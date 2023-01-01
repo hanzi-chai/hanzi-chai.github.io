@@ -14,12 +14,13 @@ const Model = ({ char }: { char: string }) => {
     } else {
       modified[strokeIndex].curveList[curveIndex].parameterList[parameterIndex] = value;
     }
+    const newData = { shape: [{ ...shape[0], glyph: modified }] };
     await fetch(`/data`, {
       headers: { 'Content-Type': 'application/json' },
       method: 'PUT',
-      body: JSON.stringify({ char, strokes: modified })
-    }).then(res => console.log(res.json()));
-    await mutate({ shape: [{ ...shape[0], glyph: modified }] });
+      body: JSON.stringify({ key: char, value: newData })
+    });
+    await mutate(newData);
   };
   return (
     <div id="model">

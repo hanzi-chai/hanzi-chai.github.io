@@ -7,7 +7,7 @@
     "build": "next build",
     "export": "next export",
     "preview": "serve out",
-    "start": "wrangler pages dev --kv CHAI --compatibility-date=2022-12-31 -- next dev",
+    "start": "wrangler pages dev --kv CHAI --persist --compatibility-date=2022-12-31 -- next dev",
     "lint": "next lint"
   },
   "dependencies": {

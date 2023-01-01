@@ -7,7 +7,6 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const key = searchParams.get('char');
   if (key) {
     const value = key && await context.env.CHAI.get(key);
-    console.log(value);
     return new Response(value);
   } else {
     const list = await context.env.CHAI.list();
@@ -16,8 +15,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export const onRequestPut: PagesFunction<Env> = async (context) => {
   const { key, value } = await context.request.json() as Record<string, any>;
-  await context.env.CHAI.put(key, value);
+  await context.env.CHAI.put(key, JSON.stringify(value));
   return new Response(JSON.stringify({ success: true }));
 }
