@@ -1,90 +1,49 @@
-import React, { Fragment } from 'react';
-import { useComponent } from './View';
+import React, { createContext, useContext } from 'react';
 
-const Model = ({ char }: { char: string }) => {
-  const framework = <div id="model"><h2>调整数据</h2></div>;
-  const { data, error, mutate } = useComponent(char);
-  if (data?.shape === undefined) return framework;
-  const { shape } = data;
-  const { glyph } = shape[0];
-  const change = async (strokeIndex: number, curveIndex: number, parameterIndex: number, value: number) => {
-    const modified = JSON.parse(JSON.stringify(glyph));
-    if (curveIndex === -1) {
-      modified[strokeIndex].start[parameterIndex] = value;
-    } else {
-      modified[strokeIndex].curveList[curveIndex].parameterList[parameterIndex] = value;
-    }
-    const newData = { shape: [{ ...shape[0], glyph: modified }] };
-    await fetch(`/data`, {
-      headers: { 'Content-Type': 'application/json' },
-      method: 'PUT',
-      body: JSON.stringify({ key: char, value: newData })
-    });
-    await mutate(newData);
-  };
-  return (
-    <div id="model">
-      <h2>调整数据</h2>
-      {
-        glyph.map((stroke, strokeIndex) => <StrokeModel key={strokeIndex} stroke={stroke} strokeIndex={strokeIndex} change={change} />)
-      }
-    </div>
-  );
-}
+export const Change = createContext((a: number, b: number, c: number, d: number) => {});
+const StrokeIndex = createContext(-1);
+const CurveIndex = createContext(-1);
 
 interface StrokeModelProps {
   stroke: Stroke,
-  strokeIndex: number,
-  change: (si: number, ci: number, pi: number, v: number) => void
+  strokeIndex: number
 }
 
-const StrokeModel = ({ stroke, strokeIndex, change }: StrokeModelProps) => {
-  const { feature, start, curveList } = stroke;
-  return (
-    <Fragment>
-      <h3>{feature}</h3>
-      {
-        start.map((parameter, parameterIndex) => <NumberModel key={parameterIndex} parameter={parameter} parameterIndex={parameterIndex} curveIndex={-1} strokeIndex={strokeIndex} change={change} />)
-      }
-      <ul>
-        {
-          curveList.map((curve, curveIndex) => <CurveModel key={curveIndex} curve={curve} curveIndex={curveIndex} strokeIndex={strokeIndex} change={change} />)
-        }
-      </ul>
-    </Fragment>
-  )
-}
+export const StrokeModel = ({ stroke: { feature, start, curveList }, strokeIndex }: StrokeModelProps) => <StrokeIndex.Provider value={strokeIndex}>
+  <h3>{feature}</h3>
+  {
+    start.map((parameter, parameterIndex) => <NumberModel key={parameterIndex} parameter={parameter} parameterIndex={parameterIndex} />)
+  }
+  <ul>
+    {
+      curveList.map((curve, curveIndex) => <CurveModel key={curveIndex} curve={curve} curveIndex={curveIndex}/>)
+    }
+  </ul>
+</StrokeIndex.Provider>
 
 interface CurveModelProps {
   curve: Curve,
-  curveIndex: number,
-  strokeIndex: number,
-  change: (si: number, ci: number, pi: number, v: number) => void
+  curveIndex: number
 }
 
-const CurveModel = ({ curve, curveIndex, strokeIndex, change }: CurveModelProps) => {
-  const { command, parameterList } = curve;
-  return (
-    <li>
-      <span className="command">{command}</span>
-      {
-        parameterList.map(
-          (parameter, parameterIndex) => <NumberModel key={parameterIndex} parameter={parameter} parameterIndex={parameterIndex} curveIndex={curveIndex} strokeIndex={strokeIndex} change={change} />
-        )
-      }
-    </li>
-  )
-}
+const CurveModel = ({ curve, curveIndex }: CurveModelProps) => <CurveIndex.Provider value={curveIndex}>
+  <li>
+    <span className="command">{curve.command}</span>
+    {
+      curve.parameterList.map(
+        (parameter, parameterIndex) => <NumberModel key={parameterIndex} parameter={parameter} parameterIndex={parameterIndex} />
+      )
+    }
+  </li>
+</CurveIndex.Provider>
 
 interface NumberModelProps {
   parameter: number,
   parameterIndex: number,
-  curveIndex: number,
-  strokeIndex: number,
-  change: (si: number, ci: number, pi: number, v: number) => void
 }
 
-const NumberModel = ({ parameter, parameterIndex, curveIndex, strokeIndex, change }: NumberModelProps) => {
+const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
+  const change = useContext(Change), strokeIndex = useContext(StrokeIndex), curveIndex = useContext(CurveIndex);
   return (
     <span className="numberModel">
       <input
@@ -97,5 +56,3 @@ const NumberModel = ({ parameter, parameterIndex, curveIndex, strokeIndex, chang
     </span>
   )
 }
-
-export default Model;
