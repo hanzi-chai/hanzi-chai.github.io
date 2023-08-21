@@ -5,7 +5,7 @@ interface Curve {
 
 interface Stroke {
   feature: string,
-  start: [number, number],
+  start: number[],
   curveList: Curve[]
 }
 

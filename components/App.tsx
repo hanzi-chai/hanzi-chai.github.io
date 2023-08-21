@@ -2,10 +2,7 @@ import React, { PropsWithChildren } from 'react';
 import { StrokeModel, Change } from '../components/Model';
 import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
-
-async function fetchSync<T>(key: string) {
-  return await (await fetch(key)).json() as T;
-}
+import CHAI from '../data/CHAI.json';
 
 const List = ({ setCurrentComponent, children }: PropsWithChildren<{setCurrentComponent: (s: string) => void}>) => <div id="list">
   <h2>选择汉字</h2>
@@ -40,11 +37,9 @@ const DataView = ({ glyph }: { glyph: Stroke[]}) => <svg id="datasvg" xmlns="htt
 
 export default function App() {
   const [currentComponent, setCurrentComponent] = useState('');
-  const { data: components, error: componentsError } = useSWR('/data', async key => await fetchSync<string[]>(key));
-  const { data: component, error } = useSWR(`/data?char=${currentComponent}`, async key => await fetchSync<Character>(key));
+  const components = Object.keys(CHAI);
+  const component = CHAI[currentComponent as '一'];
 
-  if (componentsError || error) return <h1>Cannot fetch data!</h1>
-  if (!components) return <h1>Loading...</h1>;
   return (
     <>
       <div>
@@ -76,12 +71,12 @@ export default function App() {
             modified[strokeIndex].curveList[curveIndex].parameterList[parameterIndex] = value;
           }
           const newData = { shape: [{ ...component.shape[0], glyph: modified }] };
-          await fetch(`/data`, {
-            headers: { 'Content-Type': 'application/json' },
-            method: 'PUT',
-            body: JSON.stringify({ key: currentComponent, value: newData })
-          });
-          await mutate(newData);
+          // await fetch(`/data`, {
+          //   headers: { 'Content-Type': 'application/json' },
+          //   method: 'PUT',
+          //   body: JSON.stringify({ key: currentComponent, value: newData })
+          // });
+          // await mutate(newData);
         }}>
           {
             component.shape[0].glyph.map((stroke, strokeIndex) => <StrokeModel key={strokeIndex} stroke={stroke} strokeIndex={strokeIndex} />)
