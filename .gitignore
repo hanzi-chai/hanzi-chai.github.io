@@ -37,4 +37,4 @@ next-env.d.ts
 
 .vscode
 .wrangler
-data
+/data

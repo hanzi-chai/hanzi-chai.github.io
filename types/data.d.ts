@@ -10,9 +10,10 @@ interface Stroke {
 }
 
 interface Component {
-  type: 'component',
-  glyph: Stroke[],
-  reference: string,
+  shape: {
+    glyph: Stroke[],
+    reference: string,
+  }[];
 }
 
 interface Character {
