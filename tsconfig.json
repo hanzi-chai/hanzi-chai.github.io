@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -31,8 +27,5 @@
     ".vscode/init.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "functions"
-  ]
+  "exclude": ["node_modules", "functions"]
 }

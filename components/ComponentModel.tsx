@@ -3,7 +3,7 @@
 import React, { createContext, useContext } from "react";
 
 export const Change = createContext(
-  (a: number, b: number, c: number, d: number) => {}
+  (a: number, b: number, c: number, d: number) => {},
 );
 const StrokeIndex = createContext(-1);
 const CurveIndex = createContext(-1);
@@ -73,7 +73,7 @@ const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
             strokeIndex,
             curveIndex,
             parameterIndex,
-            parseInt(event.target.value)
+            parseInt(event.target.value),
           )
         }
       ></input>
@@ -112,10 +112,10 @@ export default function ComponentModel({
             strokeIndex: number,
             curveIndex: number,
             parameterIndex: number,
-            value: number
+            value: number,
           ) => {
             const modified = JSON.parse(
-              JSON.stringify(component.shape[0].glyph)
+              JSON.stringify(component.shape[0].glyph),
             );
             if (curveIndex === -1) {
               modified[strokeIndex].start[parameterIndex] = value;

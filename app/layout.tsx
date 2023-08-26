@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import '../styles/globals.css'
-import '../styles/App.css';
-import '../styles/index.module.css';
+import "../styles/globals.css";
+import "../styles/App.css";
+import "../styles/index.module.css";
 
 export const metadata: Metadata = {
   title: "Home",

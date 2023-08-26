@@ -7,7 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <h1>汉字自动拆分系统</h1>
-  );
+  return <h1>汉字自动拆分系统</h1>;
 }

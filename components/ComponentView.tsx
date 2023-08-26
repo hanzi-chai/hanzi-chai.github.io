@@ -40,7 +40,7 @@ const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
 );
 
 export default function ComponentView({ component }: { component: Component }) {
-  if (component === undefined) return (<div id="view"></div>);
+  if (component === undefined) return <div id="view"></div>;
   return (
     <div id="view">
       <h2>查看 SVG</h2>

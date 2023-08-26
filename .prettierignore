@@ -1,0 +1,5 @@
+# Ignore artifacts:
+.next
+data
+node_modules
+out
