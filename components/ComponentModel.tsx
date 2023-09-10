@@ -1,6 +1,4 @@
-"use client";
-
-import React, { createContext, useContext } from "react";
+import { createContext, useContext } from "react";
 
 export const Change = createContext(
   (a: number, b: number, c: number, d: number) => {},
@@ -124,9 +122,9 @@ export default function ComponentModel({
                 parameterIndex
               ] = value;
             }
-            const newData = {
-              shape: [{ ...component.shape[0], glyph: modified }],
-            };
+            // const newData = {
+            //   shape: [{ ...component.shape[0], glyph: modified }],
+            // };
             // await fetch(`/data`, {
             //   headers: { 'Content-Type': 'application/json' },
             //   method: 'PUT',

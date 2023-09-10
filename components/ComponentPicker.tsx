@@ -1,5 +1,3 @@
-"use client";
-
 export default function ComponentPicker({
   setCurrentComponent,
   components,

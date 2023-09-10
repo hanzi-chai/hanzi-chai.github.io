@@ -1,5 +1,3 @@
-"use client";
-
 const FontView = ({ reference }: { reference: string }) => (
   <svg
     id="fontsvg"
