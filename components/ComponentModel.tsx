@@ -1,3 +1,4 @@
+import { InputNumber } from "antd";
 import { createContext, useContext } from "react";
 
 export const Change = createContext(
@@ -62,36 +63,9 @@ const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
     strokeIndex = useContext(StrokeIndex),
     curveIndex = useContext(CurveIndex);
   return (
-    <span className="numberModel">
-      <input
-        className="number"
-        value={parameter}
-        onChange={(event) =>
-          change(
-            strokeIndex,
-            curveIndex,
-            parameterIndex,
-            parseInt(event.target.value),
-          )
-        }
-      ></input>
-      <button
-        className="increase"
-        onClick={() =>
-          change(strokeIndex, curveIndex, parameterIndex, parameter + 1)
-        }
-      >
-        ↑
-      </button>
-      <button
-        className="decrease"
-        onClick={() =>
-          change(strokeIndex, curveIndex, parameterIndex, parameter - 1)
-        }
-      >
-        ↓
-      </button>
-    </span>
+    <InputNumber min={-100} max={100} value={parameter} onChange={(value) => {
+      change(strokeIndex, curveIndex, parameterIndex, value!)
+    }} style={{width: "64px"}}/>
   );
 };
 

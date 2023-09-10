@@ -38,14 +38,13 @@ const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
 );
 
 export default function ComponentView({ component }: { component: Component }) {
-  if (component === undefined) return <div id="view"></div>;
   return (
     <div id="view">
       <h2>查看 SVG</h2>
-      <div id="overlay">
+      { component ? <div id="overlay">
         <FontView reference={component.shape[0].reference} />
         <StrokesView glyph={component.shape[0].glyph} />
-      </div>
+      </div> : <div id="overlay" />}
     </div>
   );
 }
