@@ -3,6 +3,8 @@ import { Button, Menu } from "antd";
 import { AppstoreOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { ConfigContext, DispatchContext } from "./Context";
+import { Config } from "../lib/chai";
+import { Page } from "./App"
 
 const items: MenuProps['items'] = [
   {

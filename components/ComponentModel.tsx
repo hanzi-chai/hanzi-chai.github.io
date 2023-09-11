@@ -1,8 +1,10 @@
 import { InputNumber } from "antd";
 import { createContext, useContext } from "react";
+import styled from "styled-components";
+import { Curve, Stroke, Component } from "../lib/data";
 
 export const Change = createContext(
-  (a: number, b: number, c: number, d: number) => {},
+  (a: number, b: number, c: number, d: number) => {}
 );
 const StrokeIndex = createContext(-1);
 const CurveIndex = createContext(-1);
@@ -25,13 +27,17 @@ export const StrokeModel = ({
         parameterIndex={parameterIndex}
       />
     ))}
-    <ul>
+    <CurveList>
       {curveList.map((curve, curveIndex) => (
         <CurveModel key={curveIndex} curve={curve} curveIndex={curveIndex} />
       ))}
-    </ul>
+    </CurveList>
   </StrokeIndex.Provider>
 );
+
+const CurveList = styled.ul`
+  padding-left: 0;
+`
 
 interface CurveModelProps {
   curve: Curve;
@@ -40,8 +46,8 @@ interface CurveModelProps {
 
 const CurveModel = ({ curve, curveIndex }: CurveModelProps) => (
   <CurveIndex.Provider value={curveIndex}>
-    <li>
-      <span className="command">{curve.command}</span>
+    <List>
+      <Command>{curve.command}</Command>
       {curve.parameterList.map((parameter, parameterIndex) => (
         <NumberModel
           key={parameterIndex}
@@ -49,9 +55,20 @@ const CurveModel = ({ curve, curveIndex }: CurveModelProps) => (
           parameterIndex={parameterIndex}
         />
       ))}
-    </li>
+    </List>
   </CurveIndex.Provider>
 );
+
+const Command = styled.span`
+  text-align: center;
+  display: inline-block;
+  width: 20px;
+  margin: 0 5px;
+`;
+
+const List = styled.li`
+  list-style: none;
+`
 
 interface NumberModelProps {
   parameter: number;
@@ -63,9 +80,15 @@ const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
     strokeIndex = useContext(StrokeIndex),
     curveIndex = useContext(CurveIndex);
   return (
-    <InputNumber min={-100} max={100} value={parameter} onChange={(value) => {
-      change(strokeIndex, curveIndex, parameterIndex, value!)
-    }} style={{width: "64px"}}/>
+    <InputNumber
+      min={-100}
+      max={100}
+      value={parameter}
+      onChange={(value) => {
+        change(strokeIndex, curveIndex, parameterIndex, value!);
+      }}
+      style={{ width: "64px" }}
+    />
   );
 };
 
@@ -75,7 +98,7 @@ export default function ComponentModel({
   component: Component;
 }) {
   return (
-    <div id="model">
+    <Wrapper>
       <h2>调整数据</h2>
 
       {component?.shape && (
@@ -84,10 +107,10 @@ export default function ComponentModel({
             strokeIndex: number,
             curveIndex: number,
             parameterIndex: number,
-            value: number,
+            value: number
           ) => {
             const modified = JSON.parse(
-              JSON.stringify(component.shape[0].glyph),
+              JSON.stringify(component.shape[0].glyph)
             );
             if (curveIndex === -1) {
               modified[strokeIndex].start[parameterIndex] = value;
@@ -116,6 +139,12 @@ export default function ComponentModel({
           ))}
         </Change.Provider>
       )}
-    </div>
+    </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  width: 42%;
+  position: relative;
+  padding: 0 0 0 2rem;
+`;

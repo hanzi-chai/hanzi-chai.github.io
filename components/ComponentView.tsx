@@ -1,5 +1,7 @@
+import styled from "styled-components";
+
 const FontView = ({ reference }: { reference: string }) => (
-  <svg
+  <SVG
     id="fontsvg"
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
@@ -7,7 +9,7 @@ const FontView = ({ reference }: { reference: string }) => (
     viewBox="0 0 1000 1000"
   >
     <path d={reference} transform="matrix(1,0,0,-1,0,850)" />
-  </svg>
+  </SVG>
 );
 
 const processPath = ({ start, curveList }: Stroke) =>
@@ -18,7 +20,7 @@ const processPath = ({ start, curveList }: Stroke) =>
     .join("");
 
 const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
-  <svg
+  <SVG
     id="datasvg"
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
@@ -34,17 +36,32 @@ const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
         fill="none"
       />
     ))}
-  </svg>
+  </SVG>
 );
+
+const SVG = styled.svg`
+  position: absolute;
+`
 
 export default function ComponentView({ component }: { component: Component }) {
   return (
-    <div id="view">
+    <Wrapper>
       <h2>查看 SVG</h2>
-      { component ? <div id="overlay">
+      { component ? <Overlay>
         <FontView reference={component.shape[0].reference} />
         <StrokesView glyph={component.shape[0].glyph} />
-      </div> : <div id="overlay" />}
-    </div>
+      </Overlay> : <Overlay />}
+    </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  text-align: center;
+  width: 42%;
+  position: relative;
+`;
+
+const Overlay = styled.div`
+  border: 1px solid black;
+  aspect-ratio: 1;
+`

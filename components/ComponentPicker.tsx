@@ -1,3 +1,5 @@
+import styled from "styled-components";
+
 export default function ComponentPicker({
   setCurrentComponent,
   components,
@@ -6,10 +8,9 @@ export default function ComponentPicker({
   components: string[];
 }) {
   return (
-    <div id="list">
+    <List>
       <h2>选择汉字</h2>
-      <select
-        id="selector"
+      <Selector
         size={20}
         onChange={(event) => setCurrentComponent(event.target.value)}
       >
@@ -26,7 +27,15 @@ export default function ComponentPicker({
               {component}
             </option>
           ))}
-      </select>
-    </div>
+      </Selector>
+    </List>
   );
 }
+
+const Selector = styled.select`
+  font-size: 1rem;
+  width: 50%;
+  border: 1px solid black;
+`;
+
+const List = styled.div``;

@@ -1,10 +1,11 @@
 import { useContext, useReducer, useState } from "react";
-import "../styles/App.css";
 import Data from "../components/Data";
 import EditorLayout from "./EditorLayout";
 import Info from "./Info";
 import HomeLayout from "./HomeLayout";
 import { ConfigContext, DispatchContext, configReducer, defaultConfig } from "./Context";
+
+export type Page = "home" | "info" | "data" | "rule" | "root" | "result";
 
 function App() {
   const [page, setPage] = useState("data" as Page);
