@@ -1,9 +1,13 @@
-import { useContext, useReducer, useState } from "react";
+import { useReducer, useState } from "react";
 import Data from "../components/Data";
 import EditorLayout from "./EditorLayout";
 import Info from "./Info";
 import HomeLayout from "./HomeLayout";
-import { ConfigContext, DispatchContext, configReducer, defaultConfig } from "./Context";
+import { ConfigContext, DispatchContext, configReducer } from "./Context";
+import Rule from "./Rules";
+import Roots from "./Roots";
+import Result from "./Result";
+import defaultConfig from "../default.yaml"
 
 export type Page = "home" | "info" | "data" | "rule" | "root" | "result";
 
@@ -15,6 +19,9 @@ function App() {
       { page === "home" ? <HomeLayout page={page} setPage={setPage}/> : <EditorLayout page={page} setPage={setPage}>
           { page === "info" ? <Info /> :
             page === "data" ? <Data /> :
+            page === "rule" ? <Rule /> :
+            page === "root" ? <Roots /> :
+            page === "result" ? <Result /> :
             <div></div> }
         </EditorLayout>}
     </DispatchContext.Provider>

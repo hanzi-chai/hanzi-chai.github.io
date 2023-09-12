@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Stroke, Component } from "../lib/data";
 
 const FontView = ({ reference }: { reference: string }) => (
   <SVG

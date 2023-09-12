@@ -3,6 +3,8 @@ import { AppstoreOutlined, MailOutlined, SettingOutlined } from '@ant-design/ico
 import type { MenuProps } from 'antd';
 import { Menu } from 'antd';
 import { DispatchContext } from './Context';
+import { Config } from '../lib/chai';
+import { Page } from './App';
 
 type MenuItem = Required<MenuProps>['items'][number];
 

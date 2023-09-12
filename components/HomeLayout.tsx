@@ -1,4 +1,5 @@
 import FileExplorer from "./FileExplorer";
+import { Page } from "./App";
 
 const HomeLayout = ({ page, setPage }: { page: Page, setPage: (a: Page) => void}) => {
   return <div style={{display: "flex"}}>

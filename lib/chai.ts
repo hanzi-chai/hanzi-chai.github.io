@@ -1,4 +1,4 @@
-type SelectorName = "根少优先" | "笔顺优先" | "能连不交、能散不连" | "取大优先";
+type SieveName = "根少优先" | "笔顺优先" | "能连不交、能散不连" | "取大优先";
 
 interface Config {
   info: {
@@ -8,7 +8,8 @@ interface Config {
     version: string;
     description: string;
   };
-  selectors: SelectorName[];
+  selector: SieveName[];
+  classifier: Record<number, string[]>
   roots: string[];
 }
 
