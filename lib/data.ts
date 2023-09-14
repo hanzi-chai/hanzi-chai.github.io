@@ -20,4 +20,8 @@ interface Character {
   shape: Component[];
 }
 
-export type { Curve, Stroke, Component, Character }
+interface Database {
+  [key: string]: Component
+}
+
+export type { Curve, Stroke, Component, Character, Database }

@@ -1,41 +1,25 @@
+import { useContext } from "react";
 import styled from "styled-components";
+import { DataContext } from "./Context";
+import { Typography } from "antd";
+import Pool from "./Pool";
+import StrokeSearch from "./StrokeSearch";
 
 export default function ComponentPicker({
   setCurrentComponent,
-  components,
+  currentComponent,
 }: {
   setCurrentComponent: (s: string) => void;
-  components: string[];
+  currentComponent: string;
 }) {
+  const CHAI = useContext(DataContext);
   return (
     <List>
-      <h2>选择汉字</h2>
-      <Selector
-        size={20}
-        onChange={(event) => setCurrentComponent(event.target.value)}
-      >
-        {[...components]
-          .sort((x, y) => {
-            if (x.length < y.length) return -1;
-            if (x.length > y.length) return 1;
-            if (x < y) return -1;
-            if (x > y) return 1;
-            return 0;
-          })
-          .map((component) => (
-            <option key={component} value={component}>
-              {component}
-            </option>
-          ))}
-      </Selector>
+      <Typography.Title level={2}>选择部件</Typography.Title>
+      <StrokeSearch />
+      <Pool />
     </List>
   );
 }
-
-const Selector = styled.select`
-  font-size: 1rem;
-  width: 50%;
-  border: 1px solid black;
-`;
 
 const List = styled.div``;

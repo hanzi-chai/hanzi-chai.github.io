@@ -1,5 +1,8 @@
 import styled from "styled-components";
 import { Stroke, Component } from "../lib/data";
+import { useContext } from "react";
+import { DataContext } from "./Context";
+import { Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
   <SVG
@@ -44,13 +47,14 @@ const SVG = styled.svg`
   position: absolute;
 `
 
-export default function ComponentView({ component }: { component: Component }) {
+export default function ComponentView({ componentName }: { componentName?: string }) {
+  const CHAI = useContext(DataContext);
   return (
     <Wrapper>
-      <h2>查看 SVG</h2>
-      { component ? <Overlay>
-        <FontView reference={component.shape[0].reference} />
-        <StrokesView glyph={component.shape[0].glyph} />
+      <Typography.Title level={2}>查看 SVG</Typography.Title>
+      { componentName ? <Overlay>
+        <FontView reference={CHAI[componentName].shape[0].reference} />
+        <StrokesView glyph={CHAI[componentName].shape[0].glyph} />
       </Overlay> : <Overlay />}
     </Wrapper>
   );

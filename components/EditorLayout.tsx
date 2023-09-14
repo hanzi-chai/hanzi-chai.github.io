@@ -1,5 +1,5 @@
 import { ChangeEvent, Dispatch, PropsWithChildren, useContext } from "react";
-import { Button, Menu, Typography } from "antd";
+import { Button, Layout, Menu, Typography } from "antd";
 import {
   AppstoreOutlined,
   MailOutlined,
@@ -50,7 +50,10 @@ const exportFile = (config: Config) => {
   a.click();
 };
 
-const importFile = (dispatch: Dispatch<Action>, e: ChangeEvent<HTMLInputElement>) => {
+const importFile = (
+  dispatch: Dispatch<Action>,
+  e: ChangeEvent<HTMLInputElement>
+) => {
   const [file] = e.target.files!;
   const reader = new FileReader();
   reader.addEventListener("load", () =>
@@ -71,18 +74,32 @@ const NameAndBack = styled.div`
 const Title = styled.h1`
   margin: 0;
   font-size: 1.5rem;
+  color: white;
 `;
 
-const Header = styled.header`
+const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-around;
   align-items: center;
+  position: sticky;
+  top: 0;
+`;
+
+const Content = styled(Layout.Content)`
+  padding: 0px 32px;
+`
+
+const Footer = styled(Layout.Footer)`
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  text-align: center;
 `;
 
 const ActionGroup = styled.div`
   display: flex;
   gap: 1rem;
-`
+`;
 
 export default function EditorLayout({
   children,
@@ -92,7 +109,7 @@ export default function EditorLayout({
   const config = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
   return (
-    <>
+    <Layout>
       <Header>
         <NameAndBack>
           <Button
@@ -104,23 +121,30 @@ export default function EditorLayout({
           />
           <Title>{config.info.name}</Title>
         </NameAndBack>
-        <nav>
-          <Menu
-            onClick={(e) => setPage(e.key as Page)}
-            selectedKeys={[page]}
-            mode="horizontal"
-            items={items}
-          />
-        </nav>
+        <Menu
+          onClick={(e) => setPage(e.key as Page)}
+          selectedKeys={[page]}
+          theme="dark"
+          mode="horizontal"
+          items={items}
+        />
         <ActionGroup>
           <Button onClick={() => document.getElementById("import")!.click()}>
             导入
           </Button>
-          <input type="file" id="import" hidden onChange={(e) => importFile(dispatch, e)} />
+          <input
+            type="file"
+            id="import"
+            hidden
+            onChange={(e) => importFile(dispatch, e)}
+          />
           <Button onClick={() => exportFile(config)}>导出</Button>
         </ActionGroup>
       </Header>
-      {children}
-    </>
+      <Content>{children}</Content>
+      <Footer>
+        © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
+      </Footer>
+    </Layout>
   );
 }

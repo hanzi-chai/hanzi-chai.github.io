@@ -12,7 +12,7 @@ import defaultConfig from "../default.yaml"
 export type Page = "home" | "info" | "data" | "rule" | "root" | "result";
 
 function App() {
-  const [page, setPage] = useState("data" as Page);
+  const [page, setPage] = useState("home" as Page);
   const [config, dispatch] = useReducer(configReducer, defaultConfig)
   return <ConfigContext.Provider value={config}>
     <DispatchContext.Provider value={dispatch}>
