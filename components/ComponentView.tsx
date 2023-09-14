@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Stroke, Component } from "../lib/data";
 import { useContext } from "react";
 import { DataContext } from "./Context";
-import { Typography } from "antd";
+import { Empty, Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
   <SVG
@@ -23,7 +23,7 @@ const processPath = ({ start, curveList }: Stroke) =>
     .map(({ command, parameterList }) => command + parameterList.join(" "))
     .join("");
 
-const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
+export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
   <SVG
     id="datasvg"
     xmlns="http://www.w3.org/2000/svg"
@@ -43,30 +43,38 @@ const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
   </SVG>
 );
 
-const SVG = styled.svg`
-  position: absolute;
-`
+const SVG = styled.svg``;
 
-export default function ComponentView({ componentName }: { componentName?: string }) {
+export default function ComponentView({
+  componentName,
+}: {
+  componentName?: string;
+}) {
   const CHAI = useContext(DataContext);
   return (
     <Wrapper>
       <Typography.Title level={2}>查看 SVG</Typography.Title>
-      { componentName ? <Overlay>
-        <FontView reference={CHAI[componentName].shape[0].reference} />
-        <StrokesView glyph={CHAI[componentName].shape[0].glyph} />
-      </Overlay> : <Overlay />}
+      <Overlay>
+        {componentName ? (
+          <>
+            <FontView reference={CHAI[componentName].shape[0].reference} />
+            <StrokesView glyph={CHAI[componentName].shape[0].glyph} />
+          </>
+        ) : (
+          <Empty description={false} />
+        )}
+      </Overlay>
     </Wrapper>
   );
 }
 
 const Wrapper = styled.div`
-  text-align: center;
-  width: 42%;
   position: relative;
 `;
 
 const Overlay = styled.div`
   border: 1px solid black;
   aspect-ratio: 1;
-`
+  display: grid;
+  place-content: center;
+`;

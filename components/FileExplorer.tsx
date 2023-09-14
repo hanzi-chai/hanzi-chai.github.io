@@ -49,7 +49,6 @@ const FileExplorer = ({ page, setPage }: { page: Page, setPage: (a: Page) => voi
   return (
     <Menu
       onClick={onClick}
-      style={{ width: 256 }}
       defaultSelectedKeys={['1']}
       defaultOpenKeys={['sub1']}
       mode="inline"

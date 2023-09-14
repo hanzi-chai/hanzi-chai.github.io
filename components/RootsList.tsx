@@ -1,19 +1,11 @@
-import { Divider, List, Typography } from "antd";
-import { useContext } from "react";
+import { Button, Divider, List, Typography } from "antd";
+import { useContext, useState } from "react";
 import styled from "styled-components";
-import { ConfigContext, DataContext } from "./Context";
+import { ConfigContext, DataContext, DispatchContext } from "./Context";
+import Root from "./Root";
+import { reverseClassifier } from "../lib/utils";
 
 const Wrapper = styled.div``;
-
-export const Root = styled.div`
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
-  border-radius: 8px;
-  border: 1px solid black;
-  display: inline-block;
-  text-align: center;
-`;
 
 const RootContainer = styled.div`
   display: flex;
@@ -21,45 +13,62 @@ const RootContainer = styled.div`
   gap: 8px;
 `;
 
-const Group = (items: string[], order: number) => {
-  return (
-    <div key={order}>
-      <Divider orientation="left">
-        起笔为&nbsp;<Root>{ order + 1 }</Root>
-      </Divider>
-      <RootContainer>
-        {items.map((item) => (
-          <Root>{item}</Root>
-        ))}
-      </RootContainer>
-    </div>
-  );
-};
+const ButtonGroup = styled.div`
+  text-align: center;
+  margin: 32px 0;
+`;
 
 const RootsList = () => {
+  const [rootName, setRootName] = useState(undefined as string | undefined);
+  const config = useContext(ConfigContext);
+  const dispatch = useContext(DispatchContext);
   const { roots, classifier } = useContext(ConfigContext);
-  const reverseClassifier = new Map<string, string>();
-  for (const [key, value] of Object.entries(classifier)) {
-    for (const v of value) {
-      reverseClassifier.set(v, key);
-    }
-  }
+  const reversedClassifier = reverseClassifier(classifier);
   const CHAI = useContext(DataContext);
-  // 现在只处理 roots 是某个部件的情形，其余暂不处理
-  const data: string[][] = Object.keys(classifier).map(key => []);
+  // 现在只处理 roots 是某个部件或其切片的情形，其余暂不处理
+  const data: string[][] = Object.keys(classifier).map((key) => []);
   for (const root of roots) {
     if (CHAI[root]) {
       const { feature } = CHAI[root].shape[0].glyph[0];
-      const featureClass = reverseClassifier.get(feature) || "0"
+      const featureClass = reversedClassifier.get(feature) || "0";
+      data[parseInt(featureClass) - 1].push(root);
+    } else if (config.aliaser[root]) {
+      const { source, indices } = config.aliaser[root];
+      const { feature } = CHAI[source].shape[0].glyph[indices[0]];
+      const featureClass = reversedClassifier.get(feature) || "0";
       data[parseInt(featureClass) - 1].push(root);
     } else {
-      console.log(root)
+
     }
   }
   return (
     <Wrapper>
       <Typography.Title level={2}>字根列表</Typography.Title>
-      <List dataSource={data} renderItem={Group}></List>
+      <List
+        dataSource={data}
+        renderItem={(items: string[], order: number) => {
+          return (
+            <div key={order}>
+              <Divider orientation="left">
+                起笔为&nbsp;<Root name={`${order + 1}`} />
+              </Divider>
+              <RootContainer>
+                {items.map((item) => (
+                  <Root key={item} name={item} current={rootName === item} change={setRootName}/>
+                ))}
+              </RootContainer>
+            </div>
+          );
+        }}
+      ></List>
+      <ButtonGroup>
+        <Button
+          type="primary"
+          onClick={() => rootName && dispatch({ type: "remove-root", content: rootName })}
+        >
+          删除
+        </Button>
+      </ButtonGroup>
     </Wrapper>
   );
 };

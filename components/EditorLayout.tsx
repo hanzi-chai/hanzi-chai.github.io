@@ -12,6 +12,7 @@ import { Config } from "../lib/chai";
 import { Action } from "./Context";
 import { Page } from "./App";
 import styled from "styled-components";
+import { dump } from "js-yaml";
 
 const items: MenuProps["items"] = [
   {
@@ -42,10 +43,13 @@ const items: MenuProps["items"] = [
 ];
 
 const exportFile = (config: Config) => {
-  const fileContent = JSON.stringify(config);
+  const fileContent = dump(config, {
+    flowLevel: 2,
+    styles: { roots: { flowLevel: 1 } },
+  });
   const blob = new Blob([fileContent], { type: "text/plain" });
   const a = document.createElement("a");
-  a.download = `${config.info.id}.json`;
+  a.download = `${config.info.id}.yaml`;
   a.href = window.URL.createObjectURL(blob);
   a.click();
 };
@@ -81,24 +85,25 @@ const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-around;
   align-items: center;
-  position: sticky;
-  top: 0;
 `;
 
 const Content = styled(Layout.Content)`
   padding: 0px 32px;
-`
+  overflow-y: scroll;
+  flex: 1;
+`;
 
 const Footer = styled(Layout.Footer)`
-  position: fixed;
-  width: 100%;
-  bottom: 0;
   text-align: center;
 `;
 
 const ActionGroup = styled.div`
   display: flex;
   gap: 1rem;
+`;
+
+const Wrapper = styled(Layout)`
+  background-color: white !important;
 `;
 
 export default function EditorLayout({
@@ -109,7 +114,7 @@ export default function EditorLayout({
   const config = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
   return (
-    <Layout>
+    <Wrapper>
       <Header>
         <NameAndBack>
           <Button
@@ -142,9 +147,7 @@ export default function EditorLayout({
         </ActionGroup>
       </Header>
       <Content>{children}</Content>
-      <Footer>
-        © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
-      </Footer>
-    </Layout>
+      <Footer>© 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}</Footer>
+    </Wrapper>
   );
 }

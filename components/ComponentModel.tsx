@@ -1,8 +1,9 @@
-import { InputNumber, Typography } from "antd";
+import { Empty, InputNumber, Typography } from "antd";
 import { createContext, useContext } from "react";
 import styled from "styled-components";
 import { Curve, Stroke, Component } from "../lib/data";
 import { DataContext } from "./Context";
+import { halfToFull } from "../lib/utils";
 
 export const Change = createContext(
   (a: number, b: number, c: number, d: number) => {}
@@ -15,19 +16,35 @@ interface StrokeModelProps {
   strokeIndex: number;
 }
 
+const FeatureAndStart = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
 export const StrokeModel = ({
   stroke: { feature, start, curveList },
   strokeIndex,
 }: StrokeModelProps) => (
   <StrokeIndex.Provider value={strokeIndex}>
-    <h3>{feature}</h3>
-    {start.map((parameter, parameterIndex) => (
-      <NumberModel
-        key={parameterIndex}
-        parameter={parameter}
-        parameterIndex={parameterIndex}
-      />
-    ))}
+    <FeatureAndStart>
+      <Typography.Title level={3}>{feature}</Typography.Title>
+      <ButtonGroup>
+        {start.map((parameter, parameterIndex) => (
+          <NumberModel
+            key={parameterIndex}
+            parameter={parameter}
+            parameterIndex={parameterIndex}
+          />
+        ))}
+      </ButtonGroup>
+    </FeatureAndStart>
     <CurveList>
       {curveList.map((curve, curveIndex) => (
         <CurveModel key={curveIndex} curve={curve} curveIndex={curveIndex} />
@@ -38,6 +55,7 @@ export const StrokeModel = ({
 
 const CurveList = styled.ul`
   padding-left: 0;
+  margin: 0;
 `;
 
 interface CurveModelProps {
@@ -48,14 +66,16 @@ interface CurveModelProps {
 const CurveModel = ({ curve, curveIndex }: CurveModelProps) => (
   <CurveIndex.Provider value={curveIndex}>
     <List>
-      <Command>{curve.command}</Command>
-      {curve.parameterList.map((parameter, parameterIndex) => (
-        <NumberModel
-          key={parameterIndex}
-          parameter={parameter}
-          parameterIndex={parameterIndex}
-        />
-      ))}
+      <Command>{halfToFull(curve.command.toUpperCase())}</Command>
+      <ButtonGroup>
+        {curve.parameterList.map((parameter, parameterIndex) => (
+          <NumberModel
+            key={parameterIndex}
+            parameter={parameter}
+            parameterIndex={parameterIndex}
+          />
+        ))}
+      </ButtonGroup>
     </List>
   </CurveIndex.Provider>
 );
@@ -69,6 +89,10 @@ const Command = styled.span`
 
 const List = styled.li`
   list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0;
 `;
 
 interface NumberModelProps {
@@ -76,19 +100,25 @@ interface NumberModelProps {
   parameterIndex: number;
 }
 
+const MyInputNumber = styled(InputNumber)`
+  width: 48px;
+  & .ant-input-number-input {
+    padding: 4px 8px;
+  }
+`;
+
 const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
   const change = useContext(Change),
     strokeIndex = useContext(StrokeIndex),
     curveIndex = useContext(CurveIndex);
   return (
-    <InputNumber
+    <MyInputNumber
       min={-100}
       max={100}
       value={parameter}
       onChange={(value) => {
-        change(strokeIndex, curveIndex, parameterIndex, value!);
+        change(strokeIndex, curveIndex, parameterIndex, 0);
       }}
-      style={{ width: "64px" }}
     />
   );
 };
@@ -102,8 +132,7 @@ export default function ComponentModel({
   return (
     <Wrapper>
       <Typography.Title level={2}>调整数据</Typography.Title>
-
-      {componentName &&
+      {componentName ?
         CHAI[componentName].shape[0].glyph.map(
           (stroke, strokeIndex) => (
             <StrokeModel
@@ -112,6 +141,7 @@ export default function ComponentModel({
               strokeIndex={strokeIndex}
             />
           )
+        ) : <Empty />
           // <Change.Provider
           // value={async (
           //   strokeIndex: number,
@@ -141,13 +171,9 @@ export default function ComponentModel({
           // }}
           // >
           // </Change.Provider>
-        )}
+        }
     </Wrapper>
   );
 }
 
-const Wrapper = styled.div`
-  width: 42%;
-  position: relative;
-  padding: 0 0 0 2rem;
-`;
+const Wrapper = styled.div``;

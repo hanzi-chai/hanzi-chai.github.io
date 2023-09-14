@@ -9,8 +9,9 @@ interface Config {
     description: string;
   };
   selector: SieveName[];
-  classifier: Record<number, string[]>
+  classifier: Record<string, string[]>;
   roots: string[];
+  aliaser: Record<string, { source: string; indices: number[] }>;
 }
 
 export type { Config };

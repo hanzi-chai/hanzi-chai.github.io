@@ -10,6 +10,13 @@ const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
   }
+  html, body, #root {
+    height: 100%;
+  }
+  #root {
+    display: flex;
+    flex-direction: column;
+  }
 `
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

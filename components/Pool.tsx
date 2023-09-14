@@ -1,6 +1,10 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { DataContext } from "./Context";
+import { ConfigContext, DataContext } from "./Context";
+import Char from "./Char";
+import { Component } from "../lib/data";
+import { reverseClassifier } from "../lib/utils";
+import { Config } from "../lib/chai";
 
 const Wrapper = styled.div`
   display: flex;
@@ -11,23 +15,44 @@ const Wrapper = styled.div`
   margin: 16px 0;
 `;
 
-export const Char = styled.div`
-  width: 32px;
-  height: 32px;
-  text-align: center;
-  line-height: 32px;
-
-  &:hover {
-    background-color: #ccc;
-    transition: background-color 400ms;
-  }
-`;
-
-const Pool = () => {
-  const CHAI = useContext(DataContext);
-  return <Wrapper>
-    { Object.keys(CHAI).filter(x => x.length === 1).map(x => <Char>{ x }</Char>)}
-  </Wrapper>
+interface PoolProps {
+  componentName?: string;
+  setComponentName: (s: string | undefined) => void;
+  sequence: string;
 }
+
+const makeSequenceFilter = (
+  classifier: Config["classifier"],
+  sequence: string
+) => {
+  const reversedClassifier = reverseClassifier(classifier);
+  return ([x, v]: [string, Component]) => {
+    const fullSequence = v.shape[0].glyph
+      .map((s) => s.feature)
+      .map((x) => reversedClassifier.get(x)!)
+      .join("");
+    return fullSequence.search(sequence) !== -1;
+  };
+};
+
+const Pool = ({ componentName, setComponentName, sequence }: PoolProps) => {
+  const CHAI = useContext(DataContext);
+  const { classifier } = useContext(ConfigContext);
+  return (
+    <Wrapper>
+      {Object.entries(CHAI)
+        .filter(makeSequenceFilter(classifier, sequence))
+        .sort((a, b) => a[0].length - b[0].length)
+        .map(([x, v]) => (
+          <Char
+            key={x}
+            name={x}
+            current={x === componentName}
+            change={setComponentName}
+          />
+        ))}
+    </Wrapper>
+  );
+};
 
 export default Pool;

@@ -1,19 +1,20 @@
-import ComponentPicker from "./ComponentPicker";
 import ComponentModel from "./ComponentModel";
 import ComponentView from "./ComponentView";
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { Col, Row } from "antd";
+import { Col, Row, Typography } from "antd";
+import StrokeSearch from "./StrokeSearch";
+import Pool from "./Pool";
 
 export default function Data() {
-  const [componentName, setCurrentComponent] = useState("" as string);
+  const [componentName, setComponentName] = useState(undefined as string | undefined);
+  const [sequence, setSequence] = useState("");
   return (
     <Row gutter={32}>
       <Col className="gutter-row" span={8}>
-        <ComponentPicker
-          currentComponent={componentName}
-          setCurrentComponent={setCurrentComponent}
-        />
+        <Typography.Title level={2}>选择部件</Typography.Title>
+        <StrokeSearch sequence={sequence} setSequence={setSequence}/>
+        <Pool componentName={componentName} setComponentName={setComponentName} sequence={sequence}/>
       </Col>
       <Col className="gutter-row" span={8}>
         <ComponentView componentName={componentName} />

@@ -8,12 +8,13 @@ import Rule from "./Rules";
 import Roots from "./Roots";
 import Result from "./Result";
 import defaultConfig from "../default.yaml"
+import { Config } from "../lib/chai";
 
 export type Page = "home" | "info" | "data" | "rule" | "root" | "result";
 
 function App() {
   const [page, setPage] = useState("home" as Page);
-  const [config, dispatch] = useReducer(configReducer, defaultConfig)
+  const [config, dispatch] = useReducer(configReducer, defaultConfig as Config)
   return <ConfigContext.Provider value={config}>
     <DispatchContext.Provider value={dispatch}>
       { page === "home" ? <HomeLayout page={page} setPage={setPage}/> : <EditorLayout page={page} setPage={setPage}>

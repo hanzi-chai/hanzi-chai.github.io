@@ -11,6 +11,7 @@
     "data": "npx -y -- ts-node -T --esm scripts/fetch.ts"
   },
   "dependencies": {
+    "@ant-design/colors": "^7.0.0",
     "antd": "^5.9.0",
     "js-yaml": "^4.1.0",
     "react": "^18.2.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@modyfi/vite-plugin-yaml": "^1.0.4",
+    "@types/js-yaml": "^4.0.5",
     "@types/node": "^18.17.15",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
