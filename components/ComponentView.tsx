@@ -43,7 +43,9 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
   </SVG>
 );
 
-const SVG = styled.svg``;
+const SVG = styled.svg`
+  grid-area: 1 / 1 / 1 / 1;
+`;
 
 export default function ComponentView({
   componentName,
@@ -76,5 +78,4 @@ const Overlay = styled.div`
   border: 1px solid black;
   aspect-ratio: 1;
   display: grid;
-  place-content: center;
 `;

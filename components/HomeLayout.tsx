@@ -1,7 +1,10 @@
-import FileExplorer from "./FileExplorer";
-import { Page } from "./App";
-import { Layout, Typography } from "antd";
+import { GlobalProps, Page } from "./App";
+import { Button, Layout, List, Typography } from "antd";
 import styled from "styled-components";
+import { Config } from "../lib/chai";
+import { Dispatch, useContext } from "react";
+import { Action, DispatchContext } from "./Context";
+import defaultConfig from "../default.yaml";
 
 const Wrapper = styled(Layout)`
   height: 100%;
@@ -26,17 +29,57 @@ const Content = styled(Layout.Content)`
   gap: 64px;
 `;
 
-const HomeLayout = ({
-  page,
-  setPage,
-}: {
-  page: Page;
-  setPage: (a: Page) => void;
-}) => {
+const File = styled(List.Item)`
+  padding: 0 32px !important;
+`;
+
+const FileList = styled(List)`
+  margin: 32px 0;
+` as typeof List;
+
+const HomeLayout = ({ setPage, configs, setConfigs }: GlobalProps) => {
+  const dispatch = useContext(DispatchContext);
   return (
     <Wrapper>
       <Sider width={320}>
-        <FileExplorer page={page} setPage={setPage} />
+        <FileList
+          itemLayout="horizontal"
+          dataSource={configs}
+          renderItem={(config) => {
+            const { info } = config;
+            return (
+              <File
+                actions={[
+                  <a
+                    onClick={() => {
+                      dispatch({ type: "load", content: config });
+                      setPage("info");
+                    }}
+                  >
+                    编辑
+                  </a>,
+                  <a
+                    onClick={() => {
+                      setConfigs(configs.filter(x => x.info.id !== info.id));
+                    }}
+                  >
+                    删除
+                  </a>,
+                ]}
+              >
+                <List.Item.Meta
+                  title={info.name}
+                  description={info.description}
+                />
+              </File>
+            );
+          }}
+        />
+        <div style={{ textAlign: "center" }}>
+          <Button type="primary" onClick={() => setConfigs(configs.concat(defaultConfig as Config))}>
+            新建
+          </Button>
+        </div>
       </Sider>
       <Content>
         <img src="/favicon.ico" />

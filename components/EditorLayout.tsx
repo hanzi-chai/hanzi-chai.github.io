@@ -10,9 +10,10 @@ import type { MenuProps } from "antd";
 import { ConfigContext, DispatchContext } from "./Context";
 import { Config } from "../lib/chai";
 import { Action } from "./Context";
-import { Page } from "./App";
+import { GlobalProps, Page } from "./App";
 import styled from "styled-components";
 import { dump } from "js-yaml";
+import defaultConfig from "../default.yaml";
 
 const items: MenuProps["items"] = [
   {
@@ -110,7 +111,9 @@ export default function EditorLayout({
   children,
   page,
   setPage,
-}: PropsWithChildren<{ page: string; setPage: (a: Page) => void }>) {
+  configs,
+  setConfigs,
+}: PropsWithChildren<GlobalProps>) {
   const config = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
   return (
@@ -120,7 +123,10 @@ export default function EditorLayout({
           <Button
             icon={<CaretLeftFilled />}
             onClick={() => {
-              localStorage.setItem(config.info.id, JSON.stringify(config));
+              setConfigs(configs.map(c => {
+                return c.info.id === config.info.id ? config : c;
+              }))
+              dispatch({ type: "load", content: defaultConfig as Config });
               setPage("home");
             }}
           />
