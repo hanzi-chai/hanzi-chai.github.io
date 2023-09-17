@@ -7,14 +7,20 @@ import StrokeSearch from "./StrokeSearch";
 import Pool from "./Pool";
 
 export default function Data() {
-  const [componentName, setComponentName] = useState(undefined as string | undefined);
+  const [componentName, setComponentName] = useState(
+    undefined as string | undefined,
+  );
   const [sequence, setSequence] = useState("");
   return (
     <Row gutter={32}>
       <Col className="gutter-row" span={8}>
         <Typography.Title level={2}>选择部件</Typography.Title>
-        <StrokeSearch sequence={sequence} setSequence={setSequence}/>
-        <Pool componentName={componentName} setComponentName={setComponentName} sequence={sequence}/>
+        <StrokeSearch sequence={sequence} setSequence={setSequence} />
+        <Pool
+          componentName={componentName}
+          setComponentName={setComponentName}
+          sequence={sequence}
+        />
       </Col>
       <Col className="gutter-row" span={8}>
         <ComponentView componentName={componentName} />
@@ -28,4 +34,4 @@ export default function Data() {
 
 const Main = styled.main`
   display: flex;
-`
+`;

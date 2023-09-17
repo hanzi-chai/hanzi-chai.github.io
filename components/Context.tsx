@@ -3,6 +3,7 @@ import { Config } from "../lib/chai";
 import CHAI from "../data/CHAI.json";
 import { Database } from "../lib/data";
 import defaultConfig from "../default.yaml";
+import { useLocation } from "react-router-dom";
 
 export type Action =
   | {
@@ -26,32 +27,48 @@ export type Action =
       name: string;
       source: string;
       indices: number[];
-  }
+    };
 
 export const configReducer = (config: Config, action: Action) => {
+  const { pathname } = location;
+  const [_, id] = pathname.split("/");
+  let newconfig;
   switch (action.type) {
     case "info":
-      return { ...config, info: { ...config.info, ...action.content } };
+      newconfig = { ...config, info: { ...config.info, ...action.content } };
+      break;
     case "load":
-      return action.content;
+      newconfig = action.content;
+      break;
     case "add-root":
-      return config.roots.includes(action.content)
+      newconfig = config.roots.includes(action.content)
         ? config
         : { ...config, roots: config.roots.concat(action.content) };
+      break;
     case "remove-root":
-      return {
+      newconfig = {
         ...config,
         roots: config.roots.filter((root) => root !== action.content),
-        aliaser: Object.fromEntries(Object.entries(config.aliaser).filter(([x, v]) => x != action.content))
+        aliaser: Object.fromEntries(
+          Object.entries(config.aliaser).filter(
+            ([x, v]) => x != action.content,
+          ),
+        ),
       };
+      break;
     case "add-sliced-root":
       const { name, source, indices } = action;
-      return {
+      newconfig = {
         ...config,
         roots: config.roots.concat(name),
-        aliaser: { ...config.aliaser, [name]: { source, indices } }
+        aliaser: { ...config.aliaser, [name]: { source, indices } },
       };
+      break;
   }
+
+  console.log("Writing config for", id);
+  localStorage.setItem(id, JSON.stringify(newconfig));
+  return newconfig;
 };
 
 export const DataContext = createContext(CHAI as Database);

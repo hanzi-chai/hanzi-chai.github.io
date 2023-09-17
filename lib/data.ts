@@ -21,7 +21,7 @@ interface Character {
 }
 
 interface Database {
-  [key: string]: Component
+  [key: string]: Component;
 }
 
-export type { Curve, Stroke, Component, Character, Database }
+export type { Curve, Stroke, Component, Character, Database };

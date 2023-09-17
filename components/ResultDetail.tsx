@@ -9,7 +9,7 @@ export interface DataType {
   order: number[];
   numberOfCrosses: number;
   numberOfAttaches: number;
-  sizes: number[]
+  sizes: number[];
 }
 
 const RootsContainer = styled.div`
@@ -40,28 +40,33 @@ const columns: ColumnsType<DataType> = [
     title: "笔画序",
     dataIndex: "order",
     key: "order",
-    render: (_, { order }) => <span>{`(${order.join(", ")})`}</span>
+    render: (_, { order }) => <span>{`(${order.join(", ")})`}</span>,
   },
   {
     title: "相交",
     dataIndex: "numberOfCrosses",
-    key: "numberOfCrosses"
+    key: "numberOfCrosses",
   },
   {
     title: "相连",
     dataIndex: "numberOfAttaches",
-    key: "numberOfAttaches"
+    key: "numberOfAttaches",
   },
   {
     title: "字根大小",
     dataIndex: "sizes",
     key: "sizes",
-    render: (_, { sizes }) => <span>{`(${sizes.join(", ")})`}</span>
-  }
+    render: (_, { sizes }) => <span>{`(${sizes.join(", ")})`}</span>,
+  },
 ];
 
 const ResultDetail = ({ data }: { data: DataType[] }) => (
-  <Table columns={columns} dataSource={data} pagination={{hideOnSinglePage: true}} size="small"/>
+  <Table
+    columns={columns}
+    dataSource={data}
+    pagination={{ hideOnSinglePage: true }}
+    size="small"
+  />
 );
 
 export default ResultDetail;

@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "data": "npx -y -- ts-node -T --esm scripts/fetch.ts"
+    "data": "npx -y -- ts-node -T --esm scripts/fetch.ts",
+    "format": "npx prettier . --write"
   },
   "dependencies": {
     "@ant-design/colors": "^7.0.0",
@@ -17,7 +18,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
-    "styled-components": "^6.0.7"
+    "styled-components": "^6.0.7",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@modyfi/vite-plugin-yaml": "^1.0.4",
@@ -25,6 +27,7 @@
     "@types/node": "^18.17.15",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
+    "@types/uuid": "^9.0.4",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
     "@vitejs/plugin-react-swc": "^3.3.2",

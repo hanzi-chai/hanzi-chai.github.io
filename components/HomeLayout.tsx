@@ -1,10 +1,10 @@
-import { GlobalProps, Page } from "./App";
 import { Button, Layout, List, Typography } from "antd";
 import styled from "styled-components";
 import { Config } from "../lib/chai";
-import { Dispatch, useContext } from "react";
-import { Action, DispatchContext } from "./Context";
+import { useEffect, useState } from "react";
 import defaultConfig from "../default.yaml";
+import { Link, useNavigate } from "react-router-dom";
+import { v4 as uuid } from "uuid";
 
 const Wrapper = styled(Layout)`
   height: 100%;
@@ -20,6 +20,10 @@ const Sider = styled(Layout.Sider)`
   }
 `;
 
+const ActionGroup = styled.div`
+  text-align: center;
+`;
+
 const Content = styled(Layout.Content)`
   height: 100%;
   display: flex;
@@ -30,41 +34,50 @@ const Content = styled(Layout.Content)`
 `;
 
 const File = styled(List.Item)`
-  padding: 0 32px !important;
+  padding: 8px 32px !important;
 `;
 
 const FileList = styled(List)`
   margin: 32px 0;
 ` as typeof List;
 
-const HomeLayout = ({ setPage, configs, setConfigs }: GlobalProps) => {
-  const dispatch = useContext(DispatchContext);
+const HomeLayout = () => {
+  const [configs, setConfigs] = useState({} as Record<string, Config>);
+  const handleRemove = (id: string) => {
+    const newConfigs = { ...configs };
+    delete newConfigs[id];
+    localStorage.removeItem(id);
+    setConfigs(newConfigs);
+  };
+  const handleAdd = () => {
+    const id = uuid();
+    localStorage.setItem(id, JSON.stringify(defaultConfig));
+    setConfigs(Object.assign({}, configs, { [id]: defaultConfig }));
+  };
+
+  // read previous data
+  useEffect(() => {
+    const previousConfigs = {} as Record<string, Config>;
+    for (let i = 0; i != localStorage.length; ++i) {
+      const key = localStorage.key(i)!;
+      const data = JSON.parse(localStorage.getItem(key)!);
+      previousConfigs[key] = data;
+    }
+    setConfigs(previousConfigs);
+  }, []);
+
   return (
     <Wrapper>
       <Sider width={320}>
         <FileList
           itemLayout="horizontal"
-          dataSource={configs}
-          renderItem={(config) => {
-            const { info } = config;
+          dataSource={Object.entries(configs)}
+          renderItem={([id, { info }]) => {
             return (
               <File
                 actions={[
-                  <a
-                    onClick={() => {
-                      dispatch({ type: "load", content: config });
-                      setPage("info");
-                    }}
-                  >
-                    编辑
-                  </a>,
-                  <a
-                    onClick={() => {
-                      setConfigs(configs.filter(x => x.info.id !== info.id));
-                    }}
-                  >
-                    删除
-                  </a>,
+                  <Link to={id}>编辑</Link>,
+                  <a onClick={() => handleRemove(id)}>删除</a>,
                 ]}
               >
                 <List.Item.Meta
@@ -75,14 +88,14 @@ const HomeLayout = ({ setPage, configs, setConfigs }: GlobalProps) => {
             );
           }}
         />
-        <div style={{ textAlign: "center" }}>
-          <Button type="primary" onClick={() => setConfigs(configs.concat(defaultConfig as Config))}>
+        <ActionGroup>
+          <Button type="primary" onClick={handleAdd}>
             新建
           </Button>
-        </div>
+        </ActionGroup>
       </Sider>
       <Content>
-        <img src="/favicon.ico" />
+        <img alt="favicon" src="/favicon.ico" />
         <Typography.Title>汉字自动拆分系统</Typography.Title>
       </Content>
     </Wrapper>

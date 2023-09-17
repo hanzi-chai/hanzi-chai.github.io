@@ -38,7 +38,7 @@ const Namer = styled.div`
 
 const Label = styled.span`
   min-width: 120px;
-`
+`;
 
 const Slicer = ({
   isModalOpen,

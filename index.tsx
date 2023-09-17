@@ -1,7 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./components/App";
 import { createGlobalStyle } from "styled-components";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import HomeLayout from "./components/HomeLayout";
+import EditorLayout from "./components/EditorLayout";
+import Info from "./components/Info";
+import Data from "./components/Data";
+import Rules from "./components/Rules";
+import Roots from "./components/Roots";
+import Result from "./components/Result";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -17,11 +24,29 @@ const GlobalStyle = createGlobalStyle`
     display: flex;
     flex-direction: column;
   }
-`
+`;
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomeLayout />,
+  },
+  {
+    path: "/:id",
+    element: <EditorLayout />,
+    children: [
+      { index: true, element: <Info /> },
+      { path: "data", element: <Data /> },
+      { path: "rule", element: <Rules /> },
+      { path: "root", element: <Roots /> },
+      { path: "result", element: <Result /> },
+    ],
+  },
+]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <GlobalStyle />
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>,
 );

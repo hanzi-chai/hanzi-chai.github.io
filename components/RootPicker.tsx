@@ -16,7 +16,7 @@ const ButtonGroup = styled.div`
 
 const RootPicker = () => {
   const [componentName, setComponentName] = useState(
-    undefined as string | undefined
+    undefined as string | undefined,
   );
   const dispatch = useContext(DispatchContext);
   const [sequence, setSequence] = useState("");
@@ -26,8 +26,13 @@ const RootPicker = () => {
     setIsModalOpen(true);
   };
 
-  const handleOk = ({ name, indices }: { name: string, indices: number[]}) => {
-    dispatch({ type: "add-sliced-root", name, source: componentName!, indices })
+  const handleOk = ({ name, indices }: { name: string; indices: number[] }) => {
+    dispatch({
+      type: "add-sliced-root",
+      name,
+      source: componentName!,
+      indices,
+    });
     setIsModalOpen(false);
   };
 
@@ -56,12 +61,14 @@ const RootPicker = () => {
         <Button disabled={componentName === undefined} onClick={showModal}>
           切片
         </Button>
-        { componentName && <Slicer
-          isModalOpen={isModalOpen}
-          handleOk={handleOk}
-          handleCancel={handleCancel}
-          componentName={componentName}
-        /> }
+        {componentName && (
+          <Slicer
+            isModalOpen={isModalOpen}
+            handleOk={handleOk}
+            handleCancel={handleCancel}
+            componentName={componentName}
+          />
+        )}
         <Button
           type="primary"
           onClick={() =>

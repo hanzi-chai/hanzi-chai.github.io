@@ -23,7 +23,7 @@ interface PoolProps {
 
 const makeSequenceFilter = (
   classifier: Config["classifier"],
-  sequence: string
+  sequence: string,
 ) => {
   const reversedClassifier = reverseClassifier(classifier);
   return ([x, v]: [string, Component]) => {

@@ -1,5 +1,5 @@
-import { ChangeEvent, Dispatch, PropsWithChildren, useContext } from "react";
-import { Button, Layout, Menu, Typography } from "antd";
+import { ChangeEvent, Dispatch, useEffect, useReducer } from "react";
+import { Button, Layout, Menu } from "antd";
 import {
   AppstoreOutlined,
   MailOutlined,
@@ -7,18 +7,18 @@ import {
   CaretLeftFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { ConfigContext, DispatchContext } from "./Context";
+import { ConfigContext, DispatchContext, configReducer } from "./Context";
 import { Config } from "../lib/chai";
 import { Action } from "./Context";
-import { GlobalProps, Page } from "./App";
 import styled from "styled-components";
 import { dump } from "js-yaml";
 import defaultConfig from "../default.yaml";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const items: MenuProps["items"] = [
   {
     label: "基本",
-    key: "info",
+    key: "index",
     icon: <MailOutlined />,
   },
   {
@@ -50,14 +50,14 @@ const exportFile = (config: Config) => {
   });
   const blob = new Blob([fileContent], { type: "text/plain" });
   const a = document.createElement("a");
-  a.download = `${config.info.id}.yaml`;
+  a.download = `export.yaml`;
   a.href = window.URL.createObjectURL(blob);
   a.click();
 };
 
 const importFile = (
   dispatch: Dispatch<Action>,
-  e: ChangeEvent<HTMLInputElement>
+  e: ChangeEvent<HTMLInputElement>,
 ) => {
   const [file] = e.target.files!;
   const reader = new FileReader();
@@ -65,7 +65,7 @@ const importFile = (
     dispatch({
       type: "load",
       content: JSON.parse(reader.result as string),
-    })
+    }),
   );
   reader.readAsText(file);
 };
@@ -107,53 +107,60 @@ const Wrapper = styled(Layout)`
   background-color: white !important;
 `;
 
-export default function EditorLayout({
-  children,
-  page,
-  setPage,
-  configs,
-  setConfigs,
-}: PropsWithChildren<GlobalProps>) {
-  const config = useContext(ConfigContext);
-  const dispatch = useContext(DispatchContext);
+export default function EditorLayout() {
+  const [config, dispatch] = useReducer(configReducer, defaultConfig as Config);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [_, id, panel] = pathname.split("/");
+
+  // read previous data
+  useEffect(() => {
+    console.log("Reading config for", id);
+    const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
+    dispatch({ type: "load", content: previousConfig });
+  }, []);
+
   return (
-    <Wrapper>
-      <Header>
-        <NameAndBack>
-          <Button
-            icon={<CaretLeftFilled />}
-            onClick={() => {
-              setConfigs(configs.map(c => {
-                return c.info.id === config.info.id ? config : c;
-              }))
-              dispatch({ type: "load", content: defaultConfig as Config });
-              setPage("home");
-            }}
-          />
-          <Title>{config.info.name}</Title>
-        </NameAndBack>
-        <Menu
-          onClick={(e) => setPage(e.key as Page)}
-          selectedKeys={[page]}
-          theme="dark"
-          mode="horizontal"
-          items={items}
-        />
-        <ActionGroup>
-          <Button onClick={() => document.getElementById("import")!.click()}>
-            导入
-          </Button>
-          <input
-            type="file"
-            id="import"
-            hidden
-            onChange={(e) => importFile(dispatch, e)}
-          />
-          <Button onClick={() => exportFile(config)}>导出</Button>
-        </ActionGroup>
-      </Header>
-      <Content>{children}</Content>
-      <Footer>© 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}</Footer>
-    </Wrapper>
+    <ConfigContext.Provider value={config}>
+      <DispatchContext.Provider value={dispatch}>
+        <Wrapper>
+          <Header>
+            <NameAndBack>
+              <Link to="/">
+                <Button icon={<CaretLeftFilled />} />
+              </Link>
+              <Title>{config.info.name}</Title>
+            </NameAndBack>
+            <Menu
+              onClick={(e) => navigate(e.key === "index" ? "" : e.key)}
+              selectedKeys={[panel || "index"]}
+              theme="dark"
+              mode="horizontal"
+              items={items}
+            />
+            <ActionGroup>
+              <Button
+                onClick={() => document.getElementById("import")!.click()}
+              >
+                导入
+              </Button>
+              <input
+                type="file"
+                id="import"
+                hidden
+                onChange={(e) => importFile(dispatch, e)}
+              />
+              <Button onClick={() => exportFile(config)}>导出</Button>
+            </ActionGroup>
+          </Header>
+          <Content>
+            <Outlet />
+          </Content>
+          <Footer>
+            © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
+          </Footer>
+        </Wrapper>
+      </DispatchContext.Provider>
+    </ConfigContext.Provider>
   );
 }

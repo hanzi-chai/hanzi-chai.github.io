@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import { blue, gray } from "@ant-design/colors";
 
-const Wrapper = styled.div<{ $current: true | undefined, $size: 1 | 2 }>`
-  width: ${(props) => (props.$size * 32)}px;
+const Wrapper = styled.div<{ $current: true | undefined; $size: 1 | 2 }>`
+  width: ${(props) => props.$size * 32}px;
   height: 32px;
   line-height: 32px;
   border-radius: 8px;
@@ -19,15 +19,21 @@ const Wrapper = styled.div<{ $current: true | undefined, $size: 1 | 2 }>`
 `;
 
 interface RootProps {
-  name: string,
-  current?: boolean,
-  change?: (s: string | undefined) => void
+  name: string;
+  current?: boolean;
+  change?: (s: string | undefined) => void;
 }
 
 const Root = ({ name, current, change }: RootProps) => {
-  return <Wrapper $current={current || undefined} $size={name.length as 1 | 2} onClick={change && (() => current ? change(undefined) : change(name))}>
-    { name }
-  </Wrapper>
-}
+  return (
+    <Wrapper
+      $current={current || undefined}
+      $size={name.length as 1 | 2}
+      onClick={change && (() => (current ? change(undefined) : change(name)))}
+    >
+      {name}
+    </Wrapper>
+  );
+};
 
 export default Root;

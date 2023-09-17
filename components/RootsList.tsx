@@ -38,7 +38,6 @@ const RootsList = () => {
       const featureClass = reversedClassifier.get(feature) || "0";
       data[parseInt(featureClass) - 1].push(root);
     } else {
-
     }
   }
   return (
@@ -50,11 +49,17 @@ const RootsList = () => {
           return (
             <div key={order}>
               <Divider orientation="left">
-                起笔为&nbsp;<Root name={`${order + 1}`} />
+                起笔为&nbsp;
+                <Root name={`${order + 1}`} />
               </Divider>
               <RootContainer>
                 {items.map((item) => (
-                  <Root key={item} name={item} current={rootName === item} change={setRootName}/>
+                  <Root
+                    key={item}
+                    name={item}
+                    current={rootName === item}
+                    change={setRootName}
+                  />
                 ))}
               </RootContainer>
             </div>
@@ -64,7 +69,9 @@ const RootsList = () => {
       <ButtonGroup>
         <Button
           type="primary"
-          onClick={() => rootName && dispatch({ type: "remove-root", content: rootName })}
+          onClick={() =>
+            rootName && dispatch({ type: "remove-root", content: rootName })
+          }
         >
           删除
         </Button>

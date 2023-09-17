@@ -6,7 +6,7 @@ import { DataContext } from "./Context";
 import { halfToFull } from "../lib/utils";
 
 export const Change = createContext(
-  (a: number, b: number, c: number, d: number) => {}
+  (a: number, b: number, c: number, d: number) => {},
 );
 const StrokeIndex = createContext(-1);
 const CurveIndex = createContext(-1);
@@ -132,46 +132,48 @@ export default function ComponentModel({
   return (
     <Wrapper>
       <Typography.Title level={2}>调整数据</Typography.Title>
-      {componentName ?
-        CHAI[componentName].shape[0].glyph.map(
-          (stroke, strokeIndex) => (
+      {
+        componentName ? (
+          CHAI[componentName].shape[0].glyph.map((stroke, strokeIndex) => (
             <StrokeModel
               key={strokeIndex}
               stroke={stroke}
               strokeIndex={strokeIndex}
             />
-          )
-        ) : <Empty />
-          // <Change.Provider
-          // value={async (
-          //   strokeIndex: number,
-          //   curveIndex: number,
-          //   parameterIndex: number,
-          //   value: number
-          // ) => {
-          //   const modified = JSON.parse(
-          //     JSON.stringify(component.shape[0].glyph)
-          //   );
-          //   if (curveIndex === -1) {
-          //     modified[strokeIndex].start[parameterIndex] = value;
-          //   } else {
-          //     modified[strokeIndex].curveList[curveIndex].parameterList[
-          //       parameterIndex
-          //     ] = value;
-          //   }
-          // const newData = {
-          //   shape: [{ ...component.shape[0], glyph: modified }],
-          // };
-          // await fetch(`/data`, {
-          //   headers: { 'Content-Type': 'application/json' },
-          //   method: 'PUT',
-          //   body: JSON.stringify({ key: currentComponent, value: newData })
-          // });
-          // await mutate(newData);
-          // }}
-          // >
-          // </Change.Provider>
-        }
+          ))
+        ) : (
+          <Empty />
+        )
+        // <Change.Provider
+        // value={async (
+        //   strokeIndex: number,
+        //   curveIndex: number,
+        //   parameterIndex: number,
+        //   value: number
+        // ) => {
+        //   const modified = JSON.parse(
+        //     JSON.stringify(component.shape[0].glyph)
+        //   );
+        //   if (curveIndex === -1) {
+        //     modified[strokeIndex].start[parameterIndex] = value;
+        //   } else {
+        //     modified[strokeIndex].curveList[curveIndex].parameterList[
+        //       parameterIndex
+        //     ] = value;
+        //   }
+        // const newData = {
+        //   shape: [{ ...component.shape[0], glyph: modified }],
+        // };
+        // await fetch(`/data`, {
+        //   headers: { 'Content-Type': 'application/json' },
+        //   method: 'PUT',
+        //   body: JSON.stringify({ key: currentComponent, value: newData })
+        // });
+        // await mutate(newData);
+        // }}
+        // >
+        // </Change.Provider>
+      }
     </Wrapper>
   );
 }
