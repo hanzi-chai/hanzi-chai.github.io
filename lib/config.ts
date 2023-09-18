@@ -20,7 +20,7 @@ export const sieveMap = new Map<SieveName, Sieve>([
   ["笔顺优先", order],
   ["取大优先", bias],
   ["能连不交", crossing],
-  ["能散不连", attaching]
+  ["能散不连", attaching],
 ]);
 
 export type { Config };

@@ -84,7 +84,7 @@ const Result = () => {
 
   const makeSequenceFilter = (
     classifier: Config["classifier"],
-    sequence: string
+    sequence: string,
   ) => {
     const reversedClassifier = reverseClassifier(classifier);
     return (x: string) => {

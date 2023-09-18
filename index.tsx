@@ -1,7 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createGlobalStyle } from "styled-components";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createHashRouter,
+  RouterProvider,
+} from "react-router-dom";
 import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";

@@ -46,11 +46,12 @@ const getComponentScheme = (
   name: string,
   component: Glyph,
   data: Database,
-  config: Config
+  config: Config,
 ) => {
   if (config.roots.includes(name)) return { best: [name], schemes: [] };
   const reverse = reverseClassifier(config.classifier);
-  if (component.length === 1) return { best: [reverse.get(component[0].feature)!], schemes: [] };
+  if (component.length === 1)
+    return { best: [reverse.get(component[0].feature)!], schemes: [] };
   const sieveList = config.selector.map((s) => sieveMap.get(s)!);
   const rootMap = new Map<number, string>();
   for (const [index, stroke] of component.entries()) {

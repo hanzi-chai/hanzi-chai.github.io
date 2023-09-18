@@ -48,7 +48,9 @@ const columns: ColumnsType<Partial<SchemeWithData>> = [
     title: "字根大小",
     dataIndex: "bias",
     key: "bias",
-    render: (_, { bias }) => <span>{bias && `(${bias.map(x => -x).join(", ")})`}</span>,
+    render: (_, { bias }) => (
+      <span>{bias && `(${bias.map((x) => -x).join(", ")})`}</span>
+    ),
   },
 ];
 
