@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { ConfigContext, DispatchContext, configReducer } from "./Context";
-import { Config } from "../lib/chai";
+import { Config } from "../lib/config";
 import { Action } from "./Context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
@@ -115,7 +115,6 @@ export default function EditorLayout() {
 
   // read previous data
   useEffect(() => {
-    console.log("Reading config for", id);
     const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
     dispatch({ type: "load", content: previousConfig });
   }, []);

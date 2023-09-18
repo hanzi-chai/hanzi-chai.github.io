@@ -1,4 +1,4 @@
-import { Config } from "./chai";
+import { Config } from "./config";
 
 export const reverseClassifier = (classifier: Config["classifier"]) => {
   const result = new Map<string, string>();

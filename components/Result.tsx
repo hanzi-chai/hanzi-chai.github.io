@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import StrokeSearch from "./StrokeSearch";
-import { Button, Table } from "antd";
+import { Button, Space, Spin, Table } from "antd";
 
 const Toolbar = styled.div`
   display: flex;
@@ -10,13 +10,17 @@ const Toolbar = styled.div`
   margin: 32px 0;
 `;
 
-import type { CollapseProps } from "antd";
 import { Collapse } from "antd";
 import Char from "./Char";
 import Root from "./Root";
-import ResultDetail, { DataType } from "./ResultDetail";
-import { useState } from "react";
+import ResultDetail from "./ResultDetail";
+import { useContext, useState } from "react";
 import { ArrowRightOutlined } from "@ant-design/icons";
+import { ConfigContext, DataContext } from "./Context";
+import chai, { ComponentResult, SchemeWithData } from "../lib/chai";
+import { Component, Database } from "../lib/data";
+import { Config } from "../lib/config";
+import { reverseClassifier } from "../lib/utils";
 
 const SummaryContainer = styled.div`
   display: flex;
@@ -44,54 +48,16 @@ const ResultSummary = ({
       <Arrow>
         <ArrowRightOutlined />
       </Arrow>
-      {rootSeries.map((x) => (
-        <Root name={x} key={x} />
+      {rootSeries.map((x, index) => (
+        <Root name={x} key={index} />
       ))}
     </SummaryContainer>
   );
 };
 
-const data: DataType[] = [
-  {
-    key: "1",
-    roots: ["一", "大"],
-    order: [1, 2, 3, 4],
-    numberOfCrosses: 0,
-    numberOfAttaches: 1,
-    sizes: [1, 3],
-  },
-  {
-    key: "2",
-    roots: ["二", "人"],
-    order: [1, 2, 3, 4],
-    numberOfCrosses: 1,
-    numberOfAttaches: 0,
-    sizes: [2, 2],
-  },
-  {
-    key: "3",
-    roots: ["一", "一", "人"],
-    order: [1, 2, 3, 4],
-    numberOfCrosses: 1,
-    numberOfAttaches: 1,
-    sizes: [1, 1, 2],
-  },
-];
-
-const items: CollapseProps["items"] = [
-  {
-    key: "1",
-    label: <ResultSummary componentName="天" rootSeries={["一", "大"]} />,
-    children: <ResultDetail data={data} />,
-  },
-  {
-    key: "2",
-    label: <ResultSummary componentName="夫" rootSeries={["二", "人"]} />,
-    children: <ResultDetail data={data} />,
-  },
-];
-
 const CollapseCustom = styled(Collapse)`
+  margin: 32px 0;
+
   & .ant-collapse-header {
     align-items: center !important;
   }
@@ -100,22 +66,81 @@ const CollapseCustom = styled(Collapse)`
   }
 `;
 
+const exportResult = (result: Record<string, ComponentResult>) => {
+  const fileContent = JSON.stringify(result);
+  const blob = new Blob([fileContent], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.download = `result.json`;
+  a.href = window.URL.createObjectURL(blob);
+  a.click();
+};
+
 const Result = () => {
   const [sequence, setSequence] = useState("");
+  const [result, setResult] = useState({} as Record<string, ComponentResult>);
+  const [loading, setLoading] = useState(false);
+  const data = useContext(DataContext);
+  const config = useContext(ConfigContext);
+
+  const makeSequenceFilter = (
+    classifier: Config["classifier"],
+    sequence: string
+  ) => {
+    const reversedClassifier = reverseClassifier(classifier);
+    return (x: string) => {
+      const v = data[x];
+      const fullSequence = v.shape[0].glyph
+        .map((s) => s.feature)
+        .map((x) => reversedClassifier.get(x)!)
+        .join("");
+      return fullSequence.search(sequence) !== -1;
+    };
+  };
+
+  const filter = makeSequenceFilter(config.classifier, sequence);
+
   return (
     <>
       <Toolbar>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
-        <Button type="primary">计算</Button>
-        <Button>导出</Button>
+        <Button
+          type="primary"
+          disabled={loading}
+          onClick={() => {
+            setLoading(true);
+            const res = chai(data, config);
+            setResult(res);
+            setLoading(false);
+          }}
+        >
+          计算
+        </Button>
+        <Button onClick={() => setResult({})}>清空</Button>
+        <Button onClick={() => exportResult(result)}>导出</Button>
       </Toolbar>
-      <CollapseCustom
-        items={items}
-        accordion={true}
-        bordered={false}
-        size={"small"}
-        defaultActiveKey={["1"]}
-      />
+      {loading ? (
+        <Space size="large">
+          <Spin size="large" />
+        </Space>
+      ) : (
+        <CollapseCustom
+          items={Object.entries(result)
+            .filter(([x, v]) => filter(x))
+            .map(([key, res]) => {
+              return {
+                key,
+                label: (
+                  <ResultSummary componentName={key} rootSeries={res.best} />
+                ),
+                children: <ResultDetail data={res.schemes} />,
+              };
+            })}
+          accordion={true}
+          bordered={false}
+          size={"small"}
+          defaultActiveKey={["1"]}
+        />
+      )}
     </>
   );
 };

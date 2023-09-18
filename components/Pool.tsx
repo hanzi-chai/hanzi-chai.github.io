@@ -4,7 +4,7 @@ import { ConfigContext, DataContext } from "./Context";
 import Char from "./Char";
 import { Component } from "../lib/data";
 import { reverseClassifier } from "../lib/utils";
-import { Config } from "../lib/chai";
+import { Config } from "../lib/config";
 
 const Wrapper = styled.div`
   display: flex;
@@ -21,7 +21,7 @@ interface PoolProps {
   sequence: string;
 }
 
-const makeSequenceFilter = (
+export const makeSequenceFilter = (
   classifier: Config["classifier"],
   sequence: string,
 ) => {

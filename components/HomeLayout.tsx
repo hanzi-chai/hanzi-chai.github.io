@@ -1,6 +1,6 @@
 import { Button, Layout, List, Typography } from "antd";
 import styled from "styled-components";
-import { Config } from "../lib/chai";
+import { Config } from "../lib/config";
 import { useEffect, useState } from "react";
 import defaultConfig from "../default.yaml";
 import { Link, useNavigate } from "react-router-dom";

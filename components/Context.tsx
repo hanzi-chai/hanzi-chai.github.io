@@ -1,5 +1,5 @@
 import { Dispatch, ReducerAction, createContext } from "react";
-import { Config } from "../lib/chai";
+import { Config } from "../lib/config";
 import CHAI from "../data/CHAI.json";
 import { Database } from "../lib/data";
 import defaultConfig from "../default.yaml";
@@ -66,7 +66,6 @@ export const configReducer = (config: Config, action: Action) => {
       break;
   }
 
-  console.log("Writing config for", id);
   localStorage.setItem(id, JSON.stringify(newconfig));
   return newconfig;
 };

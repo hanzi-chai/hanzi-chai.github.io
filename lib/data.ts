@@ -9,9 +9,11 @@ interface Stroke {
   curveList: Curve[];
 }
 
+type Glyph = Stroke[];
+
 interface Component {
   shape: {
-    glyph: Stroke[];
+    glyph: Glyph;
     reference: string;
   }[];
 }
@@ -24,4 +26,4 @@ interface Database {
   [key: string]: Component;
 }
 
-export type { Curve, Stroke, Component, Character, Database };
+export type { Curve, Stroke, Glyph, Component, Character, Database };
