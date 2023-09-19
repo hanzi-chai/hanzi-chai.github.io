@@ -37,8 +37,48 @@
     "eslint": "^8.49.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "pre-commit": "^1.2.2",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
     "vite-plugin-singlefile": "^0.13.5"
+  },
+  "pre-commit": [
+    "format"
+  ],
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "browser": true,
+      "es2020": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:react-hooks/recommended"
+    ],
+    "ignorePatterns": [
+      "dist",
+      ".eslintrc.cjs"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "react-refresh"
+    ],
+    "rules": {
+      "react-refresh/only-export-components": [
+        "warn",
+        {
+          "allowConstantExport": true
+        }
+      ]
+    }
+  },
+  "hintConfig": {
+    "extends": [
+      "development"
+    ],
+    "hints": {
+      "typescript-config/is-valid": "off"
+    }
   }
 }

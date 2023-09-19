@@ -1,5 +1,4 @@
 # Ignore artifacts:
-.next
-data
 node_modules
-out
+data
+dist
