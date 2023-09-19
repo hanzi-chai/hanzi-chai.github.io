@@ -70,6 +70,6 @@ export const configReducer = (config: Config, action: Action) => {
   return newconfig;
 };
 
-export const DataContext = createContext(CHAI as Database);
+export const DataContext = createContext(CHAI as unknown as Database);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});

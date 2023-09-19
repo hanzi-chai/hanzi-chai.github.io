@@ -1,69 +1,140 @@
-import { ComponentResult, SchemeWithData } from "./chai";
+import { ComponentData, ComponentResult, SchemeWithData } from "./chai";
 import { Component, Glyph } from "./data";
+import { Relation } from "./topology";
+import { isEqual } from "underscore";
 
 type Scheme = number[];
 
-type Sieve = (component: Glyph, scheme: Scheme) => number | number[];
+type Sieve<T extends number | number[]> = {
+  name: string;
+  key: (component: ComponentData, scheme: Scheme) => T;
+};
 
-export const length: Sieve = (_, scheme) => scheme.length;
+function isLess<T extends number | number[]>(a: T, b: T) {
+  if (typeof a === "number" && typeof b === "number") {
+    return a < b;
+  } else if (Array.isArray(a) && Array.isArray(b)) {
+    const n = a.length;
+    for (let i = 0; i != n; ++i) {
+      if (a[i] < b[i]) return true;
+      if (a[i] > b[i]) return false;
+    }
+    return false;
+  }
+  return undefined;
+}
+
+export const length: Sieve<number> = {
+  name: "length",
+  key: (_, scheme) => scheme.length,
+};
 
 const countStrokes: (n: number) => number = (n) =>
   n < 2 ? n : (n & 1) + countStrokes(n >>> 1);
 
-export const bias: Sieve = (_, scheme) =>
-  scheme.map(countStrokes).map((x) => -x);
-
-export const order: Sieve = (component, scheme) => {
-  const indices = [...Array(component.length).keys()];
-  const b = 1 << (component.length - 1);
-  return scheme.map((n) => indices.filter((i) => n & (b >> i))).flat();
+export const bias: Sieve<number[]> = {
+  name: "bias",
+  key: (_, scheme) => scheme.map(countStrokes).map((x) => -x),
 };
 
-export const crossing: Sieve = (_, __) => -1;
+const parseBinary = function (binary: number, n: number): number[] {
+  const indices = [...Array(n).keys()];
+  const b = 1 << (n - 1);
+  return indices.filter((i) => binary & (b >> i));
+};
 
-export const attaching: Sieve = (_, __) => -1;
+export const order: Sieve<number[]> = {
+  name: "order",
+  key: (component, scheme) => {
+    return scheme.map((x) => parseBinary(x, component.glyph.length)).flat();
+  },
+};
+
+export const makeTopologySieve = function (
+  relationType: Relation["type"],
+  name: string,
+): Sieve<number> {
+  let key: Sieve<number>["key"] = (component, scheme) => {
+    const parsedScheme = scheme.map((x) =>
+      parseBinary(x, component.glyph.length),
+    );
+    let totalCrosses = 0;
+    for (const [i, bi] of parsedScheme.entries()) {
+      for (const [j, bj] of parsedScheme.entries()) {
+        if (j >= i) continue;
+        let cross = false;
+        for (const k of bi) {
+          for (const l of bj) {
+            const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
+            const relations = component.topology[larger][smaller];
+            cross ||= relations.some((v) => v.type === relationType);
+          }
+        }
+        totalCrosses += +cross;
+      }
+    }
+    return totalCrosses;
+  };
+  return { name, key };
+};
+
+export const crossing = makeTopologySieve("交", "crossing");
+
+export const attaching = makeTopologySieve("连", "attaching");
 
 const select = (
-  sieveList: Sieve[],
-  name: string,
-  component: Glyph,
+  sieveList: (Sieve<number> | Sieve<number[]>)[],
+  componentData: ComponentData,
   schemeList: Scheme[],
   rootMap: Map<number, string>,
 ) => {
   const lookup = (n: number) => rootMap.get(n)!;
   let currentSchemeList = [...schemeList];
-  const schemeData = new Map<string, Partial<SchemeWithData>>();
+  let schemeData = new Map<string, Partial<SchemeWithData>>();
   schemeList.forEach((v) => {
     schemeData.set(v.toString(), {
       key: v.toString(),
       roots: v.map(lookup),
-      attaching: -1,
-      crossing: -1,
     });
   });
   for (const sieve of sieveList) {
     const scoreList = currentSchemeList.map((x) => {
-      const v = sieve(component, x);
+      const v = sieve.key(componentData, x);
       const obj = schemeData.get(x.toString())!;
-      const field = sieve.name as "order" | "bias";
-      obj[field] = v as number[];
+      obj[sieve.name as "order"] = v as number[];
       return v;
     });
     let min = typeof scoreList[0] === "number" ? Infinity : [Infinity];
     for (const score of scoreList) {
-      if (score < min) min = score;
+      if (isLess(score, min)) min = score;
     }
-    currentSchemeList = currentSchemeList.filter(
-      (_, index) => scoreList[index] === min,
+    currentSchemeList = currentSchemeList.filter((_, index) =>
+      isEqual(scoreList[index], min),
     );
   }
+  const parsedRootMap = [...rootMap.entries()].map(([k, v]) => [
+    parseBinary(k, componentData.glyph.length),
+    v,
+  ]);
   if (currentSchemeList.length === 1) {
     return {
       best: currentSchemeList[0].map(lookup),
+      map: parsedRootMap,
+      schemes: [...schemeData.values()],
+    } as ComponentResult;
+  } else {
+    console.error(
+      "undetermined component",
+      componentData.name,
+      schemeList,
+      currentSchemeList,
+    );
+    return {
+      best: currentSchemeList[0].map(lookup),
+      map: parsedRootMap,
       schemes: [...schemeData.values()],
     } as ComponentResult;
   }
-  throw new Error("undetermined component");
 };
 
 export type { Scheme, Sieve };

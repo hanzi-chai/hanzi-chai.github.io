@@ -132,7 +132,7 @@ const Result = () => {
                 label: (
                   <ResultSummary componentName={key} rootSeries={res.best} />
                 ),
-                children: <ResultDetail data={res.schemes} />,
+                children: <ResultDetail data={res.schemes} map={res.map} />,
               };
             })}
           accordion={true}

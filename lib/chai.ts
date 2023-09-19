@@ -4,10 +4,12 @@ import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import { reverseClassifier } from "./utils";
+import findTopology, { Relation } from "./topology";
 
 export interface SchemeWithData {
   key: string;
   roots: string[];
+  length: number;
   order: number[];
   crossing: number;
   attaching: number;
@@ -16,6 +18,7 @@ export interface SchemeWithData {
 
 export interface ComponentResult {
   best: string[];
+  map: [number[], string][];
   schemes: SchemeWithData[];
 }
 
@@ -42,37 +45,68 @@ const generateSchemes = (component: Glyph, rootMap: Map<number, string>) => {
   return schemeList;
 };
 
+export interface ComponentData {
+  name: string;
+  glyph: Glyph;
+  topology: Relation[][][];
+}
+
 const getComponentScheme = (
   name: string,
-  component: Glyph,
-  data: Database,
+  componentGlyph: Glyph,
+  rootData: Map<string, { glyph: Glyph; topology: Relation[][][] }>,
   config: Config,
 ) => {
-  if (config.roots.includes(name)) return { best: [name], schemes: [] };
+  if (config.roots.includes(name))
+    return { best: [name], map: [], schemes: [] };
   const reverse = reverseClassifier(config.classifier);
-  if (component.length === 1)
-    return { best: [reverse.get(component[0].feature)!], schemes: [] };
+  if (componentGlyph.length === 1)
+    return {
+      best: [reverse.get(componentGlyph[0].feature)!],
+      map: [],
+      schemes: [],
+    };
   const sieveList = config.selector.map((s) => sieveMap.get(s)!);
   const rootMap = new Map<number, string>();
-  for (const [index, stroke] of component.entries()) {
-    const binary = 1 << (component.length - 1 - index);
+  for (const [index, stroke] of componentGlyph.entries()) {
+    const binary = 1 << (componentGlyph.length - 1 - index);
     rootMap.set(binary, reverse.get(stroke.feature)!);
   }
-  for (const rootName of config.roots) {
-    if (!data[rootName]) continue; // 暂不处理切片字根和合体字根
-    const root = data[rootName].shape[0].glyph;
+  const componentTopology = findTopology(componentGlyph);
+  const component: ComponentData = {
+    name,
+    glyph: componentGlyph,
+    topology: componentTopology,
+  };
+  for (const [rootName, value] of rootData.entries()) {
+    const root: ComponentData = { name: rootName, ...value };
     const binaries = generateSliceBinaries(component, root);
     binaries.forEach((v) => rootMap.set(v, rootName));
   }
-  const schemeList = generateSchemes(component, rootMap);
-  return select(sieveList, name, component, schemeList, rootMap);
+  const schemeList = generateSchemes(componentGlyph, rootMap);
+  const componentData: ComponentData = {
+    name,
+    glyph: componentGlyph,
+    topology: componentTopology,
+  };
+  return select(sieveList, componentData, schemeList, rootMap);
 };
 
 const chai = (data: Database, config: Config) => {
   const result = {} as Record<string, ComponentResult>;
+  const rootData = new Map<
+    string,
+    { glyph: Glyph; topology: Relation[][][] }
+  >();
+  for (const rootName of config.roots) {
+    if (!data[rootName]) continue; // 暂不处理切片字根和合体字根
+    const glyph = data[rootName].shape[0].glyph;
+    const topology = findTopology(glyph);
+    rootData.set(rootName, { glyph, topology });
+  }
   for (const [name, component] of Object.entries(data)) {
     const glyph = component.shape[0].glyph;
-    result[name] = getComponentScheme(name, glyph, data, config);
+    result[name] = getComponentScheme(name, glyph, rootData, config);
   }
   return result;
 };

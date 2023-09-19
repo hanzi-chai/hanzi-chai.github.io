@@ -1,4 +1,8 @@
+import assert from "assert";
 import { Glyph } from "./data";
+import { Relation } from "./topology";
+import _ from "underscore";
+import { ComponentData } from "./chai";
 
 const indexListToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -14,23 +18,35 @@ const strokeFeatureEqual = (s1: string, s2: string) => {
   return simplify(s1) === simplify(s2);
 };
 
-export const generateSliceBinaries = (component: Glyph, root: Glyph) => {
-  if (component.length < root.length) return [];
+export const generateSliceBinaries = (
+  component: ComponentData,
+  root: ComponentData,
+) => {
+  const { name: cname, glyph: cglyph, topology: ctopology } = component;
+  const { name: rname, glyph: rglyph, topology: rtopology } = root;
+  if (cglyph.length < rglyph.length) return [];
   const queue = [[]] as number[][];
-  for (const [rIndex, rStroke] of root.entries()) {
-    const end = component.length - root.length + rIndex + 1;
+  for (const [rIndex, rStroke] of rglyph.entries()) {
+    const rStrokeTopology = rtopology[rIndex];
+    const end = cglyph.length - rglyph.length + rIndex + 1;
     const l = queue.length;
     for (let i = 0; i != l; ++i) {
       const indexList = queue.shift()!;
       const start = indexList.length ? indexList[indexList.length - 1] + 1 : 0;
-      const interval = component.slice(start, end);
-      for (const [cIndex, cStroke] of interval.entries()) {
+      for (let cIndex = start; cIndex != end; ++cIndex) {
+        const cStroke = cglyph[cIndex];
         if (!strokeFeatureEqual(cStroke.feature, rStroke.feature)) continue;
-        // TODO: compare topology
-        queue.push(indexList.concat(cIndex + start));
+        const cStrokeTopology = ctopology[cIndex].filter((_, i) =>
+          indexList.includes(i),
+        );
+        console.assert(
+          cStrokeTopology.flat().length === rStrokeTopology.flat().length,
+        );
+        if (!_.isEqual(cStrokeTopology, rStrokeTopology)) continue;
+        queue.push(indexList.concat(cIndex));
       }
     }
     if (!queue) return [];
   }
-  return queue.map(indexListToBinary(component.length));
+  return queue.map(indexListToBinary(cglyph.length));
 };

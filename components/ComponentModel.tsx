@@ -1,7 +1,7 @@
 import { Empty, InputNumber, Typography } from "antd";
 import { createContext, useContext } from "react";
 import styled from "styled-components";
-import { Curve, Stroke, Component } from "../lib/data";
+import { Draw as Curve, Stroke, Component } from "../lib/data";
 import { DataContext } from "./Context";
 import { halfToFull } from "../lib/utils";
 

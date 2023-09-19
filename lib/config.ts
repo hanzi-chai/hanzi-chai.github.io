@@ -15,7 +15,7 @@ interface Config {
   aliaser: Record<string, { source: string; indices: number[] }>;
 }
 
-export const sieveMap = new Map<SieveName, Sieve>([
+export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>([
   ["根少优先", length],
   ["笔顺优先", order],
   ["取大优先", bias],
