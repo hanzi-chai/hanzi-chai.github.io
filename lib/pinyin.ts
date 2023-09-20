@@ -91,3 +91,6 @@ const renderWithoutShengdiao = ({
 const render = (pinyin: Pinyin) => {
   return renderWithoutShengdiao(pinyin) + pinyin.shengdiao.toString();
 };
+
+export type { Pinyin };
+export { render, renderWithoutShengdiao };

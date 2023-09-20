@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import Modal from "antd/es/modal/Modal";
 import { useContext, useState } from "react";
-import { DataContext } from "./Context";
+import { WenContext } from "./Context";
 import { Checkbox, Input } from "antd";
 import { StrokesView } from "./ComponentView";
 
@@ -46,7 +46,7 @@ const Slicer = ({
   handleCancel,
   componentName,
 }: SlicerProps) => {
-  const CHAI = useContext(DataContext);
+  const CHAI = useContext(WenContext);
   const component = CHAI[componentName];
   const { glyph } = component.shape[0];
   const [indices, setIndices] = useState(glyph.map((_, index) => index));

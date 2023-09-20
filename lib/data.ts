@@ -1,3 +1,5 @@
+import { Pinyin } from "./pinyin";
+
 type Draw =
   | {
       command: "h";
@@ -51,13 +53,25 @@ interface Component {
   }[];
 }
 
-interface Character {
-  shape: Component[];
+interface Compound {
+  first: string;
+  second: string;
+  mix: number;
 }
 
-interface Database {
+interface Wen {
   [key: string]: Component;
 }
 
-export type { Point, Draw, Stroke, Glyph, Component, Character, Database };
+interface Zi {
+  [key: string]: Compound;
+}
+
+interface Yin {
+  [key: string]: {
+    pinyin: Pinyin;
+  };
+}
+
+export type { Point, Draw, Stroke, Glyph, Component, Wen, Zi, Yin };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { ConfigContext, DataContext } from "./Context";
+import { ConfigContext, WenContext } from "./Context";
 import Char from "./Char";
 import { Component } from "../lib/data";
 import { reverseClassifier } from "../lib/utils";
@@ -36,7 +36,7 @@ export const makeSequenceFilter = (
 };
 
 const Pool = ({ componentName, setComponentName, sequence }: PoolProps) => {
-  const CHAI = useContext(DataContext);
+  const CHAI = useContext(WenContext);
   const { classifier } = useContext(ConfigContext);
   return (
     <Wrapper>

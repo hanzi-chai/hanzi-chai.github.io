@@ -1,7 +1,7 @@
 import { Button, Divider, List, Typography } from "antd";
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { ConfigContext, DataContext, DispatchContext } from "./Context";
+import { ConfigContext, WenContext, DispatchContext } from "./Context";
 import Root from "./Root";
 import { reverseClassifier } from "../lib/utils";
 
@@ -24,7 +24,7 @@ const RootsList = () => {
   const dispatch = useContext(DispatchContext);
   const { roots, classifier } = useContext(ConfigContext);
   const reversedClassifier = reverseClassifier(classifier);
-  const CHAI = useContext(DataContext);
+  const CHAI = useContext(WenContext);
   // 现在只处理 roots 是某个部件或其切片的情形，其余暂不处理
   const data: string[][] = Object.keys(classifier).map((key) => []);
   for (const root of roots) {

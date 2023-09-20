@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { Stroke, Component } from "../lib/data";
 import { useContext } from "react";
-import { DataContext } from "./Context";
+import { WenContext } from "./Context";
 import { Empty, Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
@@ -52,7 +52,7 @@ export default function ComponentView({
 }: {
   componentName?: string;
 }) {
-  const CHAI = useContext(DataContext);
+  const CHAI = useContext(WenContext);
   return (
     <Wrapper>
       <Typography.Title level={2}>查看 SVG</Typography.Title>

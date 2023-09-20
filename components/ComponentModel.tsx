@@ -2,7 +2,7 @@ import { Empty, InputNumber, Typography } from "antd";
 import { createContext, useContext } from "react";
 import styled from "styled-components";
 import { Draw as Curve, Stroke, Component } from "../lib/data";
-import { DataContext } from "./Context";
+import { WenContext } from "./Context";
 import { halfToFull } from "../lib/utils";
 
 export const Change = createContext(
@@ -128,7 +128,7 @@ export default function ComponentModel({
 }: {
   componentName?: string;
 }) {
-  const CHAI = useContext(DataContext);
+  const CHAI = useContext(WenContext);
   return (
     <Wrapper>
       <Typography.Title level={2}>调整数据</Typography.Title>

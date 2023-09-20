@@ -1,7 +1,9 @@
 import { Dispatch, ReducerAction, createContext } from "react";
 import { Config } from "../lib/config";
-import CHAI from "../data/CHAI.json";
-import { Database } from "../lib/data";
+import wen from "../data/wen.json";
+import { Wen } from "../lib/data";
+// import yin from "../data/yin.json";
+import { Yin } from "../lib/data";
 import defaultConfig from "../default.yaml";
 import { useLocation } from "react-router-dom";
 
@@ -70,6 +72,7 @@ export const configReducer = (config: Config, action: Action) => {
   return newconfig;
 };
 
-export const DataContext = createContext(CHAI as unknown as Database);
+export const WenContext = createContext(wen as unknown as Wen);
+// export const YinContext = createContext(yin as unknown as Yin);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});

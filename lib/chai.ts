@@ -1,5 +1,5 @@
 import { Config, sieveMap } from "./config";
-import { Database, Glyph } from "./data";
+import { Wen, Glyph } from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -92,19 +92,19 @@ const getComponentScheme = (
   return select(sieveList, componentData, schemeList, rootMap);
 };
 
-const chai = (data: Database, config: Config) => {
+const chai = (wen: Wen, config: Config) => {
   const result = {} as Record<string, ComponentResult>;
   const rootData = new Map<
     string,
     { glyph: Glyph; topology: Relation[][][] }
   >();
   for (const rootName of config.roots) {
-    if (!data[rootName]) continue; // 暂不处理切片字根和合体字根
-    const glyph = data[rootName].shape[0].glyph;
+    if (!wen[rootName]) continue; // 暂不处理切片字根和合体字根
+    const glyph = wen[rootName].shape[0].glyph;
     const topology = findTopology(glyph);
     rootData.set(rootName, { glyph, topology });
   }
-  for (const [name, component] of Object.entries(data)) {
+  for (const [name, component] of Object.entries(wen)) {
     const glyph = component.shape[0].glyph;
     result[name] = getComponentScheme(name, glyph, rootData, config);
   }

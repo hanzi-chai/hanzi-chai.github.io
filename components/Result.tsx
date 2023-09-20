@@ -16,9 +16,9 @@ import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
 import { ArrowRightOutlined } from "@ant-design/icons";
-import { ConfigContext, DataContext } from "./Context";
+import { ConfigContext, WenContext } from "./Context";
 import chai, { ComponentResult, SchemeWithData } from "../lib/chai";
-import { Component, Database } from "../lib/data";
+import { Component, Wen } from "../lib/data";
 import { Config } from "../lib/config";
 import { reverseClassifier } from "../lib/utils";
 
@@ -79,7 +79,7 @@ const Result = () => {
   const [sequence, setSequence] = useState("");
   const [result, setResult] = useState({} as Record<string, ComponentResult>);
   const [loading, setLoading] = useState(false);
-  const data = useContext(DataContext);
+  const wen = useContext(WenContext);
   const config = useContext(ConfigContext);
 
   const makeSequenceFilter = (
@@ -88,7 +88,7 @@ const Result = () => {
   ) => {
     const reversedClassifier = reverseClassifier(classifier);
     return (x: string) => {
-      const v = data[x];
+      const v = wen[x];
       const fullSequence = v.shape[0].glyph
         .map((s) => s.feature)
         .map((x) => reversedClassifier.get(x)!)
@@ -108,7 +108,7 @@ const Result = () => {
           disabled={loading}
           onClick={() => {
             setLoading(true);
-            const res = chai(data, config);
+            const res = chai(wen, config);
             setResult(res);
             setLoading(false);
           }}

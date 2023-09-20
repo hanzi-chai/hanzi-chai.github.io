@@ -1,7 +1,7 @@
 import { Button, Checkbox, Modal, Row, Tabs, Typography } from "antd";
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { DataContext, DispatchContext } from "./Context";
+import { WenContext, DispatchContext } from "./Context";
 import Pool from "./Pool";
 import StrokeSearch from "./StrokeSearch";
 import Slicer from "./Slicer";
