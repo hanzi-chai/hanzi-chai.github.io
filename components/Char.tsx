@@ -17,8 +17,8 @@ const Wrapper = styled.div<{ $current: true | undefined; $size: 1 | 2 }>`
 
 interface CharProps {
   name: string;
-  current: boolean;
-  change: (s: string | undefined) => void;
+  current?: boolean;
+  change?: (s: string | undefined) => void;
 }
 
 const Char = ({ name, current, change }: CharProps) => {
@@ -26,7 +26,7 @@ const Char = ({ name, current, change }: CharProps) => {
     <Wrapper
       $current={current || undefined}
       $size={name.length as 1 | 2}
-      onClick={() => (current ? change(undefined) : change(name))}
+      onClick={change && (() => (current ? change(undefined) : change(name)))}
     >
       {name}
     </Wrapper>

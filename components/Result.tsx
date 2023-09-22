@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import StrokeSearch from "./StrokeSearch";
-import { Button, Space, Spin, Table } from "antd";
+import { Button, Empty, Pagination, Space, Spin, Steps, Table } from "antd";
+import { BorderOutlined, AppstoreOutlined } from "@ant-design/icons";
 
 const Toolbar = styled.div`
   display: flex;
@@ -16,11 +17,17 @@ import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
 import { ArrowRightOutlined } from "@ant-design/icons";
-import { ConfigContext, WenContext } from "./Context";
-import chai, { ComponentResult, SchemeWithData } from "../lib/chai";
+import { ConfigContext, WenContext, ZiContext } from "./Context";
+import componentDisassembly, {
+  ComponentResult,
+  CompoundResult,
+  SchemeWithData,
+  compoundDisassembly,
+} from "../lib/chai";
 import { Component, Wen } from "../lib/data";
 import { Config } from "../lib/config";
 import { reverseClassifier } from "../lib/utils";
+import { isEmpty } from "underscore";
 
 const SummaryContainer = styled.div`
   display: flex;
@@ -75,12 +82,30 @@ const exportResult = (result: Record<string, ComponentResult>) => {
   a.click();
 };
 
+const ChaiSteps = styled(Steps)`
+  width: 400px;
+  margin: 32px auto;
+`;
+
 const Result = () => {
   const [sequence, setSequence] = useState("");
-  const [result, setResult] = useState({} as Record<string, ComponentResult>);
+  const [step, setStep] = useState(0 as 0 | 1);
+  const [componentResults, setComponentResult] = useState(
+    {} as Record<string, ComponentResult>,
+  );
+  const [compoundResults, setCompoundResult] = useState(
+    {} as Record<string, CompoundResult>,
+  );
   const [loading, setLoading] = useState(false);
   const wen = useContext(WenContext);
+  const zi = useContext(ZiContext);
   const config = useContext(ConfigContext);
+  const steps = [
+    () => setComponentResult(componentDisassembly(wen, config)),
+    () => setCompoundResult(compoundDisassembly(zi, config, componentResults)),
+  ];
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   const makeSequenceFilter = (
     classifier: Config["classifier"],
@@ -98,48 +123,71 @@ const Result = () => {
   };
 
   const filter = makeSequenceFilter(config.classifier, sequence);
+  const displays = [
+    Object.entries(componentResults)
+      .filter(([x, v]) => filter(x))
+      .map(([key, res]) => {
+        return {
+          key,
+          label: <ResultSummary componentName={key} rootSeries={res.best} />,
+          children: <ResultDetail data={res.schemes} map={res.map} />,
+        };
+      }),
+    Object.entries(compoundResults).map(([key, res]) => {
+      return {
+        key,
+        label: <ResultSummary componentName={key} rootSeries={res.sequence} />,
+      };
+    }),
+  ];
 
   return (
     <>
+      <ChaiSteps
+        current={step}
+        onChange={(e) => setStep(e as 0)}
+        items={[
+          { title: "部件拆分", icon: <BorderOutlined /> },
+          {
+            title: "复合体拆分",
+            disabled: isEmpty(componentResults),
+            icon: <AppstoreOutlined />,
+          },
+        ]}
+      />
       <Toolbar>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
-        <Button
-          type="primary"
-          disabled={loading}
-          onClick={() => {
-            setLoading(true);
-            const res = chai(wen, config);
-            setResult(res);
-            setLoading(false);
-          }}
-        >
+        <Button type="primary" disabled={loading} onClick={steps[step]}>
           计算
         </Button>
-        <Button onClick={() => setResult({})}>清空</Button>
-        <Button onClick={() => exportResult(result)}>导出</Button>
+        <Button onClick={() => setComponentResult({})}>清空</Button>
+        <Button onClick={() => exportResult(componentResults)}>导出</Button>
       </Toolbar>
       {loading ? (
         <Space size="large">
           <Spin size="large" />
         </Space>
+      ) : displays[step].length ? (
+        <>
+          <CollapseCustom
+            items={displays[step].slice((page - 1) * pageSize, page * pageSize)}
+            accordion={true}
+            bordered={false}
+            size={"small"}
+            defaultActiveKey={["1"]}
+          />
+          <Pagination
+            current={page}
+            onChange={(page, pageSize) => {
+              setPage(page);
+              setPageSize(pageSize);
+            }}
+            total={displays[step].length}
+            pageSize={pageSize}
+          />
+        </>
       ) : (
-        <CollapseCustom
-          items={Object.entries(result)
-            .filter(([x, v]) => filter(x))
-            .map(([key, res]) => {
-              return {
-                key,
-                label: (
-                  <ResultSummary componentName={key} rootSeries={res.best} />
-                ),
-                children: <ResultDetail data={res.schemes} map={res.map} />,
-              };
-            })}
-          accordion={true}
-          bordered={false}
-          size={"small"}
-          defaultActiveKey={["1"]}
-        />
+        <Empty />
       )}
     </>
   );

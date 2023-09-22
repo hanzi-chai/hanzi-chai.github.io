@@ -53,10 +53,25 @@ interface Component {
   }[];
 }
 
+type Operand =
+  | "⿰"
+  | "⿱"
+  | "⿲"
+  | "⿳"
+  | "⿴"
+  | "⿵"
+  | "⿶"
+  | "⿷"
+  | "⿸"
+  | "⿹"
+  | "⿺"
+  | "⿻"
+  | "〾";
+
 interface Compound {
-  first: string;
-  second: string;
-  mix: number;
+  operator: Operand;
+  operandList: [string, string];
+  mix?: number;
 }
 
 interface Wen {
@@ -73,5 +88,16 @@ interface Yin {
   };
 }
 
-export type { Point, Draw, Stroke, Glyph, Component, Wen, Zi, Yin };
+export type {
+  Point,
+  Draw,
+  Stroke,
+  Glyph,
+  Component,
+  Compound,
+  Operand,
+  Wen,
+  Zi,
+  Yin,
+};
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

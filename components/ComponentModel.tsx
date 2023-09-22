@@ -100,7 +100,7 @@ interface NumberModelProps {
   parameterIndex: number;
 }
 
-const MyInputNumber = styled(InputNumber)`
+export const MyInputNumber = styled(InputNumber)`
   width: 48px;
   & .ant-input-number-input {
     padding: 4px 8px;

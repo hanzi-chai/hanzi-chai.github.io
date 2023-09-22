@@ -2,8 +2,10 @@ import { Dispatch, ReducerAction, createContext } from "react";
 import { Config } from "../lib/config";
 import wen from "../data/wen.json";
 import { Wen } from "../lib/data";
-// import yin from "../data/yin.json";
+import yin from "../data/yin.json";
 import { Yin } from "../lib/data";
+import zi from "../data/zi.json";
+import { Zi } from "../lib/data";
 import defaultConfig from "../default.yaml";
 import { useLocation } from "react-router-dom";
 
@@ -73,6 +75,7 @@ export const configReducer = (config: Config, action: Action) => {
 };
 
 export const WenContext = createContext(wen as unknown as Wen);
-// export const YinContext = createContext(yin as unknown as Yin);
+export const ZiContext = createContext(zi as unknown as Zi);
+export const YinContext = createContext(yin as unknown as Yin);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});

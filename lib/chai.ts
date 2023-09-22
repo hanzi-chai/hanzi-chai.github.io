@@ -1,5 +1,5 @@
 import { Config, sieveMap } from "./config";
-import { Wen, Glyph } from "./data";
+import { Wen, Glyph, Zi, Compound } from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -20,6 +20,10 @@ export interface ComponentResult {
   best: string[];
   map: [number[], string][];
   schemes: SchemeWithData[];
+}
+
+export interface CompoundResult {
+  sequence: string[];
 }
 
 const generateSchemes = (component: Glyph, rootMap: Map<number, string>) => {
@@ -92,7 +96,7 @@ const getComponentScheme = (
   return select(sieveList, componentData, schemeList, rootMap);
 };
 
-const chai = (wen: Wen, config: Config) => {
+const componentDisassembly = (wen: Wen, config: Config) => {
   const result = {} as Record<string, ComponentResult>;
   const rootData = new Map<
     string,
@@ -111,4 +115,24 @@ const chai = (wen: Wen, config: Config) => {
   return result;
 };
 
-export default chai;
+export const compoundDisassembly = (
+  zi: Zi,
+  config: Config,
+  prev: Record<string, ComponentResult>,
+) => {
+  const result = {} as Record<string, CompoundResult>;
+  const getResult = (s: string) =>
+    prev[s] ? prev[s].best : result[s]?.sequence;
+  for (const [name, compound] of Object.entries(zi)) {
+    const [c1, c2] = compound.operandList;
+    const [r1, r2] = [getResult(c1), getResult(c2)];
+    if (r1 !== undefined && r2 !== undefined) {
+      result[name] = { sequence: getResult(c1).concat(getResult(c2)) };
+    } else {
+      console.log(name, c1, c2);
+    }
+  }
+  return result;
+};
+
+export default componentDisassembly;

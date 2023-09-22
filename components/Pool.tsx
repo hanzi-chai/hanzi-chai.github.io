@@ -1,12 +1,13 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import styled from "styled-components";
-import { ConfigContext, WenContext } from "./Context";
+import { ConfigContext, WenContext, ZiContext } from "./Context";
 import Char from "./Char";
 import { Component } from "../lib/data";
 import { reverseClassifier } from "../lib/utils";
 import { Config } from "../lib/config";
+import { Pagination } from "antd";
 
-const Wrapper = styled.div`
+const Content = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -16,8 +17,9 @@ const Wrapper = styled.div`
 `;
 
 interface PoolProps {
-  componentName?: string;
-  setComponentName: (s: string | undefined) => void;
+  type: "component" | "compound";
+  name?: string;
+  setName: (s: string | undefined) => void;
   sequence: string;
 }
 
@@ -35,23 +37,37 @@ export const makeSequenceFilter = (
   };
 };
 
-const Pool = ({ componentName, setComponentName, sequence }: PoolProps) => {
-  const CHAI = useContext(WenContext);
+const Pool = ({ type, name, setName, sequence }: PoolProps) => {
+  const wen = useContext(WenContext);
+  const zi = useContext(ZiContext);
   const { classifier } = useContext(ConfigContext);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(200);
+  const content =
+    type === "component"
+      ? Object.entries(wen).filter(makeSequenceFilter(classifier, sequence))
+      : Object.entries(zi);
+  const range = content
+    .sort((a, b) => a[0].length - b[0].length)
+    .slice((page - 1) * pageSize, page * pageSize);
   return (
-    <Wrapper>
-      {Object.entries(CHAI)
-        .filter(makeSequenceFilter(classifier, sequence))
-        .sort((a, b) => a[0].length - b[0].length)
-        .map(([x, v]) => (
-          <Char
-            key={x}
-            name={x}
-            current={x === componentName}
-            change={setComponentName}
-          />
+    <>
+      <Content>
+        {range.map(([x, v]) => (
+          <Char key={x} name={x} current={x === name} change={setName} />
         ))}
-    </Wrapper>
+      </Content>
+      <Pagination
+        current={page}
+        onChange={(page, pageSize) => {
+          setPage(page);
+          setPageSize(pageSize);
+        }}
+        total={content.length}
+        pageSize={pageSize}
+        pageSizeOptions={[50, 100, 200, 300]}
+      />
+    </>
   );
 };
 
