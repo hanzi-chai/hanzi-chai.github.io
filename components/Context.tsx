@@ -1,12 +1,12 @@
 import { Dispatch, ReducerAction, createContext } from "react";
-import { Config } from "../lib/config";
+import { Config, ElementConfig, RootConfig } from "../lib/config";
 import wen from "../data/wen.json";
 import { Wen } from "../lib/data";
 import yin from "../data/yin.json";
 import { Yin } from "../lib/data";
 import zi from "../data/zi.json";
 import { Zi } from "../lib/data";
-import defaultConfig from "../default.yaml";
+import defaultConfig from "../templates/default.yaml";
 import { useLocation } from "react-router-dom";
 
 export type Action =
@@ -18,20 +18,25 @@ export type Action =
       type: "load";
       content: Config;
     }
-  | {
-      type: "add-root";
-      content: string;
-    }
-  | {
-      type: "remove-root";
-      content: string;
-    }
-  | {
-      type: "add-sliced-root";
+  | ({
+      type: "root";
+      element: number;
       name: string;
-      source: string;
-      indices: number[];
-    };
+    } & (
+      | {
+          subtype: "add";
+          key: string;
+        }
+      | {
+          subtype: "remove";
+        }
+      | {
+          subtype: "add-sliced";
+          key: string;
+          source: string;
+          indices: number[];
+        }
+    ));
 
 export const configReducer = (config: Config, action: Action) => {
   const { pathname } = location;
@@ -44,30 +49,37 @@ export const configReducer = (config: Config, action: Action) => {
     case "load":
       newconfig = action.content;
       break;
-    case "add-root":
-      newconfig = config.roots.includes(action.content)
-        ? config
-        : { ...config, roots: config.roots.concat(action.content) };
-      break;
-    case "remove-root":
+    case "root":
+      const { name } = action;
+      const elementConfig = config.elements[action.element] as RootConfig;
+      const { mapping, aliaser } = elementConfig;
+      let newMapping = { ...mapping };
+      let newAliaser = { ...aliaser };
+      switch (action.subtype) {
+        case "add":
+          newMapping = Object.assign({ [name]: action.key }, mapping);
+          break;
+        case "remove":
+          delete newMapping[name];
+          delete newAliaser[name];
+          break;
+        case "add-sliced":
+          const { source, indices } = action;
+          newMapping[name] = action.key;
+          newAliaser[name] = { source, indices };
+          break;
+      }
+      const newElementConfig = {
+        ...elementConfig,
+        mapping: newMapping,
+        aliaser: newAliaser,
+      };
       newconfig = {
         ...config,
-        roots: config.roots.filter((root) => root !== action.content),
-        aliaser: Object.fromEntries(
-          Object.entries(config.aliaser).filter(
-            ([x, v]) => x != action.content,
-          ),
+        elements: config.elements.map((v, i) =>
+          i === action.element ? newElementConfig : v,
         ),
       };
-      break;
-    case "add-sliced-root":
-      const { name, source, indices } = action;
-      newconfig = {
-        ...config,
-        roots: config.roots.concat(name),
-        aliaser: { ...config.aliaser, [name]: { source, indices } },
-      };
-      break;
   }
 
   localStorage.setItem(id, JSON.stringify(newconfig));

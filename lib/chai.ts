@@ -1,9 +1,8 @@
-import { Config, sieveMap } from "./config";
+import { Config, RootConfig, sieveMap } from "./config";
 import { Wen, Glyph, Zi, Compound } from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import { reverseClassifier } from "./utils";
 import findTopology, { Relation } from "./topology";
 
 export interface SchemeWithData {
@@ -61,20 +60,23 @@ const getComponentScheme = (
   rootData: Map<string, { glyph: Glyph; topology: Relation[][][] }>,
   config: Config,
 ) => {
-  if (config.roots.includes(name))
-    return { best: [name], map: [], schemes: [] };
-  const reverse = reverseClassifier(config.classifier);
+  const {
+    analysis: { classifier, selector },
+    mapping,
+    aliaser,
+  } = config.elements[0] as RootConfig;
+  if (mapping[name]) return { best: [name], map: [], schemes: [] };
   if (componentGlyph.length === 1)
     return {
-      best: [reverse.get(componentGlyph[0].feature)!],
+      best: [classifier[componentGlyph[0].feature].toString()],
       map: [],
       schemes: [],
     };
-  const sieveList = config.selector.map((s) => sieveMap.get(s)!);
+  const sieveList = selector.map((s) => sieveMap.get(s)!);
   const rootMap = new Map<number, string>();
   for (const [index, stroke] of componentGlyph.entries()) {
     const binary = 1 << (componentGlyph.length - 1 - index);
-    rootMap.set(binary, reverse.get(stroke.feature)!);
+    rootMap.set(binary, classifier[stroke.feature].toString());
   }
   const componentTopology = findTopology(componentGlyph);
   const component: ComponentData = {
@@ -102,7 +104,8 @@ const componentDisassembly = (wen: Wen, config: Config) => {
     string,
     { glyph: Glyph; topology: Relation[][][] }
   >();
-  for (const rootName of config.roots) {
+  const mapping = (config.elements[0] as RootConfig).mapping;
+  for (const rootName of Object.keys(mapping)) {
     if (!wen[rootName]) continue; // 暂不处理切片字根和合体字根
     const glyph = wen[rootName].shape[0].glyph;
     const topology = findTopology(glyph);

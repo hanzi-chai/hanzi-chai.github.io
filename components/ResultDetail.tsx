@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { SchemeWithData } from "../lib/chai";
 import { useContext } from "react";
 import { ConfigContext } from "./Context";
-import { Config, sieveMap } from "../lib/config";
+import { Config, RootConfig, Selector, sieveMap } from "../lib/config";
 
 const RootsContainer = styled.div`
   display: flex;
@@ -56,7 +56,7 @@ const columns: ColumnsType<Partial<SchemeWithData>> = [
   },
 ];
 
-const makeSorter = (selector: Config["selector"]) => {
+const makeSorter = (selector: Selector) => {
   const selectorFields = selector.map((x) => sieveMap.get(x)!.name);
   return (a: Partial<SchemeWithData>, b: Partial<SchemeWithData>) => {
     for (const f of selectorFields) {
@@ -91,7 +91,10 @@ const ResultDetail = ({
   data: Partial<SchemeWithData>[];
   map: [number[], string][];
 }) => {
-  const { selector } = useContext(ConfigContext);
+  const { elements } = useContext(ConfigContext);
+  const {
+    analysis: { selector },
+  } = elements[0] as RootConfig;
   return data.length ? (
     <>
       <RootSlices>

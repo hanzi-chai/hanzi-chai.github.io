@@ -1,0 +1,14 @@
+info:
+  name: 基础模板
+  version: "0.1"
+  author: 无名氏
+  description: 用于初始化
+
+data:
+  component: {}
+  compound: {}
+  character: {}
+
+elements: []
+
+encoder: null

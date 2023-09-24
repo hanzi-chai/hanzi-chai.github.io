@@ -14,6 +14,10 @@
   },
   "dependencies": {
     "@ant-design/colors": "^7.0.0",
+    "@antv/x6": "^2.15.1",
+    "@antv/x6-plugin-snapline": "^2.1.7",
+    "@antv/x6-plugin-stencil": "^2.1.4",
+    "@antv/x6-react-shape": "^2.2.2",
     "antd": "^5.9.0",
     "d3-array": "^3.2.4",
     "js-yaml": "^4.1.0",

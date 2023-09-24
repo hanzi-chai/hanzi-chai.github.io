@@ -27,8 +27,11 @@ const RootPicker = () => {
 
   const handleOk = ({ name, indices }: { name: string; indices: number[] }) => {
     dispatch({
-      type: "add-sliced-root",
+      type: "root",
+      subtype: "add-sliced",
+      element: 0,
       name,
+      key: "a",
       source: name!,
       indices,
     });
@@ -52,7 +55,13 @@ const RootPicker = () => {
         ]}
         onChange={(e) => setMode(e as "component" | "compound")}
       />
-      <Pool type={mode} name={name} setName={setName} sequence={sequence} />
+      <Pool
+        elementIndex={0}
+        type={mode}
+        name={name}
+        setName={setName}
+        sequence={sequence}
+      />
       <ButtonGroup>
         {mode === "component" && (
           <Button disabled={name === undefined} onClick={showModal}>
@@ -70,7 +79,16 @@ const RootPicker = () => {
         <Button
           type="primary"
           disabled={name === undefined}
-          onClick={() => name && dispatch({ type: "add-root", content: name })}
+          onClick={() =>
+            name &&
+            dispatch({
+              type: "root",
+              subtype: "add",
+              element: 0,
+              name,
+              key: "a",
+            })
+          }
         >
           添加
         </Button>

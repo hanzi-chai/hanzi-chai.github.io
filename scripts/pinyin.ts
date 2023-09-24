@@ -78,12 +78,24 @@ const parsePinyin = function (s: string): Pinyin {
   return { shengmu, yunmu, shengdiao };
 };
 
+const parsePinyin2 = function (s: string) {
+  let shengdiao: Pinyin["shengdiao"] = 5;
+  let shengyun = s.replace(
+    RE_PHONETIC_SYMBOL,
+    function ($0: string, $1: string) {
+      shengdiao = parseInt(PHONETIC_SYMBOL[$1][1]) as Pinyin["shengdiao"];
+      return PHONETIC_SYMBOL[$1][0];
+    },
+  );
+  return shengyun + shengdiao.toString();
+};
+
 const data = Object.fromEntries(
   Object.entries(dict).map(([codepoint, pinyinString]) => {
     const char = String.fromCodePoint(parseInt(codepoint.slice(2), 16));
-    const pinyin = pinyinString.split(",").map(parsePinyin);
-    return [char, { pinyin }];
+    const pinyin = pinyinString.split(",").map(parsePinyin2);
+    return [char, pinyin];
   }),
 );
 
-writeFileSync("data/Yin.json", JSON.stringify(data));
+writeFileSync("data/yin.json", JSON.stringify(data));

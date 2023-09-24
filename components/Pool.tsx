@@ -3,8 +3,7 @@ import styled from "styled-components";
 import { ConfigContext, WenContext, ZiContext } from "./Context";
 import Char from "./Char";
 import { Component } from "../lib/data";
-import { reverseClassifier } from "../lib/utils";
-import { Config } from "../lib/config";
+import { Config, RootConfig } from "../lib/config";
 import { Pagination } from "antd";
 
 const Content = styled.div`
@@ -18,29 +17,32 @@ const Content = styled.div`
 
 interface PoolProps {
   type: "component" | "compound";
+  elementIndex: number;
   name?: string;
   setName: (s: string | undefined) => void;
   sequence: string;
 }
 
 export const makeSequenceFilter = (
-  classifier: Config["classifier"],
+  classifier: Record<string, number>,
   sequence: string,
 ) => {
-  const reversedClassifier = reverseClassifier(classifier);
   return ([x, v]: [string, Component]) => {
     const fullSequence = v.shape[0].glyph
       .map((s) => s.feature)
-      .map((x) => reversedClassifier.get(x)!)
+      .map((x) => classifier[x])
       .join("");
     return fullSequence.search(sequence) !== -1;
   };
 };
 
-const Pool = ({ type, name, setName, sequence }: PoolProps) => {
+const Pool = ({ elementIndex, type, name, setName, sequence }: PoolProps) => {
   const wen = useContext(WenContext);
   const zi = useContext(ZiContext);
-  const { classifier } = useContext(ConfigContext);
+  const { elements } = useContext(ConfigContext);
+  const {
+    analysis: { classifier },
+  } = elements[elementIndex] as RootConfig;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(200);
   const content =

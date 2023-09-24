@@ -7,6 +7,8 @@ import { MailOutlined, AppstoreOutlined } from "@ant-design/icons";
 import StrokeSearch from "./StrokeSearch";
 import CompoundModel from "./CompoundModel";
 import Pool from "./Pool";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import EditableTable from "./EditableTable";
 
 const items: MenuProps["items"] = [
   {
@@ -19,6 +21,11 @@ const items: MenuProps["items"] = [
     key: "compound",
     icon: <AppstoreOutlined />,
   },
+  {
+    label: "字音",
+    key: "character",
+    icon: <AppstoreOutlined />,
+  },
 ];
 
 const Switcher = styled(Menu)`
@@ -27,9 +34,9 @@ const Switcher = styled(Menu)`
 `;
 
 export default function Data() {
-  const [mode, setMode] = useState("component" as "component" | "compound");
-  const [name, setName] = useState(undefined as string | undefined);
-  const [sequence, setSequence] = useState("");
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [_, id, data, mode] = pathname.split("/");
   return (
     <>
       <Switcher
@@ -37,36 +44,61 @@ export default function Data() {
         mode="horizontal"
         selectedKeys={[mode]}
         onClick={(e) => {
-          setMode(e.key as typeof mode);
-          setName(undefined);
-          setSequence("");
+          navigate(e.key);
         }}
       />
-      <Row gutter={32}>
-        <Col className="gutter-row" span={mode === "component" ? 8 : 16}>
-          <Typography.Title level={2}>
-            选择{mode === "component" ? "部件" : "复合体"}
-          </Typography.Title>
-          <StrokeSearch sequence={sequence} setSequence={setSequence} />
-          <Pool type={mode} name={name} setName={setName} sequence={sequence} />
-        </Col>
-        {mode === "component" && (
-          <Col className="gutter-row" span={8}>
-            <ComponentView componentName={name} />
-          </Col>
-        )}
-        <Col className="gutter-row" span={8}>
-          {mode === "component" ? (
-            <ComponentModel componentName={name} />
-          ) : (
-            <CompoundModel name={name} />
-          )}
-        </Col>
-      </Row>
+      <Outlet />
     </>
   );
 }
 
-const Main = styled.main`
-  display: flex;
-`;
+const ComponentData = () => {
+  const [name, setName] = useState(undefined as string | undefined);
+  const [sequence, setSequence] = useState("");
+  return (
+    <Row gutter={32}>
+      <Col className="gutter-row" span={8}>
+        <Typography.Title level={2}>选择部件</Typography.Title>
+        <StrokeSearch sequence={sequence} setSequence={setSequence} />
+        <Pool
+          type="component"
+          name={name}
+          setName={setName}
+          sequence={sequence}
+        />
+      </Col>
+      <Col className="gutter-row" span={8}>
+        <ComponentView componentName={name} />
+      </Col>
+      <Col className="gutter-row" span={8}>
+        <ComponentModel componentName={name} />
+      </Col>
+    </Row>
+  );
+};
+
+const CompoundData = () => {
+  const [name, setName] = useState(undefined as string | undefined);
+  const [sequence, setSequence] = useState("");
+  return (
+    <Row gutter={32}>
+      <Col className="gutter-row" span={16}>
+        <Typography.Title level={2}>选择复合体</Typography.Title>
+        <StrokeSearch sequence={sequence} setSequence={setSequence} />
+        <Pool
+          type="compound"
+          name={name}
+          setName={setName}
+          sequence={sequence}
+        />
+      </Col>
+      <Col className="gutter-row" span={8}>
+        <CompoundModel name={name} />
+      </Col>
+    </Row>
+  );
+};
+
+const CharacterData = EditableTable;
+
+export { ComponentData, CompoundData, CharacterData };

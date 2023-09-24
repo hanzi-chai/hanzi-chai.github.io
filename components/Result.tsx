@@ -24,9 +24,7 @@ import componentDisassembly, {
   SchemeWithData,
   compoundDisassembly,
 } from "../lib/chai";
-import { Component, Wen } from "../lib/data";
-import { Config } from "../lib/config";
-import { reverseClassifier } from "../lib/utils";
+import { Classifier, Config, RootConfig } from "../lib/config";
 import { isEmpty } from "underscore";
 
 const SummaryContainer = styled.div`
@@ -107,22 +105,21 @@ const Result = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  const makeSequenceFilter = (
-    classifier: Config["classifier"],
-    sequence: string,
-  ) => {
-    const reversedClassifier = reverseClassifier(classifier);
+  const makeSequenceFilter = (classifier: Classifier, sequence: string) => {
     return (x: string) => {
       const v = wen[x];
       const fullSequence = v.shape[0].glyph
         .map((s) => s.feature)
-        .map((x) => reversedClassifier.get(x)!)
+        .map((x) => classifier[x])
         .join("");
       return fullSequence.search(sequence) !== -1;
     };
   };
 
-  const filter = makeSequenceFilter(config.classifier, sequence);
+  const {
+    analysis: { classifier },
+  } = config.elements[0] as RootConfig;
+  const filter = makeSequenceFilter(classifier, sequence);
   const displays = [
     Object.entries(componentResults)
       .filter(([x, v]) => filter(x))

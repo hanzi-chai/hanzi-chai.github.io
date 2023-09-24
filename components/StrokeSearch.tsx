@@ -3,6 +3,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { fullToHalf, halfToFull } from "../lib/utils";
 import { useContext } from "react";
 import { ConfigContext } from "./Context";
+import { RootConfig } from "../lib/config";
 
 interface StrokeSearchProps {
   sequence: string;
@@ -10,8 +11,14 @@ interface StrokeSearchProps {
 }
 
 const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
-  const { classifier } = useContext(ConfigContext);
-  const valid = Array.from(sequence).every((x) => classifier[x]);
+  const { elements } = useContext(ConfigContext);
+  const {
+    analysis: { classifier },
+  } = elements[0] as RootConfig;
+  const numbers = Object.values(classifier);
+  const valid = Array.from(sequence).every((x) =>
+    numbers.includes(parseInt(x)),
+  );
   return (
     <Input
       placeholder="输入笔画搜索（１２３４５．．）"

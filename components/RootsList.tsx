@@ -3,7 +3,7 @@ import { useContext, useState } from "react";
 import styled from "styled-components";
 import { ConfigContext, WenContext, DispatchContext } from "./Context";
 import Root from "./Root";
-import { reverseClassifier } from "../lib/utils";
+import { RootConfig } from "../lib/config";
 
 const Wrapper = styled.div``;
 
@@ -20,23 +20,26 @@ const ButtonGroup = styled.div`
 
 const RootsList = () => {
   const [rootName, setRootName] = useState(undefined as string | undefined);
-  const config = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
-  const { roots, classifier } = useContext(ConfigContext);
-  const reversedClassifier = reverseClassifier(classifier);
-  const CHAI = useContext(WenContext);
+  const { elements } = useContext(ConfigContext);
+  const {
+    analysis: { classifier },
+    mapping,
+    aliaser,
+  } = elements[0] as RootConfig;
+  const wen = useContext(WenContext);
   // 现在只处理 roots 是某个部件或其切片的情形，其余暂不处理
   const data: string[][] = Object.keys(classifier).map((key) => []);
-  for (const root of roots) {
-    if (CHAI[root]) {
-      const { feature } = CHAI[root].shape[0].glyph[0];
-      const featureClass = reversedClassifier.get(feature) || "0";
-      data[parseInt(featureClass) - 1].push(root);
-    } else if (config.aliaser[root]) {
-      const { source, indices } = config.aliaser[root];
-      const { feature } = CHAI[source].shape[0].glyph[indices[0]];
-      const featureClass = reversedClassifier.get(feature) || "0";
-      data[parseInt(featureClass) - 1].push(root);
+  for (const root of Object.keys(mapping)) {
+    if (wen[root]) {
+      const { feature } = wen[root].shape[0].glyph[0];
+      const featureClass = classifier[feature];
+      data[featureClass - 1].push(root);
+    } else if (aliaser[root]) {
+      const { source, indices } = aliaser[root];
+      const { feature } = wen[source].shape[0].glyph[indices[0]];
+      const featureClass = classifier[feature];
+      data[featureClass - 1].push(root);
     } else {
     }
   }
@@ -70,7 +73,13 @@ const RootsList = () => {
         <Button
           type="primary"
           onClick={() =>
-            rootName && dispatch({ type: "remove-root", content: rootName })
+            rootName &&
+            dispatch({
+              type: "root",
+              element: 0,
+              subtype: "remove",
+              name: rootName,
+            })
           }
         >
           删除

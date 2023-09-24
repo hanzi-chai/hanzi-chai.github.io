@@ -1,9 +1,11 @@
 import { ChangeEvent, Dispatch, useEffect, useReducer } from "react";
 import { Button, Layout, Menu } from "antd";
 import {
-  AppstoreOutlined,
+  DatabaseOutlined,
   MailOutlined,
   SettingOutlined,
+  ProfileOutlined,
+  BoldOutlined,
   CaretLeftFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
@@ -12,7 +14,7 @@ import { Config } from "../lib/config";
 import { Action } from "./Context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
-import defaultConfig from "../default.yaml";
+import defaultConfig from "../templates/default.yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const items: MenuProps["items"] = [
@@ -24,22 +26,22 @@ const items: MenuProps["items"] = [
   {
     label: "数据",
     key: "data",
-    icon: <AppstoreOutlined />,
+    icon: <DatabaseOutlined />,
   },
   {
-    label: "规则",
-    key: "rule",
+    label: "码元",
+    key: "element",
     icon: <SettingOutlined />,
   },
   {
-    label: "字根",
-    key: "root",
-    icon: <SettingOutlined />,
+    label: "分析",
+    key: "analysis",
+    icon: <ProfileOutlined />,
   },
   {
-    label: "拆分",
-    key: "result",
-    icon: <SettingOutlined />,
+    label: "编码",
+    key: "encode",
+    icon: <BoldOutlined />,
   },
 ];
 
@@ -136,6 +138,7 @@ export default function EditorLayout() {
               theme="dark"
               mode="horizontal"
               items={items}
+              style={{ width: "600px", justifyContent: "center" }}
             />
             <ActionGroup>
               <Button

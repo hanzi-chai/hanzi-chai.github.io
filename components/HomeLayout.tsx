@@ -1,8 +1,9 @@
-import { Button, Layout, List, Typography } from "antd";
+import { Button, Dropdown, Layout, List, MenuProps, Typography } from "antd";
 import styled from "styled-components";
 import { Config } from "../lib/config";
 import { useEffect, useState } from "react";
-import defaultConfig from "../default.yaml";
+import defaultConfig from "../templates/default.yaml";
+import xingyin from "../templates/xingyin.yaml";
 import { Link, useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 
@@ -41,6 +42,32 @@ const FileList = styled(List)`
   margin: 32px 0;
 ` as typeof List;
 
+const items: MenuProps["items"] = [
+  {
+    label: "默认模板",
+    key: "default",
+  },
+  {
+    label: "形音码模板",
+    key: "xingyin",
+  },
+  {
+    label: "形码模板",
+    key: "xingma",
+    disabled: true,
+  },
+  {
+    label: "二笔模板",
+    key: "erbi",
+    disabled: true,
+  },
+];
+
+const configMap = new Map<string, Config>([
+  ["default", defaultConfig as Config],
+  ["xingyin", xingyin as Config],
+]);
+
 const HomeLayout = () => {
   const [configs, setConfigs] = useState({} as Record<string, Config>);
   const handleRemove = (id: string) => {
@@ -49,10 +76,11 @@ const HomeLayout = () => {
     localStorage.removeItem(id);
     setConfigs(newConfigs);
   };
-  const handleAdd = () => {
+  const handleAdd: MenuProps["onClick"] = (e) => {
+    const config = configMap.get(e.key)!;
     const id = uuid();
-    localStorage.setItem(id, JSON.stringify(defaultConfig));
-    setConfigs(Object.assign({}, configs, { [id]: defaultConfig }));
+    localStorage.setItem(id, JSON.stringify(config));
+    setConfigs(Object.assign({}, configs, { [id]: config }));
   };
 
   // read previous data
@@ -89,9 +117,15 @@ const HomeLayout = () => {
           }}
         />
         <ActionGroup>
-          <Button type="primary" onClick={handleAdd}>
-            新建
-          </Button>
+          <Dropdown
+            placement="bottom"
+            menu={{
+              items,
+              onClick: handleAdd,
+            }}
+          >
+            <Button type="primary">新建</Button>
+          </Dropdown>
         </ActionGroup>
       </Sider>
       <Content>

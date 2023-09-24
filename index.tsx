@@ -9,10 +9,11 @@ import {
 import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";
-import Data from "./components/Data";
-import Rules from "./components/Rules";
+import Data, { ComponentData, CompoundData } from "./components/Data";
 import Roots from "./components/Roots";
 import Result from "./components/Result";
+import Encoder from "./components/Encoder";
+import EditableTable from "./components/EditableTable";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -40,10 +41,18 @@ const router = createBrowserRouter([
     element: <EditorLayout />,
     children: [
       { index: true, element: <Info /> },
-      { path: "data", element: <Data /> },
-      { path: "rule", element: <Rules /> },
-      { path: "root", element: <Roots /> },
-      { path: "result", element: <Result /> },
+      {
+        path: "data",
+        element: <Data />,
+        children: [
+          { path: "component", element: <ComponentData /> },
+          { path: "compound", element: <CompoundData /> },
+          { path: "character", element: <EditableTable /> },
+        ],
+      },
+      { path: "element", element: <Roots /> },
+      { path: "analysis", element: <Result /> },
+      { path: "encode", element: <Encoder /> },
     ],
   },
 ]);
