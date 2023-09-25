@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { Graph, Node } from "@antv/x6";
 import { Options } from "@antv/x6/lib/graph/options";
 import { register } from "@antv/x6-react-shape";
@@ -6,6 +6,7 @@ import { Col, Dropdown, Row } from "antd";
 import { Snapline } from "@antv/x6-plugin-snapline";
 import styled from "styled-components";
 import { Stencil } from "@antv/x6-plugin-stencil";
+import { ConfigContext } from "./Context";
 
 const unit = 32;
 
@@ -54,9 +55,40 @@ const CustomNode = styled.div`
 `;
 
 register({
-  shape: "custom-react-node",
+  shape: "element",
   width: unit * 3,
   height: unit,
+  component: CustomComponent,
+  ports: {
+    groups: {
+      right: {
+        position: "right",
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: "#8f8f8f",
+            r: 5,
+          },
+        },
+      },
+      left: {
+        position: "left",
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: "#8f8f8f",
+            r: 5,
+          },
+        },
+      },
+    },
+  },
+});
+
+register({
+  shape: "start",
+  width: unit * 2,
+  height: unit * 2,
   component: CustomComponent,
 });
 
@@ -73,7 +105,7 @@ const options: Partial<Options.Manual> = {
     minScale: 0.5,
   },
   grid: {
-    size: unit,
+    size: 16,
     visible: true,
     type: "mesh",
     args: {
@@ -90,35 +122,19 @@ const data = {
   nodes: [
     {
       id: "node1",
-      shape: "custom-react-node",
+      shape: "element",
       x: 0,
       y: 0,
-      label: "hello",
-    },
-    {
-      id: "node2",
-      shape: "custom-react-node",
-      x: unit * 4,
-      y: unit * 4,
-      label: "world",
-    },
-  ],
-  edges: [
-    {
-      shape: "edge",
-      source: "node1",
-      target: "node2",
-      attrs: {
-        line: {
-          stroke: "#8f8f8f",
-          strokeWidth: 1,
-        },
+      label: "+",
+      ports: {
+        items: [{ id: "port1", group: "right" }],
       },
     },
   ],
 };
 
 const Wrapper = styled(Row)`
+  user-select: none;
   margin-top: 32px;
   gap: 32px;
 `;
@@ -134,6 +150,8 @@ const GraphEditor = styled(Col)`
 const NodeLibrary = styled(Col)``;
 
 const Encoder = () => {
+  const { elements } = useContext(ConfigContext);
+  const groups = elements.map(({ type }, index) => `元素 ${index}: ${type}`);
   const graphEditor = useRef(null as HTMLDivElement | null);
   const nodeLibrary = useRef(null as HTMLDivElement | null);
 
@@ -143,7 +161,7 @@ const Encoder = () => {
       ...options,
     });
 
-    graph.use(new Snapline({ enabled: true }));
+    // graph.use(new Snapline({ enabled: true }));
     graph.fromJSON(data);
     graph.centerContent();
 
@@ -151,23 +169,33 @@ const Encoder = () => {
       title: "节点库",
       target: graph,
       stencilGraphHeight: 0,
-      layoutOptions: { columnWidth: 100 },
+      layoutOptions: { columnWidth: 200 },
+      groups: groups.map((x) => ({ name: x })),
     });
+    console.log(groups);
 
     nodeLibrary.current?.appendChild(stencil.container);
 
-    const n1 = graph.createNode({
-      shape: "custom-react-node",
-      label: "字根 1",
-    });
-
-    const n2 = graph.createNode({
-      shape: "custom-react-node",
-      label: "字根 2",
-    });
-
-    stencil.load([n1, n2]);
-  }, []);
+    for (const [index, element] of elements.entries()) {
+      const name = groups[index];
+      const list = [];
+      for (const nodename of element.nodes) {
+        console.log(nodename);
+        const node = graph.createNode({
+          shape: "element",
+          label: nodename,
+          ports: {
+            items: [
+              { id: "test", group: "left" },
+              { id: "right", group: "right" },
+            ],
+          },
+        });
+        list.push(node);
+      }
+      stencil.load(list, name);
+    }
+  }, [elements]);
 
   return (
     <Wrapper gutter={32}>

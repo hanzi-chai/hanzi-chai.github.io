@@ -12,7 +12,8 @@ type Aliaser = Record<string, { source: string; indices: number[] }>;
 type Mapping = Record<string, string>;
 
 interface RootConfig {
-  type: "root";
+  type: "字根";
+  nodes: string[];
   analysis: {
     selector: Selector;
     classifier: Classifier;
@@ -22,9 +23,17 @@ interface RootConfig {
 }
 
 interface PhoneticConfig {
-  type: "phonetic";
-  analysis: { regex: string } | { preset: string };
+  type: "字音";
+  nodes: string[];
+  analysis: {
+    type: "initial" | "final" | "sheng" | "yun" | "diao" | "custom";
+    regex?: string;
+  };
   mapping: "id" | Record<string, string>;
+}
+
+interface ElementCache {
+  [key: string]: Record<string, string>;
 }
 
 type ElementConfig = RootConfig | PhoneticConfig;
@@ -56,3 +65,5 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>([
 export type { SieveName, Selector, Classifier, Aliaser, Mapping };
 
 export type { Config, ElementConfig, RootConfig, PhoneticConfig };
+
+export type { ElementCache };

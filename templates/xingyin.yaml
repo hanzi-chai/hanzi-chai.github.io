@@ -10,7 +10,8 @@ data:
   character: {}
 
 elements:
-  - type: root
+  - type: 字根
+    nodes: [字根 1, 字根 2, 字根 3]
     aliaser: {}
     analysis:
       selector:
@@ -177,7 +178,15 @@ elements:
       马: a
       幺: a
       纟: a
-  - type: initial
+  - type: 字音
+    nodes: [首字母]
+    analysis:
+      type: initial
+    mapping: id
+  - type: 字音
+    nodes: [末字母]
+    analysis:
+      type: final
     mapping: id
 
 encoder: null

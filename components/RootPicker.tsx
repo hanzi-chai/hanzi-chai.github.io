@@ -55,13 +55,7 @@ const RootPicker = () => {
         ]}
         onChange={(e) => setMode(e as "component" | "compound")}
       />
-      <Pool
-        elementIndex={0}
-        type={mode}
-        name={name}
-        setName={setName}
-        sequence={sequence}
-      />
+      <Pool type={mode} name={name} setName={setName} sequence={sequence} />
       <ButtonGroup>
         {mode === "component" && (
           <Button disabled={name === undefined} onClick={showModal}>

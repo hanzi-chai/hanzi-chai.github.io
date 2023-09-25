@@ -58,13 +58,13 @@ const getComponentScheme = (
   name: string,
   componentGlyph: Glyph,
   rootData: Map<string, { glyph: Glyph; topology: Relation[][][] }>,
-  config: Config,
+  config: RootConfig,
 ) => {
   const {
     analysis: { classifier, selector },
     mapping,
     aliaser,
-  } = config.elements[0] as RootConfig;
+  } = config;
   if (mapping[name]) return { best: [name], map: [], schemes: [] };
   if (componentGlyph.length === 1)
     return {
@@ -98,13 +98,13 @@ const getComponentScheme = (
   return select(sieveList, componentData, schemeList, rootMap);
 };
 
-const componentDisassembly = (wen: Wen, config: Config) => {
+const componentDisassembly = (wen: Wen, config: RootConfig) => {
   const result = {} as Record<string, ComponentResult>;
   const rootData = new Map<
     string,
     { glyph: Glyph; topology: Relation[][][] }
   >();
-  const mapping = (config.elements[0] as RootConfig).mapping;
+  const mapping = config.mapping;
   for (const rootName of Object.keys(mapping)) {
     if (!wen[rootName]) continue; // 暂不处理切片字根和合体字根
     const glyph = wen[rootName].shape[0].glyph;
@@ -120,7 +120,7 @@ const componentDisassembly = (wen: Wen, config: Config) => {
 
 export const compoundDisassembly = (
   zi: Zi,
-  config: Config,
+  config: RootConfig,
   prev: Record<string, ComponentResult>,
 ) => {
   const result = {} as Record<string, CompoundResult>;

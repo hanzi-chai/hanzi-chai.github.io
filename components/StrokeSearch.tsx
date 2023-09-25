@@ -1,21 +1,21 @@
 import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { fullToHalf, halfToFull } from "../lib/utils";
-import { useContext } from "react";
-import { ConfigContext } from "./Context";
-import { RootConfig } from "../lib/config";
+import { Classifier, RootConfig } from "../lib/config";
+import defaultClassifier from "../templates/classifier.yaml";
 
 interface StrokeSearchProps {
   sequence: string;
+  classifier?: Classifier;
   setSequence: (s: string) => void;
 }
 
-const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
-  const { elements } = useContext(ConfigContext);
-  const {
-    analysis: { classifier },
-  } = elements[0] as RootConfig;
-  const numbers = Object.values(classifier);
+const StrokeSearch = ({
+  sequence,
+  setSequence,
+  classifier,
+}: StrokeSearchProps) => {
+  const numbers = Object.values(classifier || defaultClassifier);
   const valid = Array.from(sequence).every((x) =>
     numbers.includes(parseInt(x)),
   );

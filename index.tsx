@@ -10,8 +10,8 @@ import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";
 import Data, { ComponentData, CompoundData } from "./components/Data";
-import Roots from "./components/Roots";
-import Result from "./components/Result";
+import Elements, { ElementConfig } from "./components/Elements";
+import Analysis, { AnalysisDispatch } from "./components/Analysis";
 import Encoder from "./components/Encoder";
 import EditableTable from "./components/EditableTable";
 
@@ -50,8 +50,21 @@ const router = createBrowserRouter([
           { path: "character", element: <EditableTable /> },
         ],
       },
-      { path: "element", element: <Roots /> },
-      { path: "analysis", element: <Result /> },
+      {
+        path: "element",
+        element: <Elements />,
+        children: [{ path: ":index", element: <ElementConfig /> }],
+      },
+      {
+        path: "analysis",
+        element: <Analysis />,
+        children: [
+          {
+            path: ":index",
+            element: <AnalysisDispatch />,
+          },
+        ],
+      },
       { path: "encode", element: <Encoder /> },
     ],
   },

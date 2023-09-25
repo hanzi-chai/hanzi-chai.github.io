@@ -3,8 +3,7 @@ import type { ColumnsType } from "antd/es/table";
 import Root from "./Root";
 import styled from "styled-components";
 import { SchemeWithData } from "../lib/chai";
-import { useContext } from "react";
-import { ConfigContext } from "./Context";
+import { useRoot } from "./Context";
 import { Config, RootConfig, Selector, sieveMap } from "../lib/config";
 
 const RootsContainer = styled.div`
@@ -91,10 +90,9 @@ const ResultDetail = ({
   data: Partial<SchemeWithData>[];
   map: [number[], string][];
 }) => {
-  const { elements } = useContext(ConfigContext);
   const {
     analysis: { selector },
-  } = elements[0] as RootConfig;
+  } = useRoot();
   return data.length ? (
     <>
       <RootSlices>

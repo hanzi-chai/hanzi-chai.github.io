@@ -1,5 +1,17 @@
-import { Dispatch, ReducerAction, createContext } from "react";
-import { Config, ElementConfig, RootConfig } from "../lib/config";
+import {
+  Dispatch,
+  ReducerAction,
+  SetStateAction,
+  createContext,
+  useContext,
+} from "react";
+import {
+  Config,
+  ElementCache,
+  ElementConfig,
+  PhoneticConfig,
+  RootConfig,
+} from "../lib/config";
 import wen from "../data/wen.json";
 import { Wen } from "../lib/data";
 import yin from "../data/yin.json";
@@ -91,3 +103,24 @@ export const ZiContext = createContext(zi as unknown as Zi);
 export const YinContext = createContext(yin as unknown as Yin);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
+
+export const CacheContext = createContext([] as ElementCache[]);
+export const WriteContext = createContext<(e: ElementCache[]) => void>(
+  () => {},
+);
+
+const useIndex = () => {
+  const { pathname } = useLocation();
+  return parseInt(pathname.split("/")[3] || "-1");
+};
+
+const useElement = () => {
+  const index = useIndex();
+  const { elements } = useContext(ConfigContext);
+  return elements[index] as ElementConfig | undefined;
+};
+
+const useRoot = () => useElement() as RootConfig;
+const usePhonetic = () => useElement() as PhoneticConfig;
+
+export { useIndex, useElement, useRoot, usePhonetic };

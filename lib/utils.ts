@@ -1,5 +1,3 @@
-import { Config } from "./config";
-
 export const halfToFull = (s: string) => {
   let result = "";
   for (let i = 0; i != s.length; ++i) {

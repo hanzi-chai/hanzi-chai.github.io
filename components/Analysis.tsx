@@ -1,6 +1,17 @@
 import styled from "styled-components";
 import StrokeSearch from "./StrokeSearch";
-import { Button, Empty, Pagination, Space, Spin, Steps, Table } from "antd";
+import {
+  Button,
+  Empty,
+  Input,
+  Menu,
+  Pagination,
+  Select,
+  Space,
+  Spin,
+  Steps,
+  Table,
+} from "antd";
 import { BorderOutlined, AppstoreOutlined } from "@ant-design/icons";
 
 const Toolbar = styled.div`
@@ -17,7 +28,14 @@ import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
 import { ArrowRightOutlined } from "@ant-design/icons";
-import { ConfigContext, WenContext, ZiContext } from "./Context";
+import {
+  ConfigContext,
+  WenContext,
+  ZiContext,
+  useElement,
+  usePhonetic,
+  useRoot,
+} from "./Context";
 import componentDisassembly, {
   ComponentResult,
   CompoundResult,
@@ -26,6 +44,8 @@ import componentDisassembly, {
 } from "../lib/chai";
 import { Classifier, Config, RootConfig } from "../lib/config";
 import { isEmpty } from "underscore";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import ConfigItem from "./ConfigItem";
 
 const SummaryContainer = styled.div`
   display: flex;
@@ -85,7 +105,7 @@ const ChaiSteps = styled(Steps)`
   margin: 32px auto;
 `;
 
-const Result = () => {
+const RootAnalysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
   const [componentResults, setComponentResult] = useState(
@@ -97,10 +117,11 @@ const Result = () => {
   const [loading, setLoading] = useState(false);
   const wen = useContext(WenContext);
   const zi = useContext(ZiContext);
-  const config = useContext(ConfigContext);
+  const rootConfig = useRoot();
   const steps = [
-    () => setComponentResult(componentDisassembly(wen, config)),
-    () => setCompoundResult(compoundDisassembly(zi, config, componentResults)),
+    () => setComponentResult(componentDisassembly(wen, rootConfig)),
+    () =>
+      setCompoundResult(compoundDisassembly(zi, rootConfig, componentResults)),
   ];
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -118,7 +139,7 @@ const Result = () => {
 
   const {
     analysis: { classifier },
-  } = config.elements[0] as RootConfig;
+  } = useElement() as RootConfig;
   const filter = makeSequenceFilter(classifier, sequence);
   const displays = [
     Object.entries(componentResults)
@@ -190,4 +211,74 @@ const Result = () => {
   );
 };
 
-export default Result;
+const Wrapper = styled.div`
+  width: 300px;
+  align-self: center;
+`;
+
+const PhoneticAnalysis = () => {
+  const {
+    analysis: { type, regex },
+  } = usePhonetic();
+  const options = ["initial", "final", "sheng", "yun", "diao", "custom"];
+
+  return (
+    <Wrapper>
+      <ConfigItem label="类型">
+        <Select
+          value={type}
+          style={{ width: "120px" }}
+          options={options.map((x) => ({ value: x, label: x }))}
+        />
+      </ConfigItem>
+      {type === "custom" && (
+        <ConfigItem label="正则表达式">
+          <Input style={{ width: "120px" }} />
+        </ConfigItem>
+      )}
+    </Wrapper>
+  );
+};
+
+const AnalysisDispatch = () => {
+  const element = useElement();
+  if (element === undefined) return <></>;
+  switch (element.type) {
+    case "字根":
+      return <RootAnalysis />;
+    case "字音":
+      return <PhoneticAnalysis />;
+  }
+};
+
+export { AnalysisDispatch };
+
+const Switcher = styled(Menu)`
+  justify-content: center;
+  margin: 32px;
+`;
+
+const Analysis = () => {
+  const { elements } = useContext(ConfigContext);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const index = parseInt(pathname.split("/")[3] || "-1");
+  return (
+    <>
+      <Switcher
+        items={elements.map(({ type }, index) => ({
+          key: index.toString(),
+          label: `元素 ${index}: ${type}`,
+        }))}
+        mode="horizontal"
+        selectedKeys={[index.toString()]}
+        onClick={(e) => {
+          navigate(e.key);
+        }}
+      />
+      <Outlet />
+    </>
+  );
+};
+
+export default Analysis;

@@ -1,7 +1,7 @@
 import { Button, Divider, List, Typography } from "antd";
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { ConfigContext, WenContext, DispatchContext } from "./Context";
+import { ConfigContext, WenContext, DispatchContext, useRoot } from "./Context";
 import Root from "./Root";
 import { RootConfig } from "../lib/config";
 
@@ -21,15 +21,16 @@ const ButtonGroup = styled.div`
 const RootsList = () => {
   const [rootName, setRootName] = useState(undefined as string | undefined);
   const dispatch = useContext(DispatchContext);
-  const { elements } = useContext(ConfigContext);
   const {
     analysis: { classifier },
     mapping,
     aliaser,
-  } = elements[0] as RootConfig;
+  } = useRoot();
   const wen = useContext(WenContext);
   // 现在只处理 roots 是某个部件或其切片的情形，其余暂不处理
-  const data: string[][] = Object.keys(classifier).map((key) => []);
+  const data: string[][] = [...new Set(Object.values(classifier))].map(
+    (key) => [],
+  );
   for (const root of Object.keys(mapping)) {
     if (wen[root]) {
       const { feature } = wen[root].shape[0].glyph[0];

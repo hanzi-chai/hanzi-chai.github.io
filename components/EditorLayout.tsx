@@ -1,4 +1,11 @@
-import { ChangeEvent, Dispatch, useEffect, useReducer } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import { Button, Layout, Menu } from "antd";
 import {
   DatabaseOutlined,
@@ -9,8 +16,14 @@ import {
   CaretLeftFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { ConfigContext, DispatchContext, configReducer } from "./Context";
-import { Config } from "../lib/config";
+import {
+  CacheContext,
+  ConfigContext,
+  DispatchContext,
+  WriteContext,
+  configReducer,
+} from "./Context";
+import { Config, ElementCache } from "../lib/config";
 import { Action } from "./Context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
@@ -29,7 +42,7 @@ const items: MenuProps["items"] = [
     icon: <DatabaseOutlined />,
   },
   {
-    label: "码元",
+    label: "元素",
     key: "element",
     icon: <SettingOutlined />,
   },
@@ -94,6 +107,8 @@ const Content = styled(Layout.Content)`
   padding: 0px 32px;
   overflow-y: scroll;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 const Footer = styled(Layout.Footer)`
@@ -109,9 +124,54 @@ const Wrapper = styled(Layout)`
   background-color: white !important;
 `;
 
-export default function EditorLayout() {
-  const [config, dispatch] = useReducer(configReducer, defaultConfig as Config);
+const EditorLayout = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [_, id, panel] = pathname.split("/");
+  const config = useContext(ConfigContext);
+  const dispatch = useContext(DispatchContext);
+
+  return (
+    <Wrapper>
+      <Header>
+        <NameAndBack>
+          <Link to="/">
+            <Button icon={<CaretLeftFilled />} />
+          </Link>
+          <Title>{config.info.name}</Title>
+        </NameAndBack>
+        <Menu
+          onClick={(e) => navigate(e.key === "index" ? "" : e.key)}
+          selectedKeys={[panel || "index"]}
+          theme="dark"
+          mode="horizontal"
+          items={items}
+          style={{ width: "600px", justifyContent: "center" }}
+        />
+        <ActionGroup>
+          <Button onClick={() => document.getElementById("import")!.click()}>
+            导入
+          </Button>
+          <input
+            type="file"
+            id="import"
+            hidden
+            onChange={(e) => importFile(dispatch, e)}
+          />
+          <Button onClick={() => exportFile(config)}>导出</Button>
+        </ActionGroup>
+      </Header>
+      <Content>
+        <Outlet />
+      </Content>
+      <Footer>© 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}</Footer>
+    </Wrapper>
+  );
+};
+
+const Contextualized = () => {
+  const [config, dispatch] = useReducer(configReducer, defaultConfig as Config);
+  const [cache, setCache] = useState([] as ElementCache[]);
   const { pathname } = useLocation();
   const [_, id, panel] = pathname.split("/");
 
@@ -122,47 +182,16 @@ export default function EditorLayout() {
   }, []);
 
   return (
-    <ConfigContext.Provider value={config}>
-      <DispatchContext.Provider value={dispatch}>
-        <Wrapper>
-          <Header>
-            <NameAndBack>
-              <Link to="/">
-                <Button icon={<CaretLeftFilled />} />
-              </Link>
-              <Title>{config.info.name}</Title>
-            </NameAndBack>
-            <Menu
-              onClick={(e) => navigate(e.key === "index" ? "" : e.key)}
-              selectedKeys={[panel || "index"]}
-              theme="dark"
-              mode="horizontal"
-              items={items}
-              style={{ width: "600px", justifyContent: "center" }}
-            />
-            <ActionGroup>
-              <Button
-                onClick={() => document.getElementById("import")!.click()}
-              >
-                导入
-              </Button>
-              <input
-                type="file"
-                id="import"
-                hidden
-                onChange={(e) => importFile(dispatch, e)}
-              />
-              <Button onClick={() => exportFile(config)}>导出</Button>
-            </ActionGroup>
-          </Header>
-          <Content>
-            <Outlet />
-          </Content>
-          <Footer>
-            © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
-          </Footer>
-        </Wrapper>
-      </DispatchContext.Provider>
-    </ConfigContext.Provider>
+    <CacheContext.Provider value={cache}>
+      <WriteContext.Provider value={setCache}>
+        <ConfigContext.Provider value={config}>
+          <DispatchContext.Provider value={dispatch}>
+            <EditorLayout />
+          </DispatchContext.Provider>
+        </ConfigContext.Provider>
+      </WriteContext.Provider>
+    </CacheContext.Provider>
   );
-}
+};
+
+export default Contextualized;
