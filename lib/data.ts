@@ -1,5 +1,3 @@
-import { Pinyin } from "./pinyin";
-
 type Draw =
   | {
       command: "h";
@@ -81,12 +79,6 @@ interface Wen {
 interface Zi {
   [key: string]: Compound;
 }
-
-// interface Yin {
-//   [key: string]: {
-//     pinyin: Pinyin;
-//   };
-// }
 
 interface Yin {
   [key: string]: string[];

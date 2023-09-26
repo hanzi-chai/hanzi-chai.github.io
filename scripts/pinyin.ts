@@ -1,6 +1,5 @@
 import { load } from "js-yaml";
 import { readFileSync, writeFileSync } from "fs";
-import { Pinyin } from "../lib/pinyin";
 
 const dict = load(readFileSync("data/kTGHZ2013.txt", "utf-8")) as Record<
   string,
@@ -40,50 +39,13 @@ const RE_PHONETIC_SYMBOL = new RegExp(
   "([" + Object.keys(PHONETIC_SYMBOL).join("") + "])",
   "g",
 );
-const RE_TONE2 = /([aeoiuvnm])([0-4])$/;
-
-const parsePinyin = function (s: string): Pinyin {
-  let shengdiao: Pinyin["shengdiao"] = 5;
-  let shengyun = s.replace(
-    RE_PHONETIC_SYMBOL,
-    function ($0: string, $1: string) {
-      shengdiao = parseInt(PHONETIC_SYMBOL[$1][1]) as Pinyin["shengdiao"];
-      return PHONETIC_SYMBOL[$1][0];
-    },
-  );
-  const regularize = new Map<RegExp, string>([
-    [/(?<=[zcsh])i/, "-i"],
-    [/^(?=[aoe])/, "0"],
-    [/^(m|n|ng)$/, "0$1"],
-    [/w(?=u)/, "0"],
-    [/w(?=[aoe])/, "0u"],
-    [/y(?=i)/, "0"],
-    [/y(?=[aoe])/, "0i"],
-    [/yu/, "0ü"],
-    [/(?<=[jqx])u/, "ü"],
-    [/iu/, "iou"],
-    [/ui/, "uei"],
-    [/un/, "uen"],
-  ]);
-  for (const [re, str] of regularize.entries()) {
-    shengyun = shengyun.replace(re, str);
-  }
-  const breakpoint =
-    /(?<=[bpmfdtnlgkhjqxzcsr0])(?=[-aeiouünm])|^(?=[-aeiouünm])/;
-  let [shengmu, yunmu] = shengyun.split(breakpoint) as [
-    Pinyin["shengmu"] | "0",
-    Pinyin["yunmu"],
-  ];
-  if (shengmu === "0") shengmu = undefined;
-  return { shengmu, yunmu, shengdiao };
-};
 
 const parsePinyin2 = function (s: string) {
-  let shengdiao: Pinyin["shengdiao"] = 5;
+  let shengdiao: number = 5;
   let shengyun = s.replace(
     RE_PHONETIC_SYMBOL,
     function ($0: string, $1: string) {
-      shengdiao = parseInt(PHONETIC_SYMBOL[$1][1]) as Pinyin["shengdiao"];
+      shengdiao = parseInt(PHONETIC_SYMBOL[$1][1]);
       return PHONETIC_SYMBOL[$1][0];
     },
   );

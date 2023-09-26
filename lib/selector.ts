@@ -1,5 +1,7 @@
 import { ComponentData, ComponentResult, SchemeWithData } from "./chai";
+import { SieveName } from "./config";
 import { Component, Glyph } from "./data";
+import { binaryToIndices } from "./degenerator";
 import { Relation } from "./topology";
 import { isEqual } from "underscore";
 
@@ -37,16 +39,10 @@ export const bias: Sieve<number[]> = {
   key: (_, scheme) => scheme.map(countStrokes).map((x) => -x),
 };
 
-const parseBinary = function (binary: number, n: number): number[] {
-  const indices = [...Array(n).keys()];
-  const b = 1 << (n - 1);
-  return indices.filter((i) => binary & (b >> i));
-};
-
 export const order: Sieve<number[]> = {
   name: "order",
   key: (component, scheme) => {
-    return scheme.map((x) => parseBinary(x, component.glyph.length)).flat();
+    return scheme.map((x) => binaryToIndices(component.glyph.length)(x)).flat();
   },
 };
 
@@ -56,7 +52,7 @@ export const makeTopologySieve = function (
 ): Sieve<number> {
   let key: Sieve<number>["key"] = (component, scheme) => {
     const parsedScheme = scheme.map((x) =>
-      parseBinary(x, component.glyph.length),
+      binaryToIndices(component.glyph.length)(x),
     );
     let totalCrosses = 0;
     for (const [i, bi] of parsedScheme.entries()) {
@@ -81,6 +77,14 @@ export const makeTopologySieve = function (
 export const crossing = makeTopologySieve("交", "crossing");
 
 export const attaching = makeTopologySieve("连", "attaching");
+
+export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>([
+  ["根少优先", length],
+  ["笔顺优先", order],
+  ["取大优先", bias],
+  ["能连不交", crossing],
+  ["能散不连", attaching],
+]);
 
 const select = (
   sieveList: (Sieve<number> | Sieve<number[]>)[],
@@ -113,7 +117,7 @@ const select = (
     );
   }
   const parsedRootMap = [...rootMap.entries()].map(([k, v]) => [
-    parseBinary(k, componentData.glyph.length),
+    binaryToIndices(componentData.glyph.length)(k),
     v,
   ]);
   if (currentSchemeList.length === 1) {

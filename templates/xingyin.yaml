@@ -12,7 +12,71 @@ data:
 elements:
   - type: 字根
     nodes: [字根 1, 字根 2, 字根 3]
-    aliaser: {}
+    aliaser:
+      丘上: { source: 丘, indices: [0, 1, 2, 3] }
+      为框: { source: 为, indices: [1, 2] }
+      步中: { source: 步下, indices: [0, 1] }
+      乌二: { source: 乌, indices: [0, 1] }
+      段二: { source: 段左, indices: [0, 1] }
+      母二: { source: 母, indices: [0, 1] }
+      贯二: { source: 母, indices: [0, 1] }
+      央三: { source: 央, indices: [0, 1, 2] }
+      业上: { source: 业, indices: [0, 1, 2, 3] }
+      皮二: { source: 皮, indices: [0, 1] }
+      舞中: { source: 舞上, indices: [2, 3, 4, 5, 6] }
+      着中: { source: 差上, indices: [2, 3, 4, 5] }
+      乐二: { source: 乐, indices: [0, 1] }
+      不下: { source: 不, indices: [1, 2, 3] }
+      余下: { source: 余, indices: [2, 3, 4, 5, 6] }
+      撇二横: { source: 朱, indices: [0, 1, 2] }
+      夫上: { source: 夫, indices: [0, 1, 2] }
+      年下: { source: 年, indices: [2, 3, 4, 5] }
+      革下: { source: 革, indices: [4, 5, 6, 7, 8] }
+      于下: { source: 于, indices: [1, 2] }
+      其上: { source: 其, indices: [0, 1, 2, 3, 4, 5] }
+      寒中: { source: 媾右, indices: [0, 1, 2, 3, 4] }
+      东上: { source: 东, indices: [0, 1] }
+      弋左: { source: 弋, indices: [0, 1] }
+      牙上: { source: 牙, indices: [0, 1] }
+      具上: { source: 具, indices: [0, 1, 2, 3, 4, 5] }
+      三竖: { source: 带上, indices: [1, 2, 3] }
+      四竖: { source: 舞上, indices: [3, 4, 5, 6] }
+      曾中: { source: 曾上, indices: [2, 3, 4, 5, 6, 7] }
+      身框: { source: 身, indices: [1, 2] }
+      两撇: { source: 勿, indices: [2, 3] }
+      且上: { source: 且, indices: [0, 1, 2, 3] }
+      豕下: { source: 豕, indices: [1, 2, 3, 4, 5, 6] }
+      臼裂: { source: 舆框, indices: [0, 1, 2, 3, 4, 5, 6] }
+      展底: { source: 展内, indices: [4, 5, 6] }
+      久上: { source: 久, indices: [0, 1] }
+      见下: { source: 见, indices: [2, 3] }
+      鱼上: { source: 鱼, indices: [0, 1, 2, 3, 4, 5, 6] }
+      犭二: { source: 犭, indices: [0, 1] }
+      万下: { source: 万, indices: [1, 2] }
+      隹右: { source: 隹, indices: [2, 3, 4, 5, 6, 7] }
+      羊变: { source: 羌, indices: [0, 1, 2, 3, 4, 5] }
+      舟下: { source: 舟, indices: [1, 2, 3, 4, 5] }
+      脊外: { source: 脊上, indices: [0, 1, 2, 3] }
+      承外: { source: 承, indices: [5, 6, 7] }
+      兴上: { source: 兴, indices: [0, 1, 2] }
+      亦下: { source: 亦, indices: [2, 3, 4, 5] }
+      变中: { source: 变上, indices: [2, 3, 4, 5] }
+      兼下: { source: 兼, indices: [6, 7, 8, 9] }
+      录上: { source: 录, indices: [0, 1, 2] }
+      聿上: { source: 聿, indices: [0, 1, 2] }
+      经角: { source: 经右, indices: [0, 1] }
+      马上: { source: 马, indices: [0, 1] }
+      黑五: { source: 黑上, indices: [0, 1, 2, 3, 4] }
+      止变: { source: 足旁, indices: [3, 4, 5, 6] }
+      衤二: { source: 衤, indices: [3, 4] }
+      见二: { source: 见, indices: [0, 1] }
+      土变: { source: 黑上, indices: [5, 6, 7] }
+      人改: { source: 内, indices: [2, 3] }
+      前上离: { source: 丧, indices: [2, 3, 4] }
+      卜离: { source: 不, indices: [2, 3] }
+      今上: { source: 今, indices: [0, 1] }
+      七变: { source: 长, indices: [1, 2] }
+      化右变: { source: 龙, indices: [2, 3] }
     analysis:
       selector:
         - 根少优先
@@ -24,160 +88,243 @@ elements:
         横: 1
         提: 1
         竖: 2
-        竖钩: 2
         撇: 3
         点: 4
         捺: 4
         横钩: 5
         横撇: 5
-        横折: 5
-        横折钩: 5
-        横斜钩: 5
-        横折提: 5
-        横折折: 5
-        横折弯: 5
-        横撇弯钩: 5
-        横折弯钩: 5
-        横折折撇: 5
-        横折折折: 5
-        横折折折钩: 5
-        竖提: 5
-        竖折: 5
-        竖弯: 5
-        竖弯钩: 5
         竖折撇: 5
-        竖折折钩: 5
+        横折折撇: 5
+        横折: 5
         竖折折: 5
-        撇点: 5
-        撇折: 5
+        竖钩: 5
+        横折钩: 5
+        竖折折钩: 5
+        横折折折钩: 5
         弯钩: 5
-        斜钩: 5
+        横撇弯钩: 5
+        横折折折: 5
+        竖提: 6
+        横折提: 6
+        竖折: 6
+        横折折: 6
+        竖弯: 6
+        横折弯: 6
+        竖弯钩: 6
+        横折弯钩: 6
+        撇点: 6
+        撇折: 6
+        斜钩: 6
+        横斜钩: 6
     mapping:
-      二: a
-      三: a
-      干: a
-      王: a
-      戋: a
-      土: a
-      士: a
-      工: a
-      十: a
-      木: a
-      丁: a
-      扌: a
-      耳: a
-      寸: a
-      古: a
-      廿: a
-      艹: a
-      其: a
+      "1": s
+      "2": e
+      "3": r
+      "4": w
+      "5": j
+      "6": l
+      金: q
+      钅: q
+      方: q
+      刀: q
+      勹: q
+      刂: q
+      乌二: q
+      言: w
+      讠: w
+      亠: w
+      立: w
+      心: e
+      忄: e
+      占上: e
+      尚上: e
+      卜: e
+      古: e
+      禾: r
+      余下: r
+      采上: r
+      每上: r
+      撇二横: r
+      气: r
+      土: t
+      土变: t
+      士: t
+      干: t
+      举下: t
+      又: "y"
+      经角: "y"
+      予上: "y"
+      厶: "y"
+      虫: "y"
+      肆左: "y"
+      竹: u
+      竹头: u
+      八: u
+      宀: u
+      冖: u
+      小: u
+      不下: u
+      步中: u
+      人: i
+      亻: i
+      人改: i
+      今上: i
+      文: o
+      攵: o
+      夂: o
+      夕: o
+      久上: o
+      火: o
+      灬: o
+      雨: o
+      目: p
+      尸: p
+      声下: p
+      隹右: p
+      反外: p
+      段二: p
+      乐二: p
+      抑中: p
+      止: p
+      足旁: p
+      止变: p
+      足: p
       西: a
-      雨: a
-      五: a
-      石: a
-      大: a
-      厂: a
-      豕: a
-      廾: a
-      匚: a
-      七: a
-      弋: a
-      戈: a
-      止: a
-      刂: a
-      小: a
-      卜: a
-      冂: a
-      皿: a
-      四: a
-      山: a
-      田: a
-      口: a
-      足: a
-      囗: a
-      贝: a
-      且: a
-      日: a
-      曰: a
-      目: a
-      虫: a
-      巾: a
-      水: a
-      手: a
-      禾: a
-      气: a
-      金: a
-      钅: a
-      竹: a
-      白: a
-      臼: a
-      川: a
-      彳: a
-      彡: a
-      舟: a
-      斤: a
-      勹: a
-      八: a
-      人: a
-      豸: a
-      亻: a
-      攵: a
-      夂: a
-      夕: a
-      匕: a
-      犭: a
-      几: a
-      儿: a
-      月: a
-      用: a
-      九: a
-      方: a
-      言: a
-      门: a
-      米: a
-      讠: a
-      亠: a
-      冫: a
-      丬: a
-      广: a
-      疒: a
-      文: a
-      立: a
-      心: a
-      忄: a
-      宀: a
-      衤: a
-      礻: a
-      之: a
-      辶: a
-      冖: a
-      火: a
-      灬: a
-      氵: a
-      弓: a
-      彐: a
-      尸: a
-      已: a
-      己: a
-      巳: a
-      凵: a
-      也: a
-      巴: a
-      卩: a
-      阝: a
-      子: a
-      孑: a
-      了: a
-      刀: a
-      乃: a
-      力: a
       女: a
-      又: a
-      厶: a
-      廴: a
-      马: a
-      幺: a
-      纟: a
+      大: a
+      弓: a
+      石: s
+      舞中: s
+      米: d
+      两撇: d
+      彳: d
+      二: d
+      工: d
+      齐下: d
+      临左: d
+      冫: d
+      丬: d
+      总上: d
+      前上: d
+      前上离: d
+      日: f
+      三: f
+      彐: f
+      五: f
+      青上: f
+      曰: f
+      横日: f
+      冒上: f
+      广: g
+      疒: g
+      厂: g
+      皮二: g
+      十: g
+      门: g
+      廿: h
+      艹: h
+      廾: h
+      黄上: h
+      贝: h
+      其: h
+      且: h
+      具上: h
+      丁: j
+      扌: j
+      寸: j
+      手: j
+      看上: j
+      着中: j
+      口: k
+      王: l
+      母二: l
+      贯二: l
+      衤: l
+      礻: l
+      七: l
+      东上: l
+      匕: l
+      化右: l
+      化右变: l
+      比左: l
+      弋: l
+      戈: l
+      戋: l
+      之: z
+      舟: z
+      辶: z
+      廴: z
+      斤: z
+      丘上: z
+      豸: z
+      豕: z
+      豕下: z
+      马: z
+      犭: z
+      白: x
+      臼: x
+      义下: x
+      彡: x
+      幺: x
+      双折: x
+      纟: x
+      田: c
+      囗: c
+      匚: c
+      凵: c
+      假角: c
+      候角: c
+      冂: c
+      周外: c
+      见二: c
+      皿: c
+      央三: c
+      罗上: c
+      黑五: c
+      四: c
+      官下: c
+      山: c
+      川: c
+      三竖: c
+      水: v
+      泰下: v
+      鳏角: v
+      脊外: v
+      承外: v
+      氵: v
+      兴上: v
+      展底: v
+      衣下: v
+      已: v
+      己: v
+      巳: v
+      也: v
+      巴: v
+      卷下: v
+      子: b
+      孑: b
+      了: b
+      耳: b
+      卩: b
+      阝: b
+      几: b
+      儿: b
+      流角: b
+      月: "n"
+      那左: "n"
+      而上: "n"
+      有上: "n"
+      乃: "n"
+      力: "n"
+      为框: "n"
+      用: "n"
+      九: "n"
+      木: m
+      巾: m
+      兼下: m
+      亦下: m
+      变中: m
+      业上: m
   - type: 字音
     nodes: [首字母]
     analysis:

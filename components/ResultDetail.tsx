@@ -4,7 +4,8 @@ import Root from "./Root";
 import styled from "styled-components";
 import { SchemeWithData } from "../lib/chai";
 import { useRoot } from "./Context";
-import { Config, RootConfig, Selector, sieveMap } from "../lib/config";
+import { Config, RootConfig, Selector } from "../lib/config";
+import { sieveMap } from "../lib/selector";
 
 const RootsContainer = styled.div`
   display: flex;

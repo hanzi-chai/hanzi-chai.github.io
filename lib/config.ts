@@ -1,5 +1,4 @@
 import { Component, Compound } from "./data";
-import { Sieve, bias, length, order, crossing, attaching } from "./selector";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
@@ -53,14 +52,6 @@ interface Config {
   elements: ElementConfig[];
   encoder: null;
 }
-
-export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>([
-  ["根少优先", length],
-  ["笔顺优先", order],
-  ["取大优先", bias],
-  ["能连不交", crossing],
-  ["能散不连", attaching],
-]);
 
 export type { SieveName, Selector, Classifier, Aliaser, Mapping };
 
