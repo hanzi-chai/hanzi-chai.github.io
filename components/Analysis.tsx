@@ -31,6 +31,7 @@ import { ArrowRightOutlined } from "@ant-design/icons";
 import {
   ConfigContext,
   WenContext,
+  YinContext,
   ZiContext,
   useElement,
   usePhonetic,
@@ -43,9 +44,16 @@ import componentDisassembly, {
   compoundDisassembly,
 } from "../lib/chai";
 import { Classifier, Config, RootConfig } from "../lib/config";
-import { isEmpty } from "underscore";
+import { intersection, isEmpty } from "underscore";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ConfigItem from "./ConfigItem";
+import d from "../data/dict.yaml";
+
+const ExtraContainer = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
 
 const SummaryContainer = styled.div`
   display: flex;
@@ -63,20 +71,35 @@ const Arrow = styled.div`
 const ResultSummary = ({
   componentName,
   rootSeries,
+  codes,
+  refcodes,
+  match,
 }: {
   componentName: string;
   rootSeries: string[];
+  codes: string[];
+  refcodes: string[];
+  match: boolean;
 }) => {
   return (
-    <SummaryContainer>
-      <Char name={componentName} current={false} change={() => {}} />
-      <Arrow>
-        <ArrowRightOutlined />
-      </Arrow>
-      {rootSeries.map((x, index) => (
-        <Root name={x} key={index} />
-      ))}
-    </SummaryContainer>
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <SummaryContainer>
+        <Char name={componentName} current={false} change={() => {}} />
+        <Arrow>
+          <ArrowRightOutlined />
+        </Arrow>
+        {rootSeries.map((x, index) => (
+          <Root name={x} key={index} />
+        ))}
+      </SummaryContainer>
+      <ExtraContainer>
+        {match ? "√" : "×"}
+        &nbsp; | &nbsp;
+        {codes.join("+")}
+        &nbsp;|&nbsp;
+        {refcodes.join(",")}
+      </ExtraContainer>
+    </div>
   );
 };
 
@@ -136,6 +159,48 @@ const RootAnalysis = () => {
       return fullSequence.search(sequence) !== -1;
     };
   };
+  const dict = d as Record<string, string[]>;
+  const yin = useContext(YinContext);
+  const { mapping } = rootConfig;
+  let correct = 0;
+  let incorrect = 0;
+  const pseudoCoder = (char: string, scheme: string[]) => {
+    const codelist = yin[char].map((py) => {
+      const initial = py[0];
+      let code = "";
+      if (scheme.length === 1) {
+        const [root] = scheme;
+        const key = mapping[root];
+        const jianming = "金言心禾土又竹人文目西石米日广廿丁口王之白田水子月木";
+        if (jianming.includes(root)) {
+          code += key.repeat(4);
+        } else if ("123456".includes(root)) {
+          code += key.repeat(2) + initial.repeat(2);
+        } else {
+          code +=
+            key +
+            wen[char].shape[0].glyph
+              .slice(0, 3)
+              .map((v) => mapping[classifier[v.feature].toString()])
+              .join("");
+        }
+      } else if (scheme.length === 2) {
+        code += scheme.map((root) => mapping[root]).join("");
+      } else {
+        code += scheme
+          .slice(0, 2)
+          .concat(scheme[scheme.length - 1])
+          .map((root) => mapping[root])
+          .join("");
+      }
+      if (code.length < 4) {
+        code += initial;
+        if ("一丨丿丶乙".includes(char)) code += initial;
+      }
+      return code;
+    });
+    return Array.from(new Set(codelist));
+  };
 
   const {
     analysis: { classifier },
@@ -144,17 +209,45 @@ const RootAnalysis = () => {
   const displays = [
     Object.entries(componentResults)
       .filter(([x, v]) => filter(x))
+      .filter(
+        ([x, v]) =>
+          x.length === 1 && yin[x] !== undefined && dict[x] !== undefined,
+      )
       .map(([key, res]) => {
+        let codes = pseudoCoder(key, res.best);
+        let refcodes = dict[key];
+        const match = intersection(codes, refcodes).length > 0;
+        if (match) {
+          correct += 1;
+        } else {
+          incorrect += 1;
+        }
         return {
           key,
-          label: <ResultSummary componentName={key} rootSeries={res.best} />,
+          label: (
+            <ResultSummary
+              componentName={key}
+              rootSeries={res.best}
+              codes={codes}
+              refcodes={refcodes}
+              match={match}
+            />
+          ),
           children: <ResultDetail data={res.schemes} map={res.map} />,
         };
       }),
     Object.entries(compoundResults).map(([key, res]) => {
       return {
         key,
-        label: <ResultSummary componentName={key} rootSeries={res.sequence} />,
+        label: (
+          <ResultSummary
+            componentName={key}
+            rootSeries={res.sequence}
+            codes={[]}
+            refcodes={[]}
+            match
+          />
+        ),
       };
     }),
   ];
@@ -187,6 +280,11 @@ const RootAnalysis = () => {
         </Space>
       ) : displays[step].length ? (
         <>
+          <div>
+            {" "}
+            正确：{correct}，错误：{incorrect}，正确率：
+            {correct / (correct + incorrect)}
+          </div>
           <CollapseCustom
             items={displays[step].slice((page - 1) * pageSize, page * pageSize)}
             accordion={true}

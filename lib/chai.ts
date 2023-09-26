@@ -1,7 +1,7 @@
-import { Config, RootConfig, sieveMap } from "./config";
+import { Config, RootConfig } from "./config";
 import { Wen, Glyph, Zi, Compound } from "./data";
 import { generateSliceBinaries } from "./degenerator";
-import select from "./selector";
+import select, { sieveMap } from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import findTopology, { Relation } from "./topology";
 

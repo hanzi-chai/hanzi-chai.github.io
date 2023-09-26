@@ -1,9 +1,9 @@
 import { Button, Divider, List, Typography } from "antd";
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { ConfigContext, WenContext, DispatchContext, useRoot } from "./Context";
+import { DispatchContext, useRoot } from "./Context";
 import Root from "./Root";
-import { RootConfig } from "../lib/config";
+import { halfToFull } from "./utils";
 
 const Wrapper = styled.div``;
 
@@ -21,43 +21,27 @@ const ButtonGroup = styled.div`
 const RootsList = () => {
   const [rootName, setRootName] = useState(undefined as string | undefined);
   const dispatch = useContext(DispatchContext);
-  const {
-    analysis: { classifier },
-    mapping,
-    aliaser,
-  } = useRoot();
-  const wen = useContext(WenContext);
-  // 现在只处理 roots 是某个部件或其切片的情形，其余暂不处理
-  const data: string[][] = [...new Set(Object.values(classifier))].map(
-    (key) => [],
-  );
-  for (const root of Object.keys(mapping)) {
-    if (wen[root]) {
-      const { feature } = wen[root].shape[0].glyph[0];
-      const featureClass = classifier[feature];
-      data[featureClass - 1].push(root);
-    } else if (aliaser[root]) {
-      const { source, indices } = aliaser[root];
-      const { feature } = wen[source].shape[0].glyph[indices[0]];
-      const featureClass = classifier[feature];
-      data[featureClass - 1].push(root);
-    } else {
-    }
+  const { mapping } = useRoot();
+  const data: Record<string, string[]> = {};
+  const alphabet = "qwertyuiopasdfghjklzxcvbnm";
+  [...alphabet].forEach((key) => (data[key] = []));
+  for (const [root, key] of Object.entries(mapping)) {
+    data[key].push(root);
   }
   return (
     <Wrapper>
       <Typography.Title level={2}>字根列表</Typography.Title>
       <List
-        dataSource={data}
-        renderItem={(items: string[], order: number) => {
+        dataSource={Object.entries(data)}
+        renderItem={(item: [string, string[]]) => {
+          const [key, roots] = item;
           return (
-            <div key={order}>
+            <div key={key}>
               <Divider orientation="left">
-                起笔为&nbsp;
-                <Root name={`${order + 1}`} />
+                {halfToFull(key.toUpperCase())}
               </Divider>
               <RootContainer>
-                {items.map((item) => (
+                {roots.map((item) => (
                   <Root
                     key={item}
                     name={item}

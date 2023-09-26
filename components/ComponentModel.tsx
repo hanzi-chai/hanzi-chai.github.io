@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import styled from "styled-components";
 import { Draw as Curve, Stroke, Component } from "../lib/data";
 import { WenContext } from "./Context";
-import { halfToFull } from "../lib/utils";
+import { halfToFull } from "./utils";
 
 export const Change = createContext(
   (a: number, b: number, c: number, d: number) => {},
