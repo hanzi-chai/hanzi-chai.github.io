@@ -79,9 +79,9 @@ elements:
       化右变: { source: 龙, indices: [2, 3] }
     analysis:
       selector:
-        - 根少优先
+        # - 根少优先
         - 笔顺优先
-        - 能连不交
+        # - 能连不交
         - 能散不连
         - 取大优先
       classifier:

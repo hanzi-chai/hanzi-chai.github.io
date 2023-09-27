@@ -37,12 +37,13 @@ import {
   usePhonetic,
   useRoot,
 } from "./Context";
-import componentDisassembly, {
+import {
   ComponentResult,
   CompoundResult,
   SchemeWithData,
-  compoundDisassembly,
-} from "../lib/chai";
+  disassembleComponents,
+  disassembleCompounds,
+} from "../lib/root";
 import { Classifier, Config, RootConfig } from "../lib/config";
 import { intersection, isEmpty } from "underscore";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -142,9 +143,9 @@ const RootAnalysis = () => {
   const zi = useContext(ZiContext);
   const rootConfig = useRoot();
   const steps = [
-    () => setComponentResult(componentDisassembly(wen, rootConfig)),
+    () => setComponentResult(disassembleComponents(wen, rootConfig)),
     () =>
-      setCompoundResult(compoundDisassembly(zi, rootConfig, componentResults)),
+      setCompoundResult(disassembleCompounds(zi, rootConfig, componentResults)),
   ];
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);

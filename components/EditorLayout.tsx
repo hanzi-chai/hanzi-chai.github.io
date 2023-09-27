@@ -27,7 +27,7 @@ import { Config, ElementCache } from "../lib/config";
 import { Action } from "./Context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
-import defaultConfig from "../templates/default.yaml";
+import defaultConfig from "../templates/xingyin.yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const items: MenuProps["items"] = [
@@ -176,10 +176,10 @@ const Contextualized = () => {
   const [_, id, panel] = pathname.split("/");
 
   // read previous data
-  useEffect(() => {
-    const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
-    dispatch({ type: "load", content: previousConfig });
-  }, []);
+  // useEffect(() => {
+  //   const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
+  //   dispatch({ type: "load", content: previousConfig });
+  // }, []);
 
   return (
     <CacheContext.Provider value={cache}>

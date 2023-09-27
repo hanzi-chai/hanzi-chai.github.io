@@ -1,5 +1,5 @@
 import { isEqual } from "underscore";
-import { ComponentData } from "./chai";
+import { Cache } from "./root";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -11,8 +11,7 @@ export const indicesToBinary = (n: number) => (indices: number[]) => {
 
 export const binaryToIndices = (n: number) => (binary: number) => {
   const indices = [...Array(n).keys()];
-  const b = 1 << (n - 1);
-  return indices.filter((i) => binary & (b >> i));
+  return indices.filter((index) => binary & (1 << (n - index - 1)));
 };
 
 const strokeFeatureEqual = (s1: string, s2: string) => {
@@ -24,10 +23,7 @@ const strokeFeatureEqual = (s1: string, s2: string) => {
   return simplify(s1) === simplify(s2);
 };
 
-export const generateSliceBinaries = (
-  component: ComponentData,
-  root: ComponentData,
-) => {
+export const generateSliceBinaries = (component: Cache, root: Cache) => {
   const { glyph: cglyph, topology: ctopology } = component;
   const { glyph: rglyph, topology: rtopology } = root;
   if (cglyph.length < rglyph.length) return [];
