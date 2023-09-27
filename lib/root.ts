@@ -1,0 +1,143 @@
+import { Config, RootConfig } from "./config";
+import { Wen, Glyph, Zi, Compound } from "./data";
+import { binaryToIndices, generateSliceBinaries } from "./degenerator";
+import select from "./selector";
+import { bisectLeft, bisectRight } from "d3-array";
+import findTopology, { Relation } from "./topology";
+
+export const generateSchemes = (n: number, roots: number[]) => {
+  const schemeList = [] as number[][];
+  const totalBin = (1 << n) - 1;
+  const combineNext = (curBin: number, curScheme: number[]) => {
+    const restBin = totalBin - curBin;
+    const restBin1st = 1 << (restBin.toString(2).length - 1);
+    const start = bisectLeft(roots, restBin1st);
+    const end = bisectRight(roots, restBin);
+    for (const binary of roots.slice(start, end)) {
+      if ((curBin & binary) !== 0) continue;
+      const newBin = curBin + binary;
+      if (newBin === totalBin) {
+        schemeList.push(curScheme.concat(binary));
+      } else {
+        combineNext(newBin, curScheme.concat(binary));
+      }
+    }
+  };
+  combineNext(0, []);
+  return schemeList;
+};
+
+export interface Cache {
+  name: string;
+  glyph: Glyph;
+  topology: Relation[][][];
+}
+
+export const getComponentScheme = (
+  component: Cache,
+  rootData: Cache[],
+  config: RootConfig,
+) => {
+  const {
+    analysis: { classifier, selector },
+    mapping,
+  } = config;
+  if (mapping[component.name])
+    return { best: [component.name], map: [], schemes: [] };
+  const rootMap = new Map<number, string>(
+    component.glyph.map((stroke, index) => {
+      const binary = 1 << (component.glyph.length - 1 - index);
+      return [binary, classifier[stroke.feature].toString()];
+    }),
+  );
+  for (const root of rootData) {
+    generateSliceBinaries(component, root).forEach((v) =>
+      rootMap.set(v, root.name),
+    );
+  }
+  const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
+  const schemeList = generateSchemes(component.glyph.length, roots);
+  const parsedRootMap = [...rootMap.entries()].map(
+    ([k, v]) =>
+      [binaryToIndices(component.glyph.length)(k), v] as [number[], string],
+  );
+  const [bestScheme, schemeData] = select(selector, component, schemeList);
+  return {
+    best: bestScheme.map((n) => rootMap.get(n)!),
+    map: parsedRootMap,
+    schemes: [...schemeData.values()].map((x) => ({
+      ...x,
+      roots: x
+        .key!.split(",")
+        .map(parseFloat)
+        .map((x) => rootMap.get(x)),
+    })),
+  } as ComponentResult;
+};
+
+export interface SchemeWithData {
+  key: string;
+  roots: string[];
+  length: number;
+  order: number[];
+  crossing: number;
+  attaching: number;
+  bias: number[];
+}
+
+export interface ComponentResult {
+  best: string[];
+  map: [number[], string][];
+  schemes: SchemeWithData[];
+}
+
+export interface CompoundResult {
+  sequence: string[];
+}
+
+export const disassembleComponents = (wen: Wen, config: RootConfig) => {
+  const result = {} as Record<string, ComponentResult>;
+  const rootData = [] as Cache[];
+  const { mapping, aliaser } = config;
+  const buildGlyph = (name: string) => {
+    const { source, indices } = aliaser[name];
+    const rawglyph = wen[source].shape[0].glyph;
+    return rawglyph.filter((_, index) => {
+      indices.includes(index);
+    });
+  };
+  for (const rootName in mapping) {
+    if (!wen[rootName] && !aliaser[rootName]) continue; // 合体字根无需在这里处理
+    const glyph = wen[rootName]?.shape[0].glyph || buildGlyph(rootName);
+    const topology = findTopology(glyph);
+    rootData.push({ glyph, topology, name: rootName });
+  }
+  for (const [name, component] of Object.entries(wen)) {
+    const glyph = component.shape[0].glyph;
+    const topology = findTopology(glyph);
+    const cache = { name, topology, glyph };
+    result[name] = getComponentScheme(cache, rootData, config);
+  }
+  return result;
+};
+
+export const disassembleCompounds = (
+  zi: Zi,
+  config: RootConfig,
+  prev: Record<string, ComponentResult>,
+) => {
+  const { mapping } = config;
+  const result = {} as Record<string, CompoundResult>;
+  const getResult = (s: string) =>
+    mapping[s] ? [s] : prev[s] ? prev[s].best : result[s]?.sequence;
+  for (const [name, compound] of Object.entries(zi)) {
+    const [c1, c2] = compound.operandList;
+    const [r1, r2] = [getResult(c1), getResult(c2)];
+    if (r1 !== undefined && r2 !== undefined) {
+      result[name] = { sequence: getResult(c1).concat(getResult(c2)) };
+    } else {
+      console.log(name, c1, c2);
+    }
+  }
+  return result;
+};

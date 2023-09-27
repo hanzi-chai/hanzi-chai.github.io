@@ -1,6 +1,5 @@
-import { ComponentData, ComponentResult, SchemeWithData } from "./chai";
+import { Cache, ComponentResult, SchemeWithData } from "./root";
 import { SieveName } from "./config";
-import { Component, Glyph } from "./data";
 import { binaryToIndices } from "./degenerator";
 import { Relation } from "./topology";
 import { isEqual } from "underscore";
@@ -8,8 +7,10 @@ import { isEqual } from "underscore";
 type Scheme = number[];
 
 type Sieve<T extends number | number[]> = {
+  title: SieveName;
   name: string;
-  key: (component: ComponentData, scheme: Scheme) => T;
+  key: (component: Cache, scheme: Scheme) => T;
+  display?: (data: T) => string;
 };
 
 function isLess<T extends number | number[]>(a: T, b: T) {
@@ -27,6 +28,7 @@ function isLess<T extends number | number[]>(a: T, b: T) {
 }
 
 export const length: Sieve<number> = {
+  title: "根少优先",
   name: "length",
   key: (_, scheme) => scheme.length,
 };
@@ -35,20 +37,25 @@ const countStrokes: (n: number) => number = (n) =>
   n < 2 ? n : (n & 1) + countStrokes(n >>> 1);
 
 export const bias: Sieve<number[]> = {
+  title: "取大优先",
   name: "bias",
   key: (_, scheme) => scheme.map(countStrokes).map((x) => -x),
+  display: (data: number[]) => "(" + data.map((x) => -x).join(", ") + ")",
 };
 
 export const order: Sieve<number[]> = {
+  title: "笔顺优先",
   name: "order",
   key: (component, scheme) => {
     return scheme.map((x) => binaryToIndices(component.glyph.length)(x)).flat();
   },
+  display: (data: number[]) => "(" + data.join(", ") + ")",
 };
 
-export const makeTopologySieve = function (
+const makeTopologySieve = function (
   relationType: Relation["type"],
   name: string,
+  title: SieveName,
 ): Sieve<number> {
   let key: Sieve<number>["key"] = (component, scheme) => {
     const parsedScheme = scheme.map((x) =>
@@ -71,41 +78,35 @@ export const makeTopologySieve = function (
     }
     return totalCrosses;
   };
-  return { name, key };
+  return { name, key, title };
 };
 
-export const crossing = makeTopologySieve("交", "crossing");
+export const crossing = makeTopologySieve("交", "crossing", "能连不交");
 
-export const attaching = makeTopologySieve("连", "attaching");
+export const attaching = makeTopologySieve("连", "attaching", "能散不连");
 
-export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>([
-  ["根少优先", length],
-  ["笔顺优先", order],
-  ["取大优先", bias],
-  ["能连不交", crossing],
-  ["能散不连", attaching],
-]);
+export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
+  [length, order, bias, crossing, attaching].map((x) => [x.title, x]),
+);
 
 const select = (
-  sieveList: (Sieve<number> | Sieve<number[]>)[],
-  componentData: ComponentData,
+  selector: SieveName[],
+  component: Cache,
   schemeList: Scheme[],
-  rootMap: Map<number, string>,
 ) => {
-  const lookup = (n: number) => rootMap.get(n)!;
+  const sieveList = selector.map((s) => sieveMap.get(s)!);
   let currentSchemeList = [...schemeList];
   let schemeData = new Map<string, Partial<SchemeWithData>>();
   schemeList.forEach((v) => {
     schemeData.set(v.toString(), {
       key: v.toString(),
-      roots: v.map(lookup),
     });
   });
   for (const sieve of sieveList) {
     const scoreList = currentSchemeList.map((x) => {
-      const v = sieve.key(componentData, x);
+      const v = sieve.key(component, x);
       const obj = schemeData.get(x.toString())!;
-      obj[sieve.name as "order"] = v as number[];
+      obj[sieve.name as "length"] = v as number;
       return v;
     });
     let min = typeof scoreList[0] === "number" ? Infinity : [Infinity];
@@ -116,29 +117,10 @@ const select = (
       isEqual(scoreList[index], min),
     );
   }
-  const parsedRootMap = [...rootMap.entries()].map(([k, v]) => [
-    binaryToIndices(componentData.glyph.length)(k),
-    v,
-  ]);
-  if (currentSchemeList.length === 1) {
-    return {
-      best: currentSchemeList[0].map(lookup),
-      map: parsedRootMap,
-      schemes: [...schemeData.values()],
-    } as ComponentResult;
-  } else {
-    console.error(
-      "undetermined component",
-      componentData.name,
-      schemeList,
-      currentSchemeList,
-    );
-    return {
-      best: currentSchemeList[0].map(lookup),
-      map: parsedRootMap,
-      schemes: [...schemeData.values()],
-    } as ComponentResult;
+  if (currentSchemeList.length !== 1) {
+    console.error("undetermined component", component.name);
   }
+  return [currentSchemeList[0], schemeData] as [Scheme, typeof schemeData];
 };
 
 export type { Scheme, Sieve };
