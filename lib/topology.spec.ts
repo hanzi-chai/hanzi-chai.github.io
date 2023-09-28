@@ -74,6 +74,21 @@ describe("linear relation", () => {
   });
 });
 
+describe("linear relation 2", () => {
+  const {
+    艹: { shape },
+  } = w;
+  const strokes = shape[0].glyph.map(render);
+  const [h, s1, s2] = strokes.map((x) => x.curveList).flat() as LinearCurve[];
+  it("figures out all relations in 艹", () => {
+    expect(linearRelation(s1, s2)).toEqual({
+      type: "散",
+      x: -1,
+      y: 0,
+    });
+  });
+});
+
 describe("curve relation", () => {
   it("figures out all relations in 义", () => {
     const {

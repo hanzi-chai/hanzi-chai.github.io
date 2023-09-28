@@ -33,8 +33,8 @@ type Relation =
     } & DisjointPosition);
 
 const intervalPosition = (i: [number, number], j: [number, number]) => {
-  const [imin, imax] = i.sort();
-  const [jmin, jmax] = j.sort();
+  const [imin, imax] = i.sort((a, b) => a - b);
+  const [jmin, jmax] = j.sort((a, b) => a - b);
   const [imid, jmid] = [mean(i), mean(j)];
   // version 1
   if (imid <= jmin && imax <= jmid) return -1;

@@ -4,7 +4,7 @@ import { writeFileSync, mkdirSync } from "fs";
 mkdirSync("data", { recursive: true });
 const endpoint = "https://chai-data.tansongchen.workers.dev/";
 
-const { data: wen } = await axios.get(endpoint);
+const { data: wen } = await axios.get(endpoint + "components");
 writeFileSync("data/wen.json", JSON.stringify(wen));
 
 const { data: zi } = await axios.get(endpoint + "compounds");

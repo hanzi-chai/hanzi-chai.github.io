@@ -54,6 +54,7 @@ export const order: Sieve<number[]> = {
 
 const makeTopologySieve = function (
   relationType: Relation["type"],
+  avoidRelationType: Relation["type"][],
   name: string,
   title: SieveName,
 ): Sieve<number> {
@@ -65,15 +66,17 @@ const makeTopologySieve = function (
     for (const [i, bi] of parsedScheme.entries()) {
       for (const [j, bj] of parsedScheme.entries()) {
         if (j >= i) continue;
-        let cross = false;
+        let r = false,
+          a = false;
         for (const k of bi) {
           for (const l of bj) {
             const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
             const relations = component.topology[larger][smaller];
-            cross ||= relations.some((v) => v.type === relationType);
+            r ||= relations.some((v) => v.type === relationType);
+            a ||= relations.some((v) => avoidRelationType.includes(v.type));
           }
         }
-        totalCrosses += +cross;
+        totalCrosses += +(r && !a);
       }
     }
     return totalCrosses;
@@ -81,9 +84,14 @@ const makeTopologySieve = function (
   return { name, key, title };
 };
 
-export const crossing = makeTopologySieve("交", "crossing", "能连不交");
+export const crossing = makeTopologySieve("交", [], "crossing", "能连不交");
 
-export const attaching = makeTopologySieve("连", "attaching", "能散不连");
+export const attaching = makeTopologySieve(
+  "连",
+  ["交"],
+  "attaching",
+  "能散不连",
+);
 
 export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   [length, order, bias, crossing, attaching].map((x) => [x.title, x]),
