@@ -1,5 +1,7 @@
 import { isEqual } from "underscore";
 import { Cache } from "./root";
+import { Glyph } from "./data";
+import findTopology from "./topology";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -14,11 +16,12 @@ export const binaryToIndices = (n: number) => (binary: number) => {
   return indices.filter((index) => binary & (1 << (n - index - 1)));
 };
 
+const simplifyMap = new Map<string, string>([
+  ["捺", "点"],
+  // ["提", "横"],
+]);
+
 const strokeFeatureEqual = (s1: string, s2: string) => {
-  const simplifyMap = new Map<string, string>([
-    ["捺", "点"],
-    ["提", "横"],
-  ]);
   const simplify = (s: string) => simplifyMap.get(s) || s;
   return simplify(s1) === simplify(s2);
 };
@@ -48,3 +51,12 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
   }
   return queue.map(indicesToBinary(cglyph.length));
 };
+
+const degenerate = (glyph: Glyph) => {
+  return [
+    glyph.map((x) => x.feature).map((x) => simplifyMap.get(x) || x),
+    findTopology(glyph),
+  ] as const;
+};
+
+export default degenerate;

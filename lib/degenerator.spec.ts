@@ -1,14 +1,15 @@
-import {
+import degenerate, {
   indicesToBinary,
   binaryToIndices,
   generateSliceBinaries,
 } from "./degenerator";
 import { describe, it, expect } from "vitest";
-import { create, all } from "mathjs";
+import { create, all, exp } from "mathjs";
 import findTopology from "./topology";
 import wen from "../data/wen.json";
-import { Wen } from "./data";
+import { Glyph, Wen } from "./data";
 import { Cache } from "./root";
+import { useWen, useWenSimp } from "./mock";
 const w = wen as unknown as Wen;
 
 const { randomInt } = create(all, {
@@ -55,5 +56,17 @@ describe("generate slice binaries", () => {
   };
   it("should find multiple occurence of a root", () => {
     expect(generateSliceBinaries(component, root)).toEqual([9, 5, 3]);
+  });
+});
+
+describe("degenerate cross tests", () => {
+  const { 九, 丸, 乡, 双折 } = useWenSimp();
+  const slice = (source: Glyph, indices: number[]) =>
+    indices.map((i) => source[i]);
+  it("says 丸 has 九", () => {
+    expect(degenerate(九)).toEqual(degenerate(slice(丸, [0, 1])));
+  });
+  it("says 丹 has 亠", () => {
+    expect(degenerate(双折)).toEqual(degenerate(slice(乡, [0, 1])));
   });
 });

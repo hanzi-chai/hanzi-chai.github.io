@@ -77,11 +77,13 @@ elements:
       今上: { source: 今, indices: [0, 1] }
       七变: { source: 长, indices: [1, 2] }
       化右变: { source: 龙, indices: [2, 3] }
+      丹中: { source: 丹, indices: [2, 3] }
+      互中: { source: 互, indices: [1, 2] }
     analysis:
       selector:
-        # - 根少优先
         - 笔顺优先
-        # - 能连不交
+        - 根少优先
+        - 能连不交
         - 能散不连
         - 取大优先
       classifier:
@@ -133,6 +135,7 @@ elements:
       言: w
       讠: w
       亠: w
+      丹中: w
       立: w
       心: e
       忄: e
@@ -167,13 +170,14 @@ elements:
       步中: u
       人: i
       亻: i
-      人改: i
+      # 人改: i
       今上: i
       文: o
       攵: o
       夂: o
       夕: o
       久上: o
+      角上: o
       火: o
       灬: o
       雨: o
@@ -226,7 +230,6 @@ elements:
       廾: h
       黄上: h
       贝: h
-      其: h
       且: h
       具上: h
       丁: j
@@ -239,6 +242,7 @@ elements:
       王: l
       母二: l
       贯二: l
+      互中: l
       衤: l
       礻: l
       七: l
@@ -269,7 +273,7 @@ elements:
       双折: x
       纟: x
       田: c
-      囗: c
+      # 囗: c
       匚: c
       凵: c
       假角: c
@@ -295,8 +299,6 @@ elements:
       兴上: v
       展底: v
       衣下: v
-      已: v
-      己: v
       巳: v
       也: v
       巴: v

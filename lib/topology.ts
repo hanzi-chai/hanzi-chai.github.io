@@ -36,8 +36,12 @@ const intervalPosition = (i: [number, number], j: [number, number]) => {
   const [imin, imax] = i.sort();
   const [jmin, jmax] = j.sort();
   const [imid, jmid] = [mean(i), mean(j)];
+  // version 1
   if (imid <= jmin && imax <= jmid) return -1;
   if (imin >= jmid && imid >= jmax) return 1;
+  // version 2
+  // if (imax <= jmin) return -1;
+  // if (imin >= jmax) return 1;
   return 0;
 };
 

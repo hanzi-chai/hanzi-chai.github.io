@@ -12,3 +12,6 @@ writeFileSync("data/zi.json", JSON.stringify(zi));
 
 const { data: yin } = await axios.get(endpoint + "characters");
 writeFileSync("data/yin.json", JSON.stringify(yin));
+
+const { data: mswb } = await axios.get(endpoint + "mswb");
+writeFileSync("data/mswb.json", JSON.stringify(mswb));
