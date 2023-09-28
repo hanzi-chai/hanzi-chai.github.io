@@ -1,5 +1,48 @@
 import { describe, it, expect } from "vitest";
+import {
+  disassembleComponents,
+  disassembleCompounds,
+  generateSchemes,
+  getComponentScheme,
+} from "./root";
+import { buildCache, useWen, useXingyin, useZi } from "./mock";
 
 describe("generate schemes", () => {
-  it("");
+  it("works for a simple case", () => {
+    expect(generateSchemes(4, [1, 2, 4, 6, 7, 8, 12])).toEqual([
+      [8, 4, 2, 1],
+      [8, 6, 1],
+      [8, 7],
+      [12, 2, 1],
+    ]);
+  });
+});
+
+describe("get component scheme", () => {
+  const config = useXingyin();
+  const [天, 一, 大, 二, 人] = ["天", "一", "大", "二", "人"].map(buildCache);
+  it("works", () => {
+    expect(getComponentScheme(天, [一, 大, 二, 人], config).best).toEqual([
+      "一",
+      "大",
+    ]);
+  });
+});
+
+describe("disassemble components", () => {
+  const config = useXingyin();
+  const wen = useWen();
+  it("works", () => {
+    expect(disassembleComponents(wen, config)).toBeDefined();
+  });
+});
+
+describe("disassemble compounds", () => {
+  const config = useXingyin();
+  const wen = useWen();
+  const zi = useZi();
+  it("works", () => {
+    const prev = disassembleComponents(wen, config);
+    expect(disassembleCompounds(zi, config, prev)).toBeDefined();
+  });
 });

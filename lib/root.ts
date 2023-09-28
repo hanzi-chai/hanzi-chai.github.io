@@ -7,19 +7,19 @@ import findTopology, { Relation } from "./topology";
 
 export const generateSchemes = (n: number, roots: number[]) => {
   const schemeList = [] as number[][];
-  const totalBin = (1 << n) - 1;
-  const combineNext = (curBin: number, curScheme: number[]) => {
-    const restBin = totalBin - curBin;
+  const total = (1 << n) - 1;
+  const combineNext = (partialSum: number, scheme: number[]) => {
+    const restBin = total - partialSum;
     const restBin1st = 1 << (restBin.toString(2).length - 1);
     const start = bisectLeft(roots, restBin1st);
     const end = bisectRight(roots, restBin);
     for (const binary of roots.slice(start, end)) {
-      if ((curBin & binary) !== 0) continue;
-      const newBin = curBin + binary;
-      if (newBin === totalBin) {
-        schemeList.push(curScheme.concat(binary));
+      if ((partialSum & binary) !== 0) continue;
+      const newBin = partialSum + binary;
+      if (newBin === total) {
+        schemeList.push(scheme.concat(binary));
       } else {
-        combineNext(newBin, curScheme.concat(binary));
+        combineNext(newBin, scheme.concat(binary));
       }
     }
   };
@@ -51,8 +51,8 @@ export const getComponentScheme = (
     }),
   );
   for (const root of rootData) {
-    generateSliceBinaries(component, root).forEach((v) =>
-      rootMap.set(v, root.name),
+    generateSliceBinaries(component, root).forEach((binary) =>
+      rootMap.set(binary, root.name),
     );
   }
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
@@ -102,12 +102,13 @@ export const disassembleComponents = (wen: Wen, config: RootConfig) => {
   const buildGlyph = (name: string) => {
     const { source, indices } = aliaser[name];
     const rawglyph = wen[source].shape[0].glyph;
-    return rawglyph.filter((_, index) => {
-      indices.includes(index);
-    });
+    return indices.map((x) => rawglyph[x]);
   };
   for (const rootName in mapping) {
-    if (!wen[rootName] && !aliaser[rootName]) continue; // 合体字根无需在这里处理
+    if (!wen[rootName] && !aliaser[rootName]) {
+      console.log(rootName);
+      continue; // 合体字根和单笔画字根无需在这里处理
+    }
     const glyph = wen[rootName]?.shape[0].glyph || buildGlyph(rootName);
     const topology = findTopology(glyph);
     rootData.push({ glyph, topology, name: rootName });

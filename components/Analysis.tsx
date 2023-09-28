@@ -48,7 +48,7 @@ import { Classifier, Config, RootConfig } from "../lib/config";
 import { intersection, isEmpty } from "underscore";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ConfigItem from "./ConfigItem";
-import d from "../data/dict.yaml";
+import d from "../data/mswb.json";
 
 const ExtraContainer = styled.div`
   display: flex;
@@ -223,6 +223,16 @@ const RootAnalysis = () => {
         } else {
           incorrect += 1;
         }
+        return [key, res, codes, refcodes, match] as [
+          string,
+          ComponentResult,
+          string[],
+          string[],
+          boolean,
+        ];
+      })
+      .filter(([key, res, codes, refcodes, match]) => !match)
+      .map(([key, res, codes, refcodes, match]) => {
         return {
           key,
           label: (
