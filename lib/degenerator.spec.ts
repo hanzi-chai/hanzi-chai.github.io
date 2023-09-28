@@ -60,13 +60,25 @@ describe("generate slice binaries", () => {
 });
 
 describe("degenerate cross tests", () => {
-  const { 九, 丸, 乡, 双折 } = useWenSimp();
+  const { 九, 丸, 儿, 充, 其, 艹, 山, 出, 冖, 农, 厶, 瓜 } = useWenSimp();
   const slice = (source: Glyph, indices: number[]) =>
     indices.map((i) => source[i]);
   it("says 丸 has 九", () => {
     expect(degenerate(九)).toEqual(degenerate(slice(丸, [0, 1])));
   });
-  it("says 丹 has 亠", () => {
-    expect(degenerate(双折)).toEqual(degenerate(slice(乡, [0, 1])));
+  it("says 充 has 儿", () => {
+    expect(degenerate(儿)).toEqual(degenerate(slice(充, [4, 5])));
+  });
+  it("says 其 has 艹", () => {
+    expect(degenerate(艹)).toEqual(degenerate(slice(其, [0, 1, 2])));
+  });
+  it("says 出 has 山", () => {
+    expect(degenerate(山)).toEqual(degenerate(slice(出, [2, 3, 4])));
+  });
+  it("says 农 has 冖", () => {
+    expect(degenerate(冖)).toEqual(degenerate(slice(农, [0, 1])));
+  });
+  it("says 瓜 has 厶", () => {
+    expect(degenerate(厶)).toEqual(degenerate(slice(瓜, [2, 3])));
   });
 });

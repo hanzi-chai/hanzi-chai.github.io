@@ -172,7 +172,7 @@ const RootAnalysis = () => {
       if (scheme.length === 1) {
         const [root] = scheme;
         const key = mapping[root];
-        const jianming = "金言心禾土又竹人文目西石米日广廿丁口王之白田水子月木";
+        const jianming = "气五山八土言月日口车金石米王广火子十立之西川水巴女木";
         if (jianming.includes(root)) {
           code += key.repeat(4);
         } else if ("123456".includes(root)) {
