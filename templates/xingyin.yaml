@@ -84,6 +84,8 @@ elements:
       少上: { source: 少, indices: [0, 1, 2] }
       毋中: { source: 毋, indices: [2, 3] }
       瓜内: { source: 瓜, indices: [2, 3] }
+      木下: { source: 木, indices: [1, 2, 3] }
+      办外: { source: 办, indices: [2, 3] }
     analysis:
       selector:
         - 笔顺优先
@@ -151,6 +153,7 @@ elements:
       兼中: e
       虐下: e
       八: r
+      办外: r
       亻: r
       土: t
       土变: t
@@ -191,10 +194,11 @@ elements:
       尸: p
       毛: p
       小: p
+      少上: p
+      木下: p
       大: p
       彳: p
       车: p
-      少上: p
       金: a
       钅: a
       人: a

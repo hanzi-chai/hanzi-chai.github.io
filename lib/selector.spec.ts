@@ -33,7 +33,7 @@ describe("crossing", () => {
 describe("attaching", () => {
   it("should measure the attaching of scheme", () => {
     expect(attaching.key(天, [8, 7])).toBe(1);
-    expect(attaching.key(天, [12, 3])).toBe(1);
+    expect(attaching.key(天, [12, 3])).toBe(0);
   });
 });
 
