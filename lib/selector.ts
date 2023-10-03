@@ -76,7 +76,7 @@ const makeTopologySieve = function (
             a ||= relations.some((v) => avoidRelationType.includes(v.type));
           }
         }
-        totalCrosses += +(r && !a);
+        if (!a) totalCrosses += +r;
       }
     }
     return totalCrosses;

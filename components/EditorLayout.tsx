@@ -38,17 +38,17 @@ const items: MenuProps["items"] = [
   },
   {
     label: "数据",
-    key: "data",
+    key: "data/component",
     icon: <DatabaseOutlined />,
   },
   {
     label: "元素",
-    key: "element",
+    key: "element/0",
     icon: <SettingOutlined />,
   },
   {
     label: "分析",
-    key: "analysis",
+    key: "analysis/0",
     icon: <ProfileOutlined />,
   },
   {
@@ -101,6 +101,7 @@ const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-around;
   align-items: center;
+  padding: 0;
 `;
 
 const Content = styled(Layout.Content)`
@@ -141,12 +142,12 @@ const EditorLayout = () => {
           <Title>{config.info.name}</Title>
         </NameAndBack>
         <Menu
-          onClick={(e) => navigate(e.key === "index" ? "" : e.key)}
+          onClick={(e) => navigate(e.key === "index" ? "" : `/${id}/${e.key}`)}
           selectedKeys={[panel || "index"]}
           theme="dark"
           mode="horizontal"
           items={items}
-          style={{ width: "600px", justifyContent: "center" }}
+          style={{ width: "440px", justifyContent: "center" }}
         />
         <ActionGroup>
           <Button onClick={() => document.getElementById("import")!.click()}>
@@ -176,10 +177,10 @@ const Contextualized = () => {
   const [_, id, panel] = pathname.split("/");
 
   // read previous data
-  // useEffect(() => {
-  //   const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
-  //   dispatch({ type: "load", content: previousConfig });
-  // }, []);
+  useEffect(() => {
+    const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
+    dispatch({ type: "load", content: previousConfig });
+  }, []);
 
   return (
     <CacheContext.Provider value={cache}>

@@ -73,12 +73,10 @@ elements:
       见二: { source: 见, indices: [0, 1] }
       土变: { source: 黑上, indices: [5, 6, 7] }
       人改: { source: 内, indices: [2, 3] }
-      前上离: { source: 丧, indices: [2, 3, 4] }
       卜离: { source: 不, indices: [2, 3] }
       今上: { source: 今, indices: [0, 1] }
       七变: { source: 长, indices: [1, 2] }
       化右变: { source: 龙, indices: [2, 3] }
-      丹中: { source: 丹, indices: [2, 3] }
       互中: { source: 互, indices: [1, 2] }
       及二: { source: 及, indices: [0, 1] }
       少上: { source: 少, indices: [0, 1, 2] }
@@ -86,6 +84,11 @@ elements:
       瓜内: { source: 瓜, indices: [2, 3] }
       木下: { source: 木, indices: [1, 2, 3] }
       办外: { source: 办, indices: [2, 3] }
+      甬下: { source: 甬, indices: [2, 3, 4, 5, 6] }
+      三点: { source: 州, indices: [0, 2, 4] }
+      飞右: { source: 飞, indices: [1, 2] }
+      年中: { source: 年, indices: [2, 3, 4] }
+      秉框: { source: 秉, indices: [0, 1, 5, 6, 7] }
     analysis:
       selector:
         - 笔顺优先
@@ -144,12 +147,12 @@ elements:
       五: w
       讠: w
       亠: w
-      丹中: w
       山: e
       占上: e
       尚上: e
       巾: e
       彐: e
+      录上: e
       兼中: e
       虐下: e
       八: r
@@ -174,6 +177,7 @@ elements:
       月: u
       那左: u
       用: u
+      甬下: u
       青下: u
       文: u
       攵: u
@@ -213,6 +217,7 @@ elements:
       齐下: d
       临左: d
       冫: d
+      飞右: d
       总上: d
       冬下: d
       王: f
@@ -221,6 +226,7 @@ elements:
       四: f
       目: f
       罗上: f
+      隹右: f
       广: g
       疒: g
       厂: g
@@ -238,6 +244,7 @@ elements:
       乐二: h
       抑中: h
       禾: h
+      秉框: h
       余下: h
       丁: j
       扌: j
@@ -256,7 +263,6 @@ elements:
       黄上: k
       丬: k
       前上: k
-      前上离: k
       又: k
       立: l
       # 互中: l
@@ -300,6 +306,7 @@ elements:
       凵: c
       假角: c
       候角: c
+      年中: c
       冂: c
       周外: c
       见二: c
@@ -313,6 +320,7 @@ elements:
       承外: v
       氵: v
       兴上: v
+      三点: v
       皿: v
       央三: v
       黑五: v

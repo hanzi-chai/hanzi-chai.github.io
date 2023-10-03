@@ -1,21 +1,14 @@
 import wen from "../data/wen.json";
 import zi from "../data/zi.json";
-import { Component, Wen, Zi } from "./data";
+import { Wen, Zi } from "./data";
 import findTopology from "./topology";
 import xingyin from "../templates/xingyin.yaml";
 import { Config, RootConfig } from "./config";
 
 export const useWen = () => {
-  return wen as unknown as Wen;
-};
-
-export const useWenSimp = () => {
   const w = wen as unknown as Wen;
-  return Object.fromEntries(
-    Object.entries(w).map(([x, v]) => {
-      return [x, v.shape[0].glyph];
-    }),
-  );
+  const x = xingyin as Config;
+  return Object.assign({}, w, x.data.component);
 };
 
 export const useZi = () => {
@@ -24,8 +17,7 @@ export const useZi = () => {
 
 export const buildCache = (name: string) => {
   const component = useWen()[name];
-  const glyph = component.shape[0].glyph;
-  return { name, glyph, topology: findTopology(glyph) };
+  return { name, glyph: component, topology: findTopology(component) };
 };
 
 export const useXingyin = () => {

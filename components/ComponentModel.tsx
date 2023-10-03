@@ -1,8 +1,13 @@
 import { Empty, InputNumber, Typography } from "antd";
 import { createContext, useContext } from "react";
 import styled from "styled-components";
-import { Draw as Curve, Stroke, Component } from "../lib/data";
-import { WenContext } from "./Context";
+import { Draw as Curve, Glyph, Stroke } from "../lib/data";
+import {
+  ConfigContext,
+  DispatchContext,
+  WenContext,
+  useWenCustomized,
+} from "./Context";
 import { halfToFull } from "./utils";
 
 export const Change = createContext(
@@ -10,6 +15,7 @@ export const Change = createContext(
 );
 const StrokeIndex = createContext(-1);
 const CurveIndex = createContext(-1);
+const NameContext = createContext("");
 
 interface StrokeModelProps {
   stroke: Stroke;
@@ -108,8 +114,10 @@ export const MyInputNumber = styled(InputNumber)`
 `;
 
 const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
-  const change = useContext(Change),
-    strokeIndex = useContext(StrokeIndex),
+  const name = useContext(NameContext);
+  const dispatch = useContext(DispatchContext);
+  const glyph = useWenCustomized()[name];
+  const strokeIndex = useContext(StrokeIndex),
     curveIndex = useContext(CurveIndex);
   return (
     <MyInputNumber
@@ -117,63 +125,43 @@ const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
       max={100}
       value={parameter}
       onChange={(value) => {
-        change(strokeIndex, curveIndex, parameterIndex, 0);
+        const modified = JSON.parse(JSON.stringify(glyph)) as Glyph;
+        if (curveIndex === -1) {
+          modified[strokeIndex].start[parameterIndex] = value as number;
+        } else {
+          modified[strokeIndex].curveList[curveIndex].parameterList[
+            parameterIndex
+          ] = value as number;
+        }
+        dispatch({
+          type: "data",
+          subtype: "component",
+          key: name,
+          value: modified,
+        });
       }}
     />
   );
 };
 
-export default function ComponentModel({
-  componentName,
-}: {
-  componentName?: string;
-}) {
-  const CHAI = useContext(WenContext);
+export default function ComponentModel({ name }: { name?: string }) {
+  const wen = useWenCustomized();
   return (
     <Wrapper>
       <Typography.Title level={2}>调整数据</Typography.Title>
-      {
-        componentName ? (
-          CHAI[componentName].shape[0].glyph.map((stroke, strokeIndex) => (
+      {name ? (
+        <NameContext.Provider value={name!}>
+          {wen[name].map((stroke, strokeIndex) => (
             <StrokeModel
               key={strokeIndex}
               stroke={stroke}
               strokeIndex={strokeIndex}
             />
-          ))
-        ) : (
-          <Empty />
-        )
-        // <Change.Provider
-        // value={async (
-        //   strokeIndex: number,
-        //   curveIndex: number,
-        //   parameterIndex: number,
-        //   value: number
-        // ) => {
-        //   const modified = JSON.parse(
-        //     JSON.stringify(component.shape[0].glyph)
-        //   );
-        //   if (curveIndex === -1) {
-        //     modified[strokeIndex].start[parameterIndex] = value;
-        //   } else {
-        //     modified[strokeIndex].curveList[curveIndex].parameterList[
-        //       parameterIndex
-        //     ] = value;
-        //   }
-        // const newData = {
-        //   shape: [{ ...component.shape[0], glyph: modified }],
-        // };
-        // await fetch(`/data`, {
-        //   headers: { 'Content-Type': 'application/json' },
-        //   method: 'PUT',
-        //   body: JSON.stringify({ key: currentComponent, value: newData })
-        // });
-        // await mutate(newData);
-        // }}
-        // >
-        // </Change.Provider>
-      }
+          ))}
+        </NameContext.Provider>
+      ) : (
+        <Empty />
+      )}
     </Wrapper>
   );
 }

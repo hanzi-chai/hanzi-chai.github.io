@@ -2,10 +2,10 @@ import { useContext, useState } from "react";
 import styled from "styled-components";
 import { ConfigContext, WenContext, ZiContext } from "./Context";
 import Char from "./Char";
-import { Component } from "../lib/data";
 import { Classifier, Config, RootConfig } from "../lib/config";
 import { Pagination } from "antd";
 import defaultClassifier from "../templates/classifier.yaml";
+import { Glyph } from "../lib/data";
 
 const Content = styled.div`
   display: flex;
@@ -28,8 +28,8 @@ export const makeSequenceFilter = (
   classifier: Classifier,
   sequence: string,
 ) => {
-  return ([x, v]: [string, Component]) => {
-    const fullSequence = v.shape[0].glyph
+  return ([x, v]: [string, Glyph]) => {
+    const fullSequence = v
       .map((s) => s.feature)
       .map((x) => classifier[x])
       .join("");

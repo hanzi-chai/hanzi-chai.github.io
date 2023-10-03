@@ -12,9 +12,11 @@ import {
 } from "./data";
 import { add, subtract, mean, multiply, abs, divide, distance } from "mathjs";
 
+type RelationSymbol = -1 | -0.5 | 0 | 0.5 | 1;
+
 interface DisjointRelation {
-  x: -1 | 0 | 1;
-  y: -1 | 0 | 1;
+  x: RelationSymbol;
+  y: RelationSymbol;
 }
 
 interface AttachRelation {
@@ -36,9 +38,12 @@ type Relation =
 const getIntervalRelation = (i: [number, number], j: [number, number]) => {
   const [imin, imax] = i.sort((a, b) => a - b);
   const [jmin, jmax] = j.sort((a, b) => a - b);
-  // version 2
+  // totally disjoint
   if (imax < jmin) return -1;
   if (imin > jmax) return 1;
+  // generally smaller or larger
+  if (imin < jmin && imax < jmax) return -0.5;
+  if (imin > jmin && imax > jmax) return +0.5;
   return 0;
 };
 
@@ -90,7 +95,7 @@ const linearRelation = function (a: LinearCurve, b: LinearCurve): Relation {
 };
 
 const switchRelation = function (r: Relation): Relation {
-  const negate = (x: -1 | 0 | 1) => (0 - x) as -1 | 0 | 1;
+  const negate = (x: RelationSymbol) => (0 - x) as RelationSymbol;
   switch (r.type) {
     case "交":
       return r;
@@ -146,8 +151,12 @@ const recurse = function (
   const al: LinearCurve = { type: "linear", controls: [as, ae] };
   const bl: LinearCurve = { type: "linear", controls: [bs, be] };
   const disjointRelation = getDisjointRelation(al, bl);
-  // console.log(at, al, bt, bl, disjointRelation);
-  if (!(disjointRelation.x === 0 && disjointRelation.y === 0)) return undefined;
+  const totallyDisjoint = [-1, 1];
+  if (
+    totallyDisjoint.includes(disjointRelation.x) ||
+    totallyDisjoint.includes(disjointRelation.y)
+  )
+    return undefined;
   const [alength, blength] = [distance(as, ae), distance(bs, be)] as [
     number,
     number,
@@ -173,18 +182,16 @@ const recurse = function (
 };
 
 const getRecursiveRelation = function (a: Curve, b: Curve): Relation {
-  const disjointRelation = {
-    type: "散" as const,
-    ...getDisjointRelation(a, b),
-  };
-  if (!(disjointRelation.x === 0 && disjointRelation.y === 0))
-    return disjointRelation;
   const crossPoint = recurse(a, [0, 1], b, [0, 1]);
-  if (crossPoint === undefined) return disjointRelation;
+  if (crossPoint === undefined)
+    return {
+      type: "散" as const,
+      ...getDisjointRelation(a, b),
+    };
   const lian = { type: "连" } as const;
-  const [astart, aend] = [a.controls[0], a.controls[a.controls.length - 1]];
-  const [bstart, bend] = [b.controls[0], b.controls[a.controls.length - 1]];
-  const distanceThreshold = 1;
+  const [astart, aend] = box(a);
+  const [bstart, bend] = box(b);
+  const distanceThreshold = 3;
   if ((distance(crossPoint, astart) as number) < distanceThreshold)
     return { ...lian, first: "前", second: "中" };
   if ((distance(crossPoint, aend) as number) < distanceThreshold)

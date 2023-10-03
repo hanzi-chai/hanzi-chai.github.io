@@ -13,11 +13,10 @@ import {
   RootConfig,
 } from "../lib/config";
 import wen from "../data/wen.json";
-import { Wen } from "../lib/data";
-import yin from "../data/yin.json";
-import { Yin } from "../lib/data";
 import zi from "../data/zi.json";
-import { Zi } from "../lib/data";
+import yin from "../data/yin.json";
+import font from "../data/pingfang.json";
+import { Compound, Glyph, Wen, Zi, Yin } from "../lib/data";
 import defaultConfig from "../templates/default.yaml";
 import { useLocation } from "react-router-dom";
 
@@ -48,6 +47,12 @@ export type Action =
           source: string;
           indices: number[];
         }
+    ))
+  | ({
+      type: "data";
+    } & (
+      | { subtype: "component"; key: string; value: Glyph }
+      | { subtype: "compound"; key: string; value: Compound }
     ));
 
 export const configReducer = (config: Config, action: Action) => {
@@ -92,6 +97,12 @@ export const configReducer = (config: Config, action: Action) => {
           i === action.element ? newElementConfig : v,
         ),
       };
+      break;
+    case "data":
+      const { subtype, key, value } = action;
+      const data = JSON.parse(JSON.stringify(config.data)) as Config["data"];
+      data[subtype][key] = value;
+      newconfig = { ...config, data };
   }
 
   localStorage.setItem(id, JSON.stringify(newconfig));
@@ -101,6 +112,7 @@ export const configReducer = (config: Config, action: Action) => {
 export const WenContext = createContext(wen as unknown as Wen);
 export const ZiContext = createContext(zi as unknown as Zi);
 export const YinContext = createContext(yin as unknown as Yin);
+export const FontContext = createContext(font as Record<string, string>);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
@@ -123,4 +135,12 @@ const useElement = () => {
 const useRoot = () => useElement() as RootConfig;
 const usePhonetic = () => useElement() as PhoneticConfig;
 
-export { useIndex, useElement, useRoot, usePhonetic };
+const useWenCustomized = () => {
+  const wen = useContext(WenContext);
+  const {
+    data: { component },
+  } = useContext(ConfigContext);
+  return Object.assign({}, wen, component);
+};
+
+export { useIndex, useElement, useRoot, usePhonetic, useWenCustomized };
