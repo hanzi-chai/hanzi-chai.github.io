@@ -18,16 +18,16 @@ const w = wen as unknown as Wen;
 describe("interval position", () => {
   it("works for easy cases", () => {
     expect(intervalPosition([10, 20], [30, 40])).toBe(-1);
-    expect(intervalPosition([10, 20], [20, 40])).toBe(-1);
-    expect(intervalPosition([40, 50], [30, 40])).toBe(1);
+    expect(intervalPosition([10, 20], [20, 40])).toBe(0);
+    expect(intervalPosition([40, 50], [30, 40])).toBe(0);
     expect(intervalPosition([50, 70], [30, 40])).toBe(1);
   });
   it("works for trickier cases", () => {
-    expect(intervalPosition([10, 20], [15, 25])).toBe(-1);
+    expect(intervalPosition([10, 20], [15, 25])).toBe(0);
     expect(intervalPosition([10, 20], [14, 25])).toBe(0);
     expect(intervalPosition([10, 30], [14, 25])).toBe(0);
     expect(intervalPosition([20, 30], [16, 25])).toBe(0);
-    expect(intervalPosition([23, 34], [16, 25])).toBe(1);
+    expect(intervalPosition([23, 34], [16, 25])).toBe(0);
   });
 });
 
@@ -90,14 +90,38 @@ describe("linear relation 2", () => {
 });
 
 describe("curve relation", () => {
+  it("figures out all relations in 天", () => {
+    const {
+      天: { shape },
+    } = w;
+    const strokes = shape[0].glyph.map(render);
+    const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
+    expect(curveRelation(c1, c3)).toEqual({
+      type: "连",
+      first: "中",
+      second: "前",
+    });
+    expect(curveRelation(c1, c4)).toEqual({ type: "散", x: 0, y: -1 });
+    expect(curveRelation(c2, c3)).toEqual({ type: "交" });
+    expect(curveRelation(c2, c4)).toEqual({
+      type: "连",
+      first: "中",
+      second: "前",
+    });
+    expect(curveRelation(c3, c4)).toEqual({
+      type: "连",
+      first: "中",
+      second: "前",
+    });
+  });
   it("figures out all relations in 义", () => {
     const {
       义: { shape },
     } = w;
     const strokes = shape[0].glyph.map(render);
     const [c1, c2, c3] = strokes.map((x) => x.curveList).flat();
-    expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: -1 });
-    expect(curveRelation(c1, c3)).toEqual({ type: "散", x: 0, y: -1 });
+    expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: 0 });
+    expect(curveRelation(c1, c3)).toEqual({ type: "散", x: 0, y: 0 });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
   });
   it("figures out all relations in 升", () => {
