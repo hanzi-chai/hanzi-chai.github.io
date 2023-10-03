@@ -1,4 +1,4 @@
-import { Component, Compound } from "./data";
+import { Compound, Glyph } from "./data";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
@@ -45,7 +45,7 @@ interface Config {
     description: string;
   };
   data: {
-    component: Record<string, Component>;
+    component: Record<string, Glyph>;
     compound: Record<string, Compound>;
     character: Record<string, string[]>;
   };

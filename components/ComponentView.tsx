@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import { Stroke, Component } from "../lib/data";
+import { Stroke } from "../lib/data";
 import { useContext } from "react";
-import { WenContext } from "./Context";
+import { FontContext, WenContext, useWenCustomized } from "./Context";
 import { Empty, Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
@@ -12,7 +12,7 @@ const FontView = ({ reference }: { reference: string }) => (
     width="100%"
     viewBox="0 0 1000 1000"
   >
-    <path d={reference} transform="matrix(1,0,0,-1,0,850)" />
+    <path d={reference} stroke="grey" transform="matrix(1,0,0,-1,0,850)" />
   </SVG>
 );
 
@@ -47,20 +47,17 @@ const SVG = styled.svg`
   grid-area: 1 / 1 / 1 / 1;
 `;
 
-export default function ComponentView({
-  componentName,
-}: {
-  componentName?: string;
-}) {
-  const CHAI = useContext(WenContext);
+export default function ComponentView({ name }: { name?: string }) {
+  const wen = useWenCustomized();
+  const font = useContext(FontContext);
   return (
     <Wrapper>
       <Typography.Title level={2}>查看 SVG</Typography.Title>
       <Overlay>
-        {componentName ? (
+        {name ? (
           <>
-            <FontView reference={CHAI[componentName].shape[0].reference} />
-            <StrokesView glyph={CHAI[componentName].shape[0].glyph} />
+            <FontView reference={font[name]} />
+            <StrokesView glyph={wen[name]} />
           </>
         ) : (
           <Empty description={false} />

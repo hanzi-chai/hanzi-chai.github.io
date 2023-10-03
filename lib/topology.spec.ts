@@ -10,10 +10,7 @@ import findTopology, {
   strokeRelation,
 } from "./topology";
 import { CubicCurve, Draw, Glyph, LinearCurve, Point } from "./data";
-import wen from "../data/wen.json";
-import { Wen } from "./data";
-
-const w = wen as unknown as Wen;
+import { useWen } from "./mock";
 
 describe("interval position", () => {
   it("works for easy cases", () => {
@@ -32,10 +29,8 @@ describe("interval position", () => {
 });
 
 describe("linear relation", () => {
-  const {
-    田: { shape },
-  } = w;
-  const strokes = shape[0].glyph.map(render);
+  const { 田 } = useWen();
+  const strokes = 田.map(render);
   const [l, t, r, h, v, b] = strokes
     .map((x) => x.curveList)
     .flat() as LinearCurve[];
@@ -75,10 +70,8 @@ describe("linear relation", () => {
 });
 
 describe("linear relation 2", () => {
-  const {
-    艹: { shape },
-  } = w;
-  const strokes = shape[0].glyph.map(render);
+  const { 艹 } = useWen();
+  const strokes = 艹.map(render);
   const [h, s1, s2] = strokes.map((x) => x.curveList).flat() as LinearCurve[];
   it("figures out all relations in 艹", () => {
     expect(linearRelation(s1, s2)).toEqual({
@@ -91,17 +84,15 @@ describe("linear relation 2", () => {
 
 describe("curve relation", () => {
   it("figures out all relations in 天", () => {
-    const {
-      天: { shape },
-    } = w;
-    const strokes = shape[0].glyph.map(render);
+    const { 天 } = useWen();
+    const strokes = 天.map(render);
     const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
     expect(curveRelation(c1, c3)).toEqual({
       type: "连",
       first: "中",
       second: "前",
     });
-    expect(curveRelation(c1, c4)).toEqual({ type: "散", x: 0, y: -1 });
+    expect(curveRelation(c1, c4)).toEqual({ type: "散", x: -0.5, y: -1 });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
     expect(curveRelation(c2, c4)).toEqual({
       type: "连",
@@ -115,20 +106,16 @@ describe("curve relation", () => {
     });
   });
   it("figures out all relations in 义", () => {
-    const {
-      义: { shape },
-    } = w;
-    const strokes = shape[0].glyph.map(render);
+    const { 义 } = useWen();
+    const strokes = 义.map(render);
     const [c1, c2, c3] = strokes.map((x) => x.curveList).flat();
-    expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: 0 });
-    expect(curveRelation(c1, c3)).toEqual({ type: "散", x: 0, y: 0 });
+    expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: -0.5 });
+    expect(curveRelation(c1, c3)).toEqual({ type: "散", x: 0, y: -0.5 });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
   });
   it("figures out all relations in 升", () => {
-    const {
-      升: { shape },
-    } = w;
-    const strokes = shape[0].glyph.map(render);
+    const { 升 } = useWen();
+    const strokes = 升.map(render);
     const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
     expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: -1 });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
@@ -193,9 +180,7 @@ describe("factory", () => {
 
 describe("find topology interface", () => {
   it("works for a simple case", () => {
-    const {
-      土: { shape },
-    } = wen;
+    const { 土 } = useWen();
     const array: Relation[][][] = [
       [],
       [[{ type: "交" }]],
@@ -204,6 +189,6 @@ describe("find topology interface", () => {
         [{ type: "连", first: "中", second: "后" }],
       ],
     ];
-    expect(findTopology(shape[0].glyph as Glyph)).toEqual(array);
+    expect(findTopology(土)).toEqual(array);
   });
 });

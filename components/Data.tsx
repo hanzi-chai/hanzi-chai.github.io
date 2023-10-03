@@ -68,10 +68,10 @@ const ComponentData = () => {
         />
       </Col>
       <Col className="gutter-row" span={8}>
-        <ComponentView componentName={name} />
+        <ComponentView name={name} />
       </Col>
       <Col className="gutter-row" span={8}>
-        <ComponentModel componentName={name} />
+        <ComponentModel name={name} />
       </Col>
     </Row>
   );

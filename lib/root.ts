@@ -101,7 +101,7 @@ export const disassembleComponents = (wen: Wen, config: RootConfig) => {
   const { mapping, aliaser } = config;
   const buildGlyph = (name: string) => {
     const { source, indices } = aliaser[name];
-    const rawglyph = wen[source].shape[0].glyph;
+    const rawglyph = wen[source];
     return indices.map((x) => rawglyph[x]);
   };
   for (const rootName in mapping) {
@@ -109,12 +109,11 @@ export const disassembleComponents = (wen: Wen, config: RootConfig) => {
       console.log(rootName);
       continue; // 合体字根和单笔画字根无需在这里处理
     }
-    const glyph = wen[rootName]?.shape[0].glyph || buildGlyph(rootName);
+    const glyph = wen[rootName] || buildGlyph(rootName);
     const topology = findTopology(glyph);
     rootData.push({ glyph, topology, name: rootName });
   }
-  for (const [name, component] of Object.entries(wen)) {
-    const glyph = component.shape[0].glyph;
+  for (const [name, glyph] of Object.entries(wen)) {
     const topology = findTopology(glyph);
     const cache = { name, topology, glyph };
     result[name] = getComponentScheme(cache, rootData, config);

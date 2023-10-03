@@ -46,9 +46,8 @@ const Slicer = ({
   handleCancel,
   componentName,
 }: SlicerProps) => {
-  const CHAI = useContext(WenContext);
-  const component = CHAI[componentName];
-  const { glyph } = component.shape[0];
+  const wen = useContext(WenContext);
+  const glyph = wen[componentName];
   const [indices, setIndices] = useState(glyph.map((_, index) => index));
   const subglyph = glyph.filter((_, index) => indices.includes(index));
   const [name, setName] = useState("");
@@ -65,7 +64,7 @@ const Slicer = ({
       </Namer>
       <ModalContent>
         <StrokeList>
-          {CHAI[componentName!].shape[0].glyph.map(({ feature }, index) => {
+          {wen[componentName!].map(({ feature }, index) => {
             return (
               <Checkbox
                 key={index}

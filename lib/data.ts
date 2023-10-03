@@ -44,13 +44,6 @@ interface RenderedStroke {
 type Glyph = Stroke[];
 type RenderedGlyph = RenderedStroke[];
 
-interface Component {
-  shape: {
-    glyph: Glyph;
-    reference: string;
-  }[];
-}
-
 type Operand =
   | "⿰"
   | "⿱"
@@ -73,7 +66,7 @@ interface Compound {
 }
 
 interface Wen {
-  [key: string]: Component;
+  [key: string]: Glyph;
 }
 
 interface Zi {
@@ -84,16 +77,5 @@ interface Yin {
   [key: string]: string[];
 }
 
-export type {
-  Point,
-  Draw,
-  Stroke,
-  Glyph,
-  Component,
-  Compound,
-  Operand,
-  Wen,
-  Zi,
-  Yin,
-};
+export type { Point, Draw, Stroke, Glyph, Compound, Operand, Wen, Zi, Yin };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

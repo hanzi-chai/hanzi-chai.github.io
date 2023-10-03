@@ -8,8 +8,7 @@ import { create, all, exp } from "mathjs";
 import findTopology from "./topology";
 import wen from "../data/wen.json";
 import { Glyph, Wen } from "./data";
-import { Cache } from "./root";
-import { useWen, useWenSimp } from "./mock";
+import { buildCache, useWen } from "./mock";
 const w = wen as unknown as Wen;
 
 const { randomInt } = create(all, {
@@ -42,22 +41,15 @@ describe("bi-directional conversion", () => {
 });
 
 describe("generate slice binaries", () => {
-  const { 丰, 十 } = w;
-  const [cglyph, rglyph] = [丰.shape[0].glyph, 十.shape[0].glyph];
-  const component: Cache = {
-    name: "丰",
-    glyph: cglyph,
-    topology: findTopology(cglyph),
-  };
-  const root: Cache = {
-    name: "十",
-    glyph: rglyph,
-    topology: findTopology(rglyph),
-  };
+  const 丰 = buildCache("丰");
+  const 十 = buildCache("十");
   it("should find multiple occurence of a root", () => {
-    expect(generateSliceBinaries(component, root)).toEqual([9, 5, 3]);
+    expect(generateSliceBinaries(丰, 十)).toEqual([9, 5, 3]);
   });
 });
+
+const slice = (source: Glyph, indices: number[]) =>
+  indices.map((i) => source[i]);
 
 describe("degenerate cross tests", () => {
   const {
@@ -73,13 +65,13 @@ describe("degenerate cross tests", () => {
     出,
     冖,
     农,
-    厶,
-    瓜,
     亦,
     赤,
-    豕,
-    彖,
-  } = useWenSimp();
+    以,
+    人,
+    良,
+    展内,
+  } = useWen();
   const slice = (source: Glyph, indices: number[]) =>
     indices.map((i) => source[i]);
   it("says 天 has 大", () => {
@@ -100,13 +92,58 @@ describe("degenerate cross tests", () => {
   it("says 农 has 冖", () => {
     expect(degenerate(冖)).toEqual(degenerate(slice(农, [0, 1])));
   });
-  // it("says 彖 has 豕", () => {
-  //   expect(degenerate(豕)).toEqual(degenerate(slice(彖, [2, 3, 4, 5, 6, 7, 8])))
-  // })
-  // it("says 赤下 is 亦下", () => {
-  //   expect(degenerate(slice(亦, [2, 3, 4, 5]))).toEqual(degenerate(slice(赤, [3, 4, 5, 6])))
-  // })
-  // it("says 瓜 has 厶", () => {
-  //   expect(degenerate(厶)).toEqual(degenerate(slice(瓜, [2, 3])));
-  // });
+  it("says 赤下 is 亦下", () => {
+    expect(degenerate(slice(亦, [2, 3, 4, 5]))).toEqual(
+      degenerate(slice(赤, [3, 4, 5, 6])),
+    );
+  });
+  it("says 良下 is 展下", () => {
+    expect(degenerate(slice(良, [4, 5, 6]))).toEqual(
+      degenerate(slice(展内, [4, 5, 6])),
+    );
+  });
+  it("says 以 has 人", () => {
+    hasroot(以, [2, 3], 人);
+  });
+});
+
+const hasroot = (a: Glyph, indices: number[], root: Glyph) => {
+  expect(degenerate(slice(a, indices))).toEqual(degenerate(root));
+};
+
+describe("degenerate cross tests 2", () => {
+  const { 豕, 彖, 象, 毅左, 涿右, 蒙下, 遂内 } = useWen();
+  const base = slice(豕, [1, 2, 3, 4, 5, 6]);
+  it("says 彖 has 豕下", () => {
+    hasroot(彖, [3, 4, 5, 6, 7, 8], base);
+  });
+  it("says 象 has 豕下", () => {
+    hasroot(象, [5, 6, 7, 8, 9, 10], base);
+  });
+  it("says 毅左 has 豕下", () => {
+    hasroot(毅左, [5, 6, 7, 8, 9, 10], base);
+  });
+  it("says 涿右 has 豕下", () => {
+    hasroot(涿右, [1, 2, 3, 4, 6, 7], base);
+  });
+  it("says 蒙下 has 豕下", () => {
+    hasroot(蒙下, [2, 3, 4, 5, 6, 7], base);
+  });
+  it("says 遂内 has 豕下", () => {
+    hasroot(遂内, [3, 4, 5, 6, 7, 8], base);
+  });
+});
+
+describe("degenerate cross tests 3", () => {
+  const { 永, 承, 水, 丞 } = useWen();
+  const base = slice(承, [5, 6, 7]);
+  it("says 承 has 水", () => {
+    hasroot(承, [5, 6, 7], base);
+  });
+  it("says 永 has 水", () => {
+    hasroot(永, [2, 3, 4], base);
+  });
+  it("says 丞 has 水", () => {
+    hasroot(丞, [2, 3, 4], base);
+  });
 });
