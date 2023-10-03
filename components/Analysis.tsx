@@ -132,21 +132,27 @@ const ChaiSteps = styled(Steps)`
 const RootAnalysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
-  const [componentResults, setComponentResult] = useState(
-    {} as Record<string, ComponentResult>,
-  );
-  const [compoundResults, setCompoundResult] = useState(
-    {} as Record<string, CompoundResult>,
-  );
+  // const [componentResults, setComponentResult] = useState(
+  //   {} as Record<string, ComponentResult>,
+  // );
+  // const [compoundResults, setCompoundResult] = useState(
+  //   {} as Record<string, CompoundResult>,
+  // );
   const [loading, setLoading] = useState(false);
   const wen = useContext(WenContext);
   const zi = useContext(ZiContext);
   const rootConfig = useRoot();
-  const steps = [
-    () => setComponentResult(disassembleComponents(wen, rootConfig)),
-    () =>
-      setCompoundResult(disassembleCompounds(zi, rootConfig, componentResults)),
-  ];
+  // const steps = [
+  //   () => setComponentResult(disassembleComponents(wen, rootConfig)),
+  //   () =>
+  //     setCompoundResult(disassembleCompounds(zi, rootConfig, componentResults)),
+  // ];
+  const componentResults = disassembleComponents(wen, rootConfig);
+  const compoundResults = disassembleCompounds(
+    zi,
+    rootConfig,
+    componentResults,
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
@@ -279,10 +285,10 @@ const RootAnalysis = () => {
       />
       <Toolbar>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
-        <Button type="primary" disabled={loading} onClick={steps[step]}>
+        {/* <Button type="primary" disabled={loading} onClick={steps[step]}>
           计算
         </Button>
-        <Button onClick={() => setComponentResult({})}>清空</Button>
+        <Button onClick={() => setComponentResult({})}>清空</Button> */}
         <Button onClick={() => exportResult(componentResults)}>导出</Button>
       </Toolbar>
       {loading ? (

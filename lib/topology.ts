@@ -1,3 +1,4 @@
+import { isEqual } from "underscore";
 import {
   CubicCurve,
   Curve,
@@ -9,14 +10,14 @@ import {
   RenderedStroke,
   Stroke,
 } from "./data";
-import { add, subtract, mean } from "mathjs";
+import { add, subtract, mean, multiply, abs, divide, distance } from "mathjs";
 
-interface DisjointPosition {
+interface DisjointRelation {
   x: -1 | 0 | 1;
   y: -1 | 0 | 1;
 }
 
-interface AttachPosition {
+interface AttachRelation {
   first: "前" | "中" | "后";
   second: "前" | "中" | "后";
 }
@@ -27,33 +28,29 @@ type Relation =
     }
   | ({
       type: "连";
-    } & AttachPosition)
+    } & AttachRelation)
   | ({
       type: "散";
-    } & DisjointPosition);
+    } & DisjointRelation);
 
-const intervalPosition = (i: [number, number], j: [number, number]) => {
+const getIntervalRelation = (i: [number, number], j: [number, number]) => {
   const [imin, imax] = i.sort((a, b) => a - b);
   const [jmin, jmax] = j.sort((a, b) => a - b);
-  const [imid, jmid] = [mean(i), mean(j)];
-  // version 1
-  if (imid <= jmin && imax <= jmid) return -1;
-  if (imin >= jmid && imid >= jmax) return 1;
   // version 2
-  // if (imax <= jmin) return -1;
-  // if (imin >= jmax) return 1;
+  if (imax < jmin) return -1;
+  if (imin > jmax) return 1;
   return 0;
 };
 
 const box = (a: Curve) =>
   [a.controls[0], a.controls[a.controls.length - 1]] as [Point, Point];
 
-const disjointPosition = function (a: Curve, b: Curve): DisjointPosition {
+const getDisjointRelation = function (a: Curve, b: Curve): DisjointRelation {
   const [sa, ea] = box(a);
   const [sb, eb] = box(b);
   return {
-    x: intervalPosition([sa[0], ea[0]], [sb[0], eb[0]]),
-    y: intervalPosition([sa[1], ea[1]], [sb[1], eb[1]]),
+    x: getIntervalRelation([sa[0], ea[0]], [sb[0], eb[0]]),
+    y: getIntervalRelation([sa[1], ea[1]], [sb[1], eb[1]]),
   };
 };
 
@@ -68,9 +65,9 @@ const linearRelation = function (a: LinearCurve, b: LinearCurve): Relation {
   const [u, u1, u2] = [subtract(s, r), subtract(p, r), subtract(q, r)];
   const [uc1, uc2] = [area(u, u1), area(u, u2)];
   const uc = uc1 * uc2;
-  let attachPosition: AttachPosition;
+  let attachPosition: AttachRelation;
   if (vc > 0 || uc > 0) {
-    return { type: "散", ...disjointPosition(a, b) };
+    return { type: "散", ...getDisjointRelation(a, b) };
   } else if (vc < 0 && uc < 0) {
     return { type: "交" };
   } else if (uc1 === 0) {
@@ -104,18 +101,120 @@ const switchRelation = function (r: Relation): Relation {
   }
 };
 
-const linearize = function (a: CubicCurve): LinearCurve {
-  return { type: "linear", controls: box(a) };
+const genericLian = function (a: Curve, b: Curve): Relation | undefined {
+  const base = { type: "连" } as const;
+  const [astart, aend] = box(a);
+  const [bstart, bend] = box(b);
+  if (isEqual(astart, bstart)) return { ...base, first: "前", second: "前" };
+  if (isEqual(astart, bend)) return { ...base, first: "前", second: "后" };
+  if (isEqual(aend, bstart)) return { ...base, first: "后", second: "前" };
+  if (isEqual(aend, bend)) return { ...base, first: "后", second: "后" };
+};
+
+const evaluate = function (a: Curve, t: number): Point {
+  if (a.type === "linear") {
+    return add(
+      multiply(1 - t, a.controls[0]) as Point,
+      multiply(t, a.controls[1]) as Point,
+    );
+  } else {
+    let v01 = add(
+      multiply(Math.pow(1 - t, 3), a.controls[0]),
+      multiply(3 * Math.pow(1 - t, 2) * t, a.controls[1]),
+    );
+    let v23 = add(
+      multiply(3 * (1 - t) * Math.pow(t, 2), a.controls[2]),
+      multiply(Math.pow(t, 3), a.controls[3]),
+    );
+    return add(v01, v23) as Point;
+  }
+};
+
+const boxArea = (s: Point, e: Point) => {
+  const diff = subtract(s, e);
+  return abs(diff[0] * diff[1]);
+};
+
+const recurse = function (
+  a: Curve,
+  at: [number, number],
+  b: Curve,
+  bt: [number, number],
+): Point | undefined {
+  const [as, ae] = [evaluate(a, at[0]), evaluate(a, at[1])];
+  const [bs, be] = [evaluate(b, bt[0]), evaluate(b, bt[1])];
+  const al: LinearCurve = { type: "linear", controls: [as, ae] };
+  const bl: LinearCurve = { type: "linear", controls: [bs, be] };
+  const disjointRelation = getDisjointRelation(al, bl);
+  // console.log(at, al, bt, bl, disjointRelation);
+  if (!(disjointRelation.x === 0 && disjointRelation.y === 0)) return undefined;
+  const [alength, blength] = [distance(as, ae), distance(bs, be)] as [
+    number,
+    number,
+  ];
+  const threshold = 1;
+  if (alength < threshold && blength < threshold)
+    return divide(add(add(as, ae), add(bs, be)), 4) as Point;
+  const [atmid, btmid] = [mean(at), mean(bt)];
+  const [at1, at2] = [
+    [at[0], atmid],
+    [atmid, at[1]],
+  ] as [[number, number], [number, number]];
+  const [bt1, bt2] = [
+    [bt[0], btmid],
+    [btmid, bt[1]],
+  ] as [[number, number], [number, number]];
+  return (
+    recurse(a, at1, b, bt1) ||
+    recurse(a, at1, b, bt2) ||
+    recurse(a, at2, b, bt1) ||
+    recurse(a, at2, b, bt2)
+  );
+};
+
+const getRecursiveRelation = function (a: Curve, b: Curve): Relation {
+  const disjointRelation = {
+    type: "散" as const,
+    ...getDisjointRelation(a, b),
+  };
+  if (!(disjointRelation.x === 0 && disjointRelation.y === 0))
+    return disjointRelation;
+  const crossPoint = recurse(a, [0, 1], b, [0, 1]);
+  if (crossPoint === undefined) return disjointRelation;
+  const lian = { type: "连" } as const;
+  const [astart, aend] = [a.controls[0], a.controls[a.controls.length - 1]];
+  const [bstart, bend] = [b.controls[0], b.controls[a.controls.length - 1]];
+  const distanceThreshold = 1;
+  if ((distance(crossPoint, astart) as number) < distanceThreshold)
+    return { ...lian, first: "前", second: "中" };
+  if ((distance(crossPoint, aend) as number) < distanceThreshold)
+    return { ...lian, first: "后", second: "中" };
+  if ((distance(crossPoint, bstart) as number) < distanceThreshold)
+    return { ...lian, first: "中", second: "前" };
+  if ((distance(crossPoint, bend) as number) < distanceThreshold)
+    return { ...lian, first: "中", second: "后" };
+  return { type: "交" };
 };
 
 const linearCubicRelation = function (a: LinearCurve, b: CubicCurve): Relation {
-  // 未实现，先使用线性化代替
-  return linearRelation(a, linearize(b));
+  let relation = genericLian(a, b);
+  if (relation !== undefined) return relation;
+  const [sa, ea] = box(a);
+  const [sb, eb] = box(b);
+  if (sa[0] === ea[0]) {
+    if (sb[0] === sa[0]) return { type: "连", first: "中", second: "前" };
+    if (eb[0] === sa[0]) return { type: "连", first: "中", second: "后" };
+  } else if (sa[1] === ea[1]) {
+    if (sb[1] === sa[1]) return { type: "连", first: "中", second: "前" };
+    if (eb[1] === sa[1]) return { type: "连", first: "中", second: "后" };
+  }
+  return getRecursiveRelation(a, b);
 };
 
 const cubicRelation = function (a: CubicCurve, b: CubicCurve): Relation {
-  // 未实现，先使用线性化代替
-  return linearRelation(linearize(a), linearize(b));
+  let relation = genericLian(a, b);
+  if (relation !== undefined) return relation;
+  return getRecursiveRelation(a, b);
 };
 
 const curveRelation = (c1: Curve, c2: Curve) => {
@@ -188,7 +287,13 @@ const findTopology = (glyph: Glyph) => {
 };
 
 export default findTopology;
-export { area, factory, disjointPosition, intervalPosition, render };
+export {
+  area,
+  factory,
+  getDisjointRelation as disjointPosition,
+  getIntervalRelation as intervalPosition,
+  render,
+};
 export {
   curveRelation,
   linearRelation,

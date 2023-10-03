@@ -36,7 +36,7 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
         key={index}
         d={processPath(stroke)}
         stroke="red"
-        strokeWidth="1"
+        strokeWidth="0.5"
         fill="none"
       />
     ))}
