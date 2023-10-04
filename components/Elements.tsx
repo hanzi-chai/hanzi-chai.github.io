@@ -47,11 +47,19 @@ const ElementDispatch = () => {
 
 const RootElementConfig = () => {
   return (
-    <Row gutter={64}>
-      <Col className="gutter-row" span={8}>
+    <Row gutter={64} style={{ flex: "1", overflowY: "scroll" }}>
+      <Col
+        className="gutter-row"
+        span={8}
+        style={{ height: "100%", overflowY: "scroll" }}
+      >
         <RootPicker />
       </Col>
-      <Col className="gutter-row" span={16}>
+      <Col
+        className="gutter-row"
+        span={16}
+        style={{ height: "100%", overflowY: "scroll" }}
+      >
         <RootsList />
       </Col>
     </Row>

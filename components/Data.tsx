@@ -56,7 +56,7 @@ const ComponentData = () => {
   const [name, setName] = useState(undefined as string | undefined);
   const [sequence, setSequence] = useState("");
   return (
-    <Row gutter={32}>
+    <Row gutter={32} style={{ flex: "1", overflowY: "scroll" }}>
       <Col className="gutter-row" span={8}>
         <Typography.Title level={2}>选择部件</Typography.Title>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
@@ -67,10 +67,18 @@ const ComponentData = () => {
           sequence={sequence}
         />
       </Col>
-      <Col className="gutter-row" span={8}>
+      <Col
+        className="gutter-row"
+        span={8}
+        style={{ height: "100%", overflowY: "scroll" }}
+      >
         <ComponentView name={name} />
       </Col>
-      <Col className="gutter-row" span={8}>
+      <Col
+        className="gutter-row"
+        span={8}
+        style={{ height: "100%", overflowY: "scroll" }}
+      >
         <ComponentModel name={name} />
       </Col>
     </Row>

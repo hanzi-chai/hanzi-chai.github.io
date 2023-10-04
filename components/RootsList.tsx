@@ -5,8 +5,6 @@ import { DispatchContext, useRoot } from "./Context";
 import Root from "./Root";
 import { halfToFull } from "./utils";
 
-const Wrapper = styled.div``;
-
 const RootContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -29,7 +27,7 @@ const RootsList = () => {
     data[key].push(root);
   }
   return (
-    <Wrapper>
+    <>
       <Typography.Title level={2}>字根列表</Typography.Title>
       <List
         dataSource={Object.entries(data)}
@@ -70,7 +68,7 @@ const RootsList = () => {
           删除
         </Button>
       </ButtonGroup>
-    </Wrapper>
+    </>
   );
 };
 

@@ -37,6 +37,24 @@ interface ElementCache {
 
 type ElementConfig = RootConfig | PhoneticConfig;
 
+interface EncoderNode {
+  index: number;
+  key: string;
+}
+
+interface Condition {
+  index: number;
+  key: string;
+  operator: "是" | "不是" | "是空的" | "不是空的";
+  value?: string;
+}
+
+interface EncoderEdge {
+  from: number;
+  to: number;
+  condition?: Condition[];
+}
+
 interface Config {
   info: {
     name: string;
@@ -50,7 +68,10 @@ interface Config {
     character: Record<string, string[]>;
   };
   elements: ElementConfig[];
-  encoder: null;
+  encoder: {
+    nodes: EncoderNode[];
+    edges: EncoderEdge[];
+  };
 }
 
 export type { SieveName, Selector, Classifier, Aliaser, Mapping };
