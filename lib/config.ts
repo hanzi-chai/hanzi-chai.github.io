@@ -35,6 +35,8 @@ interface ElementCache {
   [key: string]: Record<string, string>;
 }
 
+type Cache = Record<number, ElementCache>;
+
 type ElementConfig = RootConfig | PhoneticConfig;
 
 interface EncoderNode {
@@ -52,7 +54,7 @@ interface Condition {
 interface EncoderEdge {
   from: number;
   to: number;
-  condition?: Condition[];
+  condition?: Condition;
 }
 
 interface Config {
@@ -78,4 +80,6 @@ export type { SieveName, Selector, Classifier, Aliaser, Mapping };
 
 export type { Config, ElementConfig, RootConfig, PhoneticConfig };
 
-export type { ElementCache };
+export type { EncoderNode, EncoderEdge, Condition };
+
+export type { ElementCache, Cache };

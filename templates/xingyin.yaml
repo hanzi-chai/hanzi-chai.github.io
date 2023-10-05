@@ -364,14 +364,10 @@ elements:
     analysis:
       type: initial
     mapping: id
-  - type: 字音
-    nodes: [末字母]
-    analysis:
-      type: final
-    mapping: id
 
 encoder:
   nodes:
+    - {}
     - { index: 0, key: "字根 1" }
     - { index: 0, key: "字根 2" }
     - { index: 0, key: "字根 3" }
@@ -383,23 +379,23 @@ encoder:
     - { index: 1, key: "首字母" }
   edges:
     - {
-        from: -1,
-        to: 0,
-        condition: [{ index: 0, key: "字根 2", operator: "是空的" }],
+        from: 0,
+        to: 1,
+        condition: { index: 0, key: "字根 2", operator: "是空的" },
       }
     - {
-        from: -1,
-        to: 4,
-        condition: [{ index: 0, key: "字根 3", operator: "是空的" }],
+        from: 0,
+        to: 5,
+        condition: { index: 0, key: "字根 3", operator: "是空的" },
       }
     - {
-        from: -1,
-        to: 7,
-        condition: [{ index: 0, key: "字根 3", operator: "不是空的" }],
+        from: 0,
+        to: 8,
+        condition: { index: 0, key: "字根 3", operator: "不是空的" },
       }
-    - { from: 0, to: 1 }
     - { from: 1, to: 2 }
     - { from: 2, to: 3 }
-    - { from: 4, to: 5 }
+    - { from: 3, to: 4 }
     - { from: 5, to: 6 }
-    - { from: 7, to: 8 }
+    - { from: 6, to: 7 }
+    - { from: 8, to: 9 }

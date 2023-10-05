@@ -6,6 +6,7 @@ import {
   useContext,
 } from "react";
 import {
+  Cache,
   Config,
   ElementCache,
   ElementConfig,
@@ -109,6 +110,15 @@ export const configReducer = (config: Config, action: Action) => {
   return newconfig;
 };
 
+interface CacheAction {
+  index: number;
+  value: ElementCache;
+}
+
+export const cacheReducer = (cache: Cache, action: CacheAction) => {
+  return { ...cache, [action.index]: action.value };
+};
+
 export const WenContext = createContext(wen as unknown as Wen);
 export const ZiContext = createContext(zi as unknown as Zi);
 export const YinContext = createContext(yin as unknown as Yin);
@@ -116,10 +126,8 @@ export const FontContext = createContext(font as Record<string, string>);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
-export const CacheContext = createContext([] as ElementCache[]);
-export const WriteContext = createContext<(e: ElementCache[]) => void>(
-  () => {},
-);
+export const CacheContext = createContext({} as Cache);
+export const WriteContext = createContext<Dispatch<CacheAction>>(() => {});
 
 const useIndex = () => {
   const { pathname } = useLocation();

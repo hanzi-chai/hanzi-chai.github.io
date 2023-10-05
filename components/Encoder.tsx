@@ -1,5 +1,5 @@
 import Dagre from "@dagrejs/dagre";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ReactFlow, {
   Node,
   Edge,
@@ -12,11 +12,13 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
 } from "reactflow";
-import { Button, Col, Dropdown, Row, Typography } from "antd";
+import { Alert, Button, Col, Dropdown, Row, Typography } from "antd";
 import styled from "styled-components";
-import { ConfigContext } from "./Context";
+import { CacheContext, ConfigContext, YinContext } from "./Context";
 
 import "reactflow/dist/style.css";
+import { Toolbar } from "./Analysis";
+import encode from "../lib/encoder";
 const Wrapper = styled(Row)``;
 
 const getLayoutedElements = (nodes: any[], edges: any[], options: any) => {
@@ -70,6 +72,10 @@ const Encoder = () => {
   );
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
+  const [result, setResult] = useState<Record<string, string>>({});
+  const cache = useContext(CacheContext);
+  const yin = useContext(YinContext);
+  const characters = Object.keys(yin);
 
   const onLayout = () => {
     const layouted = getLayoutedElements(nodes, edges, { direction: "TB" });
@@ -79,6 +85,11 @@ const Encoder = () => {
       fitView();
     });
   };
+  const ready = elements.every((v, i) => cache[i] !== undefined);
+  const notready = elements
+    .filter((v, i) => cache[i] === undefined)
+    .map((v, i) => i)
+    .join(", ");
 
   return (
     <Wrapper gutter={32} style={{ flex: "1" }}>
@@ -106,6 +117,22 @@ const Encoder = () => {
       </Col>
       <Col className="gutter-row" span={12}>
         <Typography.Title level={2}>编码生成</Typography.Title>
+        {!ready && (
+          <Alert message={notready + "尚未完成分析"} type="warning" closable />
+        )}
+        <Toolbar>
+          {/* <StrokeSearch sequence={sequence} setSequence={setSequence} /> */}
+          <Button
+            type="primary"
+            onClick={() =>
+              setResult(encode(encoder, elements, characters, cache))
+            }
+          >
+            计算
+          </Button>
+          <Button onClick={() => {}}>清空</Button>
+          <Button onClick={() => {}}>导出</Button>
+        </Toolbar>
       </Col>
     </Wrapper>
   );

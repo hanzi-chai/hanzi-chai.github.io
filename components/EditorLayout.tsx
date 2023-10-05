@@ -21,9 +21,10 @@ import {
   ConfigContext,
   DispatchContext,
   WriteContext,
+  cacheReducer,
   configReducer,
 } from "./Context";
-import { Config, ElementCache } from "../lib/config";
+import { Cache, Config, ElementCache } from "../lib/config";
 import { Action } from "./Context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
@@ -172,7 +173,7 @@ const EditorLayout = () => {
 
 const Contextualized = () => {
   const [config, dispatch] = useReducer(configReducer, defaultConfig as Config);
-  const [cache, setCache] = useState([] as ElementCache[]);
+  const [cache, write] = useReducer(cacheReducer, {} as Cache);
   const { pathname } = useLocation();
   const [_, id, panel] = pathname.split("/");
 
@@ -184,7 +185,7 @@ const Contextualized = () => {
 
   return (
     <CacheContext.Provider value={cache}>
-      <WriteContext.Provider value={setCache}>
+      <WriteContext.Provider value={write}>
         <ConfigContext.Provider value={config}>
           <DispatchContext.Provider value={dispatch}>
             <EditorLayout />

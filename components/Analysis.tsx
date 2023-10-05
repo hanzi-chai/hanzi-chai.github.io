@@ -14,7 +14,7 @@ import {
 } from "antd";
 import { BorderOutlined, AppstoreOutlined } from "@ant-design/icons";
 
-const Toolbar = styled.div`
+export const Toolbar = styled.div`
   display: flex;
   justify-content: center;
   gap: 32px;
@@ -26,14 +26,16 @@ import { Collapse } from "antd";
 import Char from "./Char";
 import Root from "./Root";
 import ResultDetail from "./ResultDetail";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ArrowRightOutlined } from "@ant-design/icons";
 import {
   ConfigContext,
   WenContext,
+  WriteContext,
   YinContext,
   ZiContext,
   useElement,
+  useIndex,
   usePhonetic,
   useRoot,
   useWenCustomized,
@@ -128,11 +130,40 @@ const RootAnalysis = () => {
   const [loading, setLoading] = useState(false);
   const wen = useWenCustomized();
   const zi = useContext(ZiContext);
+  const yin = useContext(YinContext);
+  const write = useContext(WriteContext);
   const rootConfig = useRoot();
+  const index = useIndex();
   const steps = [
     () => setComponentResult(disassembleComponents(wen, rootConfig)),
-    () =>
-      setCompoundResult(disassembleCompounds(zi, rootConfig, componentResults)),
+    () => {
+      const cpr = disassembleCompounds(zi, rootConfig, componentResults);
+      setCompoundResult(cpr);
+      const cache = {} as Record<
+        string,
+        { "字根 1": string; "字根 2": string; "字根 3": string }
+      >;
+      const semy = (l: string[]) =>
+        l.length <= 3 ? l : l.slice(0, 2).concat(l[l.length - 1]);
+      for (const char in yin) {
+        let list;
+        if (componentResults[char]) {
+          const c = componentResults[char];
+          list = semy(c.best);
+        } else if (cpr[char]) {
+          const c = cpr[char];
+          list = semy(c.sequence);
+        } else {
+          list = ["1"];
+        }
+        cache[char] = {
+          "字根 1": list[0],
+          "字根 2": list[1],
+          "字根 3": list[2],
+        };
+      }
+      write({ index, value: cache });
+    },
   ];
   // const componentResults = disassembleComponents(wen, rootConfig);
   // const compoundResults = disassembleCompounds(
@@ -237,7 +268,10 @@ const PhoneticAnalysis = () => {
   const {
     analysis: { type, regex },
   } = usePhonetic();
+  const index = useIndex();
   const options = ["initial", "final", "sheng", "yun", "diao", "custom"];
+  const write = useContext(WriteContext);
+  const yin = useContext(YinContext);
 
   return (
     <Wrapper>
@@ -253,6 +287,20 @@ const PhoneticAnalysis = () => {
           <Input style={{ width: "120px" }} />
         </ConfigItem>
       )}
+      <Toolbar>
+        <Button
+          type="primary"
+          onClick={() => {
+            const value = {} as Record<string, { initial: string }>;
+            for (const [char, pinyins] of Object.entries(yin)) {
+              value[char] = { initial: pinyins[0][0] };
+            }
+            write({ index, value });
+          }}
+        >
+          计算
+        </Button>
+      </Toolbar>
     </Wrapper>
   );
 };
