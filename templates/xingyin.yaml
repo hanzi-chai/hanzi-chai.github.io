@@ -365,22 +365,22 @@ elements:
     mapping: id
 
 encoder:
-  - { key: "开始", children: [{ to: 1 }] }
+  - { key: "开始", children: [{ to: 1, conditions: [] }] }
   - {
       key: "字根 1",
       children:
         [
-          { to: 2, condition: { key: "字根 2", operator: "不是空的" } },
-          { to: 4 },
+          { to: 2, conditions: [{ key: "字根 2", operator: "有" }] },
+          { to: 4, conditions: [] },
         ],
     }
   - {
       key: "字根 2",
       children:
         [
-          { to: 3, condition: { key: "字根 3", operator: "不是空的" } },
-          { to: 4 },
+          { to: 3, conditions: [{ key: "字根 3", operator: "有" }] },
+          { to: 4, conditions: [] },
         ],
     }
-  - { key: "字根 3", children: [{ to: 4 }] }
+  - { key: "字根 3", children: [{ to: 4, conditions: [] }] }
   - { key: "首字母", children: [] }

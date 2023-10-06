@@ -7,14 +7,14 @@ import {
   EncoderNode,
 } from "./config";
 
-const table: Record<
+export const table: Record<
   Condition["operator"],
   (target?: string, value?: string) => boolean
 > = {
   是: (t, v) => t === v,
   不是: (t, v) => t !== v,
-  是空的: (t) => t === undefined,
-  不是空的: (t) => t !== undefined,
+  有: (t) => t !== undefined,
+  没有: (t) => t === undefined,
 };
 
 const satisfy = (condition: Condition, data: ElementResult) => {
@@ -25,21 +25,24 @@ const satisfy = (condition: Condition, data: ElementResult) => {
 };
 
 const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
-  const elementReverseLookup = {} as Record<string, number>;
-  for (const [index, { nodes }] of elements.entries()) {
+  const elementReverseLookup = {} as Record<
+    string,
+    Record<string, string> | string
+  >;
+  for (const { nodes, mapping } of elements) {
     for (const node of nodes) {
-      elementReverseLookup[node] = index;
+      elementReverseLookup[node] = mapping;
     }
   }
   return (character: string, data: ElementResult) => {
     let node = 0;
     let codes = [] as string[];
     while (encoder[node].children.length) {
-      for (const { to, condition } of encoder[node].children) {
-        if (condition === undefined || satisfy(condition, data)) {
+      for (const { to, conditions } of encoder[node].children) {
+        if (conditions.every((x) => satisfy(x, data))) {
           const { key } = encoder[to];
           const element = data[key]!;
-          const mapping = elements[elementReverseLookup[key]].mapping;
+          const mapping = elementReverseLookup[key];
           codes.push(typeof mapping === "string" ? element : mapping[element]);
           node = to;
           break;

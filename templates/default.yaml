@@ -12,5 +12,4 @@ data:
 elements: []
 
 encoder:
-  nodes: []
-  edges: []
+  - { key: "开始", children: [] }

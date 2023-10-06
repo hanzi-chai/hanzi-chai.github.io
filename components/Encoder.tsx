@@ -1,4 +1,4 @@
-import Dagre from "@dagrejs/dagre";
+import { layout, graphlib } from "@dagrejs/dagre";
 import React, {
   useCallback,
   useContext,
@@ -24,6 +24,7 @@ import styled from "styled-components";
 import {
   CacheContext,
   ConfigContext,
+  DispatchContext,
   WenContext,
   YinContext,
   ZiContext,
@@ -33,26 +34,25 @@ import "reactflow/dist/style.css";
 import { Toolbar, getPhonetic, getRoot } from "./Analysis";
 import encode from "../lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
-import EncoderNode, { NodeData } from "./EncoderNode";
+import EncoderNode, { ENode, NodeData, base } from "./EncoderNode";
+import { ElementCache, EncoderNode as IEncoderNode } from "../lib/config";
+import EncoderEdge, { EEdge, EdgeData } from "./EncoderEdge";
 const Wrapper = styled(Row)``;
 
-const getLayoutedElements = (nodes: any[], edges: any[], options: any) => {
-  const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: options.direction });
-
+export const getLayoutedElements = function (
+  nodes: Omit<ENode, "position">[],
+  edges: EEdge[],
+): [ENode[], EEdge[]] {
+  const g = new graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  g.setGraph({ rankdir: "TB", ranksep: 32, nodesep: 64 });
   edges.forEach((edge) => g.setEdge(edge.source, edge.target));
-  nodes.forEach((node) => g.setNode(node.id, node));
-
-  Dagre.layout(g);
-
-  return {
-    nodes: nodes.map((node) => {
-      const { x, y } = g.node(node.id);
-
-      return { ...node, position: { x, y } };
-    }),
+  nodes.forEach((node) => g.setNode(node.id, node as any));
+  layout(g);
+  const position = (id: string) => ({ x: g.node(id).x, y: g.node(id).y });
+  return [
+    nodes.map((node) => ({ ...node, position: position(node.id) })),
     edges,
-  };
+  ];
 };
 
 const isGB = (char: string) => {
@@ -62,46 +62,59 @@ const isGB = (char: string) => {
 const Encoder = () => {
   const { fitView } = useReactFlow();
   const { elements, encoder } = useContext(ConfigContext);
-  const initialNodes: Node<NodeData>[] = encoder.map(({ key }, i) => {
-    return {
-      id: i.toString(),
-      position: { x: 0, y: i * 100 },
-      data: { label: key },
-      width: 96,
-      height: 16,
-      type: "encoder",
-    };
+  console.log(elements, encoder);
+  const initialNodes: Omit<ENode, "position">[] = encoder.map(({ key }, i) => {
+    return { ...base, id: i.toString(), data: { label: key } };
   });
-  const initialEdges: Edge[] = encoder
+  const initialEdges: EEdge[] = encoder
     .map(({ children }, from) => {
-      return children.map(({ to }) => {
+      return children.map(({ to, conditions }) => {
         return {
           id: `${from}-${to}`,
           source: from.toString(),
           target: to.toString(),
+          type: "encoder",
           animated: true,
+          data: conditions,
         };
       });
     })
     .flat();
-  const { nodes: layoutNodes, edges: layoutEdges } = getLayoutedElements(
+  const [layoutNodes, layoutEdges] = getLayoutedElements(
     initialNodes,
     initialEdges,
-    { direction: "TB" },
   );
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(layoutNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>(layoutEdges);
   const [result, setResult] = useState<Record<string, string>>({});
   const wen = useContext(WenContext);
   const zi = useContext(ZiContext);
   const yin = useContext(YinContext);
+  const dispatch = useContext(DispatchContext);
   const characters = Object.keys(yin).filter(isGB);
   const nodeTypes = useMemo(() => ({ encoder: EncoderNode }), []);
+  const edgeTypes = useMemo(() => ({ encoder: EncoderEdge }), []);
+
+  // useEffect(() => {
+  //   const idmap = {} as Record<string, number>;
+  //   const newencoder: IEncoderNode[] = nodes.map(({ id, data }, index) => {
+  //     idmap[id] = index;
+  //     return { key: data.label, children: [] };
+  //   });
+  //   edges.forEach(({ source, target, data }) => {
+  //     const [from, to] = [idmap[source], idmap[target]];
+  //     newencoder[from].children.push({
+  //       to,
+  //       conditions: data!
+  //     })
+  //   })
+  //   dispatch({ type: "encoder", content: newencoder });
+  // }, [nodes, edges]);
 
   const onLayout = () => {
-    const layouted = getLayoutedElements(nodes, edges, { direction: "TB" });
-    setNodes([...layouted.nodes]);
-    setEdges([...layouted.edges]);
+    const [lnodes, ledges] = getLayoutedElements(nodes, edges);
+    setNodes([...lnodes]);
+    setEdges([...ledges]);
     window.requestAnimationFrame(() => {
       fitView();
     });
@@ -126,19 +139,21 @@ const Encoder = () => {
         span={12}
         style={{ display: "flex", flexDirection: "column" }}
       >
-        <Typography.Title level={2}>图编辑器</Typography.Title>
+        <Typography.Title level={2}>编码器</Typography.Title>
         <div style={{ flex: "1" }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            nodeDragThreshold={10000}
             fitView
           >
-            <Panel position="top-right">
+            {/* <Panel position="top-right">
               <Button onClick={onLayout}>整理布局</Button>
-            </Panel>
+            </Panel> */}
             <Background variant={BackgroundVariant.Cross} />
             <Controls />
           </ReactFlow>
@@ -155,19 +170,21 @@ const Encoder = () => {
           <Button
             type="primary"
             onClick={() => {
-              const cache = elements
-                .map((config, i) => {
-                  switch (config.type) {
-                    case "字根":
-                      return getRoot(wen, zi, yin, config);
-                    case "字音":
-                      return getPhonetic(yin, config);
-                  }
-                })
-                .reduce((prev, curr) => {
-                  return Object.assign({}, prev, curr);
-                });
-              setResult(encode(encoder, elements, characters, cache));
+              const cache = elements.map((config) => {
+                switch (config.type) {
+                  case "字根":
+                    return getRoot(wen, zi, yin, config);
+                  case "字音":
+                    return getPhonetic(yin, config);
+                }
+              });
+              const data = {} as ElementCache;
+              for (const char in yin) {
+                data[char] = cache
+                  .map((a) => a[char])
+                  .reduce((prev, curr) => Object.assign({}, prev, curr), {});
+              }
+              setResult(encode(encoder, elements, characters, data));
             }}
           >
             计算

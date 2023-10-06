@@ -53,7 +53,8 @@ export type Action =
     } & (
       | { subtype: "component"; key: string; value: Glyph }
       | { subtype: "compound"; key: string; value: Compound }
-    ));
+    ))
+  | { type: "encoder"; content: Config["encoder"] };
 
 export const configReducer = (config: Config, action: Action) => {
   const { pathname } = location;
@@ -103,6 +104,10 @@ export const configReducer = (config: Config, action: Action) => {
       const data = JSON.parse(JSON.stringify(config.data)) as Config["data"];
       data[subtype][key] = value;
       newconfig = { ...config, data };
+      break;
+    case "encoder":
+      newconfig = { ...config, encoder: action.content };
+      break;
   }
 
   localStorage.setItem(id, JSON.stringify(newconfig));

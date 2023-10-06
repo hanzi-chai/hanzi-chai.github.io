@@ -28,7 +28,7 @@ import { Config, ElementCache } from "../lib/config";
 import { Action } from "./Context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
-import defaultConfig from "../templates/xingyin.yaml";
+import defaultConfig from "../templates/default.yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const items: MenuProps["items"] = [

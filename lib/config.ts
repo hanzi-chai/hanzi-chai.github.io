@@ -43,13 +43,13 @@ interface EncoderNode {
 
 interface Condition {
   key: string;
-  operator: "是" | "不是" | "是空的" | "不是空的";
+  operator: "是" | "不是" | "有" | "没有";
   value?: string;
 }
 
 interface EncoderEdge {
   to: number;
-  condition?: Condition;
+  conditions: Condition[];
 }
 
 interface Config {
