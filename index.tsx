@@ -1,7 +1,11 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createGlobalStyle } from "styled-components";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  redirect,
+  RouterProvider,
+} from "react-router-dom";
 import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";

@@ -38,9 +38,6 @@ const compile =
   (character: string, data: Record<string, string>[]) => {
     let node = 0;
     let codes = [] as string[];
-    if (character === "天") {
-      console.log(graph, data);
-    }
     while (graph[node].children.length) {
       for (const { to, condition } of graph[node].children) {
         if (condition === undefined || satisfy(condition, data)) {
@@ -51,9 +48,6 @@ const compile =
           node = to;
           break;
         }
-      }
-      if (character === "天") {
-        console.log(codes);
       }
     }
     return codes.join("");
@@ -66,13 +60,9 @@ const encode = (
   cache: Cache,
 ) => {
   const graph: Graph = encoder.nodes.map((n) => ({ ...n, children: [] }));
-  for (const edge of encoder.edges) {
-    graph[edge.from].children.push({
-      to: edge.to,
-      condition: edge.condition,
-    });
+  for (const { from, to, condition } of encoder.edges) {
+    graph[from].children.push({ to, condition });
   }
-  console.log(graph);
   const func = compile(graph, elements);
   const result = {} as Record<string, string>;
   characters.forEach((char) => {

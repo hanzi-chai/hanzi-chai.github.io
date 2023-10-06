@@ -4,6 +4,8 @@ import styled from "styled-components";
 import { DispatchContext, useRoot } from "./Context";
 import Root from "./Root";
 import { halfToFull } from "./utils";
+import ConfigItem from "./ConfigItem";
+import Char from "./Char";
 
 const RootContainer = styled.div`
   display: flex;
@@ -14,6 +16,12 @@ const RootContainer = styled.div`
 const ButtonGroup = styled.div`
   text-align: center;
   margin: 32px 0;
+`;
+
+const Line = styled.div`
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
 `;
 
 const RootsList = () => {
@@ -34,10 +42,8 @@ const RootsList = () => {
         renderItem={(item: [string, string[]]) => {
           const [key, roots] = item;
           return (
-            <div key={key}>
-              <Divider orientation="left">
-                {halfToFull(key.toUpperCase())}
-              </Divider>
+            <Line>
+              <Char name={key} />
               <RootContainer>
                 {roots.map((item) => (
                   <Root
@@ -48,7 +54,7 @@ const RootsList = () => {
                   />
                 ))}
               </RootContainer>
-            </div>
+            </Line>
           );
         }}
       ></List>

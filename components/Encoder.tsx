@@ -1,5 +1,11 @@
 import Dagre from "@dagrejs/dagre";
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactFlow, {
   Node,
   Edge,
@@ -12,13 +18,21 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
 } from "reactflow";
-import { Alert, Button, Col, Dropdown, Row, Typography } from "antd";
+import { Alert, Button, Col, Dropdown, MenuProps, Row, Typography } from "antd";
 import styled from "styled-components";
-import { CacheContext, ConfigContext, YinContext } from "./Context";
+import {
+  CacheContext,
+  ConfigContext,
+  WenContext,
+  YinContext,
+  ZiContext,
+} from "./Context";
 
 import "reactflow/dist/style.css";
-import { Toolbar } from "./Analysis";
+import "./cm.css";
+import { Toolbar, getPhonetic, getRoot } from "./Analysis";
 import encode from "../lib/encoder";
+import Table, { ColumnsType } from "antd/es/table";
 const Wrapper = styled(Row)``;
 
 const getLayoutedElements = (nodes: any[], edges: any[], options: any) => {
@@ -40,6 +54,10 @@ const getLayoutedElements = (nodes: any[], edges: any[], options: any) => {
   };
 };
 
+const isGB = (char: string) => {
+  return char.charCodeAt(0) >= 0x4e00;
+};
+
 const Encoder = () => {
   const { fitView } = useReactFlow();
   const { elements, encoder } = useContext(ConfigContext);
@@ -48,14 +66,16 @@ const Encoder = () => {
       id: i.toString(),
       position: { x: 0, y: i * 100 },
       data: { label: key },
-      height: 40,
-      width: 150,
+      width: 64,
+      height: 32,
+      style: {
+        width: 64,
+        height: 32,
+        padding: "0",
+        lineHeight: "32px",
+      },
+      type: i ? "default" : "input",
     };
-  });
-  initialNodes.push({
-    id: (-1).toString(),
-    position: { x: -100, y: 0 },
-    data: { label: "+" },
   });
   const initialEdges: Edge[] = encoder.edges.map(({ from, to }, i) => {
     return {
@@ -73,9 +93,11 @@ const Encoder = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
   const [result, setResult] = useState<Record<string, string>>({});
-  const cache = useContext(CacheContext);
+  const ref = useRef(null as unknown as HTMLDivElement);
+  const wen = useContext(WenContext);
+  const zi = useContext(ZiContext);
   const yin = useContext(YinContext);
-  const characters = Object.keys(yin);
+  const characters = Object.keys(yin).filter(isGB);
 
   const onLayout = () => {
     const layouted = getLayoutedElements(nodes, edges, { direction: "TB" });
@@ -85,26 +107,34 @@ const Encoder = () => {
       fitView();
     });
   };
-  const ready = elements.every((v, i) => cache[i] !== undefined);
-  const notready = elements
-    .filter((v, i) => cache[i] === undefined)
-    .map((v, i) => i)
-    .join(", ");
+  const columns: ColumnsType<Record<string, string>> = [
+    {
+      title: "汉字",
+      dataIndex: "char",
+      key: "char",
+    },
+    {
+      title: "编码",
+      dataIndex: "code",
+      key: "code",
+    },
+  ];
 
   return (
-    <Wrapper gutter={32} style={{ flex: "1" }}>
+    <Wrapper gutter={32} style={{ flex: "1", overflowY: "scroll" }}>
       <Col
         className="gutter-row"
         span={12}
-        style={{ flex: "1", display: "flex", flexDirection: "column" }}
+        style={{ display: "flex", flexDirection: "column" }}
       >
         <Typography.Title level={2}>图编辑器</Typography.Title>
         <div style={{ flex: "1" }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
+            ref={ref}
+            // onNodesChange={onNodesChange}
+            // onEdgesChange={onEdgesChange}
             fitView
           >
             <Panel position="top-right">
@@ -115,24 +145,43 @@ const Encoder = () => {
           </ReactFlow>
         </div>
       </Col>
-      <Col className="gutter-row" span={12}>
+      <Col
+        className="gutter-row"
+        span={12}
+        style={{ height: "100%", overflowY: "scroll" }}
+      >
         <Typography.Title level={2}>编码生成</Typography.Title>
-        {!ready && (
-          <Alert message={notready + "尚未完成分析"} type="warning" closable />
-        )}
         <Toolbar>
           {/* <StrokeSearch sequence={sequence} setSequence={setSequence} /> */}
           <Button
             type="primary"
-            onClick={() =>
-              setResult(encode(encoder, elements, characters, cache))
-            }
+            onClick={() => {
+              const cache = elements.map((config, i) => {
+                switch (config.type) {
+                  case "字根":
+                    return getRoot(wen, zi, yin, config);
+                  case "字音":
+                    return getPhonetic(yin, config);
+                }
+              });
+              setResult(encode(encoder, elements, characters, cache));
+            }}
           >
             计算
           </Button>
           <Button onClick={() => {}}>清空</Button>
           <Button onClick={() => {}}>导出</Button>
         </Toolbar>
+        <Table
+          columns={columns}
+          dataSource={Object.entries(result).map(([k, v]) => ({
+            key: k,
+            char: k,
+            code: v,
+          }))}
+          pagination={{ pageSize: 50, hideOnSinglePage: true }}
+          size="small"
+        />
       </Col>
     </Wrapper>
   );

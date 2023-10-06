@@ -47,10 +47,11 @@ import {
   disassembleComponents,
   disassembleCompounds,
 } from "../lib/root";
-import { Classifier, Config, RootConfig } from "../lib/config";
+import { Classifier, Config, PhoneticConfig, RootConfig } from "../lib/config";
 import { intersection, isEmpty } from "underscore";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ConfigItem from "./ConfigItem";
+import { Wen, Yin, Zi } from "../lib/data";
 
 const ExtraContainer = styled.div`
   display: flex;
@@ -118,6 +119,33 @@ const ChaiSteps = styled(Steps)`
   margin: 32px auto;
 `;
 
+export const getRoot = (wen: Wen, zi: Zi, yin: Yin, root: RootConfig) => {
+  const componentResults = disassembleComponents(wen, root);
+  const compoundResults = disassembleCompounds(zi, root, componentResults);
+  const value = {} as Record<string, Record<string, string>>;
+  const semy = (l: string[]) =>
+    l.length <= 3 ? l : l.slice(0, 2).concat(l[l.length - 1]);
+  for (const char in yin) {
+    let list;
+    if (componentResults[char]) {
+      const c = componentResults[char];
+      list = semy(c.best);
+    } else if (compoundResults[char]) {
+      const c = compoundResults[char];
+      list = semy(c.sequence);
+    } else {
+      list = ["1"];
+    }
+    value[char] = {
+      "字根 1": list[0],
+      "字根 2": list[1],
+      "字根 3": list[2],
+    };
+  }
+  return value;
+  // write({ index, value });
+};
+
 const RootAnalysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
@@ -131,46 +159,7 @@ const RootAnalysis = () => {
   const wen = useWenCustomized();
   const zi = useContext(ZiContext);
   const yin = useContext(YinContext);
-  const write = useContext(WriteContext);
   const rootConfig = useRoot();
-  const index = useIndex();
-  const steps = [
-    () => setComponentResult(disassembleComponents(wen, rootConfig)),
-    () => {
-      const cpr = disassembleCompounds(zi, rootConfig, componentResults);
-      setCompoundResult(cpr);
-      const cache = {} as Record<
-        string,
-        { "字根 1": string; "字根 2": string; "字根 3": string }
-      >;
-      const semy = (l: string[]) =>
-        l.length <= 3 ? l : l.slice(0, 2).concat(l[l.length - 1]);
-      for (const char in yin) {
-        let list;
-        if (componentResults[char]) {
-          const c = componentResults[char];
-          list = semy(c.best);
-        } else if (cpr[char]) {
-          const c = cpr[char];
-          list = semy(c.sequence);
-        } else {
-          list = ["1"];
-        }
-        cache[char] = {
-          "字根 1": list[0],
-          "字根 2": list[1],
-          "字根 3": list[2],
-        };
-      }
-      write({ index, value: cache });
-    },
-  ];
-  // const componentResults = disassembleComponents(wen, rootConfig);
-  // const compoundResults = disassembleCompounds(
-  //   zi,
-  //   rootConfig,
-  //   componentResults,
-  // );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
@@ -214,16 +203,21 @@ const RootAnalysis = () => {
         onChange={(e) => setStep(e as 0)}
         items={[
           { title: "部件拆分", icon: <BorderOutlined /> },
-          {
-            title: "复合体拆分",
-            disabled: isEmpty(componentResults),
-            icon: <AppstoreOutlined />,
-          },
+          { title: "复合体拆分", icon: <AppstoreOutlined /> },
         ]}
       />
       <Toolbar>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
-        <Button type="primary" disabled={loading} onClick={steps[step]}>
+        <Button
+          type="primary"
+          disabled={loading}
+          onClick={() => {
+            const s1 = disassembleComponents(wen, rootConfig);
+            const s2 = disassembleCompounds(zi, rootConfig, s1);
+            setComponentResult(s1);
+            setCompoundResult(s2);
+          }}
+        >
           计算
         </Button>
         <Button onClick={() => setComponentResult({})}>清空</Button>
@@ -264,12 +258,26 @@ const Wrapper = styled.div`
   align-self: center;
 `;
 
+const options = {
+  首字母: (p: string) => p[0],
+  末字母: (p: string) => p[p.length - 1],
+} as Record<string, (p: string) => string>;
+
+export const getPhonetic = (yin: Yin, config: PhoneticConfig) => {
+  const value = {} as Record<string, Record<string, string>>;
+  for (const [char, pinyins] of Object.entries(yin)) {
+    value[char] = {};
+    const onepinyin = pinyins[0]; // todo: support 多音字
+    for (const node of config.nodes) {
+      value[char][node] = options[node](onepinyin);
+    }
+  }
+  return value;
+};
+
 const PhoneticAnalysis = () => {
-  const {
-    analysis: { type, regex },
-  } = usePhonetic();
+  const phonetic = usePhonetic();
   const index = useIndex();
-  const options = ["initial", "final", "sheng", "yun", "diao", "custom"];
   const write = useContext(WriteContext);
   const yin = useContext(YinContext);
 
@@ -277,24 +285,21 @@ const PhoneticAnalysis = () => {
     <Wrapper>
       <ConfigItem label="类型">
         <Select
-          value={type}
+          value={phonetic.nodes[0]}
           style={{ width: "120px" }}
-          options={options.map((x) => ({ value: x, label: x }))}
+          options={Object.keys(options).map((x) => ({ value: x, label: x }))}
         />
       </ConfigItem>
-      {type === "custom" && (
+      {/* {type === "custom" && (
         <ConfigItem label="正则表达式">
           <Input style={{ width: "120px" }} />
         </ConfigItem>
-      )}
+      )} */}
       <Toolbar>
         <Button
           type="primary"
           onClick={() => {
-            const value = {} as Record<string, { initial: string }>;
-            for (const [char, pinyins] of Object.entries(yin)) {
-              value[char] = { initial: pinyins[0][0] };
-            }
+            const value = getPhonetic(yin, phonetic);
             write({ index, value });
           }}
         >

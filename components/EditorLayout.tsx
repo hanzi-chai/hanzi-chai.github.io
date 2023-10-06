@@ -39,17 +39,17 @@ const items: MenuProps["items"] = [
   },
   {
     label: "数据",
-    key: "data/component",
+    key: "data",
     icon: <DatabaseOutlined />,
   },
   {
     label: "元素",
-    key: "element/0",
+    key: "element",
     icon: <SettingOutlined />,
   },
   {
     label: "分析",
-    key: "analysis/0",
+    key: "analysis",
     icon: <ProfileOutlined />,
   },
   {
@@ -58,6 +58,12 @@ const items: MenuProps["items"] = [
     icon: <BoldOutlined />,
   },
 ];
+
+const defaultChildren: Record<string, string> = {
+  data: "/component",
+  element: "/0",
+  analysis: "/0",
+};
 
 const exportFile = (config: Config) => {
   const fileContent = dump(config, {
@@ -107,6 +113,7 @@ const Header = styled(Layout.Header)`
 
 const Content = styled(Layout.Content)`
   padding: 0px 32px;
+  overflow-x: hidden;
   overflow-y: scroll;
   flex: 1;
   display: flex;
@@ -143,7 +150,11 @@ const EditorLayout = () => {
           <Title>{config.info.name}</Title>
         </NameAndBack>
         <Menu
-          onClick={(e) => navigate(e.key === "index" ? "" : `/${id}/${e.key}`)}
+          onClick={(e) =>
+            navigate(
+              e.key === "index" ? "" : e.key + (defaultChildren[e.key] || ""),
+            )
+          }
           selectedKeys={[panel || "index"]}
           theme="dark"
           mode="horizontal"
@@ -175,7 +186,7 @@ const Contextualized = () => {
   const [config, dispatch] = useReducer(configReducer, defaultConfig as Config);
   const [cache, write] = useReducer(cacheReducer, {} as Cache);
   const { pathname } = useLocation();
-  const [_, id, panel] = pathname.split("/");
+  const [_, id] = pathname.split("/");
 
   // read previous data
   useEffect(() => {

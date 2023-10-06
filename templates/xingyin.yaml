@@ -361,21 +361,20 @@ elements:
       步中: m
   - type: 字音
     nodes: [首字母]
-    analysis:
-      type: initial
+    analysis: null
     mapping: id
 
 encoder:
   nodes:
-    - {}
+    - { key: "开始" }
+    - { index: 0, key: "字根 1" }
+    - { index: 1, key: "首字母" }
+    - { index: 0, key: "字根 1" }
+    - { index: 0, key: "字根 2" }
+    - { index: 1, key: "首字母" }
     - { index: 0, key: "字根 1" }
     - { index: 0, key: "字根 2" }
     - { index: 0, key: "字根 3" }
-    - { index: 1, key: "首字母" }
-    - { index: 0, key: "字根 1" }
-    - { index: 0, key: "字根 2" }
-    - { index: 1, key: "首字母" }
-    - { index: 0, key: "字根 1" }
     - { index: 1, key: "首字母" }
   edges:
     - {
@@ -385,17 +384,17 @@ encoder:
       }
     - {
         from: 0,
-        to: 5,
+        to: 3,
         condition: { index: 0, key: "字根 3", operator: "是空的" },
       }
     - {
         from: 0,
-        to: 8,
+        to: 6,
         condition: { index: 0, key: "字根 3", operator: "不是空的" },
       }
     - { from: 1, to: 2 }
-    - { from: 2, to: 3 }
     - { from: 3, to: 4 }
-    - { from: 5, to: 6 }
+    - { from: 4, to: 5 }
     - { from: 6, to: 7 }
+    - { from: 7, to: 8 }
     - { from: 8, to: 9 }

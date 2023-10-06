@@ -12,7 +12,7 @@ type Mapping = Record<string, string>;
 
 interface RootConfig {
   type: "字根";
-  nodes: string[];
+  nodes: ("字根 1" | "字根 2" | "字根 3")[];
   analysis: {
     selector: Selector;
     classifier: Classifier;
@@ -23,11 +23,8 @@ interface RootConfig {
 
 interface PhoneticConfig {
   type: "字音";
-  nodes: string[];
-  analysis: {
-    type: "initial" | "final" | "sheng" | "yun" | "diao" | "custom";
-    regex?: string;
-  };
+  nodes: ("首字母" | "末字母" | "声" | "韵" | "调" | "自定义")[];
+  analysis: null;
   mapping: "id" | Record<string, string>;
 }
 

@@ -106,7 +106,7 @@ export const disassembleComponents = (wen: Wen, config: RootConfig) => {
   };
   for (const rootName in mapping) {
     if (!wen[rootName] && !aliaser[rootName]) {
-      console.log(rootName);
+      // console.log(rootName);
       continue; // 合体字根和单笔画字根无需在这里处理
     }
     const glyph = wen[rootName] || buildGlyph(rootName);
@@ -136,7 +136,7 @@ export const disassembleCompounds = (
     if (r1 !== undefined && r2 !== undefined) {
       result[name] = { sequence: getResult(c1).concat(getResult(c2)) };
     } else {
-      console.log(name, c1, c2);
+      // console.log(name, c1, c2);
     }
   }
   return result;

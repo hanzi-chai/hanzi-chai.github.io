@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { blue, gray } from "@ant-design/colors";
 
 const Wrapper = styled.div<{ $current: true | undefined; $size: 1 | 2 }>`
-  width: ${(props) => props.$size * 32}px;
+  min-width: ${(props) => props.$size * 32}px;
   height: 32px;
   text-align: center;
   line-height: 32px;
