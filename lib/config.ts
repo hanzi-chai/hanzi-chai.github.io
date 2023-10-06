@@ -28,28 +28,26 @@ interface PhoneticConfig {
   mapping: "id" | Record<string, string>;
 }
 
-interface ElementCache {
-  [key: string]: Record<string, string>;
-}
+type ElementResult = Record<string, string | undefined>;
 
-type Cache = Record<number, ElementCache>;
+interface ElementCache {
+  [key: string]: ElementResult;
+}
 
 type ElementConfig = RootConfig | PhoneticConfig;
 
 interface EncoderNode {
-  index: number;
   key: string;
+  children: EncoderEdge[];
 }
 
 interface Condition {
-  index: number;
   key: string;
   operator: "是" | "不是" | "是空的" | "不是空的";
   value?: string;
 }
 
 interface EncoderEdge {
-  from: number;
   to: number;
   condition?: Condition;
 }
@@ -67,10 +65,7 @@ interface Config {
     character: Record<string, string[]>;
   };
   elements: ElementConfig[];
-  encoder: {
-    nodes: EncoderNode[];
-    edges: EncoderEdge[];
-  };
+  encoder: EncoderNode[];
 }
 
 export type { SieveName, Selector, Classifier, Aliaser, Mapping };
@@ -79,4 +74,4 @@ export type { Config, ElementConfig, RootConfig, PhoneticConfig };
 
 export type { EncoderNode, EncoderEdge, Condition };
 
-export type { ElementCache, Cache };
+export type { ElementCache, ElementResult };

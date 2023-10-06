@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -29,10 +30,10 @@ import {
 } from "./Context";
 
 import "reactflow/dist/style.css";
-import "./cm.css";
 import { Toolbar, getPhonetic, getRoot } from "./Analysis";
 import encode from "../lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
+import EncoderNode, { NodeData } from "./EncoderNode";
 const Wrapper = styled(Row)``;
 
 const getLayoutedElements = (nodes: any[], edges: any[], options: any) => {
@@ -61,30 +62,28 @@ const isGB = (char: string) => {
 const Encoder = () => {
   const { fitView } = useReactFlow();
   const { elements, encoder } = useContext(ConfigContext);
-  const initialNodes: Node[] = encoder.nodes.map(({ index, key }, i) => {
+  const initialNodes: Node<NodeData>[] = encoder.map(({ key }, i) => {
     return {
       id: i.toString(),
       position: { x: 0, y: i * 100 },
       data: { label: key },
-      width: 64,
-      height: 32,
-      style: {
-        width: 64,
-        height: 32,
-        padding: "0",
-        lineHeight: "32px",
-      },
-      type: i ? "default" : "input",
+      width: 96,
+      height: 16,
+      type: "encoder",
     };
   });
-  const initialEdges: Edge[] = encoder.edges.map(({ from, to }, i) => {
-    return {
-      id: i.toString(),
-      source: from.toString(),
-      target: to.toString(),
-      animated: true,
-    };
-  });
+  const initialEdges: Edge[] = encoder
+    .map(({ children }, from) => {
+      return children.map(({ to }) => {
+        return {
+          id: `${from}-${to}`,
+          source: from.toString(),
+          target: to.toString(),
+          animated: true,
+        };
+      });
+    })
+    .flat();
   const { nodes: layoutNodes, edges: layoutEdges } = getLayoutedElements(
     initialNodes,
     initialEdges,
@@ -93,11 +92,11 @@ const Encoder = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
   const [result, setResult] = useState<Record<string, string>>({});
-  const ref = useRef(null as unknown as HTMLDivElement);
   const wen = useContext(WenContext);
   const zi = useContext(ZiContext);
   const yin = useContext(YinContext);
   const characters = Object.keys(yin).filter(isGB);
+  const nodeTypes = useMemo(() => ({ encoder: EncoderNode }), []);
 
   const onLayout = () => {
     const layouted = getLayoutedElements(nodes, edges, { direction: "TB" });
@@ -132,9 +131,9 @@ const Encoder = () => {
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            ref={ref}
-            // onNodesChange={onNodesChange}
-            // onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
             fitView
           >
             <Panel position="top-right">
@@ -156,14 +155,18 @@ const Encoder = () => {
           <Button
             type="primary"
             onClick={() => {
-              const cache = elements.map((config, i) => {
-                switch (config.type) {
-                  case "字根":
-                    return getRoot(wen, zi, yin, config);
-                  case "字音":
-                    return getPhonetic(yin, config);
-                }
-              });
+              const cache = elements
+                .map((config, i) => {
+                  switch (config.type) {
+                    case "字根":
+                      return getRoot(wen, zi, yin, config);
+                    case "字音":
+                      return getPhonetic(yin, config);
+                  }
+                })
+                .reduce((prev, curr) => {
+                  return Object.assign({}, prev, curr);
+                });
               setResult(encode(encoder, elements, characters, cache));
             }}
           >

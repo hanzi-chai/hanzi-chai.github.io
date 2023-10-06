@@ -6,7 +6,6 @@ import {
   useContext,
 } from "react";
 import {
-  Cache,
   Config,
   ElementCache,
   ElementConfig,
@@ -115,7 +114,7 @@ interface CacheAction {
   value: ElementCache;
 }
 
-export const cacheReducer = (cache: Cache, action: CacheAction) => {
+export const cacheReducer = (cache: ElementCache, action: CacheAction) => {
   return { ...cache, [action.index]: action.value };
 };
 
@@ -126,7 +125,7 @@ export const FontContext = createContext(font as Record<string, string>);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
-export const CacheContext = createContext({} as Cache);
+export const CacheContext = createContext({} as ElementCache);
 export const WriteContext = createContext<Dispatch<CacheAction>>(() => {});
 
 const useIndex = () => {
