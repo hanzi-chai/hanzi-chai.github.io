@@ -18,6 +18,7 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
+  addEdge,
 } from "reactflow";
 import { Alert, Button, Col, Dropdown, MenuProps, Row, Typography } from "antd";
 import styled from "styled-components";
@@ -62,7 +63,6 @@ const isGB = (char: string) => {
 const Encoder = () => {
   const { fitView } = useReactFlow();
   const { elements, encoder } = useContext(ConfigContext);
-  console.log(elements, encoder);
   const initialNodes: Omit<ENode, "position">[] = encoder.map(({ key }, i) => {
     return { ...base, id: i.toString(), data: { label: key } };
   });
@@ -95,21 +95,21 @@ const Encoder = () => {
   const nodeTypes = useMemo(() => ({ encoder: EncoderNode }), []);
   const edgeTypes = useMemo(() => ({ encoder: EncoderEdge }), []);
 
-  // useEffect(() => {
-  //   const idmap = {} as Record<string, number>;
-  //   const newencoder: IEncoderNode[] = nodes.map(({ id, data }, index) => {
-  //     idmap[id] = index;
-  //     return { key: data.label, children: [] };
-  //   });
-  //   edges.forEach(({ source, target, data }) => {
-  //     const [from, to] = [idmap[source], idmap[target]];
-  //     newencoder[from].children.push({
-  //       to,
-  //       conditions: data!
-  //     })
-  //   })
-  //   dispatch({ type: "encoder", content: newencoder });
-  // }, [nodes, edges]);
+  useEffect(() => {
+    const idmap = {} as Record<string, number>;
+    const newencoder: IEncoderNode[] = nodes.map(({ id, data }, index) => {
+      idmap[id] = index;
+      return { key: data.label, children: [] };
+    });
+    edges.forEach(({ source, target, data }) => {
+      const [from, to] = [idmap[source], idmap[target]];
+      newencoder[from].children.push({
+        to,
+        conditions: data!,
+      });
+    });
+    dispatch({ type: "encoder", content: newencoder });
+  }, [nodes, edges]);
 
   const onLayout = () => {
     const [lnodes, ledges] = getLayoutedElements(nodes, edges);
@@ -131,7 +131,13 @@ const Encoder = () => {
       key: "code",
     },
   ];
-
+  const onConnect = useCallback(
+    (connection: any) => {
+      setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
+      onLayout();
+    },
+    [setEdges],
+  );
   return (
     <Wrapper gutter={32} style={{ flex: "1", overflowY: "scroll" }}>
       <Col
@@ -148,6 +154,7 @@ const Encoder = () => {
             edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
             nodeDragThreshold={10000}
             fitView
           >

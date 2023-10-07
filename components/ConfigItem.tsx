@@ -5,9 +5,13 @@ const LineWrapper = styled.div`
   display: flex;
   gap: 32px;
   align-items: baseline;
+  margin: 16px 0;
 `;
 
-const Label = styled.label``;
+const Label = styled.label`
+  display: inline-block;
+  width: 64px;
+`;
 
 const ConfigItem = ({
   label,

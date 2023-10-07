@@ -2,15 +2,19 @@ import styled from "styled-components";
 import StrokeSearch from "./StrokeSearch";
 import {
   Button,
+  Col,
+  Dropdown,
   Empty,
   Input,
   Menu,
   Pagination,
+  Row,
   Select,
   Space,
   Spin,
   Steps,
   Table,
+  Typography,
 } from "antd";
 import { BorderOutlined, AppstoreOutlined } from "@ant-design/icons";
 
@@ -30,6 +34,7 @@ import { useContext, useEffect, useState } from "react";
 import { ArrowRightOutlined } from "@ant-design/icons";
 import {
   ConfigContext,
+  DispatchContext,
   WenContext,
   WriteContext,
   YinContext,
@@ -47,11 +52,22 @@ import {
   disassembleComponents,
   disassembleCompounds,
 } from "../lib/root";
-import { Classifier, Config, PhoneticConfig, RootConfig } from "../lib/config";
+import {
+  Classifier,
+  Config,
+  ElementResult,
+  PhoneticConfig,
+  PhoneticElement,
+  RootConfig,
+  SieveName,
+} from "../lib/config";
 import { intersection, isEmpty } from "underscore";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ConfigItem from "./ConfigItem";
 import { Wen, Yin, Zi } from "../lib/data";
+import analyzers from "../lib/pinyin";
+import { ColumnsType } from "antd/es/table";
+import { sieveMap } from "../lib/selector";
 
 const ExtraContainer = styled.div`
   display: flex;
@@ -155,13 +171,14 @@ const RootAnalysis = () => {
   const [compoundResults, setCompoundResult] = useState(
     {} as Record<string, CompoundResult>,
   );
-  const [loading, setLoading] = useState(false);
   const wen = useWenCustomized();
   const zi = useContext(ZiContext);
   const yin = useContext(YinContext);
   const rootConfig = useRoot();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const index = useIndex();
+  const dispatch = useContext(DispatchContext);
 
   const makeSequenceFilter = (classifier: Classifier, sequence: string) => {
     return (x: string) => {
@@ -175,7 +192,7 @@ const RootAnalysis = () => {
   };
 
   const {
-    analysis: { classifier },
+    analysis: { classifier, selector },
   } = useElement() as RootConfig;
   const filter = makeSequenceFilter(classifier, sequence);
   const displays = [
@@ -197,115 +214,250 @@ const RootAnalysis = () => {
   ];
 
   return (
-    <>
-      <ChaiSteps
-        current={step}
-        onChange={(e) => setStep(e as 0)}
-        items={[
-          { title: "部件拆分", icon: <BorderOutlined /> },
-          { title: "复合体拆分", icon: <AppstoreOutlined /> },
-        ]}
-      />
-      <Toolbar>
-        <StrokeSearch sequence={sequence} setSequence={setSequence} />
-        <Button
-          type="primary"
-          disabled={loading}
-          onClick={() => {
-            const s1 = disassembleComponents(wen, rootConfig);
-            const s2 = disassembleCompounds(zi, rootConfig, s1);
-            setComponentResult(s1);
-            setCompoundResult(s2);
+    <Row>
+      <Col span={8}>
+        <Typography.Title level={2}>字形分析</Typography.Title>
+        {selector.map((element) => {
+          return (
+            <SelectWithDelete key={element}>
+              <Select
+                value={element}
+                style={{ width: "120px" }}
+                options={[...sieveMap.keys()].map((x) => ({
+                  value: x,
+                  label: x,
+                }))}
+              />
+              <Button
+                onClick={() => {
+                  dispatch({
+                    type: "selector",
+                    element: index,
+                    subtype: "remove",
+                    name: element,
+                  });
+                }}
+              >
+                删除
+              </Button>
+            </SelectWithDelete>
+          );
+        })}
+        <Dropdown
+          menu={{
+            items: ([...sieveMap.keys()] as SieveName[])
+              .filter((x) => !selector.includes(x))
+              .map((x) => ({
+                key: x,
+                label: x,
+                onClick: () => {
+                  dispatch({
+                    type: "selector",
+                    element: index,
+                    subtype: "add",
+                    name: x,
+                  });
+                },
+              })),
           }}
         >
-          计算
-        </Button>
-        <Button onClick={() => setComponentResult({})}>清空</Button>
-        <Button onClick={() => exportResult(componentResults)}>导出</Button>
-      </Toolbar>
-      {loading ? (
-        <Space size="large">
-          <Spin size="large" />
-        </Space>
-      ) : displays[step].length ? (
-        <>
-          <CollapseCustom
-            items={displays[step].slice((page - 1) * pageSize, page * pageSize)}
-            accordion={true}
-            bordered={false}
-            size={"small"}
-            defaultActiveKey={["1"]}
-          />
-          <Pagination
-            current={page}
-            onChange={(page, pageSize) => {
-              setPage(page);
-              setPageSize(pageSize);
+          <Button
+            type="primary"
+            style={{ display: "block", margin: "0 auto" }}
+            disabled={selector.length === [...sieveMap.keys()].length}
+          >
+            添加
+          </Button>
+        </Dropdown>
+      </Col>
+      <Col span={16}>
+        <Typography.Title level={2}>分析结果</Typography.Title>
+        <Toolbar>
+          <StrokeSearch sequence={sequence} setSequence={setSequence} />
+          <Button
+            type="primary"
+            onClick={() => {
+              const s1 = disassembleComponents(wen, rootConfig);
+              const s2 = disassembleCompounds(zi, rootConfig, s1);
+              setComponentResult(s1);
+              setCompoundResult(s2);
             }}
-            total={displays[step].length}
-            pageSize={pageSize}
-          />
-        </>
-      ) : (
-        <Empty />
-      )}
-    </>
+          >
+            计算
+          </Button>
+          <Button onClick={() => setComponentResult({})}>清空</Button>
+          <Button onClick={() => exportResult(componentResults)}>导出</Button>
+        </Toolbar>
+        <ChaiSteps
+          current={step}
+          onChange={(e) => setStep(e as 0)}
+          items={[
+            { title: "部件拆分", icon: <BorderOutlined />, status: "finish" },
+            {
+              title: "复合体拆分",
+              icon: <AppstoreOutlined />,
+              status: "finish",
+            },
+          ]}
+        />
+        {displays[step].length ? (
+          <>
+            <CollapseCustom
+              items={displays[step].slice(
+                (page - 1) * pageSize,
+                page * pageSize,
+              )}
+              accordion={true}
+              bordered={false}
+              size={"small"}
+              defaultActiveKey={["1"]}
+            />
+            <Pagination
+              current={page}
+              onChange={(page, pageSize) => {
+                setPage(page);
+                setPageSize(pageSize);
+              }}
+              total={displays[step].length}
+              pageSize={pageSize}
+            />
+          </>
+        ) : (
+          <Empty />
+        )}
+      </Col>
+    </Row>
   );
 };
 
-const Wrapper = styled.div`
-  width: 300px;
-  align-self: center;
-`;
-
-const options = {
-  首字母: (p: string) => p[0],
-  末字母: (p: string) => p[p.length - 1],
-} as Record<string, (p: string) => string>;
+const Wrapper = styled(Row)``;
 
 export const getPhonetic = (yin: Yin, config: PhoneticConfig) => {
-  const value = {} as Record<string, Record<string, string>>;
+  const value = {} as Record<string, ElementResult>;
   for (const [char, pinyins] of Object.entries(yin)) {
     value[char] = {};
     const onepinyin = pinyins[0]; // todo: support 多音字
     for (const node of config.nodes) {
-      value[char][node] = options[node](onepinyin);
+      value[char][node] = analyzers[node](onepinyin);
     }
   }
   return value;
 };
+
+const SelectWithDelete = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin: 16px;
+`;
 
 const PhoneticAnalysis = () => {
   const phonetic = usePhonetic();
   const index = useIndex();
   const write = useContext(WriteContext);
   const yin = useContext(YinContext);
+  const dispatch = useContext(DispatchContext);
+  const [result, setResult] = useState({} as Record<string, ElementResult>);
+  const columns: ColumnsType<Record<string, string>> = [
+    {
+      title: "汉字",
+      dataIndex: "char",
+      key: "char",
+    },
+  ].concat(
+    phonetic.nodes.map((x) => ({
+      title: x,
+      dataIndex: x,
+      key: x,
+    })),
+  );
 
   return (
     <Wrapper>
-      <ConfigItem label="类型">
-        <Select
-          value={phonetic.nodes[0]}
-          style={{ width: "120px" }}
-          options={Object.keys(options).map((x) => ({ value: x, label: x }))}
-        />
-      </ConfigItem>
+      <Col span={8}>
+        <Typography.Title level={2}>字音分析</Typography.Title>
+        {phonetic.nodes.map((element) => {
+          return (
+            <SelectWithDelete key={element}>
+              <Select
+                value={element}
+                style={{ width: "120px" }}
+                options={Object.keys(analyzers).map((x) => ({
+                  value: x,
+                  label: x,
+                }))}
+              />
+              <Button
+                onClick={() => {
+                  dispatch({
+                    type: "phonetic",
+                    element: index,
+                    subtype: "remove",
+                    name: element,
+                  });
+                }}
+              >
+                删除
+              </Button>
+            </SelectWithDelete>
+          );
+        })}
+        <Dropdown
+          menu={{
+            items: (Object.keys(analyzers) as PhoneticElement[])
+              .filter((x) => !phonetic.nodes.includes(x))
+              .map((x) => ({
+                key: x,
+                label: x,
+                onClick: () => {
+                  dispatch({
+                    type: "phonetic",
+                    element: index,
+                    subtype: "add",
+                    name: x,
+                  });
+                },
+              })),
+          }}
+        >
+          <Button
+            type="primary"
+            style={{ display: "block", margin: "0 auto" }}
+            disabled={phonetic.nodes.length === Object.keys(analyzers).length}
+          >
+            添加
+          </Button>
+        </Dropdown>
+      </Col>
       {/* {type === "custom" && (
         <ConfigItem label="正则表达式">
           <Input style={{ width: "120px" }} />
         </ConfigItem>
       )} */}
-      <Toolbar>
-        <Button
-          type="primary"
-          onClick={() => {
-            const value = getPhonetic(yin, phonetic);
-            write({ index, value });
-          }}
-        >
-          计算
-        </Button>
-      </Toolbar>
+      <Col span={16}>
+        <Typography.Title level={2}>分析结果</Typography.Title>
+        <Toolbar>
+          <Button
+            type="primary"
+            onClick={() => {
+              const value = getPhonetic(yin, phonetic);
+              setResult(value);
+              // write({ index, value });
+            }}
+          >
+            计算
+          </Button>
+        </Toolbar>
+        <Table
+          columns={columns}
+          dataSource={Object.entries(result).map(([k, v]) => ({
+            key: k,
+            char: k,
+            ...v,
+          }))}
+          pagination={{ pageSize: 50, hideOnSinglePage: true }}
+          size="small"
+        />
+      </Col>
     </Wrapper>
   );
 };

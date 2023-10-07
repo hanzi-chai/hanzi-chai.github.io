@@ -36,7 +36,7 @@ const RootsList = () => {
   }
   return (
     <>
-      <Typography.Title level={2}>字根列表</Typography.Title>
+      <Typography.Title level={2}>键盘映射</Typography.Title>
       <List
         dataSource={Object.entries(data)}
         renderItem={(item: [string, string[]]) => {

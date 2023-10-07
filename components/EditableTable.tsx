@@ -67,9 +67,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
 
       toggleEdit();
       handleSave({ ...record, ...values });
-    } catch (errInfo) {
-      console.log("Save failed:", errInfo);
-    }
+    } catch (errInfo) {}
   };
 
   let childNode = children;
@@ -117,7 +115,6 @@ const EditableTable: React.FC = () => {
     key: k,
     pinyin: v,
   }));
-  console.log(Math.max(...dataSource.map(({ key, pinyin }) => pinyin.length)));
 
   // const handleDelete = (key: React.Key) => {
   //   const newData = dataSource.filter((item) => item.key !== key);

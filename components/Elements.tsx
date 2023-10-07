@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import RootPicker from "./RootPicker";
 import RootsList from "./RootsList";
-import { Col, Menu, Row, Select } from "antd";
+import { Col, Menu, Row, Select, Typography } from "antd";
 import { useContext } from "react";
 import { ConfigContext, useElement, useIndex, usePhonetic } from "./Context";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -66,25 +66,26 @@ const RootElementConfig = () => {
   );
 };
 
-const Wrapper = styled.div`
-  width: 300px;
-  align-self: center;
-`;
-
 const PhoneticElementConfig = () => {
   const { mapping } = usePhonetic();
   const type = typeof mapping === "string" ? "恒等映射" : "自定义映射";
-  const options = ["恒等映射", "自定义映射"];
+  const options = ["恒等映射", "自定义映射"] as const;
   return (
-    <Wrapper>
-      <ConfigItem label="类型">
-        <Select
-          value={type}
-          style={{ width: "120px" }}
-          options={options.map((x) => ({ label: x, value: x }))}
-        />
-      </ConfigItem>
-    </Wrapper>
+    <Row>
+      <Col span={8}>
+        <Typography.Title level={2}>来源</Typography.Title>
+      </Col>
+      <Col span={16}>
+        <Typography.Title level={2}>键盘映射</Typography.Title>
+        <ConfigItem label="类型">
+          <Select
+            value={type}
+            style={{ width: "120px" }}
+            options={options.map((x) => ({ label: x, value: x }))}
+          />
+        </ConfigItem>
+      </Col>
+    </Row>
   );
 };
 

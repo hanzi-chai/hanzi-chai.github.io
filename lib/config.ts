@@ -21,9 +21,11 @@ interface RootConfig {
   mapping: Mapping;
 }
 
+type PhoneticElement = "首字母" | "末字母" | "声" | "韵" | "调";
+
 interface PhoneticConfig {
   type: "字音";
-  nodes: ("首字母" | "末字母" | "声" | "韵" | "调" | "自定义")[];
+  nodes: PhoneticElement[];
   analysis: null;
   mapping: "id" | Record<string, string>;
 }
@@ -70,7 +72,13 @@ interface Config {
 
 export type { SieveName, Selector, Classifier, Aliaser, Mapping };
 
-export type { Config, ElementConfig, RootConfig, PhoneticConfig };
+export type {
+  Config,
+  ElementConfig,
+  RootConfig,
+  PhoneticConfig,
+  PhoneticElement,
+};
 
 export type { EncoderNode, EncoderEdge, Condition };
 

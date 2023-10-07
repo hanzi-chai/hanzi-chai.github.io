@@ -10,7 +10,9 @@ import {
   ElementCache,
   ElementConfig,
   PhoneticConfig,
+  PhoneticElement,
   RootConfig,
+  SieveName,
 } from "../lib/config";
 import wen from "../data/wen.json";
 import zi from "../data/zi.json";
@@ -48,6 +50,18 @@ export type Action =
           indices: number[];
         }
     ))
+  | {
+      type: "selector";
+      element: number;
+      name: SieveName;
+      subtype: "add" | "remove";
+    }
+  | {
+      type: "phonetic";
+      element: number;
+      name: PhoneticElement;
+      subtype: "add" | "remove";
+    }
   | ({
       type: "data";
     } & (
@@ -66,6 +80,49 @@ export const configReducer = (config: Config, action: Action) => {
       break;
     case "load":
       newconfig = action.content;
+      break;
+    case "phonetic":
+      const phoneticConfig = config.elements[action.element] as PhoneticConfig;
+      let newNodes;
+      switch (action.subtype) {
+        case "add":
+          newNodes = phoneticConfig.nodes.concat(action.name);
+          break;
+        case "remove":
+          newNodes = phoneticConfig.nodes.filter((x) => x !== action.name);
+          break;
+      }
+      const newPhoneticConfig = { ...phoneticConfig, nodes: newNodes };
+      newconfig = {
+        ...config,
+        elements: config.elements.map((v, i) =>
+          i === action.element ? newPhoneticConfig : v,
+        ),
+      };
+      break;
+    case "selector":
+      const rootConfig = config.elements[action.element] as RootConfig;
+      let newselector;
+      switch (action.subtype) {
+        case "add":
+          newselector = rootConfig.analysis.selector.concat(action.name);
+          break;
+        case "remove":
+          newselector = rootConfig.analysis.selector.filter(
+            (x) => x !== action.name,
+          );
+          break;
+      }
+      const newRootConfig = {
+        ...rootConfig,
+        analysis: { ...rootConfig.analysis, selector: newselector },
+      };
+      newconfig = {
+        ...config,
+        elements: config.elements.map((v, i) =>
+          i === action.element ? newRootConfig : v,
+        ),
+      };
       break;
     case "root":
       const { name } = action;
@@ -155,4 +212,19 @@ const useWenCustomized = () => {
   return Object.assign({}, wen, component);
 };
 
-export { useIndex, useElement, useRoot, usePhonetic, useWenCustomized };
+const useZiCustomized = () => {
+  const zi = useContext(ZiContext);
+  const {
+    data: { compound },
+  } = useContext(ConfigContext);
+  return Object.assign({}, zi, compound);
+};
+
+export {
+  useIndex,
+  useElement,
+  useRoot,
+  usePhonetic,
+  useWenCustomized,
+  useZiCustomized,
+};
