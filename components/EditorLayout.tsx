@@ -4,9 +4,8 @@ import {
   useContext,
   useEffect,
   useReducer,
-  useState,
 } from "react";
-import { Button, Layout, Menu } from "antd";
+import { Button, Layout, Menu, Typography } from "antd";
 import {
   DatabaseOutlined,
   MailOutlined,
@@ -23,14 +22,15 @@ import {
   WriteContext,
   cacheReducer,
   configReducer,
-} from "./Context";
+} from "./context";
 import { Config, ElementCache } from "../lib/config";
-import { Action } from "./Context";
+import { Action } from "./context";
 import styled from "styled-components";
 import { dump } from "js-yaml";
 import defaultConfig from "../templates/default.yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
+import { FlexContainer } from "./Utils";
 
 const items: MenuProps["items"] = [
   {
@@ -93,18 +93,6 @@ const importFile = (
   reader.readAsText(file);
 };
 
-const NameAndBack = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  font-size: 1.5rem;
-  color: white;
-`;
-
 const Header = styled(Layout.Header)`
   display: flex;
   justify-content: space-around;
@@ -123,31 +111,27 @@ const Footer = styled(Layout.Footer)`
   text-align: center;
 `;
 
-const ActionGroup = styled.div`
-  display: flex;
-  gap: 1rem;
-`;
-
-const Wrapper = styled(Layout)`
-  background-color: white !important;
-`;
-
 const EditorLayout = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [_, id, panel] = pathname.split("/");
+  const [_, __, panel] = pathname.split("/");
   const config = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
 
   return (
-    <Wrapper>
+    <Layout>
       <Header>
-        <NameAndBack>
+        <FlexContainer>
           <Link to="/">
             <Button icon={<CaretLeftFilled />} />
           </Link>
-          <Title>{config.info.name}</Title>
-        </NameAndBack>
+          <Typography.Title
+            level={1}
+            style={{ fontSize: "32px", color: "white" }}
+          >
+            {config.info.name}
+          </Typography.Title>
+        </FlexContainer>
         <Menu
           onClick={(e) =>
             navigate(
@@ -160,7 +144,7 @@ const EditorLayout = () => {
           items={items}
           style={{ width: "440px", justifyContent: "center" }}
         />
-        <ActionGroup>
+        <FlexContainer>
           <Button onClick={() => document.getElementById("import")!.click()}>
             导入
           </Button>
@@ -171,30 +155,31 @@ const EditorLayout = () => {
             onChange={(e) => importFile(dispatch, e)}
           />
           <Button onClick={() => exportFile(config)}>导出</Button>
-        </ActionGroup>
+        </FlexContainer>
       </Header>
       <Content>
         <Outlet />
       </Content>
       <Footer>© 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}</Footer>
-    </Wrapper>
+    </Layout>
   );
 };
 
 const Contextualized = () => {
+  const { pathname } = useLocation();
+  const [_, id] = pathname.split("/");
   const [config, dispatch] = useImmerReducer(
     configReducer,
     defaultConfig as Config,
+    () => {
+      return JSON.parse(localStorage.getItem(id)!) as Config;
+    },
   );
   const [cache, write] = useReducer(cacheReducer, {} as ElementCache);
-  const { pathname } = useLocation();
-  const [_, id] = pathname.split("/");
 
-  // read previous data
   useEffect(() => {
-    const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
-    dispatch({ type: "load", value: previousConfig });
-  }, []);
+    localStorage.setItem(id, JSON.stringify(config));
+  }, [config, id]);
 
   return (
     <CacheContext.Provider value={cache}>

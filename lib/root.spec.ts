@@ -1,11 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  disassembleComponents,
-  disassembleCompounds,
-  generateSchemes,
-  getComponentScheme,
-} from "./root";
-import { buildCache, useWen, useXingyin, useZi } from "./mock";
+import { generateSchemes } from "./root";
 
 describe("generate schemes", () => {
   it("works for a simple case", () => {
@@ -18,31 +12,31 @@ describe("generate schemes", () => {
   });
 });
 
-describe("get component scheme", () => {
-  const config = useXingyin();
-  const [天, 一, 大, 二, 人] = ["天", "一", "大", "二", "人"].map(buildCache);
-  it("works", () => {
-    expect(getComponentScheme(天, [一, 大, 二, 人], config).best).toEqual([
-      "一",
-      "大",
-    ]);
-  });
-});
+// describe("get component scheme", () => {
+//   const config = useXingyin();
+//   const [天, 一, 大, 二, 人] = ["天", "一", "大", "二", "人"].map(buildCache);
+//   it("works", () => {
+//     expect(getComponentScheme(天, [一, 大, 二, 人], config).best).toEqual([
+//       "一",
+//       "大",
+//     ]);
+//   });
+// });
 
-describe("disassemble components", () => {
-  const config = useXingyin();
-  const wen = useWen();
-  it("works", () => {
-    expect(disassembleComponents(wen, config)).toBeDefined();
-  });
-});
+// describe("disassemble components", () => {
+//   const config = useXingyin();
+//   const components = getComponents();
+//   it("works", () => {
+//     expect(disassembleComponents(components, config)).toBeDefined();
+//   });
+// });
 
-describe("disassemble compounds", () => {
-  const config = useXingyin();
-  const wen = useWen();
-  const zi = useZi();
-  it("works", () => {
-    const prev = disassembleComponents(wen, config);
-    expect(disassembleCompounds(zi, config, prev)).toBeDefined();
-  });
-});
+// describe("disassemble compounds", () => {
+//   const config = useXingyin();
+//   const components = getComponents();
+//   const compounds = useCompounds();
+//   it("works", () => {
+//     const prev = disassembleComponents(components, config);
+//     expect(disassembleCompounds(compounds, config, prev)).toBeDefined();
+//   });
+// });

@@ -1,26 +1,22 @@
 import styled from "styled-components";
 import RootPicker from "./RootPicker";
 import Mapping from "./Mapping";
-import { Col, Form, Menu, Row, Select, Typography } from "antd";
+import { Form, Menu, Select, Typography } from "antd";
 import { useContext, useState } from "react";
 import {
   ConfigContext,
-  DispatchContext,
   useDesign,
   useElement,
   useIndex,
   usePhonetic,
-  useYinCustomized,
-} from "./Context";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+  useCharacters,
+} from "./context";
+import { Outlet, useNavigate } from "react-router-dom";
 import analyzers from "../lib/pinyin";
 import Root from "./Root";
 import ElementAdder from "./ElementAdder";
-
-const Switcher = styled(Menu)`
-  justify-content: center;
-  margin: 32px;
-`;
+import { EditorColumn, EditorRow, FlexContainer, Switcher } from "./Utils";
+import { isEmpty } from "underscore";
 
 const Elements = () => {
   const { elements } = useContext(ConfigContext);
@@ -57,47 +53,33 @@ const ElementDispatch = () => {
 
 const RootElementConfig = () => {
   return (
-    <Row gutter={64} style={{ flex: "1", overflowY: "scroll" }}>
-      <Col
-        className="gutter-row"
-        span={8}
-        style={{ height: "100%", overflowY: "scroll" }}
-      >
+    <EditorRow>
+      <EditorColumn span={8}>
         <RootPicker />
-      </Col>
-      <Col
-        className="gutter-row"
-        span={16}
-        style={{ height: "100%", overflowY: "scroll" }}
-      >
+      </EditorColumn>
+      <EditorColumn span={16}>
         <Typography.Title level={2}>键盘映射</Typography.Title>
         <Mapping />
-      </Col>
-    </Row>
+      </EditorColumn>
+    </EditorRow>
   );
 };
 
-const PhoneticElementContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-`;
-
 const PhoneticElementConfig = () => {
   const [name, setName] = useState<string | undefined>(undefined);
-  const { mapping, nodes } = usePhonetic();
-  const type = mapping === undefined ? "恒等映射" : "自定义映射";
+  const { mapping, nodes, alphabet } = usePhonetic();
+  const type = isEmpty(mapping) ? "恒等映射" : "自定义映射";
   const options = ["恒等映射", "自定义映射"] as const;
   const design = useDesign();
-  const yin = useYinCustomized();
-  const syllables = [...new Set(Object.values(yin).flat())];
+  const characters = useCharacters();
+  const syllables = [...new Set(Object.values(characters).flat())];
   const fn = analyzers[nodes[0]];
   const elements = [...new Set(syllables.map(fn).flat())].sort();
   return (
-    <Row gutter={64} style={{ flex: "1", overflowY: "scroll" }}>
-      <Col span={8}>
+    <EditorRow>
+      <EditorColumn span={8}>
         <Typography.Title level={2}>来源</Typography.Title>
-        <PhoneticElementContainer>
+        <FlexContainer>
           {elements.map((x) => (
             <Root
               key={x}
@@ -107,28 +89,36 @@ const PhoneticElementConfig = () => {
               {x}
             </Root>
           ))}
-        </PhoneticElementContainer>
+        </FlexContainer>
         {type === "自定义映射" && <ElementAdder name={name} />}
-      </Col>
-      <Col span={16}>
+      </EditorColumn>
+      <EditorColumn span={16}>
         <Typography.Title level={2}>键盘映射</Typography.Title>
         {["首字母", "末字母"].includes(nodes[0]) && (
           <Form.Item label="类型">
             <Select
               value={type}
-              style={{ width: "120px" }}
+              style={{ width: "128px" }}
               options={options.map((x) => ({ label: x, value: x }))}
               onChange={(event) => {
                 if (event === "恒等映射")
-                  design({ subtype: "phonetic-automapping", value: undefined });
-                else design({ subtype: "phonetic-automapping", value: {} });
+                  design({ subtype: "phonetic-automapping", value: {} });
+                else
+                  design({
+                    subtype: "phonetic-automapping",
+                    value: Object.fromEntries(
+                      elements
+                        .filter((x) => alphabet.includes(x))
+                        .map((x) => [x, x]),
+                    ),
+                  });
               }}
             />
           </Form.Item>
         )}
-        {mapping !== undefined && <Mapping />}
-      </Col>
-    </Row>
+        {!isEmpty(mapping) && <Mapping />}
+      </EditorColumn>
+    </EditorRow>
   );
 };
 

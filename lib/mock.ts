@@ -1,22 +1,24 @@
-import wen from "../data/wen.json";
-import zi from "../data/zi.json";
-import { Wen, Zi } from "./data";
+import components from "../data/components.json";
+import compounds from "../data/compounds.json";
+import { Components, Compounds } from "./data";
 import findTopology from "./topology";
 import xingyin from "../templates/xingyin.yaml";
 import { Config, RootConfig } from "./config";
 
-export const useWen = () => {
-  const w = wen as unknown as Wen;
+export const getComponents = () => {
+  const w = components as unknown as Components;
   const x = xingyin as Config;
-  return Object.assign({}, w, x.data.component);
+  return Object.assign({}, w, x.data.components);
 };
 
-export const useZi = () => {
-  return zi as unknown as Zi;
+export const getCompounds = () => {
+  return compounds as unknown as Compounds;
 };
+
+export const useAll = () => {};
 
 export const buildCache = (name: string) => {
-  const component = useWen()[name];
+  const component = getComponents()[name];
   return { name, glyph: component, topology: findTopology(component) };
 };
 

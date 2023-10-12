@@ -1,26 +1,29 @@
+import { Dispatch, createContext, useContext } from "react";
 import {
-  Dispatch,
-  ReducerAction,
-  SetStateAction,
-  createContext,
-  useContext,
-} from "react";
-import {
+  Classifier,
   Config,
   ElementCache,
-  ElementConfig,
   Mapping,
   PhoneticConfig,
-  PhoneticElement,
   RootConfig,
   SieveName,
 } from "../lib/config";
-import wen from "../data/wen.json";
-import zi from "../data/zi.json";
-import yin from "../data/yin.json";
+import components from "../data/components.json";
+import compounds from "../data/compounds.json";
+import characters from "../data/characters.json";
+import slices from "../data/slices.json";
 import font from "../data/pingfang.json";
-import { Compound, Glyph, Wen, Zi, Yin } from "../lib/data";
+import {
+  Compound,
+  Glyph,
+  Components,
+  Compounds,
+  Characters,
+  Alias,
+  Slices,
+} from "../lib/data";
 import defaultConfig from "../templates/default.yaml";
+import defaultClassifier from "../templates/classifier.yaml";
 import { useLocation } from "react-router-dom";
 
 export type Action =
@@ -60,28 +63,25 @@ type ElementSubAction =
       value: SieveName;
     }
   | {
-      subtype: "root-aliaser";
-      action: "add" | "remove";
-      key: string;
-      value?: RootConfig["aliaser"][string];
-    }
-  | {
       subtype: "phonetic-automapping";
-      value: Mapping | undefined;
+      value: Mapping;
     };
 type DataAction = {
   type: "data";
 } & (
-  | { subtype: "component"; key: string; value: Glyph }
-  | { subtype: "compound"; key: string; value: Compound }
-  | { subtype: "character"; key: string; value: string[] }
+  | { subtype: "components"; key: string; value: Glyph }
+  | { subtype: "compounds"; key: string; value: Compound }
+  | { subtype: "characters"; key: string; value: string[] }
+  | { subtype: "slices"; key: string; value: Alias }
+  | { subtype: "classifier"; key: string; value: number }
 );
 type EncoderAction = { type: "encoder"; value: Config["encoder"] };
 
 export const configReducer = (config: Config, action: Action) => {
-  const { pathname } = location;
-  const [_, id] = pathname.split("/");
   const { type, value } = action;
+  const { index } = action as ElementAction;
+  const element = config.elements[index];
+  const root = element as RootConfig;
   switch (type) {
     case "load":
       config = action.value;
@@ -90,14 +90,9 @@ export const configReducer = (config: Config, action: Action) => {
       config.info = { ...config.info, ...value };
       break;
     case "data":
-      const { subtype, key } = action;
-      config.data[subtype][key] = value;
+      config.data[action.subtype][action.key] = value;
       break;
     case "element":
-      const { index } = action;
-      const element = config.elements[index];
-      const mapping = element.mapping!;
-      const root = element as RootConfig;
       switch (action.subtype) {
         case "generic-alphabet":
           element.alphabet = action.value;
@@ -105,10 +100,10 @@ export const configReducer = (config: Config, action: Action) => {
         case "generic-mapping":
           switch (action.action) {
             case "add":
-              mapping[action.key] = action.value!;
+              element.mapping[action.key] = action.value!;
               break;
             case "remove":
-              delete mapping[action.key];
+              delete element.mapping[action.key];
               break;
           }
           break;
@@ -120,10 +115,6 @@ export const configReducer = (config: Config, action: Action) => {
               (x) => x !== action.value,
             );
           break;
-        case "root-aliaser":
-          if (action.action === "add") root.aliaser[action.key] = action.value!;
-          else delete root.aliaser[action.key];
-          break;
         case "phonetic-automapping":
           element.mapping = action.value;
           break;
@@ -133,8 +124,6 @@ export const configReducer = (config: Config, action: Action) => {
       config.encoder = action.value;
       break;
   }
-
-  localStorage.setItem(id, JSON.stringify(config));
   return config;
 };
 
@@ -147,15 +136,21 @@ export const cacheReducer = (cache: ElementCache, action: CacheAction) => {
   return { ...cache, [action.index]: action.value };
 };
 
-export const WenContext = createContext(wen as unknown as Wen);
-export const ZiContext = createContext(zi as unknown as Zi);
-export const YinContext = createContext(yin as unknown as Yin);
+const ComponentsContext = createContext(components as unknown as Components);
+const CompoundsContext = createContext(compounds as unknown as Compounds);
+const CharactersContext = createContext(characters as unknown as Characters);
+const SlicesContext = createContext(slices as unknown as Slices);
 export const FontContext = createContext(font as Record<string, string>);
 export const ConfigContext = createContext(defaultConfig as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
 export const CacheContext = createContext({} as ElementCache);
 export const WriteContext = createContext<Dispatch<CacheAction>>(() => {});
+
+const useData = () => {
+  const { data } = useContext(ConfigContext);
+  return data;
+};
 
 const useIndex = () => {
   const { pathname } = useLocation();
@@ -171,28 +166,39 @@ const useElement = () => {
 const useRoot = () => useElement() as RootConfig;
 const usePhonetic = () => useElement() as PhoneticConfig;
 
-const useWenCustomized = () => {
-  const wen = useContext(WenContext);
-  const {
-    data: { component },
-  } = useContext(ConfigContext);
-  return Object.assign({}, wen, component);
+const useComponents = () => {
+  const components = useContext(ComponentsContext);
+  return Object.assign({}, components, useData().components);
 };
 
-const useZiCustomized = () => {
-  const zi = useContext(ZiContext);
-  const {
-    data: { compound },
-  } = useContext(ConfigContext);
-  return Object.assign({}, zi, compound);
+const useCompounds = () => {
+  const compounds = useContext(CompoundsContext);
+  return Object.assign({}, compounds, useData().compounds);
 };
 
-const useYinCustomized = () => {
-  const yin = useContext(YinContext);
-  const {
-    data: { character },
-  } = useContext(ConfigContext);
-  return Object.assign({}, yin, character);
+const useCharacters = () => {
+  const characters = useContext(CharactersContext);
+  return Object.assign({}, characters, useData().characters);
+};
+
+const useSlices = () => {
+  const slices = useContext(SlicesContext);
+  return Object.assign({}, slices, useData().slices);
+};
+
+const useAll = () => {
+  return {
+    components: useComponents(),
+    compounds: useCompounds(),
+    characters: useCharacters(),
+    slices: useSlices(),
+    classifier: useClassifier(),
+  };
+};
+
+const useClassifier = () => {
+  const { classifier } = useData();
+  return Object.assign({}, defaultClassifier as Classifier, classifier);
 };
 
 const useDesign = () => {
@@ -202,13 +208,34 @@ const useDesign = () => {
     dispatch({ type: "element", index, ...action });
 };
 
+const useDataType = () => {
+  const { pathname } = useLocation();
+  return pathname.split("/")[3];
+};
+
+const useModify = () => {
+  const dispatch = useContext(DispatchContext);
+  const subtype = useDataType() as "components";
+  return (key: string, value: DataAction["value"]) =>
+    dispatch({
+      type: "data",
+      subtype,
+      key,
+      value: value as Glyph,
+    });
+};
+
 export {
   useIndex,
   useElement,
   useRoot,
   usePhonetic,
   useDesign,
-  useWenCustomized,
-  useZiCustomized,
-  useYinCustomized,
+  useComponents,
+  useCompounds,
+  useCharacters,
+  useSlices,
+  useClassifier,
+  useAll,
+  useModify,
 };

@@ -1,7 +1,6 @@
 import { Button, Input, Popover, Select } from "antd";
 import {
   BaseEdge,
-  Edge,
   EdgeLabelRenderer,
   EdgeProps,
   getBezierPath,
@@ -10,10 +9,10 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import { useContext } from "react";
-import { ConfigContext } from "./Context";
-import { NodeData } from "./EncoderNode";
+import { ConfigContext } from "./context";
+import { EdgeData, NodeData } from "./graph";
 import { table } from "../lib/encoder";
-import { Condition } from "../lib/config";
+import { FlexContainer } from "./Utils";
 
 const ConditionTrigger = styled(Button)`
   height: 12px !important;
@@ -21,15 +20,6 @@ const ConditionTrigger = styled(Button)`
   display: grid;
   place-content: center;
 `;
-
-const ConditionLine = styled.div`
-  display: flex;
-  gap: 8px;
-  margin: 8px 0;
-`;
-
-export type EdgeData = Condition[];
-export type EEdge = Edge<EdgeData>;
 
 const ConditionEditor = ({
   conditions,
@@ -51,7 +41,7 @@ const ConditionEditor = ({
     <>
       {conditions.map(({ key, operator, value }, index) => {
         return (
-          <ConditionLine key={index}>
+          <FlexContainer key={index}>
             <Select
               style={{ width: "96px" }}
               value={key}
@@ -89,7 +79,7 @@ const ConditionEditor = ({
             >
               删除
             </Button>
-          </ConditionLine>
+          </FlexContainer>
         );
       })}
       <Button

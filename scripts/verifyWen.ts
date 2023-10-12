@@ -1,13 +1,16 @@
 import { readFileSync } from "fs";
 import { load } from "js-yaml";
-import { Wen } from "../lib/data";
+import { Components } from "../lib/data";
 
-const strokes: Record<string, { class: number; schema: string }> = load(
-  readFileSync("templates/strokes.yaml", "utf-8"),
-) as any;
-const wen: Wen = JSON.parse(readFileSync("data/wen.json", "utf-8"));
+const strokes = load(readFileSync("templates/strokes.yaml", "utf-8")) as Record<
+  string,
+  { class: number; schema: string }
+>;
+const components: Components = JSON.parse(
+  readFileSync("data/components.json", "utf-8"),
+);
 
-for (const [name, glyph] of Object.entries(wen)) {
+for (const [name, glyph] of Object.entries(components)) {
   for (const [index, stroke] of glyph.entries()) {
     const { feature, curveList } = stroke;
 

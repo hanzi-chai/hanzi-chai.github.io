@@ -1,19 +1,20 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createGlobalStyle } from "styled-components";
-import {
-  createBrowserRouter,
-  redirect,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";
-import Data, { ComponentData, CompoundData } from "./components/Data";
+import Data, {
+  ComponentData,
+  CompoundData,
+  CharacterData,
+  SliceData,
+} from "./components/Data";
 import Elements, { ElementConfig } from "./components/Elements";
 import Analysis, { AnalysisDispatch } from "./components/Analysis";
 import Encoder from "./components/Encoder";
-import EditableTable from "./components/EditableTable";
+import Classifier from "./components/Classifier";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -47,7 +48,9 @@ const router = createBrowserRouter([
         children: [
           { path: "component", element: <ComponentData /> },
           { path: "compound", element: <CompoundData /> },
-          { path: "character", element: <EditableTable /> },
+          { path: "character", element: <CharacterData /> },
+          { path: "slice", element: <SliceData /> },
+          { path: "classifier", element: <Classifier /> },
         ],
       },
       {

@@ -4,12 +4,9 @@ import { Config } from "../lib/config";
 import { useEffect, useState } from "react";
 import defaultConfig from "../templates/default.yaml";
 import xingyin from "../templates/xingyin.yaml";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
-
-const Wrapper = styled(Layout)`
-  height: 100%;
-`;
+import { FlexContainer } from "./Utils";
 
 const Sider = styled(Layout.Sider)`
   background: white !important;
@@ -19,10 +16,6 @@ const Sider = styled(Layout.Sider)`
     flex-direction: column;
     justify-content: center;
   }
-`;
-
-const ActionGroup = styled.div`
-  text-align: center;
 `;
 
 const Content = styled(Layout.Content)`
@@ -95,7 +88,7 @@ const HomeLayout = () => {
   }, []);
 
   return (
-    <Wrapper>
+    <Layout>
       <Sider width={320}>
         <FileList
           itemLayout="horizontal"
@@ -116,7 +109,7 @@ const HomeLayout = () => {
             );
           }}
         />
-        <ActionGroup>
+        <FlexContainer>
           <Dropdown
             placement="bottom"
             menu={{
@@ -126,13 +119,13 @@ const HomeLayout = () => {
           >
             <Button type="primary">新建</Button>
           </Dropdown>
-        </ActionGroup>
+        </FlexContainer>
       </Sider>
       <Content>
         <img alt="favicon" src="/favicon.ico" />
         <Typography.Title>汉字自动拆分系统</Typography.Title>
       </Content>
-    </Wrapper>
+    </Layout>
   );
 };
 

@@ -30,7 +30,7 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
   const { glyph: cglyph, topology: ctopology } = component;
   const { glyph: rglyph, topology: rtopology } = root;
   if (cglyph.length < rglyph.length) return [];
-  let queue = [[]] as number[][];
+  const queue = [[]] as number[][];
   for (const [rIndex, rStroke] of rglyph.entries()) {
     const rStrokeTopology = rtopology[rIndex];
     const end = cglyph.length - rglyph.length + rIndex + 1;

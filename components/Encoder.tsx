@@ -1,17 +1,6 @@
-import { layout, graphlib } from "@dagrejs/dagre";
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import ReactFlow, {
-  Node,
-  Edge,
   ReactFlowProvider,
-  Panel,
   useNodesState,
   useEdgesState,
   useReactFlow,
@@ -19,42 +8,29 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
   addEdge,
+  Connection,
 } from "reactflow";
-import { Alert, Button, Col, Dropdown, MenuProps, Row, Typography } from "antd";
-import styled from "styled-components";
-import {
-  CacheContext,
-  ConfigContext,
-  DispatchContext,
-  WenContext,
-  YinContext,
-  ZiContext,
-} from "./Context";
+import { Button, Typography } from "antd";
+import { ConfigContext, DispatchContext, useAll } from "./context";
 
 import "reactflow/dist/style.css";
-import { Toolbar, getPhonetic, getRoot } from "./Analysis";
 import encode from "../lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
-import EncoderNode, { ENode, NodeData, base } from "./EncoderNode";
+import EncoderNode from "./EncoderNode";
 import { ElementCache, EncoderNode as IEncoderNode } from "../lib/config";
-import EncoderEdge, { EEdge, EdgeData } from "./EncoderEdge";
-const Wrapper = styled(Row)``;
-
-export const getLayoutedElements = function (
-  nodes: Omit<ENode, "position">[],
-  edges: EEdge[],
-): [ENode[], EEdge[]] {
-  const g = new graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "TB", ranksep: 32, nodesep: 64 });
-  edges.forEach((edge) => g.setEdge(edge.source, edge.target));
-  nodes.forEach((node) => g.setNode(node.id, node as any));
-  layout(g);
-  const position = (id: string) => ({ x: g.node(id).x, y: g.node(id).y });
-  return [
-    nodes.map((node) => ({ ...node, position: position(node.id) })),
-    edges,
-  ];
-};
+import EncoderEdge from "./EncoderEdge";
+import {
+  ENode,
+  NodeData,
+  makeNode,
+  EEdge,
+  EdgeData,
+  makeEdge,
+  getLayoutedElements,
+} from "./graph";
+import { getRoot } from "../lib/root";
+import { getPhonetic } from "../lib/pinyin";
+import { FlexContainer, EditorColumn, EditorRow } from "./Utils";
 
 const isGB = (char: string) => {
   return char.charCodeAt(0) >= 0x4e00;
@@ -63,20 +39,11 @@ const isGB = (char: string) => {
 const Encoder = () => {
   const { fitView } = useReactFlow();
   const { elements, encoder } = useContext(ConfigContext);
-  const initialNodes: Omit<ENode, "position">[] = encoder.map(({ key }, i) => {
-    return { ...base, id: i.toString(), data: { label: key } };
-  });
+  const initialNodes: ENode[] = encoder.map(({ key }, i) => makeNode(i, key));
   const initialEdges: EEdge[] = encoder
     .map(({ children }, from) => {
       return children.map(({ to, conditions }) => {
-        return {
-          id: `${from}-${to}`,
-          source: from.toString(),
-          target: to.toString(),
-          type: "encoder",
-          animated: true,
-          data: conditions,
-        };
+        return makeEdge(from, to, conditions);
       });
     })
     .flat();
@@ -87,11 +54,9 @@ const Encoder = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(layoutNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>(layoutEdges);
   const [result, setResult] = useState<Record<string, string>>({});
-  const wen = useContext(WenContext);
-  const zi = useContext(ZiContext);
-  const yin = useContext(YinContext);
+  const data = useAll();
   const dispatch = useContext(DispatchContext);
-  const characters = Object.keys(yin).filter(isGB);
+  const characters = Object.keys(data.characters).filter(isGB);
   const nodeTypes = useMemo(() => ({ encoder: EncoderNode }), []);
   const edgeTypes = useMemo(() => ({ encoder: EncoderEdge }), []);
 
@@ -109,16 +74,8 @@ const Encoder = () => {
       });
     });
     dispatch({ type: "encoder", value: newencoder });
-  }, [nodes, edges]);
+  }, [nodes, edges, dispatch]);
 
-  const onLayout = () => {
-    const [lnodes, ledges] = getLayoutedElements(nodes, edges);
-    setNodes([...lnodes]);
-    setEdges([...ledges]);
-    window.requestAnimationFrame(() => {
-      fitView();
-    });
-  };
   const columns: ColumnsType<Record<string, string>> = [
     {
       title: "汉字",
@@ -131,22 +88,23 @@ const Encoder = () => {
       key: "code",
     },
   ];
-  const onConnect = useCallback(
-    (connection: any) => {
-      setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
-      onLayout();
-    },
-    [setEdges],
-  );
+  const onConnect = (connection: Connection) => {
+    setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
+    const [lnodes, ledges] = getLayoutedElements(nodes, edges);
+    setNodes([...lnodes]);
+    setEdges([...ledges]);
+    window.requestAnimationFrame(() => {
+      fitView();
+    });
+  };
   return (
-    <Wrapper gutter={32} style={{ flex: "1", overflowY: "scroll" }}>
-      <Col
-        className="gutter-row"
+    <EditorRow>
+      <EditorColumn
         span={12}
         style={{ display: "flex", flexDirection: "column" }}
       >
         <Typography.Title level={2}>编码器</Typography.Title>
-        <div style={{ flex: "1" }}>
+        <div style={{ flex: 1 }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -158,21 +116,14 @@ const Encoder = () => {
             nodeDragThreshold={10000}
             fitView
           >
-            {/* <Panel position="top-right">
-              <Button onClick={onLayout}>整理布局</Button>
-            </Panel> */}
             <Background variant={BackgroundVariant.Cross} />
             <Controls />
           </ReactFlow>
         </div>
-      </Col>
-      <Col
-        className="gutter-row"
-        span={12}
-        style={{ height: "100%", overflowY: "scroll" }}
-      >
+      </EditorColumn>
+      <EditorColumn span={12}>
         <Typography.Title level={2}>编码生成</Typography.Title>
-        <Toolbar>
+        <FlexContainer>
           {/* <StrokeSearch sequence={sequence} setSequence={setSequence} /> */}
           <Button
             type="primary"
@@ -180,25 +131,25 @@ const Encoder = () => {
               const cache = elements.map((config) => {
                 switch (config.type) {
                   case "字根":
-                    return getRoot(wen, zi, yin, config);
+                    return getRoot(data, config);
                   case "字音":
-                    return getPhonetic(yin, config);
+                    return getPhonetic(data, config);
                 }
               });
-              const data = {} as ElementCache;
-              for (const char in yin) {
-                data[char] = cache
+              const allcache = {} as ElementCache;
+              for (const char in data.characters) {
+                allcache[char] = cache
                   .map((a) => a[char])
                   .reduce((prev, curr) => Object.assign({}, prev, curr), {});
               }
-              setResult(encode(encoder, elements, characters, data));
+              setResult(encode(encoder, elements, characters, allcache));
             }}
           >
             计算
           </Button>
           <Button onClick={() => {}}>清空</Button>
           <Button onClick={() => {}}>导出</Button>
-        </Toolbar>
+        </FlexContainer>
         <Table
           columns={columns}
           dataSource={Object.entries(result).map(([k, v]) => ({
@@ -209,15 +160,17 @@ const Encoder = () => {
           pagination={{ pageSize: 50, hideOnSinglePage: true }}
           size="small"
         />
-      </Col>
-    </Wrapper>
+      </EditorColumn>
+    </EditorRow>
   );
 };
 
-export default function () {
+const WrappedEncoder = () => {
   return (
     <ReactFlowProvider>
       <Encoder />
     </ReactFlowProvider>
   );
-}
+};
+
+export default WrappedEncoder;

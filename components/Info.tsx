@@ -1,11 +1,6 @@
 import React, { useContext } from "react";
 import { Form, Input, Typography } from "antd";
-import { ConfigContext, DispatchContext } from "./Context";
-import styled from "styled-components";
-
-const Wrapper = styled.section`
-  align-self: center;
-`;
+import { ConfigContext, DispatchContext } from "./context";
 
 const InfoInput = ({ field }: { field: string }) => {
   const config = useContext(ConfigContext);
@@ -23,9 +18,9 @@ const InfoInput = ({ field }: { field: string }) => {
 
 const Info: React.FC = () => {
   return (
-    <Wrapper>
+    <>
       <Typography.Title level={2}>基本信息</Typography.Title>
-      <Form labelCol={{ span: 6 }}>
+      <Form labelCol={{ span: 2 }}>
         <Form.Item label="方案名称">
           <InfoInput field="name" />
         </Form.Item>
@@ -39,7 +34,7 @@ const Info: React.FC = () => {
           <InfoInput field="description" />
         </Form.Item>
       </Form>
-    </Wrapper>
+    </>
   );
 };
 

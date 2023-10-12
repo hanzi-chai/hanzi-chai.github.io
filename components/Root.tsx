@@ -16,7 +16,7 @@ interface RootProps {
   name: string;
 }
 
-const Root2 = ({ name }: RootProps) => {
+export const Root2 = ({ name }: RootProps) => {
   return <Wrapper $size={name.length as 1 | 2}>{name}</Wrapper>;
 };
 

@@ -1,11 +1,4 @@
-import {
-  Condition,
-  Config,
-  ElementCache,
-  ElementResult,
-  EncoderEdge,
-  EncoderNode,
-} from "./config";
+import { Condition, Config, ElementCache, ElementResult } from "./config";
 
 export const table: Record<
   Condition["operator"],
@@ -36,7 +29,7 @@ const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
   }
   return (character: string, data: ElementResult) => {
     let node = 0;
-    let codes = [] as string[];
+    const codes = [] as string[];
     while (encoder[node].children.length) {
       for (const { to, conditions } of encoder[node].children) {
         if (conditions.every((x) => satisfy(x, data))) {

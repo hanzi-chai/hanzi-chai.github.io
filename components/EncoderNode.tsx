@@ -1,35 +1,22 @@
 import { Button, Dropdown } from "antd";
-import type { MenuProps } from "antd";
-import { useCallback, useContext } from "react";
-import {
-  Edge,
-  Handle,
-  Node,
-  NodeProps,
-  Position,
-  useReactFlow,
-} from "reactflow";
-import { ConfigContext, DispatchContext } from "./Context";
+import { useContext } from "react";
+import { Handle, NodeProps, Position, useReactFlow } from "reactflow";
+import { ConfigContext } from "./context";
 import styled from "styled-components";
 import {
   MenuItemGroupType,
   MenuItemType,
   SubMenuType,
 } from "antd/es/menu/hooks/useItems";
-import { getLayoutedElements } from "./Encoder";
-import { EdgeData } from "./EncoderEdge";
-
-export interface NodeData {
-  label: string;
-}
-
-export type ENode = Node<NodeData>;
-
-export const base = {
-  width: 64,
-  height: 32,
-  type: "encoder",
-};
+import {
+  ENode,
+  NodeData,
+  EEdge,
+  EdgeData,
+  makeEdge,
+  getLayoutedElements,
+  makeNode,
+} from "./graph";
 
 const NodeButton = styled(Button)`
   width: 64px;
@@ -65,7 +52,7 @@ const EncoderNode = ({ id, data }: NodeProps<NodeData>) => {
         },
       })),
   };
-  const setLayout = (newnodes: ENode[], newedges: Edge[]) => {
+  const setLayout = (newnodes: ENode[], newedges: EEdge[]) => {
     const [lnodes, ledges] = getLayoutedElements(newnodes, newedges);
     setNodes(lnodes);
     setEdges(ledges);
@@ -84,20 +71,9 @@ const EncoderNode = ({ id, data }: NodeProps<NodeData>) => {
           newid += 1;
         }
         const newnodes = nodes
-          .concat({
-            ...base,
-            id: newid.toString(),
-            data: { label: key },
-            position: { x: 0, y: 0 },
-          })
+          .concat(makeNode(newid, key))
           .sort((a, b) => parseInt(a.id) - parseInt(b.id));
-        const newedges = edges.concat({
-          id: `${id}-${newid}`,
-          source: id,
-          target: newid.toString(),
-          data: [],
-          animated: true,
-        });
+        const newedges = edges.concat(makeEdge(parseInt(id), newid, []));
         setLayout(newnodes, newedges);
       },
     })),

@@ -6,11 +6,10 @@ import {
   Glyph,
   LinearCurve,
   Point,
-  RenderedGlyph,
   RenderedStroke,
   Stroke,
 } from "./data";
-import { add, subtract, mean, multiply, abs, divide, distance } from "mathjs";
+import { add, subtract, mean, multiply, divide, distance } from "mathjs";
 
 type RelationSymbol = -1 | -0.5 | 0 | 0.5 | 1;
 
@@ -123,21 +122,16 @@ const evaluate = function (a: Curve, t: number): Point {
       multiply(t, a.controls[1]) as Point,
     );
   } else {
-    let v01 = add(
+    const v01 = add(
       multiply(Math.pow(1 - t, 3), a.controls[0]),
       multiply(3 * Math.pow(1 - t, 2) * t, a.controls[1]),
     );
-    let v23 = add(
+    const v23 = add(
       multiply(3 * (1 - t) * Math.pow(t, 2), a.controls[2]),
       multiply(Math.pow(t, 3), a.controls[3]),
     );
     return add(v01, v23) as Point;
   }
-};
-
-const boxArea = (s: Point, e: Point) => {
-  const diff = subtract(s, e);
-  return abs(diff[0] * diff[1]);
 };
 
 const recurse = function (
@@ -204,7 +198,7 @@ const getRecursiveRelation = function (a: Curve, b: Curve): Relation {
 };
 
 const linearCubicRelation = function (a: LinearCurve, b: CubicCurve): Relation {
-  let relation = genericLian(a, b);
+  const relation = genericLian(a, b);
   if (relation !== undefined) return relation;
   const [sa, ea] = box(a);
   const [sb, eb] = box(b);
@@ -219,7 +213,7 @@ const linearCubicRelation = function (a: LinearCurve, b: CubicCurve): Relation {
 };
 
 const cubicRelation = function (a: CubicCurve, b: CubicCurve): Relation {
-  let relation = genericLian(a, b);
+  const relation = genericLian(a, b);
   if (relation !== undefined) return relation;
   return getRecursiveRelation(a, b);
 };

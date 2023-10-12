@@ -1,19 +1,21 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
-import { useRoot, useWenCustomized, useZiCustomized } from "./Context";
+import {
+  useClassifier,
+  useComponents,
+  useSlices,
+  useCompounds,
+} from "./context";
 import Char from "./Char";
-import { Classifier, Config, RootConfig } from "../lib/config";
 import { Pagination } from "antd";
-import defaultClassifier from "../templates/classifier.yaml";
 import { Glyph } from "../lib/data";
+import { makeSequenceFilter } from "../lib/root";
+import { FlexContainer } from "./Utils";
 
-const Content = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  border: 1px solid black;
+const Content = styled(FlexContainer)`
   padding: 8px;
-  margin: 16px 0;
+  gap: 0;
+  border: 1px solid black;
 `;
 
 interface PoolProps {
@@ -23,18 +25,12 @@ interface PoolProps {
   sequence: string;
 }
 
-export const makeSequenceFilter = (
-  classifier: Classifier,
-  sequence: string,
-) => {
-  return ([x, v]: [string, Glyph]) => {
-    const fullSequence = v
-      .map((s) => s.feature)
-      .map((x) => classifier[x])
-      .join("");
-    return fullSequence.search(sequence) !== -1;
-  };
-};
+const MyPagination = styled(Pagination)`
+  margin: 16px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
 
 const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
   const [page, setPage] = useState(1);
@@ -49,7 +45,7 @@ const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
           <Char key={x} name={x} current={x === name} change={setName} />
         ))}
       </Content>
-      <Pagination
+      <MyPagination
         current={page}
         onChange={(page, pageSize) => {
           setPage(page);
@@ -68,24 +64,26 @@ const ComponentPool = ({
   setName,
   sequence,
 }: Omit<PoolProps, "content">) => {
-  const wen = useWenCustomized();
-  const content = Object.entries(wen)
-    .filter(makeSequenceFilter(defaultClassifier, sequence))
-    .map(([x, v]) => x);
+  const components = useComponents();
+  const classifier = useClassifier();
+  const content = Object.entries(components)
+    .filter(makeSequenceFilter(classifier, sequence))
+    .map(([x]) => x);
   return <Pool name={name} setName={setName} content={content} />;
 };
 
 const SlicePool = ({ name, setName, sequence }: Omit<PoolProps, "content">) => {
-  const wen = useWenCustomized();
-  const { aliaser } = useRoot();
-  const wenlike = Object.entries(aliaser).map(([x, v]) => {
-    const parent = wen[v.source];
+  const components = useComponents();
+  const classifier = useClassifier();
+  const slices = useSlices();
+  const componentslike = Object.entries(slices).map(([x, v]) => {
+    const parent = components[v.source];
     const g = v.indices.map((x) => parent[x]);
     return [x, g] as [string, Glyph];
   });
-  const content = wenlike
-    .filter(makeSequenceFilter(defaultClassifier, sequence))
-    .map(([x, v]) => x);
+  const content = componentslike
+    .filter(makeSequenceFilter(classifier, sequence))
+    .map(([x]) => x);
   return <Pool name={name} setName={setName} content={content} />;
 };
 
@@ -94,10 +92,10 @@ const CompoundPool = ({
   setName,
   sequence,
 }: Omit<PoolProps, "content">) => {
-  const zi = useZiCustomized();
-  const content = Object.entries(zi)
-    .filter(([x, v]) => x === sequence)
-    .map(([x, v]) => x);
+  const compounds = useCompounds();
+  const content = Object.entries(compounds)
+    .filter(([x]) => x === sequence)
+    .map(([x]) => x);
   return <Pool name={name} setName={setName} content={content} />;
 };
 

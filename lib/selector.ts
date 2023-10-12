@@ -1,4 +1,4 @@
-import { Cache, ComponentResult, SchemeWithData } from "./root";
+import { Cache, SchemeWithData } from "./root";
 import { SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import { Relation } from "./topology";
@@ -58,7 +58,7 @@ const makeTopologySieve = function (
   name: string,
   title: SieveName,
 ): Sieve<number> {
-  let key: Sieve<number>["key"] = (component, scheme) => {
+  const key: Sieve<number>["key"] = (component, scheme) => {
     const parsedScheme = scheme.map((x) =>
       binaryToIndices(component.glyph.length)(x),
     );
@@ -104,7 +104,7 @@ const select = (
 ) => {
   const sieveList = selector.map((s) => sieveMap.get(s)!);
   let currentSchemeList = [...schemeList];
-  let schemeData = new Map<string, Partial<SchemeWithData>>();
+  const schemeData = new Map<string, Partial<SchemeWithData>>();
   schemeList.forEach((v) => {
     schemeData.set(v.toString(), {
       key: v.toString(),

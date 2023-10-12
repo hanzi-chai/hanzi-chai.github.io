@@ -49,12 +49,12 @@ const RE_PHONETIC_SYMBOL = new RegExp(
   "g",
 );
 
-const parsePinyin2 = function (s: string) {
+const parsePincharacters2 = function (s: string) {
   let shengdiao: number = 5;
-  let shengyun = s.replace(
+  const shengyun = s.replace(
     RE_PHONETIC_SYMBOL,
     function ($0: string, $1: string) {
-      let content = PHONETIC_SYMBOL[$1];
+      const content = PHONETIC_SYMBOL[$1];
       shengdiao = parseInt(content[content.length - 1]);
       return content.slice(0, content.length - 1);
     },
@@ -65,9 +65,9 @@ const parsePinyin2 = function (s: string) {
 const data = Object.fromEntries(
   Object.entries(dict).map(([codepoint, pinyinString]) => {
     const char = String.fromCodePoint(parseInt(codepoint.slice(2), 16));
-    const pinyin = pinyinString.split(",").map(parsePinyin2);
+    const pinyin = pinyinString.split(",").map(parsePincharacters2);
     return [char, pinyin];
   }),
 );
 
-writeFileSync("data/yin.json", JSON.stringify(data));
+writeFileSync("data/characters.json", JSON.stringify(data));

@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "fix": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
     "preview": "vite preview",
     "data": "npx -y -- ts-node -T --esm scripts/fetch.ts",
     "format": "npx prettier . --write && git add .",
@@ -17,6 +18,7 @@
   "dependencies": {
     "@ant-design/colors": "^7.0.0",
     "@dagrejs/dagre": "^1.0.4",
+    "@dnd-kit/core": "^6.0.8",
     "antd": "^5.9.4",
     "d3-array": "^3.2.4",
     "dagre": "^0.8.5",
@@ -48,8 +50,10 @@
     "@vitest/ui": "^0.34.6",
     "axios": "^1.5.1",
     "eslint": "^8.50.0",
+    "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "eslint-plugin-unused-imports": "^3.0.0",
     "pre-commit": "^1.2.2",
     "typescript": "^5.2.2",
     "vite": "^4.4.11",
@@ -72,17 +76,24 @@
     ],
     "ignorePatterns": [
       "dist",
-      ".eslintrc.cjs"
+      "index.tsx"
     ],
     "parser": "@typescript-eslint/parser",
     "plugins": [
-      "react-refresh"
+      "react-refresh",
+      "unused-imports"
     ],
     "rules": {
       "react-refresh/only-export-components": [
         "warn",
         {
           "allowConstantExport": true
+        }
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          "varsIgnorePattern": "^_"
         }
       ]
     }

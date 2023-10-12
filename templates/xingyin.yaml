@@ -5,91 +5,28 @@ info:
   description: 用于初始化
 
 data:
-  component: {}
-  compound: {}
-  character: {}
+  components: {}
+  compounds: {}
+  characters: {}
+  slices: {}
+  classifier:
+    竖提: 6
+    横折提: 6
+    竖折: 6
+    横折折: 6
+    竖弯: 6
+    横折弯: 6
+    竖弯钩: 6
+    横折弯钩: 6
+    撇点: 6
+    撇折: 6
+    斜钩: 6
+    横斜钩: 6
 
 elements:
   - type: 字根
     nodes: [字根 1, 字根 2, 字根 3]
     alphabet: qwertyuiopasdfghjklzxcvbnm
-    aliaser:
-      丘上: { source: 丘, indices: [0, 1, 2, 3] }
-      为框: { source: 为, indices: [1, 2] }
-      步中: { source: 步下, indices: [0, 1] }
-      乌二: { source: 乌, indices: [0, 1] }
-      段二: { source: 段左, indices: [0, 1] }
-      母二: { source: 母, indices: [0, 1] }
-      贯二: { source: 母, indices: [0, 1] }
-      央三: { source: 央, indices: [0, 1, 2] }
-      业上: { source: 业, indices: [0, 1, 2, 3] }
-      皮二: { source: 皮, indices: [0, 1] }
-      舞中: { source: 舞上, indices: [2, 3, 4, 5, 6] }
-      着中: { source: 差上, indices: [2, 3, 4, 5] }
-      乐二: { source: 乐, indices: [0, 1] }
-      不下: { source: 不, indices: [1, 2, 3] }
-      余下: { source: 余, indices: [2, 3, 4, 5, 6] }
-      撇二横: { source: 朱, indices: [0, 1, 2] }
-      夫上: { source: 夫, indices: [0, 1, 2] }
-      年下: { source: 年, indices: [2, 3, 4, 5] }
-      革下: { source: 革, indices: [4, 5, 6, 7, 8] }
-      于下: { source: 于, indices: [1, 2] }
-      其上: { source: 其, indices: [0, 1, 2, 3, 4, 5] }
-      寒中: { source: 媾右, indices: [0, 1, 2, 3, 4] }
-      东上: { source: 东, indices: [0, 1] }
-      弋左: { source: 弋, indices: [0, 1] }
-      牙上: { source: 牙, indices: [0, 1] }
-      具上: { source: 具, indices: [0, 1, 2, 3, 4, 5] }
-      三竖: { source: 带上, indices: [1, 2, 3] }
-      四竖: { source: 舞上, indices: [3, 4, 5, 6] }
-      曾中: { source: 曾上, indices: [2, 3, 4, 5, 6, 7] }
-      身框: { source: 身, indices: [1, 2] }
-      两撇: { source: 勿, indices: [2, 3] }
-      且上: { source: 且, indices: [0, 1, 2, 3] }
-      豕下: { source: 豕, indices: [1, 2, 3, 4, 5, 6] }
-      臼裂: { source: 舆框, indices: [0, 1, 2, 3, 4, 5, 6] }
-      展底: { source: 展内, indices: [4, 5, 6] }
-      久上: { source: 久, indices: [0, 1] }
-      见下: { source: 见, indices: [2, 3] }
-      鱼上: { source: 鱼, indices: [0, 1, 2, 3, 4, 5, 6] }
-      犭二: { source: 犭, indices: [0, 1] }
-      万下: { source: 万, indices: [1, 2] }
-      隹右: { source: 隹, indices: [2, 3, 4, 5, 6, 7] }
-      羊变: { source: 羌, indices: [0, 1, 2, 3, 4, 5] }
-      舟下: { source: 舟, indices: [1, 2, 3, 4, 5] }
-      脊外: { source: 脊上, indices: [0, 1, 2, 3] }
-      承外: { source: 承, indices: [5, 6, 7] }
-      兴上: { source: 兴, indices: [0, 1, 2] }
-      亦下: { source: 亦, indices: [2, 3, 4, 5] }
-      变中: { source: 变上, indices: [2, 3, 4, 5] }
-      兼下: { source: 兼, indices: [6, 7, 8, 9] }
-      兼中: { source: 兼, indices: [3, 4, 5] }
-      录上: { source: 录, indices: [0, 1, 2] }
-      聿上: { source: 聿, indices: [0, 1, 2] }
-      经角: { source: 经右, indices: [0, 1] }
-      马上: { source: 马, indices: [0, 1] }
-      黑五: { source: 黑上, indices: [0, 1, 2, 3, 4] }
-      止变: { source: 足旁, indices: [3, 4, 5, 6] }
-      衤二: { source: 衤, indices: [3, 4] }
-      见二: { source: 见, indices: [0, 1] }
-      土变: { source: 黑上, indices: [5, 6, 7] }
-      人改: { source: 内, indices: [2, 3] }
-      卜离: { source: 不, indices: [2, 3] }
-      今上: { source: 今, indices: [0, 1] }
-      七变: { source: 长, indices: [1, 2] }
-      化右变: { source: 龙, indices: [2, 3] }
-      互中: { source: 互, indices: [1, 2] }
-      及二: { source: 及, indices: [0, 1] }
-      少上: { source: 少, indices: [0, 1, 2] }
-      毋中: { source: 毋, indices: [2, 3] }
-      瓜内: { source: 瓜, indices: [2, 3] }
-      木下: { source: 木, indices: [1, 2, 3] }
-      办外: { source: 办, indices: [2, 3] }
-      甬下: { source: 甬, indices: [2, 3, 4, 5, 6] }
-      三点: { source: 州, indices: [0, 2, 4] }
-      飞右: { source: 飞, indices: [1, 2] }
-      年中: { source: 年, indices: [2, 3, 4] }
-      秉框: { source: 秉, indices: [0, 1, 5, 6, 7] }
     analysis:
       selector:
         - 笔顺优先
@@ -97,38 +34,6 @@ elements:
         - 能连不交
         - 能散不连
         - 取大优先
-      classifier:
-        横: 1
-        提: 1
-        竖: 2
-        撇: 3
-        点: 4
-        捺: 4
-        横钩: 5
-        横撇: 5
-        竖折撇: 5
-        横折折撇: 5
-        横折: 5
-        竖折折: 5
-        竖钩: 5
-        横折钩: 5
-        竖折折钩: 5
-        横折折折钩: 5
-        弯钩: 5
-        横撇弯钩: 5
-        横折折折: 5
-        竖提: 6
-        横折提: 6
-        竖折: 6
-        横折折: 6
-        竖弯: 6
-        横折弯: 6
-        竖弯钩: 6
-        横折弯钩: 6
-        撇点: 6
-        撇折: 6
-        斜钩: 6
-        横斜钩: 6
     mapping:
       "1": s
       "2": e

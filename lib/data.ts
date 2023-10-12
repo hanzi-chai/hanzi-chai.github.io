@@ -70,18 +70,14 @@ interface Compound {
   mix?: number;
 }
 
-interface Wen {
-  [key: string]: Glyph;
-}
+type Components = Record<string, Glyph>;
+type Compounds = Record<string, Compound>;
+type Characters = Record<string, string[]>;
+type Slices = Record<string, Alias>;
 
-interface Zi {
-  [key: string]: Compound;
-}
-
-interface Yin {
-  [key: string]: string[];
-}
+type Alias = { source: string; indices: number[] };
 
 export type { N1, N2, N3, N6 };
-export type { Point, Draw, Stroke, Glyph, Compound, Operand, Wen, Zi, Yin };
+export type { Point, Draw, Stroke, Glyph, Compound, Operand, Alias };
+export type { Components, Compounds, Characters, Slices };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

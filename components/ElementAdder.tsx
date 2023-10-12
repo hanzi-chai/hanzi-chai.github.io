@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { ButtonContainer } from "./Utils";
+import { FlexContainer } from "./Utils";
 import { Select, Button } from "antd";
-import { useDesign, useRoot } from "./Context";
+import { useDesign, useRoot } from "./context";
 
 const ElementAdder = ({ name }: { name?: string }) => {
   const { alphabet } = useRoot();
   const design = useDesign();
   const [key, setKey] = useState(alphabet[0]);
   return (
-    <ButtonContainer>
+    <FlexContainer>
       <span>添加至</span>
       <Select
         value={key}
@@ -35,7 +35,7 @@ const ElementAdder = ({ name }: { name?: string }) => {
       >
         添加
       </Button>
-    </ButtonContainer>
+    </FlexContainer>
   );
 };
 

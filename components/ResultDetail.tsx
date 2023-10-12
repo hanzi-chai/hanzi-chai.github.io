@@ -1,16 +1,12 @@
-import { Space, Table, Tag } from "antd";
+import { Table } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Root from "./Root";
 import styled from "styled-components";
 import { SchemeWithData } from "../lib/root";
-import { useRoot } from "./Context";
-import { Config, RootConfig, Selector } from "../lib/config";
+import { useRoot } from "./context";
+import { Selector } from "../lib/config";
 import { sieveMap } from "../lib/selector";
-
-const RootsContainer = styled.div`
-  display: flex;
-  gap: 8px;
-`;
+import { FlexContainer } from "./Utils";
 
 const makeSorter = (selector: Selector) => {
   const selectorFields = selector.map((x) => sieveMap.get(x)!.name);
@@ -28,24 +24,12 @@ const makeSorter = (selector: Selector) => {
   };
 };
 
-const RootSlices = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 0 16px;
-`;
-
-const RootSlice = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
 const ResultDetail = ({
   data,
   map,
 }: {
   data: Partial<SchemeWithData>[];
-  map: [number[], string][];
+  map: Record<string, number[][]>;
 }) => {
   const {
     analysis: { selector },
@@ -57,11 +41,11 @@ const ResultDetail = ({
       dataIndex: "roots",
       key: "roots",
       render: (_, { roots }) => (
-        <RootsContainer>
+        <FlexContainer>
           {roots!.map((root, index) => (
-            <Root name={root} key={index} />
+            <Root key={index}>{root}</Root>
           ))}
-        </RootsContainer>
+        </FlexContainer>
       ),
     },
   ];
@@ -81,20 +65,18 @@ const ResultDetail = ({
 
   return data.length ? (
     <>
-      <RootSlices>
-        {map
-          .filter(([v, s]) => v.length > 1)
-          .map(([v, s]) => (
-            <RootSlice key={v.join(",")}>
-              <span>({v.join(",")}) =&nbsp;</span>
-              <Root name={s} />
-            </RootSlice>
-          ))}
-      </RootSlices>
+      <FlexContainer>
+        {Object.entries(map).map(([s, v]) => (
+          <FlexContainer key={s}>
+            <Root>{s}</Root>
+            <span>{v.map((ar) => `(${ar.join(",")})`).join(" ")}</span>
+          </FlexContainer>
+        ))}
+      </FlexContainer>
       <Table
         columns={columns}
         dataSource={data.sort(makeSorter(selector))}
-        pagination={{ hideOnSinglePage: true }}
+        pagination={{ hideOnSinglePage: true, defaultPageSize: 20 }}
         size="small"
       />
     </>

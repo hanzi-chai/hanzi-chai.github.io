@@ -1,16 +1,8 @@
 import { Empty, Form, Select, Typography } from "antd";
 import { Compound, Operand } from "../lib/data";
 import styled from "styled-components";
-import { PropsWithChildren, useContext } from "react";
-import {
-  DispatchContext,
-  ZiContext,
-  useWenCustomized,
-  useZiCustomized,
-} from "./Context";
+import { useComponents, useCompounds, useModify } from "./context";
 import { MyInputNumber } from "./ComponentModel";
-
-const Wrapper = styled.div``;
 
 const ideos: Operand[] = [
   "⿰",
@@ -34,34 +26,29 @@ const filterOption = (
 ) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase());
 
 const CompoundModel = ({ name }: { name?: string }) => {
-  const zi = useZiCustomized();
-  const wen = useWenCustomized();
-  const dispatch = useContext(DispatchContext);
+  const compounds = useCompounds();
+  const components = useComponents();
+  const modify = useModify();
   return (
-    <Wrapper>
+    <>
       <Typography.Title level={2}>调整数据</Typography.Title>
       {name ? (
         <>
           <Form.Item label="结构">
             <Select
-              value={zi[name].operator}
+              value={compounds[name].operator}
               style={{ width: "128px" }}
               onChange={(operator) => {
                 const modified = JSON.parse(
-                  JSON.stringify(zi[name]),
+                  JSON.stringify(compounds[name]),
                 ) as Compound;
                 modified.operator = operator;
-                dispatch({
-                  type: "data",
-                  subtype: "compound",
-                  key: name,
-                  value: modified,
-                });
+                modify(name, modified);
               }}
               options={ideos.map((x) => ({ value: x, label: x }))}
             />
           </Form.Item>
-          {zi[name].operandList.map((value, index) => {
+          {compounds[name].operandList.map((value, index) => {
             return (
               <Form.Item label={`第 ${index + 1} 部`} key={index}>
                 <Select
@@ -72,34 +59,29 @@ const CompoundModel = ({ name }: { name?: string }) => {
                   optionFilterProp="children"
                   onChange={(part) => {
                     const modified = JSON.parse(
-                      JSON.stringify(zi[name]),
+                      JSON.stringify(compounds[name]),
                     ) as Compound;
                     modified.operandList[index] = part;
-                    dispatch({
-                      type: "data",
-                      subtype: "compound",
-                      key: name,
-                      value: modified,
-                    });
+                    modify(name, modified);
                   }}
                   filterOption={filterOption}
-                  options={Object.keys(zi)
-                    .concat(Object.keys(wen))
+                  options={Object.keys(compounds)
+                    .concat(Object.keys(components))
                     .map((x) => ({ value: x, label: x }))}
                 />
               </Form.Item>
             );
           })}
-          {zi[name].mix && (
+          {compounds[name].mix && (
             <Form.Item label="混合">
-              <MyInputNumber min={1} max={20} value={zi[name].mix} />
+              <MyInputNumber min={1} max={20} value={compounds[name].mix} />
             </Form.Item>
           )}
         </>
       ) : (
         <Empty />
       )}
-    </Wrapper>
+    </>
   );
 };
 

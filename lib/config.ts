@@ -1,12 +1,10 @@
-import { Compound, Glyph } from "./data";
+import { Components, Compounds, Characters, Slices } from "./data";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
 type Selector = SieveName[];
 
 type Classifier = Record<string, number>;
-
-type Aliaser = Record<string, { source: string; indices: number[] }>;
 
 type Mapping = Record<string, string>;
 
@@ -20,9 +18,7 @@ interface RootConfig extends BaseConfig {
   nodes: ("字根 1" | "字根 2" | "字根 3")[];
   analysis: {
     selector: Selector;
-    classifier: Classifier;
   };
-  aliaser: Aliaser;
   mapping: Mapping;
 }
 
@@ -31,7 +27,7 @@ type PhoneticElement = "首字母" | "末字母" | "声" | "韵" | "调";
 interface PhoneticConfig extends BaseConfig {
   type: "字音";
   nodes: [PhoneticElement];
-  mapping?: Mapping;
+  mapping: Mapping;
 }
 
 type ElementResult = Record<string, string | undefined>;
@@ -66,15 +62,17 @@ interface Config {
     description: string;
   };
   data: {
-    component: Record<string, Glyph>;
-    compound: Record<string, Compound>;
-    character: Record<string, string[]>;
+    components: Components;
+    compounds: Compounds;
+    characters: Characters;
+    slices: Slices;
+    classifier: Classifier;
   };
   elements: ElementConfig[];
   encoder: EncoderNode[];
 }
 
-export type { SieveName, Selector, Classifier, Aliaser, Mapping };
+export type { SieveName, Selector, Classifier, Mapping };
 
 export type {
   Config,

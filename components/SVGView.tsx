@@ -1,19 +1,18 @@
 import styled from "styled-components";
 import { Stroke } from "../lib/data";
-import { useContext } from "react";
-import { FontContext, WenContext, useWenCustomized } from "./Context";
-import { Empty, Typography } from "antd";
+import { PropsWithChildren, useContext } from "react";
+import { FontContext, useComponents, useSlices } from "./context";
+import { Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
-  <SVG
-    id="fontsvg"
+  <svg
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
     width="100%"
     viewBox="0 0 1000 1000"
   >
     <path d={reference} stroke="grey" transform="matrix(1,0,0,-1,0,850)" />
-  </SVG>
+  </svg>
 );
 
 const processPath = ({ start, curveList }: Stroke) =>
@@ -24,8 +23,7 @@ const processPath = ({ start, curveList }: Stroke) =>
     .join("");
 
 export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
-  <SVG
-    id="datasvg"
+  <svg
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
     width="100%"
@@ -40,37 +38,50 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
         fill="none"
       />
     ))}
-  </SVG>
+  </svg>
 );
 
-const SVG = styled.svg`
-  grid-area: 1 / 1 / 1 / 1;
-`;
-
-export default function ComponentView({ name }: { name?: string }) {
-  const wen = useWenCustomized();
+export const ComponentView = ({ name }: { name: string }) => {
+  const components = useComponents();
   const font = useContext(FontContext);
   return (
-    <Wrapper>
+    <>
+      <FontView reference={font[name]} />
+      <StrokesView glyph={components[name]} />
+    </>
+  );
+};
+
+export const SliceView = ({ name }: { name: string }) => {
+  const components = useComponents();
+  const font = useContext(FontContext);
+  const slices = useSlices();
+  const { source, indices } = slices[name];
+  const glyph = components[source];
+  const subglyph = indices.map((x) => glyph[x]);
+  return (
+    <>
+      <FontView reference={font[source]} />
+      <StrokesView glyph={subglyph} />
+    </>
+  );
+};
+
+export default function SVGView({ children }: PropsWithChildren) {
+  return (
+    <>
       <Typography.Title level={2}>查看 SVG</Typography.Title>
-      <Overlay>
-        {name ? (
-          <>
-            <FontView reference={font[name]} />
-            <StrokesView glyph={wen[name]} />
-          </>
-        ) : (
-          <Empty description={false} />
-        )}
-      </Overlay>
-    </Wrapper>
+      <Overlay>{children}</Overlay>
+    </>
   );
 }
-
-const Wrapper = styled.div``;
 
 const Overlay = styled.div`
   border: 1px solid black;
   aspect-ratio: 1;
   display: grid;
+
+  & svg {
+    grid-area: 1 / 1 / 1 / 1;
+  }
 `;

@@ -1,31 +1,11 @@
-import {
-  Button,
-  Divider,
-  Dropdown,
-  Form,
-  Input,
-  List,
-  MenuProps,
-  Typography,
-} from "antd";
-import { useContext, useState } from "react";
+import { Dropdown, Form, Input, List, MenuProps } from "antd";
+import { useContext } from "react";
 import styled from "styled-components";
-import { DispatchContext, useElement, useIndex, useRoot } from "./Context";
+import { DispatchContext, useElement, useIndex } from "./context";
 import Root from "./Root";
 import Char from "./Char";
 import { reverse } from "../lib/utils";
-
-const ElementContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const Line = styled.div`
-  display: flex;
-  gap: 16px;
-  margin: 16px 0;
-`;
+import { FlexContainer } from "./Utils";
 
 const AdjustableRoot = ({ name }: { name: string }) => {
   const dispatch = useContext(DispatchContext);
@@ -77,14 +57,14 @@ const Mapping = () => {
         renderItem={(item: [string, string[]]) => {
           const [key, roots] = item;
           return (
-            <Line>
+            <FlexContainer>
               <Char name={key} />
-              <ElementContainer>
+              <FlexContainer>
                 {roots.map((name) => (
                   <AdjustableRoot key={name} name={name} />
                 ))}
-              </ElementContainer>
-            </Line>
+              </FlexContainer>
+            </FlexContainer>
           );
         }}
       ></List>

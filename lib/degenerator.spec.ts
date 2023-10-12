@@ -4,12 +4,9 @@ import degenerate, {
   generateSliceBinaries,
 } from "./degenerator";
 import { describe, it, expect } from "vitest";
-import { create, all, exp } from "mathjs";
-import findTopology from "./topology";
-import wen from "../data/wen.json";
-import { Glyph, Wen } from "./data";
-import { buildCache, useWen } from "./mock";
-const w = wen as unknown as Wen;
+import { create, all } from "mathjs";
+import { Glyph } from "./data";
+import { buildCache, getComponents } from "./mock";
 
 const { randomInt } = create(all, {
   randomSeed: "a",
@@ -31,9 +28,7 @@ describe("bi-directional conversion", () => {
   it("should be consistent", () => {
     const n = 10;
     const [i2b, b2i] = [indicesToBinary(n), binaryToIndices(n)];
-    const numbers = [...Array(100).keys()].map((_) =>
-      randomInt(0, 1 << (n - 1)),
-    );
+    const numbers = Array(100).map(() => randomInt(0, 1 << (n - 1)));
     for (const i of numbers) {
       expect(i2b(b2i(i))).toBe(i);
     }
@@ -71,7 +66,7 @@ describe("degenerate cross tests", () => {
     人,
     良,
     展内,
-  } = useWen();
+  } = getComponents();
   const slice = (source: Glyph, indices: number[]) =>
     indices.map((i) => source[i]);
   it("says 天 has 大", () => {
@@ -112,7 +107,7 @@ const hasroot = (a: Glyph, indices: number[], root: Glyph) => {
 };
 
 describe("degenerate cross tests 2", () => {
-  const { 豕, 彖, 象, 毅左, 涿右, 蒙下, 遂内 } = useWen();
+  const { 豕, 彖, 象, 毅左, 涿右, 蒙下, 遂内 } = getComponents();
   const base = slice(豕, [1, 2, 3, 4, 5, 6]);
   it("says 彖 has 豕下", () => {
     hasroot(彖, [3, 4, 5, 6, 7, 8], base);
@@ -135,7 +130,7 @@ describe("degenerate cross tests 2", () => {
 });
 
 describe("degenerate cross tests 3", () => {
-  const { 永, 承, 水, 丞 } = useWen();
+  const { 永, 承, 丞 } = getComponents();
   const base = slice(承, [5, 6, 7]);
   it("says 承 has 水", () => {
     hasroot(承, [5, 6, 7], base);

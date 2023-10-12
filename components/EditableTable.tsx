@@ -1,14 +1,12 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import type { InputRef } from "antd";
-import { Button, Form, Input, Popconfirm, Table } from "antd";
+import { Form, Input, Table } from "antd";
 import type { FormInstance } from "antd/es/form";
-import { DispatchContext, YinContext, useYinCustomized } from "./Context";
+import { useCharacters, useModify } from "./context";
 import { SearchOutlined } from "@ant-design/icons";
-
-import "./tb.css";
 import styled from "styled-components";
 
-const EditableContext = React.createContext<FormInstance<any> | null>(null);
+const EditableContext = React.createContext<FormInstance | null>(null);
 
 interface Item {
   key: string;
@@ -21,12 +19,21 @@ interface EditableRowProps {
   index: number;
 }
 
-const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => {
+const EditableTr = styled.tr`
+  &:hover .editable-cell-value-wrap {
+    padding: 4px 11px;
+    border: 1px solid #d9d9d9;
+    border-radius: 2px;
+  }
+`;
+
+const EditableRow: React.FC<EditableRowProps> = (props) => {
   const [form] = Form.useForm();
+  const { index: _index, ...rest } = props;
   return (
     <Form form={form} component={false}>
       <EditableContext.Provider value={form}>
-        <tr {...props} />
+        <EditableTr {...rest} />
       </EditableContext.Provider>
     </Form>
   );
@@ -40,6 +47,12 @@ interface EditableCellProps {
   record: Item;
   handleSave: (record: Item) => void;
 }
+
+const EditableCellValueWrap = styled.div`
+  padding: 5px 12px;
+  cursor: pointer;
+  padding-right: 24;
+`;
 
 const EditableCell: React.FC<EditableCellProps> = ({
   title,
@@ -66,12 +79,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
   };
 
   const save = async () => {
-    try {
-      const values = await form.validateFields();
+    const values = await form.validateFields();
 
-      toggleEdit();
-      handleSave({ ...record, ...values });
-    } catch (errInfo) {}
+    toggleEdit();
+    handleSave({ ...record, ...values });
   };
 
   let childNode = children;
@@ -91,17 +102,17 @@ const EditableCell: React.FC<EditableCellProps> = ({
         <Input ref={inputRef} onPressEnter={save} onBlur={save} />
       </Form.Item>
     ) : (
-      <div
-        className="editable-cell-value-wrap"
-        style={{ paddingRight: 24 }}
-        onClick={toggleEdit}
-      >
+      <EditableCellValueWrap onClick={toggleEdit}>
         {children}
-      </div>
+      </EditableCellValueWrap>
     );
   }
 
-  return <td {...restProps}>{childNode}</td>;
+  return (
+    <td style={{ position: "relative" }} {...restProps}>
+      {childNode}
+    </td>
+  );
 };
 
 type EditableTableProps = Parameters<typeof Table>[0];
@@ -114,10 +125,10 @@ interface DataType {
 type ColumnTypes = Exclude<EditableTableProps["columns"], undefined>;
 
 const EditableTable: React.FC = () => {
-  const yin = useYinCustomized();
-  const dispatch = useContext(DispatchContext);
+  const characters = useCharacters();
+  const modify = useModify();
   const [character, setCharacter] = useState<string>("");
-  const rawdata = Object.entries(yin).map(([k, v]) => ({
+  const rawdata = Object.entries(characters).map(([k, v]) => ({
     key: k,
     pinyin: v,
   }));
@@ -160,13 +171,8 @@ const EditableTable: React.FC = () => {
   //   setCount(count + 1);
   // };
 
-  const handleSave = (row: any) => {
-    dispatch({
-      type: "data",
-      subtype: "character",
-      key: row.key,
-      value: row.pinyin.split(","),
-    });
+  const handleSave = (row: DataType) => {
+    modify(row.key, (row.pinyin as unknown as string).split(","));
   };
 
   const components = {
@@ -194,9 +200,6 @@ const EditableTable: React.FC = () => {
 
   return (
     <Wrapper>
-      {/* <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-        Add a row
-      </Button> */}
       <Input
         placeholder="搜索汉字"
         prefix={<SearchOutlined />}
