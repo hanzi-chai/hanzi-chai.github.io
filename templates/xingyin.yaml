@@ -12,6 +12,7 @@ data:
 elements:
   - type: 字根
     nodes: [字根 1, 字根 2, 字根 3]
+    alphabet: qwertyuiopasdfghjklzxcvbnm
     aliaser:
       丘上: { source: 丘, indices: [0, 1, 2, 3] }
       为框: { source: 为, indices: [1, 2] }
@@ -361,8 +362,7 @@ elements:
       步中: m
   - type: 字音
     nodes: [首字母]
-    analysis: null
-    mapping: id
+    alphabet: qwertyuiopasdfghjklzxcvbnm
 
 encoder:
   - { key: "开始", children: [{ to: 1, conditions: [] }] }

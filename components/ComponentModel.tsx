@@ -1,99 +1,146 @@
-import { Empty, InputNumber, Typography } from "antd";
+import {
+  Button,
+  Dropdown,
+  Empty,
+  InputNumber,
+  MenuProps,
+  Select,
+  Typography,
+} from "antd";
 import { createContext, useContext } from "react";
 import styled from "styled-components";
-import { Draw as Curve, Glyph, Stroke } from "../lib/data";
-import {
-  ConfigContext,
-  DispatchContext,
-  WenContext,
-  useWenCustomized,
-} from "./Context";
-import { halfToFull } from "./utils";
+import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
+import { DispatchContext, useWenCustomized } from "./Context";
+import defaultClassifier from "../templates/strokes.yaml";
+import { ButtonContainer } from "./Utils";
+import { getDummyStroke, halfToFull } from "../lib/utils";
 
-export const Change = createContext(
-  (a: number, b: number, c: number, d: number) => {},
-);
-const StrokeIndex = createContext(-1);
-const CurveIndex = createContext(-1);
 const NameContext = createContext("");
+
+const useNameAndGlyph = () => {
+  const name = useContext(NameContext);
+  const glyph = useWenCustomized()[name];
+  return [name, glyph] as [string, Glyph];
+};
+
+const useDispatchComponent = () => {
+  const dispatch = useContext(DispatchContext);
+  return (name: string, glyph: Glyph) =>
+    dispatch({ type: "data", subtype: "component", key: name, value: glyph });
+};
+
+function deepcopy<T>(t: T) {
+  return JSON.parse(JSON.stringify(t)) as T;
+}
 
 interface StrokeModelProps {
   stroke: Stroke;
-  strokeIndex: number;
+  index: N1;
 }
 
 const FeatureAndStart = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
+  justify-content: right;
   flex-wrap: wrap;
   gap: 8px;
 `;
 
+const StrokeModelWrapper = styled.div`
+  margin: 32px 0;
+`;
+
 export const StrokeModel = ({
   stroke: { feature, start, curveList },
-  strokeIndex,
-}: StrokeModelProps) => (
-  <StrokeIndex.Provider value={strokeIndex}>
-    <FeatureAndStart>
-      <Typography.Title level={3}>{feature}</Typography.Title>
-      <ButtonGroup>
-        {start.map((parameter, parameterIndex) => (
-          <NumberModel
-            key={parameterIndex}
-            parameter={parameter}
-            parameterIndex={parameterIndex}
+  index,
+}: StrokeModelProps) => {
+  const dispatch = useDispatchComponent();
+  const [name, glyph] = useNameAndGlyph();
+  return (
+    <StrokeModelWrapper>
+      <FeatureAndStart>
+        <Select
+          value={feature}
+          style={{ width: 128 }}
+          options={Object.keys(defaultClassifier).map((x) => ({
+            label: x,
+            value: x,
+          }))}
+          onChange={(value) => {
+            const modified = deepcopy(glyph);
+            const newstroke = getDummyStroke(
+              value,
+              Array.from(defaultClassifier[value].schema),
+            );
+            modified[index[0]] = { ...newstroke, start };
+            dispatch(name, modified);
+          }}
+        />
+        <ButtonGroup>
+          {start.map((parameter, parameterIndex) => (
+            <NumberModel
+              parameter={parameter}
+              index={index.concat(-1, parameterIndex) as N3}
+              key={parameterIndex}
+            />
+          ))}
+        </ButtonGroup>
+        <Button
+          onClick={() => {
+            const modified = deepcopy(glyph);
+            modified.splice(index[0], 1);
+            dispatch(name, modified);
+          }}
+        >
+          删除
+        </Button>
+      </FeatureAndStart>
+      <DrawList>
+        {curveList.map((draw, drawIndex) => (
+          <DrawModel
+            draw={draw}
+            index={index.concat(drawIndex) as N2}
+            key={drawIndex}
           />
         ))}
-      </ButtonGroup>
-    </FeatureAndStart>
-    <CurveList>
-      {curveList.map((curve, curveIndex) => (
-        <CurveModel key={curveIndex} curve={curve} curveIndex={curveIndex} />
-      ))}
-    </CurveList>
-  </StrokeIndex.Provider>
-);
+      </DrawList>
+    </StrokeModelWrapper>
+  );
+};
 
-const CurveList = styled.ul`
+const DrawList = styled.ul`
   padding-left: 0;
   margin: 0;
 `;
 
-interface CurveModelProps {
-  curve: Curve;
-  curveIndex: number;
+interface DrawModelProps {
+  draw: Draw;
+  index: [number, number];
 }
 
-const CurveModel = ({ curve, curveIndex }: CurveModelProps) => (
-  <CurveIndex.Provider value={curveIndex}>
-    <List>
-      <Command>{halfToFull(curve.command.toUpperCase())}</Command>
-      <ButtonGroup>
-        {curve.parameterList.map((parameter, parameterIndex) => (
-          <NumberModel
-            key={parameterIndex}
-            parameter={parameter}
-            parameterIndex={parameterIndex}
-          />
-        ))}
-      </ButtonGroup>
-    </List>
-  </CurveIndex.Provider>
+const DrawModel = ({
+  draw: { command, parameterList },
+  index,
+}: DrawModelProps) => (
+  <DrawModelWrapper>
+    <span>{halfToFull(command.toUpperCase())}</span>
+    <ButtonGroup>
+      {parameterList.map((parameter, parameterIndex) => (
+        <NumberModel
+          parameter={parameter}
+          index={index.concat(parameterIndex) as N3}
+          key={parameterIndex}
+        />
+      ))}
+    </ButtonGroup>
+  </DrawModelWrapper>
 );
 
-const Command = styled.span`
-  text-align: center;
-  display: inline-block;
-  width: 20px;
-  margin: 0 5px;
-`;
-
-const List = styled.li`
+const DrawModelWrapper = styled.li`
   list-style: none;
   display: flex;
   align-items: center;
@@ -103,7 +150,7 @@ const List = styled.li`
 
 interface NumberModelProps {
   parameter: number;
-  parameterIndex: number;
+  index: [number, number, number];
 }
 
 export const MyInputNumber = styled(InputNumber)`
@@ -113,34 +160,55 @@ export const MyInputNumber = styled(InputNumber)`
   }
 `;
 
-const NumberModel = ({ parameter, parameterIndex }: NumberModelProps) => {
-  const name = useContext(NameContext);
-  const dispatch = useContext(DispatchContext);
-  const glyph = useWenCustomized()[name];
-  const strokeIndex = useContext(StrokeIndex),
-    curveIndex = useContext(CurveIndex);
+const NumberModel = ({ parameter, index }: NumberModelProps) => {
+  const dispatch = useDispatchComponent();
+  const [name, glyph] = useNameAndGlyph();
+  const [strokeIndex, drawIndex, parameterIndex] = index;
   return (
     <MyInputNumber
       min={-100}
       max={100}
       value={parameter}
       onChange={(value) => {
-        const modified = JSON.parse(JSON.stringify(glyph)) as Glyph;
-        if (curveIndex === -1) {
+        const modified = deepcopy(glyph);
+        if (drawIndex === -1) {
           modified[strokeIndex].start[parameterIndex] = value as number;
         } else {
-          modified[strokeIndex].curveList[curveIndex].parameterList[
+          modified[strokeIndex].curveList[drawIndex].parameterList[
             parameterIndex
           ] = value as number;
         }
-        dispatch({
-          type: "data",
-          subtype: "component",
-          key: name,
-          value: modified,
-        });
+        dispatch(name, modified);
       }}
     />
+  );
+};
+
+const StrokeAdder = () => {
+  const dispatch = useDispatchComponent();
+  const [name, glyph] = useNameAndGlyph();
+  const rawitems: MenuProps["items"] = Object.entries(defaultClassifier).map(
+    ([x, v]) => ({
+      key: x,
+      label: x,
+      onClick: () => {
+        const modified = deepcopy(glyph);
+        modified.push(getDummyStroke(x, Array.from(v.schema)));
+        dispatch(name, modified);
+      },
+    }),
+  );
+  const items: MenuProps["items"] = [
+    { key: 0, label: "基本", children: rawitems.slice(0, 7) },
+    { key: 1, label: "折类 I", children: rawitems.slice(7, 13) },
+    { key: 2, label: "折类 II", children: rawitems.slice(13, 20) },
+    { key: 3, label: "折类 III", children: rawitems.slice(20, 27) },
+    { key: 4, label: "折类 IV", children: rawitems.slice(27) },
+  ];
+  return (
+    <Dropdown menu={{ items }} placement="top">
+      <Button type="primary">添加</Button>
+    </Dropdown>
   );
 };
 
@@ -150,14 +218,17 @@ export default function ComponentModel({ name }: { name?: string }) {
     <Wrapper>
       <Typography.Title level={2}>调整数据</Typography.Title>
       {name ? (
-        <NameContext.Provider value={name!}>
+        <NameContext.Provider value={name}>
           {wen[name].map((stroke, strokeIndex) => (
             <StrokeModel
-              key={strokeIndex}
               stroke={stroke}
-              strokeIndex={strokeIndex}
+              index={[strokeIndex]}
+              key={strokeIndex}
             />
           ))}
+          <ButtonContainer>
+            <StrokeAdder />
+          </ButtonContainer>
         </NameContext.Provider>
       ) : (
         <Empty />

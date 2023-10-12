@@ -1,92 +1,132 @@
-import { Button, Checkbox, Modal, Row, Tabs, Typography } from "antd";
+import {
+  Button,
+  Checkbox,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Tabs,
+  Typography,
+} from "antd";
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { WenContext, DispatchContext } from "./Context";
-import Pool from "./Pool";
+import { useIndex, useRoot, useDesign } from "./Context";
+import Pool, { ComponentPool, CompoundPool, SlicePool } from "./Pool";
 import StrokeSearch from "./StrokeSearch";
 import Slicer from "./Slicer";
+import ElementAdder from "./ElementAdder";
+import { ButtonContainer } from "./Utils";
 
 const Wrapper = styled.div``;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-`;
-
 const RootPicker = () => {
   const [name, setName] = useState(undefined as string | undefined);
-  const dispatch = useContext(DispatchContext);
+  const design = useDesign();
   const [sequence, setSequence] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mode, setMode] = useState("component" as "component" | "compound");
-
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleOk = ({ name, indices }: { name: string; indices: number[] }) => {
-    dispatch({
-      type: "root",
-      subtype: "add-sliced",
-      element: 0,
-      name,
-      key: "a",
-      source: name!,
-      indices,
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState(
+    "component" as "component" | "compound" | "slice",
+  );
+  const handleOk = ({
+    sliceName,
+    indices,
+  }: {
+    sliceName: string;
+    indices: number[];
+  }) => {
+    design({
+      subtype: "root-aliaser",
+      action: "add",
+      key: sliceName,
+      value: {
+        source: name!,
+        indices,
+      },
     });
-    setIsModalOpen(false);
+    setOpen(false);
+    setName(sliceName);
+    setMode("slice");
   };
 
   const handleCancel = () => {
-    setIsModalOpen(false);
+    setOpen(false);
   };
 
   return (
     <Wrapper>
       <Typography.Title level={2}>来源</Typography.Title>
-      <StrokeSearch sequence={sequence} setSequence={setSequence} />
+      {mode === "compound" ? (
+        <Input
+          value={sequence}
+          placeholder="输入复合体名称"
+          onChange={(event) => setSequence(event.target.value)}
+        />
+      ) : (
+        <StrokeSearch sequence={sequence} setSequence={setSequence} />
+      )}
       <Tabs
         activeKey={mode}
         centered
         items={[
-          { label: "部件", key: "component" },
-          { label: "复合体", key: "compound" },
+          {
+            label: "部件",
+            key: "component",
+            children: (
+              <ComponentPool
+                name={name}
+                setName={setName}
+                sequence={sequence}
+              />
+            ),
+          },
+          {
+            label: "切片",
+            key: "slice",
+            children: (
+              <SlicePool name={name} setName={setName} sequence={sequence} />
+            ),
+          },
+          {
+            label: "复合体",
+            key: "compound",
+            children: (
+              <CompoundPool name={name} setName={setName} sequence={sequence} />
+            ),
+          },
         ]}
-        onChange={(e) => setMode(e as "component" | "compound")}
+        onChange={(e) => {
+          setMode(e as "component" | "compound");
+          setSequence("");
+          setName(undefined);
+        }}
       />
-      <Pool type={mode} name={name} setName={setName} sequence={sequence} />
-      <ButtonGroup>
+      {mode === "component" && name && (
+        <Slicer
+          isModalOpen={open}
+          handleOk={handleOk}
+          handleCancel={handleCancel}
+          componentName={name}
+        />
+      )}
+      <ButtonContainer>
         {mode === "component" && (
-          <Button disabled={name === undefined} onClick={showModal}>
-            切片
+          <Button onClick={() => setOpen(true)}>切片</Button>
+        )}
+        {mode === "slice" && (
+          <Button
+            onClick={() =>
+              design({
+                subtype: "root-aliaser",
+                action: "remove",
+                key: name!,
+              })
+            }
+          >
+            删除切片
           </Button>
         )}
-        {mode === "component" && name && (
-          <Slicer
-            isModalOpen={isModalOpen}
-            handleOk={handleOk}
-            handleCancel={handleCancel}
-            componentName={name}
-          />
-        )}
-        <Button
-          type="primary"
-          disabled={name === undefined}
-          onClick={() =>
-            name &&
-            dispatch({
-              type: "root",
-              subtype: "add",
-              element: 0,
-              name,
-              key: "a",
-            })
-          }
-        >
-          添加
-        </Button>
-      </ButtonGroup>
+      </ButtonContainer>
+      <ElementAdder name={name} />
     </Wrapper>
   );
 };

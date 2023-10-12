@@ -108,7 +108,7 @@ const Encoder = () => {
         conditions: data!,
       });
     });
-    dispatch({ type: "encoder", content: newencoder });
+    dispatch({ type: "encoder", value: newencoder });
   }, [nodes, edges]);
 
   const onLayout = () => {

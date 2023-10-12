@@ -27,7 +27,7 @@ const satisfy = (condition: Condition, data: ElementResult) => {
 const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
   const elementReverseLookup = {} as Record<
     string,
-    Record<string, string> | string
+    Record<string, string> | undefined
   >;
   for (const { nodes, mapping } of elements) {
     for (const node of nodes) {
@@ -43,7 +43,7 @@ const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
           const { key } = encoder[to];
           const element = data[key]!;
           const mapping = elementReverseLookup[key];
-          codes.push(typeof mapping === "string" ? element : mapping[element]);
+          codes.push(mapping === undefined ? element : mapping[element]);
           node = to;
           break;
         }

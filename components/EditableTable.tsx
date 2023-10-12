@@ -2,7 +2,11 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import type { InputRef } from "antd";
 import { Button, Form, Input, Popconfirm, Table } from "antd";
 import type { FormInstance } from "antd/es/form";
-import { YinContext } from "./Context";
+import { DispatchContext, YinContext, useYinCustomized } from "./Context";
+import { SearchOutlined } from "@ant-design/icons";
+
+import "./tb.css";
+import styled from "styled-components";
 
 const EditableContext = React.createContext<FormInstance<any> | null>(null);
 
@@ -110,11 +114,16 @@ interface DataType {
 type ColumnTypes = Exclude<EditableTableProps["columns"], undefined>;
 
 const EditableTable: React.FC = () => {
-  const yin = useContext(YinContext);
-  const dataSource = Object.entries(yin).map(([k, v]) => ({
+  const yin = useYinCustomized();
+  const dispatch = useContext(DispatchContext);
+  const [character, setCharacter] = useState<string>("");
+  const rawdata = Object.entries(yin).map(([k, v]) => ({
     key: k,
     pinyin: v,
   }));
+  const dataSource = character
+    ? rawdata.filter((x) => x.key === character)
+    : rawdata;
 
   // const handleDelete = (key: React.Key) => {
   //   const newData = dataSource.filter((item) => item.key !== key);
@@ -129,26 +138,15 @@ const EditableTable: React.FC = () => {
       title: "汉字",
       dataIndex: "key",
       width: "30%",
-      editable: true,
     },
     {
       title: "字音",
       dataIndex: "pinyin",
       render: (_, record) => {
-        return record.pinyin.join("");
+        return record.pinyin.join(",");
       },
       editable: true,
     },
-    // {
-    //   title: 'operation',
-    //   dataIndex: 'operation',
-    //   render: (_, record: { key: React.Key }) =>
-    //     dataSource.length >= 1 ? (
-    //       <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
-    //         <a>Delete</a>
-    //       </Popconfirm>
-    //     ) : null,
-    // },
   ];
 
   // const handleAdd = () => {
@@ -162,15 +160,13 @@ const EditableTable: React.FC = () => {
   //   setCount(count + 1);
   // };
 
-  const handleSave = (row: DataType) => {
-    const newData = [...dataSource];
-    const index = newData.findIndex((item) => row.key === item.key);
-    const item = newData[index];
-    newData.splice(index, 1, {
-      ...item,
-      ...row,
+  const handleSave = (row: any) => {
+    dispatch({
+      type: "data",
+      subtype: "character",
+      key: row.key,
+      value: row.pinyin.split(","),
     });
-    // setDataSource(newData);
   };
 
   const components = {
@@ -197,10 +193,19 @@ const EditableTable: React.FC = () => {
   });
 
   return (
-    <div>
+    <Wrapper>
       {/* <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
         Add a row
       </Button> */}
+      <Input
+        placeholder="搜索汉字"
+        prefix={<SearchOutlined />}
+        value={character}
+        onChange={(event) => {
+          setCharacter(event.target.value);
+        }}
+        style={{ maxWidth: "200px", margin: "0 auto" }}
+      />
       <Table
         components={components}
         rowClassName={() => "editable-row"}
@@ -209,11 +214,18 @@ const EditableTable: React.FC = () => {
         columns={columns as ColumnTypes}
         pagination={{
           total: dataSource.length,
-          pageSize: 50,
+          pageSize: 10,
         }}
       />
-    </div>
+    </Wrapper>
   );
 };
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: scroll;
+`;
 
 export default EditableTable;

@@ -1,4 +1,4 @@
-import { Empty, Select, Typography } from "antd";
+import { Empty, Form, Select, Typography } from "antd";
 import { Compound, Operand } from "../lib/data";
 import styled from "styled-components";
 import { PropsWithChildren, useContext } from "react";
@@ -8,9 +8,7 @@ import {
   useWenCustomized,
   useZiCustomized,
 } from "./Context";
-import Char from "./Char";
 import { MyInputNumber } from "./ComponentModel";
-import ConfigItem from "./ConfigItem";
 
 const Wrapper = styled.div``;
 
@@ -44,7 +42,7 @@ const CompoundModel = ({ name }: { name?: string }) => {
       <Typography.Title level={2}>调整数据</Typography.Title>
       {name ? (
         <>
-          <ConfigItem label="结构">
+          <Form.Item label="结构">
             <Select
               value={zi[name].operator}
               style={{ width: "128px" }}
@@ -62,10 +60,10 @@ const CompoundModel = ({ name }: { name?: string }) => {
               }}
               options={ideos.map((x) => ({ value: x, label: x }))}
             />
-          </ConfigItem>
+          </Form.Item>
           {zi[name].operandList.map((value, index) => {
             return (
-              <ConfigItem label={`第 ${index + 1} 部`} key={index}>
+              <Form.Item label={`第 ${index + 1} 部`} key={index}>
                 <Select
                   style={{ width: "128px" }}
                   showSearch
@@ -89,13 +87,13 @@ const CompoundModel = ({ name }: { name?: string }) => {
                     .concat(Object.keys(wen))
                     .map((x) => ({ value: x, label: x }))}
                 />
-              </ConfigItem>
+              </Form.Item>
             );
           })}
           {zi[name].mix && (
-            <ConfigItem label="混合">
+            <Form.Item label="混合">
               <MyInputNumber min={1} max={20} value={zi[name].mix} />
-            </ConfigItem>
+            </Form.Item>
           )}
         </>
       ) : (

@@ -9,6 +9,7 @@ import {
   Config,
   ElementCache,
   ElementConfig,
+  Mapping,
   PhoneticConfig,
   PhoneticElement,
   RootConfig,
@@ -23,152 +24,118 @@ import defaultConfig from "../templates/default.yaml";
 import { useLocation } from "react-router-dom";
 
 export type Action =
+  | InfoAction
+  | LoadAction
+  | ElementAction
+  | DataAction
+  | EncoderAction;
+
+type InfoAction = {
+  type: "info";
+  value: Record<string, string>;
+};
+type LoadAction = {
+  type: "load";
+  value: Config;
+};
+type ElementAction = {
+  type: "element";
+  index: number;
+} & ElementSubAction;
+
+type ElementSubAction =
   | {
-      type: "info";
-      content: Record<string, string>;
+      subtype: "generic-alphabet";
+      value: string;
     }
   | {
-      type: "load";
-      content: Config;
-    }
-  | ({
-      type: "root";
-      element: number;
-      name: string;
-    } & (
-      | {
-          subtype: "add";
-          key: string;
-        }
-      | {
-          subtype: "remove";
-        }
-      | {
-          subtype: "add-sliced";
-          key: string;
-          source: string;
-          indices: number[];
-        }
-    ))
-  | {
-      type: "selector";
-      element: number;
-      name: SieveName;
-      subtype: "add" | "remove";
+      subtype: "generic-mapping";
+      action: "add" | "remove";
+      key: string;
+      value?: string;
     }
   | {
-      type: "phonetic";
-      element: number;
-      name: PhoneticElement;
-      subtype: "add" | "remove";
+      subtype: "root-selector";
+      action: "add" | "remove";
+      value: SieveName;
     }
-  | ({
-      type: "data";
-    } & (
-      | { subtype: "component"; key: string; value: Glyph }
-      | { subtype: "compound"; key: string; value: Compound }
-    ))
-  | { type: "encoder"; content: Config["encoder"] };
+  | {
+      subtype: "root-aliaser";
+      action: "add" | "remove";
+      key: string;
+      value?: RootConfig["aliaser"][string];
+    }
+  | {
+      subtype: "phonetic-automapping";
+      value: Mapping | undefined;
+    };
+type DataAction = {
+  type: "data";
+} & (
+  | { subtype: "component"; key: string; value: Glyph }
+  | { subtype: "compound"; key: string; value: Compound }
+  | { subtype: "character"; key: string; value: string[] }
+);
+type EncoderAction = { type: "encoder"; value: Config["encoder"] };
 
 export const configReducer = (config: Config, action: Action) => {
   const { pathname } = location;
   const [_, id] = pathname.split("/");
-  let newconfig;
-  switch (action.type) {
-    case "info":
-      newconfig = { ...config, info: { ...config.info, ...action.content } };
-      break;
+  const { type, value } = action;
+  switch (type) {
     case "load":
-      newconfig = action.content;
+      config = action.value;
       break;
-    case "phonetic":
-      const phoneticConfig = config.elements[action.element] as PhoneticConfig;
-      let newNodes;
-      switch (action.subtype) {
-        case "add":
-          newNodes = phoneticConfig.nodes.concat(action.name);
-          break;
-        case "remove":
-          newNodes = phoneticConfig.nodes.filter((x) => x !== action.name);
-          break;
-      }
-      const newPhoneticConfig = { ...phoneticConfig, nodes: newNodes };
-      newconfig = {
-        ...config,
-        elements: config.elements.map((v, i) =>
-          i === action.element ? newPhoneticConfig : v,
-        ),
-      };
-      break;
-    case "selector":
-      const rootConfig = config.elements[action.element] as RootConfig;
-      let newselector;
-      switch (action.subtype) {
-        case "add":
-          newselector = rootConfig.analysis.selector.concat(action.name);
-          break;
-        case "remove":
-          newselector = rootConfig.analysis.selector.filter(
-            (x) => x !== action.name,
-          );
-          break;
-      }
-      const newRootConfig = {
-        ...rootConfig,
-        analysis: { ...rootConfig.analysis, selector: newselector },
-      };
-      newconfig = {
-        ...config,
-        elements: config.elements.map((v, i) =>
-          i === action.element ? newRootConfig : v,
-        ),
-      };
-      break;
-    case "root":
-      const { name } = action;
-      const elementConfig = config.elements[action.element] as RootConfig;
-      const { mapping, aliaser } = elementConfig;
-      let newMapping = { ...mapping };
-      let newAliaser = { ...aliaser };
-      switch (action.subtype) {
-        case "add":
-          newMapping = Object.assign({ [name]: action.key }, mapping);
-          break;
-        case "remove":
-          delete newMapping[name];
-          delete newAliaser[name];
-          break;
-        case "add-sliced":
-          const { source, indices } = action;
-          newMapping[name] = action.key;
-          newAliaser[name] = { source, indices };
-          break;
-      }
-      const newElementConfig = {
-        ...elementConfig,
-        mapping: newMapping,
-        aliaser: newAliaser,
-      };
-      newconfig = {
-        ...config,
-        elements: config.elements.map((v, i) =>
-          i === action.element ? newElementConfig : v,
-        ),
-      };
+    case "info":
+      config.info = { ...config.info, ...value };
       break;
     case "data":
-      const { subtype, key, value } = action;
-      const data = JSON.parse(JSON.stringify(config.data)) as Config["data"];
-      data[subtype][key] = value;
-      newconfig = { ...config, data };
+      const { subtype, key } = action;
+      config.data[subtype][key] = value;
+      break;
+    case "element":
+      const { index } = action;
+      const element = config.elements[index];
+      const mapping = element.mapping!;
+      const root = element as RootConfig;
+      switch (action.subtype) {
+        case "generic-alphabet":
+          element.alphabet = action.value;
+          break;
+        case "generic-mapping":
+          switch (action.action) {
+            case "add":
+              mapping[action.key] = action.value!;
+              break;
+            case "remove":
+              delete mapping[action.key];
+              break;
+          }
+          break;
+        case "root-selector":
+          if (action.action === "add")
+            root.analysis.selector.push(action.value);
+          else
+            root.analysis.selector = root.analysis.selector.filter(
+              (x) => x !== action.value,
+            );
+          break;
+        case "root-aliaser":
+          if (action.action === "add") root.aliaser[action.key] = action.value!;
+          else delete root.aliaser[action.key];
+          break;
+        case "phonetic-automapping":
+          element.mapping = action.value;
+          break;
+      }
       break;
     case "encoder":
-      newconfig = { ...config, encoder: action.content };
+      config.encoder = action.value;
       break;
   }
 
-  localStorage.setItem(id, JSON.stringify(newconfig));
-  return newconfig;
+  localStorage.setItem(id, JSON.stringify(config));
+  return config;
 };
 
 interface CacheAction {
@@ -198,7 +165,7 @@ const useIndex = () => {
 const useElement = () => {
   const index = useIndex();
   const { elements } = useContext(ConfigContext);
-  return elements[index] as ElementConfig | undefined;
+  return elements[index];
 };
 
 const useRoot = () => useElement() as RootConfig;
@@ -220,11 +187,28 @@ const useZiCustomized = () => {
   return Object.assign({}, zi, compound);
 };
 
+const useYinCustomized = () => {
+  const yin = useContext(YinContext);
+  const {
+    data: { character },
+  } = useContext(ConfigContext);
+  return Object.assign({}, yin, character);
+};
+
+const useDesign = () => {
+  const dispatch = useContext(DispatchContext);
+  const index = useIndex();
+  return (action: ElementSubAction) =>
+    dispatch({ type: "element", index, ...action });
+};
+
 export {
   useIndex,
   useElement,
   useRoot,
   usePhonetic,
+  useDesign,
   useWenCustomized,
   useZiCustomized,
+  useYinCustomized,
 };

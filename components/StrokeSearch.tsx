@@ -1,6 +1,6 @@
 import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
-import { fullToHalf, halfToFull } from "./utils";
+import { fullToHalf, halfToFull } from "../lib/utils";
 import { Classifier, RootConfig } from "../lib/config";
 import defaultClassifier from "../templates/classifier.yaml";
 

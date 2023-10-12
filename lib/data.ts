@@ -1,22 +1,27 @@
+type N1 = [number];
+type N2 = [number, number];
+type N3 = [number, number, number];
+type N6 = [number, number, number, number, number, number];
+
 type Draw =
   | {
       command: "h";
-      parameterList: [number];
+      parameterList: N1;
     }
   | {
       command: "v";
-      parameterList: [number];
+      parameterList: N1;
     }
   | {
       command: "l";
-      parameterList: [number, number];
+      parameterList: N2;
     }
   | {
       command: "c";
-      parameterList: [number, number, number, number, number, number];
+      parameterList: N6;
     };
 
-type Point = [number, number];
+type Point = N2;
 
 type LinearCurve = {
   type: "linear";
@@ -77,5 +82,6 @@ interface Yin {
   [key: string]: string[];
 }
 
+export type { N1, N2, N3, N6 };
 export type { Point, Draw, Stroke, Glyph, Compound, Operand, Wen, Zi, Yin };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

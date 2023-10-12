@@ -30,6 +30,7 @@ import styled from "styled-components";
 import { dump } from "js-yaml";
 import defaultConfig from "../templates/default.yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useImmerReducer } from "use-immer";
 
 const items: MenuProps["items"] = [
   {
@@ -86,7 +87,7 @@ const importFile = (
   reader.addEventListener("load", () =>
     dispatch({
       type: "load",
-      content: JSON.parse(reader.result as string),
+      value: JSON.parse(reader.result as string),
     }),
   );
   reader.readAsText(file);
@@ -113,8 +114,6 @@ const Header = styled(Layout.Header)`
 
 const Content = styled(Layout.Content)`
   padding: 0px 32px;
-  overflow-x: hidden;
-  overflow-y: scroll;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -183,7 +182,10 @@ const EditorLayout = () => {
 };
 
 const Contextualized = () => {
-  const [config, dispatch] = useReducer(configReducer, defaultConfig as Config);
+  const [config, dispatch] = useImmerReducer(
+    configReducer,
+    defaultConfig as Config,
+  );
   const [cache, write] = useReducer(cacheReducer, {} as ElementCache);
   const { pathname } = useLocation();
   const [_, id] = pathname.split("/");
@@ -191,7 +193,7 @@ const Contextualized = () => {
   // read previous data
   useEffect(() => {
     const previousConfig = JSON.parse(localStorage.getItem(id)!) as Config;
-    dispatch({ type: "load", content: previousConfig });
+    dispatch({ type: "load", value: previousConfig });
   }, []);
 
   return (

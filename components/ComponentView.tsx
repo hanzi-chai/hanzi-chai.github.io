@@ -67,9 +67,7 @@ export default function ComponentView({ name }: { name?: string }) {
   );
 }
 
-const Wrapper = styled.div`
-  position: relative;
-`;
+const Wrapper = styled.div``;
 
 const Overlay = styled.div`
   border: 1px solid black;

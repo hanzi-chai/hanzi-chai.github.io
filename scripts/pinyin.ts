@@ -27,16 +27,25 @@ const PHONETIC_SYMBOL: Record<string, string> = {
   ú: "u2",
   ǔ: "u3",
   ù: "u4",
+  ǖ: "v1",
   ǘ: "v2",
   ǚ: "v3",
   ǜ: "v4",
+  ü: "v5",
+  ñ: "n1",
   ń: "n2",
   ň: "n3",
-  "": "m2",
+  ǹ: "n4",
+  ḿ: "m2",
+  m̀: "m4",
+  ê̄: "ei1",
+  ế: "ei2",
+  ê̌: "ei3",
+  ề: "ei4",
 };
 
 const RE_PHONETIC_SYMBOL = new RegExp(
-  "([" + Object.keys(PHONETIC_SYMBOL).join("") + "])",
+  "(" + Object.keys(PHONETIC_SYMBOL).join("|") + ")",
   "g",
 );
 
@@ -45,8 +54,9 @@ const parsePinyin2 = function (s: string) {
   let shengyun = s.replace(
     RE_PHONETIC_SYMBOL,
     function ($0: string, $1: string) {
-      shengdiao = parseInt(PHONETIC_SYMBOL[$1][1]);
-      return PHONETIC_SYMBOL[$1][0];
+      let content = PHONETIC_SYMBOL[$1];
+      shengdiao = parseInt(content[content.length - 1]);
+      return content.slice(0, content.length - 1);
     },
   );
   return shengyun + shengdiao.toString();

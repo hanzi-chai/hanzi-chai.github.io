@@ -10,7 +10,12 @@ type Aliaser = Record<string, { source: string; indices: number[] }>;
 
 type Mapping = Record<string, string>;
 
-interface RootConfig {
+interface BaseConfig {
+  type: string;
+  alphabet: string;
+}
+
+interface RootConfig extends BaseConfig {
   type: "字根";
   nodes: ("字根 1" | "字根 2" | "字根 3")[];
   analysis: {
@@ -23,11 +28,10 @@ interface RootConfig {
 
 type PhoneticElement = "首字母" | "末字母" | "声" | "韵" | "调";
 
-interface PhoneticConfig {
+interface PhoneticConfig extends BaseConfig {
   type: "字音";
-  nodes: PhoneticElement[];
-  analysis: null;
-  mapping: "id" | Record<string, string>;
+  nodes: [PhoneticElement];
+  mapping?: Mapping;
 }
 
 type ElementResult = Record<string, string | undefined>;

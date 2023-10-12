@@ -63,7 +63,6 @@ import {
 } from "../lib/config";
 import { intersection, isEmpty } from "underscore";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import ConfigItem from "./ConfigItem";
 import { Wen, Yin, Zi } from "../lib/data";
 import analyzers from "../lib/pinyin";
 import { ColumnsType } from "antd/es/table";
@@ -217,11 +216,11 @@ const RootAnalysis = () => {
     <Row>
       <Col span={8}>
         <Typography.Title level={2}>字形分析</Typography.Title>
-        {selector.map((element) => {
+        {selector.map((sieve) => {
           return (
-            <SelectWithDelete key={element}>
+            <SelectWithDelete key={sieve}>
               <Select
-                value={element}
+                value={sieve}
                 style={{ width: "120px" }}
                 options={[...sieveMap.keys()].map((x) => ({
                   value: x,
@@ -231,10 +230,11 @@ const RootAnalysis = () => {
               <Button
                 onClick={() => {
                   dispatch({
-                    type: "selector",
-                    element: index,
-                    subtype: "remove",
-                    name: element,
+                    type: "element",
+                    index,
+                    subtype: "root-selector",
+                    action: "remove",
+                    value: sieve,
                   });
                 }}
               >
@@ -247,15 +247,16 @@ const RootAnalysis = () => {
           menu={{
             items: ([...sieveMap.keys()] as SieveName[])
               .filter((x) => !selector.includes(x))
-              .map((x) => ({
-                key: x,
-                label: x,
+              .map((sieve) => ({
+                key: sieve,
+                label: sieve,
                 onClick: () => {
                   dispatch({
-                    type: "selector",
-                    element: index,
-                    subtype: "add",
-                    name: x,
+                    type: "element",
+                    index: index,
+                    subtype: "root-selector",
+                    action: "add",
+                    value: sieve,
                   });
                 },
               })),
@@ -375,64 +376,15 @@ const PhoneticAnalysis = () => {
     <Wrapper>
       <Col span={8}>
         <Typography.Title level={2}>字音分析</Typography.Title>
-        {phonetic.nodes.map((element) => {
-          return (
-            <SelectWithDelete key={element}>
-              <Select
-                value={element}
-                style={{ width: "120px" }}
-                options={Object.keys(analyzers).map((x) => ({
-                  value: x,
-                  label: x,
-                }))}
-              />
-              <Button
-                onClick={() => {
-                  dispatch({
-                    type: "phonetic",
-                    element: index,
-                    subtype: "remove",
-                    name: element,
-                  });
-                }}
-              >
-                删除
-              </Button>
-            </SelectWithDelete>
-          );
-        })}
-        <Dropdown
-          menu={{
-            items: (Object.keys(analyzers) as PhoneticElement[])
-              .filter((x) => !phonetic.nodes.includes(x))
-              .map((x) => ({
-                key: x,
-                label: x,
-                onClick: () => {
-                  dispatch({
-                    type: "phonetic",
-                    element: index,
-                    subtype: "add",
-                    name: x,
-                  });
-                },
-              })),
-          }}
-        >
-          <Button
-            type="primary"
-            style={{ display: "block", margin: "0 auto" }}
-            disabled={phonetic.nodes.length === Object.keys(analyzers).length}
-          >
-            添加
-          </Button>
-        </Dropdown>
+        <Select
+          value={phonetic.nodes[0]}
+          style={{ width: "120px" }}
+          options={Object.keys(analyzers).map((x) => ({
+            value: x,
+            label: x,
+          }))}
+        />
       </Col>
-      {/* {type === "custom" && (
-        <ConfigItem label="正则表达式">
-          <Input style={{ width: "120px" }} />
-        </ConfigItem>
-      )} */}
       <Col span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>
         <Toolbar>

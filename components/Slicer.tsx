@@ -25,7 +25,7 @@ const Box = styled.div`
 
 interface SlicerProps {
   isModalOpen: boolean;
-  handleOk: (s: { name: string; indices: number[] }) => void;
+  handleOk: (s: { sliceName: string; indices: number[] }) => void;
   handleCancel: () => void;
   componentName: string;
 }
@@ -50,17 +50,20 @@ const Slicer = ({
   const glyph = wen[componentName];
   const [indices, setIndices] = useState(glyph.map((_, index) => index));
   const subglyph = glyph.filter((_, index) => indices.includes(index));
-  const [name, setName] = useState("");
+  const [sliceName, setSliceName] = useState("");
   return (
     <Modal
       title="切片器"
       open={isModalOpen}
-      onOk={() => handleOk({ name, indices })}
+      onOk={() => handleOk({ sliceName, indices })}
       onCancel={handleCancel}
     >
       <Namer>
         <Label>字根名称</Label>
-        <Input value={name} onChange={(event) => setName(event.target.value)} />
+        <Input
+          value={sliceName}
+          onChange={(event) => setSliceName(event.target.value)}
+        />
       </Namer>
       <ModalContent>
         <StrokeList>
