@@ -105,6 +105,7 @@ const Content = styled(Layout.Content)`
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
 `;
 
 const Footer = styled(Layout.Footer)`

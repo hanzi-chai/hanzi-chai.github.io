@@ -12,7 +12,7 @@ import components from "../data/components.json";
 import compounds from "../data/compounds.json";
 import characters from "../data/characters.json";
 import slices from "../data/slices.json";
-import font from "../data/pingfang.json";
+import font from "../data/font.json";
 import {
   Compound,
   Glyph,

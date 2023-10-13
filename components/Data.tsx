@@ -2,7 +2,7 @@ import ComponentModel from "./ComponentModel";
 import { ComponentView, SliceView } from "./SVGView";
 import { useState } from "react";
 import styled from "styled-components";
-import { Empty, Menu, MenuProps, Typography } from "antd";
+import { Empty, Layout, Menu, MenuProps, Typography } from "antd";
 import {
   BorderOutlined,
   AppstoreOutlined,
@@ -52,17 +52,18 @@ export default function Data() {
   const navigate = useNavigate();
   const mode = pathname.split("/")[3];
   return (
-    <>
-      <Switcher
-        items={items}
-        mode="horizontal"
-        selectedKeys={[mode]}
-        onClick={(e) => {
-          navigate(e.key);
-        }}
-      />
+    <Layout>
+      <Layout.Sider>
+        <Menu
+          items={items}
+          selectedKeys={[mode]}
+          onClick={(e) => {
+            navigate(e.key);
+          }}
+        />
+      </Layout.Sider>
       <Outlet />
-    </>
+    </Layout>
   );
 }
 

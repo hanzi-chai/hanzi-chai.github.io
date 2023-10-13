@@ -23,10 +23,7 @@ const ScrollableColumn = styled(Col)`
   overflow-y: auto;
 `;
 
-export const Switcher = styled(Menu)`
-  justify-content: center;
-  margin: 32px;
-`;
+export const Switcher = styled(Menu)``;
 
 export const EditorColumn = (props: ColProps) => (
   <ScrollableColumn className="gutter-row" {...props} />

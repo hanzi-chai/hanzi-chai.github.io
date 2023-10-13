@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
-import { Form, Input, Typography } from "antd";
+import { Col, Form, Input, Typography } from "antd";
 import { ConfigContext, DispatchContext } from "./context";
+import { EditorColumn } from "./Utils";
 
 const InfoInput = ({ field }: { field: string }) => {
   const config = useContext(ConfigContext);
@@ -8,7 +9,6 @@ const InfoInput = ({ field }: { field: string }) => {
   return (
     <Input
       value={config.info[field as "name"]}
-      style={{ width: "200px" }}
       onChange={(e) =>
         dispatch({ type: "info", value: { [field]: e.target.value } })
       }
@@ -18,9 +18,9 @@ const InfoInput = ({ field }: { field: string }) => {
 
 const Info: React.FC = () => {
   return (
-    <>
+    <Col span={6}>
       <Typography.Title level={2}>基本信息</Typography.Title>
-      <Form labelCol={{ span: 2 }}>
+      <Form labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
         <Form.Item label="方案名称">
           <InfoInput field="name" />
         </Form.Item>
@@ -34,7 +34,7 @@ const Info: React.FC = () => {
           <InfoInput field="description" />
         </Form.Item>
       </Form>
-    </>
+    </Col>
   );
 };
 

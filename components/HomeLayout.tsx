@@ -1,4 +1,12 @@
-import { Button, Dropdown, Layout, List, MenuProps, Typography } from "antd";
+import {
+  Button,
+  Dropdown,
+  Flex,
+  Layout,
+  List,
+  MenuProps,
+  Typography,
+} from "antd";
 import styled from "styled-components";
 import { Config } from "../lib/config";
 import { useEffect, useState } from "react";
@@ -6,7 +14,6 @@ import defaultConfig from "../templates/default.yaml";
 import xingyin from "../templates/xingyin.yaml";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
-import { FlexContainer } from "./Utils";
 
 const Sider = styled(Layout.Sider)`
   background: white !important;
@@ -109,7 +116,7 @@ const HomeLayout = () => {
             );
           }}
         />
-        <FlexContainer>
+        <Flex justify="center">
           <Dropdown
             placement="bottom"
             menu={{
@@ -119,7 +126,7 @@ const HomeLayout = () => {
           >
             <Button type="primary">新建</Button>
           </Dropdown>
-        </FlexContainer>
+        </Flex>
       </Sider>
       <Content>
         <img alt="favicon" src="/favicon.ico" />

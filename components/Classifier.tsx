@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useClassifier, useModify } from "./context";
-import { Button, notification } from "antd";
+import { Button, Flex, notification } from "antd";
 import { FlexContainer } from "./Utils";
 import Root from "./Root";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
@@ -24,7 +24,7 @@ function Draggable({ name }: { name: string }) {
   );
 }
 
-const Drop = styled(FlexContainer)`
+const Drop = styled(Flex)`
   min-height: 48px;
   background-color: ${blue[1]};
   flex: 1;
