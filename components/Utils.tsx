@@ -1,21 +1,20 @@
-import { Col, ColProps, Menu, Row, RowProps } from "antd";
+import {
+  Col,
+  ColProps,
+  InputNumber,
+  Row,
+  RowProps,
+  Select as _Select,
+} from "antd";
 import styled from "styled-components";
 
-export const FlexContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin: 8px 0;
-`;
-
 const ScrollableRow = styled(Row)`
-  flex: 1;
+  height: 100%;
   overflow-y: auto;
 `;
 
 export const EditorRow = (props: RowProps) => (
-  <ScrollableRow gutter={32} {...props} />
+  <ScrollableRow {...props} gutter={32} />
 );
 
 const ScrollableColumn = styled(Col)`
@@ -23,8 +22,17 @@ const ScrollableColumn = styled(Col)`
   overflow-y: auto;
 `;
 
-export const Switcher = styled(Menu)``;
-
 export const EditorColumn = (props: ColProps) => (
   <ScrollableColumn className="gutter-row" {...props} />
 );
+
+export const NumberInput = styled(InputNumber)`
+  width: 48px;
+  & .ant-input-number-input {
+    padding: 4px 8px;
+  }
+`;
+
+export const Select = styled(_Select)`
+  width: 128px;
+` as typeof _Select;

@@ -5,6 +5,9 @@ import yaml from "@modyfi/vite-plugin-yaml";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    APP_VERSION: JSON.stringify(process.env.npm_package_version),
+  },
   plugins: [react(), yaml()],
   test: {
     globals: true,

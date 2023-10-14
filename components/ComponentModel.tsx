@@ -2,19 +2,18 @@ import {
   Button,
   Dropdown,
   Empty,
-  InputNumber,
+  Flex,
   MenuProps,
   Select,
   Space,
   Typography,
 } from "antd";
 import { createContext, useContext } from "react";
-import styled from "styled-components";
 import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
 import { useComponents, useModify } from "./context";
 import defaultClassifier from "../templates/strokes.yaml";
-import { FlexContainer } from "./Utils";
 import { getDummyStroke, halfToFull } from "../lib/utils";
+import { NumberInput } from "./Utils";
 
 const NameContext = createContext("");
 
@@ -41,10 +40,9 @@ export const StrokeModel = ({
   const [name, glyph] = useNameAndGlyph();
   return (
     <Space direction="vertical">
-      <FlexContainer>
+      <Space>
         <Select
           value={feature}
-          style={{ width: "128px" }}
           options={Object.keys(defaultClassifier).map((x) => ({
             label: x,
             value: x,
@@ -59,7 +57,7 @@ export const StrokeModel = ({
             modify(name, modified);
           }}
         />
-        <FlexContainer>
+        <Space>
           {start.map((parameter, parameterIndex) => (
             <NumberModel
               parameter={parameter}
@@ -67,7 +65,7 @@ export const StrokeModel = ({
               key={parameterIndex}
             />
           ))}
-        </FlexContainer>
+        </Space>
         <Button
           onClick={() => {
             const modified = deepcopy(glyph);
@@ -77,7 +75,7 @@ export const StrokeModel = ({
         >
           删除
         </Button>
-      </FlexContainer>
+      </Space>
       <div>
         {curveList.map((draw, drawIndex) => (
           <DrawModel
@@ -100,18 +98,16 @@ const DrawModel = ({
   draw: { command, parameterList },
   index,
 }: DrawModelProps) => (
-  <FlexContainer>
+  <Flex>
     <span>{halfToFull(command.toUpperCase())}</span>
-    <FlexContainer>
-      {parameterList.map((parameter, parameterIndex) => (
-        <NumberModel
-          parameter={parameter}
-          index={index.concat(parameterIndex) as N3}
-          key={parameterIndex}
-        />
-      ))}
-    </FlexContainer>
-  </FlexContainer>
+    {parameterList.map((parameter, parameterIndex) => (
+      <NumberModel
+        parameter={parameter}
+        index={index.concat(parameterIndex) as N3}
+        key={parameterIndex}
+      />
+    ))}
+  </Flex>
 );
 
 interface NumberModelProps {
@@ -119,19 +115,12 @@ interface NumberModelProps {
   index: [number, number, number];
 }
 
-export const MyInputNumber = styled(InputNumber)`
-  width: 48px;
-  & .ant-input-number-input {
-    padding: 4px 8px;
-  }
-`;
-
 const NumberModel = ({ parameter, index }: NumberModelProps) => {
   const modify = useModify();
   const [name, glyph] = useNameAndGlyph();
   const [strokeIndex, drawIndex, parameterIndex] = index;
   return (
-    <MyInputNumber
+    <NumberInput
       min={-100}
       max={100}
       value={parameter}
@@ -192,9 +181,9 @@ export default function ComponentModel({ name }: { name?: string }) {
               key={strokeIndex}
             />
           ))}
-          <FlexContainer>
+          <Flex justify="center">
             <StrokeAdder />
-          </FlexContainer>
+          </Flex>
         </NameContext.Provider>
       ) : (
         <Empty />

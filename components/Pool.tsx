@@ -7,14 +7,12 @@ import {
   useCompounds,
 } from "./context";
 import Char from "./Char";
-import { Pagination } from "antd";
+import { ConfigProvider, Flex, Pagination } from "antd";
 import { Glyph } from "../lib/data";
 import { makeSequenceFilter } from "../lib/root";
-import { FlexContainer } from "./Utils";
 
-const Content = styled(FlexContainer)`
+const Content = styled(Flex)`
   padding: 8px;
-  gap: 0;
   border: 1px solid black;
 `;
 
@@ -40,11 +38,22 @@ const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
     .slice((page - 1) * pageSize, page * pageSize);
   return (
     <>
-      <Content>
-        {range.map((x) => (
-          <Char key={x} name={x} current={x === name} change={setName} />
-        ))}
-      </Content>
+      <ConfigProvider
+        theme={{ components: { Button: { defaultBg: "transparent" } } }}
+      >
+        <Content wrap="wrap">
+          {range.map((x) => (
+            <Char
+              onClick={() => {
+                x === name ? setName(undefined) : setName(x);
+              }}
+              type={x === name ? "primary" : "default"}
+            >
+              {x}
+            </Char>
+          ))}
+        </Content>
+      </ConfigProvider>
       <MyPagination
         current={page}
         onChange={(page, pageSize) => {

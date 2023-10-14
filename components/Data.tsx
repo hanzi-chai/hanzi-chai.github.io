@@ -1,7 +1,6 @@
 import ComponentModel from "./ComponentModel";
 import { ComponentView, SliceView } from "./SVGView";
 import { useState } from "react";
-import styled from "styled-components";
 import { Empty, Layout, Menu, MenuProps, Typography } from "antd";
 import {
   BorderOutlined,
@@ -14,30 +13,30 @@ import StrokeSearch from "./StrokeSearch";
 import CompoundModel from "./CompoundModel";
 import { ComponentPool, CompoundPool, SlicePool } from "./Pool";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import EditableTable from "./EditableTable";
+import CharacterTable from "./CharacterTable";
 import SVGView from "./SVGView";
 import SliceModel from "./SliceModel";
-import { EditorColumn, EditorRow, Switcher } from "./Utils";
+import { EditorColumn, EditorRow } from "./Utils";
 
 const items: MenuProps["items"] = [
   {
     label: "部件",
-    key: "component",
+    key: "components",
     icon: <BorderOutlined />,
   },
   {
     label: "复合体",
-    key: "compound",
+    key: "compounds",
     icon: <AppstoreOutlined />,
   },
   {
     label: "字音",
-    key: "character",
+    key: "characters",
     icon: <InfoCircleOutlined />,
   },
   {
     label: "切片",
-    key: "slice",
+    key: "slices",
     icon: <MenuOutlined />,
   },
   {
@@ -52,8 +51,8 @@ export default function Data() {
   const navigate = useNavigate();
   const mode = pathname.split("/")[3];
   return (
-    <Layout>
-      <Layout.Sider>
+    <Layout style={{ flex: 1 }}>
+      <Layout.Sider theme="light">
         <Menu
           items={items}
           selectedKeys={[mode]}
@@ -62,7 +61,9 @@ export default function Data() {
           }}
         />
       </Layout.Sider>
-      <Outlet />
+      <div style={{ padding: "0 32px", height: "100%", flex: 1 }}>
+        <Outlet />
+      </div>
     </Layout>
   );
 }
@@ -125,6 +126,6 @@ const CompoundData = () => {
   );
 };
 
-const CharacterData = EditableTable;
+const CharacterData = CharacterTable;
 
 export { ComponentData, CompoundData, CharacterData, SliceData };

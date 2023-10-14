@@ -1,24 +1,23 @@
-import styled from "styled-components";
 import StrokeSearch from "./StrokeSearch";
 import {
   Button,
   Dropdown,
   Empty,
+  Flex,
+  Layout,
   Menu,
   Pagination,
-  Select,
-  Steps,
+  Radio,
+  Space,
   Table,
   Typography,
 } from "antd";
-import { BorderOutlined, AppstoreOutlined } from "@ant-design/icons";
 
 import { Collapse } from "antd";
 import Char from "./Char";
 import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
-import { ArrowRightOutlined } from "@ant-design/icons";
 import {
   ConfigContext,
   DispatchContext,
@@ -46,7 +45,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import analyzers, { getPhonetic } from "../lib/pinyin";
 import { ColumnsType } from "antd/es/table";
 import { sieveMap } from "../lib/selector";
-import { FlexContainer, EditorColumn, EditorRow, Switcher } from "./Utils";
+import { EditorColumn, EditorRow, Select } from "./Utils";
 
 const ResultSummary = ({
   componentName,
@@ -56,27 +55,14 @@ const ResultSummary = ({
   rootSeries: string[];
 }) => {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between" }}>
-      <FlexContainer>
-        <Char name={componentName} current={false} change={() => {}} />
-        {rootSeries.map((x, index) => (
-          <Root key={index}>{x}</Root>
-        ))}
-      </FlexContainer>
-    </div>
+    <Space>
+      <Char>{componentName}</Char>
+      {rootSeries.map((x, index) => (
+        <Root key={index}>{x}</Root>
+      ))}
+    </Space>
   );
 };
-
-const CollapseCustom = styled(Collapse)`
-  margin: 32px 0;
-
-  & .ant-collapse-header {
-    align-items: center !important;
-  }
-  & .ant-collapse-content-box {
-    padding: 0 32px !important;
-  }
-`;
 
 const exportResult = (result: Record<string, ComponentResult>) => {
   const fileContent = JSON.stringify(result);
@@ -86,11 +72,6 @@ const exportResult = (result: Record<string, ComponentResult>) => {
   a.href = window.URL.createObjectURL(blob);
   a.click();
 };
-
-const ChaiSteps = styled(Steps)`
-  width: 400px;
-  margin: 32px auto;
-`;
 
 const RootAnalysis = () => {
   const [sequence, setSequence] = useState("");
@@ -147,65 +128,66 @@ const RootAnalysis = () => {
     <EditorRow>
       <EditorColumn span={8}>
         <Typography.Title level={2}>字形分析</Typography.Title>
-        {selector.map((sieve) => {
-          return (
-            <FlexContainer key={sieve}>
-              <Select
-                value={sieve}
-                style={{ width: "120px" }}
-                options={[...sieveMap.keys()].map((x) => ({
-                  value: x,
-                  label: x,
-                }))}
-              />
-              <Button
-                onClick={() => {
-                  dispatch({
-                    type: "element",
-                    index,
-                    subtype: "root-selector",
-                    action: "remove",
-                    value: sieve,
-                  });
-                }}
-              >
-                删除
-              </Button>
-            </FlexContainer>
-          );
-        })}
-        <FlexContainer>
-          <Dropdown
-            menu={{
-              items: ([...sieveMap.keys()] as SieveName[])
-                .filter((x) => !selector.includes(x))
-                .map((sieve) => ({
-                  key: sieve,
-                  label: sieve,
-                  onClick: () => {
+        <Flex vertical gap="small">
+          {selector.map((sieve) => {
+            return (
+              <Flex key={sieve} justify="space-evenly">
+                <Select
+                  value={sieve}
+                  options={[...sieveMap.keys()].map((x) => ({
+                    value: x,
+                    label: x,
+                  }))}
+                />
+                <Button
+                  onClick={() => {
                     dispatch({
                       type: "element",
-                      index: index,
+                      index,
                       subtype: "root-selector",
-                      action: "add",
+                      action: "remove",
                       value: sieve,
                     });
-                  },
-                })),
-            }}
-          >
-            <Button
-              type="primary"
-              disabled={selector.length === [...sieveMap.keys()].length}
+                  }}
+                >
+                  删除
+                </Button>
+              </Flex>
+            );
+          })}
+          <Flex justify="center">
+            <Dropdown
+              menu={{
+                items: ([...sieveMap.keys()] as SieveName[])
+                  .filter((x) => !selector.includes(x))
+                  .map((sieve) => ({
+                    key: sieve,
+                    label: sieve,
+                    onClick: () => {
+                      dispatch({
+                        type: "element",
+                        index: index,
+                        subtype: "root-selector",
+                        action: "add",
+                        value: sieve,
+                      });
+                    },
+                  })),
+              }}
             >
-              添加
-            </Button>
-          </Dropdown>
-        </FlexContainer>
+              <Button
+                type="primary"
+                disabled={selector.length === [...sieveMap.keys()].length}
+              >
+                添加
+              </Button>
+            </Dropdown>
+          </Flex>
+        </Flex>
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>
-        <FlexContainer>
+        <Flex>
           <StrokeSearch sequence={sequence} setSequence={setSequence} />
           <Button
             type="primary"
@@ -220,22 +202,19 @@ const RootAnalysis = () => {
           </Button>
           <Button onClick={() => setComponentResult({})}>清空</Button>
           <Button onClick={() => exportResult(componentResults)}>导出</Button>
-        </FlexContainer>
-        <ChaiSteps
-          current={step}
-          onChange={(e) => setStep(e as 0)}
-          items={[
-            { title: "部件拆分", icon: <BorderOutlined />, status: "finish" },
-            {
-              title: "复合体拆分",
-              icon: <AppstoreOutlined />,
-              status: "finish",
-            },
-          ]}
-        />
+        </Flex>
+        <Flex justify="center">
+          <Radio.Group
+            value={step}
+            onChange={(e) => setStep(e.target.value as 0)}
+          >
+            <Radio.Button>部件拆分</Radio.Button>
+            <Radio.Button>复合体拆分</Radio.Button>
+          </Radio.Group>
+        </Flex>
         {displays[step].length ? (
           <>
-            <CollapseCustom
+            <Collapse
               items={displays[step].slice(
                 (page - 1) * pageSize,
                 page * pageSize,
@@ -287,7 +266,6 @@ const PhoneticAnalysis = () => {
         <Typography.Title level={2}>字音分析</Typography.Title>
         <Select
           value={phonetic.nodes[0]}
-          style={{ width: "120px" }}
           options={Object.keys(analyzers).map((x) => ({
             value: x,
             label: x,
@@ -296,7 +274,7 @@ const PhoneticAnalysis = () => {
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>
-        <FlexContainer>
+        <Flex>
           <Button
             type="primary"
             onClick={() => {
@@ -307,7 +285,7 @@ const PhoneticAnalysis = () => {
           >
             计算
           </Button>
-        </FlexContainer>
+        </Flex>
         <Table
           columns={columns}
           dataSource={Object.entries(result).map(([k, v]) => ({
@@ -342,20 +320,23 @@ const Analysis = () => {
   const navigate = useNavigate();
   const index = parseInt(pathname.split("/")[3] || "-1");
   return (
-    <>
-      <Switcher
-        items={elements.map(({ type }, index) => ({
-          key: index.toString(),
-          label: `元素 ${index}: ${type}`,
-        }))}
-        mode="horizontal"
-        selectedKeys={[index.toString()]}
-        onClick={(e) => {
-          navigate(e.key);
-        }}
-      />
-      <Outlet />
-    </>
+    <Layout style={{ flex: 1 }}>
+      <Layout.Sider theme="light">
+        <Menu
+          items={elements.map(({ type }, index) => ({
+            key: index.toString(),
+            label: `元素 ${index}: ${type}`,
+          }))}
+          selectedKeys={[index.toString()]}
+          onClick={(e) => {
+            navigate(e.key);
+          }}
+        />
+      </Layout.Sider>
+      <div style={{ padding: "0 32px", height: "100%", flex: 1 }}>
+        <Outlet />
+      </div>
+    </Layout>
   );
 };
 

@@ -19,7 +19,7 @@
     // "noUnusedLocals": true,
     // "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["@modyfi/vite-plugin-yaml/modules"]
+    "types": ["@modyfi/vite-plugin-yaml/modules", "./vite-env.d.ts"]
   },
   "include": ["components", "lib", "scripts"],
   "references": [{ "path": "./tsconfig.node.json" }]

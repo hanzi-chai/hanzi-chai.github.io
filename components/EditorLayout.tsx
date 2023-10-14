@@ -5,7 +5,7 @@ import {
   useEffect,
   useReducer,
 } from "react";
-import { Button, Layout, Menu, Typography } from "antd";
+import { Button, Flex, Layout, Menu, Space, Typography } from "antd";
 import {
   DatabaseOutlined,
   MailOutlined,
@@ -25,12 +25,10 @@ import {
 } from "./context";
 import { Config, ElementCache } from "../lib/config";
 import { Action } from "./context";
-import styled from "styled-components";
 import { dump } from "js-yaml";
 import defaultConfig from "../templates/default.yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
-import { FlexContainer } from "./Utils";
 
 const items: MenuProps["items"] = [
   {
@@ -61,7 +59,7 @@ const items: MenuProps["items"] = [
 ];
 
 const defaultChildren: Record<string, string> = {
-  data: "/component",
+  data: "/components",
   element: "/0",
   analysis: "/0",
 };
@@ -93,25 +91,6 @@ const importFile = (
   reader.readAsText(file);
 };
 
-const Header = styled(Layout.Header)`
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0;
-`;
-
-const Content = styled(Layout.Content)`
-  padding: 0px 32px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const Footer = styled(Layout.Footer)`
-  text-align: center;
-`;
-
 const EditorLayout = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -120,48 +99,45 @@ const EditorLayout = () => {
   const dispatch = useContext(DispatchContext);
 
   return (
-    <Layout>
-      <Header>
-        <FlexContainer>
-          <Link to="/">
-            <Button icon={<CaretLeftFilled />} />
-          </Link>
-          <Typography.Title
-            level={1}
-            style={{ fontSize: "32px", color: "white" }}
-          >
-            {config.info.name}
-          </Typography.Title>
-        </FlexContainer>
-        <Menu
-          onClick={(e) =>
-            navigate(
-              e.key === "index" ? "" : e.key + (defaultChildren[e.key] || ""),
-            )
-          }
-          selectedKeys={[panel || "index"]}
-          theme="dark"
-          mode="horizontal"
-          items={items}
-          style={{ width: "440px", justifyContent: "center" }}
-        />
-        <FlexContainer>
-          <Button onClick={() => document.getElementById("import")!.click()}>
-            导入
-          </Button>
-          <input
-            type="file"
-            id="import"
-            hidden
-            onChange={(e) => importFile(dispatch, e)}
+    <Layout
+      style={{ height: "100%", display: "flex", flexDirection: "column" }}
+    >
+      <Layout.Header>
+        <Flex justify="space-between" align="center">
+          <Flex gap="small">
+            <Link to="/">
+              <Button icon={<CaretLeftFilled />} />
+            </Link>
+            <Typography.Title style={{ fontSize: "24px", color: "white" }}>
+              {config.info.name}
+            </Typography.Title>
+          </Flex>
+          <Menu
+            onClick={(e) =>
+              navigate(
+                e.key === "index" ? "" : e.key + (defaultChildren[e.key] || ""),
+              )
+            }
+            selectedKeys={[panel || "index"]}
+            theme="dark"
+            mode="horizontal"
+            items={items}
           />
-          <Button onClick={() => exportFile(config)}>导出</Button>
-        </FlexContainer>
-      </Header>
-      <Content>
-        <Outlet />
-      </Content>
-      <Footer>© 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}</Footer>
+          <Space>
+            <Button onClick={() => document.getElementById("import")!.click()}>
+              导入
+            </Button>
+            <input
+              type="file"
+              id="import"
+              hidden
+              onChange={(e) => importFile(dispatch, e)}
+            />
+            <Button onClick={() => exportFile(config)}>导出</Button>
+          </Space>
+        </Flex>
+      </Layout.Header>
+      <Outlet />
     </Layout>
   );
 };

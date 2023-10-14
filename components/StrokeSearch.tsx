@@ -21,7 +21,6 @@ const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
       onChange={(event) => {
         setSequence(fullToHalf(event.target.value));
       }}
-      style={{ maxWidth: "400px" }}
       prefix={<SearchOutlined />}
       value={halfToFull(sequence)}
     />

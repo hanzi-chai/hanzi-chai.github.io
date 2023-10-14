@@ -1,7 +1,6 @@
-import styled from "styled-components";
 import RootPicker from "./RootPicker";
 import Mapping from "./Mapping";
-import { Form, Menu, Select, Typography } from "antd";
+import { Flex, Form, Layout, Menu, Typography } from "antd";
 import { useContext, useState } from "react";
 import {
   ConfigContext,
@@ -15,7 +14,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import analyzers from "../lib/pinyin";
 import Root from "./Root";
 import ElementAdder from "./ElementAdder";
-import { EditorColumn, EditorRow, FlexContainer, Switcher } from "./Utils";
+import { EditorColumn, EditorRow, Select } from "./Utils";
 import { isEmpty } from "underscore";
 
 const Elements = () => {
@@ -23,20 +22,23 @@ const Elements = () => {
   const navigate = useNavigate();
   const index = useIndex();
   return (
-    <>
-      <Switcher
-        items={elements.map(({ type }, index) => ({
-          key: index.toString(),
-          label: `元素 ${index}: ${type}`,
-        }))}
-        mode="horizontal"
-        selectedKeys={[index.toString()]}
-        onClick={(e) => {
-          navigate(e.key);
-        }}
-      />
-      <Outlet />
-    </>
+    <Layout style={{ flex: 1 }}>
+      <Layout.Sider theme="light">
+        <Menu
+          items={elements.map(({ type }, index) => ({
+            key: index.toString(),
+            label: `元素 ${index}: ${type}`,
+          }))}
+          selectedKeys={[index.toString()]}
+          onClick={(e) => {
+            navigate(e.key);
+          }}
+        />
+      </Layout.Sider>
+      <div style={{ padding: "0 32px", height: "100%" }}>
+        <Outlet />
+      </div>
+    </Layout>
   );
 };
 
@@ -79,7 +81,7 @@ const PhoneticElementConfig = () => {
     <EditorRow>
       <EditorColumn span={8}>
         <Typography.Title level={2}>来源</Typography.Title>
-        <FlexContainer>
+        <Flex>
           {elements.map((x) => (
             <Root
               key={x}
@@ -89,7 +91,7 @@ const PhoneticElementConfig = () => {
               {x}
             </Root>
           ))}
-        </FlexContainer>
+        </Flex>
         {type === "自定义映射" && <ElementAdder name={name} />}
       </EditorColumn>
       <EditorColumn span={16}>
@@ -98,7 +100,6 @@ const PhoneticElementConfig = () => {
           <Form.Item label="类型">
             <Select
               value={type}
-              style={{ width: "128px" }}
               options={options.map((x) => ({ label: x, value: x }))}
               onChange={(event) => {
                 if (event === "恒等映射")

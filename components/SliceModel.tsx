@@ -1,11 +1,5 @@
-import styled from "styled-components";
 import { useModify, useComponents, useSlices } from "./context";
-import { Checkbox } from "antd";
-
-const StrokeList = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
+import { Checkbox, Flex } from "antd";
 
 const SliceModel = ({ name }: { name: string }) => {
   const components = useComponents();
@@ -14,7 +8,7 @@ const SliceModel = ({ name }: { name: string }) => {
   const { source, indices } = slices[name];
   const glyph = components[source];
   return (
-    <StrokeList>
+    <Flex vertical>
       {glyph.map(({ feature }, index) => {
         return (
           <Checkbox
@@ -31,7 +25,7 @@ const SliceModel = ({ name }: { name: string }) => {
           </Checkbox>
         );
       })}
-    </StrokeList>
+    </Flex>
   );
 };
 

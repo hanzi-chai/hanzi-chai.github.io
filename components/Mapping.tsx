@@ -1,11 +1,9 @@
-import { Dropdown, Form, Input, List, MenuProps } from "antd";
+import { Dropdown, Flex, Form, Input, List, MenuProps } from "antd";
 import { useContext } from "react";
-import styled from "styled-components";
 import { DispatchContext, useElement, useIndex } from "./context";
 import Root from "./Root";
 import Char from "./Char";
 import { reverse } from "../lib/utils";
-import { FlexContainer } from "./Utils";
 
 const AdjustableRoot = ({ name }: { name: string }) => {
   const dispatch = useContext(DispatchContext);
@@ -57,14 +55,14 @@ const Mapping = () => {
         renderItem={(item: [string, string[]]) => {
           const [key, roots] = item;
           return (
-            <FlexContainer>
-              <Char name={key} />
-              <FlexContainer>
+            <Flex>
+              <Char>{key}</Char>
+              <Flex gap="small" wrap="wrap">
                 {roots.map((name) => (
                   <AdjustableRoot key={name} name={name} />
                 ))}
-              </FlexContainer>
-            </FlexContainer>
+              </Flex>
+            </Flex>
           );
         }}
       ></List>

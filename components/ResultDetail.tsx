@@ -1,12 +1,10 @@
-import { Table } from "antd";
+import { Space, Table } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Root from "./Root";
-import styled from "styled-components";
 import { SchemeWithData } from "../lib/root";
 import { useRoot } from "./context";
 import { Selector } from "../lib/config";
 import { sieveMap } from "../lib/selector";
-import { FlexContainer } from "./Utils";
 
 const makeSorter = (selector: Selector) => {
   const selectorFields = selector.map((x) => sieveMap.get(x)!.name);
@@ -41,11 +39,11 @@ const ResultDetail = ({
       dataIndex: "roots",
       key: "roots",
       render: (_, { roots }) => (
-        <FlexContainer>
+        <Space>
           {roots!.map((root, index) => (
             <Root key={index}>{root}</Root>
           ))}
-        </FlexContainer>
+        </Space>
       ),
     },
   ];
@@ -65,14 +63,14 @@ const ResultDetail = ({
 
   return data.length ? (
     <>
-      <FlexContainer>
+      <Space>
         {Object.entries(map).map(([s, v]) => (
-          <FlexContainer key={s}>
+          <Space key={s}>
             <Root>{s}</Root>
             <span>{v.map((ar) => `(${ar.join(",")})`).join(" ")}</span>
-          </FlexContainer>
+          </Space>
         ))}
-      </FlexContainer>
+      </Space>
       <Table
         columns={columns}
         dataSource={data.sort(makeSorter(selector))}

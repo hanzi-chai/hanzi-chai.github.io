@@ -7,40 +7,12 @@ import {
   MenuProps,
   Typography,
 } from "antd";
-import styled from "styled-components";
 import { Config } from "../lib/config";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import defaultConfig from "../templates/default.yaml";
 import xingyin from "../templates/xingyin.yaml";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
-
-const Sider = styled(Layout.Sider)`
-  background: white !important;
-
-  & .ant-layout-sider-children {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-`;
-
-const Content = styled(Layout.Content)`
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 64px;
-`;
-
-const File = styled(List.Item)`
-  padding: 8px 32px !important;
-`;
-
-const FileList = styled(List)`
-  margin: 32px 0;
-` as typeof List;
 
 const items: MenuProps["items"] = [
   {
@@ -69,7 +41,16 @@ const configMap = new Map<string, Config>([
 ]);
 
 const HomeLayout = () => {
-  const [configs, setConfigs] = useState({} as Record<string, Config>);
+  const [configs, setConfigs] = useState(
+    () =>
+      Object.fromEntries(
+        [...Array(localStorage.length).keys()].map((i) => {
+          const key = localStorage.key(i)!;
+          const data = JSON.parse(localStorage.getItem(key)!);
+          return [key, data];
+        }),
+      ) as Record<string, Config>,
+  );
   const handleRemove = (id: string) => {
     const newConfigs = { ...configs };
     delete newConfigs[id];
@@ -83,55 +64,55 @@ const HomeLayout = () => {
     setConfigs(Object.assign({}, configs, { [id]: config }));
   };
 
-  // read previous data
-  useEffect(() => {
-    const previousConfigs = {} as Record<string, Config>;
-    for (let i = 0; i != localStorage.length; ++i) {
-      const key = localStorage.key(i)!;
-      const data = JSON.parse(localStorage.getItem(key)!);
-      previousConfigs[key] = data;
-    }
-    setConfigs(previousConfigs);
-  }, []);
-
   return (
-    <Layout>
-      <Sider width={320}>
-        <FileList
-          itemLayout="horizontal"
-          dataSource={Object.entries(configs)}
-          renderItem={([id, { info }]) => {
-            return (
-              <File
-                actions={[
-                  <Link to={id}>编辑</Link>,
-                  <a onClick={() => handleRemove(id)}>删除</a>,
-                ]}
-              >
-                <List.Item.Meta
-                  title={info.name}
-                  description={info.description}
-                />
-              </File>
-            );
-          }}
-        />
-        <Flex justify="center">
-          <Dropdown
-            placement="bottom"
-            menu={{
-              items,
-              onClick: handleAdd,
+    <Layout style={{ height: "100%" }}>
+      <Layout.Sider width={320} theme="light">
+        <Flex
+          vertical
+          justify="space-evenly"
+          style={{ height: "100%", padding: "0 16px" }}
+        >
+          <List
+            itemLayout="horizontal"
+            dataSource={Object.entries(configs)}
+            renderItem={([id, { info }]) => {
+              return (
+                <List.Item
+                  actions={[
+                    <Link to={id}>编辑</Link>,
+                    <a onClick={() => handleRemove(id)}>删除</a>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={info.name}
+                    description={info.description}
+                  />
+                </List.Item>
+              );
             }}
-          >
-            <Button type="primary">新建</Button>
-          </Dropdown>
+          />
+          <Flex justify="center">
+            <Dropdown
+              placement="bottom"
+              menu={{
+                items,
+                onClick: handleAdd,
+              }}
+            >
+              <Button type="primary">新建</Button>
+            </Dropdown>
+          </Flex>
         </Flex>
-      </Sider>
-      <Content>
-        <img alt="favicon" src="/favicon.ico" />
-        <Typography.Title>汉字自动拆分系统</Typography.Title>
-      </Content>
+      </Layout.Sider>
+      <Layout>
+        <Flex component={Layout.Content} vertical align="center" gap="large">
+          <img alt="favicon" src="/favicon.ico" />
+          <Typography.Title>汉字自动拆分系统 v{APP_VERSION}</Typography.Title>
+        </Flex>
+        <Flex component={Layout.Footer} justify="center">
+          © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
+        </Flex>
+      </Layout>
     </Layout>
   );
 };

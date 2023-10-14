@@ -1,8 +1,7 @@
-import { Empty, Form, Select, Typography } from "antd";
+import { Empty, Form, Typography } from "antd";
 import { Compound, Operand } from "../lib/data";
-import styled from "styled-components";
 import { useComponents, useCompounds, useModify } from "./context";
-import { MyInputNumber } from "./ComponentModel";
+import { NumberInput, Select } from "./Utils";
 
 const ideos: Operand[] = [
   "⿰",
@@ -37,7 +36,6 @@ const CompoundModel = ({ name }: { name?: string }) => {
           <Form.Item label="结构">
             <Select
               value={compounds[name].operator}
-              style={{ width: "128px" }}
               onChange={(operator) => {
                 const modified = JSON.parse(
                   JSON.stringify(compounds[name]),
@@ -52,7 +50,6 @@ const CompoundModel = ({ name }: { name?: string }) => {
             return (
               <Form.Item label={`第 ${index + 1} 部`} key={index}>
                 <Select
-                  style={{ width: "128px" }}
                   showSearch
                   value={value}
                   placeholder="Select a person"
@@ -74,7 +71,7 @@ const CompoundModel = ({ name }: { name?: string }) => {
           })}
           {compounds[name].mix && (
             <Form.Item label="混合">
-              <MyInputNumber min={1} max={20} value={compounds[name].mix} />
+              <NumberInput min={1} max={20} value={compounds[name].mix} />
             </Form.Item>
           )}
         </>

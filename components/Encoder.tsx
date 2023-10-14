@@ -10,7 +10,7 @@ import ReactFlow, {
   addEdge,
   Connection,
 } from "reactflow";
-import { Button, Typography } from "antd";
+import { Button, Flex, Typography } from "antd";
 import { ConfigContext, DispatchContext, useAll } from "./context";
 
 import "reactflow/dist/style.css";
@@ -30,7 +30,7 @@ import {
 } from "./graph";
 import { getRoot } from "../lib/root";
 import { getPhonetic } from "../lib/pinyin";
-import { FlexContainer, EditorColumn, EditorRow } from "./Utils";
+import { EditorColumn, EditorRow } from "./Utils";
 
 const isGB = (char: string) => {
   return char.charCodeAt(0) >= 0x4e00;
@@ -99,31 +99,25 @@ const Encoder = () => {
   };
   return (
     <EditorRow>
-      <EditorColumn
-        span={12}
-        style={{ display: "flex", flexDirection: "column" }}
-      >
-        <Typography.Title level={2}>编码器</Typography.Title>
-        <div style={{ flex: 1 }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeDragThreshold={10000}
-            fitView
-          >
-            <Background variant={BackgroundVariant.Cross} />
-            <Controls />
-          </ReactFlow>
-        </div>
+      <EditorColumn span={12}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeDragThreshold={10000}
+          fitView
+        >
+          <Background variant={BackgroundVariant.Cross} />
+          <Controls />
+        </ReactFlow>
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>编码生成</Typography.Title>
-        <FlexContainer>
+        <Flex justify="center" gap="small">
           {/* <StrokeSearch sequence={sequence} setSequence={setSequence} /> */}
           <Button
             type="primary"
@@ -149,7 +143,7 @@ const Encoder = () => {
           </Button>
           <Button onClick={() => {}}>清空</Button>
           <Button onClick={() => {}}>导出</Button>
-        </FlexContainer>
+        </Flex>
         <Table
           columns={columns}
           dataSource={Object.entries(result).map(([k, v]) => ({
