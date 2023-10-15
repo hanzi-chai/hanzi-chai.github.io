@@ -12,7 +12,7 @@ import { createContext, useContext } from "react";
 import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
 import { useComponents, useModify } from "./context";
 import defaultClassifier from "../templates/strokes.yaml";
-import { getDummyStroke, halfToFull } from "../lib/utils";
+import { deepcopy, getDummyStroke, halfToFull } from "../lib/utils";
 import { NumberInput } from "./Utils";
 
 const NameContext = createContext("");
@@ -22,10 +22,6 @@ const useNameAndGlyph = () => {
   const glyph = useComponents()[name];
   return [name, glyph] as [string, Glyph];
 };
-
-function deepcopy<T>(t: T) {
-  return JSON.parse(JSON.stringify(t)) as T;
-}
 
 interface StrokeModelProps {
   stroke: Stroke;
@@ -39,8 +35,8 @@ export const StrokeModel = ({
   const modify = useModify();
   const [name, glyph] = useNameAndGlyph();
   return (
-    <Space direction="vertical">
-      <Space>
+    <Flex vertical gap="small">
+      <Flex justify="space-between">
         <Select
           value={feature}
           options={Object.keys(defaultClassifier).map((x) => ({
@@ -75,17 +71,15 @@ export const StrokeModel = ({
         >
           删除
         </Button>
-      </Space>
-      <div>
-        {curveList.map((draw, drawIndex) => (
-          <DrawModel
-            draw={draw}
-            index={index.concat(drawIndex) as N2}
-            key={drawIndex}
-          />
-        ))}
-      </div>
-    </Space>
+      </Flex>
+      {curveList.map((draw, drawIndex) => (
+        <DrawModel
+          draw={draw}
+          index={index.concat(drawIndex) as N2}
+          key={drawIndex}
+        />
+      ))}
+    </Flex>
   );
 };
 
@@ -98,8 +92,8 @@ const DrawModel = ({
   draw: { command, parameterList },
   index,
 }: DrawModelProps) => (
-  <Flex>
-    <span>{halfToFull(command.toUpperCase())}</span>
+  <Space>
+    {halfToFull(command.toUpperCase())}
     {parameterList.map((parameter, parameterIndex) => (
       <NumberModel
         parameter={parameter}
@@ -107,7 +101,7 @@ const DrawModel = ({
         key={parameterIndex}
       />
     ))}
-  </Flex>
+  </Space>
 );
 
 interface NumberModelProps {
@@ -167,27 +161,22 @@ const StrokeAdder = () => {
   );
 };
 
-export default function ComponentModel({ name }: { name?: string }) {
+export default function ComponentModel({ name }: { name: string }) {
   const components = useComponents();
   return (
-    <>
-      <Typography.Title level={2}>调整数据</Typography.Title>
-      {name ? (
-        <NameContext.Provider value={name}>
-          {components[name].map((stroke, strokeIndex) => (
-            <StrokeModel
-              stroke={stroke}
-              index={[strokeIndex]}
-              key={strokeIndex}
-            />
-          ))}
-          <Flex justify="center">
-            <StrokeAdder />
-          </Flex>
-        </NameContext.Provider>
-      ) : (
-        <Empty />
-      )}
-    </>
+    <NameContext.Provider value={name}>
+      <Flex vertical gap="large">
+        {components[name].map((stroke, strokeIndex) => (
+          <StrokeModel
+            stroke={stroke}
+            index={[strokeIndex]}
+            key={strokeIndex}
+          />
+        ))}
+      </Flex>
+      <Flex justify="center">
+        <StrokeAdder />
+      </Flex>
+    </NameContext.Provider>
   );
 }

@@ -1,6 +1,10 @@
 import { Mapping } from "./config";
 import { Stroke } from "./data";
 
+export function deepcopy<T>(t: T) {
+  return JSON.parse(JSON.stringify(t)) as T;
+}
+
 export const halfToFull = (s: string) => {
   let result = "";
   for (let i = 0; i != s.length; ++i) {

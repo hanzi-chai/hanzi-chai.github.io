@@ -1,4 +1,10 @@
-import { Classifier, Config, RootConfig } from "./config";
+import {
+  Classifier,
+  Config,
+  ElementCache,
+  ElementResult,
+  RootConfig,
+} from "./config";
 import { Glyph } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
@@ -10,6 +16,19 @@ export const makeSequenceFilter = (
   sequence: string,
 ) => {
   return ([, v]: [string, Glyph]) => {
+    const fullSequence = v
+      .map((s) => s.feature)
+      .map((x) => classifier[x])
+      .join("");
+    return fullSequence.search(sequence) !== -1;
+  };
+};
+
+export const makeSequenceFilter2 = (
+  classifier: Classifier,
+  sequence: string,
+) => {
+  return (v: Glyph) => {
     const fullSequence = v
       .map((s) => s.feature)
       .map((x) => classifier[x])
@@ -161,29 +180,36 @@ export const disassembleCompounds = (
   return result;
 };
 
-export const getRoot = (data: Config["data"], root: RootConfig) => {
+export const getRoot = (
+  list: string[],
+  data: Config["data"],
+  root: RootConfig,
+) => {
   const componentResults = disassembleComponents(data, root);
   const compoundResults = disassembleCompounds(data, root, componentResults);
-  const value = {} as Record<string, Record<string, string>>;
+  const value = {} as ElementCache;
   const semy = (l: string[]) =>
     l.length <= 3 ? l : l.slice(0, 2).concat(l[l.length - 1]);
-  for (const char in data.characters) {
-    let list;
+  for (const char of list) {
+    let rootlist: string[] | undefined;
     if (componentResults[char]) {
       const c = componentResults[char];
-      list = semy(c.best);
+      rootlist = semy(c.best);
     } else if (compoundResults[char]) {
       const c = compoundResults[char];
-      list = semy(c.sequence);
+      rootlist = semy(c.sequence);
     } else {
-      list = ["1"];
+      rootlist = undefined;
     }
-    value[char] = {
-      "字根 1": list[0],
-      "字根 2": list[1],
-      "字根 3": list[2],
-    };
+    value[char] = rootlist
+      ? [
+          {
+            "字根 1": rootlist[0],
+            "字根 2": rootlist[1],
+            "字根 3": rootlist[2],
+          },
+        ]
+      : [];
   }
   return value;
-  // write({ index, value });
 };

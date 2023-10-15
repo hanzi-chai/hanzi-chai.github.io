@@ -21,6 +21,7 @@ import {
   Characters,
   Alias,
   Slices,
+  Character,
 } from "../lib/data";
 import defaultConfig from "../templates/default.yaml";
 import defaultClassifier from "../templates/classifier.yaml";
@@ -31,6 +32,7 @@ export type Action =
   | LoadAction
   | ElementAction
   | DataAction
+  | DeleteAction
   | EncoderAction;
 
 type InfoAction = {
@@ -71,10 +73,16 @@ type DataAction = {
 } & (
   | { subtype: "components"; key: string; value: Glyph }
   | { subtype: "compounds"; key: string; value: Compound }
-  | { subtype: "characters"; key: string; value: string[] }
+  | { subtype: "characters"; key: string; value: Character }
   | { subtype: "slices"; key: string; value: Alias }
   | { subtype: "classifier"; key: string; value: number }
 );
+type DeleteAction = {
+  type: "data-delete";
+  subtype: DataAction["subtype"];
+  key: string;
+  value: undefined;
+};
 type EncoderAction = { type: "encoder"; value: Config["encoder"] };
 
 export const configReducer = (config: Config, action: Action) => {
@@ -91,6 +99,9 @@ export const configReducer = (config: Config, action: Action) => {
       break;
     case "data":
       config.data[action.subtype][action.key] = value;
+      break;
+    case "data-delete":
+      delete config.data[action.subtype][action.key];
       break;
     case "element":
       switch (action.subtype) {
@@ -225,12 +236,25 @@ const useModify = () => {
     });
 };
 
+const useDelete = () => {
+  const dispatch = useContext(DispatchContext);
+  const subtype = useDataType() as "components";
+  return (key: string) =>
+    dispatch({
+      type: "data-delete",
+      subtype,
+      key,
+      value: undefined,
+    });
+};
+
 export {
   useIndex,
   useElement,
   useRoot,
   usePhonetic,
   useDesign,
+  useData,
   useComponents,
   useCompounds,
   useCharacters,
@@ -238,4 +262,5 @@ export {
   useClassifier,
   useAll,
   useModify,
+  useDelete,
 };

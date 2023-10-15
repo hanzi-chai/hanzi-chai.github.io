@@ -38,22 +38,18 @@ const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
     .slice((page - 1) * pageSize, page * pageSize);
   return (
     <>
-      <ConfigProvider
-        theme={{ components: { Button: { defaultBg: "transparent" } } }}
-      >
-        <Content wrap="wrap">
-          {range.map((x) => (
-            <Char
-              onClick={() => {
-                x === name ? setName(undefined) : setName(x);
-              }}
-              type={x === name ? "primary" : "default"}
-            >
-              {x}
-            </Char>
-          ))}
-        </Content>
-      </ConfigProvider>
+      <Content wrap="wrap">
+        {range.map((x) => (
+          <Char
+            onClick={() => {
+              x === name ? setName(undefined) : setName(x);
+            }}
+            type={x === name ? "primary" : "default"}
+          >
+            {x}
+          </Char>
+        ))}
+      </Content>
       <MyPagination
         current={page}
         onChange={(page, pageSize) => {

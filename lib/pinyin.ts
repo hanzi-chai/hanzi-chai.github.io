@@ -1,5 +1,6 @@
 import {
   Config,
+  ElementCache,
   ElementResult,
   PhoneticConfig,
   PhoneticElement,
@@ -19,14 +20,24 @@ const analyzers = {
   调: (p: string) => p.match(/\d/)![0],
 } as Record<PhoneticElement, (p: string) => string>;
 
-export const getPhonetic = (data: Config["data"], config: PhoneticConfig) => {
-  const value = {} as Record<string, ElementResult>;
-  for (const [char, pinyins] of Object.entries(data.characters)) {
-    value[char] = {};
-    const onepinyin = pinyins[0]; // todo: support 多音字
-    for (const node of config.nodes) {
-      value[char][node] = analyzers[node](onepinyin);
-    }
+export const getPhonetic = (
+  list: string[],
+  data: Config["data"],
+  config: PhoneticConfig,
+) => {
+  const value = {} as ElementCache;
+  for (const char of list) {
+    const pinyin = data.characters[char].pinyin;
+    const rawresult = pinyin.map((p) =>
+      Object.fromEntries(
+        config.nodes.map((node) => {
+          return [node, analyzers[node](p)];
+        }),
+      ),
+    );
+    value[char] = Array.from(
+      new Set(rawresult.map((x) => JSON.stringify(x))),
+    ).map((x) => JSON.parse(x) as ElementResult);
   }
   return value;
 };

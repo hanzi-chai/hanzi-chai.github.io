@@ -70,14 +70,20 @@ interface Compound {
   mix?: number;
 }
 
+interface Character {
+  pinyin: string[];
+  tygf: boolean;
+  gb2312: boolean;
+}
+
 type Components = Record<string, Glyph>;
 type Compounds = Record<string, Compound>;
-type Characters = Record<string, string[]>;
+type Characters = Record<string, Character>;
 type Slices = Record<string, Alias>;
 
 type Alias = { source: string; indices: number[] };
 
 export type { N1, N2, N3, N6 };
-export type { Point, Draw, Stroke, Glyph, Compound, Operand, Alias };
+export type { Point, Draw, Stroke, Glyph, Compound, Operand, Alias, Character };
 export type { Components, Compounds, Characters, Slices };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

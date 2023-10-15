@@ -20,6 +20,9 @@ export const EditorRow = (props: RowProps) => (
 const ScrollableColumn = styled(Col)`
   height: 100%;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 export const EditorColumn = (props: ColProps) => (

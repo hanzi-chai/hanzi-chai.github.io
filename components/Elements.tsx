@@ -74,7 +74,13 @@ const PhoneticElementConfig = () => {
   const options = ["恒等映射", "自定义映射"] as const;
   const design = useDesign();
   const characters = useCharacters();
-  const syllables = [...new Set(Object.values(characters).flat())];
+  const syllables = [
+    ...new Set(
+      Object.values(characters)
+        .map((x) => x.pinyin)
+        .flat(),
+    ),
+  ];
   const fn = analyzers[nodes[0]];
   const elements = [...new Set(syllables.map(fn).flat())].sort();
   return (

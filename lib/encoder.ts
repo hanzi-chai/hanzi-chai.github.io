@@ -1,4 +1,6 @@
 import { Condition, Config, ElementCache, ElementResult } from "./config";
+import { getPhonetic } from "./pinyin";
+import { getRoot } from "./root";
 
 export const table: Record<
   Condition["operator"],
@@ -46,6 +48,34 @@ const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
   };
 };
 
+export const getCache = (
+  list: string[],
+  elements: Config["elements"],
+  data: Config["data"],
+) => {
+  const cache = elements.map((config) => {
+    switch (config.type) {
+      case "字根":
+        return getRoot(list, data, config);
+      case "字音":
+        return getPhonetic(list, data, config);
+    }
+  });
+  return Object.fromEntries(
+    list.map((char) => {
+      const ers = cache.map((a) => a[char]);
+      return [
+        char,
+        ers.reduce(
+          (prev, curr) =>
+            prev.map((x) => curr.map((y) => Object.assign({}, x, y))).flat(),
+          [{}],
+        ),
+      ];
+    }),
+  );
+};
+
 const encode = (
   encoder: Config["encoder"],
   elements: Config["elements"],
@@ -53,10 +83,9 @@ const encode = (
   cache: ElementCache,
 ) => {
   const func = compile(encoder, elements);
-  const result = {} as Record<string, string>;
-  characters.forEach((char) => {
-    result[char] = func(char, cache[char]);
-  });
+  const result = Object.fromEntries(
+    characters.map((char) => [char, cache[char].map((x) => func(char, x))]),
+  );
   return result;
 };
 

@@ -66,22 +66,3 @@ export const SliceView = ({ name }: { name: string }) => {
     </>
   );
 };
-
-export default function SVGView({ children }: PropsWithChildren) {
-  return (
-    <>
-      <Typography.Title level={2}>查看 SVG</Typography.Title>
-      <Overlay>{children}</Overlay>
-    </>
-  );
-}
-
-const Overlay = styled.div`
-  border: 1px solid black;
-  aspect-ratio: 1;
-  display: grid;
-
-  & svg {
-    grid-area: 1 / 1 / 1 / 1;
-  }
-`;

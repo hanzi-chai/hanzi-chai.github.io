@@ -37,6 +37,7 @@ import {
 } from "../lib/root";
 import {
   Classifier,
+  ElementCache,
   ElementResult,
   RootConfig,
   SieveName,
@@ -187,7 +188,7 @@ const RootAnalysis = () => {
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>
-        <Flex>
+        <Flex gap="middle">
           <StrokeSearch sequence={sequence} setSequence={setSequence} />
           <Button
             type="primary"
@@ -208,8 +209,8 @@ const RootAnalysis = () => {
             value={step}
             onChange={(e) => setStep(e.target.value as 0)}
           >
-            <Radio.Button>部件拆分</Radio.Button>
-            <Radio.Button>复合体拆分</Radio.Button>
+            <Radio.Button value={0}>部件拆分</Radio.Button>
+            <Radio.Button value={1}>复合体拆分</Radio.Button>
           </Radio.Group>
         </Flex>
         {displays[step].length ? (
@@ -245,8 +246,8 @@ const RootAnalysis = () => {
 const PhoneticAnalysis = () => {
   const phonetic = usePhonetic();
   const data = useAll();
-  const [result, setResult] = useState({} as Record<string, ElementResult>);
-  const columns: ColumnsType<Record<string, string>> = [
+  const [result, setResult] = useState<ElementCache>({});
+  const columns: ColumnsType<{ char: string }> = [
     {
       title: "汉字",
       dataIndex: "char",
@@ -278,7 +279,11 @@ const PhoneticAnalysis = () => {
           <Button
             type="primary"
             onClick={() => {
-              const value = getPhonetic(data, phonetic);
+              const value = getPhonetic(
+                Object.keys(data.characters),
+                data,
+                phonetic,
+              );
               setResult(value);
               // write({ index, value });
             }}

@@ -4,10 +4,12 @@ import { useCharacters, useModify } from "./context";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "./Utils";
+import { Character } from "../lib/data";
+import { deepcopy } from "../lib/utils";
 
-interface DataType {
+interface DataType extends Character {
   key: string;
-  pinyin: string[];
+  self: Character;
 }
 
 const EditablePinyin = ({
@@ -19,23 +21,17 @@ const EditablePinyin = ({
   setPinyin: (s: string) => void;
   deletePinyin: () => void;
 }) => {
-  const items: MenuProps["items"] = [
-    {
-      key: "delete",
-      label: "删除",
-      onClick: deletePinyin,
-    },
-  ];
   return (
-    <Dropdown trigger={["contextMenu"]} menu={{ items }}>
+    <Space>
       <Input
-        style={{ width: "96px" }}
+        style={{ width: "80px" }}
         value={pinyin}
         onChange={(event) => {
           setPinyin(event.target.value);
         }}
       />
-    </Dropdown>
+      <a onClick={deletePinyin}>删除</a>
+    </Space>
   );
 };
 
@@ -45,7 +41,8 @@ const CharacterTable: React.FC = () => {
   const [character, setCharacter] = useState<string>("");
   const rawdata = Object.entries(characters).map(([k, v]) => ({
     key: k,
-    pinyin: v,
+    self: v,
+    ...v,
   }));
   const dataSource = character
     ? rawdata.filter((x) => x.key === character)
@@ -55,39 +52,55 @@ const CharacterTable: React.FC = () => {
     {
       title: "汉字",
       dataIndex: "key",
-      width: "30%",
+    },
+    {
+      title: "通用规范",
+      dataIndex: "tygf",
+      render: (_, record) => {
+        return <span>{record.tygf ? "是" : "否"}</span>;
+      },
+    },
+    {
+      title: "GB/T 2312",
+      dataIndex: "gb2312",
+      render: (_, record) => {
+        return <span>{record.gb2312 ? "是" : "否"}</span>;
+      },
     },
     {
       title: "字音",
       dataIndex: "pinyin",
       render: (_, record) => {
         return (
-          <Space>
-            {record.pinyin.map((x, i, a) => (
-              <EditablePinyin
-                pinyin={x}
-                setPinyin={(pinyin) => {
-                  modify(
-                    record.key,
-                    a.map((y, j) => (j === i ? pinyin : y)),
-                  );
-                }}
-                deletePinyin={() =>
-                  modify(
-                    record.key,
-                    a.filter((y, j) => j !== i),
-                  )
-                }
-              />
-            ))}
+          <Flex justify="space-between">
+            <Space size="middle">
+              {record.pinyin.map((x, i) => (
+                <EditablePinyin
+                  key={i}
+                  pinyin={x}
+                  setPinyin={(pinyin) => {
+                    const modified = deepcopy(record.self);
+                    modified.pinyin[i] = pinyin;
+                    modify(record.key, modified);
+                  }}
+                  deletePinyin={() => {
+                    const modified = deepcopy(record.self);
+                    modified.pinyin.splice(i, 1);
+                    modify(record.key, modified);
+                  }}
+                />
+              ))}
+            </Space>
             <Button
               onClick={() => {
-                modify(record.key, record.pinyin.concat(""));
+                const modified = deepcopy(record.self);
+                modified.pinyin.push("");
+                modify(record.key, modified);
               }}
             >
               添加
             </Button>
-          </Space>
+          </Flex>
         );
       },
     },

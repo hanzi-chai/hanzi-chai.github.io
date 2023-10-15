@@ -8,11 +8,12 @@ import {
   Typography,
 } from "antd";
 import { Config } from "../lib/config";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import defaultConfig from "../templates/default.yaml";
 import xingyin from "../templates/xingyin.yaml";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
+import { useImmer } from "use-immer";
 
 const items: MenuProps["items"] = [
   {
@@ -41,28 +42,23 @@ const configMap = new Map<string, Config>([
 ]);
 
 const HomeLayout = () => {
-  const [configs, setConfigs] = useState(
-    () =>
-      Object.fromEntries(
-        [...Array(localStorage.length).keys()].map((i) => {
-          const key = localStorage.key(i)!;
-          const data = JSON.parse(localStorage.getItem(key)!);
-          return [key, data];
-        }),
-      ) as Record<string, Config>,
+  const [configs, setConfigs] = useImmer(() =>
+    Object.fromEntries(
+      Object.entries(localStorage).map(([key, value]) => {
+        const data = JSON.parse(value) as Config;
+        return [key, data];
+      }),
+    ),
   );
-  const handleRemove = (id: string) => {
-    const newConfigs = { ...configs };
-    delete newConfigs[id];
-    localStorage.removeItem(id);
-    setConfigs(newConfigs);
-  };
-  const handleAdd: MenuProps["onClick"] = (e) => {
-    const config = configMap.get(e.key)!;
-    const id = uuid();
-    localStorage.setItem(id, JSON.stringify(config));
-    setConfigs(Object.assign({}, configs, { [id]: config }));
-  };
+
+  useEffect(() => {
+    Object.entries(configs).forEach(([id, config]) => {
+      localStorage.setItem(id, JSON.stringify(config));
+    });
+    Object.keys(localStorage)
+      .filter((x) => !configs[x])
+      .forEach((id) => localStorage.removeItem(id));
+  }, [configs]);
 
   return (
     <Layout style={{ height: "100%" }}>
@@ -70,7 +66,7 @@ const HomeLayout = () => {
         <Flex
           vertical
           justify="space-evenly"
-          style={{ height: "100%", padding: "0 16px" }}
+          style={{ height: "100%", padding: "0 32px" }}
         >
           <List
             itemLayout="horizontal"
@@ -80,7 +76,15 @@ const HomeLayout = () => {
                 <List.Item
                   actions={[
                     <Link to={id}>编辑</Link>,
-                    <a onClick={() => handleRemove(id)}>删除</a>,
+                    <a
+                      onClick={() =>
+                        setConfigs((configs) => {
+                          delete configs[id];
+                        })
+                      }
+                    >
+                      删除
+                    </a>,
                   ]}
                 >
                   <List.Item.Meta
@@ -96,7 +100,11 @@ const HomeLayout = () => {
               placement="bottom"
               menu={{
                 items,
-                onClick: handleAdd,
+                onClick: (e) => {
+                  setConfigs((configs) => {
+                    configs[uuid()] = configMap.get(e.key)!;
+                  });
+                },
               }}
             >
               <Button type="primary">新建</Button>
@@ -105,7 +113,13 @@ const HomeLayout = () => {
         </Flex>
       </Layout.Sider>
       <Layout>
-        <Flex component={Layout.Content} vertical align="center" gap="large">
+        <Flex
+          component={Layout.Content}
+          vertical
+          justify="center"
+          align="center"
+          gap="large"
+        >
           <img alt="favicon" src="/favicon.ico" />
           <Typography.Title>汉字自动拆分系统 v{APP_VERSION}</Typography.Title>
         </Flex>

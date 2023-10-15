@@ -30,11 +30,13 @@ interface PhoneticConfig extends BaseConfig {
   mapping: Mapping;
 }
 
-type ElementResult = Record<string, string | undefined>;
+type ElementResult = Record<string, string>;
 
 interface ElementCache {
-  [key: string]: ElementResult;
+  [key: string]: ElementResult[];
 }
+
+type EncoderResult = Record<string, string[]>;
 
 type ElementConfig = RootConfig | PhoneticConfig;
 
@@ -84,4 +86,4 @@ export type {
 
 export type { EncoderNode, EncoderEdge, Condition };
 
-export type { ElementCache, ElementResult };
+export type { ElementCache, ElementResult, EncoderResult };
