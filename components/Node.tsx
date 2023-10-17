@@ -1,5 +1,5 @@
 import { Button, Dropdown } from "antd";
-import { useContext } from "react";
+import { PropsWithChildren, useContext } from "react";
 import {
   Edge,
   Handle,
@@ -8,7 +8,7 @@ import {
   Position,
   useReactFlow,
 } from "reactflow";
-import { ConfigContext } from "./context";
+import { ConfigContext, DispatchContext } from "./context";
 import styled from "styled-components";
 import {
   MenuItemGroupType,
@@ -21,6 +21,9 @@ import {
   getLayoutedElements,
   ConditionData,
   makeSourceNode,
+  sortNodes,
+  makeConditionNode,
+  renderType,
 } from "./graph";
 
 const SourceButton = styled(Button)`
@@ -30,75 +33,111 @@ const SourceButton = styled(Button)`
 `;
 
 const ConditionButton = styled(Button)`
-  width: 96px;
+  width: 64px;
   height: 32px;
   padding: 4px;
+
+  border-radius: 0;
+  font-size: 0.8em;
 `;
 
-const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
+const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   const { elements } = useContext(ConfigContext);
+  const allNodes = elements.map(({ nodes }) => nodes).flat();
   const { setNodes, setEdges, getNodes, getEdges } = useReactFlow<
     SourceData | ConditionData
   >();
+  const nodes = getNodes();
   const edges = getEdges();
-  const allNodes = elements.map(({ nodes }) => nodes).flat();
-  const updateNode: MenuItemGroupType = {
-    key: "update",
-    type: "group",
-    label: "更改节点",
-    children: allNodes
-      .filter((v) => v !== data.label)
-      .map((key) => ({
-        key,
-        label: key,
-        onClick: () => {
-          setNodes((nodes) =>
-            nodes.map((node) => {
-              if (node.id === id) {
-                node.data = { label: key };
-              }
-              return node;
-            }),
-          );
-        },
-      })),
+  const labelList: MenuItemType[] = allNodes.map((label) => ({
+    key: label,
+    label,
+    onClick: () => {
+      setNodes(
+        nodes.map((node) =>
+          node.id === id ? { ...node, data: { ...node.data, label } } : node,
+        ),
+      );
+    },
+  }));
+  const operatorList: MenuItemType[] = ["是", "不是", "有", "没有"].map(
+    (operator) => ({
+      key: operator,
+      label: operator,
+      onClick: () => {
+        setNodes(
+          nodes.map((node) =>
+            node.id === id
+              ? { ...node, data: { ...node.data, operator } }
+              : node,
+          ),
+        );
+      },
+    }),
+  );
+  const updateNodeLabel: SubMenuType = {
+    key: "update-label",
+    label: "更改节点源",
+    children: labelList,
+  };
+  const updateNodeOperator: SubMenuType = {
+    key: "update-operator",
+    label: "更改节点操作符",
+    children: operatorList,
   };
   const setLayout = (newnodes: Node[], newedges: Edge[]) => {
     const [lnodes, ledges] = getLayoutedElements(newnodes, newedges);
     setNodes(lnodes);
     setEdges(ledges);
   };
-  const createNode: SubMenuType = {
-    key: "create",
-    label: "添加节点",
-    disabled: edges.some((v) => v.source === id),
+  const createSourceNode: (etype: string | undefined) => SubMenuType = (
+    etype,
+  ) => ({
+    key: `create-source-${etype}`,
+    label:
+      "添加源节点" +
+      (etype ? `（${renderType[etype as keyof typeof renderType]}）` : ""),
     children: allNodes.map((label) => ({
-      key: "create" + label,
+      key: `create-source-${etype}` + label,
       label: label,
       onClick: () => {
-        const [nodes, edges] = [getNodes(), getEdges()];
         let newid = 0;
-        for (const node of nodes) {
+        for (const node of nodes.filter((x) => x.id[0] === "s")) {
           if (node.id !== `s${newid}`) break;
           newid += 1;
         }
         const newnodes = nodes
           .concat(makeSourceNode({ label }, `s${newid}`))
-          .sort((a, b) => {
-            const [typea, typeb] = [a.id[0], b.id[0]];
-            if (typea === "s" && typeb === "c") return -1;
-            if (typea === "c" && typeb === "s") return 1;
-            const [indexa, indexb] = [
-              parseInt(a.id.slice(1)),
-              parseInt(b.id.slice(1)),
-            ];
-            return indexa - indexb;
-          });
-        const newedges = edges.concat(makeEdge(id, `s${newid}`));
+          .sort(sortNodes);
+        const newedges = edges.concat(makeEdge(id, `s${newid}`, etype));
         setLayout(newnodes, newedges);
       },
     })),
-  };
+  });
+  const createConditionNode: (etype: string | undefined) => SubMenuType = (
+    etype,
+  ) => ({
+    key: `create-condition-${etype}`,
+    label:
+      "添加条件节点" +
+      (etype ? `（${renderType[etype as keyof typeof renderType]}）` : ""),
+    children: allNodes.map((label) => ({
+      key: `create-condition-${etype}` + label,
+      label: label,
+      onClick: () => {
+        let newid = 0;
+        for (const node of nodes.filter((x) => x.id[0] === "c")) {
+          if (node.id !== `c${newid}`) break;
+          newid += 1;
+        }
+        const newnodes = nodes
+          .concat(makeConditionNode({ label, operator: "有" }, `c${newid}`))
+          .sort(sortNodes);
+        const newedges = edges.concat(makeEdge(id, `c${newid}`, etype));
+        setLayout(newnodes, newedges);
+      },
+    })),
+  });
   const deleteNode: MenuItemType = {
     key: "delete",
     label: "删除节点",
@@ -110,16 +149,40 @@ const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
       setLayout(newnodes, newedges);
     },
   };
-  const items: (MenuItemType | MenuItemGroupType)[] =
-    id === "s0" ? [createNode] : [updateNode, createNode, deleteNode];
+  let items: (MenuItemType | MenuItemGroupType)[] = [];
+  if (id[0] === "s") {
+    if (id !== "s0") items.push(updateNodeLabel, deleteNode);
+    if (!edges.some((e) => e.source === id))
+      items.push(createSourceNode(undefined), createConditionNode(undefined));
+  } else {
+    items.push(updateNodeLabel, updateNodeOperator, deleteNode);
+    for (const label of ["positive", "negative"]) {
+      if (
+        !edges.some(
+          (e) =>
+            e.source === id &&
+            e.label === renderType[label as keyof typeof renderType],
+        )
+      )
+        items.push(createSourceNode(label), createConditionNode(label));
+    }
+  }
 
   return (
+    <Dropdown menu={{ items }} placement="bottom">
+      {children}
+    </Dropdown>
+  );
+};
+
+const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
+  return (
     <>
-      <Dropdown menu={{ items }} placement="bottom">
+      <ContextMenu id={id}>
         <SourceButton type={id === "s0" ? "primary" : "default"}>
           {data.label}
         </SourceButton>
-      </Dropdown>
+      </ContextMenu>
       {id !== "s0" && <Handle type="target" position={Position.Top} />}
       <Handle type="source" position={Position.Bottom} />
     </>
@@ -127,17 +190,13 @@ const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
 };
 
 const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
-  const { elements } = useContext(ConfigContext);
-  const { setNodes, setEdges, getNodes, getEdges } = useReactFlow<
-    SourceData | ConditionData
-  >();
-  const allNodes = elements.map(({ nodes }) => nodes).flat();
-
   return (
     <>
-      <ConditionButton type="dashed">
-        {data.label + ": " + data.operator}
-      </ConditionButton>
+      <ContextMenu id={id}>
+        <ConditionButton type="dashed">
+          {data.label + ": " + data.operator}
+        </ConditionButton>
+      </ContextMenu>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" id="positive" position={Position.Left} />
       <Handle type="source" id="negative" position={Position.Right} />

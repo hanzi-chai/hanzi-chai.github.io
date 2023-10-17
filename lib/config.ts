@@ -54,6 +54,8 @@ interface Condition {
 }
 
 interface Config {
+  version: "0.1";
+  template: string;
   info: {
     name: string;
     author: string;

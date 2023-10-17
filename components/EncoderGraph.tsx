@@ -17,7 +17,6 @@ import { ConfigContext, DispatchContext, useAll } from "./context";
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
 import { Condition, Config, Source } from "../lib/config";
-import EncoderEdge from "./EncoderEdge";
 import {
   SourceData,
   SNode,
@@ -56,7 +55,6 @@ const EncoderGraph = () => {
       initialEdges.push(makeEdge(`c${index}`, negative, "negative"));
     }
   }
-  console.log(initialNodes, initialEdges);
   const [layoutNodes, layoutEdges] = getLayoutedElements(
     initialNodes,
     initialEdges,
@@ -122,7 +120,7 @@ const EncoderGraph = () => {
       nodeDragThreshold={10000}
       fitView
     >
-      <Background variant={BackgroundVariant.Cross} />
+      <Background variant={BackgroundVariant.Cross} gap={32} />
       <Controls />
     </ReactFlow>
   );

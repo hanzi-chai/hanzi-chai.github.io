@@ -5,7 +5,7 @@ import {
   useEffect,
   useReducer,
 } from "react";
-import { Button, Flex, Layout, Menu, Space, Typography } from "antd";
+import { Button, Flex, Layout, Menu, Space, Typography, Upload } from "antd";
 import {
   DatabaseOutlined,
   MailOutlined,
@@ -25,10 +25,11 @@ import {
 } from "./context";
 import { Config, ElementCache } from "../lib/config";
 import { Action } from "./context";
-import { dump } from "js-yaml";
-import defaultConfig from "../templates/default.yaml";
+import { dump, load } from "js-yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
+import { Uploader } from "./Utils";
+import { templates } from "../lib/template";
 
 const items: MenuProps["items"] = [
   {
@@ -76,21 +77,6 @@ const exportFile = (config: Config) => {
   a.click();
 };
 
-const importFile = (
-  dispatch: Dispatch<Action>,
-  e: ChangeEvent<HTMLInputElement>,
-) => {
-  const [file] = e.target.files!;
-  const reader = new FileReader();
-  reader.addEventListener("load", () =>
-    dispatch({
-      type: "load",
-      value: JSON.parse(reader.result as string),
-    }),
-  );
-  reader.readAsText(file);
-};
-
 const EditorLayout = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -124,16 +110,22 @@ const EditorLayout = () => {
             items={items}
           />
           <Space>
-            <Button onClick={() => document.getElementById("import")!.click()}>
-              导入
-            </Button>
-            <input
-              type="file"
-              id="import"
-              hidden
-              onChange={(e) => importFile(dispatch, e)}
+            <Uploader
+              action={(s: string) => {
+                dispatch({ type: "load", value: load(s) as Config });
+              }}
             />
             <Button onClick={() => exportFile(config)}>导出</Button>
+            <Button
+              onClick={() => {
+                dispatch({
+                  type: "load",
+                  value: templates[config.template].self,
+                });
+              }}
+            >
+              重置
+            </Button>
           </Space>
         </Flex>
       </Layout.Header>
@@ -145,13 +137,9 @@ const EditorLayout = () => {
 const Contextualized = () => {
   const { pathname } = useLocation();
   const [_, id] = pathname.split("/");
-  const [config, dispatch] = useImmerReducer(
-    configReducer,
-    defaultConfig as Config,
-    () => {
-      return JSON.parse(localStorage.getItem(id)!) as Config;
-    },
-  );
+  const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
+    return JSON.parse(localStorage.getItem(id)!) as Config;
+  });
   const [cache, write] = useReducer(cacheReducer, {} as ElementCache);
 
   useEffect(() => {

@@ -83,7 +83,7 @@ const Classifier = () => {
             </Droppable>
           </Flex>
         ))}
-        <Flex>
+        <Flex justify="center" gap="middle">
           <Button onClick={() => setCategories(categories + 1)}>
             增加分类
           </Button>

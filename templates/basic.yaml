@@ -1,3 +1,7 @@
+version: "0.1"
+
+template: basic
+
 info:
   name: 基础模板
   version: "0.1"
