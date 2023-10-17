@@ -270,22 +270,14 @@ elements:
     alphabet: qwertyuiopasdfghjklzxcvbnm
 
 encoder:
-  - { key: "开始", children: [{ to: 1, conditions: [] }] }
-  - {
-      key: "字根 1",
-      children:
-        [
-          { to: 2, conditions: [{ key: "字根 2", operator: "有" }] },
-          { to: 4, conditions: [] },
-        ],
-    }
-  - {
-      key: "字根 2",
-      children:
-        [
-          { to: 3, conditions: [{ key: "字根 3", operator: "有" }] },
-          { to: 4, conditions: [] },
-        ],
-    }
-  - { key: "字根 3", children: [{ to: 4, conditions: [] }] }
-  - { key: "首字母", children: [] }
+  sources:
+    - { label: 开始, next: s1 }
+    - { label: "字根 1", next: c0 }
+    - { label: "字根 2", next: c1 }
+    - { label: "字根 3", next: s4 }
+    - { label: "首字母", next: null }
+    - { label: "首字母", next: null }
+    - { label: "首字母", next: null }
+  conditions:
+    - { label: "字根 2", operator: "有", positive: s2, negative: s5 }
+    - { label: "字根 3", operator: "有", positive: s3, negative: s6 }

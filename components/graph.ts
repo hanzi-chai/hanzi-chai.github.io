@@ -1,42 +1,62 @@
 import { Edge, Node } from "reactflow";
-import { Condition } from "../lib/config";
+import { Condition, Source } from "../lib/config";
 import { layout, graphlib, Label } from "@dagrejs/dagre";
+import { render } from "react-dom";
 
-export interface NodeData {
-  label: string;
-}
+export type SourceData = Omit<Source, "next">;
 
-export type ENode = Node<NodeData>;
+export type SNode = Node<SourceData>;
 
-export const makeNode = (id: number, key: string) => {
+export const makeSourceNode = (data: SourceData, id: string) => {
   return {
-    type: "encoder",
+    type: "source",
     width: 64,
     height: 32,
-    id: id.toString(),
-    data: { label: key },
+    id,
+    data,
     position: { x: 0, y: 0 },
   };
 };
 
-export type EdgeData = Condition[];
-export type EEdge = Edge<EdgeData>;
+export type ConditionData = Omit<Condition, "positive" | "negative">;
 
-export const makeEdge = (from: number, to: number, data: EdgeData) => {
+export type CNode = Node<ConditionData>;
+
+export const makeConditionNode = (data: ConditionData, id: string) => {
   return {
-    id: `${from}-${to}`,
-    source: from.toString(),
-    target: to.toString(),
-    type: "encoder",
-    animated: true,
+    type: "condition",
+    width: 64,
+    height: 32,
+    id,
     data,
+    position: { x: 0, y: 0 },
+  };
+};
+
+const renderType = {
+  positive: "是",
+  negative: "否",
+};
+
+export const makeEdge = function (
+  source: string,
+  target: string,
+  type?: string,
+): Edge {
+  return {
+    id: `${source}-${target}`,
+    source,
+    sourceHandle: type,
+    target,
+    animated: true,
+    label: type && renderType[type as keyof typeof render],
   };
 };
 
 export const getLayoutedElements = function (
-  nodes: ENode[],
-  edges: EEdge[],
-): [ENode[], EEdge[]] {
+  nodes: (SNode | CNode)[],
+  edges: Edge[],
+): [(SNode | CNode)[], Edge[]] {
   const g = new graphlib.Graph().setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: "TB", ranksep: 32, nodesep: 64 });
   nodes.forEach((node) => g.setNode(node.id, node as Label));
