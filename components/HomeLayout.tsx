@@ -1,45 +1,12 @@
-import {
-  Button,
-  Dropdown,
-  Flex,
-  Layout,
-  List,
-  MenuProps,
-  Typography,
-} from "antd";
+import { Button, Dropdown, Flex, Layout, List, Typography } from "antd";
 import { Config } from "../lib/config";
-import { useEffect, useState } from "react";
-import defaultConfig from "../templates/default.yaml";
-import xingyin from "../templates/xingyin.yaml";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useImmer } from "use-immer";
-
-const items: MenuProps["items"] = [
-  {
-    label: "默认模板",
-    key: "default",
-  },
-  {
-    label: "形音码模板",
-    key: "xingyin",
-  },
-  {
-    label: "形码模板",
-    key: "xingma",
-    disabled: true,
-  },
-  {
-    label: "二笔模板",
-    key: "erbi",
-    disabled: true,
-  },
-];
-
-const configMap = new Map<string, Config>([
-  ["default", defaultConfig as Config],
-  ["xingyin", xingyin as Config],
-]);
+import { templates } from "../lib/template";
+import { Uploader } from "./Utils";
+import { load } from "js-yaml";
 
 const HomeLayout = () => {
   const [configs, setConfigs] = useImmer(() =>
@@ -95,20 +62,27 @@ const HomeLayout = () => {
               );
             }}
           />
-          <Flex justify="center">
+          <Flex justify="center" gap="middle">
             <Dropdown
               placement="bottom"
               menu={{
-                items,
-                onClick: (e) => {
+                items: Object.values(templates),
+                onClick: (menu) => {
                   setConfigs((configs) => {
-                    configs[uuid()] = configMap.get(e.key)!;
+                    configs[uuid()] = templates[menu.key].self;
                   });
                 },
               }}
             >
               <Button type="primary">新建</Button>
             </Dropdown>
+            <Uploader
+              action={(s) => {
+                setConfigs((configs) => {
+                  configs[uuid()] = load(s) as Config;
+                });
+              }}
+            />
           </Flex>
         </Flex>
       </Layout.Sider>

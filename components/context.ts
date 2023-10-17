@@ -23,9 +23,9 @@ import {
   Slices,
   Character,
 } from "../lib/data";
-import defaultConfig from "../templates/default.yaml";
 import defaultClassifier from "../templates/classifier.yaml";
 import { useLocation } from "react-router-dom";
+import { templates } from "../lib/template";
 
 export type Action =
   | InfoAction
@@ -63,6 +63,11 @@ type ElementSubAction =
       subtype: "root-selector";
       action: "add" | "remove";
       value: SieveName;
+    }
+  | {
+      subtype: "root-selector";
+      action: "replace";
+      value: SieveName[];
     }
   | {
       subtype: "phonetic-automapping";
@@ -119,12 +124,18 @@ export const configReducer = (config: Config, action: Action) => {
           }
           break;
         case "root-selector":
-          if (action.action === "add")
-            root.analysis.selector.push(action.value);
-          else
-            root.analysis.selector = root.analysis.selector.filter(
-              (x) => x !== action.value,
-            );
+          switch (action.action) {
+            case "add":
+              root.analysis.selector.push(action.value);
+              break;
+            case "remove":
+              root.analysis.selector = root.analysis.selector.filter(
+                (x) => x !== action.value,
+              );
+              break;
+            case "replace":
+              root.analysis.selector = action.value;
+          }
           break;
         case "phonetic-automapping":
           element.mapping = action.value;
@@ -152,7 +163,7 @@ const CompoundsContext = createContext(compounds as unknown as Compounds);
 const CharactersContext = createContext(characters as unknown as Characters);
 const SlicesContext = createContext(slices as unknown as Slices);
 export const FontContext = createContext(font as Record<string, string>);
-export const ConfigContext = createContext(defaultConfig as Config);
+export const ConfigContext = createContext(templates.basic.self as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
 export const CacheContext = createContext({} as ElementCache);

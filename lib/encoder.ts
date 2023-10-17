@@ -13,8 +13,8 @@ export const table: Record<
 };
 
 const satisfy = (condition: Condition, data: ElementResult) => {
-  const { key, operator, value } = condition;
-  const target = data[key];
+  const { label, operator, value } = condition;
+  const target = data[label];
   const fn = table[operator];
   return fn(target, value);
 };
@@ -30,17 +30,24 @@ const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
     }
   }
   return (character: string, data: ElementResult) => {
-    let node = 0;
+    let node: string | null = "s0";
     const codes = [] as string[];
-    while (encoder[node].children.length) {
-      for (const { to, conditions } of encoder[node].children) {
-        if (conditions.every((x) => satisfy(x, data))) {
-          const { key } = encoder[to];
-          const element = data[key]!;
-          const mapping = elementReverseLookup[key];
+    while (node) {
+      if (node.startsWith("s")) {
+        const index = parseInt(node.slice(1));
+        const { label, next } = encoder.sources[index];
+        const element = data[label]!;
+        const mapping = elementReverseLookup[label];
+        if (node !== "s0")
           codes.push(mapping === undefined ? element : mapping[element]);
-          node = to;
-          break;
+        node = next;
+      } else {
+        const index = parseInt(node.slice(1));
+        const condition = encoder.conditions[index];
+        if (satisfy(condition, data)) {
+          node = condition.positive;
+        } else {
+          node = condition.negative;
         }
       }
     }

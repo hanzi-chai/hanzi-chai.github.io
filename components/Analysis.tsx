@@ -12,6 +12,7 @@ import {
   Table,
   Typography,
 } from "antd";
+import { MenuOutlined } from "@ant-design/icons";
 
 import { Collapse } from "antd";
 import Char from "./Char";
@@ -28,6 +29,7 @@ import {
   useRoot,
   useComponents,
   useAll,
+  useDesign,
 } from "./context";
 import {
   ComponentResult,
@@ -47,6 +49,20 @@ import analyzers, { getPhonetic } from "../lib/pinyin";
 import { ColumnsType } from "antd/es/table";
 import { sieveMap } from "../lib/selector";
 import { EditorColumn, EditorRow, Select } from "./Utils";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const ResultSummary = ({
   componentName,
@@ -74,6 +90,44 @@ const exportResult = (result: Record<string, ComponentResult>) => {
   a.click();
 };
 
+const SortableItem = ({ sieve }: { sieve: SieveName }) => {
+  const design = useDesign();
+
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: sieve });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  return (
+    <Flex
+      key={sieve}
+      justify="space-evenly"
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      <Button>
+        <MenuOutlined />
+      </Button>
+      <Button>{sieve}</Button>
+      <Button
+        onClick={() => {
+          design({
+            subtype: "root-selector",
+            action: "remove",
+            value: sieve,
+          });
+        }}
+      >
+        删除
+      </Button>
+    </Flex>
+  );
+};
+
 const RootAnalysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
@@ -89,8 +143,7 @@ const RootAnalysis = () => {
   const rootConfig = useRoot();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const index = useIndex();
-  const dispatch = useContext(DispatchContext);
+  const design = useDesign();
 
   const makeSequenceFilter = (classifier: Classifier, sequence: string) => {
     return (x: string) => {
@@ -125,37 +178,39 @@ const RootAnalysis = () => {
     }),
   ];
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  function handleDragEnd(event: any) {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      const oldIndex = selector.indexOf(active.id);
+      const newIndex = selector.indexOf(over.id);
+      design({
+        subtype: "root-selector",
+        action: "replace",
+        value: arrayMove(selector, oldIndex, newIndex),
+      });
+    }
+  }
+
   return (
     <EditorRow>
       <EditorColumn span={8}>
         <Typography.Title level={2}>字形分析</Typography.Title>
         <Flex vertical gap="small">
-          {selector.map((sieve) => {
-            return (
-              <Flex key={sieve} justify="space-evenly">
-                <Select
-                  value={sieve}
-                  options={[...sieveMap.keys()].map((x) => ({
-                    value: x,
-                    label: x,
-                  }))}
-                />
-                <Button
-                  onClick={() => {
-                    dispatch({
-                      type: "element",
-                      index,
-                      subtype: "root-selector",
-                      action: "remove",
-                      value: sieve,
-                    });
-                  }}
-                >
-                  删除
-                </Button>
-              </Flex>
-            );
-          })}
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <SortableContext items={selector}>
+              {selector.map((sieve) => (
+                <SortableItem sieve={sieve} key={sieve} />
+              ))}
+            </SortableContext>
+          </DndContext>
           <Flex justify="center">
             <Dropdown
               menu={{
@@ -165,9 +220,7 @@ const RootAnalysis = () => {
                     key: sieve,
                     label: sieve,
                     onClick: () => {
-                      dispatch({
-                        type: "element",
-                        index: index,
+                      design({
                         subtype: "root-selector",
                         action: "add",
                         value: sieve,

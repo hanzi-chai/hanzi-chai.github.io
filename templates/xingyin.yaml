@@ -1,3 +1,7 @@
+version: "0.1"
+
+template: xingyin
+
 info:
   name: 形音码模板
   version: "0.1"
