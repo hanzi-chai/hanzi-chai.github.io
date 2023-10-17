@@ -3,17 +3,35 @@ import { Select, Button, Flex } from "antd";
 import { useDesign, useRoot } from "./context";
 
 const ElementAdder = ({ name }: { name?: string }) => {
-  const { alphabet } = useRoot();
+  const { alphabet, maxcodelen } = useRoot();
   const design = useDesign();
-  const [key, setKey] = useState(alphabet[0]);
+  const initialKeys = Array(maxcodelen).fill("");
+  initialKeys[0] = alphabet[0];
+  const [keys, setKeys] = useState(initialKeys);
+  const alphabetOptions = Array.from(alphabet).map((x) => ({
+    label: x,
+    value: x,
+  }));
+  const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
   return (
     <Flex justify="center" align="center" gap="small">
       <span>添加至</span>
-      <Select
-        value={key}
-        onChange={(event) => setKey(event)}
-        options={Array.from(alphabet).map((x) => ({ key: x, value: x }))}
-      />
+      {keys.map((key, index) => {
+        return (
+          <Select
+            key={index}
+            value={key}
+            onChange={(event) =>
+              setKeys((keys) =>
+                keys.map((v, i) => {
+                  return i === index ? event : v;
+                }),
+              )
+            }
+            options={index ? allOptions : alphabetOptions}
+          />
+        );
+      })}
       <Button
         type="primary"
         disabled={name === undefined}
@@ -23,7 +41,7 @@ const ElementAdder = ({ name }: { name?: string }) => {
             subtype: "generic-mapping",
             action: "add",
             key: name,
-            value: key,
+            value: keys.join(""),
           })
         }
       >

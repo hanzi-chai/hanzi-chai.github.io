@@ -31,6 +31,7 @@ elements:
   - type: 字根
     nodes: [字根 1, 字根 2, 字根 3]
     alphabet: qwertyuiopasdfghjklzxcvbnm
+    maxcodelen: 2
     analysis:
       selector:
         - 笔顺优先
@@ -271,6 +272,7 @@ elements:
       步中: m
   - type: 字音
     nodes: [首字母]
+    maxcodelen: 1
     alphabet: qwertyuiopasdfghjklzxcvbnm
 
 encoder:

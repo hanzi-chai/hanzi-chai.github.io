@@ -11,6 +11,7 @@ type Mapping = Record<string, string>;
 interface BaseConfig {
   type: string;
   alphabet: string;
+  maxcodelen: number;
 }
 
 interface RootConfig extends BaseConfig {
@@ -43,6 +44,7 @@ type ElementConfig = RootConfig | PhoneticConfig;
 interface Source {
   label: string;
   next: string | null;
+  length?: number;
 }
 
 interface Condition {

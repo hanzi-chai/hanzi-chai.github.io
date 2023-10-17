@@ -41,6 +41,7 @@ const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
       <Content wrap="wrap">
         {range.map((x) => (
           <Char
+            key={x}
             onClick={() => {
               x === name ? setName(undefined) : setName(x);
             }}

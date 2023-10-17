@@ -53,12 +53,15 @@ export const getDummyStroke = function (
   };
 };
 
+export type MappedInfo = { name: string; code: string };
+
 export const reverse = (alphabet: string, mapping: Mapping) => {
-  const data: Record<string, string[]> = Object.fromEntries(
+  const data: Record<string, MappedInfo[]> = Object.fromEntries(
     Array.from(alphabet).map((key) => [key, []]),
   );
-  for (const [root, key] of Object.entries(mapping)) {
-    data[key]?.push(root);
+  for (const [name, code] of Object.entries(mapping)) {
+    const [main] = [code[0]];
+    data[main].push({ name, code });
   }
   return data;
 };

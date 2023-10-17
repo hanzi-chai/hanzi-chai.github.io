@@ -54,6 +54,10 @@ type ElementSubAction =
       value: string;
     }
   | {
+      subtype: "generic-maxcodelen";
+      value: number;
+    }
+  | {
       subtype: "generic-mapping";
       action: "add" | "remove";
       key: string;
@@ -112,6 +116,9 @@ export const configReducer = (config: Config, action: Action) => {
       switch (action.subtype) {
         case "generic-alphabet":
           element.alphabet = action.value;
+          break;
+        case "generic-maxcodelen":
+          element.maxcodelen = action.value;
           break;
         case "generic-mapping":
           switch (action.action) {

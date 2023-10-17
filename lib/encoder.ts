@@ -35,11 +35,14 @@ const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
     while (node) {
       if (node.startsWith("s")) {
         const index = parseInt(node.slice(1));
-        const { label, next } = encoder.sources[index];
-        const element = data[label]!;
-        const mapping = elementReverseLookup[label];
-        if (node !== "s0")
-          codes.push(mapping === undefined ? element : mapping[element]);
+        const { label, next, length } = encoder.sources[index];
+        if (node !== "s0") {
+          const element = data[label]!;
+          const mapping = elementReverseLookup[label];
+          const elementcode =
+            mapping === undefined ? element : mapping[element];
+          codes.push(elementcode.slice(0, length || 1));
+        }
         node = next;
       } else {
         const index = parseInt(node.slice(1));

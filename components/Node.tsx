@@ -180,7 +180,7 @@ const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
     <>
       <ContextMenu id={id}>
         <SourceButton type={id === "s0" ? "primary" : "default"}>
-          {data.label}
+          {data.label + (data.length === undefined ? "" : ` (${data.length})`)}
         </SourceButton>
       </ContextMenu>
       {id !== "s0" && <Handle type="target" position={Position.Top} />}
