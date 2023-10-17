@@ -1,6 +1,13 @@
 import { Button, Dropdown } from "antd";
 import { useContext } from "react";
-import { Handle, NodeProps, Position, useReactFlow } from "reactflow";
+import {
+  Edge,
+  Handle,
+  Node,
+  NodeProps,
+  Position,
+  useReactFlow,
+} from "reactflow";
 import { ConfigContext } from "./context";
 import styled from "styled-components";
 import {
@@ -9,27 +16,31 @@ import {
   SubMenuType,
 } from "antd/es/menu/hooks/useItems";
 import {
-  ENode,
-  NodeData,
-  EEdge,
-  EdgeData,
+  SourceData,
   makeEdge,
   getLayoutedElements,
-  makeNode,
+  ConditionData,
+  makeSourceNode,
 } from "./graph";
 
-const NodeButton = styled(Button)`
+const SourceButton = styled(Button)`
   width: 64px;
   height: 32px;
   padding: 4px;
 `;
 
-const EncoderNode = ({ id, data }: NodeProps<NodeData>) => {
+const ConditionButton = styled(Button)`
+  width: 96px;
+  height: 32px;
+  padding: 4px;
+`;
+
+const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
   const { elements } = useContext(ConfigContext);
   const { setNodes, setEdges, getNodes, getEdges } = useReactFlow<
-    NodeData,
-    EdgeData
+    SourceData | ConditionData
   >();
+  const edges = getEdges();
   const allNodes = elements.map(({ nodes }) => nodes).flat();
   const updateNode: MenuItemGroupType = {
     key: "update",
@@ -52,7 +63,7 @@ const EncoderNode = ({ id, data }: NodeProps<NodeData>) => {
         },
       })),
   };
-  const setLayout = (newnodes: ENode[], newedges: EEdge[]) => {
+  const setLayout = (newnodes: Node[], newedges: Edge[]) => {
     const [lnodes, ledges] = getLayoutedElements(newnodes, newedges);
     setNodes(lnodes);
     setEdges(ledges);
@@ -60,20 +71,30 @@ const EncoderNode = ({ id, data }: NodeProps<NodeData>) => {
   const createNode: SubMenuType = {
     key: "create",
     label: "添加节点",
-    children: allNodes.map((key) => ({
-      key: "create" + key,
-      label: key,
+    disabled: edges.some((v) => v.source === id),
+    children: allNodes.map((label) => ({
+      key: "create" + label,
+      label: label,
       onClick: () => {
         const [nodes, edges] = [getNodes(), getEdges()];
         let newid = 0;
         for (const node of nodes) {
-          if (node.id !== newid.toString()) break;
+          if (node.id !== `s${newid}`) break;
           newid += 1;
         }
         const newnodes = nodes
-          .concat(makeNode(newid, key))
-          .sort((a, b) => parseInt(a.id) - parseInt(b.id));
-        const newedges = edges.concat(makeEdge(parseInt(id), newid, []));
+          .concat(makeSourceNode({ label }, `s${newid}`))
+          .sort((a, b) => {
+            const [typea, typeb] = [a.id[0], b.id[0]];
+            if (typea === "s" && typeb === "c") return -1;
+            if (typea === "c" && typeb === "s") return 1;
+            const [indexa, indexb] = [
+              parseInt(a.id.slice(1)),
+              parseInt(b.id.slice(1)),
+            ];
+            return indexa - indexb;
+          });
+        const newedges = edges.concat(makeEdge(id, `s${newid}`));
         setLayout(newnodes, newedges);
       },
     })),
@@ -90,19 +111,38 @@ const EncoderNode = ({ id, data }: NodeProps<NodeData>) => {
     },
   };
   const items: (MenuItemType | MenuItemGroupType)[] =
-    id === "0" ? [createNode] : [updateNode, createNode, deleteNode];
+    id === "s0" ? [createNode] : [updateNode, createNode, deleteNode];
 
   return (
     <>
       <Dropdown menu={{ items }} placement="bottom">
-        <NodeButton type={id === "0" ? "primary" : "default"}>
+        <SourceButton type={id === "s0" ? "primary" : "default"}>
           {data.label}
-        </NodeButton>
+        </SourceButton>
       </Dropdown>
-      {id !== "0" && <Handle type="target" position={Position.Top} />}
+      {id !== "s0" && <Handle type="target" position={Position.Top} />}
       <Handle type="source" position={Position.Bottom} />
     </>
   );
 };
 
-export default EncoderNode;
+const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
+  const { elements } = useContext(ConfigContext);
+  const { setNodes, setEdges, getNodes, getEdges } = useReactFlow<
+    SourceData | ConditionData
+  >();
+  const allNodes = elements.map(({ nodes }) => nodes).flat();
+
+  return (
+    <>
+      <ConditionButton type="dashed">
+        {data.label + ": " + data.operator}
+      </ConditionButton>
+      <Handle type="target" position={Position.Top} />
+      <Handle type="source" id="positive" position={Position.Left} />
+      <Handle type="source" id="negative" position={Position.Right} />
+    </>
+  );
+};
+
+export { SourceNode, ConditionNode };

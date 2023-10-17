@@ -9,21 +9,24 @@ import ReactFlow, {
   Controls,
   addEdge,
   Connection,
+  Node,
+  Edge,
 } from "reactflow";
 import { ConfigContext, DispatchContext, useAll } from "./context";
 
 import "reactflow/dist/style.css";
-import EncoderNode from "./EncoderNode";
-import { EncoderNode as IEncoderNode } from "../lib/config";
+import { SourceNode, ConditionNode } from "./Node";
+import { Condition, Config, Source } from "../lib/config";
 import EncoderEdge from "./EncoderEdge";
 import {
-  ENode,
-  NodeData,
-  makeNode,
-  EEdge,
-  EdgeData,
-  makeEdge,
+  SourceData,
+  SNode,
+  makeSourceNode,
+  ConditionData,
+  CNode,
+  makeConditionNode,
   getLayoutedElements,
+  makeEdge,
 } from "./graph";
 
 import "reactflow/dist/style.css";
@@ -32,36 +35,70 @@ const EncoderGraph = () => {
   const { fitView } = useReactFlow();
   const { elements, encoder } = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
-  const initialNodes: ENode[] = encoder.map(({ key }, i) => makeNode(i, key));
-  const initialEdges: EEdge[] = encoder
-    .map(({ children }, from) => {
-      return children.map(({ to, conditions }) => {
-        return makeEdge(from, to, conditions);
-      });
-    })
-    .flat();
+  const n1 = encoder.sources.map((data, index) =>
+    makeSourceNode(data, `s${index}`),
+  );
+  const n2 = encoder.conditions.map((data, index) =>
+    makeConditionNode(data, `c${index}`),
+  );
+  const initialNodes: Node[] = [...n1, ...n2];
+  const initialEdges: Edge[] = [];
+  for (const [index, { next }] of encoder.sources.entries()) {
+    if (next) {
+      initialEdges.push(makeEdge(`s${index}`, next));
+    }
+  }
+  for (const [index, { positive, negative }] of encoder.conditions.entries()) {
+    if (positive) {
+      initialEdges.push(makeEdge(`c${index}`, positive, "positive"));
+    }
+    if (negative) {
+      initialEdges.push(makeEdge(`c${index}`, negative, "negative"));
+    }
+  }
+  console.log(initialNodes, initialEdges);
   const [layoutNodes, layoutEdges] = getLayoutedElements(
     initialNodes,
     initialEdges,
   );
-  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(layoutNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>(layoutEdges);
-  const nodeTypes = useMemo(() => ({ encoder: EncoderNode }), []);
-  const edgeTypes = useMemo(() => ({ encoder: EncoderEdge }), []);
+  const [nodes, setNodes, onNodesChange] = useNodesState<
+    SourceData | ConditionData
+  >(layoutNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
+  const nodeTypes = useMemo(
+    () => ({ source: SourceNode, condition: ConditionNode }),
+    [],
+  );
+
   useEffect(() => {
-    const idmap = {} as Record<string, number>;
-    const newencoder: IEncoderNode[] = nodes.map(({ id, data }, index) => {
-      idmap[id] = index;
-      return { key: data.label, children: [] };
+    const idmap = {} as Record<string, string>;
+    const sources: Source[] = [];
+    const conditions: Condition[] = [];
+    let sourceCount = 0,
+      conditionCount = 0;
+    nodes.forEach(({ id, data }) => {
+      if ("operator" in data) {
+        idmap[id] = `c${conditionCount}`;
+        conditions.push({ ...data, positive: null, negative: null });
+        conditionCount += 1;
+      } else {
+        idmap[id] = `s${sourceCount}`;
+        sources.push({ ...data, next: null });
+        sourceCount += 1;
+      }
     });
-    edges.forEach(({ source, target, data }) => {
+    edges.forEach(({ source, target, label }) => {
       const [from, to] = [idmap[source], idmap[target]];
-      newencoder[from].children.push({
-        to,
-        conditions: data!,
-      });
+      const fromNumber = parseInt(from.slice(1));
+      if (label === undefined) {
+        sources[fromNumber].next = to;
+      } else if (label === "是") {
+        conditions[fromNumber].positive = to;
+      } else {
+        conditions[fromNumber].negative = to;
+      }
     });
-    dispatch({ type: "encoder", value: newencoder });
+    dispatch({ type: "encoder", value: { sources, conditions } });
   }, [nodes, edges, dispatch]);
   const onConnect = (connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
@@ -78,7 +115,7 @@ const EncoderGraph = () => {
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
+      // edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}

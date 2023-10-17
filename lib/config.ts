@@ -40,20 +40,17 @@ type EncoderResult = Record<string, string[]>;
 
 type ElementConfig = RootConfig | PhoneticConfig;
 
-interface EncoderNode {
-  key: string;
-  children: EncoderEdge[];
+interface Source {
+  label: string;
+  next: string | null;
 }
 
 interface Condition {
-  key: string;
+  label: string;
   operator: "是" | "不是" | "有" | "没有";
   value?: string;
-}
-
-interface EncoderEdge {
-  to: number;
-  conditions: Condition[];
+  positive: string | null;
+  negative: string | null;
 }
 
 interface Config {
@@ -71,7 +68,10 @@ interface Config {
     classifier: Classifier;
   };
   elements: ElementConfig[];
-  encoder: EncoderNode[];
+  encoder: {
+    sources: Source[];
+    conditions: Condition[];
+  };
 }
 
 export type { SieveName, Selector, Classifier, Mapping };
@@ -84,6 +84,6 @@ export type {
   PhoneticElement,
 };
 
-export type { EncoderNode, EncoderEdge, Condition };
+export type { Source, Condition };
 
 export type { ElementCache, ElementResult, EncoderResult };

@@ -10,7 +10,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import { useContext } from "react";
 import { ConfigContext } from "./context";
-import { EdgeData, NodeData } from "./graph";
+import { EdgeData, Source } from "./graph";
 import { table } from "../lib/encoder";
 import { Select } from "./Utils";
 
@@ -33,7 +33,7 @@ const ConditionEditor = ({
   conditions: EdgeData;
   id: string;
 }) => {
-  const { setEdges, getEdges } = useReactFlow<NodeData, EdgeData>();
+  const { setEdges, getEdges } = useReactFlow<Source, EdgeData>();
   const { elements } = useContext(ConfigContext);
   const allNodes = elements.map(({ nodes }) => nodes).flat();
   const update = (modify: (e: EdgeData) => EdgeData) =>
