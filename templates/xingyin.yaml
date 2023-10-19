@@ -29,7 +29,7 @@ data:
 
 elements:
   - type: 字根
-    nodes: [字根 1, 字根 2, 字根 3]
+    nodes: [根 1, 根 2, 根 3, 根 -1]
     alphabet: qwertyuiopasdfghjklzxcvbnm
     maxcodelen: 2
     analysis:
@@ -278,12 +278,12 @@ elements:
 encoder:
   sources:
     - { label: 开始, next: s1 }
-    - { label: "字根 1", next: c0 }
-    - { label: "字根 2", next: c1 }
-    - { label: "字根 3", next: s4 }
+    - { label: "根 1", next: c0 }
+    - { label: "根 2", next: c1 }
+    - { label: "根 -1", next: s4 }
     - { label: "首字母", next: null }
     - { label: "首字母", next: null }
     - { label: "首字母", next: null }
   conditions:
-    - { label: "字根 2", operator: "有", positive: s2, negative: s5 }
-    - { label: "字根 3", operator: "有", positive: s3, negative: s6 }
+    - { label: "根 2", operator: "有", positive: s2, negative: s5 }
+    - { label: "根 3", operator: "有", positive: s3, negative: s6 }

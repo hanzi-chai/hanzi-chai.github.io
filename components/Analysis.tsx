@@ -12,7 +12,6 @@ import {
   Table,
   Typography,
 } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
 
 import { Collapse } from "antd";
 import Char from "./Char";
@@ -49,20 +48,8 @@ import analyzers, { getPhonetic } from "../lib/pinyin";
 import { ColumnsType } from "antd/es/table";
 import { sieveMap } from "../lib/selector";
 import { EditorColumn, EditorRow, Select } from "./Utils";
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import Selector from "./Selector";
+import ElementPicker from "./ElementPicker";
 
 const ResultSummary = ({
   componentName,
@@ -90,44 +77,6 @@ const exportResult = (result: Record<string, ComponentResult>) => {
   a.click();
 };
 
-const SortableItem = ({ sieve }: { sieve: SieveName }) => {
-  const design = useDesign();
-
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: sieve });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-  return (
-    <Flex
-      key={sieve}
-      justify="space-evenly"
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-    >
-      <Button>
-        <MenuOutlined />
-      </Button>
-      <Button>{sieve}</Button>
-      <Button
-        onClick={() => {
-          design({
-            subtype: "root-selector",
-            action: "remove",
-            value: sieve,
-          });
-        }}
-      >
-        删除
-      </Button>
-    </Flex>
-  );
-};
-
 const RootAnalysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
@@ -143,7 +92,6 @@ const RootAnalysis = () => {
   const rootConfig = useRoot();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const design = useDesign();
 
   const makeSequenceFilter = (classifier: Classifier, sequence: string) => {
     return (x: string) => {
@@ -156,9 +104,6 @@ const RootAnalysis = () => {
     };
   };
 
-  const {
-    analysis: { selector },
-  } = useElement() as RootConfig;
   const filter = makeSequenceFilter(classifier, sequence);
   const displays = [
     Object.entries(componentResults)
@@ -178,66 +123,13 @@ const RootAnalysis = () => {
     }),
   ];
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  function handleDragEnd(event: any) {
-    const { active, over } = event;
-
-    if (active.id !== over.id) {
-      const oldIndex = selector.indexOf(active.id);
-      const newIndex = selector.indexOf(over.id);
-      design({
-        subtype: "root-selector",
-        action: "replace",
-        value: arrayMove(selector, oldIndex, newIndex),
-      });
-    }
-  }
-
   return (
     <EditorRow>
       <EditorColumn span={8}>
         <Typography.Title level={2}>字形分析</Typography.Title>
-        <Flex vertical gap="small">
-          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-            <SortableContext items={selector}>
-              {selector.map((sieve) => (
-                <SortableItem sieve={sieve} key={sieve} />
-              ))}
-            </SortableContext>
-          </DndContext>
-          <Flex justify="center">
-            <Dropdown
-              menu={{
-                items: ([...sieveMap.keys()] as SieveName[])
-                  .filter((x) => !selector.includes(x))
-                  .map((sieve) => ({
-                    key: sieve,
-                    label: sieve,
-                    onClick: () => {
-                      design({
-                        subtype: "root-selector",
-                        action: "add",
-                        value: sieve,
-                      });
-                    },
-                  })),
-              }}
-            >
-              <Button
-                type="primary"
-                disabled={selector.length === [...sieveMap.keys()].length}
-              >
-                添加
-              </Button>
-            </Dropdown>
-          </Flex>
-        </Flex>
+        <Selector />
+        <Typography.Title level={2}>字形取码</Typography.Title>
+        <ElementPicker />
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>

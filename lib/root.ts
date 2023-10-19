@@ -128,13 +128,9 @@ export interface CompoundResult {
   sequence: string[];
 }
 
-export const disassembleComponents = (
-  data: Config["data"],
-  config: RootConfig,
-) => {
-  const result = {} as Record<string, ComponentResult>;
+const getRootData = (data: Config["data"], config: RootConfig) => {
   const rootData = [] as Cache[];
-  const { components, slices, classifier } = data;
+  const { components, slices } = data;
   const { mapping } = config;
   const buildGlyph = (name: string) => {
     const { source, indices } = slices[name];
@@ -150,6 +146,17 @@ export const disassembleComponents = (
     const topology = findTopology(glyph);
     rootData.push({ glyph, topology, name: rootName });
   }
+  return rootData;
+};
+
+export const disassembleComponents = (
+  data: Config["data"],
+  config: RootConfig,
+  rootData?: Cache[],
+) => {
+  const { components, classifier } = data;
+  if (!rootData) rootData = getRootData(data, config);
+  const result = {} as Record<string, ComponentResult>;
   for (const [name, glyph] of Object.entries(components)) {
     const topology = findTopology(glyph);
     const cache = { name, topology, glyph };
@@ -180,35 +187,95 @@ export const disassembleCompounds = (
   return result;
 };
 
+interface Extra {
+  rootData: Record<string, { glyph: Glyph }>;
+}
+
+export interface ElementNode {
+  name: string;
+  fn: (rl: string[], data: Config["data"], extra: Extra) => string;
+  children: ElementNode[];
+}
+
+function getindex<T>(a: T[], i: number) {
+  return i >= 0 ? a[i + 1] : a[a.length + i];
+}
+
+const forwardStrokes: (i: number) => (j: number) => ElementNode =
+  (i) => (j) => ({
+    name: `根 ${i} 笔 ${j}`,
+    fn: (rl, data, extra) => {
+      const root = getindex(rl, i);
+      const { glyph } = extra?.rootData[root];
+      const { feature } = getindex(glyph, j);
+      return data.classifier[feature].toString();
+    },
+    children: [],
+  });
+
+const forwardRoots: (i: number) => ElementNode = (i) => ({
+  name: `根 ${i}`,
+  fn: (rl) => getindex(rl, i),
+  children: [
+    ...[1, 2, 3].map(forwardStrokes(i)),
+    ...[-1, -2, -3].map(forwardStrokes(i)),
+  ],
+});
+
+export const provideElements: ElementNode[] = [
+  ...[1, 2, 3, 4].map(forwardRoots),
+  ...[-1, -2, -3, -4].map(forwardRoots),
+];
+
+type ElementLookup = Record<string, ElementNode["fn"]>;
+
+function flatten(en: ElementNode): ElementLookup {
+  return Object.assign(
+    { [en.name]: en.fn },
+    ...en.children.map(flatten),
+  ) as ElementLookup;
+}
+
+const elementLookup = Object.assign({}, ...provideElements.map(flatten));
+
+const getRecord = (
+  nodes: string[],
+  rootlist: string[],
+  data: Config["data"],
+  extra: Extra,
+) => {
+  return Object.fromEntries(
+    nodes.map((name) => {
+      return [name, elementLookup[name](rootlist, data, extra)];
+    }),
+  );
+};
+
 export const getRoot = (
   list: string[],
   data: Config["data"],
-  root: RootConfig,
+  config: RootConfig,
 ) => {
-  const componentResults = disassembleComponents(data, root);
-  const compoundResults = disassembleCompounds(data, root, componentResults);
+  const rootData = getRootData(data, config);
+  const rootLookup = Object.fromEntries(
+    rootData.map(({ name, glyph }) => [name, { glyph }]),
+  );
+  const componentResults = disassembleComponents(data, config, rootData);
+  const compoundResults = disassembleCompounds(data, config, componentResults);
   const value = {} as ElementCache;
-  const semy = (l: string[]) =>
-    l.length <= 3 ? l : l.slice(0, 2).concat(l[l.length - 1]);
   for (const char of list) {
     let rootlist: string[] | undefined;
     if (componentResults[char]) {
       const c = componentResults[char];
-      rootlist = semy(c.best);
+      rootlist = c.best;
     } else if (compoundResults[char]) {
       const c = compoundResults[char];
-      rootlist = semy(c.sequence);
+      rootlist = c.sequence;
     } else {
       rootlist = undefined;
     }
     value[char] = rootlist
-      ? [
-          {
-            "字根 1": rootlist[0],
-            "字根 2": rootlist[1],
-            "字根 3": rootlist[2],
-          },
-        ]
+      ? [getRecord(config.nodes, rootlist, data, { rootData: rootLookup })]
       : [];
   }
   return value;

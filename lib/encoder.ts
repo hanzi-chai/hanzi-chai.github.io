@@ -1,4 +1,11 @@
-import { Condition, Config, ElementCache, ElementResult } from "./config";
+import {
+  Condition,
+  Config,
+  ElementCache,
+  ElementResult,
+  TotalCache,
+  TotalResult,
+} from "./config";
 import { getPhonetic } from "./pinyin";
 import { getRoot } from "./root";
 
@@ -29,7 +36,7 @@ const compile = (encoder: Config["encoder"], elements: Config["elements"]) => {
       elementReverseLookup[node] = mapping;
     }
   }
-  return (character: string, data: ElementResult) => {
+  return (data: TotalResult) => {
     let node: string | null = "s0";
     const codes = [] as string[];
     while (node) {
@@ -79,22 +86,22 @@ export const getCache = (
         ers.reduce(
           (prev, curr) =>
             prev.map((x) => curr.map((y) => Object.assign({}, x, y))).flat(),
-          [{}],
+          [{ char }],
         ),
       ];
     }),
-  );
+  ) as TotalCache;
 };
 
 const encode = (
   encoder: Config["encoder"],
   elements: Config["elements"],
   characters: string[],
-  cache: ElementCache,
+  cache: TotalCache,
 ) => {
   const func = compile(encoder, elements);
   const result = Object.fromEntries(
-    characters.map((char) => [char, cache[char].map((x) => func(char, x))]),
+    characters.map((char) => [char, cache[char].map(func)]),
   );
   return result;
 };

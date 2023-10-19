@@ -16,7 +16,7 @@ interface BaseConfig {
 
 interface RootConfig extends BaseConfig {
   type: "字根";
-  nodes: ("字根 1" | "字根 2" | "字根 3")[];
+  nodes: string[];
   analysis: {
     selector: Selector;
   };
@@ -32,10 +32,9 @@ interface PhoneticConfig extends BaseConfig {
 }
 
 type ElementResult = Record<string, string>;
-
-interface ElementCache {
-  [key: string]: ElementResult[];
-}
+type TotalResult = ElementResult & { char: string };
+type ElementCache = Record<string, ElementResult[]>;
+type TotalCache = Record<string, TotalResult[]>;
 
 type EncoderResult = Record<string, string[]>;
 
@@ -90,4 +89,10 @@ export type {
 
 export type { Source, Condition };
 
-export type { ElementCache, ElementResult, EncoderResult };
+export type {
+  ElementCache,
+  ElementResult,
+  TotalCache,
+  TotalResult,
+  EncoderResult,
+};
