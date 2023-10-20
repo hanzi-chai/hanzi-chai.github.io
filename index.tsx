@@ -11,8 +11,11 @@ import Data, {
   CharacterData,
   SliceData,
 } from "./components/Data";
-import Elements, { ElementConfig } from "./components/Elements";
-import Analysis, { AnalysisDispatch } from "./components/Analysis";
+import Elements, {
+  PhoneticElementConfig,
+  RootElementConfig,
+} from "./components/Elements";
+import Analysis from "./components/Analysis";
 import Encoder from "./components/Encoder";
 import Classifier from "./components/Classifier";
 import { ConfigProvider } from "antd";
@@ -53,18 +56,12 @@ const router = createBrowserRouter([
       {
         path: "element",
         element: <Elements />,
-        children: [{ path: ":index", element: <ElementConfig /> }],
-      },
-      {
-        path: "analysis",
-        element: <Analysis />,
         children: [
-          {
-            path: ":index",
-            element: <AnalysisDispatch />,
-          },
+          { path: "form", element: <RootElementConfig /> },
+          { path: "pronunciation", element: <PhoneticElementConfig /> },
         ],
       },
+      { path: "analysis", element: <Analysis /> },
       { path: "encode", element: <Encoder /> },
     ],
   },

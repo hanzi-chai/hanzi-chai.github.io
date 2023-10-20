@@ -1,4 +1,7 @@
 import { Components, Compounds, Characters, Slices } from "./data";
+import { CodableObject } from "./element";
+import { Op } from "./encoder";
+import { ComponentResult, CompoundResult } from "./form";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
@@ -9,46 +12,39 @@ type Classifier = Record<string, number>;
 type Mapping = Record<string, string>;
 
 interface BaseConfig {
-  type: string;
   alphabet: string;
   maxcodelen: number;
+  mapping: Mapping;
 }
 
-interface RootConfig extends BaseConfig {
-  type: "字根";
-  nodes: string[];
+interface FormConfig extends BaseConfig {
   analysis: {
     selector: Selector;
   };
-  mapping: Mapping;
 }
 
-type PhoneticElement = "首字母" | "末字母" | "声" | "韵" | "调";
+interface PronunciationConfig extends BaseConfig {}
 
-interface PhoneticConfig extends BaseConfig {
-  type: "字音";
-  nodes: [PhoneticElement];
-  mapping: Mapping;
-}
-
-type ElementResult = Record<string, string>;
-type TotalResult = ElementResult & { char: string };
-type ElementCache = Record<string, ElementResult[]>;
-type TotalCache = Record<string, TotalResult[]>;
+type Metadata = { char: string; pinyin: string };
+type ComponentTotalResult = ComponentResult & Metadata;
+type CompoundTotalResult = CompoundResult & Metadata;
+type TotalResult = ComponentTotalResult | CompoundTotalResult;
+type TotalCache = Record<
+  string,
+  ComponentTotalResult[] | CompoundTotalResult[]
+>;
 
 type EncoderResult = Record<string, string[]>;
 
-type ElementConfig = RootConfig | PhoneticConfig;
-
 interface Source {
-  label: string;
-  next: string | null;
+  object: CodableObject;
   length?: number;
+  next: string | null;
 }
 
 interface Condition {
-  label: string;
-  operator: "是" | "不是" | "有" | "没有";
+  object: CodableObject;
+  operator: Op;
   value?: string;
   positive: string | null;
   negative: string | null;
@@ -70,29 +66,18 @@ interface Config {
     slices: Slices;
     classifier: Classifier;
   };
-  elements: ElementConfig[];
+  form: FormConfig;
+  pronunciation: PronunciationConfig;
   encoder: {
-    sources: Source[];
-    conditions: Condition[];
+    sources: Record<string, Source>;
+    conditions: Record<string, Condition>;
   };
 }
 
 export type { SieveName, Selector, Classifier, Mapping };
 
-export type {
-  Config,
-  ElementConfig,
-  RootConfig,
-  PhoneticConfig,
-  PhoneticElement,
-};
+export type { Config, FormConfig, PronunciationConfig };
 
 export type { Source, Condition };
 
-export type {
-  ElementCache,
-  ElementResult,
-  TotalCache,
-  TotalResult,
-  EncoderResult,
-};
+export type { TotalCache, TotalResult, EncoderResult };

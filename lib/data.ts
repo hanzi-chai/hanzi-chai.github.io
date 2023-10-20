@@ -49,7 +49,7 @@ interface RenderedStroke {
 type Glyph = Stroke[];
 type RenderedGlyph = RenderedStroke[];
 
-type Operand =
+type Operator =
   | "⿰"
   | "⿱"
   | "⿲"
@@ -65,7 +65,7 @@ type Operand =
   | "〾";
 
 interface Compound {
-  operator: Operand;
+  operator: Operator;
   operandList: [string, string];
   mix?: number;
 }
@@ -84,6 +84,15 @@ type Slices = Record<string, Alias>;
 type Alias = { source: string; indices: number[] };
 
 export type { N1, N2, N3, N6 };
-export type { Point, Draw, Stroke, Glyph, Compound, Operand, Alias, Character };
+export type {
+  Point,
+  Draw,
+  Stroke,
+  Glyph,
+  Compound,
+  Operator,
+  Alias,
+  Character,
+};
 export type { Components, Compounds, Characters, Slices };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

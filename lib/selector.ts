@@ -1,4 +1,4 @@
-import { Cache, SchemeWithData } from "./root";
+import { Cache, SchemeWithData } from "./form";
 import { SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import { Relation } from "./topology";

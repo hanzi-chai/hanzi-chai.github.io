@@ -1,5 +1,5 @@
 import { isEqual } from "underscore";
-import { Cache } from "./root";
+import { Cache } from "./form";
 import { Glyph } from "./data";
 import findTopology from "./topology";
 

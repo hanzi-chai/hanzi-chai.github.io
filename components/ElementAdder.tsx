@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Select, Button, Flex } from "antd";
-import { useDesign, useRoot } from "./context";
+import { useDesign, useGeneric, useRoot } from "./context";
 
 const ElementAdder = ({ name }: { name?: string }) => {
-  const { alphabet, maxcodelen } = useRoot();
+  const { alphabet, maxcodelen } = useGeneric();
   const design = useDesign();
   const initialKeys = Array(maxcodelen).fill("");
   initialKeys[0] = alphabet[0];

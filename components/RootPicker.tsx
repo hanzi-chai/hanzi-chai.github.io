@@ -12,7 +12,6 @@ const RootPicker = () => {
   );
   return (
     <>
-      <Typography.Title level={2}>来源</Typography.Title>
       {mode === "compound" ? (
         <Input
           value={sequence}

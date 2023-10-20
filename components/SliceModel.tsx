@@ -1,4 +1,4 @@
-import { makeSequenceFilter2 } from "../lib/root";
+import { makeSequenceFilter2 } from "../lib/form";
 import { Select } from "./Utils";
 import { useModify, useComponents, useSlices, useClassifier } from "./context";
 import { Checkbox, Flex, Form } from "antd";

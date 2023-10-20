@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateSchemes } from "./root";
+import { generateSchemes } from "./form";
 
 describe("generate schemes", () => {
   it("works for a simple case", () => {

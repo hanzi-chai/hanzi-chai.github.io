@@ -34,7 +34,7 @@ const filtermap: Record<
 
 const Encoder = () => {
   const data = useAll();
-  const { elements, encoder } = useContext(ConfigContext);
+  const { form, pronunciation, encoder } = useContext(ConfigContext);
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>({});
@@ -112,8 +112,16 @@ const Encoder = () => {
             <Button
               type="primary"
               onClick={() => {
-                const cache = getCache(list, elements, data);
-                const rawresult = encode(encoder, elements, list, cache);
+                const [cache, extra] = getCache(list, form, data);
+                const rawresult = encode(
+                  encoder,
+                  form,
+                  pronunciation,
+                  list,
+                  cache,
+                  data,
+                  extra,
+                );
                 const filtered = Object.fromEntries(
                   Object.entries(rawresult).filter(([x, v]) => v.length > 0),
                 );

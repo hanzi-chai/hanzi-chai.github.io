@@ -1,11 +1,5 @@
-import {
-  Classifier,
-  Config,
-  ElementCache,
-  ElementResult,
-  RootConfig,
-} from "./config";
-import { Glyph } from "./data";
+import { Classifier, Config, FormConfig, TotalResult } from "./config";
+import { Glyph, Operator } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -68,7 +62,7 @@ export interface Cache {
 export const getComponentScheme = (
   component: Cache,
   rootData: Cache[],
-  config: RootConfig,
+  config: FormConfig,
   classifier: Classifier,
 ) => {
   const {
@@ -76,7 +70,12 @@ export const getComponentScheme = (
     mapping,
   } = config;
   if (mapping[component.name])
-    return { best: [component.name], map: {}, schemes: [] };
+    return {
+      sequence: [component.name],
+      all: [component.name],
+      map: {},
+      schemes: [],
+    };
   const rootMap = new Map<number, string>(
     component.glyph.map((stroke, index) => {
       const binary = 1 << (component.glyph.length - 1 - index);
@@ -95,8 +94,10 @@ export const getComponentScheme = (
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
   const schemeList = generateSchemes(component.glyph.length, roots);
   const [bestScheme, schemeData] = select(selector, component, schemeList);
+  const sequence = bestScheme.map((n) => rootMap.get(n)!);
   return {
-    best: bestScheme.map((n) => rootMap.get(n)!),
+    sequence,
+    all: sequence,
     map: reverseRootMap,
     schemes: [...schemeData.values()].map((x) => ({
       ...x,
@@ -119,16 +120,23 @@ export interface SchemeWithData {
 }
 
 export interface ComponentResult {
-  best: string[];
+  sequence: string[];
+  all: string[];
   map: Record<string, number[][]>;
   schemes: SchemeWithData[];
 }
 
-export interface CompoundResult {
-  sequence: string[];
+interface SequenceTree {
+  operator: Operator;
+  operandList: [string[] | SequenceTree, string[] | SequenceTree];
 }
 
-const getRootData = (data: Config["data"], config: RootConfig) => {
+export interface CompoundResult {
+  sequence: string[];
+  all: string[] | SequenceTree;
+}
+
+const getRootData = (data: Config["data"], config: FormConfig) => {
   const rootData = [] as Cache[];
   const { components, slices } = data;
   const { mapping } = config;
@@ -151,7 +159,7 @@ const getRootData = (data: Config["data"], config: RootConfig) => {
 
 export const disassembleComponents = (
   data: Config["data"],
-  config: RootConfig,
+  config: FormConfig,
   rootData?: Cache[],
 ) => {
   const { components, classifier } = data;
@@ -167,94 +175,40 @@ export const disassembleComponents = (
 
 export const disassembleCompounds = (
   data: Config["data"],
-  config: RootConfig,
+  config: FormConfig,
   prev: Record<string, ComponentResult>,
 ) => {
   const { mapping } = config;
   const { compounds } = data;
   const result = {} as Record<string, CompoundResult>;
-  const getResult = (s: string) =>
-    mapping[s] ? [s] : prev[s] ? prev[s].best : result[s]?.sequence;
+  const getResult = (s: string) => (prev[s] ? prev[s] : result[s]);
   for (const [name, compound] of Object.entries(compounds)) {
-    const [c1, c2] = compound.operandList;
+    if (mapping[name]) {
+      // 复合体本身是一个字根
+      result[name] = { sequence: [name], all: [name] };
+      continue;
+    }
+    const {
+      operator,
+      operandList: [c1, c2],
+    } = compound;
     const [r1, r2] = [getResult(c1), getResult(c2)];
     if (r1 !== undefined && r2 !== undefined) {
-      result[name] = { sequence: getResult(c1).concat(getResult(c2)) };
+      result[name] = {
+        sequence: r1.sequence.concat(r2.sequence),
+        all: { operator, operandList: [r1.all, r2.all] },
+      };
     } else {
-      // console.log(name, c1, c2);
+      console.error(name, c1, c2);
     }
   }
   return result;
 };
 
-interface Extra {
-  rootData: Record<string, { glyph: Glyph }>;
-}
-
-export interface ElementNode {
-  name: string;
-  fn: (rl: string[], data: Config["data"], extra: Extra) => string;
-  children: ElementNode[];
-}
-
-function getindex<T>(a: T[], i: number) {
-  return i >= 0 ? a[i + 1] : a[a.length + i];
-}
-
-const forwardStrokes: (i: number) => (j: number) => ElementNode =
-  (i) => (j) => ({
-    name: `根 ${i} 笔 ${j}`,
-    fn: (rl, data, extra) => {
-      const root = getindex(rl, i);
-      const { glyph } = extra?.rootData[root];
-      const { feature } = getindex(glyph, j);
-      return data.classifier[feature].toString();
-    },
-    children: [],
-  });
-
-const forwardRoots: (i: number) => ElementNode = (i) => ({
-  name: `根 ${i}`,
-  fn: (rl) => getindex(rl, i),
-  children: [
-    ...[1, 2, 3].map(forwardStrokes(i)),
-    ...[-1, -2, -3].map(forwardStrokes(i)),
-  ],
-});
-
-export const provideElements: ElementNode[] = [
-  ...[1, 2, 3, 4].map(forwardRoots),
-  ...[-1, -2, -3, -4].map(forwardRoots),
-];
-
-type ElementLookup = Record<string, ElementNode["fn"]>;
-
-function flatten(en: ElementNode): ElementLookup {
-  return Object.assign(
-    { [en.name]: en.fn },
-    ...en.children.map(flatten),
-  ) as ElementLookup;
-}
-
-const elementLookup = Object.assign({}, ...provideElements.map(flatten));
-
-const getRecord = (
-  nodes: string[],
-  rootlist: string[],
-  data: Config["data"],
-  extra: Extra,
-) => {
-  return Object.fromEntries(
-    nodes.map((name) => {
-      return [name, elementLookup[name](rootlist, data, extra)];
-    }),
-  );
-};
-
-export const getRoot = (
+export const getForm = (
   list: string[],
   data: Config["data"],
-  config: RootConfig,
+  config: FormConfig,
 ) => {
   const rootData = getRootData(data, config);
   const rootLookup = Object.fromEntries(
@@ -262,21 +216,14 @@ export const getRoot = (
   );
   const componentResults = disassembleComponents(data, config, rootData);
   const compoundResults = disassembleCompounds(data, config, componentResults);
-  const value = {} as ElementCache;
-  for (const char of list) {
-    let rootlist: string[] | undefined;
-    if (componentResults[char]) {
-      const c = componentResults[char];
-      rootlist = c.best;
-    } else if (compoundResults[char]) {
-      const c = compoundResults[char];
-      rootlist = c.sequence;
-    } else {
-      rootlist = undefined;
-    }
-    value[char] = rootlist
-      ? [getRecord(config.nodes, rootlist, data, { rootData: rootLookup })]
-      : [];
-  }
-  return value;
+  const value = Object.fromEntries(
+    list.map((char) => {
+      const result = componentResults[char] || compoundResults[char];
+      // 这里只处理一种情况，未来可以返回多个拆分
+      return result === undefined
+        ? [char, []]
+        : [char, [result] as ComponentResult[] | CompoundResult[]];
+    }),
+  );
+  return [value, { rootData: rootLookup }] as const;
 };

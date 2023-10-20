@@ -6,7 +6,7 @@ export type SourceData = Omit<Source, "next">;
 
 export type SNode = Node<SourceData>;
 
-export const makeSourceNode = (data: SourceData, id: string) => {
+export const makeSourceNode = function (data: SourceData, id: string): SNode {
   return {
     type: "source",
     width: 64,
@@ -14,6 +14,7 @@ export const makeSourceNode = (data: SourceData, id: string) => {
     id,
     data,
     position: { x: 0, y: 0 },
+    selectable: id !== "s0",
   };
 };
 

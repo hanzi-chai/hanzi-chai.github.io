@@ -37,7 +37,7 @@ import {
   useModify,
   useSlices,
 } from "./context";
-import { makeSequenceFilter, makeSequenceFilter2 } from "../lib/root";
+import { makeSequenceFilter, makeSequenceFilter2 } from "../lib/form";
 import styled from "styled-components";
 import { Glyph } from "../lib/data";
 

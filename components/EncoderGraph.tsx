@@ -4,6 +4,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   useReactFlow,
+  useOnSelectionChange,
   Background,
   BackgroundVariant,
   Controls,
@@ -11,6 +12,7 @@ import ReactFlow, {
   Connection,
   Node,
   Edge,
+  Panel,
 } from "reactflow";
 import { ConfigContext, DispatchContext, useAll } from "./context";
 
@@ -29,30 +31,33 @@ import {
 } from "./graph";
 
 import "reactflow/dist/style.css";
+import DetailEditor from "./DetailEditor";
 
 const EncoderGraph = () => {
-  const { fitView } = useReactFlow();
-  const { elements, encoder } = useContext(ConfigContext);
+  const { fitView, getNode } = useReactFlow();
+  const {
+    encoder: { sources, conditions },
+  } = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
-  const n1 = encoder.sources.map((data, index) =>
-    makeSourceNode(data, `s${index}`),
+  const n1 = Object.entries(sources).map(([id, data]) =>
+    makeSourceNode(data, id),
   );
-  const n2 = encoder.conditions.map((data, index) =>
-    makeConditionNode(data, `c${index}`),
+  const n2 = Object.entries(conditions).map(([id, data]) =>
+    makeConditionNode(data, id),
   );
   const initialNodes: Node[] = [...n1, ...n2];
   const initialEdges: Edge[] = [];
-  for (const [index, { next }] of encoder.sources.entries()) {
+  for (const [id, { next }] of Object.entries(sources)) {
     if (next) {
-      initialEdges.push(makeEdge(`s${index}`, next));
+      initialEdges.push(makeEdge(id, next));
     }
   }
-  for (const [index, { positive, negative }] of encoder.conditions.entries()) {
+  for (const [id, { positive, negative }] of Object.entries(conditions)) {
     if (positive) {
-      initialEdges.push(makeEdge(`c${index}`, positive, "positive"));
+      initialEdges.push(makeEdge(id, positive, "positive"));
     }
     if (negative) {
-      initialEdges.push(makeEdge(`c${index}`, negative, "negative"));
+      initialEdges.push(makeEdge(id, negative, "negative"));
     }
   }
   const [layoutNodes, layoutEdges] = getLayoutedElements(
@@ -67,33 +72,37 @@ const EncoderGraph = () => {
     () => ({ source: SourceNode, condition: ConditionNode }),
     [],
   );
+  const [selected, setSelected] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    console.log(nodes);
     const idmap = {} as Record<string, string>;
-    const sources: Source[] = [];
-    const conditions: Condition[] = [];
+    const sources: Record<string, Source> = {};
+    const conditions: Record<string, Condition> = {};
     let sourceCount = 0,
-      conditionCount = 0;
+      conditionCount = 0,
+      newid: string;
     nodes.forEach(({ id, data }) => {
       if ("operator" in data) {
-        idmap[id] = `c${conditionCount}`;
-        conditions.push({ ...data, positive: null, negative: null });
+        newid = `c${conditionCount}`;
+        idmap[id] = newid;
+        conditions[newid] = { ...data, positive: null, negative: null };
         conditionCount += 1;
       } else {
-        idmap[id] = `s${sourceCount}`;
-        sources.push({ ...data, next: null });
+        newid = `s${sourceCount}`;
+        idmap[id] = newid;
+        sources[newid] = { ...data, next: null };
         sourceCount += 1;
       }
     });
     edges.forEach(({ source, target, label }) => {
       const [from, to] = [idmap[source], idmap[target]];
-      const fromNumber = parseInt(from.slice(1));
       if (label === undefined) {
-        sources[fromNumber].next = to;
+        sources[from].next = to;
       } else if (label === "是") {
-        conditions[fromNumber].positive = to;
+        conditions[from].positive = to;
       } else {
-        conditions[fromNumber].negative = to;
+        conditions[from].negative = to;
       }
     });
     dispatch({ type: "encoder", value: { sources, conditions } });
@@ -113,15 +122,20 @@ const EncoderGraph = () => {
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
-      // edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onSelectionChange={({ nodes, edges }) => {
+        nodes[0] && setSelected(nodes[0].id);
+      }}
+      onNodesDelete={() => setSelected(undefined)}
       onConnect={onConnect}
+      onPaneClick={() => setSelected(undefined)}
       nodeDragThreshold={10000}
       fitView
     >
       <Background variant={BackgroundVariant.Cross} gap={32} />
       <Controls />
+      {selected && getNode(selected) && <DetailEditor selected={selected} />}
     </ReactFlow>
   );
 };

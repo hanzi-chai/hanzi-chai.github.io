@@ -1,9 +1,9 @@
 import { Empty, Form, Typography } from "antd";
-import { Compound, Operand } from "../lib/data";
+import { Compound, Operator } from "../lib/data";
 import { useComponents, useCompounds, useModify } from "./context";
 import { NumberInput, Select } from "./Utils";
 
-const ideos: Operand[] = [
+const ideos: Operator[] = [
   "⿰",
   "⿱",
   "⿲",

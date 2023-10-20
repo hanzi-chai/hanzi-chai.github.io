@@ -9,7 +9,7 @@ import {
 import Char from "./Char";
 import { ConfigProvider, Flex, Pagination } from "antd";
 import { Glyph } from "../lib/data";
-import { makeSequenceFilter } from "../lib/root";
+import { makeSequenceFilter } from "../lib/form";
 
 const Content = styled(Flex)`
   padding: 8px;

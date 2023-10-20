@@ -18,38 +18,16 @@ import Char from "./Char";
 import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
-import {
-  ConfigContext,
-  DispatchContext,
-  useClassifier,
-  useElement,
-  useIndex,
-  usePhonetic,
-  useRoot,
-  useComponents,
-  useAll,
-  useDesign,
-} from "./context";
+import { useClassifier, useRoot, useComponents, useAll } from "./context";
 import {
   ComponentResult,
   CompoundResult,
   disassembleComponents,
   disassembleCompounds,
-} from "../lib/root";
-import {
-  Classifier,
-  ElementCache,
-  ElementResult,
-  RootConfig,
-  SieveName,
-} from "../lib/config";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import analyzers, { getPhonetic } from "../lib/pinyin";
-import { ColumnsType } from "antd/es/table";
-import { sieveMap } from "../lib/selector";
+} from "../lib/form";
+import { Classifier } from "../lib/config";
 import { EditorColumn, EditorRow, Select } from "./Utils";
 import Selector from "./Selector";
-import ElementPicker from "./ElementPicker";
 
 const ResultSummary = ({
   componentName,
@@ -77,7 +55,7 @@ const exportResult = (result: Record<string, ComponentResult>) => {
   a.click();
 };
 
-const RootAnalysis = () => {
+const Analysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
   const [componentResults, setComponentResult] = useState(
@@ -111,7 +89,9 @@ const RootAnalysis = () => {
       .map(([key, res]) => {
         return {
           key,
-          label: <ResultSummary componentName={key} rootSeries={res.best} />,
+          label: (
+            <ResultSummary componentName={key} rootSeries={res.sequence} />
+          ),
           children: <ResultDetail data={res.schemes} map={res.map} />,
         };
       }),
@@ -128,8 +108,6 @@ const RootAnalysis = () => {
       <EditorColumn span={8}>
         <Typography.Title level={2}>字形分析</Typography.Title>
         <Selector />
-        <Typography.Title level={2}>字形取码</Typography.Title>
-        <ElementPicker />
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>
@@ -185,108 +163,6 @@ const RootAnalysis = () => {
         )}
       </EditorColumn>
     </EditorRow>
-  );
-};
-
-const PhoneticAnalysis = () => {
-  const phonetic = usePhonetic();
-  const data = useAll();
-  const [result, setResult] = useState<ElementCache>({});
-  const columns: ColumnsType<{ char: string }> = [
-    {
-      title: "汉字",
-      dataIndex: "char",
-      key: "char",
-    },
-  ].concat(
-    phonetic.nodes.map((x) => ({
-      title: x,
-      dataIndex: x,
-      key: x,
-    })),
-  );
-
-  return (
-    <EditorRow>
-      <EditorColumn span={8}>
-        <Typography.Title level={2}>字音分析</Typography.Title>
-        <Select
-          value={phonetic.nodes[0]}
-          options={Object.keys(analyzers).map((x) => ({
-            value: x,
-            label: x,
-          }))}
-        />
-      </EditorColumn>
-      <EditorColumn span={16}>
-        <Typography.Title level={2}>分析结果</Typography.Title>
-        <Flex>
-          <Button
-            type="primary"
-            onClick={() => {
-              const value = getPhonetic(
-                Object.keys(data.characters),
-                data,
-                phonetic,
-              );
-              setResult(value);
-              // write({ index, value });
-            }}
-          >
-            计算
-          </Button>
-        </Flex>
-        <Table
-          columns={columns}
-          dataSource={Object.entries(result).map(([k, v]) => ({
-            key: k,
-            char: k,
-            ...v,
-          }))}
-          pagination={{ pageSize: 50, hideOnSinglePage: true }}
-          size="small"
-        />
-      </EditorColumn>
-    </EditorRow>
-  );
-};
-
-const AnalysisDispatch = () => {
-  const element = useElement();
-  if (element === undefined) return <></>;
-  switch (element.type) {
-    case "字根":
-      return <RootAnalysis />;
-    case "字音":
-      return <PhoneticAnalysis />;
-  }
-};
-
-export { AnalysisDispatch };
-
-const Analysis = () => {
-  const { elements } = useContext(ConfigContext);
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const index = parseInt(pathname.split("/")[3] || "-1");
-  return (
-    <Layout style={{ flex: 1 }}>
-      <Layout.Sider theme="light">
-        <Menu
-          items={elements.map(({ type }, index) => ({
-            key: index.toString(),
-            label: `元素 ${index}: ${type}`,
-          }))}
-          selectedKeys={[index.toString()]}
-          onClick={(e) => {
-            navigate(e.key);
-          }}
-        />
-      </Layout.Sider>
-      <div style={{ padding: "0 32px", height: "100%", flex: 1 }}>
-        <Outlet />
-      </div>
-    </Layout>
   );
 };
 

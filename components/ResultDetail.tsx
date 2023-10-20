@@ -1,7 +1,7 @@
 import { Space, Table } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Root from "./Root";
-import { SchemeWithData } from "../lib/root";
+import { SchemeWithData } from "../lib/form";
 import { useRoot } from "./context";
 import { Selector } from "../lib/config";
 import { sieveMap } from "../lib/selector";

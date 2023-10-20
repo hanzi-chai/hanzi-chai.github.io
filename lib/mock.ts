@@ -3,7 +3,7 @@ import compounds from "../data/compounds.json";
 import { Components, Compounds } from "./data";
 import findTopology from "./topology";
 import xingyin from "../templates/xingyin.yaml";
-import { Config, RootConfig } from "./config";
+import { Config, FormConfig } from "./config";
 
 export const getComponents = () => {
   const w = components as unknown as Components;
@@ -23,5 +23,5 @@ export const buildCache = (name: string) => {
 };
 
 export const useXingyin = () => {
-  return (xingyin as Config).elements[0] as RootConfig;
+  return (xingyin as Config).form;
 };

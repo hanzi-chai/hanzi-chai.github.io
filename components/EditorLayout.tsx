@@ -15,15 +15,8 @@ import {
   CaretLeftFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import {
-  CacheContext,
-  ConfigContext,
-  DispatchContext,
-  WriteContext,
-  cacheReducer,
-  configReducer,
-} from "./context";
-import { Config, ElementCache } from "../lib/config";
+import { ConfigContext, DispatchContext, configReducer } from "./context";
+import { Config } from "../lib/config";
 import { Action } from "./context";
 import { dump, load } from "js-yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -61,8 +54,7 @@ const items: MenuProps["items"] = [
 
 const defaultChildren: Record<string, string> = {
   data: "/components",
-  element: "/0",
-  analysis: "/0",
+  element: "/form",
 };
 
 const exportFile = (config: Config) => {
@@ -140,22 +132,17 @@ const Contextualized = () => {
   const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
     return JSON.parse(localStorage.getItem(id)!) as Config;
   });
-  const [cache, write] = useReducer(cacheReducer, {} as ElementCache);
 
   useEffect(() => {
     localStorage.setItem(id, JSON.stringify(config));
   }, [config, id]);
 
   return (
-    <CacheContext.Provider value={cache}>
-      <WriteContext.Provider value={write}>
-        <ConfigContext.Provider value={config}>
-          <DispatchContext.Provider value={dispatch}>
-            <EditorLayout />
-          </DispatchContext.Provider>
-        </ConfigContext.Provider>
-      </WriteContext.Provider>
-    </CacheContext.Provider>
+    <ConfigContext.Provider value={config}>
+      <DispatchContext.Provider value={dispatch}>
+        <EditorLayout />
+      </DispatchContext.Provider>
+    </ConfigContext.Provider>
   );
 };
 

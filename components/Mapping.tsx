@@ -13,7 +13,7 @@ import { useContext } from "react";
 import {
   DispatchContext,
   useDesign,
-  useElement,
+  useGeneric,
   useIndex,
   useRoot,
 } from "./context";
@@ -25,7 +25,7 @@ import { Select as AntdSelect } from "antd";
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const design = useDesign();
-  const { alphabet, maxcodelen } = useRoot();
+  const { alphabet, maxcodelen } = useGeneric();
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: x,
@@ -80,7 +80,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
 };
 
 const Mapping = () => {
-  const { mapping, alphabet, maxcodelen } = useElement();
+  const { mapping, alphabet, maxcodelen } = useGeneric();
   const design = useDesign();
   const reversed = reverse(alphabet, mapping!);
   return (

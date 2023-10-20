@@ -1,13 +1,5 @@
 import { Dispatch, createContext, useContext } from "react";
-import {
-  Classifier,
-  Config,
-  ElementCache,
-  Mapping,
-  PhoneticConfig,
-  RootConfig,
-  SieveName,
-} from "../lib/config";
+import { Classifier, Config, Mapping, SieveName } from "../lib/config";
 import components from "../data/components.json";
 import compounds from "../data/compounds.json";
 import characters from "../data/characters.json";
@@ -45,7 +37,7 @@ type LoadAction = {
 };
 type ElementAction = {
   type: "element";
-  index: number;
+  index: "form" | "pronunciation";
 } & ElementSubAction;
 
 type ElementSubAction =
@@ -97,8 +89,8 @@ type EncoderAction = { type: "encoder"; value: Config["encoder"] };
 export const configReducer = (config: Config, action: Action) => {
   const { type, value } = action;
   const { index } = action as ElementAction;
-  const element = config.elements[index];
-  const root = element as RootConfig;
+  const element = index === "form" ? config.form : config.pronunciation;
+  const root = config.form;
   switch (type) {
     case "load":
       config = action.value;
@@ -156,15 +148,6 @@ export const configReducer = (config: Config, action: Action) => {
   return config;
 };
 
-interface CacheAction {
-  index: number;
-  value: ElementCache;
-}
-
-export const cacheReducer = (cache: ElementCache, action: CacheAction) => {
-  return { ...cache, [action.index]: action.value };
-};
-
 const ComponentsContext = createContext(components as unknown as Components);
 const CompoundsContext = createContext(compounds as unknown as Compounds);
 const CharactersContext = createContext(characters as unknown as Characters);
@@ -173,9 +156,6 @@ export const FontContext = createContext(font as Record<string, string>);
 export const ConfigContext = createContext(templates.basic.self as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
-export const CacheContext = createContext({} as ElementCache);
-export const WriteContext = createContext<Dispatch<CacheAction>>(() => {});
-
 const useData = () => {
   const { data } = useContext(ConfigContext);
   return data;
@@ -183,17 +163,23 @@ const useData = () => {
 
 const useIndex = () => {
   const { pathname } = useLocation();
-  return parseInt(pathname.split("/")[3] || "-1");
+  return pathname.split("/")[3];
 };
 
-const useElement = () => {
-  const index = useIndex();
-  const { elements } = useContext(ConfigContext);
-  return elements[index];
+const useRoot = () => {
+  const { form } = useContext(ConfigContext);
+  return form;
 };
 
-const useRoot = () => useElement() as RootConfig;
-const usePhonetic = () => useElement() as PhoneticConfig;
+const usePhonetic = () => {
+  const { pronunciation } = useContext(ConfigContext);
+  return pronunciation;
+};
+
+const useGeneric = () => {
+  const config = useContext(ConfigContext);
+  return config[useIndex() as "form"];
+};
 
 const useComponents = () => {
   const components = useContext(ComponentsContext);
@@ -234,7 +220,11 @@ const useDesign = () => {
   const dispatch = useContext(DispatchContext);
   const index = useIndex();
   return (action: ElementSubAction) =>
-    dispatch({ type: "element", index, ...action });
+    dispatch({
+      type: "element",
+      index: index as "form" | "pronunciation",
+      ...action,
+    });
 };
 
 const useDataType = () => {
@@ -268,9 +258,9 @@ const useDelete = () => {
 
 export {
   useIndex,
-  useElement,
   useRoot,
   usePhonetic,
+  useGeneric,
   useDesign,
   useData,
   useComponents,
