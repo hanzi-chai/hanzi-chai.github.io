@@ -38,7 +38,7 @@ type EncoderResult = Record<string, string[]>;
 
 interface Source {
   object: CodableObject;
-  length?: number;
+  index?: number;
   next: string | null;
 }
 
@@ -67,7 +67,7 @@ interface Config {
     classifier: Classifier;
   };
   form: FormConfig;
-  pronunciation: PronunciationConfig;
+  pronunciation?: PronunciationConfig;
   encoder: {
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;

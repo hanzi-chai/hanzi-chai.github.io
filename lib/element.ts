@@ -47,7 +47,13 @@ interface Stroke extends Base {
   strokeIndex: number;
 }
 
-export type CodableObject = This | Pronunciation | Root | Stroke;
+interface StrokePair extends Base {
+  type: "二笔";
+  rootIndex: number;
+  strokeIndex: number;
+}
+
+export type CodableObject = This | Pronunciation | Root | Stroke | StrokePair;
 
 export const renderName = (object: CodableObject) => {
   switch (object.type) {
@@ -59,6 +65,10 @@ export const renderName = (object: CodableObject) => {
       return `根 ${object.rootIndex}`;
     case "笔画":
       return `根 ${object.rootIndex} 笔 ${object.strokeIndex}`;
+    case "二笔":
+      return `根 ${object.rootIndex} 笔 (${object.strokeIndex * 2 - 1}, ${
+        object.strokeIndex * 2
+      })`;
   }
 };
 
@@ -70,6 +80,8 @@ export const renderList = (object: CodableObject) => {
     case "字根":
       return [...list, object.rootIndex];
     case "笔画":
+      return [...list, object.rootIndex, object.strokeIndex];
+    case "二笔":
       return [...list, object.rootIndex, object.strokeIndex];
   }
   return list;
@@ -84,12 +96,18 @@ export const parseList = (value: (string | number)[]) => {
       return { ...object, rootIndex: value[1] };
     case "笔画":
       return { ...object, rootIndex: value[1], strokeIndex: value[2] };
+    case "二笔":
+      return { ...object, rootIndex: value[1], strokeIndex: value[2] };
   }
   return object;
 };
 
 function getindex<T>(a: T[], i: number) {
   return i >= 0 ? a[i - 1] : a[a.length + i];
+}
+
+function getslice<T>(a: T[], i: number, j: number) {
+  return i >= 0 ? a.slice(i - 1, j) : a.slice(a.length + j, a.length + i + 1);
 }
 
 export const findElement = (
@@ -99,6 +117,7 @@ export const findElement = (
   extra: Extra,
 ) => {
   const { pinyin, sequence, all } = result;
+  let root: string;
   switch (object.type) {
     case "汉字":
       return result.char;
@@ -107,13 +126,30 @@ export const findElement = (
     case "字根":
       return getindex(sequence, object.rootIndex);
     case "笔画":
-      const root = getindex(sequence, object.rootIndex);
+      root = getindex(sequence, object.rootIndex);
       if (extra.rootData[root] === undefined) {
-        if (object.strokeIndex === 1) return root;
+        if (Math.abs(object.strokeIndex) === 1) return root;
         return undefined;
       }
-      const { glyph } = extra.rootData[root];
-      const stroke = getindex(glyph, object.strokeIndex);
+      const stroke = getindex(extra.rootData[root].glyph, object.strokeIndex);
       return stroke && data.classifier[stroke.feature].toString();
+    case "二笔":
+      root = getindex(sequence, object.rootIndex);
+      if (extra.rootData[root] === undefined) {
+        if (Math.abs(object.strokeIndex) === 1) return root;
+        return undefined;
+      }
+      const [i1, i2] = [
+        object.strokeIndex * 2 - Math.sign(object.strokeIndex),
+        object.strokeIndex * 2,
+      ];
+      const stroke1 = getindex(extra.rootData[root].glyph, i1);
+      if (stroke1 === undefined) return undefined;
+      let erbi = data.classifier[stroke1.feature].toString();
+      const stroke2 = getindex(extra.rootData[root].glyph, i2);
+      if (stroke2) {
+        erbi += data.classifier[stroke2.feature].toString();
+      }
+      return erbi;
   }
 };

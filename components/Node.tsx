@@ -31,7 +31,8 @@ import { blue } from "@ant-design/colors";
 const SourceButton = styled(Button)`
   width: 64px;
   height: 32px;
-  padding: 4px;
+  padding: 4px 0;
+  font-size: 0.8em;
 
   &:focus {
     color: ${blue[4]};
@@ -41,7 +42,6 @@ const SourceButton = styled(Button)`
 
 const ConditionButton = styled(SourceButton)`
   border-radius: 0;
-  font-size: 0.8em;
 `;
 
 const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
@@ -137,12 +137,18 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   );
 };
 
+const renderIndex = (index: number | undefined) => {
+  return index === undefined ? "" : ` [${index + 1}]`;
+};
+
 const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
   return (
     <>
       <ContextMenu id={id}>
         <SourceButton type={id === "s0" ? "primary" : "default"}>
-          {data.object === null ? "开始" : renderName(data.object)}
+          {data.object === null
+            ? "开始"
+            : renderName(data.object) + renderIndex(data.index)}
         </SourceButton>
       </ContextMenu>
       {id !== "s0" && <Handle type="target" position={Position.Top} />}
@@ -156,7 +162,7 @@ const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
     <>
       <ContextMenu id={id}>
         <ConditionButton type="dashed">
-          {renderName(data.object) + ": " + data.operator}
+          {renderName(data.object) + ": " + data.operator + "?"}
         </ConditionButton>
       </ContextMenu>
       <Handle type="target" position={Position.Top} />

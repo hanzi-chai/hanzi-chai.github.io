@@ -11,6 +11,13 @@ const components: Components = JSON.parse(
 );
 
 for (const [name, glyph] of Object.entries(components)) {
+  if (
+    !Array.from(name).every(
+      (x) => x.charCodeAt(0) <= 0x9fa5 && x.charCodeAt(0) >= 0x4e00,
+    )
+  ) {
+    console.log(name);
+  }
   for (const [index, stroke] of glyph.entries()) {
     const { feature, curveList } = stroke;
 

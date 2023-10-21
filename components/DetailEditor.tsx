@@ -65,6 +65,20 @@ const DetailEditor = ({ selected }: { selected: string }) => {
       })),
     },
     {
+      value: "二笔",
+      label: "二笔",
+      children: [1, 2, 3, 4, -1, -2, -3].map((v) => ({
+        value: v,
+        label: v.toString(),
+        children: [1, 2, -1, -2].map((v) => {
+          return {
+            value: v,
+            label: `(${v * 2 - Math.sign(v)}, ${v * 2})`,
+          };
+        }),
+      })),
+    },
+    {
       value: "汉字",
       label: "汉字",
     },
@@ -95,10 +109,13 @@ const DetailEditor = ({ selected }: { selected: string }) => {
           <Item label="码数">
             <Select
               style={{ width: "128px" }}
-              value={data.length || 1}
-              options={[1, 2, 3].map((v) => ({ value: v, label: v }))}
+              value={data.index}
+              options={[-1, 0, 1, 2].map((v) => ({
+                value: v,
+                label: v === -1 ? "全取" : (v + 1).toString(),
+              }))}
               onChange={(event) => {
-                update({ ...data, length: event });
+                update({ ...data, index: event === -1 ? undefined : event });
               }}
             />
           </Item>

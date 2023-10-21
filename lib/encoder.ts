@@ -40,17 +40,23 @@ const compile = (
   form: Config["form"],
   pronunciation: Config["pronunciation"],
 ) => {
-  const totalMapping = Object.assign({}, form.mapping, pronunciation.mapping);
+  const totalMapping = Object.assign(
+    {},
+    form.mapping,
+    pronunciation?.mapping || {},
+  );
   return (result: TotalResult, data: Config["data"], extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as string[];
     while (node) {
       if (node.startsWith("s")) {
-        const { object, next, length }: Source = encoder.sources[node];
+        const { object, next, index }: Source = encoder.sources[node];
         if (node !== "s0") {
           const element = findElement(object, result, data, extra);
           const elementcode = totalMapping[element!] || element!;
-          codes.push(elementcode.slice(0, length || 1));
+          const somecode =
+            index === undefined ? elementcode : elementcode[index];
+          codes.push(somecode);
         }
         node = next;
       } else {
