@@ -5,12 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";
-import Data, {
-  ComponentData,
-  CompoundData,
-  CharacterData,
-  SliceData,
-} from "./components/Data";
+import Data, { FormData } from "./components/Data";
 import Elements, {
   PhoneticElementConfig,
   RootElementConfig,
@@ -19,6 +14,9 @@ import Analysis from "./components/Analysis";
 import Encoder from "./components/Encoder";
 import Classifier from "./components/Classifier";
 import { ConfigProvider } from "antd";
+import CharacterTable from "./components/CharacterTable";
+
+const endpoint = "https://api.chaifen.app/";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -40,16 +38,24 @@ const router = createBrowserRouter([
   {
     path: "/:id",
     element: <EditorLayout />,
+    loader: async () => {
+      const repertoire = fetch(endpoint + "repertoire").then(
+        (res) => res.json() as Record<string, any>,
+      );
+      const form = fetch(endpoint + "form").then(
+        (res) => res.json() as Record<string, any>,
+      );
+      const data = await Promise.all([repertoire, form]);
+      return data;
+    },
     children: [
       { index: true, element: <Info /> },
       {
         path: "data",
         element: <Data />,
         children: [
-          { path: "components", element: <ComponentData /> },
-          { path: "compounds", element: <CompoundData /> },
-          { path: "characters", element: <CharacterData /> },
-          { path: "slices", element: <SliceData /> },
+          { path: "form", element: <FormData /> },
+          { path: "repertoire", element: <CharacterTable /> },
           { path: "classifier", element: <Classifier /> },
         ],
       },

@@ -1,5 +1,5 @@
 import { Classifier, Config, FormConfig, TotalResult } from "./config";
-import { Glyph, Operator } from "./data";
+import { Component, Compound, Form, Glyph, Operator } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -10,23 +10,13 @@ export const makeSequenceFilter = (
   sequence: string,
 ) => {
   return ([, v]: [string, Glyph]) => {
-    const fullSequence = v
-      .map((s) => s.feature)
-      .map((x) => classifier[x])
-      .join("");
-    return fullSequence.search(sequence) !== -1;
-  };
-};
-
-export const makeSequenceFilter2 = (
-  classifier: Classifier,
-  sequence: string,
-) => {
-  return (v: Glyph) => {
-    const fullSequence = v
-      .map((s) => s.feature)
-      .map((x) => classifier[x])
-      .join("");
+    const fullSequence =
+      v.component &&
+      v.component
+        .map((s) => s.feature)
+        .map((x) => classifier[x])
+        .join("");
+    if (!fullSequence) return false;
     return fullSequence.search(sequence) !== -1;
   };
 };
@@ -55,7 +45,7 @@ export const generateSchemes = (n: number, roots: number[]) => {
 
 export interface Cache {
   name: string;
-  glyph: Glyph;
+  glyph: Component;
   topology: Relation[][][];
 }
 
@@ -138,21 +128,21 @@ export interface CompoundResult {
 
 const getRootData = (data: Config["data"], config: FormConfig) => {
   const rootData = [] as Cache[];
-  const { components, slices } = data;
+  const { form } = data;
   const { mapping } = config;
   const buildGlyph = (name: string) => {
-    const { source, indices } = slices[name];
-    const rawglyph = components[source];
+    const { source, indices } = form[name].slice!;
+    const rawglyph = form[source].component!;
     return indices.map((x) => rawglyph[x]);
   };
-  for (const rootName in mapping) {
-    if (!components[rootName] && !slices[rootName]) {
+  for (const name in mapping) {
+    if (!form[name].component && !form[name].slice) {
       // console.log(rootName);
       continue; // 合体字根和单笔画字根无需在这里处理
     }
-    const glyph = components[rootName] || buildGlyph(rootName);
+    const glyph = form[name].component || buildGlyph(name);
     const topology = findTopology(glyph);
-    rootData.push({ glyph, topology, name: rootName });
+    rootData.push({ glyph, topology, name: name });
   }
   return rootData;
 };
@@ -162,15 +152,22 @@ export const disassembleComponents = (
   config: FormConfig,
   rootData?: Cache[],
 ) => {
-  const { components, classifier } = data;
+  const { form, classifier } = data;
   if (!rootData) rootData = getRootData(data, config);
   const result = {} as Record<string, ComponentResult>;
-  for (const [name, glyph] of Object.entries(components)) {
-    const topology = findTopology(glyph);
-    const cache = { name, topology, glyph };
+  for (const [name, glyph] of Object.entries(form).filter(
+    ([, g]) => g.default_type === 0,
+  )) {
+    const topology = findTopology(glyph.component!);
+    const cache = { name, topology, glyph: glyph.component! };
     result[name] = getComponentScheme(cache, rootData, config, classifier);
   }
   return result;
+};
+
+const topologicalSort = (form: Form) => {
+  const compound: Record<string, Compound> = {};
+  return compound;
 };
 
 export const disassembleCompounds = (
@@ -179,7 +176,7 @@ export const disassembleCompounds = (
   prev: Record<string, ComponentResult>,
 ) => {
   const { mapping } = config;
-  const { compounds } = data;
+  const compounds = topologicalSort(data.form);
   const result = {} as Record<string, CompoundResult>;
   const getResult = (s: string) => (prev[s] ? prev[s] : result[s]);
   for (const [name, compound] of Object.entries(compounds)) {

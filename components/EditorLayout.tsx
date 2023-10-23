@@ -15,14 +15,27 @@ import {
   CaretLeftFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { ConfigContext, DispatchContext, configReducer } from "./context";
+import {
+  ConfigContext,
+  DispatchContext,
+  FormContext,
+  RepertoireContext,
+  configReducer,
+} from "./context";
 import { Config } from "../lib/config";
 import { Action } from "./context";
 import { dump, load } from "js-yaml";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Outlet,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { useImmerReducer } from "use-immer";
 import { Uploader } from "./Utils";
 import { templates } from "../lib/template";
+import { Form, Repertoire } from "../lib/data";
 
 const items: MenuProps["items"] = [
   {
@@ -53,7 +66,7 @@ const items: MenuProps["items"] = [
 ];
 
 const defaultChildren: Record<string, string> = {
-  data: "/components",
+  data: "/form",
   element: "/form",
 };
 
@@ -132,6 +145,30 @@ const Contextualized = () => {
   const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
     return JSON.parse(localStorage.getItem(id)!) as Config;
   });
+  const data = useLoaderData() as [any[], any[]];
+  const repertoire: Repertoire = Object.fromEntries(
+    data[0].map((x) => [
+      String.fromCodePoint(x.unicode),
+      {
+        tygf: x.tygf,
+        gb2312: x.gb2312,
+        pinyin: JSON.parse(x.pinyin),
+      },
+    ]),
+  );
+  const form: Form = Object.fromEntries(
+    data[1].map((x) => [
+      String.fromCodePoint(x.unicode),
+      {
+        name: x.name,
+        default_type: x.default_type,
+        gf0014_id: x.gf0014_id,
+        component: x.component && JSON.parse(x.component),
+        compound: x.compound && JSON.parse(x.compound),
+        slice: x.slice && JSON.parse(x.slice),
+      },
+    ]),
+  );
 
   useEffect(() => {
     localStorage.setItem(id, JSON.stringify(config));
@@ -140,7 +177,11 @@ const Contextualized = () => {
   return (
     <ConfigContext.Provider value={config}>
       <DispatchContext.Provider value={dispatch}>
-        <EditorLayout />
+        <RepertoireContext.Provider value={repertoire}>
+          <FormContext.Provider value={form}>
+            <EditorLayout />
+          </FormContext.Provider>
+        </RepertoireContext.Provider>
       </DispatchContext.Provider>
     </ConfigContext.Provider>
   );

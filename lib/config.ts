@@ -1,4 +1,4 @@
-import { Components, Compounds, Characters, Slices } from "./data";
+import { Form, Repertoire, Slices } from "./data";
 import { CodableObject } from "./element";
 import { Op } from "./encoder";
 import { ComponentResult, CompoundResult } from "./form";
@@ -60,10 +60,8 @@ interface Config {
     description: string;
   };
   data: {
-    components: Components;
-    compounds: Compounds;
-    characters: Characters;
-    slices: Slices;
+    form: Form;
+    repertoire: Repertoire;
     classifier: Classifier;
   };
   form: FormConfig;

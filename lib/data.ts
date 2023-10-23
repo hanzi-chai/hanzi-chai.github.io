@@ -41,13 +41,7 @@ interface Stroke {
   curveList: Draw[];
 }
 
-interface RenderedStroke {
-  feature: string;
-  curveList: Curve[];
-}
-
-type Glyph = Stroke[];
-type RenderedGlyph = RenderedStroke[];
+type Component = Stroke[];
 
 type Operator =
   | "⿰"
@@ -76,9 +70,32 @@ interface Character {
   gb2312: boolean;
 }
 
-type Components = Record<string, Glyph>;
-type Compounds = Record<string, Compound>;
-type Characters = Record<string, Character>;
+type Glyph = {
+  name: string | null;
+  gf0014_id: string | null;
+} & (
+  | {
+      default_type: 0;
+      component: Component;
+      compound: Compound | null;
+      slice: Alias | null;
+    }
+  | {
+      default_type: 1;
+      component: Component | null;
+      compound: Compound;
+      slice: Alias | null;
+    }
+  | {
+      default_type: 2;
+      component: Component | null;
+      compound: Compound | null;
+      slice: Alias;
+    }
+);
+
+type Form = Record<string, Glyph>;
+type Repertoire = Record<string, Character>;
 type Slices = Record<string, Alias>;
 
 type Alias = { source: string; indices: number[] };
@@ -89,10 +106,15 @@ export type {
   Draw,
   Stroke,
   Glyph,
+  Component,
   Compound,
   Operator,
   Alias,
   Character,
+  LinearCurve,
+  CubicCurve,
+  Curve,
+  Form,
+  Repertoire,
+  Slices,
 };
-export type { Components, Compounds, Characters, Slices };
-export type { LinearCurve, CubicCurve, Curve, RenderedStroke, RenderedGlyph };

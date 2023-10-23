@@ -1,14 +1,9 @@
 import { useState } from "react";
 import styled from "styled-components";
-import {
-  useClassifier,
-  useComponents,
-  useSlices,
-  useCompounds,
-} from "./context";
+import { useClassifier, useForm } from "./context";
 import Char from "./Char";
 import { ConfigProvider, Flex, Pagination } from "antd";
-import { Glyph } from "../lib/data";
+import { Component, Glyph } from "../lib/data";
 import { makeSequenceFilter } from "../lib/form";
 
 const Content = styled(Flex)`
@@ -19,7 +14,6 @@ const Content = styled(Flex)`
 interface PoolProps {
   name?: string;
   setName: (s: string | undefined) => void;
-  content: string[];
   sequence: string;
 }
 
@@ -30,7 +24,12 @@ const MyPagination = styled(Pagination)`
   justify-content: center;
 `;
 
-const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
+const Pool = ({ name, setName, sequence }: PoolProps) => {
+  const form = useForm();
+  const classifier = useClassifier();
+  const content = Object.entries(form)
+    .filter(makeSequenceFilter(classifier, sequence))
+    .map(([x]) => x);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content
@@ -64,47 +63,5 @@ const Pool = ({ name, setName, content }: Omit<PoolProps, "sequence">) => {
     </>
   );
 };
-
-const ComponentPool = ({
-  name,
-  setName,
-  sequence,
-}: Omit<PoolProps, "content">) => {
-  const components = useComponents();
-  const classifier = useClassifier();
-  const content = Object.entries(components)
-    .filter(makeSequenceFilter(classifier, sequence))
-    .map(([x]) => x);
-  return <Pool name={name} setName={setName} content={content} />;
-};
-
-const SlicePool = ({ name, setName, sequence }: Omit<PoolProps, "content">) => {
-  const components = useComponents();
-  const classifier = useClassifier();
-  const slices = useSlices();
-  const componentslike = Object.entries(slices).map(([x, v]) => {
-    const parent = components[v.source];
-    const g = v.indices.map((x) => parent[x]);
-    return [x, g] as [string, Glyph];
-  });
-  const content = componentslike
-    .filter(makeSequenceFilter(classifier, sequence))
-    .map(([x]) => x);
-  return <Pool name={name} setName={setName} content={content} />;
-};
-
-const CompoundPool = ({
-  name,
-  setName,
-  sequence,
-}: Omit<PoolProps, "content">) => {
-  const compounds = useCompounds();
-  const content = Object.entries(compounds)
-    .filter(([x]) => x === sequence)
-    .map(([x]) => x);
-  return <Pool name={name} setName={setName} content={content} />;
-};
-
-export { ComponentPool, SlicePool, CompoundPool };
 
 export default Pool;

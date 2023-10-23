@@ -10,7 +10,7 @@ import {
 } from "antd";
 import { createContext, useContext } from "react";
 import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
-import { useComponents, useModify } from "./context";
+import { useForm, useModify } from "./context";
 import defaultClassifier from "../templates/strokes.yaml";
 import { deepcopy, getDummyStroke, halfToFull } from "../lib/utils";
 import { NumberInput } from "./Utils";
@@ -19,7 +19,7 @@ const NameContext = createContext("");
 
 const useNameAndGlyph = () => {
   const name = useContext(NameContext);
-  const glyph = useComponents()[name];
+  const glyph = useForm()[name];
   return [name, glyph] as [string, Glyph];
 };
 
@@ -162,7 +162,7 @@ const StrokeAdder = () => {
 };
 
 export default function ComponentModel({ name }: { name: string }) {
-  const components = useComponents();
+  const components = useForm();
   return (
     <NameContext.Provider value={name}>
       <Flex vertical gap="large">

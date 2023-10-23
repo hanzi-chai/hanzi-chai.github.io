@@ -1,16 +1,10 @@
 import { Dispatch, createContext, useContext } from "react";
 import { Classifier, Config, Mapping, SieveName } from "../lib/config";
-import components from "../data/components.json";
-import compounds from "../data/compounds.json";
-import characters from "../data/characters.json";
-import slices from "../data/slices.json";
-import font from "../data/font.json";
 import {
   Compound,
   Glyph,
-  Components,
-  Compounds,
-  Characters,
+  Form,
+  Repertoire,
   Alias,
   Slices,
   Character,
@@ -72,10 +66,8 @@ type ElementSubAction =
 type DataAction = {
   type: "data";
 } & (
-  | { subtype: "components"; key: string; value: Glyph }
-  | { subtype: "compounds"; key: string; value: Compound }
-  | { subtype: "characters"; key: string; value: Character }
-  | { subtype: "slices"; key: string; value: Alias }
+  | { subtype: "form"; key: string; value: Glyph }
+  | { subtype: "repertoire"; key: string; value: Character }
   | { subtype: "classifier"; key: string; value: number }
 );
 type DeleteAction = {
@@ -89,7 +81,7 @@ type EncoderAction = { type: "encoder"; value: Config["encoder"] };
 export const configReducer = (config: Config, action: Action) => {
   const { type, value } = action;
   const { index } = action as ElementAction;
-  const element = index === "form" ? config.form : config.pronunciation;
+  const element = index === "form" ? config.form : config.pronunciation!;
   const root = config.form;
   switch (type) {
     case "load":
@@ -148,11 +140,9 @@ export const configReducer = (config: Config, action: Action) => {
   return config;
 };
 
-const ComponentsContext = createContext(components as unknown as Components);
-const CompoundsContext = createContext(compounds as unknown as Compounds);
-const CharactersContext = createContext(characters as unknown as Characters);
-const SlicesContext = createContext(slices as unknown as Slices);
-export const FontContext = createContext(font as Record<string, string>);
+export const FormContext = createContext({} as unknown as Form);
+export const RepertoireContext = createContext({} as unknown as Repertoire);
+export const FontContext = createContext({} as Record<string, string>);
 export const ConfigContext = createContext(templates.basic.self as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
@@ -181,32 +171,20 @@ const useGeneric = () => {
   return config[useIndex() as "form"];
 };
 
-const useComponents = () => {
-  const components = useContext(ComponentsContext);
-  return Object.assign({}, components, useData().components);
+const useForm = () => {
+  const form = useContext(FormContext);
+  return Object.assign({}, form, useData().form);
 };
 
-const useCompounds = () => {
-  const compounds = useContext(CompoundsContext);
-  return Object.assign({}, compounds, useData().compounds);
-};
-
-const useCharacters = () => {
-  const characters = useContext(CharactersContext);
-  return Object.assign({}, characters, useData().characters);
-};
-
-const useSlices = () => {
-  const slices = useContext(SlicesContext);
-  return Object.assign({}, slices, useData().slices);
+const useRepertoire = () => {
+  const repertoire = useContext(RepertoireContext);
+  return Object.assign({}, repertoire, useData().repertoire);
 };
 
 const useAll = () => {
   return {
-    components: useComponents(),
-    compounds: useCompounds(),
-    characters: useCharacters(),
-    slices: useSlices(),
+    form: useForm(),
+    repertoire: useRepertoire(),
     classifier: useClassifier(),
   };
 };
@@ -234,7 +212,7 @@ const useDataType = () => {
 
 const useModify = () => {
   const dispatch = useContext(DispatchContext);
-  const subtype = useDataType() as "components";
+  const subtype = useDataType() as "form";
   return (key: string, value: DataAction["value"]) =>
     dispatch({
       type: "data",
@@ -246,7 +224,7 @@ const useModify = () => {
 
 const useDelete = () => {
   const dispatch = useContext(DispatchContext);
-  const subtype = useDataType() as "components";
+  const subtype = useDataType() as "form";
   return (key: string) =>
     dispatch({
       type: "data-delete",
@@ -263,10 +241,8 @@ export {
   useGeneric,
   useDesign,
   useData,
-  useComponents,
-  useCompounds,
-  useCharacters,
-  useSlices,
+  useForm,
+  useRepertoire,
   useClassifier,
   useAll,
   useModify,
