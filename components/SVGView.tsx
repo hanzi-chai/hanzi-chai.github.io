@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { Stroke } from "../lib/data";
 import { PropsWithChildren, useContext } from "react";
-import { FontContext, useComponents, useSlices } from "./context";
+import { FontContext, useForm } from "./context";
 import { Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
@@ -42,22 +42,21 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
 );
 
 export const ComponentView = ({ name }: { name: string }) => {
-  const components = useComponents();
+  const components = useForm();
   const font = useContext(FontContext);
   return (
     <>
-      <FontView reference={font[name]} />
-      <StrokesView glyph={components[name]} />
+      {/* <FontView reference={font[name]} /> */}
+      <StrokesView glyph={components[name].component!} />
     </>
   );
 };
 
 export const SliceView = ({ name }: { name: string }) => {
-  const components = useComponents();
+  const form = useForm();
   const font = useContext(FontContext);
-  const slices = useSlices();
-  const { source, indices } = slices[name];
-  const glyph = components[source];
+  const { source, indices } = form[name].slice!;
+  const glyph = form[source].component!;
   const subglyph = indices.map((x) => glyph[x]);
   return (
     <>

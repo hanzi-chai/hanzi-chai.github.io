@@ -4,7 +4,7 @@ import { ComponentPool, CompoundPool, SlicePool } from "./Pool";
 import StrokeSearch from "./StrokeSearch";
 import ElementAdder from "./ElementAdder";
 import { AName, analyzerNames, pinyinAnalyzers } from "../lib/element";
-import { useCharacters, useDesign, usePhonetic } from "./context";
+import { useRepertoire, useDesign, usePhonetic } from "./context";
 import Root from "./Root";
 import Char from "./Char";
 import styled from "styled-components";
@@ -19,7 +19,7 @@ const PhoneticPicker = () => {
   const [mode, setMode] = useState<AName>("声");
   const { mapping, alphabet } = usePhonetic();
   const design = useDesign();
-  const characters = useCharacters();
+  const characters = useRepertoire();
   const syllables = [
     ...new Set(
       Object.values(characters)

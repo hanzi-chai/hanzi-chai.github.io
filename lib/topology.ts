@@ -3,13 +3,19 @@ import {
   CubicCurve,
   Curve,
   Draw,
-  Glyph,
+  Component,
   LinearCurve,
   Point,
-  RenderedStroke,
   Stroke,
 } from "./data";
 import { add, subtract, mean, multiply, divide, distance } from "mathjs";
+
+interface RenderedStroke {
+  feature: string;
+  curveList: Curve[];
+}
+
+type RenderedComponent = RenderedStroke[];
 
 type RelationSymbol = -1 | -0.5 | 0 | 0.5 | 1;
 
@@ -273,7 +279,7 @@ const render = ({ feature, start, curveList }: Stroke) => {
   return r;
 };
 
-const findTopology = (glyph: Glyph) => {
+const findTopology = (glyph: Component) => {
   const g = glyph.map(render);
   const matrix = [] as Relation[][][];
   for (const [i, s] of g.entries()) {

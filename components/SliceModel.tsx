@@ -1,14 +1,13 @@
-import { makeSequenceFilter2 } from "../lib/form";
+import { makeSequenceFilter } from "../lib/form";
 import { Select } from "./Utils";
-import { useModify, useComponents, useSlices, useClassifier } from "./context";
+import { useModify, useForm, useClassifier } from "./context";
 import { Checkbox, Flex, Form } from "antd";
 
 const SliceModel = ({ name }: { name: string }) => {
-  const components = useComponents();
-  const slices = useSlices();
+  const form = useForm();
   const modify = useModify();
-  const { source, indices } = slices[name];
-  const glyph = components[source];
+  const { source, indices } = form[name].slice!;
+  const glyph = form[source].component!;
   const classifier = useClassifier();
   return (
     <Flex vertical>
@@ -25,7 +24,7 @@ const SliceModel = ({ name }: { name: string }) => {
             });
           }}
           filterOption={(input, option) =>
-            makeSequenceFilter2(classifier, input)(components[option!.value])
+            makeSequenceFilter(classifier, input)(components[option!.value])
           }
           filterSort={(a, b) => {
             return components[a.value].length - components[b.value].length;

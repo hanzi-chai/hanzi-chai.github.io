@@ -1,6 +1,6 @@
 import { Empty, Form, Typography } from "antd";
 import { Compound, Operator } from "../lib/data";
-import { useComponents, useCompounds, useModify } from "./context";
+import { useForm, useModify } from "./context";
 import { NumberInput, Select } from "./Utils";
 
 const ideos: Operator[] = [
@@ -25,8 +25,7 @@ const filterOption = (
 ) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase());
 
 const CompoundModel = ({ name }: { name: string }) => {
-  const compounds = useCompounds();
-  const components = useComponents();
+  const components = useForm();
   const modify = useModify();
   return (
     <>

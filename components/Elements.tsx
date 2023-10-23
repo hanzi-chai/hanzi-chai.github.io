@@ -7,7 +7,7 @@ import {
   useDesign,
   useIndex,
   usePhonetic,
-  useCharacters,
+  useRepertoire,
 } from "./context";
 import { Outlet, useNavigate } from "react-router-dom";
 import Root from "./Root";

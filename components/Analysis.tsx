@@ -18,7 +18,7 @@ import Char from "./Char";
 import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
-import { useClassifier, useRoot, useComponents, useAll } from "./context";
+import { useClassifier, useRoot, useForm, useAll } from "./context";
 import {
   ComponentResult,
   CompoundResult,
@@ -64,7 +64,7 @@ const Analysis = () => {
   const [compoundResults, setCompoundResult] = useState(
     {} as Record<string, CompoundResult>,
   );
-  const components = useComponents();
+  const components = useForm();
   const classifier = useClassifier();
   const data = useAll();
   const rootConfig = useRoot();
