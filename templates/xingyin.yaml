@@ -9,10 +9,8 @@ info:
   description: 用于初始化
 
 data:
-  components: {}
-  compounds: {}
-  characters: {}
-  slices: {}
+  form: {}
+  repertoire: {}
   classifier:
     竖提: 6
     横折提: 6
@@ -37,6 +35,8 @@ form:
       - 能连不交
       - 能散不连
       - 取大优先
+  grouping:
+    为框: 力
   mapping:
     "1": s
     "2": e
@@ -52,7 +52,6 @@ form:
     方: q
     马: q
     犭: q
-    为框: q
     五: w
     讠: w
     亠: w

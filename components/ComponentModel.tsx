@@ -11,9 +11,9 @@ import {
 import { createContext, useContext } from "react";
 import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
 import { useForm, useModify } from "./context";
-import defaultClassifier from "../templates/strokes.yaml";
 import { deepcopy, getDummyStroke, halfToFull } from "../lib/utils";
 import { NumberInput } from "./Utils";
+import classifier, { Feature, schema } from "../lib/classifier";
 
 const NameContext = createContext("");
 
@@ -37,9 +37,9 @@ export const StrokeModel = ({
   return (
     <Flex vertical gap="small">
       <Flex justify="space-between">
-        <Select
+        <Select<Feature>
           value={feature}
-          options={Object.keys(defaultClassifier).map((x) => ({
+          options={Object.keys(classifier).map((x) => ({
             label: x,
             value: x,
           }))}
@@ -47,9 +47,9 @@ export const StrokeModel = ({
             const modified = deepcopy(glyph);
             const newstroke = getDummyStroke(
               value,
-              Array.from(defaultClassifier[value].schema),
+              Array.from(schema[value as keyof typeof schema]),
             );
-            modified[index[0]] = { ...newstroke, start };
+            modified.component![index[0]] = { ...newstroke, start };
             modify(name, modified);
           }}
         />
@@ -65,7 +65,7 @@ export const StrokeModel = ({
         <Button
           onClick={() => {
             const modified = deepcopy(glyph);
-            modified.splice(index[0], 1);
+            modified.component!.splice(index[0], 1);
             modify(name, modified);
           }}
         >
@@ -121,9 +121,10 @@ const NumberModel = ({ parameter, index }: NumberModelProps) => {
       onChange={(value) => {
         const modified = deepcopy(glyph);
         if (drawIndex === -1) {
-          modified[strokeIndex].start[parameterIndex] = value as number;
+          modified.component![strokeIndex].start[parameterIndex] =
+            value as number;
         } else {
-          modified[strokeIndex].curveList[drawIndex].parameterList[
+          modified.component![strokeIndex].curveList[drawIndex].parameterList[
             parameterIndex
           ] = value as number;
         }
@@ -136,17 +137,14 @@ const NumberModel = ({ parameter, index }: NumberModelProps) => {
 const StrokeAdder = () => {
   const modify = useModify();
   const [name, glyph] = useNameAndGlyph();
-  const rawitems: MenuProps["items"] = Object.entries(defaultClassifier).map(
-    ([x, v]) => ({
-      key: x,
-      label: x,
-      onClick: () => {
-        const modified = deepcopy(glyph);
-        modified.push(getDummyStroke(x, Array.from(v.schema)));
-        modify(name, modified);
-      },
-    }),
-  );
+  const rawitems: MenuProps["items"] = Object.entries(schema).map(([x, v]) => ({
+    key: x,
+    onClick: () => {
+      const modified = deepcopy(glyph);
+      modified.component!.push(getDummyStroke(x as Feature, v));
+      modify(name, modified);
+    },
+  }));
   const items: MenuProps["items"] = [
     { key: 0, label: "基本", children: rawitems.slice(0, 7) },
     { key: 1, label: "折类 I", children: rawitems.slice(7, 13) },
@@ -166,7 +164,7 @@ export default function ComponentModel({ name }: { name: string }) {
   return (
     <NameContext.Provider value={name}>
       <Flex vertical gap="large">
-        {components[name].map((stroke, strokeIndex) => (
+        {components[name].component!.map((stroke, strokeIndex) => (
           <StrokeModel
             stroke={stroke}
             index={[strokeIndex]}

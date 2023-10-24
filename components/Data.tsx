@@ -1,16 +1,18 @@
 import ComponentModel from "./ComponentModel";
-import { ComponentView, SliceView } from "./SVGView";
+import { ComponentView, CompoundView, SliceView } from "./SVGView";
 import { useState } from "react";
 import {
   Button,
   Empty,
   Flex,
+  Form,
   Input,
   Layout,
   Menu,
   MenuProps,
   Popconfirm,
   Popover,
+  Radio,
   Typography,
 } from "antd";
 import {
@@ -30,10 +32,16 @@ import {
   useData,
   useDelete,
   useModify,
+  useFormByChar,
 } from "./context";
-import { makeSequenceFilter } from "../lib/form";
+import {
+  getSequence,
+  makeSequenceFilter,
+  recursiveGetSequence,
+} from "../lib/form";
 import styled from "styled-components";
 import { Component, Glyph } from "../lib/data";
+import CompoundModel from "./CompoundModel";
 
 const items: MenuProps["items"] = [
   {
@@ -82,35 +90,27 @@ const ItemSelect = ({
   name?: string;
   setName: (s: string) => void;
 }) => {
-  const content = useForm();
+  const form = useForm();
   const classifier = useClassifier();
-
-  // content = Object.fromEntries(
-  //   Object.entries(slices).map(([x, v]) => {
-  //     const parent = form[v.source];
-  //     const g = v.indices.map((x) => parent[x]);
-  //     return [x, g] as [string, Component];
-  //   })
-  // );
   return (
     <Select
       showSearch
       placeholder="输入笔画搜索"
-      options={Object.keys(content).map((x) => ({
+      options={Object.entries(form).map(([x, v]) => ({
         value: x,
-        label: x,
+        label: v.name || x,
       }))}
       value={name}
       onChange={(value) => setName(value)}
       filterOption={(input, option) =>
-        makeSequenceFilter(
-          classifier,
-          input,
-        )([option!.value, content[option!.value]])
+        getSequence(form, classifier, option!.value).startsWith(input)
       }
-      // filterSort={(a, b) => {
-      //   return content[a.value].component!.length - content[b.value].component!.length;
-      // }}
+      filterSort={(a, b) => {
+        return (
+          getSequence(form, classifier, a.value).length -
+          getSequence(form, classifier, b.value).length
+        );
+      }}
     />
   );
 };
@@ -139,7 +139,7 @@ const Toolbar = ({
   const [newname, setNewname] = useState("");
   return (
     <Flex justify="center" align="center" gap="small">
-      选择部件
+      选择
       <ItemSelect name={name} setName={setName} />
       <Popconfirm
         title="新组件名称"
@@ -173,42 +173,56 @@ const Toolbar = ({
   );
 };
 
+const ModelDispatch = ({ name }: { name: string }) => {
+  const form = useForm();
+  const models = [ComponentModel, CompoundModel, SliceModel];
+  const Model = models[form[name].default_type];
+  return <Model name={name} />;
+};
+
+const ViewDispatch = ({ name }: { name: string }) => {
+  const { default_type } = useFormByChar(name);
+  const views = [ComponentView, CompoundView, SliceView];
+  const View = views[default_type];
+  return <View name={name} />;
+};
+
 const FormData = () => {
   const [name, setName] = useState(undefined as string | undefined);
+  const form = useForm();
+  const options = [
+    { label: "部件", value: 0 },
+    { label: "复合体", value: 1 },
+    { label: "切片", value: 2 },
+  ];
   return (
     <Flex vertical gap="middle" style={{ height: "100%" }}>
       <Toolbar name={name} setName={setName} />
       <EditorRow style={{ flex: 1 }}>
         <EditorColumn span={12}>
-          <Typography.Title level={2}>查看 SVG</Typography.Title>
-          <Overlay>{name ? <ComponentView name={name} /> : <Empty />}</Overlay>
+          <Typography.Title level={2}>查看字形</Typography.Title>
+          <Overlay>{name ? <ViewDispatch name={name} /> : <Empty />}</Overlay>
         </EditorColumn>
         <EditorColumn span={12}>
           <Typography.Title level={2}>调整数据</Typography.Title>
-          {name ? <ComponentModel name={name} /> : <Empty />}
+          {name ? (
+            <>
+              <Form.Item label="类型">
+                <Radio.Group
+                  options={options}
+                  optionType="button"
+                  value={form[name].default_type}
+                />
+              </Form.Item>
+              <ModelDispatch name={name} />
+            </>
+          ) : (
+            <Empty />
+          )}
         </EditorColumn>
       </EditorRow>
     </Flex>
   );
 };
 
-const SliceData = () => {
-  const [name, setName] = useState(undefined as string | undefined);
-  return (
-    <Flex vertical gap="middle" style={{ height: "100%" }}>
-      <Toolbar name={name} setName={setName} />
-      <EditorRow>
-        <EditorColumn span={12}>
-          <Typography.Title level={2}>查看 SVG</Typography.Title>
-          <Overlay>{name ? <SliceView name={name} /> : <Empty />}</Overlay>
-        </EditorColumn>
-        <EditorColumn span={12}>
-          <Typography.Title level={2}>选择笔画</Typography.Title>
-          {name ? <SliceModel name={name} /> : <Empty />}
-        </EditorColumn>
-      </EditorRow>
-    </Flex>
-  );
-};
-
-export { FormData, SliceData };
+export { FormData };

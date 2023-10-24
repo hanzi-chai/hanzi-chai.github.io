@@ -1,5 +1,6 @@
+import { Feature } from "./classifier";
 import { Mapping } from "./config";
-import { Stroke } from "./data";
+import { SVGCommand, Stroke } from "./data";
 
 export function deepcopy<T>(t: T) {
   return JSON.parse(JSON.stringify(t)) as T;
@@ -32,8 +33,8 @@ export const fullToHalf = (s: string) => {
 };
 
 export const getDummyStroke = function (
-  feature: string,
-  schema: ("h" | "v" | "l" | "c")[],
+  feature: Feature,
+  schema: SVGCommand[],
 ): Stroke {
   return {
     feature,

@@ -14,6 +14,7 @@ type Mapping = Record<string, string>;
 interface BaseConfig {
   alphabet: string;
   maxcodelen: number;
+  grouping: Mapping;
   mapping: Mapping;
 }
 

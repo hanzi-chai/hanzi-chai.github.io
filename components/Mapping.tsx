@@ -9,7 +9,7 @@ import {
   Popover,
   Space,
 } from "antd";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import {
   DispatchContext,
   useDesign,
@@ -25,7 +25,7 @@ import { Select as AntdSelect } from "antd";
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const design = useDesign();
-  const { alphabet, maxcodelen } = useGeneric();
+  const { alphabet, maxcodelen, grouping, mapping } = useGeneric();
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: x,
@@ -34,46 +34,76 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const keys = Array.from(code).concat(
     Array(maxcodelen - code.length).fill(""),
   );
+  const affiliates = Object.keys(grouping).filter((x) => grouping[x] === name);
+  const [main, setMain] = useState(Object.keys(mapping)[0]);
   return (
     <Popover
       trigger={["click"]}
       title="字根编码"
       content={
-        <Space>
-          {keys.map((key, index) => {
-            return (
-              <AntdSelect
-                key={index}
-                value={key}
-                onChange={(event) => {
-                  keys[index] = event;
-                  return design({
-                    subtype: "generic-mapping",
-                    action: "add",
-                    key: name,
-                    value: keys.join(""),
-                  });
-                }}
-                options={index ? allOptions : alphabetOptions}
-              />
-            );
-          })}
-          <Button
-            onClick={() =>
-              design({
-                subtype: "generic-mapping",
-                action: "remove",
-                key: name,
-              })
-            }
-          >
-            删除
-          </Button>
-        </Space>
+        <Flex vertical gap="middle">
+          <Space>
+            {keys.map((key, index) => {
+              return (
+                <AntdSelect
+                  key={index}
+                  value={key}
+                  onChange={(event) => {
+                    keys[index] = event;
+                    return design({
+                      subtype: "generic-mapping",
+                      action: "add",
+                      key: name,
+                      value: keys.join(""),
+                    });
+                  }}
+                  options={index ? allOptions : alphabetOptions}
+                />
+              );
+            })}
+            <Button
+              onClick={() =>
+                design({
+                  subtype: "generic-mapping",
+                  action: "remove",
+                  key: name,
+                })
+              }
+            >
+              删除
+            </Button>
+          </Space>
+          <Space>
+            或归并至
+            <AntdSelect<string>
+              value={main}
+              onChange={(event) => setMain(event)}
+              options={Object.keys(mapping).map((x) => ({
+                label: x,
+                value: x,
+              }))}
+            />
+            <Button
+              onClick={() =>
+                design({
+                  subtype: "generic-mapping",
+                  action: "remove",
+                  key: name,
+                })
+              }
+            >
+              归并
+            </Button>
+          </Space>
+        </Flex>
       }
     >
       <Root>
-        {name} {code.slice(1)}
+        {name}
+        <span style={{ fontSize: "0.8em" }}>
+          {affiliates.length ? `(${affiliates.join(",")})` : ""}
+        </span>{" "}
+        {code.slice(1)}
       </Root>
     </Popover>
   );
