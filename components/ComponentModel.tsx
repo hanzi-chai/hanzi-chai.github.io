@@ -10,9 +10,9 @@ import {
 } from "antd";
 import { createContext, useContext } from "react";
 import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
-import { useForm, useModify } from "./context";
+import { useComponent, useForm, useModify } from "./context";
 import { deepcopy, getDummyStroke, halfToFull } from "../lib/utils";
-import { NumberInput } from "./Utils";
+import { Index, NumberInput } from "./Utils";
 import classifier, { Feature, schema } from "../lib/classifier";
 
 const NameContext = createContext("");
@@ -20,7 +20,7 @@ const NameContext = createContext("");
 const useNameAndGlyph = () => {
   const name = useContext(NameContext);
   const glyph = useForm()[name];
-  return [name, glyph] as [string, Glyph];
+  return [name, glyph] as const;
 };
 
 interface StrokeModelProps {
@@ -159,12 +159,12 @@ const StrokeAdder = () => {
   );
 };
 
-export default function ComponentModel({ name }: { name: string }) {
-  const components = useForm();
+export default function ComponentModel({ char }: Index) {
+  const { component } = useComponent(char);
   return (
-    <NameContext.Provider value={name}>
+    <NameContext.Provider value={char}>
       <Flex vertical gap="large">
-        {components[name].component!.map((stroke, strokeIndex) => (
+        {component.map((stroke, strokeIndex) => (
           <StrokeModel
             stroke={stroke}
             index={[strokeIndex]}

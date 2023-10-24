@@ -1,13 +1,10 @@
-version: "0.1"
-
-template: xingyin
-
+version: "0.0.0"
+source: mswb
 info:
-  name: 形音码模板
-  version: "0.1"
-  author: 无名氏
-  description: 用于初始化
-
+  name: 米十五笔
+  version: "2023.05.30"
+  author: 李明、Skating（作）蓝落萧（编）
+  description: http://xukt.ysepan.com/
 data:
   form: {}
   repertoire: {}
@@ -24,19 +21,50 @@ data:
     撇折: 6
     斜钩: 6
     横斜钩: 6
-
 form:
-  maxcodelen: 2
+  maxcodelen: 1
   alphabet: qwertyuiopasdfghjklzxcvbnm
   analysis:
-    selector:
-      - 笔顺优先
-      - 根少优先
-      - 能连不交
-      - 能散不连
-      - 取大优先
+    selector: [笔顺优先, 根少优先, 能连不交, 能散不连, 取大优先]
   grouping:
-    为框: 力
+    "\ue401": 力
+    "\ue432": 彐
+    "\ue431": 彐
+    "\ue446": 八
+    攵: 文
+    夂: 文
+    曰: 日
+    "\ue070": 日
+    "\ue00c": 日
+    "\ue43a": 土
+    "\ue445": 小
+    "\ue442": 小
+    "\ue43d": 人
+    "\ue43b": 人
+    "\ue444": 厶
+    "\ue416": 七
+    "\ue011": 匕
+    "\ue43f": 匕
+    "\ue079": 匕
+    "\ue443": "\ue068"
+    "\ue439": 冂
+    "\ue441": 乃
+    "\ue437": 止
+    "\ue0c6": 足
+    "\ue400": 斤
+    "\ue403": 勹
+    "\ue07d": 水
+    "\ue0d9": 水
+    "\ue42b": 水
+    "\ue42c": 水
+    "\ue096": 手
+    "\ue40b": 手
+    "\ue0d2": 月
+    "\ue447": 用
+    "\ue44b": 禾
+    "\ue420": 豕
+    "\ue406": "\ue405"
+    "\ue440": "\ue405"
   mapping:
     "1": s
     "2": e
@@ -45,8 +73,8 @@ form:
     "5": j
     "6": l
     气: q
-    每上: q
-    撇二横: q
+    "\ue078": q
+    "\ue40f": q
     刀: q
     力: q
     方: q
@@ -56,104 +84,86 @@ form:
     讠: w
     亠: w
     山: e
-    占上: e
-    尚上: e
+    "\ue018": e
+    "\ue03e": e
     巾: e
     彐: e
-    录上: e
-    兼中: e
-    虐下: e
+    "\ue0b4": e
     八: r
-    办外: r
     亻: r
     土: t
-    土变: t
     士: t
     干: t
-    举下: t
+    "\ue002": t
     雨: t
     田: t
     言: "y"
-    经角: "y"
-    予上: "y"
+    "\ue434": "y"
+    "\ue004": "y"
     厶: "y"
-    瓜内: "y"
     衤: "y"
     礻: "y"
     鱼: "y"
     也: "y"
     月: u
-    那左: u
+    "\ue0cd": u
     用: u
-    甬下: u
-    青下: u
     文: u
-    攵: u
-    夂: u
     夕: u
-    久上: u
-    角上: u
+    "\ue423": u
+    "\ue0bc": u
     日: i
-    曰: i
-    横日: i
-    冒上: i
     灬: i
     宀: i
     冖: i
-    官下: i
+    "\ue039": i
     口: o
-    # 囗: o
     尸: p
     毛: p
     小: p
-    少上: p
-    木下: p
     大: p
     彳: p
     车: p
     金: a
     钅: a
     人: a
-    今上: a
-    人改: a
     石: s
-    而上: s
+    "\ue0a7": s
     米: d
-    两撇: d
+    "\ue41e": d
     二: d
     工: d
-    齐下: d
-    临左: d
+    "\ue0e3": d
+    "\ue001": d
     冫: d
-    飞右: d
-    总上: d
-    冬下: d
+    "\ue449": d
+    "\ue050": d
+    "\ue00d": d
     王: f
     三: f
-    青上: f
+    "\ue0d1": f
     四: f
     目: f
-    罗上: f
-    隹右: f
+    "\ue0a4": f
+    "\ue428": f
     广: g
     疒: g
     厂: g
-    皮二: g
+    "\ue409": g
     古: g
     弓: g
-    展底: g
-    衣下: g
+    "\ue422": g
+    "\ue0b7": g
     贝: h
     且: h
-    具上: h
+    "\ue419": h
     火: h
-    反外: h
-    段二: h
-    乐二: h
-    抑中: h
+    "\ue024": h
+    "\ue404": h
+    "\ue40c": h
+    "\ue057": h
     禾: h
-    秉框: h
-    余下: h
+    "\ue40e": h
     丁: j
     扌: j
     刂: j
@@ -162,30 +172,24 @@ form:
     孑: j
     了: j
     斤: j
-    丘上: j
     十: k
-    舞中: k
+    "\ue40a": k
     廿: k
     艹: k
     廾: k
-    黄上: k
+    "\ue0dd": k
     丬: k
-    前上: k
+    "\ue010": k
     又: k
     立: l
-    # 互中: l
     七: l
-    东上: l
     匕: l
-    化右: l
-    化右变: l
-    比左: l
-    弋左: l
+    "\ue417": l
     弋: l
     戈: l
     戋: l
     幺: l
-    双折: l
+    "\ue023": l
     纟: l
     之: z
     辶: z
@@ -194,88 +198,71 @@ form:
     长: z
     豸: z
     豕: z
-    豕下: z
-    # 竹: z
-    竹头: z
-    采上: z
+    "\ue09e": z
+    "\ue0ce": z
     西: x
     酉: x
-    义下: x
+    "\ue003": x
     彡: x
-    有上: x
+    "\ue068": x
     心: x
     忄: x
-    毋中: x
     川: c
-    三竖: c
+    "\ue41a": c
     门: c
-    肆左: c
+    "\ue0aa": c
     匚: c
     凵: c
-    假角: c
-    候角: c
-    年中: c
+    "\ue009": c
+    "\ue007": c
+    "\ue44a": c
     冂: c
-    周外: c
-    见二: c
-    牙上: c
+    "\ue02a": c
+    "\ue418": c
     虫: c
     寸: c
     水: v
-    泰下: v
-    鳏角: v
-    脊外: v
-    承外: v
     氵: v
-    兴上: v
-    三点: v
+    "\ue42d": v
+    "\ue448": v
     皿: v
-    央三: v
-    黑五: v
+    "\ue407": v
+    "\ue436": v
     手: v
-    看上: v
-    着中: v
     耳: b
     卩: b
-    节下: b
+    "\ue0b2": b
     阝: b
     巳: b
     巴: b
-    卷下: b
+    "\ue020": b
     勹: b
-    乌二: b
     女: "n"
     白: "n"
     臼: "n"
     乃: "n"
-    及二: "n"
     止: "n"
-    足旁: "n"
-    止变: "n"
     足: "n"
     几: "n"
     儿: "n"
-    见下: "n"
-    流角: "n"
+    "\ue424": "n"
+    "\ue07f": "n"
     木: m
-    兼下: m
-    亦下: m
-    变中: m
-    业上: m
-    母二: m
-    贯二: m
-    互中: m
+    "\ue430": m
+    "\ue42e": m
+    "\ue42f": m
+    "\ue408": m
+    "\ue405": m
     卜: m
-    步中: m
-
+    "\ue402": m
 pronunciation:
   maxcodelen: 1
   alphabet: qwertyuiopasdfghjklzxcvbnm
+  grouping: {}
   mapping: {}
-
 encoder:
   sources:
-    s0: { object: null, next: s1 }
+    s0: { next: s1 }
     s1: { object: { type: 字根, rootIndex: 1 }, next: c0 }
     s2: { object: { type: 字根, rootIndex: 2 }, next: c1 }
     s3: { object: { type: 字根, rootIndex: -1 }, next: s4 }
@@ -292,28 +279,38 @@ encoder:
     s14: { object: { type: 字音, subtype: 首字母 }, next: null }
   conditions:
     c0:
-      object: { type: 字根, rootIndex: 2 }
-      operator: 存在
-      positive: s2
-      negative: c2
+      {
+        object: { type: 字根, rootIndex: 2 },
+        operator: 存在,
+        positive: s2,
+        negative: c2,
+      }
     c1:
-      object: { type: 字根, rootIndex: 3 }
-      operator: 存在
-      positive: s3
-      negative: s6
+      {
+        object: { type: 字根, rootIndex: 3 },
+        operator: 存在,
+        positive: s3,
+        negative: s6,
+      }
     c2:
-      object: { type: 汉字 }
-      operator: 匹配
-      value: 金言心禾土又竹人文目西石米日广廿丁口王之白田水子月木
-      positive: s5
-      negative: s8
+      {
+        object: { type: 汉字 },
+        operator: 匹配,
+        value: 金言心禾土又竹人文目西石米日广廿丁口王之白田水子月木,
+        positive: s5,
+        negative: s8,
+      }
     c3:
-      object: { type: 笔画, rootIndex: 1, strokeIndex: 2 }
-      operator: 存在
-      positive: s9
-      negative: s11
+      {
+        object: { type: 笔画, rootIndex: 1, strokeIndex: 2 },
+        operator: 存在,
+        positive: s9,
+        negative: s11,
+      }
     c4:
-      object: { type: 笔画, rootIndex: 1, strokeIndex: 3 }
-      operator: 存在
-      positive: s13
-      negative: s14
+      {
+        object: { type: 笔画, rootIndex: 1, strokeIndex: 3 },
+        operator: 存在,
+        positive: s13,
+        negative: s14,
+      }

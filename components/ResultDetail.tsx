@@ -2,7 +2,7 @@ import { Space, Table } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Root from "./Root";
 import { SchemeWithData } from "../lib/form";
-import { useRoot } from "./context";
+import { useForm, useRoot } from "./context";
 import { Selector } from "../lib/config";
 import { sieveMap } from "../lib/selector";
 
@@ -32,6 +32,10 @@ const ResultDetail = ({
   const {
     analysis: { selector },
   } = useRoot();
+  const form = useForm();
+  const displayRoot = (c: string) => {
+    return form[c] ? form[c].name || c : c;
+  };
 
   const columns: ColumnsType<Partial<SchemeWithData>> = [
     {
@@ -41,7 +45,7 @@ const ResultDetail = ({
       render: (_, { roots }) => (
         <Space>
           {roots!.map((root, index) => (
-            <Root key={index}>{root}</Root>
+            <Root key={index}>{displayRoot(root)}</Root>
           ))}
         </Space>
       ),
@@ -66,7 +70,7 @@ const ResultDetail = ({
       <Space>
         {Object.entries(map).map(([s, v]) => (
           <Space key={s}>
-            <Root>{s}</Root>
+            <Root>{displayRoot(s)}</Root>
             <span>{v.map((ar) => `(${ar.join(",")})`).join(" ")}</span>
           </Space>
         ))}

@@ -1,18 +1,6 @@
-import {
-  Condition,
-  Config,
-  Mapping,
-  Source,
-  TotalCache,
-  TotalResult,
-} from "./config";
-import { getForm } from "./form";
+import { Condition, Config, Mapping, Op, Source } from "./config";
+import { ComponentResult, CompoundResult, getForm } from "./form";
 import { renderName, findElement, Extra } from "./element";
-
-export const binaryOps = ["是", "不是", "匹配", "不匹配"] as const;
-export const unaryOps = ["存在", "不存在"] as const;
-export const ops = (unaryOps as readonly Op[]).concat(...binaryOps);
-export type Op = (typeof binaryOps)[number] | (typeof unaryOps)[number];
 
 export const table: Record<Op, (target?: string, value?: string) => boolean> = {
   是: (t, v) => t === v,
@@ -22,6 +10,17 @@ export const table: Record<Op, (target?: string, value?: string) => boolean> = {
   存在: (t) => t !== undefined,
   不存在: (t) => t === undefined,
 };
+
+type Metadata = { char: string; pinyin: string };
+type ComponentTotalResult = ComponentResult & Metadata;
+type CompoundTotalResult = CompoundResult & Metadata;
+export type TotalResult = ComponentTotalResult | CompoundTotalResult;
+export type TotalCache = Record<
+  string,
+  ComponentTotalResult[] | CompoundTotalResult[]
+>;
+
+export type EncoderResult = Record<string, string[]>;
 
 const satisfy = (
   condition: Condition,
@@ -35,16 +34,23 @@ const satisfy = (
   return fn(target, value);
 };
 
+const merge = (grouping: Mapping, mapping: Mapping) => {
+  const compiledGrouping = Object.fromEntries(
+    Object.entries(grouping).map(([x, y]) => [x, mapping[y]]),
+  );
+  return Object.assign(compiledGrouping, mapping);
+};
+
 const compile = (
   encoder: Config["encoder"],
   form: Config["form"],
   pronunciation: Config["pronunciation"],
 ) => {
-  const totalMapping = Object.assign(
-    {},
-    form.mapping,
-    pronunciation?.mapping || {},
-  );
+  const formMerge = merge(form.grouping, form.mapping);
+  const pronMerge = pronunciation
+    ? merge(pronunciation.grouping, pronunciation.mapping)
+    : {};
+  const totalMapping = Object.assign({}, formMerge, pronMerge);
   return (result: TotalResult, data: Config["data"], extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as string[];
@@ -52,7 +58,7 @@ const compile = (
       if (node.startsWith("s")) {
         const { object, next, index }: Source = encoder.sources[node];
         if (node !== "s0") {
-          const element = findElement(object, result, data, extra);
+          const element = findElement(object!, result, data, extra);
           const elementcode = totalMapping[element!] || element!;
           const somecode =
             index === undefined ? elementcode : elementcode[index];
@@ -81,7 +87,7 @@ export const getCache = (
   const result = Object.fromEntries(
     list.map((char) => {
       const formData = formResult[char];
-      const pronunciationData = data.characters[char].pinyin;
+      const pronunciationData = data.repertoire[char].pinyin;
       return [
         char,
         formData

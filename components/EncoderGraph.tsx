@@ -75,7 +75,6 @@ const EncoderGraph = () => {
   const [selected, setSelected] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    console.log(nodes);
     const idmap = {} as Record<string, string>;
     const sources: Record<string, Source> = {};
     const conditions: Record<string, Condition> = {};

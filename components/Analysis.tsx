@@ -18,28 +18,40 @@ import Char from "./Char";
 import Root from "./Root";
 import ResultDetail from "./ResultDetail";
 import { useContext, useState } from "react";
-import { useClassifier, useRoot, useForm, useAll } from "./context";
+import {
+  useClassifier,
+  useRoot,
+  useForm,
+  useAll,
+  useGlyph,
+  useDisplay,
+} from "./context";
 import {
   ComponentResult,
   CompoundResult,
   disassembleComponents,
   disassembleCompounds,
+  getSequence,
 } from "../lib/form";
 import { Classifier } from "../lib/config";
 import { EditorColumn, EditorRow, Select } from "./Utils";
 import Selector from "./Selector";
 
 const ResultSummary = ({
-  componentName,
+  char,
   rootSeries,
 }: {
-  componentName: string;
+  char: string;
   rootSeries: string[];
 }) => {
+  const name = useDisplay(char);
+  const rootNames = rootSeries.map((x) =>
+    x.match(/[\uE000-\uFFFF]/) ? useDisplay(x) : x,
+  );
   return (
     <Space>
-      <Char>{componentName}</Char>
-      {rootSeries.map((x, index) => (
+      <Char>{name}</Char>
+      {rootNames.map((x, index) => (
         <Root key={index}>{x}</Root>
       ))}
     </Space>
@@ -67,38 +79,25 @@ const Analysis = () => {
   const components = useForm();
   const classifier = useClassifier();
   const data = useAll();
+  const form = useForm();
   const rootConfig = useRoot();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const makeSequenceFilter = (classifier: Classifier, sequence: string) => {
-    return (x: string) => {
-      const v = components[x];
-      const fullSequence = v
-        .map((s) => s.feature)
-        .map((x) => classifier[x])
-        .join("");
-      return fullSequence.search(sequence) !== -1;
-    };
-  };
-
-  const filter = makeSequenceFilter(classifier, sequence);
   const displays = [
     Object.entries(componentResults)
-      .filter(([x]) => filter(x))
+      .filter(([x]) => getSequence(form, classifier, x))
       .map(([key, res]) => {
         return {
           key,
-          label: (
-            <ResultSummary componentName={key} rootSeries={res.sequence} />
-          ),
+          label: <ResultSummary char={key} rootSeries={res.sequence} />,
           children: <ResultDetail data={res.schemes} map={res.map} />,
         };
       }),
     Object.entries(compoundResults).map(([key, res]) => {
       return {
         key,
-        label: <ResultSummary componentName={key} rootSeries={res.sequence} />,
+        label: <ResultSummary char={key} rootSeries={res.sequence} />,
       };
     }),
   ];

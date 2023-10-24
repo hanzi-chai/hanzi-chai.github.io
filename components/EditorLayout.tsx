@@ -34,8 +34,8 @@ import {
 } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
 import { Uploader } from "./Utils";
-import { templates } from "../lib/template";
-import { Form, Repertoire } from "../lib/data";
+import { examples } from "../lib/example";
+import { Compound, Form, Repertoire } from "../lib/data";
 
 const items: MenuProps["items"] = [
   {
@@ -71,10 +71,12 @@ const defaultChildren: Record<string, string> = {
 };
 
 const exportFile = (config: Config) => {
-  const fileContent = dump(config, {
-    flowLevel: 2,
-    styles: { roots: { flowLevel: 1 } },
-  });
+  const fileContent = dump(config, { flowLevel: 3 }).replace(
+    /[\uE000-\uFFFF]/g,
+    (c) => {
+      return `"\\u${c.codePointAt(0)!.toString(16)}"`;
+    },
+  );
   const blob = new Blob([fileContent], { type: "text/plain" });
   const a = document.createElement("a");
   a.download = `export.yaml`;
@@ -125,7 +127,7 @@ const EditorLayout = () => {
               onClick={() => {
                 dispatch({
                   type: "load",
-                  value: templates[config.template].self,
+                  value: examples[config.source].self,
                 });
               }}
             >
@@ -137,6 +139,16 @@ const EditorLayout = () => {
       <Outlet />
     </Layout>
   );
+};
+
+const preprocessCompounds = (c: any) => {
+  c.operandList = c.operandList.map((x: any) => String.fromCodePoint(x));
+  return c;
+};
+
+const preprocessSlices = (c: any) => {
+  c.source = String.fromCodePoint(c.source);
+  return c;
 };
 
 const Contextualized = () => {
@@ -164,8 +176,8 @@ const Contextualized = () => {
         default_type: x.default_type,
         gf0014_id: x.gf0014_id,
         component: x.component && JSON.parse(x.component),
-        compound: x.compound && JSON.parse(x.compound),
-        slice: x.slice && JSON.parse(x.slice),
+        compound: x.compound && preprocessCompounds(JSON.parse(x.compound)),
+        slice: x.slice && preprocessSlices(JSON.parse(x.slice)),
       },
     ]),
   );

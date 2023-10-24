@@ -2,9 +2,8 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Alert, Button, Flex, Space, Typography } from "antd";
 import { ConfigContext, DispatchContext, useAll } from "./context";
 
-import encode, { getCache } from "../lib/encoder";
+import encode, { EncoderResult, getCache } from "../lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
-import { EncoderResult } from "../lib/config";
 import { EditorColumn, EditorRow, Select } from "./Utils";
 import EncoderGraph from "./EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
@@ -39,7 +38,7 @@ const Encoder = () => {
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>({});
   const [lost, setLost] = useState<string[]>([]);
-  const list = Object.entries(data.characters)
+  const list = Object.entries(data.repertoire)
     .filter(filtermap[gb2312]("gb2312"))
     .filter(filtermap[tygf]("tygf"))
     .map(([x]) => x);
