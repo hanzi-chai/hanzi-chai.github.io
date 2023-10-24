@@ -15,8 +15,8 @@ interface DataType {
   code: string[];
 }
 
-type CharsetFilter = "是" | "否" | "未定义";
-const filtervalues = ["是", "否", "未定义"] as CharsetFilter[];
+const filtervalues = ["是", "否", "未定义"] as const;
+type CharsetFilter = (typeof filtervalues)[number];
 const filtermap: Record<
   CharsetFilter,
   (s: "gb2312" | "tygf") => (t: [string, Character]) => boolean

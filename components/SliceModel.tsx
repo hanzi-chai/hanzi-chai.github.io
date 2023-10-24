@@ -1,13 +1,16 @@
-import { makeSequenceFilter } from "../lib/form";
+import { getSequence, makeSequenceFilter } from "../lib/form";
+import { deepcopy } from "../lib/utils";
 import { Select } from "./Utils";
-import { useModify, useForm, useClassifier } from "./context";
+import { useModify, useForm, useClassifier, useFormByChar } from "./context";
 import { Checkbox, Flex, Form } from "antd";
 
 const SliceModel = ({ name }: { name: string }) => {
   const form = useForm();
+  const glyph = useFormByChar(name);
   const modify = useModify();
-  const { source, indices } = form[name].slice!;
-  const glyph = form[source].component!;
+  const modified = deepcopy(glyph);
+  const { source, indices } = glyph.slice!;
+  const component = form[String.fromCodePoint(source)].component!;
   const classifier = useClassifier();
   return (
     <Flex vertical>
@@ -15,24 +18,30 @@ const SliceModel = ({ name }: { name: string }) => {
         <Select
           showSearch
           placeholder="输入笔画搜索"
-          value={source}
-          options={Object.keys(components).map((x) => ({ value: x, label: x }))}
+          value={String.fromCodePoint(source)}
+          options={Object.entries(form)
+            .filter(([, v]) => v.default_type === 0)
+            .map(([x, v]) => ({ value: x, label: v.name || x }))}
           onChange={(event) => {
-            modify(name, {
-              source: event,
-              indices: indices.slice(0, components[event].length),
-            });
+            modified.slice = {
+              source: event.codePointAt(0)!,
+              indices: indices.slice(0, form[event].component!.length),
+            };
+            modify(name, modified);
           }}
           filterOption={(input, option) =>
-            makeSequenceFilter(classifier, input)(components[option!.value])
+            getSequence(form, classifier, option!.value).startsWith(input)
           }
           filterSort={(a, b) => {
-            return components[a.value].length - components[b.value].length;
+            return (
+              getSequence(form, classifier, a.value).length -
+              getSequence(form, classifier, b.value).length
+            );
           }}
         />
       </Form.Item>
       <Flex vertical>
-        {glyph.map(({ feature }, index) => {
+        {component.map(({ feature }, index) => {
           return (
             <Checkbox
               key={index}
@@ -41,7 +50,8 @@ const SliceModel = ({ name }: { name: string }) => {
                 const newindices = event.target.checked
                   ? indices.concat(index).sort()
                   : indices.filter((x) => x !== index);
-                modify(name, { source, indices: newindices });
+                modified.slice = { source, indices: newindices };
+                modify(name, modified);
               }}
             >
               {feature}

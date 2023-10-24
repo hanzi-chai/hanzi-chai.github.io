@@ -21,6 +21,47 @@ export const makeSequenceFilter = (
   };
 };
 
+export const recursiveGetSequence = function (
+  form: Form,
+  classifier: Classifier,
+  char: string,
+): number[] {
+  const glyph = form[char];
+  if (glyph.default_type === 0) {
+    return glyph.component.map((s) => classifier[s.feature]);
+  } else {
+    return glyph
+      .compound!.operandList.map((s) =>
+        recursiveGetSequence(form, classifier, String.fromCodePoint(s)),
+      )
+      .flat();
+  }
+};
+
+export const getSequence = (
+  form: Form,
+  classifier: Classifier,
+  char: string,
+) => {
+  let thisSequence: string;
+  const glyph = form[char];
+  switch (glyph.default_type) {
+    case 0:
+    case 1:
+      thisSequence = recursiveGetSequence(form, classifier, char).join("");
+      break;
+    case 2:
+      const sourceSequence = recursiveGetSequence(
+        form,
+        classifier,
+        String.fromCodePoint(glyph.slice.source),
+      );
+      thisSequence = glyph.slice.indices.map((x) => sourceSequence[x]).join("");
+      break;
+  }
+  return thisSequence;
+};
+
 export const generateSchemes = (n: number, roots: number[]) => {
   const schemeList = [] as number[][];
   const total = (1 << n) - 1;
@@ -189,7 +230,10 @@ export const disassembleCompounds = (
       operator,
       operandList: [c1, c2],
     } = compound;
-    const [r1, r2] = [getResult(c1), getResult(c2)];
+    const [r1, r2] = [
+      getResult(String.fromCodePoint(c1)),
+      getResult(String.fromCodePoint(c2)),
+    ];
     if (r1 !== undefined && r2 !== undefined) {
       result[name] = {
         sequence: r1.sequence.concat(r2.sequence),

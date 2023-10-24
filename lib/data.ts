@@ -1,3 +1,5 @@
+import { Feature } from "./classifier";
+
 type N1 = [number];
 type N2 = [number, number];
 type N3 = [number, number, number];
@@ -21,6 +23,8 @@ type Draw =
       parameterList: N6;
     };
 
+type SVGCommand = Draw["command"];
+
 type Point = N2;
 
 type LinearCurve = {
@@ -36,7 +40,7 @@ type CubicCurve = {
 type Curve = LinearCurve | CubicCurve;
 
 interface Stroke {
-  feature: string;
+  feature: Feature;
   start: Point;
   curveList: Draw[];
 }
@@ -60,7 +64,7 @@ type Operator =
 
 interface Compound {
   operator: Operator;
-  operandList: [string, string];
+  operandList: [number, number];
   mix?: number;
 }
 
@@ -98,10 +102,11 @@ type Form = Record<string, Glyph>;
 type Repertoire = Record<string, Character>;
 type Slices = Record<string, Alias>;
 
-type Alias = { source: string; indices: number[] };
+type Alias = { source: number; indices: number[] };
 
 export type { N1, N2, N3, N6 };
 export type {
+  SVGCommand,
   Point,
   Draw,
   Stroke,

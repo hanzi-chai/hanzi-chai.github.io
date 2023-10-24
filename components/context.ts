@@ -9,7 +9,7 @@ import {
   Slices,
   Character,
 } from "../lib/data";
-import defaultClassifier from "../templates/classifier.yaml";
+import defaultClassifier from "../lib/classifier";
 import { useLocation } from "react-router-dom";
 import { templates } from "../lib/template";
 
@@ -176,6 +176,11 @@ const useForm = () => {
   return Object.assign({}, form, useData().form);
 };
 
+const useFormByChar = (char: string) => {
+  const form = useContext(FormContext);
+  return useData().form[char] || form[char];
+};
+
 const useRepertoire = () => {
   const repertoire = useContext(RepertoireContext);
   return Object.assign({}, repertoire, useData().repertoire);
@@ -242,6 +247,7 @@ export {
   useDesign,
   useData,
   useForm,
+  useFormByChar,
   useRepertoire,
   useClassifier,
   useAll,

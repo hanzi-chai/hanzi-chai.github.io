@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import { Stroke } from "../lib/data";
 import { PropsWithChildren, useContext } from "react";
-import { FontContext, useForm } from "./context";
-import { Typography } from "antd";
+import { FontContext, useForm, useFormByChar } from "./context";
+import { Empty, Typography } from "antd";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -42,25 +42,27 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
 );
 
 export const ComponentView = ({ name }: { name: string }) => {
-  const components = useForm();
-  const font = useContext(FontContext);
+  const glyph = useFormByChar(name);
   return (
     <>
-      {/* <FontView reference={font[name]} /> */}
-      <StrokesView glyph={components[name].component!} />
+      <StrokesView glyph={glyph.component!} />
     </>
   );
 };
 
+export const CompoundView = ({ name }: { name: string }) => {
+  const glyph = useFormByChar(name);
+  return <Empty description="暂不支持复合体的预览" />;
+};
+
 export const SliceView = ({ name }: { name: string }) => {
-  const form = useForm();
-  const font = useContext(FontContext);
-  const { source, indices } = form[name].slice!;
-  const glyph = form[source].component!;
-  const subglyph = indices.map((x) => glyph[x]);
+  const glyph = useFormByChar(name);
+  const { source, indices } = glyph.slice!;
+  const sourceGlyph = useFormByChar(String.fromCodePoint(source));
+  const component = sourceGlyph.component!;
+  const subglyph = indices.map((x) => component[x]);
   return (
     <>
-      <FontView reference={font[source]} />
       <StrokesView glyph={subglyph} />
     </>
   );

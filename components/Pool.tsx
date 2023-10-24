@@ -4,7 +4,7 @@ import { useClassifier, useForm } from "./context";
 import Char from "./Char";
 import { ConfigProvider, Flex, Pagination } from "antd";
 import { Component, Glyph } from "../lib/data";
-import { makeSequenceFilter } from "../lib/form";
+import { getSequence, makeSequenceFilter } from "../lib/form";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -27,9 +27,13 @@ const MyPagination = styled(Pagination)`
 const Pool = ({ name, setName, sequence }: PoolProps) => {
   const form = useForm();
   const classifier = useClassifier();
-  const content = Object.entries(form)
-    .filter(makeSequenceFilter(classifier, sequence))
-    .map(([x]) => x);
+  const content = Object.keys(form)
+    .filter((x) => getSequence(form, classifier, x).startsWith(sequence))
+    .sort(
+      (x, y) =>
+        getSequence(form, classifier, x).length -
+        getSequence(form, classifier, y).length,
+    );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content
@@ -46,7 +50,7 @@ const Pool = ({ name, setName, sequence }: PoolProps) => {
             }}
             type={x === name ? "primary" : "default"}
           >
-            {x}
+            {form[x].name || x}
           </Char>
         ))}
       </Content>

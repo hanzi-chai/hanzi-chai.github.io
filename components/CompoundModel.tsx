@@ -1,7 +1,8 @@
 import { Empty, Form, Typography } from "antd";
-import { Compound, Operator } from "../lib/data";
-import { useForm, useModify } from "./context";
+import { Compound, Glyph, Operator } from "../lib/data";
+import { useClassifier, useForm, useFormByChar, useModify } from "./context";
 import { NumberInput, Select } from "./Utils";
+import { getSequence } from "../lib/form";
 
 const ideos: Operator[] = [
   "⿰",
@@ -18,56 +19,52 @@ const ideos: Operator[] = [
   "⿻",
   "〾",
 ];
-// Filter `option.label` match the user type `input`
-const filterOption = (
-  input: string,
-  option?: { label: string; value: string },
-) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase());
 
 const CompoundModel = ({ name }: { name: string }) => {
-  const components = useForm();
+  const form = useForm();
+  const glyph = useFormByChar(name);
+  const { operator, operandList, mix } = glyph.compound!;
   const modify = useModify();
+  const modified = JSON.parse(JSON.stringify(glyph)) as Glyph;
+  const classifier = useClassifier();
   return (
     <>
       <Form.Item label="结构">
         <Select
-          value={compounds[name].operator}
+          value={operator}
           onChange={(operator) => {
-            const modified = JSON.parse(
-              JSON.stringify(compounds[name]),
-            ) as Compound;
-            modified.operator = operator;
+            modified.compound!.operator = operator;
             modify(name, modified);
           }}
           options={ideos.map((x) => ({ value: x, label: x }))}
         />
       </Form.Item>
-      {compounds[name].operandList.map((value, index) => {
+      {operandList.map((value, index) => {
         return (
           <Form.Item label={`第 ${index + 1} 部`} key={index}>
             <Select
               showSearch
-              value={value}
+              value={String.fromCodePoint(value)}
               placeholder="Select a person"
               optionFilterProp="children"
               onChange={(part) => {
-                const modified = JSON.parse(
-                  JSON.stringify(compounds[name]),
-                ) as Compound;
-                modified.operandList[index] = part;
+                modified.compound!.operandList[index] = part.codePointAt(0)!;
                 modify(name, modified);
               }}
-              filterOption={filterOption}
-              options={Object.keys(compounds)
-                .concat(Object.keys(components))
-                .map((x) => ({ value: x, label: x }))}
+              filterOption={(input, option) =>
+                getSequence(form, classifier, option!.value).startsWith(input)
+              }
+              options={Object.entries(form).map(([x, v]) => ({
+                value: x,
+                label: v.name || x,
+              }))}
             />
           </Form.Item>
         );
       })}
-      {compounds[name].mix && (
+      {mix && (
         <Form.Item label="混合">
-          <NumberInput min={1} max={20} value={compounds[name].mix} />
+          <NumberInput min={1} max={20} value={mix} />
         </Form.Item>
       )}
     </>
