@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useImmer } from "use-immer";
-import { templates } from "../lib/template";
+import { examples } from "../lib/example";
 import { Uploader } from "./Utils";
 import { load } from "js-yaml";
 
@@ -66,15 +66,23 @@ const HomeLayout = () => {
             <Dropdown
               placement="bottom"
               menu={{
-                items: Object.values(templates),
+                items: [],
+              }}
+            >
+              <Button type="primary">新建</Button>
+            </Dropdown>
+            <Dropdown
+              placement="bottom"
+              menu={{
+                items: Object.values(examples),
                 onClick: (menu) => {
                   setConfigs((configs) => {
-                    configs[uuid()] = templates[menu.key].self;
+                    configs[uuid()] = examples[menu.key].self;
                   });
                 },
               }}
             >
-              <Button type="primary">新建</Button>
+              <Button>示例</Button>
             </Dropdown>
             <Uploader
               action={(s) => {

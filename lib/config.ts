@@ -1,7 +1,5 @@
-import { Form, Repertoire, Slices } from "./data";
+import { Form, Repertoire } from "./data";
 import { CodableObject } from "./element";
-import { Op } from "./encoder";
-import { ComponentResult, CompoundResult } from "./form";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
@@ -26,22 +24,16 @@ interface FormConfig extends BaseConfig {
 
 interface PronunciationConfig extends BaseConfig {}
 
-type Metadata = { char: string; pinyin: string };
-type ComponentTotalResult = ComponentResult & Metadata;
-type CompoundTotalResult = CompoundResult & Metadata;
-type TotalResult = ComponentTotalResult | CompoundTotalResult;
-type TotalCache = Record<
-  string,
-  ComponentTotalResult[] | CompoundTotalResult[]
->;
-
-type EncoderResult = Record<string, string[]>;
-
 interface Source {
-  object: CodableObject;
+  object?: CodableObject;
   index?: number;
   next: string | null;
 }
+
+export const binaryOps = ["是", "不是", "匹配", "不匹配"] as const;
+export const unaryOps = ["存在", "不存在"] as const;
+export const ops = (unaryOps as readonly Op[]).concat(...binaryOps);
+export type Op = (typeof binaryOps)[number] | (typeof unaryOps)[number];
 
 interface Condition {
   object: CodableObject;
@@ -52,8 +44,8 @@ interface Condition {
 }
 
 interface Config {
-  version: "0.1";
-  template: string;
+  version: "0.0.0";
+  source: string;
   info: {
     name: string;
     author: string;
@@ -73,10 +65,14 @@ interface Config {
   };
 }
 
-export type { SieveName, Selector, Classifier, Mapping };
-
-export type { Config, FormConfig, PronunciationConfig };
-
-export type { Source, Condition };
-
-export type { TotalCache, TotalResult, EncoderResult };
+export type {
+  SieveName,
+  Selector,
+  Classifier,
+  Mapping,
+  Config,
+  FormConfig,
+  PronunciationConfig,
+  Source,
+  Condition,
+};

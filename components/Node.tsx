@@ -146,7 +146,7 @@ const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
     <>
       <ContextMenu id={id}>
         <SourceButton type={id === "s0" ? "primary" : "default"}>
-          {data.object === null
+          {data.object === undefined
             ? "开始"
             : renderName(data.object) + renderIndex(data.index)}
         </SourceButton>

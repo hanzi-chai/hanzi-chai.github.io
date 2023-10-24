@@ -67,7 +67,6 @@ const Classifier = () => {
       onDragEnd={(event) => {
         const { active, over } = event;
         if (over) {
-          console.log(active.id, over.id);
           modify(active.id as string, over.id as number);
         }
       }}

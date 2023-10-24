@@ -2,6 +2,17 @@ import { Feature } from "./classifier";
 import { Mapping } from "./config";
 import { SVGCommand, Stroke } from "./data";
 
+export const validUnicode = (char: string) => {
+  const code = char.codePointAt(0)!;
+  if (code >= 0x4e00 && code <= 0x9fff) return true;
+  if (code >= 0x3400 && code <= 0x4dbf) return true;
+  return false;
+};
+
+export const length = (s: string) => {
+  return Array.from(s).length;
+};
+
 export function deepcopy<T>(t: T) {
   return JSON.parse(JSON.stringify(t)) as T;
 }

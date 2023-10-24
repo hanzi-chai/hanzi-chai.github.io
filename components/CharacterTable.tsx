@@ -6,6 +6,7 @@ import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Character } from "../lib/data";
 import { deepcopy } from "../lib/utils";
+import { number } from "mathjs";
 
 interface DataType extends Character {
   key: string;
@@ -38,20 +39,21 @@ const EditablePinyin = ({
 const CharacterTable: React.FC = () => {
   const characters = useRepertoire();
   const modify = useModify();
-  const [character, setCharacter] = useState<string>("");
+  const [input, setInput] = useState("");
   const rawdata = Object.entries(characters).map(([k, v]) => ({
     key: k,
     self: v,
     ...v,
   }));
-  const dataSource = character
-    ? rawdata.filter((x) => x.key === character)
-    : rawdata;
+  const dataSource = input ? rawdata.filter((x) => x.key === input) : rawdata;
 
   const columns: ColumnsType<DataType> = [
     {
       title: "汉字",
       dataIndex: "key",
+      render: (_, record) => {
+        return <span>{record.key}</span>;
+      },
     },
     {
       title: "通用规范",
@@ -113,9 +115,9 @@ const CharacterTable: React.FC = () => {
           <Input
             placeholder="搜索汉字"
             prefix={<SearchOutlined />}
-            value={character}
+            value={input}
             onChange={(event) => {
-              setCharacter(event.target.value);
+              setInput(event.target.value);
             }}
           />
           <Table

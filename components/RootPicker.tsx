@@ -5,13 +5,13 @@ import StrokeSearch from "./StrokeSearch";
 import ElementAdder from "./ElementAdder";
 
 const RootPicker = () => {
-  const [name, setName] = useState(undefined as string | undefined);
+  const [char, setChar] = useState<string | undefined>(undefined);
   const [sequence, setSequence] = useState("");
   return (
     <>
       <StrokeSearch sequence={sequence} setSequence={setSequence} />
-      <Pool name={name} setName={setName} sequence={sequence} />
-      <ElementAdder name={name} />
+      <Pool char={char} setChar={setChar} sequence={sequence} />
+      <ElementAdder char={char} />
     </>
   );
 };

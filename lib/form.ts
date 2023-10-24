@@ -1,5 +1,13 @@
-import { Classifier, Config, FormConfig, TotalResult } from "./config";
-import { Component, Compound, Form, Glyph, Operator } from "./data";
+import { Classifier, Config, FormConfig } from "./config";
+import {
+  Component,
+  ComponentGlyph,
+  Compound,
+  CompoundGlyph,
+  Form,
+  Glyph,
+  Operator,
+} from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -26,14 +34,14 @@ export const recursiveGetSequence = function (
   classifier: Classifier,
   char: string,
 ): number[] {
-  const glyph = form[char];
-  if (glyph.default_type === 0) {
-    return glyph.component.map((s) => classifier[s.feature]);
+  const { default_type, component, compound } = form[char] as
+    | ComponentGlyph
+    | CompoundGlyph;
+  if (default_type === 0) {
+    return component.map((s) => classifier[s.feature]);
   } else {
-    return glyph
-      .compound!.operandList.map((s) =>
-        recursiveGetSequence(form, classifier, String.fromCodePoint(s)),
-      )
+    return compound.operandList
+      .map((s) => recursiveGetSequence(form, classifier, s))
       .flat();
   }
 };
@@ -47,14 +55,14 @@ export const getSequence = (
   const glyph = form[char];
   switch (glyph.default_type) {
     case 0:
-    case 1:
+    case 2:
       thisSequence = recursiveGetSequence(form, classifier, char).join("");
       break;
-    case 2:
+    case 1:
       const sourceSequence = recursiveGetSequence(
         form,
         classifier,
-        String.fromCodePoint(glyph.slice.source),
+        glyph.slice.source,
       );
       thisSequence = glyph.slice.indices.map((x) => sourceSequence[x]).join("");
       break;
@@ -170,20 +178,20 @@ export interface CompoundResult {
 const getRootData = (data: Config["data"], config: FormConfig) => {
   const rootData = [] as Cache[];
   const { form } = data;
-  const { mapping } = config;
-  const buildGlyph = (name: string) => {
-    const { source, indices } = form[name].slice!;
+  const { mapping, grouping } = config;
+  const buildGlyph = (char: string) => {
+    const { source, indices } = form[char].slice!;
     const rawglyph = form[source].component!;
     return indices.map((x) => rawglyph[x]);
   };
-  for (const name in mapping) {
-    if (!form[name].component && !form[name].slice) {
+  for (const char of [...Object.keys(mapping), ...Object.keys(grouping)]) {
+    if (form[char] === undefined || form[char].default_type === 2) {
       // console.log(rootName);
       continue; // 合体字根和单笔画字根无需在这里处理
     }
-    const glyph = form[name].component || buildGlyph(name);
+    const glyph = form[char].component || buildGlyph(char);
     const topology = findTopology(glyph);
-    rootData.push({ glyph, topology, name: name });
+    rootData.push({ glyph, topology, name: char });
   }
   return rootData;
 };
@@ -195,20 +203,40 @@ export const disassembleComponents = (
 ) => {
   const { form, classifier } = data;
   if (!rootData) rootData = getRootData(data, config);
-  const result = {} as Record<string, ComponentResult>;
-  for (const [name, glyph] of Object.entries(form).filter(
-    ([, g]) => g.default_type === 0,
-  )) {
-    const topology = findTopology(glyph.component!);
-    const cache = { name, topology, glyph: glyph.component! };
-    result[name] = getComponentScheme(cache, rootData, config, classifier);
-  }
+  const result = Object.fromEntries(
+    Object.entries(form)
+      .filter(([, g]) => g.default_type === 0)
+      .map(([char, glyph]) => {
+        const topology = findTopology(glyph.component!);
+        const cache = {
+          name: char,
+          topology,
+          glyph: glyph.component!,
+        };
+        return [char, getComponentScheme(cache, rootData!, config, classifier)];
+      }),
+  );
   return result;
 };
 
 const topologicalSort = (form: Form) => {
-  const compound: Record<string, Compound> = {};
-  return compound;
+  const compounds: Record<string, CompoundGlyph> = {};
+  for (let i = 0; i != 10; ++i) {
+    const thisLevelCompound: Record<string, Glyph> = {};
+    for (const [k, glyph] of Object.entries(form)) {
+      if (compounds[k]) continue;
+      if (glyph.default_type !== 2) continue;
+      if (
+        glyph.compound.operandList.every(
+          (x) => form[x].default_type === 0 || compounds[x] !== undefined,
+        )
+      ) {
+        thisLevelCompound[k] = glyph;
+      }
+    }
+    Object.assign(compounds, thisLevelCompound);
+  }
+  return compounds;
 };
 
 export const disassembleCompounds = (
@@ -218,29 +246,26 @@ export const disassembleCompounds = (
 ) => {
   const { mapping } = config;
   const compounds = topologicalSort(data.form);
-  const result = {} as Record<string, CompoundResult>;
+  const result: Record<string, CompoundResult> = {};
   const getResult = (s: string) => (prev[s] ? prev[s] : result[s]);
-  for (const [name, compound] of Object.entries(compounds)) {
-    if (mapping[name]) {
+  for (const [char, glyph] of Object.entries(compounds)) {
+    if (mapping[char]) {
       // 复合体本身是一个字根
-      result[name] = { sequence: [name], all: [name] };
+      result[char] = { sequence: [char], all: [char] };
       continue;
     }
     const {
       operator,
       operandList: [c1, c2],
-    } = compound;
-    const [r1, r2] = [
-      getResult(String.fromCodePoint(c1)),
-      getResult(String.fromCodePoint(c2)),
-    ];
+    } = glyph.compound;
+    const [r1, r2] = [getResult(c1), getResult(c2)];
     if (r1 !== undefined && r2 !== undefined) {
-      result[name] = {
+      result[char] = {
         sequence: r1.sequence.concat(r2.sequence),
         all: { operator, operandList: [r1.all, r2.all] },
       };
     } else {
-      console.error(name, c1, c2);
+      console.error(char, c1, c2);
     }
   }
   return result;

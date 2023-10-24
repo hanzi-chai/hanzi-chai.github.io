@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomeLayout from "./components/HomeLayout";
 import EditorLayout from "./components/EditorLayout";
 import Info from "./components/Info";
-import Data, { FormData } from "./components/Data";
+import Data from "./components/Data";
 import Elements, {
   PhoneticElementConfig,
   RootElementConfig,
@@ -14,6 +14,7 @@ import Analysis from "./components/Analysis";
 import Encoder from "./components/Encoder";
 import Classifier from "./components/Classifier";
 import { ConfigProvider } from "antd";
+import FormData from "./components/FormData";
 import CharacterTable from "./components/CharacterTable";
 
 const endpoint = "https://api.chaifen.app/";

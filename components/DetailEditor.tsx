@@ -9,7 +9,7 @@ import {
   renderList,
 } from "../lib/element";
 import { Select } from "./Utils";
-import { Op, binaryOps, ops } from "../lib/encoder";
+import { Op, binaryOps, ops } from "../lib/config";
 import TextArea from "antd/es/input/TextArea";
 
 const Background = styled(Flex)`
@@ -97,7 +97,7 @@ const DetailEditor = ({ selected }: { selected: string }) => {
         <Item label="取码">
           <Cascader
             style={{ width: "128px" }}
-            value={renderList(data.object)}
+            value={renderList(data.object!)}
             options={options}
             onChange={(event) => {
               const object = parseList(event) as CodableObject;

@@ -1,6 +1,6 @@
 import { isEqual } from "underscore";
 import { Cache } from "./form";
-import { Glyph } from "./data";
+import { Component } from "./data";
 import findTopology from "./topology";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
@@ -52,7 +52,7 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
   return queue.map(indicesToBinary(cglyph.length));
 };
 
-const degenerate = (glyph: Glyph) => {
+const degenerate = (glyph: Component) => {
   return [
     glyph.map((x) => x.feature).map((x) => simplifyMap.get(x) || x),
     findTopology(glyph),

@@ -13,18 +13,23 @@ import { useContext, useState } from "react";
 import {
   DispatchContext,
   useDesign,
+  useForm,
   useGeneric,
+  useGlyph,
   useIndex,
   useRoot,
 } from "./context";
 import Root from "./Root";
 import Char from "./Char";
 import { MappedInfo, reverse } from "../lib/utils";
-import { Select } from "./Utils";
+import { RootSelect, Select } from "./Utils";
 import { Select as AntdSelect } from "antd";
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const design = useDesign();
+  const form = useForm();
+  const displayName = (name: string) =>
+    name.match(/^[\uE000-\uFFFF]$/) ? form[name].name : name;
   const { alphabet, maxcodelen, grouping, mapping } = useGeneric();
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
@@ -73,35 +78,68 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
               删除
             </Button>
           </Space>
-          <Space>
-            或归并至
-            <AntdSelect<string>
-              value={main}
-              onChange={(event) => setMain(event)}
-              options={Object.keys(mapping).map((x) => ({
-                label: x,
-                value: x,
-              }))}
-            />
-            <Button
-              onClick={() =>
-                design({
-                  subtype: "generic-mapping",
-                  action: "remove",
-                  key: name,
-                })
-              }
-            >
-              归并
-            </Button>
-          </Space>
+          {affiliates.length ? (
+            <Flex vertical>
+              <span>已归并字根</span>
+              {affiliates.map((x) => (
+                <Flex key={x} justify="space-between">
+                  <Root>{displayName(x)}</Root>
+                  <Button
+                    onClick={() => {
+                      design({
+                        subtype: "generic-mapping",
+                        action: "add",
+                        key: x,
+                        value: code,
+                      });
+                      design({
+                        subtype: "generic-grouping",
+                        action: "remove",
+                        key: x,
+                      });
+                    }}
+                  >
+                    取消归并
+                  </Button>
+                </Flex>
+              ))}
+            </Flex>
+          ) : (
+            <Space>
+              或归并至
+              <RootSelect
+                char={undefined}
+                onChange={(event) => setMain(event)}
+                exclude={name}
+              />
+              <Button
+                onClick={() => {
+                  design({
+                    subtype: "generic-grouping",
+                    action: "add",
+                    key: name,
+                    value: main,
+                  });
+                  design({
+                    subtype: "generic-mapping",
+                    action: "remove",
+                    key: name,
+                  });
+                }}
+              >
+                归并
+              </Button>
+            </Space>
+          )}
         </Flex>
       }
     >
       <Root>
-        {name}
+        {displayName(name)}
         <span style={{ fontSize: "0.8em" }}>
-          {affiliates.length ? `(${affiliates.join(",")})` : ""}
+          {affiliates.length
+            ? `(${affiliates.map(displayName).join(",")})`
+            : ""}
         </span>{" "}
         {code.slice(1)}
       </Root>
@@ -137,10 +175,10 @@ const Mapping = () => {
         renderItem={(item: [string, MappedInfo[]]) => {
           const [key, roots] = item;
           return (
-            <Flex>
+            <Flex gap="small" style={{ margin: "8px 0" }}>
               <Char>{key}</Char>
               <Flex gap="small" wrap="wrap">
-                {roots.map(({ name, code }) => (
+                {roots.map(({ name: name, code }) => (
                   <AdjustableRoot key={name} name={name} code={code} />
                 ))}
               </Flex>

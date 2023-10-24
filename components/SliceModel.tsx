@@ -1,42 +1,33 @@
 import { getSequence, makeSequenceFilter } from "../lib/form";
 import { deepcopy } from "../lib/utils";
-import { Select } from "./Utils";
-import { useModify, useForm, useClassifier, useFormByChar } from "./context";
+import { Index, ItemSelect, Select } from "./Utils";
+import {
+  useModify,
+  useForm,
+  useClassifier,
+  useSlice,
+  useComponent,
+} from "./context";
 import { Checkbox, Flex, Form } from "antd";
 
-const SliceModel = ({ name }: { name: string }) => {
+const SliceModel = ({ char }: Index) => {
   const form = useForm();
-  const glyph = useFormByChar(name);
+  const glyph = useSlice(char);
   const modify = useModify();
   const modified = deepcopy(glyph);
   const { source, indices } = glyph.slice!;
-  const component = form[String.fromCodePoint(source)].component!;
-  const classifier = useClassifier();
+  const { component } = useComponent(char);
   return (
     <Flex vertical>
       <Form.Item label="源部件">
-        <Select
-          showSearch
-          placeholder="输入笔画搜索"
-          value={String.fromCodePoint(source)}
-          options={Object.entries(form)
-            .filter(([, v]) => v.default_type === 0)
-            .map(([x, v]) => ({ value: x, label: v.name || x }))}
+        <ItemSelect
+          char={source}
           onChange={(event) => {
             modified.slice = {
-              source: event.codePointAt(0)!,
+              source: event,
               indices: indices.slice(0, form[event].component!.length),
             };
-            modify(name, modified);
-          }}
-          filterOption={(input, option) =>
-            getSequence(form, classifier, option!.value).startsWith(input)
-          }
-          filterSort={(a, b) => {
-            return (
-              getSequence(form, classifier, a.value).length -
-              getSequence(form, classifier, b.value).length
-            );
+            modify(char, modified);
           }}
         />
       </Form.Item>
@@ -51,7 +42,7 @@ const SliceModel = ({ name }: { name: string }) => {
                   ? indices.concat(index).sort()
                   : indices.filter((x) => x !== index);
                 modified.slice = { source, indices: newindices };
-                modify(name, modified);
+                modify(char, modified);
               }}
             >
               {feature}

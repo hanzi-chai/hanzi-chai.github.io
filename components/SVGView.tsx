@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import { Stroke } from "../lib/data";
-import { PropsWithChildren, useContext } from "react";
-import { FontContext, useForm, useFormByChar } from "./context";
 import { Empty, Typography } from "antd";
+import { useComponent, useSlice } from "./context";
+import { Index } from "./Utils";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -41,25 +41,23 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
   </svg>
 );
 
-export const ComponentView = ({ name }: { name: string }) => {
-  const glyph = useFormByChar(name);
+export const ComponentView = ({ char }: Index) => {
+  const { component } = useComponent(char);
   return (
     <>
-      <StrokesView glyph={glyph.component!} />
+      <StrokesView glyph={component} />
     </>
   );
 };
 
-export const CompoundView = ({ name }: { name: string }) => {
-  const glyph = useFormByChar(name);
+export const CompoundView = ({ char }: Index) => {
   return <Empty description="暂不支持复合体的预览" />;
 };
 
-export const SliceView = ({ name }: { name: string }) => {
-  const glyph = useFormByChar(name);
+export const SliceView = ({ char }: Index) => {
+  const glyph = useSlice(char);
   const { source, indices } = glyph.slice!;
-  const sourceGlyph = useFormByChar(String.fromCodePoint(source));
-  const component = sourceGlyph.component!;
+  const { component } = useComponent(source);
   const subglyph = indices.map((x) => component[x]);
   return (
     <>

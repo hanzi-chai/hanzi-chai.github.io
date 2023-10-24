@@ -1,17 +1,17 @@
 import { Dispatch, createContext, useContext } from "react";
 import { Classifier, Config, Mapping, SieveName } from "../lib/config";
 import {
-  Compound,
   Glyph,
   Form,
   Repertoire,
-  Alias,
-  Slices,
   Character,
+  ComponentGlyph,
+  CompoundGlyph,
+  SliceGlyph,
 } from "../lib/data";
 import defaultClassifier from "../lib/classifier";
 import { useLocation } from "react-router-dom";
-import { templates } from "../lib/template";
+import { createBasicConfig } from "../lib/templates";
 
 export type Action =
   | InfoAction
@@ -50,6 +50,12 @@ type ElementSubAction =
       value?: string;
     }
   | {
+      subtype: "generic-grouping";
+      action: "add" | "remove";
+      key: string;
+      value?: string;
+    }
+  | {
       subtype: "root-selector";
       action: "add" | "remove";
       value: SieveName;
@@ -66,14 +72,14 @@ type ElementSubAction =
 type DataAction = {
   type: "data";
 } & (
-  | { subtype: "form"; key: string; value: Glyph }
-  | { subtype: "repertoire"; key: string; value: Character }
+  | { subtype: "form"; key: number; value: Glyph }
+  | { subtype: "repertoire"; key: number; value: Character }
   | { subtype: "classifier"; key: string; value: number }
 );
 type DeleteAction = {
   type: "data-delete";
   subtype: DataAction["subtype"];
-  key: string;
+  key: DataAction["key"];
   value: undefined;
 };
 type EncoderAction = { type: "encoder"; value: Config["encoder"] };
@@ -91,9 +97,11 @@ export const configReducer = (config: Config, action: Action) => {
       config.info = { ...config.info, ...value };
       break;
     case "data":
+      // @ts-ignore
       config.data[action.subtype][action.key] = value;
       break;
     case "data-delete":
+      // @ts-ignore
       delete config.data[action.subtype][action.key];
       break;
     case "element":
@@ -111,6 +119,16 @@ export const configReducer = (config: Config, action: Action) => {
               break;
             case "remove":
               delete element.mapping[action.key];
+              break;
+          }
+          break;
+        case "generic-grouping":
+          switch (action.action) {
+            case "add":
+              element.grouping[action.key] = action.value!;
+              break;
+            case "remove":
+              delete element.grouping[action.key];
               break;
           }
           break;
@@ -143,7 +161,7 @@ export const configReducer = (config: Config, action: Action) => {
 export const FormContext = createContext({} as unknown as Form);
 export const RepertoireContext = createContext({} as unknown as Repertoire);
 export const FontContext = createContext({} as Record<string, string>);
-export const ConfigContext = createContext(templates.basic.self as Config);
+export const ConfigContext = createContext(createBasicConfig() as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
 const useData = () => {
@@ -176,9 +194,27 @@ const useForm = () => {
   return Object.assign({}, form, useData().form);
 };
 
-const useFormByChar = (char: string) => {
+const useGlyph = (char: string) => {
   const form = useContext(FormContext);
   return useData().form[char] || form[char];
+};
+
+const useDisplay = (char: string) => {
+  const form = useContext(FormContext);
+  const glyph = useData().form[char] || form[char];
+  return glyph.name || char;
+};
+
+const useComponent = (char: string) => {
+  return useGlyph(char) as ComponentGlyph;
+};
+
+const useCompound = (char: string) => {
+  return useGlyph(char) as CompoundGlyph;
+};
+
+const useSlice = (char: string) => {
+  return useGlyph(char) as SliceGlyph;
 };
 
 const useRepertoire = () => {
@@ -218,11 +254,11 @@ const useDataType = () => {
 const useModify = () => {
   const dispatch = useContext(DispatchContext);
   const subtype = useDataType() as "form";
-  return (key: string, value: DataAction["value"]) =>
+  return (key: DataAction["key"], value: DataAction["value"]) =>
     dispatch({
       type: "data",
       subtype,
-      key,
+      key: key as number,
       value: value as Glyph,
     });
 };
@@ -230,11 +266,11 @@ const useModify = () => {
 const useDelete = () => {
   const dispatch = useContext(DispatchContext);
   const subtype = useDataType() as "form";
-  return (key: string) =>
+  return (key: DataAction["key"]) =>
     dispatch({
       type: "data-delete",
       subtype,
-      key,
+      key: key as number,
       value: undefined,
     });
 };
@@ -247,7 +283,11 @@ export {
   useDesign,
   useData,
   useForm,
-  useFormByChar,
+  useGlyph,
+  useDisplay,
+  useComponent,
+  useCompound,
+  useSlice,
   useRepertoire,
   useClassifier,
   useAll,

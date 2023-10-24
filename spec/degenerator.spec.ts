@@ -2,10 +2,10 @@ import degenerate, {
   indicesToBinary,
   binaryToIndices,
   generateSliceBinaries,
-} from "./degenerator";
+} from "../lib/degenerator";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
-import { Glyph } from "./data";
+import { Component, Glyph } from "../lib/data";
 import { buildCache, getComponents } from "./mock";
 
 const { randomInt } = create(all, {
@@ -43,7 +43,7 @@ describe("generate slice binaries", () => {
   });
 });
 
-const slice = (source: Glyph, indices: number[]) =>
+const slice = (source: Component, indices: number[]) =>
   indices.map((i) => source[i]);
 
 describe("degenerate cross tests", () => {
@@ -67,7 +67,7 @@ describe("degenerate cross tests", () => {
     良,
     展内,
   } = getComponents();
-  const slice = (source: Glyph, indices: number[]) =>
+  const slice = (source: Component, indices: number[]) =>
     indices.map((i) => source[i]);
   it("says 天 has 大", () => {
     expect(degenerate(大)).toEqual(degenerate(slice(天, [1, 2, 3])));

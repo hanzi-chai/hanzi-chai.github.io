@@ -1,8 +1,9 @@
-import { Config, TotalResult } from "./config";
-import { Glyph } from "./data";
+import { Config } from "./config";
+import { ComponentGlyph, Glyph } from "./data";
+import { TotalResult } from "./encoder";
 
 export interface Extra {
-  rootData: Record<string, { glyph: Glyph }>;
+  rootData: Record<string, { glyph: ComponentGlyph["component"] }>;
 }
 
 interface Base {
@@ -33,7 +34,7 @@ interface This extends Base {
 
 interface Pronunciation extends Base {
   type: "字音";
-  subtype: keyof typeof pinyinAnalyzers;
+  subtype: AName;
 }
 
 interface Root extends Base {

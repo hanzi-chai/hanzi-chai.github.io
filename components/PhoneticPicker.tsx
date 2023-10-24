@@ -1,6 +1,5 @@
 import { Flex, Input, Tabs, Typography } from "antd";
 import { useState } from "react";
-import { ComponentPool, CompoundPool, SlicePool } from "./Pool";
 import StrokeSearch from "./StrokeSearch";
 import ElementAdder from "./ElementAdder";
 import { AName, analyzerNames, pinyinAnalyzers } from "../lib/element";
@@ -17,7 +16,6 @@ const Content = styled(Flex)`
 const PhoneticPicker = () => {
   const [name, setName] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<AName>("声");
-  const { mapping, alphabet } = usePhonetic();
   const design = useDesign();
   const characters = useRepertoire();
   const syllables = [
@@ -57,7 +55,7 @@ const PhoneticPicker = () => {
           setMode(e as AName);
         }}
       />
-      <ElementAdder name={name} />
+      <ElementAdder char={name} />
     </>
   );
 };

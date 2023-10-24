@@ -12,8 +12,8 @@ const Content = styled(Flex)`
 `;
 
 interface PoolProps {
-  name?: string;
-  setName: (s: string | undefined) => void;
+  char?: string;
+  setChar: (s: string | undefined) => void;
   sequence: string;
 }
 
@@ -24,7 +24,7 @@ const MyPagination = styled(Pagination)`
   justify-content: center;
 `;
 
-const Pool = ({ name, setName, sequence }: PoolProps) => {
+const Pool = ({ char, setChar, sequence }: PoolProps) => {
   const form = useForm();
   const classifier = useClassifier();
   const content = Object.keys(form)
@@ -36,9 +36,7 @@ const Pool = ({ name, setName, sequence }: PoolProps) => {
     );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
-  const range = content
-    .sort((a, b) => a.length - b.length)
-    .slice((page - 1) * pageSize, page * pageSize);
+  const range = content.slice((page - 1) * pageSize, page * pageSize);
   return (
     <>
       <Content wrap="wrap">
@@ -46,9 +44,9 @@ const Pool = ({ name, setName, sequence }: PoolProps) => {
           <Char
             key={x}
             onClick={() => {
-              x === name ? setName(undefined) : setName(x);
+              x === char ? setChar(undefined) : setChar(x);
             }}
-            type={x === name ? "primary" : "default"}
+            type={x === char ? "primary" : "default"}
           >
             {form[x].name || x}
           </Char>

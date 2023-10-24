@@ -1,9 +1,9 @@
 import components from "../data/components.json";
 import compounds from "../data/compounds.json";
-import { Components, Compounds } from "./data";
-import findTopology from "./topology";
+import { Components, Compounds } from "../lib/data";
+import findTopology from "../lib/topology";
 import xingyin from "../templates/xingyin.yaml";
-import { Config, FormConfig } from "./config";
+import { Config, FormConfig } from "../lib/config";
 
 export const getComponents = () => {
   const w = components as unknown as Components;
