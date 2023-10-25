@@ -9,7 +9,6 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "fix": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
     "preview": "vite preview",
-    "data": "npx -y -- ts-node -T --esm scripts/fetch.ts",
     "format": "npx prettier . --write && git add .",
     "test": "vitest",
     "testui": "vitest --ui",

@@ -1,12 +1,22 @@
-import { Button, Dropdown, Flex, Layout, List, Typography } from "antd";
+import {
+  Button,
+  Dropdown,
+  Flex,
+  Form,
+  Layout,
+  List,
+  Modal,
+  Typography,
+} from "antd";
 import { Config } from "../lib/config";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useImmer } from "use-immer";
 import { examples } from "../lib/example";
-import { Uploader } from "./Utils";
+import { Select, Uploader } from "./Utils";
 import { load } from "js-yaml";
+import Starter from "./Starter";
 
 const HomeLayout = () => {
   const [configs, setConfigs] = useImmer(() =>
@@ -63,14 +73,7 @@ const HomeLayout = () => {
             }}
           />
           <Flex justify="center" gap="middle">
-            <Dropdown
-              placement="bottom"
-              menu={{
-                items: [],
-              }}
-            >
-              <Button type="primary">新建</Button>
-            </Dropdown>
+            <Starter setConfigs={setConfigs} />
             <Dropdown
               placement="bottom"
               menu={{

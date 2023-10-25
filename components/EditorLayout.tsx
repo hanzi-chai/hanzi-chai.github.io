@@ -90,6 +90,7 @@ const EditorLayout = () => {
   const [_, __, panel] = pathname.split("/");
   const config = useContext(ConfigContext);
   const dispatch = useContext(DispatchContext);
+  const { source } = config;
 
   return (
     <Layout
@@ -123,16 +124,18 @@ const EditorLayout = () => {
               }}
             />
             <Button onClick={() => exportFile(config)}>导出</Button>
-            <Button
-              onClick={() => {
-                dispatch({
-                  type: "load",
-                  value: examples[config.source].self,
-                });
-              }}
-            >
-              重置
-            </Button>
+            {source !== undefined && (
+              <Button
+                onClick={() => {
+                  dispatch({
+                    type: "load",
+                    value: examples[source].self,
+                  });
+                }}
+              >
+                重置
+              </Button>
+            )}
           </Space>
         </Flex>
       </Layout.Header>
