@@ -11,7 +11,6 @@ import {
 } from "../lib/data";
 import defaultClassifier from "../lib/classifier";
 import { useLocation } from "react-router-dom";
-import { createBasicConfig } from "../lib/templates";
 
 export type Action =
   | InfoAction
@@ -161,7 +160,7 @@ export const configReducer = (config: Config, action: Action) => {
 export const FormContext = createContext({} as unknown as Form);
 export const RepertoireContext = createContext({} as unknown as Repertoire);
 export const FontContext = createContext({} as Record<string, string>);
-export const ConfigContext = createContext(createBasicConfig() as Config);
+export const ConfigContext = createContext({} as Config);
 export const DispatchContext = createContext<Dispatch<Action>>(() => {});
 
 const useData = () => {

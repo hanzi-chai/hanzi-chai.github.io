@@ -44,8 +44,8 @@ interface Condition {
 }
 
 interface Config {
-  version: "0.0.0";
-  source: string;
+  version: string;
+  source?: string;
   info: {
     name: string;
     author: string;
@@ -58,7 +58,7 @@ interface Config {
     classifier: Classifier;
   };
   form: FormConfig;
-  pronunciation?: PronunciationConfig;
+  pronunciation: PronunciationConfig;
   encoder: {
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;
