@@ -18,7 +18,8 @@ export type Action =
   | ElementAction
   | DataAction
   | DeleteAction
-  | EncoderAction;
+  | EncoderAction
+  | ReferenceAction;
 
 type InfoAction = {
   type: "info";
@@ -82,6 +83,7 @@ type DeleteAction = {
   value: undefined;
 };
 type EncoderAction = { type: "encoder"; value: Config["encoder"] };
+type ReferenceAction = { type: "reference"; value: Config["reference"] };
 
 export const configReducer = (config: Config, action: Action) => {
   const { type, value } = action;
@@ -153,6 +155,8 @@ export const configReducer = (config: Config, action: Action) => {
     case "encoder":
       config.encoder = action.value;
       break;
+    case "reference":
+      config.reference = action.value;
   }
   return config;
 };

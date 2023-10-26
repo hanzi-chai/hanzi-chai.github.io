@@ -1,6 +1,6 @@
 import { Feature } from "./classifier";
 import { Mapping } from "./config";
-import { SVGCommand, Stroke } from "./data";
+import { Form, SVGCommand, Stroke } from "./data";
 
 export const validUnicode = (char: string) => {
   const code = char.codePointAt(0)!;
@@ -76,4 +76,29 @@ export const reverse = (alphabet: string, mapping: Mapping) => {
     data[main].push({ name, code });
   }
   return data;
+};
+
+export const getSupplemental = (form: Form, list: string[]) => {
+  const set = new Set(list);
+  const reverseForm: Record<string, string[]> = Object.fromEntries(
+    Object.entries(form).map(([x]) => [x, []]),
+  );
+  for (const [char, glyph] of Object.entries(form)) {
+    if (glyph.default_type === 2) {
+      glyph.compound.operandList.forEach((x) => reverseForm[x].push(char));
+    }
+  }
+  const componentsNotChar = Object.entries(form)
+    .filter(([, v]) => v.default_type === 0)
+    .map(([x]) => x)
+    .filter((x) => !set.has(x));
+  const suppList: string[] = [];
+  componentsNotChar.forEach((char) => {
+    let trial = char;
+    while (trial && !set.has(trial)) {
+      trial = reverseForm[trial][0];
+    }
+    if (trial) suppList.push(trial);
+  });
+  return Array.from(new Set(suppList));
 };

@@ -28,7 +28,10 @@ const Pool = ({ char, setChar, sequence }: PoolProps) => {
   const form = useForm();
   const classifier = useClassifier();
   const content = Object.keys(form)
-    .filter((x) => getSequence(form, classifier, x).startsWith(sequence))
+    .filter((x) => {
+      const thisSequence = getSequence(form, classifier, x);
+      return thisSequence.length > 1 && thisSequence.startsWith(sequence);
+    })
     .sort(
       (x, y) =>
         getSequence(form, classifier, x).length -

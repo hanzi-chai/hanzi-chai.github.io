@@ -115,14 +115,14 @@ const Toolbar = ({ char, setChar }: IndexEdit) => {
 
 const ModelDispatch = ({ char }: Index) => {
   const form = useForm();
-  const models = [ComponentModel, CompoundModel, SliceModel];
+  const models = [ComponentModel, SliceModel, CompoundModel];
   const Model = models[form[char].default_type];
   return <Model char={char} />;
 };
 
 const ViewDispatch = ({ char }: Index) => {
   const { default_type } = useGlyph(char);
-  const views = [ComponentView, CompoundView, SliceView];
+  const views = [ComponentView, SliceView, CompoundView];
   const View = views[default_type];
   return <View char={char} />;
 };

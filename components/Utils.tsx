@@ -44,10 +44,16 @@ export const Select = styled(_Select)`
   width: 128px;
 ` as typeof _Select;
 
-export const Uploader = ({ action }: { action: (s: string) => void }) => {
+export const Uploader = ({
+  action,
+  text,
+}: {
+  action: (s: string) => void;
+  text?: string;
+}) => {
   return (
     <Upload
-      accept=".yaml"
+      accept=".yaml,.json"
       customRequest={({ file }) => {
         const reader = new FileReader();
         reader.addEventListener("load", () => action(reader.result as string));
@@ -56,7 +62,7 @@ export const Uploader = ({ action }: { action: (s: string) => void }) => {
       maxCount={1}
       showUploadList={false}
     >
-      <Button>导入</Button>
+      <Button>{text || "导入"}</Button>
     </Upload>
   );
 };

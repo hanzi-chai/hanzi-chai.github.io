@@ -9,6 +9,7 @@ data:
   form: {}
   repertoire: {}
   classifier:
+    竖钩: 5
     竖提: 6
     横折提: 6
     竖折: 6
@@ -296,7 +297,7 @@ encoder:
       {
         object: { type: 汉字 },
         operator: 匹配,
-        value: 金言心禾土又竹人文目西石米日广廿丁口王之白田水子月木,
+        value: "[气五山八土言月日口车金石米王广火子十立之西川水巴女木]",
         positive: s5,
         negative: s8,
       }

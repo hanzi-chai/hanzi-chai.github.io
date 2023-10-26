@@ -1,8 +1,9 @@
 import mswb from "../examples/mswb.yaml";
+import yima from "../examples/yima.yaml";
 import { Config } from "./config";
 
 export const examples = Object.fromEntries(
-  ([mswb] as Config[]).map((config) => {
+  ([mswb, yima] as Config[]).map((config) => {
     return [
       config.source,
       {

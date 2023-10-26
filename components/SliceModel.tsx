@@ -15,8 +15,8 @@ const SliceModel = ({ char }: Index) => {
   const glyph = useSlice(char);
   const modify = useModify();
   const modified = deepcopy(glyph);
-  const { source, indices } = glyph.slice!;
-  const { component } = useComponent(char);
+  const { source, indices } = glyph.slice;
+  const { component } = useComponent(source);
   return (
     <Flex vertical>
       <Form.Item label="源部件">
