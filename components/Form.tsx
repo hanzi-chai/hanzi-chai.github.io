@@ -7,9 +7,6 @@ import {
   Flex,
   Form,
   Input,
-  Layout,
-  Menu,
-  MenuProps,
   Popconfirm,
   Popover,
   Radio,
@@ -33,13 +30,7 @@ import {
   useModify,
   useGlyph,
 } from "./context";
-import {
-  getSequence,
-  makeSequenceFilter,
-  recursiveGetSequence,
-} from "../lib/form";
 import styled from "styled-components";
-import { Component, Glyph } from "../lib/data";
 import CompoundModel from "./CompoundModel";
 import { deepcopy, length, validUnicode } from "../lib/utils";
 
@@ -54,12 +45,11 @@ const Overlay = styled.div`
 `;
 
 const Toolbar = ({ char, setChar }: IndexEdit) => {
-  const c1 = useData().form;
-  const c2 = useForm();
+  const formCustomizations = useData().form;
+  const form = useForm();
   const del = useDelete();
   const modify = useModify();
   const [newName, setNewName] = useState("");
-  const [api] = notification.useNotification();
   return (
     <Flex justify="center" align="center" gap="small">
       选择
@@ -74,21 +64,24 @@ const Toolbar = ({ char, setChar }: IndexEdit) => {
         }
         onConfirm={() => {
           if (!Array.from(newName).every(validUnicode)) {
-            api.error({
+            notification.error({
               message: "名称含有非法字符",
               description:
                 "合法字符的范围：0x4e00 - 0x9fff，或 0x3400 - 0x4dbf",
             });
+            return;
           }
-          const value = deepcopy(c2[char!]);
+          const value = deepcopy(form[char!]);
           value.name = null;
           value.gf0014_id = null;
           if (length(newName) === 1) {
             modify(newName, value);
             setChar(newName);
           } else {
-            const code =
-              Math.max(0xf000 - 1, ...Object.keys(c1).map(Number)) + 1;
+            const maxCode = Math.max(
+              ...Object.keys(formCustomizations).map((x) => x.codePointAt(0)!),
+            );
+            const code = Math.max(maxCode + 1, 0xf000);
             value.name = newName;
             const char = String.fromCodePoint(code);
             modify(char, value);
@@ -101,7 +94,7 @@ const Toolbar = ({ char, setChar }: IndexEdit) => {
         <Button disabled={char === undefined}>复制</Button>
       </Popconfirm>
       <Button
-        disabled={char === undefined || !c1[char]}
+        disabled={char === undefined || !formCustomizations[char]}
         onClick={() => {
           del(char!);
           setChar(undefined);

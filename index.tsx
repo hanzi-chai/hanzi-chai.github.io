@@ -16,8 +16,7 @@ import Classifier from "./components/Classifier";
 import { ConfigProvider } from "antd";
 import Repertoire from "./components/Repertoire";
 import Form from "./components/Form";
-
-const endpoint = "https://api.chaifen.app/";
+import { get } from "./lib/api";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -40,12 +39,8 @@ const router = createBrowserRouter([
     path: "/:id",
     element: <EditorLayout />,
     loader: async () => {
-      const repertoire = fetch(endpoint + "repertoire").then(
-        (res) => res.json() as Record<string, any>,
-      );
-      const form = fetch(endpoint + "form").then(
-        (res) => res.json() as Record<string, any>,
-      );
+      const repertoire = get<Record<string, any>>("repertoire");
+      const form = get<Record<string, any>>("form/all");
       const data = await Promise.all([repertoire, form]);
       return data;
     },
