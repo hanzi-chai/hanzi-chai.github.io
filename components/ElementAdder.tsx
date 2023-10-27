@@ -3,7 +3,7 @@ import { Select, Button, Flex } from "antd";
 import { useDesign, useGeneric, useIndex, useRoot } from "./context";
 import { RootSelect } from "./Utils";
 
-const ElementAdder = ({ char }: { char?: string }) => {
+const ElementAdder = ({ element }: { element?: string }) => {
   const { alphabet, maxcodelen, mapping } = useGeneric();
   const index = useIndex();
   const design = useDesign();
@@ -36,13 +36,13 @@ const ElementAdder = ({ char }: { char?: string }) => {
         })}
         <Button
           type="primary"
-          disabled={char === undefined}
+          disabled={element === undefined}
           onClick={() =>
-            char &&
+            element &&
             design({
               subtype: "generic-mapping",
               action: "add",
-              key: char,
+              key: element,
               value: keys.slice(0, maxcodelen).join(""),
             })
           }
@@ -60,13 +60,15 @@ const ElementAdder = ({ char }: { char?: string }) => {
           />
           <Button
             type="primary"
-            disabled={char === undefined || Object.keys(mapping).length === 0}
+            disabled={
+              element === undefined || Object.keys(mapping).length === 0
+            }
             onClick={() =>
-              char &&
+              element &&
               design({
                 subtype: "generic-grouping",
                 action: "add",
-                key: char,
+                key: element,
                 value: main,
               })
             }

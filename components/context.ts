@@ -11,6 +11,7 @@ import {
 } from "../lib/data";
 import defaultClassifier from "../lib/classifier";
 import { useLocation } from "react-router-dom";
+import { act } from "react-dom/test-utils";
 
 export type Action =
   | InfoAction
@@ -66,8 +67,10 @@ type ElementSubAction =
       value: SieveName[];
     }
   | {
-      subtype: "phonetic-automapping";
-      value: Mapping;
+      subtype: "root-customize";
+      action: "add" | "remove";
+      key: string;
+      value?: string[];
     };
 type DataAction = {
   type: "data";
@@ -147,9 +150,15 @@ export const configReducer = (config: Config, action: Action) => {
               root.analysis.selector = action.value;
           }
           break;
-        case "phonetic-automapping":
-          element.mapping = action.value;
-          break;
+        case "root-customize":
+          switch (action.action) {
+            case "add":
+              root.analysis.customize[action.key] = action.value!;
+              break;
+            case "remove":
+              delete root.analysis.customize[action.key];
+              break;
+          }
       }
       break;
     case "encoder":

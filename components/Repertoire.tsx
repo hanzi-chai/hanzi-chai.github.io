@@ -6,7 +6,6 @@ import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Character } from "../lib/data";
 import { deepcopy } from "../lib/utils";
-import { number } from "mathjs";
 
 interface DataType extends Character {
   key: string;
@@ -36,7 +35,7 @@ const EditablePinyin = ({
   );
 };
 
-const CharacterTable: React.FC = () => {
+const Repertoire: React.FC = () => {
   const characters = useRepertoire();
   const modify = useModify();
   const [input, setInput] = useState("");
@@ -134,4 +133,4 @@ const CharacterTable: React.FC = () => {
   );
 };
 
-export default CharacterTable;
+export default Repertoire;

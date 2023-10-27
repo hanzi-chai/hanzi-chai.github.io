@@ -27,6 +27,7 @@ form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   analysis:
     selector: [笔顺优先, 根少优先, 能连不交, 能散不连, 取大优先]
+    customize: {}
   grouping:
     "\ue401": 力
     "\ue432": 彐

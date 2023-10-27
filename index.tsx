@@ -14,8 +14,8 @@ import Analysis from "./components/Analysis";
 import Encoder from "./components/Encoder";
 import Classifier from "./components/Classifier";
 import { ConfigProvider } from "antd";
-import FormData from "./components/FormData";
-import CharacterTable from "./components/CharacterTable";
+import Repertoire from "./components/Repertoire";
+import Form from "./components/Form";
 
 const endpoint = "https://api.chaifen.app/";
 
@@ -55,8 +55,8 @@ const router = createBrowserRouter([
         path: "data",
         element: <Data />,
         children: [
-          { path: "form", element: <FormData /> },
-          { path: "repertoire", element: <CharacterTable /> },
+          { path: "form", element: <Form /> },
+          { path: "repertoire", element: <Repertoire /> },
           { path: "classifier", element: <Classifier /> },
         ],
       },

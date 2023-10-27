@@ -274,6 +274,29 @@ export const disassembleCompounds = (
   return result;
 };
 
+export const getFormCore = (data: Config["data"], config: FormConfig) => {
+  const s1 = disassembleComponents(data, config);
+  Object.assign(
+    s1,
+    Object.fromEntries(
+      Object.entries(config.analysis.customize).map(([component, sequence]) => {
+        const pseudoResult: ComponentResult = {
+          sequence: sequence,
+          all: sequence,
+          map: {},
+          schemes: [],
+        };
+        return [component, pseudoResult];
+      }),
+    ),
+  );
+  const s2 = disassembleCompounds(data, config, s1);
+  return [s1, s2] as [
+    Record<string, ComponentResult>,
+    Record<string, ComponentResult>,
+  ];
+};
+
 export const getForm = (
   list: string[],
   data: Config["data"],
@@ -283,8 +306,7 @@ export const getForm = (
   const rootLookup = Object.fromEntries(
     rootData.map(({ name, glyph }) => [name, { glyph }]),
   );
-  const componentResults = disassembleComponents(data, config, rootData);
-  const compoundResults = disassembleCompounds(data, config, componentResults);
+  const [componentResults, compoundResults] = getFormCore(data, config);
   const value = Object.fromEntries(
     list.map((char) => {
       const result = componentResults[char] || compoundResults[char];

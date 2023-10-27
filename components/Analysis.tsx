@@ -31,11 +31,13 @@ import {
   CompoundResult,
   disassembleComponents,
   disassembleCompounds,
+  getFormCore,
   getSequence,
 } from "../lib/form";
 import { Classifier } from "../lib/config";
 import { EditorColumn, EditorRow, Select } from "./Utils";
 import Selector from "./Selector";
+import AnalysisCustomizer from "./AnalysisCustomizer";
 
 const ResultSummary = ({
   char,
@@ -58,7 +60,7 @@ const ResultSummary = ({
   );
 };
 
-const exportResult = (result: Record<string, ComponentResult>) => {
+const exportResult = (result: Record<string, any>) => {
   const fileContent = JSON.stringify(result);
   const blob = new Blob([fileContent], { type: "text/plain" });
   const a = document.createElement("a");
@@ -76,7 +78,6 @@ const Analysis = () => {
   const [compoundResults, setCompoundResult] = useState(
     {} as Record<string, CompoundResult>,
   );
-  const components = useForm();
   const classifier = useClassifier();
   const data = useAll();
   const form = useForm();
@@ -107,6 +108,9 @@ const Analysis = () => {
       <EditorColumn span={8}>
         <Typography.Title level={2}>字形分析</Typography.Title>
         <Selector />
+        <Typography.Title level={2}>自定义分析</Typography.Title>
+        <Typography.Title level={3}>部件</Typography.Title>
+        <AnalysisCustomizer />;
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>分析结果</Typography.Title>
@@ -115,16 +119,31 @@ const Analysis = () => {
           <Button
             type="primary"
             onClick={() => {
-              const s1 = disassembleComponents(data, rootConfig);
-              const s2 = disassembleCompounds(data, rootConfig, s1);
-              setComponentResult(s1);
-              setCompoundResult(s2);
+              const [componentResults, compoundResults] = getFormCore(
+                data,
+                rootConfig,
+              );
+              setComponentResult(componentResults);
+              setCompoundResult(compoundResults);
             }}
           >
             计算
           </Button>
-          <Button onClick={() => setComponentResult({})}>清空</Button>
-          <Button onClick={() => exportResult(componentResults)}>导出</Button>
+          <Button
+            onClick={() => {
+              setComponentResult({});
+              setCompoundResult({});
+            }}
+          >
+            清空
+          </Button>
+          <Button
+            onClick={() => {
+              exportResult({ componentResults, compoundResults });
+            }}
+          >
+            导出
+          </Button>
         </Flex>
         <Flex justify="center">
           <Radio.Group

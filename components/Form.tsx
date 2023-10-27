@@ -1,5 +1,5 @@
 import ComponentModel from "./ComponentModel";
-import { ComponentView, CompoundView, SliceView } from "./SVGView";
+import { ComponentView, CompoundView, SliceView } from "./GlyphView";
 import { useState } from "react";
 import {
   Button,

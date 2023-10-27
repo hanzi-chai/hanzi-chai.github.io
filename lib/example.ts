@@ -3,7 +3,7 @@ import yima from "../examples/yima.yaml";
 import { Config } from "./config";
 
 export const examples = Object.fromEntries(
-  ([mswb, yima] as Config[]).map((config) => {
+  ([mswb] as Config[]).map((config) => {
     return [
       config.source,
       {

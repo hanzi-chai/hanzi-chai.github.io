@@ -19,6 +19,7 @@ interface BaseConfig {
 interface FormConfig extends BaseConfig {
   analysis: {
     selector: Selector;
+    customize: Record<string, string[]>;
   };
 }
 

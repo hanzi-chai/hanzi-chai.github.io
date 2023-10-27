@@ -12,9 +12,10 @@ const Content = styled(Flex)`
 `;
 
 interface PoolProps {
-  char?: string;
-  setChar: (s: string | undefined) => void;
-  sequence: string;
+  element?: string;
+  setElement: (s: string | undefined) => void;
+  content: string[];
+  specialRendering?: (s: string) => string;
 }
 
 const MyPagination = styled(Pagination)`
@@ -24,19 +25,12 @@ const MyPagination = styled(Pagination)`
   justify-content: center;
 `;
 
-const Pool = ({ char, setChar, sequence }: PoolProps) => {
-  const form = useForm();
-  const classifier = useClassifier();
-  const content = Object.keys(form)
-    .filter((x) => {
-      const thisSequence = getSequence(form, classifier, x);
-      return thisSequence.length > 1 && thisSequence.startsWith(sequence);
-    })
-    .sort(
-      (x, y) =>
-        getSequence(form, classifier, x).length -
-        getSequence(form, classifier, y).length,
-    );
+const ElementPool = ({
+  element,
+  setElement,
+  content,
+  specialRendering,
+}: PoolProps) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content.slice((page - 1) * pageSize, page * pageSize);
@@ -47,11 +41,11 @@ const Pool = ({ char, setChar, sequence }: PoolProps) => {
           <Char
             key={x}
             onClick={() => {
-              x === char ? setChar(undefined) : setChar(x);
+              x === element ? setElement(undefined) : setElement(x);
             }}
-            type={x === char ? "primary" : "default"}
+            type={x === element ? "primary" : "default"}
           >
-            {form[x].name || x}
+            {specialRendering ? specialRendering(x) : x}
           </Char>
         ))}
       </Content>
@@ -69,4 +63,4 @@ const Pool = ({ char, setChar, sequence }: PoolProps) => {
   );
 };
 
-export default Pool;
+export default ElementPool;
