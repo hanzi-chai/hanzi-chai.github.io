@@ -63,15 +63,19 @@ const ElementAdder = ({ element }: { element?: string }) => {
             disabled={
               element === undefined || Object.keys(mapping).length === 0
             }
-            onClick={() =>
-              element &&
+            onClick={() => {
               design({
                 subtype: "generic-grouping",
                 action: "add",
-                key: element,
+                key: element!,
                 value: main,
-              })
-            }
+              });
+              design({
+                subtype: "generic-mapping",
+                action: "remove",
+                key: element!,
+              });
+            }}
           >
             归并
           </Button>

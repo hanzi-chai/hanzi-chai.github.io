@@ -31,8 +31,8 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const legacyLoader = async () => {
-  const repertoire = get<Record<string, any>>("repertoire");
-  const form = get<Record<string, any>>("form/all");
+  const repertoire = get<Record<string, any>, undefined>("repertoire");
+  const form = get<Record<string, any>, undefined>("form/all");
   const data = await Promise.all([repertoire, form]);
   return data;
 };

@@ -142,3 +142,7 @@ export type IndexEdit = {
   char: string | undefined;
   setChar: (s: string | undefined) => void;
 };
+export type IndexEdit2 = {
+  char: string;
+  setChar: (s: string) => void;
+};

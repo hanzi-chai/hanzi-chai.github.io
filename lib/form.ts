@@ -34,9 +34,6 @@ export const recursiveGetSequence = function (
   classifier: Classifier,
   char: string,
 ): number[] {
-  if (form[char] === undefined) {
-    console.log(char);
-  }
   const { default_type, component, compound } = form[char] as
     | ComponentGlyph
     | CompoundGlyph;

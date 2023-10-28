@@ -1,6 +1,6 @@
 import { Feature } from "./classifier";
 import { Mapping } from "./config";
-import { Form, SVGCommand, Stroke } from "./data";
+import { Alias, Compound, Form, Glyph, SVGCommand, Stroke } from "./data";
 
 export const validUnicode = (char: string) => {
   const code = char.codePointAt(0)!;
@@ -126,6 +126,21 @@ const preprocessSlices = (c: any) => {
   return c;
 };
 
+const postProcessCompounds = (c: any) => {
+  const c2 = deepcopy(c);
+  c2.operandList = c2.operandList.map((x: any) => x.codePointAt(0)!) as [
+    number,
+    number,
+  ];
+  return c2;
+};
+
+const postProcessSlices = (c: any) => {
+  const c2 = deepcopy(c);
+  c2.source = c2.source.codePointAt(0);
+  return c2;
+};
+
 export const preprocessForm = (f: any[]) => {
   return Object.fromEntries(
     f.map((x) => [
@@ -140,4 +155,16 @@ export const preprocessForm = (f: any[]) => {
       },
     ]),
   );
+};
+
+export const postProcessForm = (x: Glyph, unicode: number | null) => {
+  return {
+    unicode,
+    name: x.name,
+    default_type: x.default_type,
+    gf0014_id: x.gf0014_id,
+    component: x.component && JSON.stringify(x.component),
+    compound: x.compound && JSON.stringify(postProcessCompounds(x.compound)),
+    slice: x.slice && JSON.stringify(postProcessSlices(x.slice)),
+  };
 };
