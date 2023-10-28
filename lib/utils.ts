@@ -102,3 +102,42 @@ export const getSupplemental = (form: Form, list: string[]) => {
   });
   return Array.from(new Set(suppList));
 };
+
+export const preprocessRepertoire = (r: any[]) => {
+  return Object.fromEntries(
+    r.map((x) => [
+      String.fromCodePoint(x.unicode),
+      {
+        tygf: x.tygf,
+        gb2312: x.gb2312,
+        pinyin: JSON.parse(x.pinyin),
+      },
+    ]),
+  );
+};
+
+const preprocessCompounds = (c: any) => {
+  c.operandList = c.operandList.map((x: any) => String.fromCodePoint(x));
+  return c;
+};
+
+const preprocessSlices = (c: any) => {
+  c.source = String.fromCodePoint(c.source);
+  return c;
+};
+
+export const preprocessForm = (f: any[]) => {
+  return Object.fromEntries(
+    f.map((x) => [
+      String.fromCodePoint(x.unicode),
+      {
+        name: x.name,
+        default_type: x.default_type,
+        gf0014_id: x.gf0014_id,
+        component: x.component && JSON.parse(x.component),
+        compound: x.compound && preprocessCompounds(JSON.parse(x.compound)),
+        slice: x.slice && preprocessSlices(JSON.parse(x.slice)),
+      },
+    ]),
+  );
+};

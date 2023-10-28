@@ -1,13 +1,18 @@
-import Mapping from "./Mapping";
+import Mapping from "../components/Mapping";
 import { Flex, Form, Layout, Menu, Typography } from "antd";
 import { useState } from "react";
-import { useClassifier, useForm, useIndex, useRepertoire } from "./context";
+import {
+  useClassifier,
+  useForm,
+  useIndex,
+  useRepertoire,
+} from "../components/context";
 import { Outlet, useNavigate } from "react-router-dom";
-import { EditorColumn, EditorRow, Select } from "./Utils";
-import ElementPicker from "./ElementPicker";
+import { EditorColumn, EditorRow, Select } from "../components/Utils";
+import ElementPicker from "../components/ElementPicker";
 import { AName, analyzerNames, pinyinAnalyzers } from "../lib/element";
 import { getSequence } from "../lib/form";
-import StrokeSearch from "./StrokeSearch";
+import StrokeSearch from "../components/StrokeSearch";
 
 const Elements = () => {
   const navigate = useNavigate();

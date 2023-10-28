@@ -2,20 +2,20 @@ import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createGlobalStyle } from "styled-components";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import HomeLayout from "./components/HomeLayout";
-import EditorLayout from "./components/EditorLayout";
-import Info from "./components/Info";
-import Data from "./components/Data";
+import HomeLayout from "./pages/HomeLayout";
+import EditorLayout from "./pages/EditorLayout";
+import Info from "./pages/Info";
+import Data from "./pages/Data";
 import Elements, {
   PhoneticElementConfig,
   RootElementConfig,
-} from "./components/Elements";
-import Analysis from "./components/Analysis";
-import Encoder from "./components/Encoder";
-import Classifier from "./components/Classifier";
+} from "./pages/Elements";
+import Analysis from "./pages/Analysis";
+import Encoder from "./pages/Encoder";
+import Classifier from "./pages/Classifier";
 import { ConfigProvider } from "antd";
-import Repertoire from "./components/Repertoire";
-import Form from "./components/Form";
+import Repertoire from "./pages/Repertoire";
+import Form from "./pages/Form";
 import { get } from "./lib/api";
 
 const GlobalStyle = createGlobalStyle`
@@ -30,6 +30,13 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const legacyLoader = async () => {
+  const repertoire = get<Record<string, any>>("repertoire");
+  const form = get<Record<string, any>>("form/all");
+  const data = await Promise.all([repertoire, form]);
+  return data;
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -38,12 +45,6 @@ const router = createBrowserRouter([
   {
     path: "/:id",
     element: <EditorLayout />,
-    loader: async () => {
-      const repertoire = get<Record<string, any>>("repertoire");
-      const form = get<Record<string, any>>("form/all");
-      const data = await Promise.all([repertoire, form]);
-      return data;
-    },
     children: [
       { index: true, element: <Info /> },
       {

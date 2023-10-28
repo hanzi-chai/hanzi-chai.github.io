@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Button, Dropdown, Flex, Input, MenuProps, Space, Table } from "antd";
-import { useRepertoire, useModify } from "./context";
+import { useRepertoire, useModify } from "../components/context";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { EditorColumn, EditorRow } from "./Utils";
+import { EditorColumn, EditorRow } from "../components/Utils";
 import { Character } from "../lib/data";
 import { deepcopy } from "../lib/utils";
 

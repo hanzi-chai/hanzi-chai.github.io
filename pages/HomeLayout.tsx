@@ -17,9 +17,9 @@ import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useImmer } from "use-immer";
 import { examples } from "../lib/example";
-import { Select, Uploader } from "./Utils";
+import { Select, Uploader } from "../components/Utils";
 import { load } from "js-yaml";
-import Starter from "./Starter";
+import Starter from "../components/Starter";
 import { post } from "../lib/api";
 import { md5 } from "js-md5";
 

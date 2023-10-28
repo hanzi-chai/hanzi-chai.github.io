@@ -21,9 +21,8 @@ import {
   FormContext,
   RepertoireContext,
   configReducer,
-} from "./context";
+} from "../components/context";
 import { Config } from "../lib/config";
-import { Action } from "./context";
 import { dump, load } from "js-yaml";
 import {
   Link,
@@ -33,9 +32,12 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
-import { Uploader } from "./Utils";
+import { Uploader } from "../components/Utils";
 import { examples } from "../lib/example";
 import { Compound, Form, Repertoire } from "../lib/data";
+import { preprocessForm, preprocessRepertoire } from "../lib/utils";
+import formRaw from "../cache/form.json";
+import repertoireRaw from "../cache/repertoire.json";
 
 const items: MenuProps["items"] = [
   {
@@ -144,46 +146,15 @@ const EditorLayout = () => {
   );
 };
 
-const preprocessCompounds = (c: any) => {
-  c.operandList = c.operandList.map((x: any) => String.fromCodePoint(x));
-  return c;
-};
-
-const preprocessSlices = (c: any) => {
-  c.source = String.fromCodePoint(c.source);
-  return c;
-};
-
 const Contextualized = () => {
   const { pathname } = useLocation();
   const [_, id] = pathname.split("/");
   const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
     return JSON.parse(localStorage.getItem(id)!) as Config;
   });
-  const data = useLoaderData() as [any[], any[]];
-  const repertoire: Repertoire = Object.fromEntries(
-    data[0].map((x) => [
-      String.fromCodePoint(x.unicode),
-      {
-        tygf: x.tygf,
-        gb2312: x.gb2312,
-        pinyin: JSON.parse(x.pinyin),
-      },
-    ]),
-  );
-  const form: Form = Object.fromEntries(
-    data[1].map((x) => [
-      String.fromCodePoint(x.unicode),
-      {
-        name: x.name,
-        default_type: x.default_type,
-        gf0014_id: x.gf0014_id,
-        component: x.component && JSON.parse(x.component),
-        compound: x.compound && preprocessCompounds(JSON.parse(x.compound)),
-        slice: x.slice && preprocessSlices(JSON.parse(x.slice)),
-      },
-    ]),
-  );
+  // const [r, f] = useLoaderData() as [any[], any[]];
+  const repertoire: Repertoire = preprocessRepertoire(repertoireRaw);
+  const form: Form = preprocessForm(formRaw);
 
   useEffect(() => {
     localStorage.setItem(id, JSON.stringify(config));

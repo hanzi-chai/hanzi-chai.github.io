@@ -1,4 +1,4 @@
-import StrokeSearch from "./StrokeSearch";
+import StrokeSearch from "../components/StrokeSearch";
 import {
   Button,
   Dropdown,
@@ -14,9 +14,9 @@ import {
 } from "antd";
 
 import { Collapse } from "antd";
-import Char from "./Char";
-import Root from "./Root";
-import ResultDetail from "./ResultDetail";
+import Char from "../components/Char";
+import Root from "../components/Root";
+import ResultDetail from "../components/ResultDetail";
 import { useContext, useState } from "react";
 import {
   useClassifier,
@@ -25,7 +25,7 @@ import {
   useAll,
   useGlyph,
   useDisplay,
-} from "./context";
+} from "../components/context";
 import {
   ComponentResult,
   CompoundResult,
@@ -35,9 +35,9 @@ import {
   getSequence,
 } from "../lib/form";
 import { Classifier } from "../lib/config";
-import { EditorColumn, EditorRow, Select } from "./Utils";
-import Selector from "./Selector";
-import AnalysisCustomizer from "./AnalysisCustomizer";
+import { EditorColumn, EditorRow, Select } from "../components/Utils";
+import Selector from "../components/Selector";
+import AnalysisCustomizer from "../components/AnalysisCustomizer";
 
 const ResultSummary = ({
   char,

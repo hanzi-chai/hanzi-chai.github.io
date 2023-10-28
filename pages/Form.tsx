@@ -1,5 +1,9 @@
-import ComponentModel from "./ComponentModel";
-import { ComponentView, CompoundView, SliceView } from "./GlyphView";
+import ComponentModel from "../components/ComponentModel";
+import {
+  ComponentView,
+  CompoundView,
+  SliceView,
+} from "../components/GlyphView";
 import { useState } from "react";
 import {
   Button,
@@ -13,7 +17,7 @@ import {
   Typography,
   notification,
 } from "antd";
-import SliceModel from "./SliceModel";
+import SliceModel from "../components/SliceModel";
 import {
   EditorColumn,
   EditorRow,
@@ -21,7 +25,7 @@ import {
   IndexEdit,
   ItemSelect,
   Select,
-} from "./Utils";
+} from "../components/Utils";
 import {
   useClassifier,
   useForm,
@@ -29,9 +33,9 @@ import {
   useDelete,
   useModify,
   useGlyph,
-} from "./context";
+} from "../components/context";
 import styled from "styled-components";
-import CompoundModel from "./CompoundModel";
+import CompoundModel from "../components/CompoundModel";
 import { deepcopy, length, validUnicode } from "../lib/utils";
 
 const Overlay = styled.div`

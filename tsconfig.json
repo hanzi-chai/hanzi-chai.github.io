@@ -21,6 +21,6 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["@modyfi/vite-plugin-yaml/modules", "./vite-env.d.ts"]
   },
-  "include": ["components", "lib"],
+  "include": ["components", "lib", "pages", "fetch.ts", "index.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

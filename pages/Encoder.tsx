@@ -1,11 +1,16 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
-import { ConfigContext, DispatchContext, useAll, useForm } from "./context";
+import {
+  ConfigContext,
+  DispatchContext,
+  useAll,
+  useForm,
+} from "../components/context";
 
 import encode, { EncoderResult, getCache } from "../lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
-import { EditorColumn, EditorRow, Select, Uploader } from "./Utils";
-import EncoderGraph from "./EncoderGraph";
+import { EditorColumn, EditorRow, Select, Uploader } from "../components/Utils";
+import EncoderGraph from "../components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
 import { Character } from "../lib/data";
 import { getSupplemental } from "../lib/utils";

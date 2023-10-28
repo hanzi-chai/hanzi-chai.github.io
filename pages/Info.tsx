@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { Col, Form, Input, Typography } from "antd";
-import { ConfigContext, DispatchContext } from "./context";
+import { ConfigContext, DispatchContext } from "../components/context";
 
 const InfoInput = ({ field }: { field: string }) => {
   const config = useContext(ConfigContext);
