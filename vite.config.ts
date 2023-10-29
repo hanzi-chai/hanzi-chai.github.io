@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: `dist/${mode.toLowerCase()}`,
       emptyOutDir: true,
+      reportCompressedSize: false,
     },
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
