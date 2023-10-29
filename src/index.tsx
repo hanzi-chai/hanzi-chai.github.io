@@ -6,20 +6,7 @@ import {
   createHashRouter,
   RouterProvider,
 } from "react-router-dom";
-import HomeLayout from "./pages/HomeLayout";
-import EditorLayout from "./pages/EditorLayout";
-import Info from "./pages/Info";
-import Data from "./pages/Data";
-import Elements, {
-  PhoneticElementConfig,
-  RootElementConfig,
-} from "./pages/Elements";
-import Analysis from "./pages/Analysis";
-import Encoder from "./pages/Encoder";
-import Classifier from "./pages/Classifier";
 import { ConfigProvider } from "antd";
-import Repertoire from "./pages/Repertoire";
-import Form from "./pages/Form";
 import { get } from "./lib/api";
 
 const GlobalStyle = createGlobalStyle`
@@ -46,32 +33,93 @@ const createRouter =
 const router = createRouter([
   {
     path: "/",
-    element: <HomeLayout />,
+    async lazy() {
+      const c = await import("./pages/HomeLayout");
+      return { Component: c.default };
+    },
   },
   {
     path: "/:id",
-    element: <EditorLayout />,
+    async lazy() {
+      const c = await import("./pages/EditorLayout");
+      return { Component: c.default };
+    },
     children: [
-      { index: true, element: <Info /> },
+      {
+        index: true,
+        async lazy() {
+          const c = await import("./pages/Info");
+          return { Component: c.default };
+        },
+      },
       {
         path: "data",
-        element: <Data />,
+        async lazy() {
+          const c = await import("./pages/Data");
+          return { Component: c.default };
+        },
         children: [
-          { path: "form", element: <Form /> },
-          { path: "repertoire", element: <Repertoire /> },
-          { path: "classifier", element: <Classifier /> },
+          {
+            path: "form",
+            async lazy() {
+              const c = await import("./pages/Form");
+              return { Component: c.default };
+            },
+          },
+
+          {
+            path: "repertoire",
+            async lazy() {
+              const c = await import("./pages/Repertoire");
+              return { Component: c.default };
+            },
+          },
+          {
+            path: "classifier",
+            async lazy() {
+              const c = await import("./pages/Classifier");
+              return { Component: c.default };
+            },
+          },
         ],
       },
       {
         path: "element",
-        element: <Elements />,
+        async lazy() {
+          const c = await import("./pages/Elements");
+          return { Component: c.default };
+        },
         children: [
-          { path: "form", element: <RootElementConfig /> },
-          { path: "pronunciation", element: <PhoneticElementConfig /> },
+          {
+            path: "form",
+            async lazy() {
+              const c = await import("./pages/Elements");
+              return { Component: c.RootElementConfig };
+            },
+          },
+          {
+            path: "pronunciation",
+            async lazy() {
+              const c = await import("./pages/Elements");
+              return { Component: c.PhoneticElementConfig };
+            },
+          },
         ],
       },
-      { path: "analysis", element: <Analysis /> },
-      { path: "encode", element: <Encoder /> },
+      {
+        path: "analysis",
+        async lazy() {
+          const c = await import("./pages/Analysis");
+          return { Component: c.default };
+        },
+      },
+      {
+        path: "encode",
+        async lazy() {
+          const c = await import("./pages/Encoder");
+          return { Component: c.default };
+        },
+      },
     ],
   },
 ]);
