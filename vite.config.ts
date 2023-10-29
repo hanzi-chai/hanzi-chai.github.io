@@ -48,6 +48,16 @@ export default defineConfig(({ mode }) => {
             var: "math",
             path: "lib/browser/math.js",
           },
+          {
+            name: "dayjs",
+            var: "dayjs",
+            path: "dayjs.min.js",
+          },
+          {
+            name: "antd",
+            var: "antd",
+            path: "dist/antd.min.js",
+          },
           // {
           //   name:'antd',
           //   var:'antd',
