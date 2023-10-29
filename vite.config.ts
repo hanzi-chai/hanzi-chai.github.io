@@ -58,16 +58,6 @@ export default defineConfig(({ mode }) => {
             var: "antd",
             path: "dist/antd.min.js",
           },
-          // {
-          //   name:'antd',
-          //   var:'antd',
-          //   path:'dist/antd.min.js'
-          // },
-          //{
-          //  name: "reactflow",
-          //  var: "ReactFlow",
-          //  path: "dist/umd/index.js",
-          //},
         ],
       }),
     );

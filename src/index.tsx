@@ -29,7 +29,10 @@ const legacyLoader = async () => {
 };
 
 const createRouter =
-  import.meta.env.MODE === "CF" ? createBrowserRouter : createHashRouter;
+  import.meta.env.MODE === "BEX" || import.meta.env.MODE === "PAGES"
+    ? createHashRouter
+    : createBrowserRouter;
+
 const router = createRouter([
   {
     path: "/",
