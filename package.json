@@ -7,7 +7,7 @@
     "dev": "vite --mode CF",
     "fetch": "npx ts-node -T --esm fetch.ts",
     "publish": "bump --tag --commit --push",
-    "build:BEX": "vite build --mode BEX && node scripts/makeBex.mjs",
+    "build:BEX": "vite build --mode BEX && node scripts/makeBex.cjs",
     "build:PAGES": "vite build --mode PAGES",
     "build:CF": "vite build --mode CF",
     "build": "npm run fetch && npm run build:PAGES",
@@ -69,6 +69,7 @@
     "ts-json-schema-generator": "^1.4.0",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
+    "vite-plugin-external-cdn": "^1.0.1",
     "vite-plugin-singlefile": "^0.13.5",
     "vitest": "^0.34.6"
   },
