@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   const sharedConfig: UserConfig = {
     build: {
       outDir: `dist/${mode.toLowerCase()}`,
+      emptyOutDir: true,
     },
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),

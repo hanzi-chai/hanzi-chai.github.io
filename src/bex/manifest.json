@@ -1,0 +1,24 @@
+{
+  "name": "汉字自动拆分系统",
+  "version": "0.0.0",
+  "manifest_version": 3,
+  "author": "汉字自动拆分开发团队",
+  "description": "为用户提供了一个方便的图形界面，使方案设计更加便捷。",
+  "icons": {
+    "16": "img/logo16.png",
+    "48": "img/logo48.png",
+    "128": "img/logo128.png",
+    "256": "img/logo256.png"
+  },
+  "homepage_url": "https://github.com/hanzi-chai/hanzi-chai.github.io",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "img/logo16.png",
+      "48": "img/logo48.png",
+      "128": "img/logo128.png",
+      "256": "img/logo256.png"
+    }
+  },
+  "permissions": ["*://api.chaifen.app/*"]
+}
