@@ -1,7 +1,11 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createGlobalStyle } from "styled-components";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createHashRouter,
+  RouterProvider,
+} from "react-router-dom";
 import HomeLayout from "./pages/HomeLayout";
 import EditorLayout from "./pages/EditorLayout";
 import Info from "./pages/Info";
@@ -37,7 +41,9 @@ const legacyLoader = async () => {
   return data;
 };
 
-const router = createBrowserRouter([
+const createRouter =
+  import.meta.env.MODE === "CF" ? createBrowserRouter : createHashRouter;
+const router = createRouter([
   {
     path: "/",
     element: <HomeLayout />,
