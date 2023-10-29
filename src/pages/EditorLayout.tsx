@@ -166,7 +166,6 @@ const Contextualized = () => {
   });
   const [repertoireAndForm, setRepertoire] = useState<[Repertoire, Form]>();
   useEffect(() => {
-    console.log("读取cache数据");
     Promise.all([fetchJson("repertoire"), fetchJson("form")]).then(
       ([repertoire, form]) => {
         setRepertoire([preprocessRepertoire(repertoire), preprocessForm(form)]);
