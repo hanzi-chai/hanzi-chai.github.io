@@ -2,6 +2,7 @@
 import { defineConfig, UserConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
+import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
 
 export default defineConfig(({ mode }) => {
   // https://vitejs.dev/config/
@@ -23,5 +24,37 @@ export default defineConfig(({ mode }) => {
       },
     },
   };
+
+  if (mode === "PAGES") {
+    sharedConfig.plugins.push(
+      importToCDN({
+        prodUrl: "https://registry.npmmirror.com/{name}/{version}/files/{path}",
+        modules: [
+          autoComplete("react"),
+          autoComplete("react-dom"),
+          // {
+          //   name:'antd',
+          //   var:'antd',
+          //   path:'dist/antd.min.js'
+          // },
+          {
+            name: "mathjs",
+            var: "math",
+            path: "lib/browser/math.js",
+          },
+          {
+            name: "js-yaml",
+            var: "jsyaml",
+            path: "dist/js-yaml.min.js",
+          },
+          {
+            name: "reactflow",
+            var: "reactflow",
+            path: "dist/umd/index.js",
+          },
+        ],
+      }),
+    );
+  }
   return sharedConfig;
 });

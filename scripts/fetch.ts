@@ -7,6 +7,6 @@ const form = JSON.stringify(
 const repertoire = JSON.stringify(
   await fetch(endpoint + "repertoire").then((res) => res.json()),
 );
-mkdirSync("cache", { recursive: true });
-writeFileSync("src/cache/form.json", form);
-writeFileSync("src/cache/repertoire.json", repertoire);
+mkdirSync("public/cache", { recursive: true });
+writeFileSync("public/cache/form.json", form);
+writeFileSync("public/cache/repertoire.json", repertoire);
