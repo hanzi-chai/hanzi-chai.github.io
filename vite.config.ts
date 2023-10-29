@@ -33,29 +33,35 @@ export default defineConfig(({ mode }) => {
         modules: [
           autoComplete("react"),
           autoComplete("react-dom"),
-          // {
-          //   name:'antd',
-          //   var:'antd',
-          //   path:'dist/antd.min.js'
-          // },
-          {
-            name: "mathjs",
-            var: "math",
-            path: "lib/browser/math.js",
-          },
           {
             name: "js-yaml",
             var: "jsyaml",
             path: "dist/js-yaml.min.js",
           },
           {
-            name: "reactflow",
-            var: "reactflow",
-            path: "dist/umd/index.js",
+            name: "decimal.js",
+            var: "Decimal",
+            path: "decimal.js",
           },
+          {
+            name: "mathjs",
+            var: "math",
+            path: "lib/browser/math.js",
+          },
+          // {
+          //   name:'antd',
+          //   var:'antd',
+          //   path:'dist/antd.min.js'
+          // },
+          //{
+          //  name: "reactflow",
+          //  var: "ReactFlow",
+          //  path: "dist/umd/index.js",
+          //},
         ],
       }),
     );
   }
+
   return sharedConfig;
 });

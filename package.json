@@ -73,6 +73,9 @@
     "vite-plugin-singlefile": "^0.13.5",
     "vitest": "^0.34.6"
   },
+  "peerDependencies": {
+    "decimal.js": "^10"
+  },
   "pre-commit": [
     "format"
   ],
