@@ -123,82 +123,6 @@ const Duplicate = ({ char, setChar, slice }: IndexEdit2 & Slicer) => {
   );
 };
 
-const RemoteDuplicate = ({ char, setChar, slice }: IndexEdit2 & Slicer) => {
-  const glyph = useGlyph(char);
-  const modify = useModify();
-  const [newName, setNewName] = useState("");
-  return (
-    <Popconfirm
-      title="新字形名称"
-      description={
-        <Input
-          value={newName}
-          onChange={(event) => setNewName(event.target.value)}
-        />
-      }
-      onConfirm={async () => {
-        const valid = verifyNewName(newName);
-        if (!valid) return;
-        const value = getValue(slice, newName, char, glyph);
-        let unicode = length(newName) === 1 ? newName.codePointAt(0)! : null;
-        const res = await post<number, any>(`form`, value);
-        provideFeedback(res);
-        if (typeof res === "number") {
-          console.log(res, String.fromCodePoint(res), value);
-          const newChar = String.fromCodePoint(res);
-          modify(newChar, value);
-          setChar(newChar);
-        }
-      }}
-    >
-      <Button>远程{slice ? "切片" : "复制"}</Button>
-    </Popconfirm>
-  );
-};
-
-const provideFeedback = (res: any | Err) => {
-  if (typeof res === "object" && "err" in res) {
-    notification.error({
-      message: "无法远程更新",
-      description: JSON.stringify(res),
-    });
-  } else {
-    notification.success({
-      message: "成功远程更新",
-    });
-  }
-};
-
-const RemoteUpdate = ({ char, setChar }: IndexEdit2) => {
-  const formCustomizations = useData().form;
-  const customized = formCustomizations[char];
-  return (
-    <Button
-      onClick={async () => {
-        const unicode = char.codePointAt(0)!;
-        console.log(customized);
-        const res = await put(`form/${unicode}`, customized);
-        provideFeedback(res);
-      }}
-    >
-      远程更新
-    </Button>
-  );
-};
-
-const RemoteDelete = ({ char, setChar }: IndexEdit2) => {
-  return (
-    <Button
-      onClick={async () => {
-        const res = await delet(`form/${char.codePointAt(0)!}`);
-        provideFeedback(res);
-      }}
-    >
-      远程删除
-    </Button>
-  );
-};
-
 const Toolbar = ({ char, setChar }: IndexEdit) => {
   const formCustomizations = useData().form;
   const glyph = useGlyph(char!);
@@ -224,12 +148,6 @@ const Toolbar = ({ char, setChar }: IndexEdit) => {
           删除
         </Button>
       )}
-      {modified && <RemoteUpdate char={char} setChar={setChar} />}
-      {char && <RemoteDuplicate char={char} setChar={setChar} slice={false} />}
-      {char && glyph.default_type == 0 && (
-        <RemoteDuplicate char={char} setChar={setChar} slice={true} />
-      )}
-      {char && <RemoteDelete char={char} setChar={setChar} />}
     </Flex>
   );
 };
@@ -266,26 +184,15 @@ const GeneralModel = ({ char }: Index) => {
           value={glyph.default_type}
         />
       </Form.Item>
-      {glyph.name !== null && (
-        <Form.Item label="名称">
-          <Input
-            value={glyph.name || ""}
-            onChange={(event) => {
-              modify(char, { ...glyph, name: event.target.value });
-            }}
-          />
-        </Form.Item>
-      )}
-      <Form.Item label="GF0014-2009 序号">
-        <InputNumber
-          min={1}
-          max={514}
-          value={glyph.gf0014_id}
+      <Form.Item label="名称">
+        <Input
+          value={glyph.name || ""}
           onChange={(event) => {
-            modify(char, { ...glyph, gf0014_id: event });
+            modify(char, { ...glyph, name: event.target.value });
           }}
         />
       </Form.Item>
+      <Form.Item label="GF0014-2009 序号">{glyph.gf0014_id}</Form.Item>
       <ModelDispatch char={char} />
     </>
   );
