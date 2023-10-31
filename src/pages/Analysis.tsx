@@ -87,7 +87,7 @@ const Analysis = () => {
 
   const displays = [
     Object.entries(componentResults)
-      .filter(([x]) => getSequence(form, classifier, x))
+      .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
       .map(([key, res]) => {
         return {
           key,
@@ -104,83 +104,85 @@ const Analysis = () => {
   ];
 
   return (
-    <EditorRow>
-      <EditorColumn span={8}>
-        <Typography.Title level={2}>字形分析</Typography.Title>
-        <Selector />
-        <Typography.Title level={2}>自定义分析</Typography.Title>
-        <Typography.Title level={3}>部件</Typography.Title>
-        <AnalysisCustomizer />;
-      </EditorColumn>
-      <EditorColumn span={16}>
-        <Typography.Title level={2}>分析结果</Typography.Title>
-        <Flex gap="middle">
-          <StrokeSearch sequence={sequence} setSequence={setSequence} />
-          <Button
-            type="primary"
-            onClick={() => {
-              const [componentResults, compoundResults] = getFormCore(
-                data,
-                rootConfig,
-              );
-              setComponentResult(componentResults);
-              setCompoundResult(compoundResults);
-            }}
-          >
-            计算
-          </Button>
-          <Button
-            onClick={() => {
-              setComponentResult({});
-              setCompoundResult({});
-            }}
-          >
-            清空
-          </Button>
-          <Button
-            onClick={() => {
-              exportResult({ componentResults, compoundResults });
-            }}
-          >
-            导出
-          </Button>
-        </Flex>
-        <Flex justify="center">
-          <Radio.Group
-            value={step}
-            onChange={(e) => setStep(e.target.value as 0)}
-          >
-            <Radio.Button value={0}>部件拆分</Radio.Button>
-            <Radio.Button value={1}>复合体拆分</Radio.Button>
-          </Radio.Group>
-        </Flex>
-        {displays[step].length ? (
-          <>
-            <Collapse
-              items={displays[step].slice(
-                (page - 1) * pageSize,
-                page * pageSize,
-              )}
-              accordion={true}
-              bordered={false}
-              size={"small"}
-              defaultActiveKey={["1"]}
-            />
-            <Pagination
-              current={page}
-              onChange={(page, pageSize) => {
-                setPage(page);
-                setPageSize(pageSize);
+    <div style={{ padding: "16px", flex: "1", overflowY: "scroll" }}>
+      <EditorRow>
+        <EditorColumn span={8}>
+          <Typography.Title level={2}>字形分析</Typography.Title>
+          <Selector />
+          <Typography.Title level={2}>自定义分析</Typography.Title>
+          <Typography.Title level={3}>部件</Typography.Title>
+          <AnalysisCustomizer />
+        </EditorColumn>
+        <EditorColumn span={16}>
+          <Typography.Title level={2}>分析结果</Typography.Title>
+          <Flex gap="middle">
+            <StrokeSearch sequence={sequence} setSequence={setSequence} />
+            <Button
+              type="primary"
+              onClick={() => {
+                const [componentResults, compoundResults] = getFormCore(
+                  data,
+                  rootConfig,
+                );
+                setComponentResult(componentResults);
+                setCompoundResult(compoundResults);
               }}
-              total={displays[step].length}
-              pageSize={pageSize}
-            />
-          </>
-        ) : (
-          <Empty />
-        )}
-      </EditorColumn>
-    </EditorRow>
+            >
+              计算
+            </Button>
+            <Button
+              onClick={() => {
+                setComponentResult({});
+                setCompoundResult({});
+              }}
+            >
+              清空
+            </Button>
+            <Button
+              onClick={() => {
+                exportResult({ componentResults, compoundResults });
+              }}
+            >
+              导出
+            </Button>
+          </Flex>
+          <Flex justify="center">
+            <Radio.Group
+              value={step}
+              onChange={(e) => setStep(e.target.value as 0)}
+            >
+              <Radio.Button value={0}>部件拆分</Radio.Button>
+              <Radio.Button value={1}>复合体拆分</Radio.Button>
+            </Radio.Group>
+          </Flex>
+          {displays[step].length ? (
+            <>
+              <Collapse
+                items={displays[step].slice(
+                  (page - 1) * pageSize,
+                  page * pageSize,
+                )}
+                accordion={true}
+                bordered={false}
+                size={"small"}
+                defaultActiveKey={["1"]}
+              />
+              <Pagination
+                current={page}
+                onChange={(page, pageSize) => {
+                  setPage(page);
+                  setPageSize(pageSize);
+                }}
+                total={displays[step].length}
+                pageSize={pageSize}
+              />
+            </>
+          ) : (
+            <Empty />
+          )}
+        </EditorColumn>
+      </EditorRow>
+    </div>
   );
 };
 

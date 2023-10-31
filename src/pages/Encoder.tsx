@@ -46,7 +46,7 @@ const exportTable = (result: EncoderResult) => {
   a.click();
 };
 
-const filterOptions = ["成字部件", "所有部件", "所有汉字"] as const;
+const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as const;
 type FilterOption = (typeof filterOptions)[number];
 
 const Encoder = () => {
@@ -66,7 +66,7 @@ const Encoder = () => {
   const supplemental = getSupplemental(data.form, list);
   const filterMap: Record<FilterOption, (p: [string, string[]]) => boolean> = {
     成字部件: ([char]) => data.form[char]?.default_type === 0,
-    所有部件: ([char]) => supplemental.includes(char),
+    非成字部件: ([char]) => supplemental.includes(char),
     所有汉字: () => true,
   };
 
@@ -97,8 +97,10 @@ const Encoder = () => {
     .filter(filterMap[filterOption])
     .map(([char, code]) => {
       const refcode = reference ? reference[char] || [] : [];
+      const refcodeShapeOnly = refcode.map((x) => x.slice(0, x.length - 1));
+      const codeShapeOnly = code.map((x) => x.slice(0, x.length - 1));
       if (refcode.length) {
-        if (code.filter((v) => refcode.includes(v)).length) {
+        if (codeShapeOnly.filter((v) => refcodeShapeOnly.includes(v)).length) {
           correct += 1;
         } else {
           incorrect += 1;
@@ -109,8 +111,8 @@ const Encoder = () => {
       return {
         key: char,
         char: char,
-        code: code,
-        refcode,
+        code: codeShapeOnly,
+        refcode: refcodeShapeOnly,
       };
     });
 

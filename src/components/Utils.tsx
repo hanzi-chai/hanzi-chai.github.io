@@ -11,6 +11,7 @@ import {
 import styled from "styled-components";
 import { useClassifier, useForm, useRoot } from "./context";
 import { getSequence } from "../lib/form";
+import { displayName } from "../lib/utils";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -41,7 +42,7 @@ export const NumberInput = styled(InputNumber)`
 `;
 
 export const Select = styled(_Select)`
-  width: 128px !important;
+  width: 128px;
 ` as typeof _Select;
 
 export const Uploader = ({
@@ -142,24 +143,30 @@ export const RootSelect = ({
   char,
   onChange,
   exclude,
+  withGrouped,
 }: {
   char?: string;
   onChange: (s: string) => void;
   exclude: string;
+  withGrouped?: boolean;
 }) => {
-  const { mapping } = useRoot();
+  const { mapping, grouping } = useRoot();
   const form = useForm();
   const classifier = useClassifier();
+  const keys = withGrouped
+    ? Object.keys(mapping).concat(Object.keys(grouping))
+    : Object.keys(mapping);
   return (
     <Select
+      style={{ width: "96px" }}
       showSearch
       placeholder="输入笔画搜索"
-      options={Object.keys(mapping)
-        .filter((x) => x.match(/[\u4E00-\uFFFF]/))
+      options={keys
+        .filter((x) => x.match(/[\u4E00-\uFFFF]/) || x.match(/\d+/))
         .filter((x) => x !== exclude)
         .map((x) => ({
           value: x,
-          label: form[x]?.name || x,
+          label: displayName(x, form[x])!,
         }))}
       value={char}
       onChange={onChange}

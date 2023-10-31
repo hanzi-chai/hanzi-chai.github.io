@@ -52,7 +52,6 @@ export const RootElementConfig = () => {
 
   const form = useForm();
   const content = Object.keys(form)
-    .filter((x) => form[x].default_type === 0)
     .filter((x) => {
       const thisSequence = getSequence(form, classifier, x);
       return thisSequence.length > 1 && thisSequence.startsWith(sequence);

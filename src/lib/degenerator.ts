@@ -18,7 +18,7 @@ export const binaryToIndices = (n: number) => (binary: number) => {
 
 const simplifyMap = new Map<string, string>([
   ["捺", "点"],
-  // ["提", "横"],
+  ["提", "横"],
 ]);
 
 const strokeFeatureEqual = (s1: string, s2: string) => {

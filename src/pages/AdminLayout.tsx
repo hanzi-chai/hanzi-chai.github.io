@@ -182,7 +182,17 @@ const ComponentForm = () => {
             <StrokeForm info={info} index={i} remove={remove} key={info.key} />
           ))}
           <Form.Item>
-            <Button block type="dashed" onClick={add}>
+            <Button
+              block
+              type="dashed"
+              onClick={() =>
+                add({
+                  feature: "横",
+                  start: [6, 48],
+                  curveList: [{ command: "h", parameterList: [88] }],
+                })
+              }
+            >
               添加笔画
             </Button>
           </Form.Item>
@@ -324,6 +334,45 @@ export const ItemSelect = (props: SelectProps) => {
     filterOption: false,
     onSearch,
   };
+  return <Select style={{ width: "96px" }} {...props} {...commonProps} />;
+};
+
+export const FeatureSelect = (props: SelectProps) => {
+  const form = useAppSelector(selectForm);
+  const initial = props.value
+    ? [{ value: props.value, label: form[props.value]?.name || props.value }]
+    : [];
+  const [data, setData] = useState<SelectProps["options"]>(initial);
+  const onSearch = (input: string) => {
+    if (input.length === 0) {
+      setData([]);
+      return;
+    }
+    const allResults = Object.entries(form)
+      .filter(
+        ([, v]) =>
+          v.component !== undefined &&
+          v.component.map((x) => x.feature).includes(input as any),
+      )
+      .map(([x, v]) => ({
+        value: x,
+        label: displayName(x, v),
+      }))
+      .sort((a, b) => {
+        return (
+          getSequence(form, classifier, a.value).length -
+          getSequence(form, classifier, b.value).length
+        );
+      });
+    setData(allResults);
+  };
+  const commonProps: SelectProps = {
+    showSearch: true,
+    placeholder: "输入笔画搜索",
+    options: data,
+    filterOption: false,
+    onSearch,
+  };
   return <Select {...props} {...commonProps} />;
 };
 
@@ -360,7 +409,7 @@ export const ReferenceSelect = (props: SelectProps) => {
           getSequence(form, classifier, b.value).length
         );
       });
-    setData(allResults.slice(0, 10));
+    setData(allResults.slice(0, 30));
   };
   const commonProps: SelectProps = {
     showSearch: true,
@@ -555,6 +604,8 @@ const AdminForm = () => {
         <ReferenceSelect value={char} onChange={choose} />
         笔画搜索
         <ItemSelect value={char} onChange={choose} />
+        笔画搜索
+        <FeatureSelect value={char} onChange={choose} />
       </Flex>
       <EditorRow>
         <EditorColumn span={12}>

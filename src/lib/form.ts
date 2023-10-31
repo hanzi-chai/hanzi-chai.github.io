@@ -59,6 +59,7 @@ export const getSequence = (
   classifier: Classifier,
   char: string,
 ) => {
+  if (char.match(/\d+/)) return char;
   let thisSequence: string = sequenceCache[char];
   if (thisSequence !== undefined) return thisSequence;
   thisSequence = recursiveGetSequence(form, classifier, char).join("");

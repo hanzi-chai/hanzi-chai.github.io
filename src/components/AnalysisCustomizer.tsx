@@ -3,6 +3,7 @@ import { ConfigContext, useDesign, useForm } from "./context";
 import { Button, Flex } from "antd";
 import { ItemSelect, RootSelect, Select } from "./Utils";
 import Char from "./Char";
+import { PlusOutlined, MinusOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const AnalysisCustomizer = () => {
   const {
@@ -18,11 +19,12 @@ const AnalysisCustomizer = () => {
     <>
       {Object.entries(customize).map(([component, sequence]) => {
         return (
-          <Flex justify="space-evenly">
+          <Flex justify="space-between" key={component}>
             <Char>{form[component].name || component}</Char>
             <Flex gap="small">
               {sequence.map((x, i) => (
                 <RootSelect
+                  withGrouped
                   key={i}
                   char={x}
                   onChange={(s) => {
@@ -45,9 +47,8 @@ const AnalysisCustomizer = () => {
                     value: sequence.concat("1"),
                   });
                 }}
-              >
-                增加
-              </Button>
+                icon={<PlusOutlined />}
+              />
               <Button
                 onClick={() => {
                   design({
@@ -57,21 +58,19 @@ const AnalysisCustomizer = () => {
                     value: sequence.slice(0, sequence.length - 1),
                   });
                 }}
-              >
-                减少
-              </Button>
+                icon={<MinusOutlined />}
+              />
+              <Button
+                onClick={() => {
+                  design({
+                    subtype: "root-customize",
+                    action: "remove",
+                    key: component,
+                  });
+                }}
+                icon={<DeleteOutlined />}
+              />
             </Flex>
-            <Button
-              onClick={() => {
-                design({
-                  subtype: "root-customize",
-                  action: "remove",
-                  key: component,
-                });
-              }}
-            >
-              删除
-            </Button>
           </Flex>
         );
       })}
