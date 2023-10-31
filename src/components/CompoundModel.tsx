@@ -5,7 +5,7 @@ import { Index, ItemSelect, NumberInput, Select } from "./Utils";
 import { getSequence } from "../lib/form";
 import { deepcopy } from "../lib/utils";
 
-const ideos: Operator[] = [
+export const ideos: Operator[] = [
   "⿰",
   "⿱",
   "⿲",

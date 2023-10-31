@@ -11,6 +11,7 @@ import {
   Flex,
   Form,
   Input,
+  InputNumber,
   Popconfirm,
   Popover,
   Radio,
@@ -25,6 +26,7 @@ import {
   IndexEdit,
   IndexEdit2,
   ItemSelect,
+  ReferenceSelect,
   Select,
 } from "../components/Utils";
 import {
@@ -37,7 +39,7 @@ import {
 } from "../components/context";
 import styled from "styled-components";
 import CompoundModel from "../components/CompoundModel";
-import { deepcopy, length, postProcessForm, validUnicode } from "../lib/utils";
+import { deepcopy, length, validUnicode } from "../lib/utils";
 import { Err, delet, post, put } from "../lib/api";
 import { Glyph } from "../lib/data";
 
@@ -75,8 +77,6 @@ const getValue = (
       name: newName,
       default_type: 1,
       gf0014_id: null,
-      component: null,
-      compound: null,
       slice: { source: char, indices: glyph.component!.map((_, i) => i) },
     } as Glyph;
   } else {
@@ -141,8 +141,7 @@ const RemoteDuplicate = ({ char, setChar, slice }: IndexEdit2 & Slicer) => {
         if (!valid) return;
         const value = getValue(slice, newName, char, glyph);
         let unicode = length(newName) === 1 ? newName.codePointAt(0)! : null;
-        const payload = postProcessForm(value, unicode);
-        const res = await post<number, any>(`form`, payload);
+        const res = await post<number, any>(`form`, value);
         provideFeedback(res);
         if (typeof res === "number") {
           console.log(res, String.fromCodePoint(res), value);
@@ -177,10 +176,8 @@ const RemoteUpdate = ({ char, setChar }: IndexEdit2) => {
     <Button
       onClick={async () => {
         const unicode = char.codePointAt(0)!;
-        const res = await put(
-          `form/${char.codePointAt(0)}`,
-          postProcessForm(customized, unicode),
-        );
+        console.log(customized);
+        const res = await put(`form/${unicode}`, customized);
         provideFeedback(res);
       }}
     >
@@ -209,8 +206,10 @@ const Toolbar = ({ char, setChar }: IndexEdit) => {
   const modified = char !== undefined && formCustomizations[char];
   return (
     <Flex justify="center" align="center" gap="small">
-      选择
+      按笔画搜索
       <ItemSelect char={char} onChange={setChar} />
+      按构件或源搜索
+      <ReferenceSelect char={char} onChange={setChar} />
       {char && <Duplicate char={char} setChar={setChar} slice={false} />}
       {char && glyph.default_type == 0 && (
         <Duplicate char={char} setChar={setChar} slice={true} />
@@ -249,14 +248,51 @@ const ViewDispatch = ({ char }: Index) => {
   return <View char={char} />;
 };
 
-const FormData = () => {
-  const [char, setChar] = useState<string | undefined>(undefined);
-  const form = useForm();
+const GeneralModel = ({ char }: Index) => {
+  const glyph = useGlyph(char);
   const options = [
     { label: "部件", value: 0 },
     { label: "切片", value: 1 },
     { label: "复合体", value: 2 },
   ];
+  const modify = useModify();
+  return (
+    <>
+      <Form.Item label="序号">{char.codePointAt(0)!}</Form.Item>
+      <Form.Item label="类型">
+        <Radio.Group
+          options={options}
+          optionType="button"
+          value={glyph.default_type}
+        />
+      </Form.Item>
+      {glyph.name !== null && (
+        <Form.Item label="名称">
+          <Input
+            value={glyph.name || ""}
+            onChange={(event) => {
+              modify(char, { ...glyph, name: event.target.value });
+            }}
+          />
+        </Form.Item>
+      )}
+      <Form.Item label="GF0014-2009 序号">
+        <InputNumber
+          min={1}
+          max={514}
+          value={glyph.gf0014_id}
+          onChange={(event) => {
+            modify(char, { ...glyph, gf0014_id: event });
+          }}
+        />
+      </Form.Item>
+      <ModelDispatch char={char} />
+    </>
+  );
+};
+
+const FormData = () => {
+  const [char, setChar] = useState<string | undefined>(undefined);
   return (
     <Flex vertical gap="middle" style={{ height: "100%" }}>
       <Toolbar char={char} setChar={setChar} />
@@ -267,20 +303,7 @@ const FormData = () => {
         </EditorColumn>
         <EditorColumn span={12}>
           <Typography.Title level={2}>调整数据</Typography.Title>
-          {char ? (
-            <>
-              <Form.Item label="类型">
-                <Radio.Group
-                  options={options}
-                  optionType="button"
-                  value={form[char].default_type}
-                />
-              </Form.Item>
-              <ModelDispatch char={char} />
-            </>
-          ) : (
-            <Empty />
-          )}
+          {char ? <GeneralModel char={char} /> : <Empty />}
         </EditorColumn>
       </EditorRow>
     </Flex>

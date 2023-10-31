@@ -34,39 +34,35 @@ export const recursiveGetSequence = function (
   classifier: Classifier,
   char: string,
 ): number[] {
-  const { default_type, component, compound } = form[char] as
-    | ComponentGlyph
-    | CompoundGlyph;
-  if (default_type === 0) {
-    return component.map((s) => classifier[s.feature]);
-  } else {
-    return compound.operandList
-      .map((s) => recursiveGetSequence(form, classifier, s))
-      .flat();
+  const { default_type, component, compound, slice } = form[char];
+  switch (default_type) {
+    case 0:
+      return component.map((s) => classifier[s.feature]);
+    case 1:
+      const sourceSequence = recursiveGetSequence(
+        form,
+        classifier,
+        slice.source,
+      );
+      return slice.indices.map((x) => sourceSequence[x]);
+    case 2:
+      return compound.operandList
+        .map((s) => recursiveGetSequence(form, classifier, s))
+        .flat();
   }
 };
+
+const sequenceCache: Record<string, string> = {};
 
 export const getSequence = (
   form: Form,
   classifier: Classifier,
   char: string,
 ) => {
-  let thisSequence: string;
-  const glyph = form[char];
-  switch (glyph.default_type) {
-    case 0:
-    case 2:
-      thisSequence = recursiveGetSequence(form, classifier, char).join("");
-      break;
-    case 1:
-      const sourceSequence = recursiveGetSequence(
-        form,
-        classifier,
-        glyph.slice.source,
-      );
-      thisSequence = glyph.slice.indices.map((x) => sourceSequence[x]).join("");
-      break;
-  }
+  let thisSequence: string = sequenceCache[char];
+  if (thisSequence !== undefined) return thisSequence;
+  thisSequence = recursiveGetSequence(form, classifier, char).join("");
+  sequenceCache[char] = thisSequence;
   return thisSequence;
 };
 

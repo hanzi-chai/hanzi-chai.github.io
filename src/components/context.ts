@@ -12,6 +12,7 @@ import {
 import defaultClassifier from "../lib/classifier";
 import { useLocation } from "react-router-dom";
 import { act } from "react-dom/test-utils";
+import { displayName } from "../lib/utils";
 
 export type Action =
   | InfoAction
@@ -214,7 +215,7 @@ const useGlyph = (char: string) => {
 const useDisplay = (char: string) => {
   const form = useContext(FormContext);
   const glyph = useData().form[char] || form[char];
-  return glyph.name || char;
+  return displayName(char, glyph)!;
 };
 
 const useComponent = (char: string) => {

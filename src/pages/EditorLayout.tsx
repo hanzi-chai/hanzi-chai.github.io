@@ -147,7 +147,7 @@ const EditorLayout = () => {
   );
 };
 
-const _cache = {};
+const _cache: Record<string, any> = {};
 const fetchJson = async (filename: string) => {
   if (filename in _cache) {
     return _cache[filename];

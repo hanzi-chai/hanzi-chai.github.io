@@ -8,6 +8,8 @@ import {
 } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import { get } from "./lib/api";
+import { Provider } from "react-redux";
+import { store } from "./components/store";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -38,6 +40,13 @@ const router = createRouter([
     path: "/",
     async lazy() {
       const c = await import("./pages/HomeLayout");
+      return { Component: c.default };
+    },
+  },
+  {
+    path: "/admin",
+    async lazy() {
+      const c = await import("./pages/AdminLayout");
       return { Component: c.default };
     },
   },
@@ -131,7 +140,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <GlobalStyle />
     <ConfigProvider autoInsertSpaceInButton={false}>
-      <RouterProvider router={router} />
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
     </ConfigProvider>
   </StrictMode>,
 );
