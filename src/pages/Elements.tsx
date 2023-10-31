@@ -13,6 +13,7 @@ import ElementPicker from "../components/ElementPicker";
 import { AName, analyzerNames, pinyinAnalyzers } from "../lib/element";
 import { getSequence } from "../lib/form";
 import StrokeSearch from "../components/StrokeSearch";
+import { displayName } from "../lib/utils";
 
 const Elements = () => {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ export const RootElementConfig = () => {
 
   const form = useForm();
   const content = Object.keys(form)
+    .filter((x) => form[x].default_type === 0)
     .filter((x) => {
       const thisSequence = getSequence(form, classifier, x);
       return thisSequence.length > 1 && thisSequence.startsWith(sequence);
@@ -75,7 +77,7 @@ export const RootElementConfig = () => {
           types={formElementTypes}
           defaultType="字根"
           contentMap={contentMap}
-          specialRendering={(x) => form[x]?.name || x}
+          specialRendering={(x) => displayName(x, form[x])!}
         />
       </EditorColumn>
       <EditorColumn span={16}>

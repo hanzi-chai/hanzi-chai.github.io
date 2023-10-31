@@ -41,7 +41,7 @@ export const NumberInput = styled(InputNumber)`
 `;
 
 export const Select = styled(_Select)`
-  width: 128px;
+  width: 128px !important;
 ` as typeof _Select;
 
 export const Uploader = ({
@@ -99,6 +99,45 @@ export const ItemSelect = ({
   );
 };
 
+export const ReferenceSelect = ({
+  char,
+  onChange,
+}: {
+  char?: string;
+  onChange: (s: string) => void;
+}) => {
+  const form = useForm();
+  const classifier = useClassifier();
+  return (
+    <Select
+      showSearch
+      placeholder="输入 unicode 搜索"
+      options={Object.entries(form).map(([x, v]) => ({
+        value: x,
+        label: v.name || x,
+      }))}
+      value={char}
+      onChange={onChange}
+      filterOption={(input, option) => {
+        const glyph = form[option!.value];
+        const c = String.fromCodePoint(Number(input));
+        if (glyph.default_type === 1) {
+          return glyph.slice.source === c;
+        } else if (glyph.default_type === 2) {
+          return glyph.compound.operandList.includes(c);
+        }
+        return false;
+      }}
+      filterSort={(a, b) => {
+        return (
+          getSequence(form, classifier, a.value).length -
+          getSequence(form, classifier, b.value).length
+        );
+      }}
+    />
+  );
+};
+
 export const RootSelect = ({
   char,
   onChange,
@@ -120,7 +159,7 @@ export const RootSelect = ({
         .filter((x) => x !== exclude)
         .map((x) => ({
           value: x,
-          label: form[x].name || x,
+          label: form[x]?.name || x,
         }))}
       value={char}
       onChange={onChange}

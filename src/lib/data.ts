@@ -75,11 +75,12 @@ interface Character {
 }
 
 type GlyphBase = {
+  unicode: number;
   name: string | null;
-  gf0014_id: string | null;
-  component: Component | null;
-  compound: Compound | null;
-  slice: Alias | null;
+  gf0014_id: number | null;
+  component?: Component;
+  compound?: Compound;
+  slice?: Alias;
 };
 
 interface ComponentGlyph extends GlyphBase {
@@ -98,6 +99,7 @@ interface CompoundGlyph extends GlyphBase {
 }
 
 type Glyph = ComponentGlyph | CompoundGlyph | SliceGlyph;
+type GlyphOptionalUnicode = Omit<Glyph, "unicode"> & { unicode?: number };
 
 type Form = Record<string, Glyph>;
 type Repertoire = Record<string, Character>;
@@ -111,6 +113,7 @@ export type {
   Draw,
   SVGStroke as Stroke,
   Glyph,
+  GlyphOptionalUnicode,
   ComponentGlyph,
   CompoundGlyph,
   SliceGlyph,

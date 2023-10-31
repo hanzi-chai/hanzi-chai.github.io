@@ -32,3 +32,5 @@ export const post = template("POST");
 export const put = template("PUT");
 
 export const delet = template("DELETE");
+
+export const patch = template("PATCH");

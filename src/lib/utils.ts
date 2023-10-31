@@ -1,9 +1,18 @@
 import { Feature } from "./classifier";
 import { Mapping } from "./config";
-import { Alias, Compound, Form, Glyph, SVGCommand, Stroke } from "./data";
+import {
+  Alias,
+  Compound,
+  Form,
+  Glyph,
+  GlyphOptionalUnicode,
+  SVGCommand,
+  Stroke,
+} from "./data";
 
 export const validUnicode = (char: string) => {
   const code = char.codePointAt(0)!;
+  if (code <= 0x7f) return true;
   if (code >= 0x4e00 && code <= 0x9fff) return true;
   if (code >= 0x3400 && code <= 0x4dbf) return true;
   return false;
@@ -116,55 +125,10 @@ export const preprocessRepertoire = (r: any[]) => {
   );
 };
 
-const preprocessCompounds = (c: any) => {
-  c.operandList = c.operandList.map((x: any) => String.fromCodePoint(x));
-  return c;
-};
-
-const preprocessSlices = (c: any) => {
-  c.source = String.fromCodePoint(c.source);
-  return c;
-};
-
-const postProcessCompounds = (c: any) => {
-  const c2 = deepcopy(c);
-  c2.operandList = c2.operandList.map((x: any) => x.codePointAt(0)!) as [
-    number,
-    number,
-  ];
-  return c2;
-};
-
-const postProcessSlices = (c: any) => {
-  const c2 = deepcopy(c);
-  c2.source = c2.source.codePointAt(0);
-  return c2;
-};
-
 export const preprocessForm = (f: any[]) => {
-  return Object.fromEntries(
-    f.map((x) => [
-      String.fromCodePoint(x.unicode),
-      {
-        name: x.name,
-        default_type: x.default_type,
-        gf0014_id: x.gf0014_id,
-        component: x.component && JSON.parse(x.component),
-        compound: x.compound && preprocessCompounds(JSON.parse(x.compound)),
-        slice: x.slice && preprocessSlices(JSON.parse(x.slice)),
-      },
-    ]),
-  );
+  return Object.fromEntries(f.map((x) => [String.fromCodePoint(x.unicode), x]));
 };
 
-export const postProcessForm = (x: Glyph, unicode: number | null) => {
-  return {
-    unicode,
-    name: x.name,
-    default_type: x.default_type,
-    gf0014_id: x.gf0014_id,
-    component: x.component && JSON.stringify(x.component),
-    compound: x.compound && JSON.stringify(postProcessCompounds(x.compound)),
-    slice: x.slice && JSON.stringify(postProcessSlices(x.slice)),
-  };
+export const displayName = (x: string, v: Glyph) => {
+  return validUnicode(x) ? x : v.name;
 };

@@ -45,10 +45,7 @@ export const StrokeModel = ({
           }))}
           onChange={(value) => {
             const modified = deepcopy(glyph);
-            const newstroke = getDummyStroke(
-              value,
-              Array.from(schema[value as keyof typeof schema]),
-            );
+            const newstroke = getDummyStroke(value, schema[value]);
             modified.component![index[0]] = { ...newstroke, start };
             modify(name, modified);
           }}
@@ -139,6 +136,7 @@ const StrokeAdder = () => {
   const [name, glyph] = useNameAndGlyph();
   const rawitems: MenuProps["items"] = Object.entries(schema).map(([x, v]) => ({
     key: x,
+    label: x,
     onClick: () => {
       const modified = deepcopy(glyph);
       modified.component!.push(getDummyStroke(x as Feature, v));
