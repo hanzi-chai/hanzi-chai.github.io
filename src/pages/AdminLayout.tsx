@@ -22,9 +22,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Err, delet, get, patch, post, put } from "../lib/api";
 import {
   Component,
+  Compound,
   Draw,
   Glyph,
   GlyphOptionalUnicode,
+  Operator,
   Stroke,
 } from "../lib/data";
 import {
@@ -185,13 +187,7 @@ const ComponentForm = () => {
             <Button
               block
               type="dashed"
-              onClick={() =>
-                add({
-                  feature: "横",
-                  start: [6, 48],
-                  curveList: [{ command: "h", parameterList: [88] }],
-                })
-              }
+              onClick={() => add(getDummyStroke("横", ["h"]))}
             >
               添加笔画
             </Button>
@@ -203,18 +199,37 @@ const ComponentForm = () => {
 };
 
 const CompoundForm = () => {
+  const form = useContext(FormContext);
   return (
-    <Space>
+    <Flex gap="middle">
       <Form.Item<Glyph> label="结构" name={["compound", "operator"]}>
-        <Select options={ideos.map((x) => ({ value: x, label: x }))} />
+        <Select<Operator>
+          options={ideos.map((x) => ({ value: x, label: x }))}
+          onChange={(value) => {
+            const list = form.getFieldValue(["compound", "operandList"]);
+            const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
+            const newList = list.concat("一").slice(0, newLength);
+            form.setFieldValue(["compound", "operandList"], newList);
+          }}
+        />
       </Form.Item>
-      <Form.Item<Glyph> label="第 1 部" name={["compound", "operandList", 0]}>
-        <ItemSelect />
-      </Form.Item>
-      <Form.Item<Glyph> label="第 2 部" name={["compound", "operandList", 1]}>
-        <ItemSelect />
-      </Form.Item>
-    </Space>
+      <Form.List name={["compound", "operandList"]}>
+        {(fields) => (
+          <>
+            {fields.map((info, i) => (
+              <Form.Item<Compound["operandList"]>
+                {...info}
+                key={info.key}
+                label={`第 ${i + 1} 部`}
+                name={info.name}
+              >
+                <ItemSelect />
+              </Form.Item>
+            ))}
+          </>
+        )}
+      </Form.List>
+    </Flex>
   );
 };
 
@@ -298,10 +313,13 @@ const FormContext = createContext<FormInstance<Glyph>>({} as any);
 
 export const ItemSelect = (props: SelectProps) => {
   const form = useAppSelector(selectForm);
-  const initial = props.value
-    ? [{ value: props.value, label: form[props.value]?.name || props.value }]
-    : [];
-  const [data, setData] = useState<SelectProps["options"]>(initial);
+  const [data, setData] = useState<SelectProps["options"]>([]);
+  useEffect(() => {
+    const initial = props.value
+      ? [{ value: props.value, label: form[props.value]?.name || props.value }]
+      : [];
+    setData(initial);
+  }, [props.value]);
   const onSearch = (input: string) => {
     if (input.length === 0) {
       setData([]);

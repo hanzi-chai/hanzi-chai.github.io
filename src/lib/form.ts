@@ -12,6 +12,7 @@ import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import findTopology, { Relation } from "./topology";
+import { Extra } from "./element";
 
 export const makeSequenceFilter = (
   classifier: Classifier,
@@ -164,7 +165,7 @@ export interface ComponentResult {
 
 interface SequenceTree {
   operator: Operator;
-  operandList: [string[] | SequenceTree, string[] | SequenceTree];
+  operandList: (string[] | SequenceTree)[];
 }
 
 export interface CompoundResult {
@@ -251,18 +252,15 @@ export const disassembleCompounds = (
       result[char] = { sequence: [char], all: [char] };
       continue;
     }
-    const {
-      operator,
-      operandList: [c1, c2],
-    } = glyph.compound;
-    const [r1, r2] = [getResult(c1), getResult(c2)];
-    if (r1 !== undefined && r2 !== undefined) {
+    const { operator, operandList } = glyph.compound;
+    const results = operandList.map(getResult);
+    if (results.every((x) => x !== undefined)) {
       result[char] = {
-        sequence: r1.sequence.concat(r2.sequence),
-        all: { operator, operandList: [r1.all, r2.all] },
+        sequence: results.map((x) => x.sequence).flat(),
+        all: { operator, operandList: results.map((x) => x.all) },
       };
     } else {
-      console.error(char, c1, c2);
+      console.error(char, operandList);
     }
   }
   return result;
@@ -291,15 +289,43 @@ export const getFormCore = (data: Config["data"], config: FormConfig) => {
   ];
 };
 
+const getExtra = function (data: Config["data"], config: FormConfig): Extra {
+  const { form, classifier } = data;
+  const { mapping, grouping } = config;
+  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  const findSequence = (x: string) => {
+    if (form[x] === undefined) {
+      // 单笔画
+      return [Number(x)];
+    }
+    const glyph = form[x];
+    switch (glyph.default_type) {
+      case 0:
+        return glyph.component.map((x) => classifier[x.feature]);
+      case 1:
+        const sourceGlyph = form[glyph.slice.source];
+        const sourceSequence = sourceGlyph.component!.map(
+          (x) => classifier[x.feature],
+        );
+        return glyph.slice.indices.map((x) => sourceSequence[x]);
+      case 2:
+        return recursiveGetSequence(form, classifier, x);
+    }
+  };
+  const rootSequence = Object.fromEntries(
+    roots.map((x) => [x, findSequence(x)]),
+  );
+  return {
+    rootSequence,
+  };
+};
+
 export const getForm = (
   list: string[],
   data: Config["data"],
   config: FormConfig,
 ) => {
-  const rootData = getRootData(data, config);
-  const rootLookup = Object.fromEntries(
-    rootData.map(({ name, glyph }) => [name, { glyph }]),
-  );
+  const extra = getExtra(data, config);
   const [componentResults, compoundResults] = getFormCore(data, config);
   const value = Object.fromEntries(
     list.map((char) => {
@@ -310,5 +336,5 @@ export const getForm = (
         : [char, [result] as ComponentResult[] | CompoundResult[]];
     }),
   );
-  return [value, { rootData: rootLookup }] as const;
+  return [value, extra] as const;
 };

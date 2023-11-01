@@ -72,7 +72,7 @@ const defaultChildren: Record<string, string> = {
 };
 
 const exportFile = (config: Config) => {
-  const fileContent = dump(config, { flowLevel: 3 }).replace(
+  const fileContent = dump(config, { flowLevel: 4 }).replace(
     /[\uE000-\uFFFF]/g,
     (c) => {
       return `"\\u${c.codePointAt(0)!.toString(16)}"`;

@@ -3,7 +3,7 @@ import { ComponentGlyph, Glyph } from "./data";
 import { TotalResult } from "./encoder";
 
 export interface Extra {
-  rootData: Record<string, { glyph: ComponentGlyph["component"] }>;
+  rootSequence: Record<string, number[]>;
 }
 
 interface Base {
@@ -103,7 +103,7 @@ export const parseList = (value: (string | number)[]) => {
   return object;
 };
 
-function getindex<T>(a: T[], i: number) {
+function getindex<T>(a: T[], i: number): T | undefined {
   return i >= 0 ? a[i - 1] : a[a.length + i];
 }
 
@@ -118,7 +118,7 @@ export const findElement = (
   extra: Extra,
 ) => {
   const { pinyin, sequence, all } = result;
-  let root: string;
+  let root: string | undefined;
   switch (object.type) {
     case "汉字":
       return result.char;
@@ -128,15 +128,17 @@ export const findElement = (
       return getindex(sequence, object.rootIndex);
     case "笔画":
       root = getindex(sequence, object.rootIndex);
-      if (extra.rootData[root] === undefined) {
+      if (root === undefined) return undefined;
+      if (extra.rootSequence[root] === undefined) {
         if (Math.abs(object.strokeIndex) === 1) return root;
         return undefined;
       }
-      const stroke = getindex(extra.rootData[root].glyph, object.strokeIndex);
-      return stroke && data.classifier[stroke.feature].toString();
+      const number = getindex(extra.rootSequence[root], object.strokeIndex);
+      return number === undefined ? undefined : number.toString();
     case "二笔":
       root = getindex(sequence, object.rootIndex);
-      if (extra.rootData[root] === undefined) {
+      if (root === undefined) return undefined;
+      if (extra.rootSequence[root] === undefined) {
         if (Math.abs(object.strokeIndex) === 1) return root;
         return undefined;
       }
@@ -144,13 +146,9 @@ export const findElement = (
         object.strokeIndex * 2 - Math.sign(object.strokeIndex),
         object.strokeIndex * 2,
       ];
-      const stroke1 = getindex(extra.rootData[root].glyph, i1);
+      const stroke1 = getindex(extra.rootSequence[root], i1);
       if (stroke1 === undefined) return undefined;
-      let erbi = data.classifier[stroke1.feature].toString();
-      const stroke2 = getindex(extra.rootData[root].glyph, i2);
-      if (stroke2) {
-        erbi += data.classifier[stroke2.feature].toString();
-      }
-      return erbi;
+      const stroke2 = getindex(extra.rootSequence[root], i2);
+      return [stroke1, stroke2].join("");
   }
 };
