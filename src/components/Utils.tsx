@@ -83,7 +83,7 @@ export const ItemSelect = ({
       placeholder="输入笔画搜索"
       options={Object.entries(form).map(([x, v]) => ({
         value: x,
-        label: v.name || x,
+        label: displayName(x, v),
       }))}
       value={char}
       onChange={onChange}
@@ -115,7 +115,7 @@ export const ReferenceSelect = ({
       placeholder="输入 unicode 搜索"
       options={Object.entries(form).map(([x, v]) => ({
         value: x,
-        label: v.name || x,
+        label: displayName(x, v),
       }))}
       value={char}
       onChange={onChange}
@@ -191,4 +191,30 @@ export type IndexEdit = {
 export type IndexEdit2 = {
   char: string;
   setChar: (s: string) => void;
+};
+
+export const exportFile = (unsafeContent: string, filename: string) => {
+  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
+    return `"\\u${c.codePointAt(0)!.toString(16)}"`;
+  });
+  const blob = new Blob([fileContent], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.download = filename;
+  const url = window.URL.createObjectURL(blob);
+  a.href = url;
+  a.click();
+  window.URL.revokeObjectURL(url); // 避免内存泄漏
+};
+
+export const exportJSON = (unsafeContent: string, filename: string) => {
+  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
+    return `\\u${c.codePointAt(0)!.toString(16)}`;
+  });
+  const blob = new Blob([fileContent], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.download = filename;
+  const url = window.URL.createObjectURL(blob);
+  a.href = url;
+  a.click();
+  window.URL.revokeObjectURL(url); // 避免内存泄漏
 };

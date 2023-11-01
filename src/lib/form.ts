@@ -35,6 +35,9 @@ export const recursiveGetSequence = function (
   classifier: Classifier,
   char: string,
 ): number[] {
+  if (form[char] === undefined) {
+    console.log(char, char.codePointAt(0)!, form[char]);
+  }
   const { default_type, component, compound, slice } = form[char];
   switch (default_type) {
     case 0:

@@ -6,6 +6,7 @@ import {
   Flex,
   Layout,
   Menu,
+  MenuItemProps,
   Pagination,
   Radio,
   Space,
@@ -35,9 +36,17 @@ import {
   getSequence,
 } from "../lib/form";
 import { Classifier } from "../lib/config";
-import { EditorColumn, EditorRow, Select } from "../components/Utils";
+import {
+  EditorColumn,
+  EditorRow,
+  Select,
+  exportFile,
+  exportJSON,
+} from "../components/Utils";
 import Selector from "../components/Selector";
 import AnalysisCustomizer from "../components/AnalysisCustomizer";
+import { MenuProps } from "rc-menu";
+import { displayName } from "../lib/utils";
 
 const ResultSummary = ({
   char,
@@ -60,13 +69,43 @@ const ResultSummary = ({
   );
 };
 
-const exportResult = (result: Record<string, any>) => {
-  const fileContent = JSON.stringify(result);
-  const blob = new Blob([fileContent], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.download = `result.json`;
-  a.href = window.URL.createObjectURL(blob);
-  a.click();
+type GenericResult = ComponentResult & CompoundResult;
+
+const exportResult = (
+  componentResult: Record<string, ComponentResult>,
+  compoundResult: Record<string, CompoundResult>,
+  full?: boolean,
+) => {
+  const getContent = full
+    ? (x: GenericResult) => x.all
+    : (x: GenericResult) => x.sequence;
+  const allResult = [
+    ...Object.entries(componentResult),
+    ...Object.entries(compoundResult),
+  ] as [string, GenericResult][];
+  const output = Object.fromEntries(
+    allResult.map(([x, v]) => [x, getContent(v)]),
+  );
+  exportJSON(JSON.stringify(output), "chai.json");
+};
+
+const AnalysisExporter = ({ componentResults, compoundResults }: any) => {
+  const items: MenuProps["items"] = [
+    { label: "不含结构数据", key: "sequence" },
+    { label: "含结构数据", key: "all" },
+  ];
+  return (
+    <Dropdown
+      menu={{
+        items,
+        onClick: (info) => {
+          exportResult(componentResults, compoundResults, info.key === "all");
+        },
+      }}
+    >
+      <Button>导出拆分结果</Button>
+    </Dropdown>
+  );
 };
 
 const Analysis = () => {
@@ -84,6 +123,14 @@ const Analysis = () => {
   const rootConfig = useRoot();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const { mapping, grouping } = useRoot();
+  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  const rootsRef = Object.fromEntries(
+    roots.map((x) => {
+      const glyph = form[x];
+      return [x, displayName(x, glyph)];
+    }),
+  );
 
   const displays = [
     Object.entries(componentResults)
@@ -138,12 +185,16 @@ const Analysis = () => {
             >
               清空
             </Button>
+            <AnalysisExporter
+              componentResults={componentResults}
+              compoundResults={compoundResults}
+            />
             <Button
               onClick={() => {
-                exportResult({ componentResults, compoundResults });
+                exportJSON(JSON.stringify(rootsRef), "roots.json");
               }}
             >
-              导出
+              导出字根对照表
             </Button>
           </Flex>
           <Flex justify="center">

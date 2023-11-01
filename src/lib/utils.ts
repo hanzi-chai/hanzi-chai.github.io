@@ -130,5 +130,5 @@ export const preprocessForm = (f: any[]) => {
 };
 
 export const displayName = (x: string, v: Glyph) => {
-  return validUnicode(x) ? x : v.name;
+  return validUnicode(x) ? x : v?.name;
 };

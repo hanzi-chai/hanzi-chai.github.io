@@ -33,7 +33,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
-import { Uploader } from "../components/Utils";
+import { Uploader, exportFile } from "../components/Utils";
 import { examples } from "../lib/example";
 import { Compound, Form, Repertoire } from "../lib/data";
 import { preprocessForm, preprocessRepertoire } from "../lib/utils";
@@ -69,22 +69,6 @@ const items: MenuProps["items"] = [
 const defaultChildren: Record<string, string> = {
   data: "/form",
   element: "/form",
-};
-
-const exportFile = (config: Config) => {
-  const fileContent = dump(config, { flowLevel: 4 }).replace(
-    /[\uE000-\uFFFF]/g,
-    (c) => {
-      return `"\\u${c.codePointAt(0)!.toString(16)}"`;
-    },
-  );
-  const blob = new Blob([fileContent], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.download = `export.yaml`;
-  const url = window.URL.createObjectURL(blob);
-  a.href = url;
-  a.click();
-  window.URL.revokeObjectURL(url); // 避免内存泄漏
 };
 
 const EditorLayout = () => {
@@ -126,7 +110,13 @@ const EditorLayout = () => {
                 dispatch({ type: "load", value: load(s) as Config });
               }}
             />
-            <Button onClick={() => exportFile(config)}>导出</Button>
+            <Button
+              onClick={() =>
+                exportFile(dump(config, { flowLevel: 4 }), `export.yaml`)
+              }
+            >
+              导出
+            </Button>
             {source !== undefined && (
               <Button
                 onClick={() => {

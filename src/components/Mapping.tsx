@@ -42,7 +42,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const safeDisplay = (x: string) => {
     return form[x] || "123456".includes(x)
       ? displayName(x, form[x])
-      : "缺失字根" + x.codePointAt(0)!;
+      : "缺失字根" + x.codePointAt(0)!.toString(16);
   };
   return (
     <Popover

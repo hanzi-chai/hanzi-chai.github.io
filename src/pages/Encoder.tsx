@@ -97,10 +97,8 @@ const Encoder = () => {
     .filter(filterMap[filterOption])
     .map(([char, code]) => {
       const refcode = reference ? reference[char] || [] : [];
-      const refcodeShapeOnly = refcode.map((x) => x.slice(0, x.length - 1));
-      const codeShapeOnly = code.map((x) => x.slice(0, x.length - 1));
       if (refcode.length) {
-        if (codeShapeOnly.filter((v) => refcodeShapeOnly.includes(v)).length) {
+        if (code.filter((v) => refcode.includes(v)).length) {
           correct += 1;
         } else {
           incorrect += 1;
@@ -111,8 +109,8 @@ const Encoder = () => {
       return {
         key: char,
         char: char,
-        code: codeShapeOnly,
-        refcode: refcodeShapeOnly,
+        code: code,
+        refcode: refcode,
       };
     });
 
