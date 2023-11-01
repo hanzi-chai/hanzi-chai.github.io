@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
   };
 
   if (mode === "PAGES") {
-    sharedConfig.plugins.push(
+    sharedConfig.plugins?.push(
       importToCDN({
         prodUrl: "https://registry.npmmirror.com/{name}/{version}/files/{path}",
         modules: [

@@ -14,7 +14,7 @@ import {
 } from "../lib/templates";
 import { Updater } from "use-immer";
 import { Config } from "../lib/config";
-import { v4 as uuid } from "uuid";
+import { nanoid } from "@reduxjs/toolkit";
 import { examples } from "../lib/example";
 
 const Starter = ({
@@ -48,7 +48,7 @@ const Starter = ({
             const config = createConfig(values);
             setModal(false);
             setConfigs((configs) => {
-              configs[uuid()] = config;
+              configs[nanoid(9)] = config;
               return undefined;
             });
           }}

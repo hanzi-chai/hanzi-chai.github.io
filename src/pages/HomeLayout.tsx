@@ -14,7 +14,7 @@ import {
 import { Config } from "../lib/config";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { v4 as uuid } from "uuid";
+import { nanoid } from "@reduxjs/toolkit";
 import { useImmer } from "use-immer";
 import { examples } from "../lib/example";
 import { Select, Uploader } from "../components/Utils";
@@ -201,7 +201,7 @@ const HomeLayout = () => {
                 items: Object.values(examples),
                 onClick: (menu) => {
                   setConfigs((configs) => {
-                    configs[uuid()] = examples[menu.key].self;
+                    configs[nanoid(9)] = examples[menu.key].self;
                   });
                 },
               }}
@@ -211,7 +211,7 @@ const HomeLayout = () => {
             <Uploader
               action={(s) => {
                 setConfigs((configs) => {
-                  configs[uuid()] = load(s) as Config;
+                  configs[nanoid(9)] = load(s) as Config;
                 });
               }}
             />
