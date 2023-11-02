@@ -1,6 +1,7 @@
 import { Empty, Form, Typography } from "antd";
 import { Compound, Glyph, Operator } from "../lib/data";
-import { useClassifier, useCompound, useForm, useModify } from "./context";
+import { useAdd } from "./context";
+import { useClassifier, useCompound, useForm } from "./contants";
 import { Index, ItemSelect, NumberInput, Select } from "./Utils";
 import { getSequence } from "../lib/form";
 import { deepcopy } from "../lib/utils";
@@ -25,7 +26,7 @@ const CompoundModel = ({ char }: Index) => {
   const form = useForm();
   const glyph = useCompound(char);
   const { operator, operandList, mix } = glyph.compound!;
-  const modify = useModify();
+  const modify = useAdd();
   const modified = deepcopy(glyph);
   const classifier = useClassifier();
   return (

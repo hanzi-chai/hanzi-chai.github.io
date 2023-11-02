@@ -19,10 +19,9 @@ import type { MenuProps } from "antd";
 import {
   ConfigContext,
   DispatchContext,
-  FormContext,
-  RepertoireContext,
   configReducer,
 } from "../components/context";
+import { FormContext, RepertoireContext } from "../components/contants";
 import { Config } from "../lib/config";
 import { dump, load } from "js-yaml";
 import {

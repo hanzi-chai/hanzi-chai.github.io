@@ -10,15 +10,8 @@ import {
   Space,
 } from "antd";
 import { useContext, useState } from "react";
-import {
-  DispatchContext,
-  useDesign,
-  useForm,
-  useGeneric,
-  useGlyph,
-  useIndex,
-  useRoot,
-} from "./context";
+import { useDesign, useGenericConfig } from "./context";
+import { useForm, useGlyph } from "./contants";
 import Root from "./Root";
 import Char from "./Char";
 import { MappedInfo, displayName, reverse } from "../lib/utils";
@@ -28,7 +21,7 @@ import { Select as AntdSelect } from "antd";
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const design = useDesign();
   const form = useForm();
-  const { alphabet, maxcodelen, grouping, mapping } = useGeneric();
+  const { alphabet, maxcodelen, grouping, mapping } = useGenericConfig();
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: x,
@@ -151,7 +144,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
 };
 
 const Mapping = () => {
-  const { mapping, alphabet, maxcodelen } = useGeneric();
+  const { mapping, alphabet, maxcodelen } = useGenericConfig();
   const design = useDesign();
   const reversed = reverse(alphabet, mapping!);
   return (

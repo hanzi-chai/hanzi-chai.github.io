@@ -19,14 +19,13 @@ import Char from "../components/Char";
 import Root from "../components/Root";
 import ResultDetail from "../components/ResultDetail";
 import { useContext, useState } from "react";
+import { useFormConfig } from "../components/context";
 import {
-  useClassifier,
-  useRoot,
-  useForm,
   useAll,
-  useGlyph,
+  useForm,
+  useClassifier,
   useDisplay,
-} from "../components/context";
+} from "../components/contants";
 import {
   ComponentResult,
   CompoundResult,
@@ -55,15 +54,12 @@ const ResultSummary = ({
   char: string;
   rootSeries: string[];
 }) => {
-  const name = useDisplay(char);
-  const rootNames = rootSeries.map((x) =>
-    x.match(/[\uE000-\uFFFF]/) ? useDisplay(x) : x,
-  );
+  const display = useDisplay();
   return (
     <Space>
-      <Char>{name}</Char>
-      {rootNames.map((x, index) => (
-        <Root key={index}>{x}</Root>
+      <Char>{display(char)}</Char>
+      {rootSeries.map((x, index) => (
+        <Root key={index}>{display(x)}</Root>
       ))}
     </Space>
   );
@@ -120,11 +116,12 @@ const Analysis = () => {
   const classifier = useClassifier();
   const data = useAll();
   const form = useForm();
-  const rootConfig = useRoot();
+  const formConfig = useFormConfig();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const { mapping, grouping } = useRoot();
-  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  const roots = Object.keys(formConfig.mapping).concat(
+    Object.keys(formConfig.grouping),
+  );
   const rootsRef = Object.fromEntries(
     roots.map((x) => {
       const glyph = form[x];
@@ -169,7 +166,7 @@ const Analysis = () => {
               onClick={() => {
                 const [componentResults, compoundResults] = getFormCore(
                   data,
-                  rootConfig,
+                  formConfig,
                 );
                 setComponentResult(componentResults);
                 setCompoundResult(compoundResults);

@@ -1,10 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { useClassifier, useForm } from "./context";
 import Char from "./Char";
 import { ConfigProvider, Flex, Pagination } from "antd";
-import { Component, Glyph } from "../lib/data";
-import { getSequence, makeSequenceFilter } from "../lib/form";
 
 const Content = styled(Flex)`
   padding: 8px;

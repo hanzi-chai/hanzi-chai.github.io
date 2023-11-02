@@ -10,7 +10,8 @@ import {
 } from "antd";
 import { createContext, useContext } from "react";
 import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
-import { useComponent, useForm, useModify } from "./context";
+import { useAdd } from "./context";
+import { useComponent, useForm } from "./contants";
 import { deepcopy, getDummyStroke, halfToFull } from "../lib/utils";
 import { Index, NumberInput } from "./Utils";
 import classifier, { Feature, schema } from "../lib/classifier";
@@ -32,7 +33,7 @@ export const StrokeModel = ({
   stroke: { feature, start, curveList },
   index,
 }: StrokeModelProps) => {
-  const modify = useModify();
+  const modify = useAdd();
   const [name, glyph] = useNameAndGlyph();
   return (
     <Flex vertical gap="small">
@@ -107,7 +108,7 @@ interface NumberModelProps {
 }
 
 const NumberModel = ({ parameter, index }: NumberModelProps) => {
-  const modify = useModify();
+  const modify = useAdd();
   const [name, glyph] = useNameAndGlyph();
   const [strokeIndex, drawIndex, parameterIndex] = index;
   return (
@@ -132,7 +133,7 @@ const NumberModel = ({ parameter, index }: NumberModelProps) => {
 };
 
 const StrokeAdder = () => {
-  const modify = useModify();
+  const modify = useAdd();
   const [name, glyph] = useNameAndGlyph();
   const rawitems: MenuProps["items"] = Object.entries(schema).map(([x, v]) => ({
     key: x,

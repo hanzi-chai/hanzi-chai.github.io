@@ -1,10 +1,6 @@
 import { Button, Form, Input, Modal, Select, notification } from "antd";
 import { useState } from "react";
 import {
-  ClassifierType,
-  EncoderTypes,
-  FormTypes,
-  PronTypes,
   StarterType,
   classifierTypes,
   createConfig,

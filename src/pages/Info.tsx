@@ -1,36 +1,46 @@
-import React, { useContext } from "react";
-import { Col, Form, Input, Typography } from "antd";
-import { ConfigContext, DispatchContext } from "../components/context";
+import React, { useContext, useEffect } from "react";
+import { Button, Col, Form, Input, Typography } from "antd";
+import { DispatchContext, useInfo } from "../components/context";
+import { Config } from "../lib/config";
+import { useForm } from "antd/es/form/Form";
 
-const InfoInput = ({ field }: { field: string }) => {
-  const config = useContext(ConfigContext);
-  const dispatch = useContext(DispatchContext);
-  return (
-    <Input
-      value={config.info[field as "name"]}
-      onChange={(e) =>
-        dispatch({ type: "info", value: { [field]: e.target.value } })
-      }
-    />
-  );
-};
+type IInfo = Config["info"];
 
 const Info: React.FC = () => {
+  const info = useInfo();
+  const dispatch = useContext(DispatchContext);
+  const [antdForm] = useForm();
+  useEffect(() => {
+    antdForm.setFieldsValue(info);
+  }, [info]);
   return (
     <Col span={6}>
       <Typography.Title level={2}>基本信息</Typography.Title>
-      <Form labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
-        <Form.Item label="方案名称">
-          <InfoInput field="name" />
+      <Form<IInfo>
+        form={antdForm}
+        labelCol={{ span: 8 }}
+        wrapperCol={{ span: 16 }}
+        initialValues={info}
+        onFinish={(values) => {
+          dispatch({ type: "info", value: values });
+        }}
+      >
+        <Form.Item<IInfo> label="方案名称" name="name">
+          <Input />
         </Form.Item>
-        <Form.Item label="作者">
-          <InfoInput field="author" />
+        <Form.Item<IInfo> label="作者" name="author">
+          <Input />
         </Form.Item>
-        <Form.Item label="版本">
-          <InfoInput field="version" />
+        <Form.Item<IInfo> label="版本" name="version">
+          <Input />
         </Form.Item>
-        <Form.Item label="描述">
-          <InfoInput field="description" />
+        <Form.Item<IInfo> label="描述" name="description">
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" key="submit" htmlType="submit">
+            更新
+          </Button>
         </Form.Item>
       </Form>
     </Col>

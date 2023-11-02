@@ -1,18 +1,17 @@
-import { useContext, useState } from "react";
-import { ConfigContext, useDesign, useForm } from "./context";
+import { useState } from "react";
+import { useDesign, useFormConfig } from "./context";
 import { Button, Flex } from "antd";
 import { ItemSelect, RootSelect, Select } from "./Utils";
 import Char from "./Char";
 import { PlusOutlined, MinusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useDisplay } from "./contants";
 
 const AnalysisCustomizer = () => {
   const {
-    form: {
-      analysis: { customize },
-    },
-  } = useContext(ConfigContext);
+    analysis: { customize },
+  } = useFormConfig();
   const design = useDesign();
-  const form = useForm();
+  const display = useDisplay();
   const [newCustomization, setNew] = useState<string | undefined>(undefined);
 
   return (
@@ -20,7 +19,7 @@ const AnalysisCustomizer = () => {
       {Object.entries(customize).map(([component, sequence]) => {
         return (
           <Flex justify="space-between" key={component}>
-            <Char>{form[component].name || component}</Char>
+            <Char>{display(component)}</Char>
             <Flex gap="small">
               {sequence.map((x, i) => (
                 <RootSelect

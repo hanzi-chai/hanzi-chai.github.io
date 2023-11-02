@@ -8,7 +8,6 @@ import {
   Position,
   useReactFlow,
 } from "reactflow";
-import { ConfigContext, DispatchContext } from "./context";
 import styled from "styled-components";
 import {
   MenuItemGroupType,

@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import { useClassifier, useModify } from "../components/context";
+import { useAdd } from "../components/context";
+import { useClassifier } from "../components/contants";
 import { Button, Flex, Space, notification } from "antd";
 import Root from "../components/Root";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
@@ -48,7 +49,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 
 const Classifier = () => {
   const classifier = useClassifier();
-  const modify = useModify();
+  const modify = useAdd();
   const [categories, setCategories] = useState(
     Math.max(...Object.values(classifier)),
   );

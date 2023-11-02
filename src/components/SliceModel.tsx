@@ -1,19 +1,14 @@
 import { getSequence, makeSequenceFilter } from "../lib/form";
 import { deepcopy } from "../lib/utils";
 import { Index, ItemSelect, Select } from "./Utils";
-import {
-  useModify,
-  useForm,
-  useClassifier,
-  useSlice,
-  useComponent,
-} from "./context";
+import { useAdd } from "./context";
+import { useForm, useSlice, useComponent } from "./contants";
 import { Checkbox, Flex, Form } from "antd";
 
 const SliceModel = ({ char }: Index) => {
   const form = useForm();
   const glyph = useSlice(char);
-  const modify = useModify();
+  const modify = useAdd();
   const modified = deepcopy(glyph);
   const { source, indices } = glyph.slice;
   const { component } = useComponent(source);

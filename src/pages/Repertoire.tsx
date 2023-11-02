@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Dropdown, Flex, Input, MenuProps, Space, Table } from "antd";
-import { useRepertoire, useModify } from "../components/context";
+import { useAdd } from "../components/context";
+import { useRepertoire } from "../components/contants";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "../components/Utils";
@@ -37,7 +38,7 @@ const EditablePinyin = ({
 
 const Repertoire: React.FC = () => {
   const characters = useRepertoire();
-  const modify = useModify();
+  const modify = useAdd();
   const [input, setInput] = useState("");
   const rawdata = Object.entries(characters).map(([k, v]) => ({
     key: k,

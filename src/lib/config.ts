@@ -64,7 +64,6 @@ interface Config {
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;
   };
-  reference?: Record<string, string[]>;
 }
 
 export type {

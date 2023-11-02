@@ -14,7 +14,7 @@ import ReactFlow, {
   Edge,
   Panel,
 } from "reactflow";
-import { ConfigContext, DispatchContext, useAll } from "./context";
+import { DispatchContext, useEncoder } from "./context";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
@@ -35,9 +35,7 @@ import DetailEditor from "./DetailEditor";
 
 const EncoderGraph = () => {
   const { fitView, getNode } = useReactFlow();
-  const {
-    encoder: { sources, conditions },
-  } = useContext(ConfigContext);
+  const { sources, conditions } = useEncoder();
   const dispatch = useContext(DispatchContext);
   const n1 = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Select, Button, Flex } from "antd";
-import { useDesign, useGeneric, useIndex, useRoot } from "./context";
+import { useDesign, useGenericConfig, useConfigType } from "./context";
 import { RootSelect } from "./Utils";
 
 const ElementAdder = ({ element }: { element?: string }) => {
-  const { alphabet, maxcodelen, mapping } = useGeneric();
-  const index = useIndex();
+  const { alphabet, maxcodelen, mapping } = useGenericConfig();
+  const index = useConfigType();
   const design = useDesign();
   const [main, setMain] = useState(Object.keys(mapping)[0]);
   const [keys, setKeys] = useState(Array(4).fill(alphabet[0]));

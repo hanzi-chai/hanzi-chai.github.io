@@ -9,7 +9,8 @@ import {
   Select as _Select,
 } from "antd";
 import styled from "styled-components";
-import { useClassifier, useForm, useRoot } from "./context";
+import { useFormConfig } from "./context";
+import { useForm, useClassifier } from "./contants";
 import { getSequence } from "../lib/form";
 import { displayName } from "../lib/utils";
 
@@ -150,7 +151,7 @@ export const RootSelect = ({
   exclude: string;
   withGrouped?: boolean;
 }) => {
-  const { mapping, grouping } = useRoot();
+  const { mapping, grouping } = useFormConfig();
   const form = useForm();
   const classifier = useClassifier();
   const keys = withGrouped

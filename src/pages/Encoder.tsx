@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
 import {
-  ConfigContext,
-  DispatchContext,
-  useAll,
-  useForm,
+  useEncoder,
+  useFormConfig,
+  usePronunciationConfig,
 } from "../components/context";
+import { useAll } from "../components/contants";
 
 import encode, { EncoderResult, getCache } from "../lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
@@ -15,7 +15,7 @@ import { ReactFlowProvider } from "reactflow";
 import { Character } from "../lib/data";
 import { getSupplemental } from "../lib/utils";
 
-interface DataType {
+interface EncodeResultTable {
   char: string;
   code: string[];
   refcode: string[];
@@ -51,14 +51,15 @@ type FilterOption = (typeof filterOptions)[number];
 
 const Encoder = () => {
   const data = useAll();
-  const { form, pronunciation, encoder, reference } = useContext(ConfigContext);
-  const dispatch = useContext(DispatchContext);
+  const formConfig = useFormConfig();
+  const pronunciationConfig = usePronunciationConfig();
+  const encoder = useEncoder();
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>({});
-  const [lost, setLost] = useState<string[]>([]);
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
+  const [reference, setReference] = useState<Record<string, string[]>>({});
   const list = Object.entries(data.repertoire)
     .filter(filtermap[gb2312]("gb2312"))
     .filter(filtermap[tygf]("tygf"))
@@ -71,29 +72,26 @@ const Encoder = () => {
   };
 
   const compute = () => {
-    const [cache, extra] = getCache(list, form, data);
+    const [cache, extra] = getCache(list, formConfig, data);
     const rawresult = encode(
       encoder,
-      form,
-      pronunciation,
+      formConfig,
+      pronunciationConfig,
       list,
       cache,
       data,
       extra,
     );
-    const filtered = Object.fromEntries(
-      Object.entries(rawresult).filter(([, v]) => v.length > 0),
-    );
-    const lost = list.filter((char) => cache[char].length === 0);
-    setResult(filtered);
-    setLost(lost);
+    setResult(rawresult);
   };
+  const lost = Object.keys(reference).filter((x) => reference[x].length === 0);
 
   let correct = 0,
     incorrect = 0,
     unknown = 0;
 
   let dataSource = Object.entries(result)
+    .filter(([, v]) => v.length > 0)
     .filter(filterMap[filterOption])
     .map(([char, code]) => {
       const refcode = reference ? reference[char] || [] : [];
@@ -120,7 +118,7 @@ const Encoder = () => {
     });
   }
 
-  const columns: ColumnsType<DataType> = [
+  const columns: ColumnsType<EncodeResultTable> = [
     {
       title: "汉字",
       dataIndex: "char",
@@ -155,97 +153,94 @@ const Encoder = () => {
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>编码生成</Typography.Title>
-        <Space direction="vertical" style={{ width: "100%" }} size="large">
-          {lost.length ? (
-            <Alert
-              message="警告"
-              description={`${lost.slice(0, 5).join("、")} 等 ${
-                lost.length
-              } 个字缺少编码所需的原始数据`}
-              type="warning"
-              showIcon
-              closable
-            />
-          ) : (
-            <></>
-          )}
-          <Flex justify="center" align="center" gap="large">
-            字集过滤
-            <Space>
-              GB/T 2312
-              <Select
-                value={gb2312}
-                options={filtervalues.map((x) => ({
-                  value: x,
-                  label: x,
-                }))}
-                onChange={(value) => setGB2312(value)}
-              />
-            </Space>
-            <Space>
-              通用规范
-              <Select
-                value={tygf}
-                options={filtervalues.map((x) => ({
-                  value: x,
-                  label: x,
-                }))}
-                onChange={(value) => setTYGF(value)}
-              />
-            </Space>
-          </Flex>
-          <Flex justify="center" align="center" gap="large">
-            校对模式
-            <Switch checked={dev} onChange={setDev} />
-            <Uploader
-              text="导入 JSON 码表"
-              action={(content) => {
-                dispatch({ type: "reference", value: JSON.parse(content) });
-              }}
-            />
-            {reference !== undefined &&
-              `已加载码表，条数：${Object.keys(reference).length}`}
-          </Flex>
-          {dev && (
-            <Flex justify="center" align="center" gap="large">
-              校对范围
-              <Select
-                value={filterOption}
-                options={filterOptions.map((x) => ({ label: x, value: x }))}
-                onChange={setFilterOption}
-              />
-              {`正确：${correct}, 错误：${incorrect}, 未知：${unknown}，正确率：${Math.round(
-                (correct / (correct + incorrect + unknown)) * 100,
-              )}%`}
-            </Flex>
-          )}
-          <Flex justify="center" gap="small">
-            <Button type="primary" onClick={compute}>
-              计算
-            </Button>
-            <Button
-              onClick={() => {
-                setResult({});
-                setLost([]);
-              }}
-            >
-              清空
-            </Button>
-            <Button
-              onClick={() => {
-                exportTable(result);
-              }}
-            >
-              导出
-            </Button>
-          </Flex>
-          <Table
-            columns={columns}
-            dataSource={dataSource}
-            pagination={{ pageSize: 50, hideOnSinglePage: true }}
-            size="small"
+        {lost.length ? (
+          <Alert
+            message="警告"
+            description={`${lost.slice(0, 5).join("、")} 等 ${
+              lost.length
+            } 个字缺少编码所需的原始数据`}
+            type="warning"
+            showIcon
+            closable
           />
-        </Space>
+        ) : (
+          <></>
+        )}
+        <Flex justify="center" align="center" gap="large">
+          字集过滤
+          <Space>
+            GB/T 2312
+            <Select
+              value={gb2312}
+              options={filtervalues.map((x) => ({
+                value: x,
+                label: x,
+              }))}
+              onChange={(value) => setGB2312(value)}
+            />
+          </Space>
+          <Space>
+            通用规范
+            <Select
+              value={tygf}
+              options={filtervalues.map((x) => ({
+                value: x,
+                label: x,
+              }))}
+              onChange={(value) => setTYGF(value)}
+            />
+          </Space>
+        </Flex>
+        <Flex justify="center" align="center" gap="large">
+          校对模式
+          <Switch checked={dev} onChange={setDev} />
+          <Uploader
+            text="导入 JSON 码表"
+            action={(content) => {
+              setReference(JSON.parse(content));
+            }}
+          />
+          {reference !== undefined &&
+            `已加载码表，条数：${Object.keys(reference).length}`}
+        </Flex>
+        {dev && (
+          <Flex justify="center" align="center" gap="large">
+            校对范围
+            <Select
+              value={filterOption}
+              options={filterOptions.map((x) => ({ label: x, value: x }))}
+              onChange={setFilterOption}
+            />
+            {`正确：${correct}, 错误：${incorrect}, 未知：${unknown}，正确率：${Math.round(
+              (correct / (correct + incorrect + unknown)) * 100,
+            )}%`}
+          </Flex>
+        )}
+        <Flex justify="center" gap="small">
+          <Button type="primary" onClick={compute}>
+            计算
+          </Button>
+          <Button
+            onClick={() => {
+              setResult({});
+            }}
+          >
+            清空
+          </Button>
+          <Button
+            onClick={() => {
+              exportTable(result);
+            }}
+          >
+            导出
+          </Button>
+        </Flex>
+        <Table
+          columns={columns}
+          dataSource={dataSource}
+          pagination={{ pageSize: 50, hideOnSinglePage: true }}
+          size="small"
+        />
       </EditorColumn>
     </EditorRow>
   );

@@ -29,14 +29,8 @@ import {
   ReferenceSelect,
   Select,
 } from "../components/Utils";
-import {
-  useClassifier,
-  useForm,
-  useData,
-  useDelete,
-  useModify,
-  useGlyph,
-} from "../components/context";
+import { useData, useRemove, useAdd } from "../components/context";
+import { useClassifier, useForm, useGlyph } from "../components/contants";
 import styled from "styled-components";
 import CompoundModel from "../components/CompoundModel";
 import { deepcopy, length, validUnicode } from "../lib/utils";
@@ -95,7 +89,7 @@ const Duplicate = ({ char, setChar, slice }: IndexEdit2 & Slicer) => {
   );
   const code = Math.max(maxCode + 1, 0xf000);
   const newChar = String.fromCodePoint(code);
-  const modify = useModify();
+  const modify = useAdd();
   const [newName, setNewName] = useState("");
 
   return (
@@ -126,7 +120,7 @@ const Duplicate = ({ char, setChar, slice }: IndexEdit2 & Slicer) => {
 const Toolbar = ({ char, setChar }: IndexEdit) => {
   const formCustomizations = useData().form;
   const glyph = useGlyph(char!);
-  const del = useDelete();
+  const del = useRemove();
   const modified = char !== undefined && formCustomizations[char];
   return (
     <Flex justify="center" align="center" gap="small">
@@ -173,7 +167,7 @@ const GeneralModel = ({ char }: Index) => {
     { label: "切片", value: 1 },
     { label: "复合体", value: 2 },
   ];
-  const modify = useModify();
+  const modify = useAdd();
   return (
     <>
       <Form.Item label="序号">{char.codePointAt(0)!}</Form.Item>
