@@ -10,6 +10,7 @@ import { ConfigProvider } from "antd";
 import { get } from "./lib/api";
 import { Provider } from "react-redux";
 import { store } from "./components/store";
+import AutoRoute from "~react-pages";
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -35,106 +36,7 @@ const createRouter =
     ? createHashRouter
     : createBrowserRouter;
 
-const router = createRouter([
-  {
-    path: "/",
-    async lazy() {
-      const c = await import("./pages/HomeLayout");
-      return { Component: c.default };
-    },
-  },
-  {
-    path: "/admin",
-    async lazy() {
-      const c = await import("./pages/AdminLayout");
-      return { Component: c.default };
-    },
-  },
-  {
-    path: "/:id",
-    async lazy() {
-      const c = await import("./pages/EditorLayout");
-      return { Component: c.default };
-    },
-    children: [
-      {
-        index: true,
-        async lazy() {
-          const c = await import("./pages/Info");
-          return { Component: c.default };
-        },
-      },
-      {
-        path: "data",
-        async lazy() {
-          const c = await import("./pages/Data");
-          return { Component: c.default };
-        },
-        children: [
-          {
-            path: "form",
-            async lazy() {
-              const c = await import("./pages/Form");
-              return { Component: c.default };
-            },
-          },
-
-          {
-            path: "repertoire",
-            async lazy() {
-              const c = await import("./pages/Repertoire");
-              return { Component: c.default };
-            },
-          },
-          {
-            path: "classifier",
-            async lazy() {
-              const c = await import("./pages/Classifier");
-              return { Component: c.default };
-            },
-          },
-        ],
-      },
-      {
-        path: "element",
-        async lazy() {
-          const c = await import("./pages/Elements");
-          return { Component: c.default };
-        },
-        children: [
-          {
-            path: "form",
-            async lazy() {
-              const c = await import("./pages/Elements");
-              return { Component: c.RootElementConfig };
-            },
-          },
-          {
-            path: "pronunciation",
-            async lazy() {
-              const c = await import("./pages/Elements");
-              return { Component: c.PhoneticElementConfig };
-            },
-          },
-        ],
-      },
-      {
-        path: "analysis",
-        async lazy() {
-          const c = await import("./pages/Analysis");
-          return { Component: c.default };
-        },
-      },
-      {
-        path: "encode",
-        async lazy() {
-          const c = await import("./pages/Encoder");
-          return { Component: c.default };
-        },
-      },
-    ],
-  },
-]);
+const router = createRouter(AutoRoute);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
