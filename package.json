@@ -1,7 +1,7 @@
 {
   "name": "chai",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.1",
   "type": "module",
   "scripts": {
     "dev": "vite --mode CF",
@@ -15,7 +15,7 @@
     "version": "tsc && npm run build:BEX && npm run build:PAGES && npm run build:CF",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "fix": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
-    "preview": "vite preview --mode BEX",
+    "preview": "vite preview --mode CF --outDir dist/cf",
     "format": "npx prettier . --write && git add .",
     "test": "vitest",
     "testui": "vitest --ui",
