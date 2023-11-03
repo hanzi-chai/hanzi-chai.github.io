@@ -1,4 +1,4 @@
-import React, { StrictMode } from "react";
+import React, { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createGlobalStyle } from "styled-components";
 import {
@@ -10,6 +10,7 @@ import { ConfigProvider } from "antd";
 import { get } from "./lib/api";
 import { Provider } from "react-redux";
 import { store } from "./components/store";
+import CusSpin from "~/components/CustomSpin";
 import AutoRoute from "~react-pages";
 
 const GlobalStyle = createGlobalStyle`
@@ -43,7 +44,9 @@ createRoot(document.getElementById("root")!).render(
     <GlobalStyle />
     <ConfigProvider autoInsertSpaceInButton={false}>
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <Suspense fallback={<CusSpin tip="加载APP…" />}>
+          <RouterProvider router={router} />
+        </Suspense>
       </Provider>
     </ConfigProvider>
   </StrictMode>,
