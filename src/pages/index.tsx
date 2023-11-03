@@ -226,7 +226,7 @@ const HomeLayout = () => {
         gap="large"
         style={{ padding: "32px" }}
       >
-        <Image alt="favicon" src="/icon.png" />
+        <Image alt="favicon" src="/icon.webp" />
         <Typography.Title>汉字自动拆分系统 v{APP_VERSION}</Typography.Title>
         <Typography.Text>
           © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
