@@ -9,12 +9,12 @@ import {
   Typography,
 } from "antd";
 import { createContext, useContext } from "react";
-import { Draw, Glyph, N1, N2, N3, Stroke } from "../lib/data";
+import { Draw, Glyph, N1, N2, N3, Stroke } from "~/lib/data";
 import { useAdd } from "./context";
 import { useComponent, useForm } from "./contants";
-import { deepcopy, getDummyStroke, halfToFull } from "../lib/utils";
+import { deepcopy, getDummyStroke, halfToFull } from "~/lib/utils";
 import { Index, NumberInput } from "./Utils";
-import classifier, { Feature, schema } from "../lib/classifier";
+import classifier, { Feature, schema } from "~/lib/classifier";
 
 const NameContext = createContext("");
 

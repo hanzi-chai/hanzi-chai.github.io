@@ -1,6 +1,6 @@
 import { Dispatch, createContext, useContext } from "react";
-import { Config, SieveName } from "../lib/config";
-import { Glyph, Character } from "../lib/data";
+import { Config, SieveName } from "~/lib/config";
+import { Glyph, Character } from "~/lib/data";
 import { useLocation } from "react-router-dom";
 
 // Config 对象一共有 7 个字段，除了 version 和 source 不可变外，均可以通过 action 改变

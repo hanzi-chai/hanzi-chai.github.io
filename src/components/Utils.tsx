@@ -11,8 +11,8 @@ import {
 import styled from "styled-components";
 import { useFormConfig } from "./context";
 import { useForm, useClassifier } from "./contants";
-import { getSequence } from "../lib/form";
-import { displayName } from "../lib/utils";
+import { getSequence } from "~/lib/form";
+import { displayName } from "~/lib/utils";
 
 const ScrollableRow = styled(Row)`
   height: 100%;

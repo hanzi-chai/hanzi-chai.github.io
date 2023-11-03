@@ -20,9 +20,9 @@ import {
   ConfigContext,
   DispatchContext,
   configReducer,
-} from "../components/context";
-import { FormContext, RepertoireContext } from "../components/contants";
-import { Config } from "../lib/config";
+} from "~/components/context";
+import { FormContext, RepertoireContext } from "~/components/contants";
+import { Config } from "~/lib/config";
 import { dump, load } from "js-yaml";
 import {
   Link,
@@ -32,10 +32,10 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
-import { Uploader, exportFile } from "../components/Utils";
-import { examples } from "../lib/example";
-import { Compound, Form, Repertoire } from "../lib/data";
-import { preprocessForm, preprocessRepertoire } from "../lib/utils";
+import { Uploader, exportFile } from "~/components/Utils";
+import { examples } from "~/lib/example";
+import { Compound, Form, Repertoire } from "~/lib/data";
+import { preprocessForm, preprocessRepertoire } from "~/lib/utils";
 
 const items: MenuProps["items"] = [
   {

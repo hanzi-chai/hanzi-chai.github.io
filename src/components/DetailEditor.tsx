@@ -7,9 +7,9 @@ import {
   parseList,
   pinyinAnalyzers,
   renderList,
-} from "../lib/element";
+} from "~/lib/element";
 import { Select } from "./Utils";
-import { Op, binaryOps, ops } from "../lib/config";
+import { Op, binaryOps, ops } from "~/lib/config";
 import TextArea from "antd/es/input/TextArea";
 
 const Background = styled(Flex)`

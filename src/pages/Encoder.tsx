@@ -4,16 +4,16 @@ import {
   useEncoder,
   useFormConfig,
   usePronunciationConfig,
-} from "../components/context";
-import { useAll } from "../components/contants";
+} from "~/components/context";
+import { useAll } from "~/components/contants";
 
-import encode, { EncoderResult, getCache } from "../lib/encoder";
+import encode, { EncoderResult, getCache } from "~/lib/encoder";
 import Table, { ColumnsType } from "antd/es/table";
-import { EditorColumn, EditorRow, Select, Uploader } from "../components/Utils";
-import EncoderGraph from "../components/EncoderGraph";
+import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
+import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
-import { Character } from "../lib/data";
-import { getSupplemental } from "../lib/utils";
+import { Character } from "~/lib/data";
+import { getSupplemental } from "~/lib/utils";
 
 interface EncodeResultTable {
   char: string;

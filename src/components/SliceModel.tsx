@@ -1,5 +1,5 @@
-import { getSequence, makeSequenceFilter } from "../lib/form";
-import { deepcopy } from "../lib/utils";
+import { getSequence, makeSequenceFilter } from "~/lib/form";
+import { deepcopy } from "~/lib/utils";
 import { Index, ItemSelect, Select } from "./Utils";
 import { useAdd } from "./context";
 import { useForm, useSlice, useComponent } from "./contants";

@@ -1,5 +1,5 @@
 import { Edge, Node } from "reactflow";
-import { Condition, Source } from "../lib/config";
+import { Condition, Source } from "~/lib/config";
 import { add, sum } from "mathjs";
 
 export type SourceData = Omit<Source, "next">;

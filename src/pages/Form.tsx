@@ -1,9 +1,5 @@
-import ComponentModel from "../components/ComponentModel";
-import {
-  ComponentView,
-  CompoundView,
-  SliceView,
-} from "../components/GlyphView";
+import ComponentModel from "~/components/ComponentModel";
+import { ComponentView, CompoundView, SliceView } from "~/components/GlyphView";
 import { useState } from "react";
 import {
   Button,
@@ -18,7 +14,7 @@ import {
   Typography,
   notification,
 } from "antd";
-import SliceModel from "../components/SliceModel";
+import SliceModel from "~/components/SliceModel";
 import {
   EditorColumn,
   EditorRow,
@@ -28,14 +24,14 @@ import {
   ItemSelect,
   ReferenceSelect,
   Select,
-} from "../components/Utils";
-import { useData, useRemove, useAdd } from "../components/context";
-import { useClassifier, useForm, useGlyph } from "../components/contants";
+} from "~/components/Utils";
+import { useData, useRemove, useAdd } from "~/components/context";
+import { useClassifier, useForm, useGlyph } from "~/components/contants";
 import styled from "styled-components";
-import CompoundModel from "../components/CompoundModel";
-import { deepcopy, length, validUnicode } from "../lib/utils";
-import { Err, delet, post, put } from "../lib/api";
-import { Glyph } from "../lib/data";
+import CompoundModel from "~/components/CompoundModel";
+import { deepcopy, length, validUnicode } from "~/lib/utils";
+import { Err, delet, post, put } from "~/lib/api";
+import { Glyph } from "~/lib/data";
 
 const Overlay = styled.div`
   border: 1px solid black;

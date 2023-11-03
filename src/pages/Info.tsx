@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { Button, Col, Form, Input, Typography } from "antd";
-import { DispatchContext, useInfo } from "../components/context";
-import { Config } from "../lib/config";
+import { DispatchContext, useInfo } from "~/components/context";
+import { Config } from "~/lib/config";
 import { useForm } from "antd/es/form/Form";
 
 type IInfo = Config["info"];

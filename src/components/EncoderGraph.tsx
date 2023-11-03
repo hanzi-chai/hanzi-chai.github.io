@@ -18,7 +18,7 @@ import { DispatchContext, useEncoder } from "./context";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
-import { Condition, Config, Source } from "../lib/config";
+import { Condition, Config, Source } from "~/lib/config";
 import {
   SourceData,
   SNode,

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Stroke } from "../lib/data";
+import { Stroke } from "~/lib/data";
 import { Empty, Typography } from "antd";
 import { useComponent, useSlice } from "./contants";
 import { Index } from "./Utils";
