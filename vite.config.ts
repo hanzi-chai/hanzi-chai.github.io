@@ -4,6 +4,7 @@ import { defineConfig, UserConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
 import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
+import Pages from "vite-plugin-pages";
 
 export default defineConfig(({ mode }) => {
   // https://vitejs.dev/config/
@@ -21,7 +22,7 @@ export default defineConfig(({ mode }) => {
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
     },
-    plugins: [react(), yaml()],
+    plugins: [react(), yaml(), Pages()],
     test: {
       globals: true,
       coverage: {
