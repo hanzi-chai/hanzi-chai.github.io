@@ -24,7 +24,7 @@ import {
   makeConditionNode,
   renderType,
 } from "./graph";
-import { renderName } from "../lib/element";
+import { renderName } from "~/lib/element";
 import { blue } from "@ant-design/colors";
 
 const SourceButton = styled(Button)`

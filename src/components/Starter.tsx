@@ -7,11 +7,11 @@ import {
   encoderTypes,
   formTypes,
   pronTypes,
-} from "../lib/templates";
+} from "~/lib/templates";
 import { Updater } from "use-immer";
-import { Config } from "../lib/config";
+import { Config } from "~/lib/config";
 import { nanoid } from "@reduxjs/toolkit";
-import { examples } from "../lib/example";
+import { examples } from "~/lib/example";
 
 const Starter = ({
   setConfigs,

@@ -1,10 +1,10 @@
 import { Empty, Form, Typography } from "antd";
-import { Compound, Glyph, Operator } from "../lib/data";
+import { Compound, Glyph, Operator } from "~/lib/data";
 import { useAdd } from "./context";
 import { useClassifier, useCompound, useForm } from "./contants";
 import { Index, ItemSelect, NumberInput, Select } from "./Utils";
-import { getSequence } from "../lib/form";
-import { deepcopy } from "../lib/utils";
+import { getSequence } from "~/lib/form";
+import { deepcopy } from "~/lib/utils";
 
 export const ideos: Operator[] = [
   "⿰",

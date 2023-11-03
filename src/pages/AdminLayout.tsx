@@ -19,7 +19,7 @@ import {
   Checkbox,
 } from "antd";
 import { createContext, useContext, useEffect, useState } from "react";
-import { Err, delet, get, patch, post, put } from "../lib/api";
+import { Err, delet, get, patch, post, put } from "~/lib/api";
 import {
   Component,
   Compound,
@@ -28,15 +28,15 @@ import {
   GlyphOptionalUnicode,
   Operator,
   Stroke,
-} from "../lib/data";
+} from "~/lib/data";
 import {
   EditorColumn,
   EditorRow,
   IndexEdit2,
   NumberInput,
   Select,
-} from "../components/Utils";
-import classifier, { Feature, schema } from "../lib/classifier";
+} from "~/components/Utils";
+import classifier, { Feature, schema } from "~/lib/classifier";
 import {
   deepcopy,
   displayName,
@@ -44,9 +44,9 @@ import {
   length,
   preprocessForm,
   validUnicode,
-} from "../lib/utils";
+} from "~/lib/utils";
 import styled from "styled-components";
-import { StrokesView } from "../components/GlyphView";
+import { StrokesView } from "~/components/GlyphView";
 import {
   load,
   mutate,
@@ -56,9 +56,9 @@ import {
   update,
   useAppDispatch,
   useAppSelector,
-} from "../components/store";
-import { getSequence } from "../lib/form";
-import { ideos } from "../components/CompoundModel";
+} from "~/components/store";
+import { getSequence } from "~/lib/form";
+import { ideos } from "~/components/CompoundModel";
 import { useWatch } from "antd/es/form/Form";
 
 interface SwitcherProps {

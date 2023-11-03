@@ -1,4 +1,4 @@
-import { sieveMap } from "../lib/selector";
+import { sieveMap } from "~/lib/selector";
 import { EditorColumn, EditorRow, Select } from "./Utils";
 import {
   DndContext,
@@ -14,7 +14,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { SieveName } from "../lib/config";
+import { SieveName } from "~/lib/config";
 import { useDesign, useFormConfig } from "./context";
 import { Button, Dropdown, Flex } from "antd";
 import { MenuOutlined } from "@ant-design/icons";

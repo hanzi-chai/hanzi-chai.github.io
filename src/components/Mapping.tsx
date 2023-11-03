@@ -14,7 +14,7 @@ import { useDesign, useGenericConfig } from "./context";
 import { useForm, useGlyph } from "./contants";
 import Root from "./Root";
 import Char from "./Char";
-import { MappedInfo, displayName, reverse } from "../lib/utils";
+import { MappedInfo, displayName, reverse } from "~/lib/utils";
 import { RootSelect, Select } from "./Utils";
 import { Select as AntdSelect } from "antd";
 

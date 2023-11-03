@@ -11,16 +11,16 @@ import {
   Typography,
   notification,
 } from "antd";
-import { Config } from "../lib/config";
+import { Config } from "~/lib/config";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "@reduxjs/toolkit";
 import { useImmer } from "use-immer";
-import { examples } from "../lib/example";
-import { Select, Uploader } from "../components/Utils";
+import { examples } from "~/lib/example";
+import { Select, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
-import Starter from "../components/Starter";
-import { post } from "../lib/api";
+import Starter from "~/components/Starter";
+import { post } from "~/lib/api";
 import { md5 } from "js-md5";
 
 type Status = "login" | "signup" | "signin";

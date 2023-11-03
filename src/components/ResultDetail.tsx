@@ -1,10 +1,10 @@
 import { Space, Table } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Root from "./Root";
-import { SchemeWithData } from "../lib/form";
+import { SchemeWithData } from "~/lib/form";
 import { useFormConfig } from "./context";
-import { Selector } from "../lib/config";
-import { sieveMap } from "../lib/selector";
+import { Selector } from "~/lib/config";
+import { sieveMap } from "~/lib/selector";
 import { useDisplay } from "./contants";
 
 const makeSorter = (selector: Selector) => {

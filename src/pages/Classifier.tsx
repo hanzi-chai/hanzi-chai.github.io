@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import { useAdd } from "../components/context";
-import { useClassifier } from "../components/contants";
+import { useAdd } from "~/components/context";
+import { useClassifier } from "~/components/contants";
 import { Button, Flex, Space, notification } from "antd";
-import Root from "../components/Root";
+import Root from "~/components/Root";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { PropsWithChildren, useState } from "react";
 import { blue } from "@ant-design/colors";

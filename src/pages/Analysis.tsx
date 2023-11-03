@@ -1,4 +1,4 @@
-import StrokeSearch from "../components/StrokeSearch";
+import StrokeSearch from "~/components/StrokeSearch";
 import {
   Button,
   Dropdown,
@@ -15,17 +15,17 @@ import {
 } from "antd";
 
 import { Collapse } from "antd";
-import Char from "../components/Char";
-import Root from "../components/Root";
-import ResultDetail from "../components/ResultDetail";
+import Char from "~/components/Char";
+import Root from "~/components/Root";
+import ResultDetail from "~/components/ResultDetail";
 import { useContext, useState } from "react";
-import { useFormConfig } from "../components/context";
+import { useFormConfig } from "~/components/context";
 import {
   useAll,
   useForm,
   useClassifier,
   useDisplay,
-} from "../components/contants";
+} from "~/components/contants";
 import {
   ComponentResult,
   CompoundResult,
@@ -33,19 +33,19 @@ import {
   disassembleCompounds,
   getFormCore,
   getSequence,
-} from "../lib/form";
-import { Classifier } from "../lib/config";
+} from "~/lib/form";
+import { Classifier } from "~/lib/config";
 import {
   EditorColumn,
   EditorRow,
   Select,
   exportFile,
   exportJSON,
-} from "../components/Utils";
-import Selector from "../components/Selector";
-import AnalysisCustomizer from "../components/AnalysisCustomizer";
+} from "~/components/Utils";
+import Selector from "~/components/Selector";
+import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import { MenuProps } from "rc-menu";
-import { displayName } from "../lib/utils";
+import { displayName } from "~/lib/utils";
 
 const ResultSummary = ({
   char,

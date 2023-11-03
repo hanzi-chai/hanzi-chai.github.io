@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
-import defaultClassifier from "../lib/classifier";
-import { displayName } from "../lib/utils";
+import defaultClassifier from "~/lib/classifier";
+import { displayName } from "~/lib/utils";
 import { useData } from "./context";
 import {
   ComponentGlyph,
@@ -8,7 +8,7 @@ import {
   Form,
   Repertoire,
   SliceGlyph,
-} from "../lib/data";
+} from "~/lib/data";
 
 export const FormContext = createContext<Form>({});
 export const RepertoireContext = createContext<Repertoire>({});
