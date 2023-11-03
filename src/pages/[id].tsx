@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useReducer,
   useState,
+  Suspense,
 } from "react";
 import { Button, Flex, Layout, Menu, Space, Typography, Upload } from "antd";
 import {
@@ -36,6 +37,7 @@ import { Uploader, exportFile } from "~/components/Utils";
 import { examples } from "~/lib/example";
 import { Compound, Form, Repertoire } from "~/lib/data";
 import { preprocessForm, preprocessRepertoire } from "~/lib/utils";
+import CusSpin from "~/components/CustomSpin";
 
 const items: MenuProps["items"] = [
   {
@@ -131,7 +133,9 @@ const EditorLayout = () => {
           </Space>
         </Flex>
       </Layout.Header>
-      <Outlet />
+      <Suspense fallback={<CusSpin tip="加载标签页…" />}>
+        <Outlet />
+      </Suspense>
     </Layout>
   );
 };
@@ -179,7 +183,7 @@ const Contextualized = () => {
           </DispatchContext.Provider>
         </ConfigContext.Provider>
       ) : (
-        <h3>loading...</h3>
+        <CusSpin tip="加载JSON数据…" />
       )}
     </>
   );
