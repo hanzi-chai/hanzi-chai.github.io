@@ -39,7 +39,7 @@ import {
   EditorColumn,
   EditorRow,
   Select,
-  exportFile,
+  exportYAML,
   exportJSON,
 } from "~/components/Utils";
 import Selector from "~/components/Selector";
@@ -82,7 +82,7 @@ const exportResult = (
   const output = Object.fromEntries(
     allResult.map(([x, v]) => [x, getContent(v)]),
   );
-  exportJSON(JSON.stringify(output), "chai.json");
+  exportJSON(output, "chai.json");
 };
 
 const AnalysisExporter = ({ componentResults, compoundResults }: any) => {
@@ -188,7 +188,7 @@ const Analysis = () => {
             />
             <Button
               onClick={() => {
-                exportJSON(JSON.stringify(rootsRef), "roots.json");
+                exportJSON(rootsRef, "roots.json");
               }}
             >
               导出字根对照表

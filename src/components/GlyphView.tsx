@@ -3,6 +3,7 @@ import { Stroke } from "~/lib/data";
 import { Empty, Typography } from "antd";
 import { useComponent, useSlice } from "./contants";
 import { Index } from "./Utils";
+import { useWatch } from "antd/es/form/Form";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -65,3 +66,24 @@ export const SliceView = ({ char }: Index) => {
     </>
   );
 };
+
+const Overlay = styled.div`
+  border: 1px solid black;
+  aspect-ratio: 1;
+  display: grid;
+
+  & svg {
+    grid-area: 1 / 1 / 1 / 1;
+  }
+`;
+
+const GlyphView = ({ char, form }: Index & { form: any }) => {
+  const component = useWatch("component", form);
+  return (
+    <Overlay>
+      {component ? <StrokesView glyph={component} /> : <Empty />}
+    </Overlay>
+  );
+};
+
+export default GlyphView;

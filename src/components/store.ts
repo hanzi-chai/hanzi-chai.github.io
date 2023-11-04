@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Glyph } from "~/lib/data";
+import { Form, Glyph, Repertoire } from "~/lib/data";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 
 interface FormState {
   loading: boolean;
-  form: Record<string, Glyph>;
+  form: Form;
 }
 
 const initialState: FormState = {
@@ -50,17 +50,39 @@ export const formSlice = createSlice({
   },
 });
 
-export const { load, update, remove, mutate } = formSlice.actions;
-
-export const selectForm = (state: RootState) => state.form.form;
-export const selectLoading = (state: RootState) => state.form.loading;
+export const { load: loadForm, update, remove, mutate } = formSlice.actions;
 
 export const formReducer = formSlice.reducer;
-// ...
+
+interface RepertoireState {
+  loading: boolean;
+  repertoire: Repertoire;
+}
+
+const initialRepertoireState: RepertoireState = {
+  loading: true,
+  repertoire: {},
+};
+
+export const repertoireSlice = createSlice({
+  name: "repertoire",
+  initialState: initialRepertoireState,
+  reducers: {
+    load: (state, action: PayloadAction<Repertoire>) => {
+      state.repertoire = action.payload;
+      state.loading = false;
+    },
+  },
+});
+
+export const repertoireReducer = repertoireSlice.reducer;
+
+export const { load: loadRepertoire } = repertoireSlice.actions;
 
 export const store = configureStore({
   reducer: {
     form: formReducer,
+    repertoire: repertoireReducer,
   },
 });
 
@@ -69,6 +91,12 @@ export type RootState = ReturnType<typeof store.getState>;
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch;
 
-// Use throughout your app instead of plain `useDispatch` and `useSelector`
+export const selectForm = (state: RootState) => state.form.form;
+export const selectFormLoading = (state: RootState) => state.form.loading;
+export const selectRepertoire = (state: RootState) =>
+  state.repertoire.repertoire;
+export const selectRepertoireLoading = (state: RootState) =>
+  state.repertoire.loading;
+
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

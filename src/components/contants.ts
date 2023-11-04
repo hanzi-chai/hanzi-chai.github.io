@@ -9,17 +9,15 @@ import {
   Repertoire,
   SliceGlyph,
 } from "~/lib/data";
-
-export const FormContext = createContext<Form>({});
-export const RepertoireContext = createContext<Repertoire>({});
+import { selectForm, selectRepertoire, useAppSelector } from "./store";
 
 const useGlyph = (char: string) => {
-  const form = useContext(FormContext);
+  const form = useAppSelector(selectForm);
   return useData().form[char] || form[char];
 };
 
 const useDisplay = () => {
-  const form = useContext(FormContext);
+  const form = useAppSelector(selectForm);
   const formCustomized = useData().form;
   return (char: string) => {
     const glyph = formCustomized[char] || form[char];
@@ -40,12 +38,12 @@ const useSlice = (char: string) => {
 };
 
 const useRepertoire = () => {
-  const repertoire = useContext(RepertoireContext);
+  const repertoire = useAppSelector(selectRepertoire);
   return Object.assign({}, repertoire, useData().repertoire);
 };
 
 const useForm = () => {
-  const form = useContext(FormContext);
+  const form = useAppSelector(selectForm);
   return Object.assign({}, form, useData().form);
 };
 

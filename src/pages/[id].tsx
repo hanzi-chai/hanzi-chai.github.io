@@ -22,7 +22,6 @@ import {
   DispatchContext,
   configReducer,
 } from "~/components/context";
-import { FormContext, RepertoireContext } from "~/components/contants";
 import { Config } from "~/lib/config";
 import { dump, load } from "js-yaml";
 import {
@@ -33,11 +32,18 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
-import { Uploader, exportFile } from "~/components/Utils";
+import { Uploader, exportYAML } from "~/components/Utils";
 import { examples } from "~/lib/example";
 import { Compound, Form, Repertoire } from "~/lib/data";
 import { preprocessForm, preprocessRepertoire } from "~/lib/utils";
 import CusSpin from "~/components/CustomSpin";
+import {
+  loadForm,
+  loadRepertoire,
+  selectFormLoading,
+  useAppDispatch,
+  useAppSelector,
+} from "~/components/store";
 
 const items: MenuProps["items"] = [
   {
@@ -111,11 +117,7 @@ const EditorLayout = () => {
                 dispatch({ type: "load", value: load(s) as Config });
               }}
             />
-            <Button
-              onClick={() =>
-                exportFile(dump(config, { flowLevel: 4 }), `export.yaml`)
-              }
-            >
+            <Button onClick={() => exportYAML(config, `export.yaml`)}>
               导出
             </Button>
             {source !== undefined && (
@@ -157,11 +159,13 @@ const Contextualized = () => {
   const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
     return JSON.parse(localStorage.getItem(id)!) as Config;
   });
-  const [repertoireAndForm, setRepertoire] = useState<[Repertoire, Form]>();
+  const appdispatch = useAppDispatch();
+  const loading = useAppSelector(selectFormLoading);
   useEffect(() => {
     Promise.all([fetchJson("repertoire"), fetchJson("form")]).then(
       ([repertoire, form]) => {
-        setRepertoire([preprocessRepertoire(repertoire), preprocessForm(form)]);
+        appdispatch(loadForm(preprocessForm(form)));
+        appdispatch(loadRepertoire(preprocessRepertoire(repertoire)));
       },
     );
   }, []);
@@ -172,18 +176,14 @@ const Contextualized = () => {
 
   return (
     <>
-      {repertoireAndForm !== undefined ? (
+      {loading ? (
+        <CusSpin tip="加载JSON数据…" />
+      ) : (
         <ConfigContext.Provider value={config}>
           <DispatchContext.Provider value={dispatch}>
-            <RepertoireContext.Provider value={repertoireAndForm[0]}>
-              <FormContext.Provider value={repertoireAndForm[1]}>
-                <EditorLayout />
-              </FormContext.Provider>
-            </RepertoireContext.Provider>
+            <EditorLayout />
           </DispatchContext.Provider>
         </ConfigContext.Provider>
-      ) : (
-        <CusSpin tip="加载JSON数据…" />
       )}
     </>
   );

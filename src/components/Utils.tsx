@@ -5,14 +5,20 @@ import {
   InputNumber,
   Row,
   RowProps,
+  SelectProps,
   Upload,
   Select as _Select,
+  notification,
 } from "antd";
 import styled from "styled-components";
 import { useFormConfig } from "./context";
 import { useForm, useClassifier } from "./contants";
 import { getSequence } from "~/lib/form";
-import { displayName } from "~/lib/utils";
+import { displayName, validUnicode } from "~/lib/utils";
+import { Err } from "~/lib/api";
+import { useEffect, useState } from "react";
+import classifier from "~/lib/classifier";
+import { dump } from "js-yaml";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -69,77 +75,6 @@ export const Uploader = ({
   );
 };
 
-export const ItemSelect = ({
-  char,
-  onChange,
-}: {
-  char?: string;
-  onChange: (s: string) => void;
-}) => {
-  const form = useForm();
-  const classifier = useClassifier();
-  return (
-    <Select
-      showSearch
-      placeholder="输入笔画搜索"
-      options={Object.entries(form).map(([x, v]) => ({
-        value: x,
-        label: displayName(x, v),
-      }))}
-      value={char}
-      onChange={onChange}
-      filterOption={(input, option) =>
-        getSequence(form, classifier, option!.value).startsWith(input)
-      }
-      filterSort={(a, b) => {
-        return (
-          getSequence(form, classifier, a.value).length -
-          getSequence(form, classifier, b.value).length
-        );
-      }}
-    />
-  );
-};
-
-export const ReferenceSelect = ({
-  char,
-  onChange,
-}: {
-  char?: string;
-  onChange: (s: string) => void;
-}) => {
-  const form = useForm();
-  const classifier = useClassifier();
-  return (
-    <Select
-      showSearch
-      placeholder="输入 unicode 搜索"
-      options={Object.entries(form).map(([x, v]) => ({
-        value: x,
-        label: displayName(x, v),
-      }))}
-      value={char}
-      onChange={onChange}
-      filterOption={(input, option) => {
-        const glyph = form[option!.value];
-        const c = String.fromCodePoint(Number(input));
-        if (glyph.default_type === 1) {
-          return glyph.slice.source === c;
-        } else if (glyph.default_type === 2) {
-          return glyph.compound.operandList.includes(c);
-        }
-        return false;
-      }}
-      filterSort={(a, b) => {
-        return (
-          getSequence(form, classifier, a.value).length -
-          getSequence(form, classifier, b.value).length
-        );
-      }}
-    />
-  );
-};
-
 export const RootSelect = ({
   char,
   onChange,
@@ -185,20 +120,16 @@ export const RootSelect = ({
 };
 
 export type Index = { char: string };
-export type IndexEdit = {
-  char: string | undefined;
-  setChar: (s: string | undefined) => void;
-};
 export type IndexEdit2 = {
   char: string;
   setChar: (s: string) => void;
 };
+export type IndexEdit3 = {
+  char: string;
+  setChar: (s?: string) => void;
+};
 
-export const exportFile = (unsafeContent: string, filename: string) => {
-  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `"\\u${c.codePointAt(0)!.toString(16)}"`;
-  });
-  const blob = new Blob([fileContent], { type: "text/plain" });
+const processExport = (blob: Blob, filename: string) => {
   const a = document.createElement("a");
   a.download = filename;
   const url = window.URL.createObjectURL(blob);
@@ -207,15 +138,92 @@ export const exportFile = (unsafeContent: string, filename: string) => {
   window.URL.revokeObjectURL(url); // 避免内存泄漏
 };
 
-export const exportJSON = (unsafeContent: string, filename: string) => {
+export const exportYAML = (config: object, filename: string) => {
+  const unsafeContent = dump(config, { flowLevel: 4 });
+  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
+    return `"\\u${c.codePointAt(0)!.toString(16)}"`;
+  });
+  const blob = new Blob([fileContent], { type: "text/plain" });
+  processExport(blob, filename);
+};
+
+export const exportJSON = (data: object, filename: string) => {
+  const unsafeContent = JSON.stringify(data);
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `\\u${c.codePointAt(0)!.toString(16)}`;
   });
   const blob = new Blob([fileContent], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.download = filename;
-  const url = window.URL.createObjectURL(blob);
-  a.href = url;
-  a.click();
-  window.URL.revokeObjectURL(url); // 避免内存泄漏
+  processExport(blob, filename);
+};
+
+export const ItemSelect = (props: SelectProps) => {
+  const form = useForm();
+  const [data, setData] = useState<SelectProps["options"]>([]);
+  useEffect(() => {
+    const initial = props.value
+      ? [{ value: props.value, label: form[props.value]?.name || props.value }]
+      : [];
+    setData(initial);
+  }, [props.value]);
+  const onSearch = (input: string) => {
+    if (input.length === 0) {
+      setData([]);
+      return;
+    }
+    const allResults = Object.entries(form)
+      .map(([x, v]) => ({
+        value: x,
+        label: displayName(x, v),
+      }))
+      .filter(({ value }) => {
+        return getSequence(form, classifier, value).startsWith(input);
+      })
+      .sort((a, b) => {
+        return (
+          getSequence(form, classifier, a.value).length -
+          getSequence(form, classifier, b.value).length
+        );
+      });
+    const minResults = allResults.filter(
+      ({ value }) =>
+        getSequence(form, classifier, value).length === input.length,
+    );
+    setData(allResults.slice(0, Math.max(5, minResults.length)));
+  };
+  const commonProps: SelectProps = {
+    showSearch: true,
+    placeholder: "输入笔画搜索",
+    options: data,
+    filterOption: false,
+    onSearch,
+  };
+  return <Select style={{ width: "96px" }} {...props} {...commonProps} />;
+};
+
+export const errorFeedback = function <T extends number | boolean>(
+  res: T | Err,
+): res is Err {
+  if (typeof res === "object") {
+    notification.error({
+      message: "无法完成该操作",
+      description: JSON.stringify(res),
+    });
+    return true;
+  } else {
+    notification.success({
+      message: "操作成功",
+    });
+    return false;
+  }
+};
+
+export const verifyNewName = (newName: string) => {
+  if (!Array.from(newName).every(validUnicode)) {
+    notification.error({
+      message: "名称含有非法字符",
+      description: "合法字符的范围：0x4e00 - 0x9fff，或 0x3400 - 0x4dbf",
+    });
+    return false;
+  }
+  return true;
 };

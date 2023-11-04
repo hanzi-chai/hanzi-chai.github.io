@@ -1,4 +1,4 @@
-import { Feature } from "./classifier";
+import { Feature, schema } from "./classifier";
 import { Mapping } from "./config";
 import {
   Alias,
@@ -52,14 +52,12 @@ export const fullToHalf = (s: string) => {
   return result;
 };
 
-export const getDummyStroke = function (
-  feature: Feature,
-  schema: SVGCommand[],
-): Stroke {
+export const getDummyStroke = function (feature: Feature): Stroke {
+  const typelist = schema[feature];
   return {
     feature,
     start: [0, 0],
-    curveList: schema.map((command) => {
+    curveList: typelist.map((command) => {
       switch (command) {
         case "h":
           return { command, parameterList: [20] };
@@ -130,5 +128,5 @@ export const preprocessForm = (f: any[]) => {
 };
 
 export const displayName = (x: string, v: Glyph) => {
-  return validUnicode(x) ? x : v?.name;
+  return validUnicode(x) ? x : v.name!;
 };

@@ -47,20 +47,23 @@ interface SVGStroke {
 
 type Component = SVGStroke[];
 
-type Operator =
-  | "⿰"
-  | "⿱"
-  | "⿲"
-  | "⿳"
-  | "⿴"
-  | "⿵"
-  | "⿶"
-  | "⿷"
-  | "⿸"
-  | "⿹"
-  | "⿺"
-  | "⿻"
-  | "〾";
+export const operators = [
+  "⿰",
+  "⿱",
+  "⿲",
+  "⿳",
+  "⿴",
+  "⿵",
+  "⿶",
+  "⿷",
+  "⿸",
+  "⿹",
+  "⿺",
+  "⿻",
+  "〾",
+];
+
+type Operator = (typeof operators)[number];
 
 interface Compound {
   operator: Operator;
