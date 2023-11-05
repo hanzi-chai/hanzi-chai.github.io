@@ -159,9 +159,10 @@ export const exportJSON = (data: object, filename: string) => {
 export const ItemSelect = (props: SelectProps) => {
   const form = useForm();
   const [data, setData] = useState<SelectProps["options"]>([]);
+  const char = props.value;
   useEffect(() => {
-    const initial = props.value
-      ? [{ value: props.value, label: form[props.value]?.name || props.value }]
+    const initial = char
+      ? [{ value: char, label: displayName(char, form[char]) }]
       : [];
     setData(initial);
   }, [props.value]);

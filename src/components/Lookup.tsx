@@ -72,8 +72,8 @@ const Lookup = ({
                     if (glyph.default_type === 1) {
                       return glyph.slice.source === compoundHasComponent;
                     } else if (glyph.default_type === 2) {
-                      return glyph.compound.operandList.includes(
-                        compoundHasComponent,
+                      return glyph.compound.some((x) =>
+                        x.operandList.includes(compoundHasComponent),
                       );
                     }
                     return false;
@@ -134,8 +134,12 @@ const Lookup = ({
         )}
       </Flex>
       <Flex wrap="wrap" justify="center">
-        {chars.map(({ value, label }) => {
-          return <Char onClick={() => setChar(value)}>{label}</Char>;
+        {chars.map(({ value, label }, index) => {
+          return (
+            <Char key={index} onClick={() => setChar(value)}>
+              {label}
+            </Char>
+          );
         })}
       </Flex>
     </>

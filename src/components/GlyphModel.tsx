@@ -288,6 +288,9 @@ const BasicForm = () => {
         <Form.Item<Glyph> label="类型" name="default_type">
           <Radio.Group optionType="button" options={options} />
         </Form.Item>
+        <Form.Item<Glyph> label="歧义" name="ambiguous" valuePropName="checked">
+          <Checkbox disabled />
+        </Form.Item>
         <Form.Item<Glyph>
           label="GF0014 序号"
           name="gf0014_id"

@@ -41,9 +41,9 @@ export const formSlice = createSlice({
           value.slice.source = replaceIf(value.slice.source);
         }
         if (value.compound !== undefined) {
-          value.compound.operandList = value.compound.operandList.map(
-            replaceIf,
-          ) as [string, string];
+          value.compound.forEach(
+            (x) => (x.operandList = x.operandList.map(replaceIf)),
+          );
         }
       }
     },
