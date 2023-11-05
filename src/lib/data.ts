@@ -60,16 +60,18 @@ export const operators = [
   "⿹",
   "⿺",
   "⿻",
-  "〾",
 ];
 
 type Operator = (typeof operators)[number];
 
-interface Compound {
+interface Partition {
   operator: Operator;
-  operandList: [string, string];
+  operandList: string[];
   mix?: number;
+  tags?: string[];
 }
+
+type Compound = Partition[];
 
 interface Character {
   pinyin: string[];
@@ -120,6 +122,7 @@ export type {
   ComponentGlyph,
   CompoundGlyph,
   SliceGlyph,
+  Partition,
   Component,
   Compound,
   Operator,

@@ -6,6 +6,8 @@ import {
   Form,
   Glyph,
   GlyphOptionalUnicode,
+  Operator,
+  Partition,
   SVGCommand,
   Stroke,
 } from "./data";
@@ -72,6 +74,10 @@ export const getDummyStroke = function (feature: Feature): Stroke {
   };
 };
 
+export const getDummyPartition = function (operator: Operator): Partition {
+  return { operator, operandList: ["一", "一"] };
+};
+
 export type MappedInfo = { name: string; code: string };
 
 export const reverse = (alphabet: string, mapping: Mapping) => {
@@ -92,7 +98,7 @@ export const getSupplemental = (form: Form, list: string[]) => {
   );
   for (const [char, glyph] of Object.entries(form)) {
     if (glyph.default_type === 2) {
-      glyph.compound.operandList.forEach((x) => reverseForm[x].push(char));
+      glyph.compound[0].operandList.forEach((x) => reverseForm[x].push(char));
     }
   }
   const componentsNotChar = Object.entries(form)

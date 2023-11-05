@@ -50,7 +50,7 @@ export const recursiveGetSequence = function (
       );
       return slice.indices.map((x) => sourceSequence[x]);
     case 2:
-      return compound.operandList
+      return compound[0].operandList
         .map((s) => recursiveGetSequence(form, classifier, s))
         .flat();
   }
@@ -228,7 +228,7 @@ const topologicalSort = (form: Form) => {
       if (compounds[k]) continue;
       if (glyph.default_type !== 2) continue;
       if (
-        glyph.compound.operandList.every(
+        glyph.compound[0].operandList.every(
           (x) => form[x].default_type === 0 || compounds[x] !== undefined,
         )
       ) {
@@ -255,7 +255,7 @@ export const disassembleCompounds = (
       result[char] = { sequence: [char], all: [char] };
       continue;
     }
-    const { operator, operandList } = glyph.compound;
+    const { operator, operandList } = glyph.compound[0];
     const results = operandList.map(getResult);
     if (results.every((x) => x !== undefined)) {
       result[char] = {

@@ -35,11 +35,17 @@ import {
   Glyph,
   GlyphOptionalUnicode,
   Operator,
+  Partition,
   Stroke,
   operators,
 } from "~/lib/data";
 import classifier, { Feature, schema } from "~/lib/classifier";
-import { deepcopy, getDummyStroke, length } from "~/lib/utils";
+import {
+  deepcopy,
+  getDummyPartition,
+  getDummyStroke,
+  length,
+} from "~/lib/utils";
 import { FormInstance, useWatch } from "antd/es/form/Form";
 import { selectForm, useAppSelector } from "./store";
 import { useForm } from "./contants";
@@ -70,15 +76,12 @@ const CurveForm = (field: any) => {
   );
 };
 
-const StrokeForm = ({
-  info,
-  index,
-  remove,
-}: {
+interface ListItemWithRemove {
   info: FormListFieldData;
-  index: number;
-  remove: (n: number) => void;
-}) => {
+  remove: () => void;
+}
+
+const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
   return (
@@ -109,7 +112,7 @@ const StrokeForm = ({
           </Form.Item>
         </Space>
         <Form.Item>
-          <Button onClick={() => remove(index)}>删除笔画</Button>
+          <Button onClick={remove}>删除笔画</Button>
         </Form.Item>
       </Flex>
       <Form.List name={[name, "curveList"]}>
@@ -141,8 +144,12 @@ const ComponentForm = () => {
     <Form.List name="component">
       {(fields, { add, remove }) => (
         <>
-          {fields.map((info, i) => (
-            <StrokeForm info={info} index={i} remove={remove} key={info.key} />
+          {fields.map((info, index) => (
+            <StrokeForm
+              info={info}
+              remove={() => remove(index)}
+              key={info.key}
+            />
           ))}
           <Form.Item>
             <Dropdown
@@ -162,11 +169,12 @@ const ComponentForm = () => {
   );
 };
 
-const CompoundForm = () => {
+const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
+  const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
   return (
     <Flex gap="middle">
-      <Form.Item<Glyph> label="结构" name={["compound", "operator"]}>
+      <Form.Item<Compound> label="结构" name={[info.name, "operator"]}>
         <Select<Operator>
           options={operators.map((x) => ({ value: x, label: x }))}
           onChange={(value) => {
@@ -177,11 +185,11 @@ const CompoundForm = () => {
           }}
         />
       </Form.Item>
-      <Form.List name={["compound", "operandList"]}>
+      <Form.List name={[info.name, "operandList"]}>
         {(fields) => (
           <>
             {fields.map((info, i) => (
-              <Form.Item<Compound["operandList"]>
+              <Form.Item<Partition["operandList"]>
                 {...info}
                 key={info.key}
                 label={`第 ${i + 1} 部`}
@@ -193,7 +201,45 @@ const CompoundForm = () => {
           </>
         )}
       </Form.List>
+      <Form.Item>
+        <Button onClick={remove}>删除分部方式</Button>
+      </Form.Item>
     </Flex>
+  );
+};
+
+const CompoundForm = () => {
+  const form = useContext(ModelContext);
+  const items: MenuProps["items"] = operators.map((x) => ({
+    label: x,
+    key: x,
+  }));
+  return (
+    <Form.List name="compound">
+      {(fields, { add, remove }) => (
+        <>
+          {fields.map((info, index) => (
+            <PartitionModel
+              key={info.key}
+              info={info}
+              remove={() => remove(index)}
+            />
+          ))}
+          <Form.Item>
+            <Dropdown
+              menu={{
+                items,
+                onClick: (info) => {
+                  add(getDummyPartition(info.key as Operator));
+                },
+              }}
+            >
+              <Button type="dashed">添加分部方式</Button>
+            </Dropdown>
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
   );
 };
 
