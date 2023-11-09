@@ -64,11 +64,16 @@ export const operators = [
 
 type Operator = (typeof operators)[number];
 
+interface Block {
+  index: number;
+  strokes: number;
+}
+
 interface Partition {
   operator: Operator;
   operandList: string[];
-  mix?: number;
   tags?: string[];
+  order?: Block[];
 }
 
 type Compound = Partition[];
@@ -124,6 +129,7 @@ export type {
   CompoundGlyph,
   SliceGlyph,
   Partition,
+  Block,
   Component,
   Compound,
   Operator,

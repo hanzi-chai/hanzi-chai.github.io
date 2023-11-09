@@ -29,6 +29,7 @@ import {
   useState,
 } from "react";
 import {
+  Block,
   Component,
   Compound,
   Draw,
@@ -42,6 +43,7 @@ import {
 import classifier, { Feature, schema } from "~/lib/classifier";
 import {
   deepcopy,
+  formDefault,
   getDummyPartition,
   getDummyStroke,
   length,
@@ -169,42 +171,126 @@ const ComponentForm = () => {
   );
 };
 
+const BlockModel = ({ info, remove }: ListItemWithRemove) => {
+  const { key, name, ...rest } = info;
+  return (
+    <Space>
+      <Form.Item<Block["index"]>
+        name={[name, "index"]}
+        label="部分"
+        colon={false}
+      >
+        <Select
+          options={[0, 1, 2].map((x) => ({
+            value: x,
+            label: x + 1,
+          }))}
+        />
+      </Form.Item>
+      <Form.Item<Block["strokes"]> name={[name, "strokes"]}>
+        <Select
+          options={[...Array(10).keys()].map((x) => ({
+            value: x,
+            label: x || "全取",
+          }))}
+        />
+      </Form.Item>
+      <Form.Item>
+        <a onClick={remove}>删除</a>
+      </Form.Item>
+    </Space>
+  );
+};
+
 const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
   return (
-    <Flex gap="middle">
-      <Form.Item<Compound> label="结构" name={[info.name, "operator"]}>
-        <Select<Operator>
-          options={operators.map((x) => ({ value: x, label: x }))}
-          onChange={(value) => {
-            const list = form.getFieldValue(["compound", "operandList"]);
-            const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
-            const newList = list.concat("一").slice(0, newLength);
-            form.setFieldValue(["compound", "operandList"], newList);
-          }}
-        />
-      </Form.Item>
-      <Form.List name={[info.name, "operandList"]}>
-        {(fields) => (
-          <>
-            {fields.map((info, i) => (
-              <Form.Item<Partition["operandList"]>
-                {...info}
-                key={info.key}
-                label={`第 ${i + 1} 部`}
-                name={info.name}
-              >
-                <ItemSelect />
+    <>
+      <Typography.Title level={3}>分部方式 {name + 1}</Typography.Title>
+      <Flex gap="middle">
+        <Form.Item<Compound> label="结构" name={[info.name, "operator"]}>
+          <Select<Operator>
+            options={operators.map((x) => ({ value: x, label: x }))}
+            onChange={(value) => {
+              const list = form.getFieldValue([
+                "compound",
+                info.name,
+                "operandList",
+              ]);
+              const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
+              const newList = list.concat("一").slice(0, newLength);
+              form.setFieldValue(
+                ["compound", info.name, "operandList"],
+                newList,
+              );
+            }}
+          />
+        </Form.Item>
+        <Form.List name={[info.name, "operandList"]}>
+          {(fields) => (
+            <>
+              {fields.map((info, i) => (
+                <Form.Item<Partition["operandList"]>
+                  {...info}
+                  key={info.key}
+                  label={`第 ${i + 1} 部`}
+                  name={info.name}
+                >
+                  <ItemSelect />
+                </Form.Item>
+              ))}
+            </>
+          )}
+        </Form.List>
+        <Form.Item>
+          <Button onClick={remove}>删除分部方式</Button>
+        </Form.Item>
+      </Flex>
+      <Flex align="center" gap="small" wrap="wrap">
+        <Form.Item label="标签" />
+        <Form.List name={[info.name, "tags"]}>
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map((info, i) => (
+                <Space key={info.key}>
+                  <Form.Item<Partition["tags"]> {...info} name={info.name}>
+                    <Input style={{ width: "96px" }} />
+                  </Form.Item>
+                  <Form.Item>
+                    <a onClick={() => remove(i)}>删除</a>
+                  </Form.Item>
+                </Space>
+              ))}
+              <Form.Item>
+                <Button onClick={() => add("形声")}>添加标签</Button>
               </Form.Item>
-            ))}
-          </>
-        )}
-      </Form.List>
-      <Form.Item>
-        <Button onClick={remove}>删除分部方式</Button>
-      </Form.Item>
-    </Flex>
+            </>
+          )}
+        </Form.List>
+      </Flex>
+      <Flex align="center" gap="small" wrap="wrap">
+        <Form.Item label="笔顺" />
+        <Form.List name={[info.name, "order"]}>
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map((info, i) => (
+                <BlockModel
+                  key={info.key}
+                  info={info}
+                  remove={() => remove(i)}
+                />
+              ))}
+              <Form.Item>
+                <Button onClick={() => add({ index: 0, strokes: 0 })}>
+                  添加笔画块
+                </Button>
+              </Form.Item>
+            </>
+          )}
+        </Form.List>
+      </Flex>
+    </>
   );
 };
 
@@ -305,15 +391,9 @@ const BasicForm = () => {
 
 interface SwitcherProps {
   name: string;
-  formName: string;
+  formName: "component" | "slice" | "compound";
   onChange: (b: boolean) => void;
 }
-
-const partDefault: Record<string, any> = {
-  component: [],
-  compound: { operator: operators[0], operandList: ["一", "一"] },
-  slice: { source: "一", indices: [0] },
-};
 
 const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
   const form = useContext(ModelContext);
@@ -332,7 +412,8 @@ const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
           if (value === false) {
             form.setFieldValue(formName, undefined);
           } else {
-            form.setFieldValue(formName, partDefault[formName]);
+            const initial = formDefault[formName];
+            form.setFieldValue(formName, initial);
           }
           onChange(!thisStatus);
         }}
