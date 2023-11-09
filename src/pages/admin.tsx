@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { preprocessForm, unicodeBlock, validChar } from "~/lib/utils";
+import { preprocessForm, unicodeBlock } from "~/lib/utils";
 import {
   loadForm,
   selectFormLoading,
@@ -32,7 +32,7 @@ import { useForm } from "~/components/contants";
 import { get, put } from "~/lib/api";
 import { Compound, Glyph, Operator, operators } from "~/lib/data";
 import { displayName } from "~/lib/utils";
-import { GlyphModel } from "~/components/GlyphModel";
+import { GlyphModel, ModelContext } from "~/components/GlyphModel";
 import GlyphView from "~/components/GlyphView";
 import Root from "~/components/Root";
 import { Delete, Mutate, Update } from "~/components/Action";
@@ -43,6 +43,7 @@ import classifier from "~/lib/classifier";
 const FormTable = () => {
   const formLoading = useAppSelector(selectFormLoading);
   const form = useForm();
+  const dispatch = useAppDispatch();
   const [thisForm] = Form.useForm<Glyph>();
   const [char, setChar] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -95,20 +96,10 @@ const FormTable = () => {
       sorter: (a, b) => a.gf0014_id! - b.gf0014_id!,
     },
     {
-      title: "分部歧义",
-      dataIndex: "ambiguous",
-      render: (_, record) => {
-        return <Checkbox checked={record.ambiguous === 1} />;
-      },
-      filters: [{ text: "只看有歧义", value: 1 }],
-      onFilter: (value, record) => record.ambiguous === 1,
-      width: 128,
-    },
-    {
       title: "部件表示",
       dataIndex: "component",
       render: (_, record) => {
-        return <Checkbox checked={record.component !== undefined} />;
+        return record.component !== undefined ? "有" : "无";
       },
       filters: [{ text: "非空", value: "" }].concat(
         Object.keys(classifier).map((x) => ({ text: x, value: x })),
@@ -137,15 +128,49 @@ const FormTable = () => {
           </Flex>
         );
       },
-      filters: [{ text: "非空", value: "" }].concat(
-        operators.map((x) => ({ text: x, value: x })),
-      ),
+      filters: [
+        { text: "非空", value: "" },
+        {
+          text: "按结构筛选",
+          value: "operator",
+          children: operators.map((x) => ({ text: x, value: x })),
+        },
+      ],
       onFilter: (value, record) =>
         record.compound
           ? record.compound.some((x) =>
               x.operator.startsWith(value as Operator),
             )
           : false,
+    },
+    {
+      title: "分部歧义标记",
+      dataIndex: "ambiguous",
+      render: (_, record) => {
+        return (
+          <Checkbox
+            checked={record.ambiguous}
+            onChange={async (event) => {
+              const checked = event.target.checked;
+              const values = { ...record, ambiguous: checked };
+              const res = await put<boolean, Glyph>(
+                `form/${record.unicode}`,
+                values,
+              );
+              if (!errorFeedback(res)) {
+                const char = String.fromCodePoint(record.unicode);
+                dispatch(update([char!, values]));
+              }
+            }}
+          />
+        );
+      },
+      filters: [
+        { text: "只看有歧义", value: 1 },
+        { text: "只看无歧义", value: 0 },
+      ],
+      onFilter: (value, record) => +record.ambiguous === value,
+      width: 128,
     },
     {
       title: "操作",
@@ -173,26 +198,27 @@ const FormTable = () => {
       >
         <Flex style={{ maxWidth: "960px" }} gap="middle">
           <StrokeSearch sequence={sequence} setSequence={setSequence} />
-          <Button>新建</Button>
         </Flex>
-        <Modal
-          open={char !== undefined}
-          onCancel={() => setChar(undefined)}
-          footer={<Update />}
-          width="80%"
-        >
-          <EditorRow>
-            <EditorColumn span={12}>
-              <Typography.Title level={2}>预览</Typography.Title>
-              {char && <GlyphView form={thisForm} />}
-            </EditorColumn>
-            <EditorColumn span={12}>
-              {char && (
-                <GlyphModel char={char} setChar={setChar} form={thisForm} />
-              )}
-            </EditorColumn>
-          </EditorRow>
-        </Modal>
+        <ModelContext.Provider value={thisForm}>
+          <Modal
+            open={char !== undefined}
+            onCancel={() => setChar(undefined)}
+            footer={<Update />}
+            width="80%"
+          >
+            <EditorRow>
+              <EditorColumn span={12}>
+                <Typography.Title level={2}>预览</Typography.Title>
+                {char && <GlyphView form={thisForm} />}
+              </EditorColumn>
+              <EditorColumn span={12}>
+                {char && (
+                  <GlyphModel char={char} setChar={setChar} form={thisForm} />
+                )}
+              </EditorColumn>
+            </EditorRow>
+          </Modal>
+        </ModelContext.Provider>
         <Table<Glyph>
           dataSource={dataSource}
           columns={columns}

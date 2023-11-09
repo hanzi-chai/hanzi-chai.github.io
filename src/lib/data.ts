@@ -86,7 +86,7 @@ type GlyphBase = {
   component?: Component;
   compound?: Compound;
   slice?: Alias;
-  ambiguous?: 0 | 1;
+  ambiguous: boolean;
 };
 
 interface ComponentGlyph extends GlyphBase {
