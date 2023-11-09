@@ -345,7 +345,6 @@ const GlyphModel = ({
   char,
   setChar,
   form,
-  children,
 }: PropsWithChildren<IndexEdit2 & { form: FormInstance<Glyph> }>) => {
   const [hasComponent, setHasComponent] = useState(false);
   const [hasCompound, setHasCompound] = useState(false);
@@ -361,7 +360,6 @@ const GlyphModel = ({
   return (
     <Form<Glyph> form={form}>
       <ModelContext.Provider value={form}>
-        {children}
         <BasicForm />
         <Switcher name="部件" formName="component" onChange={setHasComponent} />
         {hasComponent && <ComponentForm />}

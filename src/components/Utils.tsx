@@ -14,7 +14,7 @@ import styled from "styled-components";
 import { useFormConfig } from "./context";
 import { useForm, useClassifier } from "./contants";
 import { getSequence } from "~/lib/form";
-import { displayName, validUnicode } from "~/lib/utils";
+import { displayName, isValidSingleChar } from "~/lib/utils";
 import { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
@@ -219,10 +219,10 @@ export const errorFeedback = function <T extends number | boolean>(
 };
 
 export const verifyNewName = (newName: string) => {
-  if (!Array.from(newName).every(validUnicode)) {
+  if (!Array.from(newName).every(isValidSingleChar)) {
     notification.error({
       message: "名称含有非法字符",
-      description: "合法字符的范围：0x4e00 - 0x9fff，或 0x3400 - 0x4dbf",
+      description: "只有 CJK 基本集或扩展集 A 中的才是合法字符",
     });
     return false;
   }
