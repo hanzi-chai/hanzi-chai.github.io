@@ -13,6 +13,8 @@ import {
 } from "./data";
 
 export const unicodeBlock = (code: number) => {
+  // ASCII
+  if (code >= 0 && code <= 0x7f) return "ascii";
   // CJK
   if (code >= 0x4e00 && code <= 0x9fff) return "cjk";
   // CJK extension A
@@ -22,19 +24,16 @@ export const unicodeBlock = (code: number) => {
   return "unknown";
 };
 
-export const isValidSingleChar = (char: string) => {
+export const isValidCJKChar = (char: string) => {
   const code = char.codePointAt(0)!;
   const block = unicodeBlock(code);
   return block === "cjk" || block === "cjk-a";
 };
 
-export const validChar = (char: string) => {
+export const isValidChar = (char: string) => {
+  if (isValidCJKChar(char)) return true;
   const code = char.codePointAt(0)!;
-  // CJK
-  if (code >= 0x4e00 && code <= 0x9fff) return true;
-  // CJK extension A
-  if (code >= 0x3400 && code <= 0x4dbf) return true;
-  return false;
+  return unicodeBlock(code) === "ascii";
 };
 
 export const length = (s: string) => {
@@ -151,5 +150,5 @@ export const preprocessForm = (f: any[]) => {
 };
 
 export const displayName = (x: string, v: Glyph) => {
-  return isValidSingleChar(x) ? x : v.name!;
+  return isValidChar(x) ? x : v.name!;
 };

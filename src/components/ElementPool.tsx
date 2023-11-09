@@ -2,6 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Char";
 import { ConfigProvider, Flex, Pagination } from "antd";
+import { useGenericConfig } from "./context";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -31,6 +32,9 @@ const ElementPool = ({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content.slice((page - 1) * pageSize, page * pageSize);
+  const { mapping, grouping } = useGenericConfig();
+  const type = (x: string) =>
+    x === element ? "primary" : mapping[x] || grouping[x] ? "link" : "default";
   return (
     <>
       <Content wrap="wrap">
@@ -40,7 +44,7 @@ const ElementPool = ({
             onClick={() => {
               x === element ? setElement(undefined) : setElement(x);
             }}
-            type={x === element ? "primary" : "default"}
+            type={type(x)}
           >
             {specialRendering ? specialRendering(x) : x}
           </Char>

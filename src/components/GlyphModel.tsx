@@ -289,7 +289,7 @@ const BasicForm = () => {
           <Radio.Group optionType="button" options={options} />
         </Form.Item>
         <Form.Item<Glyph> label="歧义" name="ambiguous" valuePropName="checked">
-          <Checkbox disabled />
+          <Checkbox />
         </Form.Item>
         <Form.Item<Glyph>
           label="GF0014 序号"
@@ -345,6 +345,7 @@ const GlyphModel = ({
   char,
   setChar,
   form,
+  children,
 }: PropsWithChildren<IndexEdit2 & { form: FormInstance<Glyph> }>) => {
   const [hasComponent, setHasComponent] = useState(false);
   const [hasCompound, setHasCompound] = useState(false);
@@ -359,15 +360,14 @@ const GlyphModel = ({
   }, [char]);
   return (
     <Form<Glyph> form={form}>
-      <ModelContext.Provider value={form}>
-        <BasicForm />
-        <Switcher name="部件" formName="component" onChange={setHasComponent} />
-        {hasComponent && <ComponentForm />}
-        <Switcher name="切片" formName="slice" onChange={setHasSlice} />
-        {hasSlice && <SliceForm />}
-        <Switcher name="复合体" formName="compound" onChange={setHasCompound} />
-        {hasCompound && <CompoundForm />}
-      </ModelContext.Provider>
+      {children}
+      <BasicForm />
+      <Switcher name="部件" formName="component" onChange={setHasComponent} />
+      {hasComponent && <ComponentForm />}
+      <Switcher name="切片" formName="slice" onChange={setHasSlice} />
+      {hasSlice && <SliceForm />}
+      <Switcher name="复合体" formName="compound" onChange={setHasCompound} />
+      {hasCompound && <CompoundForm />}
     </Form>
   );
 };
@@ -396,6 +396,7 @@ export const getValue = function (
       default_type: 1,
       gf0014_id: null,
       slice: { source: char, indices: glyph.component!.map((_, i) => i) },
+      ambiguous: false,
     };
   } else {
     const value: GlyphOptionalUnicode = deepcopy(glyph);

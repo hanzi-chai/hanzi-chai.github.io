@@ -10,7 +10,7 @@ import {
   errorFeedback,
   verifyNewName,
 } from "~/components/Utils";
-import { deepcopy, length, preprocessForm, validChar } from "~/lib/utils";
+import { deepcopy, length, isValidCJKChar } from "~/lib/utils";
 import {
   loadForm,
   mutate,
@@ -98,7 +98,7 @@ export const Mutate = ({ char }: Index) => {
         }
       }}
     >
-      <Button disabled={validChar(char)}>替换为成字</Button>
+      <Button disabled={isValidCJKChar(char)}>替换为成字</Button>
     </Popconfirm>
   );
 };

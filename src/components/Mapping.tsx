@@ -63,13 +63,20 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
               );
             })}
             <Button
-              onClick={() =>
+              onClick={() => {
                 design({
                   subtype: "generic-mapping",
                   action: "remove",
                   key: name,
-                })
-              }
+                });
+                affiliates?.map((x) =>
+                  design({
+                    subtype: "generic-grouping",
+                    action: "remove",
+                    key: x,
+                  }),
+                );
+              }}
             >
               删除
             </Button>

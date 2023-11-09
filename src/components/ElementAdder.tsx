@@ -37,15 +37,19 @@ const ElementAdder = ({ element }: { element?: string }) => {
         <Button
           type="primary"
           disabled={element === undefined}
-          onClick={() =>
-            element &&
+          onClick={() => {
             design({
               subtype: "generic-mapping",
               action: "add",
-              key: element,
+              key: element!,
               value: keys.slice(0, maxcodelen).join(""),
-            })
-          }
+            });
+            design({
+              subtype: "generic-grouping",
+              action: "remove",
+              key: element!,
+            });
+          }}
         >
           添加
         </Button>
