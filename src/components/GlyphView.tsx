@@ -77,7 +77,7 @@ const Overlay = styled.div`
   }
 `;
 
-const GlyphView = ({ char, form }: Index & { form: any }) => {
+const GlyphView = ({ form }: { form: any }) => {
   const component = useWatch("component", form);
   return (
     <Overlay>

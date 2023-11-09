@@ -12,10 +12,27 @@ import {
   Stroke,
 } from "./data";
 
-export const validUnicode = (char: string) => {
+export const unicodeBlock = (code: number) => {
+  // CJK
+  if (code >= 0x4e00 && code <= 0x9fff) return "cjk";
+  // CJK extension A
+  if (code >= 0x3400 && code <= 0x4dbf) return "cjk-a";
+  // PUA
+  if (code >= 0xe000 && code <= 0xf9ff) return "pua";
+  return "unknown";
+};
+
+export const isValidSingleChar = (char: string) => {
   const code = char.codePointAt(0)!;
-  if (code <= 0x7f) return true;
+  const block = unicodeBlock(code);
+  return block === "cjk" || block === "cjk-a";
+};
+
+export const validChar = (char: string) => {
+  const code = char.codePointAt(0)!;
+  // CJK
   if (code >= 0x4e00 && code <= 0x9fff) return true;
+  // CJK extension A
   if (code >= 0x3400 && code <= 0x4dbf) return true;
   return false;
 };
@@ -134,5 +151,5 @@ export const preprocessForm = (f: any[]) => {
 };
 
 export const displayName = (x: string, v: Glyph) => {
-  return validUnicode(x) ? x : v.name!;
+  return isValidSingleChar(x) ? x : v.name!;
 };
