@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Form, Glyph, Repertoire } from "~/lib/data";
+import { Form, Glyph, GlyphOptionalUnicode, Repertoire } from "~/lib/data";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 
 interface FormState {
@@ -21,9 +21,15 @@ export const formSlice = createSlice({
       state.form = action.payload;
       state.loading = false;
     },
-    update: (state, action: PayloadAction<[string, Glyph]>) => {
-      const [key, value] = action.payload;
-      state.form[key] = value;
+    create: (state, action: PayloadAction<Glyph>) => {
+      state.form[String.fromCodePoint(action.payload.unicode)] = action.payload;
+    },
+    createWithoutUnicode: (
+      state,
+      action: PayloadAction<GlyphOptionalUnicode>,
+    ) => {},
+    update: (state, action: PayloadAction<Glyph>) => {
+      state.form[String.fromCodePoint(action.payload.unicode)] = action.payload;
     },
     remove: (state, action: PayloadAction<string>) => {
       delete state.form[action.payload];

@@ -7,7 +7,6 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { ConfigProvider } from "antd";
-import { get } from "./lib/api";
 import { Provider } from "react-redux";
 import { store } from "./components/store";
 import CusSpin from "~/components/CustomSpin";
@@ -24,13 +23,6 @@ const GlobalStyle = createGlobalStyle`
     height: 100%;
   }
 `;
-
-const legacyLoader = async () => {
-  const repertoire = get<Record<string, any>, undefined>("repertoire");
-  const form = get<Record<string, any>, undefined>("form/all");
-  const data = await Promise.all([repertoire, form]);
-  return data;
-};
 
 const createRouter =
   import.meta.env.MODE === "BEX" || import.meta.env.MODE === "PAGES"

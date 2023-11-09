@@ -1,26 +1,23 @@
-import { Button, Input, Popconfirm } from "antd";
+import { Button, Checkbox, Form, Input, Popconfirm, Popover } from "antd";
 import { createContext, useContext, useEffect, useState } from "react";
-import { Err, delet, get, patch, post, put } from "~/lib/api";
+import {
+  Err,
+  remoteCreate,
+  remoteCreateWithoutUnicode,
+  remoteUpdate,
+  remoteRemove,
+  remoteMutate,
+} from "~/lib/api";
 import { Glyph, GlyphOptionalUnicode } from "~/lib/data";
 import {
-  EditorColumn,
-  EditorRow,
   Index,
   IndexEdit2,
+  Select,
   errorFeedback,
   verifyNewName,
 } from "~/components/Utils";
-import { deepcopy, length, isValidCJKChar } from "~/lib/utils";
-import {
-  loadForm,
-  mutate,
-  remove,
-  selectForm,
-  selectFormLoading,
-  update,
-  useAppDispatch,
-  useAppSelector,
-} from "~/components/store";
+import { deepcopy, length, isValidCJKChar, formDefault } from "~/lib/utils";
+import { mutate, remove, update, useAppDispatch } from "~/components/store";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
 
 export const getValue = function (
@@ -36,40 +33,83 @@ export const getValue = function (
   return value;
 };
 
-export const Create = ({ char, setChar }: IndexEdit2) => {
-  const formData = useAppSelector(selectForm);
-  const form = useContext(ModelContext);
+interface CreateProps {
+  charOrName: string;
+  default_type: "component" | "slice" | "compound";
+}
+
+export const RemoteContext = createContext(true);
+
+export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => {
   const dispatch = useAppDispatch();
-  const [newName, setNewName] = useState("");
+
+  const options = [
+    { label: "部件", value: "component" },
+    { label: "切片", value: "slice" },
+    { label: "复合体", value: "compound" },
+  ];
+  const typemap: Record<keyof typeof formDefault, 0 | 1 | 2> = {
+    component: 0,
+    slice: 1,
+    compound: 2,
+  };
+
   return (
-    <Popconfirm
-      title="新字形名称"
-      description={
-        <Input
-          value={newName}
-          onChange={(event) => setNewName(event.target.value)}
-        />
+    <Popover
+      content={
+        <Form<CreateProps>
+          onFinish={async ({ charOrName, default_type }) => {
+            const valid = verifyNewName(charOrName);
+            if (!valid) return;
+            const initial = {
+              default_type: typemap[default_type],
+              [default_type]: formDefault[default_type],
+              gf0014_id: null,
+              ambiguous: false,
+            };
+            if (length(charOrName) > 1) {
+              const payload: GlyphOptionalUnicode = {
+                ...initial,
+                name: charOrName,
+              };
+              const res = await remoteCreateWithoutUnicode(payload);
+              if (!errorFeedback(res)) {
+                const value = { ...payload, unicode: res } as Glyph;
+                const char = String.fromCodePoint(res);
+                dispatch(update(value));
+                setChar(char);
+              }
+            } else {
+              const unicode = charOrName.codePointAt(0)!;
+              const payload: Glyph = {
+                ...initial,
+                unicode,
+                name: null,
+              } as Glyph;
+              const res = await remoteCreate(payload);
+              if (!errorFeedback(res)) {
+                dispatch(update(payload));
+                setChar(charOrName);
+              }
+            }
+          }}
+        >
+          <Form.Item<CreateProps> label="名称" name="charOrName">
+            <Input />
+          </Form.Item>
+          <Form.Item<CreateProps> label="类型" name="default_type">
+            <Select options={options} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              确认
+            </Button>
+          </Form.Item>
+        </Form>
       }
-      onConfirm={async () => {
-        const valid = verifyNewName(newName);
-        if (!valid) return;
-        const value = getValue(newName, char, formData[char]);
-        console.log(value);
-        const slug =
-          value.unicode === undefined ? "form" : `form/${value.unicode}`;
-        const res = await post<number, any>(slug, value);
-        if (!errorFeedback(res)) {
-          const newChar = String.fromCodePoint(res);
-          const finish = { ...value, unicode: res } as Glyph;
-          console.log(res, String.fromCodePoint(res), finish);
-          dispatch(update([newChar, finish]));
-          setChar(newChar);
-          form.setFieldsValue(finish);
-        }
-      }}
     >
       <Button>新建</Button>
-    </Popconfirm>
+    </Popover>
   );
 };
 
@@ -88,11 +128,10 @@ export const Mutate = ({ char }: Index) => {
       onConfirm={async () => {
         const valid = verifyNewName(newName);
         if (!valid || newName.length > 1) return;
-        const res = await patch<boolean, number>(
-          `form/${char.codePointAt(0)!}`,
+        const res = await remoteMutate([
+          char.codePointAt(0)!,
           newName.codePointAt(0)!,
-        );
-        console.log(char, char.codePointAt(0), newName, newName.codePointAt(0));
+        ]);
         if (!errorFeedback(res)) {
           dispatch(mutate([char, newName]));
         }
@@ -111,14 +150,9 @@ export const Update = () => {
       type="primary"
       onClick={async () => {
         const values = model.getFieldsValue();
-        console.log(values);
-        const res = await put<boolean, typeof values>(
-          `form/${values.unicode}`,
-          values,
-        );
+        const res = await remoteUpdate(values);
         if (!errorFeedback(res)) {
-          const char = String.fromCodePoint(values.unicode);
-          dispatch(update([char!, values]));
+          dispatch(update(values));
         }
       }}
     >
@@ -132,9 +166,7 @@ export const Delete = ({ char }: Index) => {
   return (
     <Button
       onClick={async () => {
-        const res = await delet<boolean, undefined>(
-          `form/${char!.codePointAt(0)}`,
-        );
+        const res = await remoteRemove(char.codePointAt(0)!);
         if (!errorFeedback(res)) {
           dispatch(remove(char!));
         }
@@ -142,5 +174,29 @@ export const Delete = ({ char }: Index) => {
     >
       删除
     </Button>
+  );
+};
+
+export const QuickPatchAmbiguous = ({
+  checked,
+  record,
+}: {
+  checked: boolean;
+  record: Glyph;
+}) => {
+  const dispatch = useAppDispatch();
+  const remote = useContext(RemoteContext);
+  return (
+    <Checkbox
+      checked={checked}
+      onChange={async (event) => {
+        const checked = event.target.checked;
+        const values = { ...record, ambiguous: checked };
+        const res = await remoteUpdate(values);
+        if (!errorFeedback(res)) {
+          dispatch(update(values));
+        }
+      }}
+    />
   );
 };

@@ -10,6 +10,7 @@ import {
   Partition,
   SVGCommand,
   Stroke,
+  operators,
 } from "./data";
 
 export const unicodeBlock = (code: number) => {
@@ -94,6 +95,14 @@ export const getDummyPartition = function (operator: Operator): Partition {
   return { operator, operandList: ["一", "一"] };
 };
 
+export const formDefault: Required<
+  Pick<Glyph, "component" | "slice" | "compound">
+> = {
+  component: [],
+  compound: [{ operator: operators[0], operandList: ["一", "一"] }],
+  slice: { source: "一", indices: [0] },
+};
+
 export type MappedInfo = { name: string; code: string };
 
 export const reverse = (alphabet: string, mapping: Mapping) => {
@@ -152,3 +161,9 @@ export const preprocessForm = (f: any[]) => {
 export const displayName = (x: string, v: Glyph) => {
   return isValidChar(x) ? x : v.name!;
 };
+
+export const genericAction = (
+  localAction: any,
+  remoteAction: any,
+  remote: boolean,
+) => {};

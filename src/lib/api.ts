@@ -1,3 +1,5 @@
+import { Glyph, GlyphOptionalUnicode } from "./data";
+
 export const endpoint = "https://api.chaifen.app/";
 
 export interface Err {
@@ -25,12 +27,24 @@ const template =
     return response as R | Err;
   };
 
-export const get = template("GET");
+export const listForm = async () =>
+  await template("GET")<any, undefined>("form/all");
 
 export const post = template("POST");
 
-export const put = template("PUT");
+export const remoteCreateWithoutUnicode = (payload: GlyphOptionalUnicode) =>
+  template("POST")<number, GlyphOptionalUnicode>(`form`, payload);
 
-export const delet = template("DELETE");
+export const remoteCreate = (payload: Glyph) =>
+  template("POST")<number, Glyph>(`form/${payload.unicode}`, payload);
 
-export const patch = template("PATCH");
+export const remoteUpdate = (payload: Glyph) =>
+  template("PUT")<boolean, Glyph>(`form/${payload.unicode}`, payload);
+
+export const remoteRemove = (unicode: number) =>
+  template("DELETE")<boolean, Glyph>(`form/${unicode}`);
+
+export const remoteMutate = (payload: [number, number]) => {
+  const [unicode, newUnicode] = payload;
+  return template("PATCH")<boolean, number>(`form/${unicode}`, newUnicode);
+};

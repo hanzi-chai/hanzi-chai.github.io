@@ -110,7 +110,7 @@ const FormData = () => {
       <EditorRow style={{ flex: 1 }}>
         <EditorColumn span={12}>
           <Typography.Title level={2}>预览</Typography.Title>
-          { char !== undefined ? <GlyphView char={char} form={form}/> : <Empty />}
+          { char !== undefined ? <GlyphView form={form}/> : <Empty />}
         </EditorColumn>
         <EditorColumn span={12}>
           {char ? <GlyphModel char={char} setChar={setChar} form={form}>
