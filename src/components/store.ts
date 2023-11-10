@@ -21,21 +21,16 @@ export const formSlice = createSlice({
       state.form = action.payload;
       state.loading = false;
     },
-    create: (state, action: PayloadAction<Glyph>) => {
-      state.form[String.fromCodePoint(action.payload.unicode)] = action.payload;
-    },
-    createWithoutUnicode: (
-      state,
-      action: PayloadAction<GlyphOptionalUnicode>,
-    ) => {},
     update: (state, action: PayloadAction<Glyph>) => {
       state.form[String.fromCodePoint(action.payload.unicode)] = action.payload;
     },
-    remove: (state, action: PayloadAction<string>) => {
-      delete state.form[action.payload];
+    remove: (state, action: PayloadAction<number>) => {
+      delete state.form[String.fromCodePoint(action.payload)];
     },
-    mutate: (state, action: PayloadAction<[string, string]>) => {
-      const [before, after] = action.payload;
+    mutate: (state, action: PayloadAction<[number, number]>) => {
+      const [before, after] = action.payload.map((x) =>
+        String.fromCodePoint(x),
+      );
       const replaceIf = (s: string) => (s === before ? after : s);
       // update itself
       const value = state.form[before];

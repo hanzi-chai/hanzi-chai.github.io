@@ -122,7 +122,7 @@ export const RootSelect = ({
 export type Index = { char: string };
 export type IndexEdit2 = {
   char: string;
-  setChar: (s: string) => void;
+  setChar: (s?: string) => void;
 };
 export type IndexEdit3 = {
   char: string;
@@ -219,7 +219,11 @@ export const errorFeedback = function <T extends number | boolean>(
 };
 
 export const verifyNewName = (newName: string) => {
-  if (!Array.from(newName).every(isValidCJKChar)) {
+  if (
+    !Array.from(newName)
+      .map((x) => x.codePointAt(0)!)
+      .every(isValidCJKChar)
+  ) {
     notification.error({
       message: "名称含有非法字符",
       description: "只有 CJK 基本集或扩展集 A 中的才是合法字符",

@@ -224,8 +224,8 @@ const FormTable = () => {
           <Button onClick={() => setChar(String.fromCodePoint(record.unicode))}>
             编辑
           </Button>
-          <Delete char={String.fromCodePoint(record.unicode)} />
-          <Mutate char={String.fromCodePoint(record.unicode)} />
+          <Delete unicode={record.unicode} />
+          <Mutate unicode={record.unicode} />
         </Space>
       ),
     },
@@ -246,7 +246,7 @@ const FormTable = () => {
         <Modal
           open={char !== undefined}
           onCancel={() => setChar(undefined)}
-          footer={<Update />}
+          footer={<Update setChar={setChar} />}
           width="80%"
         >
           <EditorRow>
