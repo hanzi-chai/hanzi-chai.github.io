@@ -47,6 +47,14 @@ const useForm = () => {
   return Object.assign({}, form, useData().form);
 };
 
+const useCode = () => {
+  const formCustomizations = useData().form;
+  const maxCode = Math.max(
+    ...Object.keys(formCustomizations).map((x) => x.codePointAt(0)!),
+  );
+  return Math.max(maxCode + 1, 0xf000);
+};
+
 const useClassifier = () => {
   const { classifier } = useData();
   return Object.assign({}, defaultClassifier, classifier);
@@ -62,6 +70,7 @@ const useAll = () => {
 
 export {
   useForm,
+  useCode,
   useRepertoire,
   useClassifier,
   useAll,

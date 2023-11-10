@@ -11,7 +11,6 @@ import {
 import { Updater } from "use-immer";
 import { Config } from "~/lib/config";
 import { nanoid } from "@reduxjs/toolkit";
-import { examples } from "~/lib/example";
 
 const Starter = ({
   setConfigs,
@@ -19,7 +18,6 @@ const Starter = ({
   setConfigs: Updater<Record<string, Config>>;
 }) => {
   const [modal, setModal] = useState(false);
-  const [api] = notification.useNotification();
   const required = [{ required: true }];
   return (
     <>
