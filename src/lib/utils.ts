@@ -1,17 +1,6 @@
 import { Feature, schema } from "./classifier";
 import { Mapping } from "./config";
-import {
-  Alias,
-  Compound,
-  Form,
-  Glyph,
-  GlyphOptionalUnicode,
-  Operator,
-  Partition,
-  SVGCommand,
-  Stroke,
-  operators,
-} from "./data";
+import { Form, Glyph, Operator, Partition, Stroke, operators } from "./data";
 
 export const unicodeBlock = (code: number) => {
   // ASCII
@@ -94,12 +83,9 @@ export const getDummyPartition = function (operator: Operator): Partition {
   return { operator, operandList: ["一", "一"] };
 };
 
-export const formDefault: Required<
-  Pick<Glyph, "component" | "slice" | "compound">
-> = {
-  component: [],
+export const formDefault: Required<Pick<Glyph, "component" | "compound">> = {
+  component: { strokes: [] },
   compound: [{ operator: operators[0], operandList: ["一", "一"] }],
-  slice: { source: "一", indices: [0] },
 };
 
 export type MappedInfo = { name: string; code: string };
@@ -121,12 +107,12 @@ export const getSupplemental = (form: Form, list: string[]) => {
     Object.entries(form).map(([x]) => [x, []]),
   );
   for (const [char, glyph] of Object.entries(form)) {
-    if (glyph.default_type === 2) {
+    if (glyph.default_type === "compound") {
       glyph.compound[0].operandList.forEach((x) => reverseForm[x].push(char));
     }
   }
   const componentsNotChar = Object.entries(form)
-    .filter(([, v]) => v.default_type === 0)
+    .filter(([, v]) => v.default_type === "component")
     .map(([x]) => x)
     .filter((x) => !set.has(x));
   const suppList: string[] = [];
@@ -160,9 +146,3 @@ export const preprocessForm = (f: any[]) => {
 export const displayName = (x: string, v: Glyph) => {
   return isValidChar(x) ? x : v.name!;
 };
-
-export const genericAction = (
-  localAction: any,
-  remoteAction: any,
-  remote: boolean,
-) => {};

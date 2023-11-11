@@ -12,7 +12,11 @@ import {
 import { useForm } from "~/components/contants";
 import { Glyph, Operator, operators } from "~/lib/data";
 import { displayName } from "~/lib/utils";
-import { GlyphModel, ModelContext } from "~/components/GlyphModel";
+import {
+  GlyphModel,
+  ModelContext,
+  defaultGlyph,
+} from "~/components/GlyphModel";
 import GlyphView from "~/components/GlyphView";
 import Root from "~/components/Root";
 import {
@@ -169,7 +173,10 @@ const FormTable = () => {
       ),
       onFilter: (value, record) =>
         record.component
-          ? record.component.some((x) => x.feature.startsWith(value as string))
+          ? record.component.strokes.some(
+              (x) =>
+                typeof x === "object" && x.feature.startsWith(value as string),
+            )
           : false,
       width: 128,
     },
@@ -245,19 +252,19 @@ const FormTable = () => {
       <ModelContext.Provider value={thisForm}>
         <Modal
           open={char !== undefined}
-          onCancel={() => setChar(undefined)}
+          onCancel={() => {
+            setChar(undefined);
+          }}
           footer={<Update setChar={setChar} />}
           width="80%"
         >
           <EditorRow>
             <EditorColumn span={12}>
               <Typography.Title level={2}>预览</Typography.Title>
-              {char && <GlyphView form={thisForm} />}
+              <GlyphView form={thisForm} />
             </EditorColumn>
             <EditorColumn span={12}>
-              {char && (
-                <GlyphModel char={char} setChar={setChar} form={thisForm} />
-              )}
+              <GlyphModel char={char!} setChar={setChar} form={thisForm} />
             </EditorColumn>
           </EditorRow>
         </Modal>

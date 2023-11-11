@@ -7,6 +7,7 @@ import {
   LinearCurve,
   Point,
   Stroke,
+  SVGGlyph,
 } from "./data";
 import { add, subtract, mean, multiply, divide, distance } from "mathjs";
 
@@ -279,7 +280,7 @@ const render = ({ feature, start, curveList }: Stroke) => {
   return r;
 };
 
-const findTopology = (glyph: Component) => {
+const findTopology = (glyph: SVGGlyph) => {
   const g = glyph.map(render);
   const matrix = [] as Relation[][][];
   for (const [i, s] of g.entries()) {

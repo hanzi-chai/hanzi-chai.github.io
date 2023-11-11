@@ -45,7 +45,20 @@ interface SVGStroke {
   curveList: Draw[];
 }
 
-type Component = SVGStroke[];
+type SVGGlyph = SVGStroke[];
+
+interface BasicComponent {
+  strokes: SVGStroke[];
+}
+
+type Stroke = SVGStroke | number;
+
+interface DerivedComponent {
+  source: string;
+  strokes: Stroke[];
+}
+
+type Component = BasicComponent | DerivedComponent;
 
 export const operators = [
   "⿰",
@@ -90,32 +103,24 @@ type GlyphBase = {
   gf0014_id: number | null;
   component?: Component;
   compound?: Compound;
-  slice?: Alias;
   ambiguous: boolean;
 };
 
 interface ComponentGlyph extends GlyphBase {
-  default_type: 0;
+  default_type: "component";
   component: Component;
 }
 
-interface SliceGlyph extends GlyphBase {
-  default_type: 1;
-  slice: Alias;
-}
-
 interface CompoundGlyph extends GlyphBase {
-  default_type: 2;
+  default_type: "compound";
   compound: Compound;
 }
 
-type Glyph = ComponentGlyph | CompoundGlyph | SliceGlyph;
+type Glyph = ComponentGlyph | CompoundGlyph;
 type GlyphOptionalUnicode = Omit<Glyph, "unicode"> & { unicode?: number };
 
 type Form = Record<string, Glyph>;
 type Repertoire = Record<string, Character>;
-
-type Alias = { source: string; indices: number[] };
 
 export type { N1, N2, N3, N6 };
 export type {
@@ -124,16 +129,17 @@ export type {
   Draw,
   SVGStroke as Stroke,
   Glyph,
+  SVGGlyph,
   GlyphOptionalUnicode,
   ComponentGlyph,
   CompoundGlyph,
-  SliceGlyph,
   Partition,
   Block,
+  BasicComponent,
+  DerivedComponent,
   Component,
   Compound,
   Operator,
-  Alias,
   Character,
   LinearCurve,
   CubicCurve,

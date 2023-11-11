@@ -2,13 +2,7 @@ import { createContext, useContext } from "react";
 import defaultClassifier from "~/lib/classifier";
 import { displayName } from "~/lib/utils";
 import { useData } from "./context";
-import {
-  ComponentGlyph,
-  CompoundGlyph,
-  Form,
-  Repertoire,
-  SliceGlyph,
-} from "~/lib/data";
+import { ComponentGlyph, CompoundGlyph, Form, Repertoire } from "~/lib/data";
 import { selectForm, selectRepertoire, useAppSelector } from "./store";
 
 const useGlyph = (char: string) => {
@@ -31,10 +25,6 @@ const useComponent = (char: string) => {
 
 const useCompound = (char: string) => {
   return useGlyph(char) as CompoundGlyph;
-};
-
-const useSlice = (char: string) => {
-  return useGlyph(char) as SliceGlyph;
 };
 
 const useRepertoire = () => {
@@ -77,6 +67,5 @@ export {
   useGlyph,
   useComponent,
   useCompound,
-  useSlice,
   useDisplay,
 };

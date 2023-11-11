@@ -1,5 +1,6 @@
 import { Classifier, Config, FormConfig } from "./config";
 import {
+  BasicComponent,
   Component,
   ComponentGlyph,
   Compound,
@@ -7,6 +8,7 @@ import {
   Form,
   Glyph,
   Operator,
+  SVGGlyph,
 } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
@@ -14,42 +16,30 @@ import { bisectLeft, bisectRight } from "d3-array";
 import findTopology, { Relation } from "./topology";
 import { Extra } from "./element";
 
-export const makeSequenceFilter = (
-  classifier: Classifier,
-  sequence: string,
-) => {
-  return ([, v]: [string, Glyph]) => {
-    const fullSequence =
-      v.component &&
-      v.component
-        .map((s) => s.feature)
-        .map((x) => classifier[x])
-        .join("");
-    if (!fullSequence) return false;
-    return fullSequence.search(sequence) !== -1;
-  };
-};
-
 export const recursiveGetSequence = function (
   form: Form,
   classifier: Classifier,
   char: string,
 ): number[] {
-  if (form[char] === undefined) {
-    console.log(char, char.codePointAt(0)!, form[char]);
-  }
-  const { default_type, component, compound, slice } = form[char];
+  const { default_type, component, compound } = form[char];
   switch (default_type) {
-    case 0:
-      return component.map((s) => classifier[s.feature]);
-    case 1:
-      const sourceSequence = recursiveGetSequence(
-        form,
-        classifier,
-        slice.source,
-      );
-      return slice.indices.map((x) => sourceSequence[x]);
-    case 2:
+    case "component":
+      if ("source" in component) {
+        const sourceSequence = recursiveGetSequence(
+          form,
+          classifier,
+          component.source,
+        );
+        return component.strokes.map((x) => {
+          if (typeof x === "number") {
+            return sourceSequence[x];
+          } else {
+            return classifier[x.feature];
+          }
+        });
+      }
+      return component.strokes.map((x) => classifier[x.feature]);
+    case "compound":
       return compound[0].operandList
         .map((s) => recursiveGetSequence(form, classifier, s))
         .flat();
@@ -95,7 +85,7 @@ export const generateSchemes = (n: number, roots: number[]) => {
 
 export interface Cache {
   name: string;
-  glyph: Component;
+  glyph: SVGGlyph;
   topology: Relation[][][];
 }
 
@@ -176,46 +166,57 @@ export interface CompoundResult {
   all: string[] | SequenceTree;
 }
 
-const getRootData = (data: Config["data"], config: FormConfig) => {
-  const rootData = [] as Cache[];
-  const { form } = data;
-  const { mapping, grouping } = config;
-  const buildGlyph = (char: string) => {
-    const { source, indices } = form[char].slice!;
-    const rawglyph = form[source].component!;
-    return indices.map((x) => rawglyph[x]);
-  };
-  for (const char of [...Object.keys(mapping), ...Object.keys(grouping)]) {
-    if (form[char] === undefined || form[char].default_type === 2) {
-      // console.log(rootName);
-      continue; // 合体字根和单笔画字根无需在这里处理
-    }
-    const glyph = form[char].component || buildGlyph(char);
-    const topology = findTopology(glyph);
-    rootData.push({ glyph, topology, name: char });
+export const recursiveRenderGlyph = (
+  char: string,
+  form: Form,
+  glyphCache: Record<string, SVGGlyph> = {},
+) => {
+  if (char in glyphCache) return glyphCache[char];
+  const component = form[char].component!;
+  let glyph: SVGGlyph;
+  if ("source" in component) {
+    const sourceGlyph = recursiveRenderGlyph(component.source, form);
+    glyph = component.strokes.map((x) => {
+      if (typeof x === "number") return sourceGlyph[x];
+      return x;
+    });
+  } else {
+    glyph = component.strokes;
   }
-  return rootData;
+  glyphCache[char] = glyph;
+  return glyph;
+};
+
+const renderComponentForm = (data: Config["data"], config: FormConfig) => {
+  const { form } = data;
+  const glyphCache: Record<string, SVGGlyph> = {};
+  return Object.fromEntries(
+    Object.entries(form)
+      .filter(([, g]) => g.default_type === "component")
+      .map(([char]) => {
+        const glyph = recursiveRenderGlyph(char, form, glyphCache);
+        const topology = findTopology(glyph);
+        const cache: Cache = { glyph, topology, name: char };
+        return [char, cache];
+      }),
+  );
 };
 
 export const disassembleComponents = (
   data: Config["data"],
   config: FormConfig,
-  rootData?: Cache[],
 ) => {
   const { form, classifier } = data;
-  if (!rootData) rootData = getRootData(data, config);
+  const componentCache = renderComponentForm(data, config);
+  const { mapping, grouping } = config;
+  const roots = [...Object.keys(mapping), ...Object.keys(grouping)];
+  const rootData = roots
+    .filter((x) => form[x]?.default_type === "component")
+    .map((x) => componentCache[x]);
   const result = Object.fromEntries(
-    Object.entries(form)
-      .filter(([, g]) => g.default_type === 0)
-      .map(([char, glyph]) => {
-        const topology = findTopology(glyph.component!);
-        const cache = {
-          name: char,
-          topology,
-          glyph: glyph.component!,
-        };
-        return [char, getComponentScheme(cache, rootData!, config, classifier)];
-      }),
+    Object.entries(componentCache).map(([char, cache]) => {
+      return [char, getComponentScheme(cache, rootData, config, classifier)];
+    }),
   );
   return result;
 };
@@ -226,10 +227,11 @@ const topologicalSort = (form: Form) => {
     const thisLevelCompound: Record<string, Glyph> = {};
     for (const [k, glyph] of Object.entries(form)) {
       if (compounds[k]) continue;
-      if (glyph.default_type !== 2) continue;
+      if (glyph.default_type !== "compound") continue;
       if (
         glyph.compound[0].operandList.every(
-          (x) => form[x].default_type === 0 || compounds[x] !== undefined,
+          (x) =>
+            form[x].default_type === "component" || compounds[x] !== undefined,
         )
       ) {
         thisLevelCompound[k] = glyph;
@@ -301,19 +303,7 @@ const getExtra = function (data: Config["data"], config: FormConfig): Extra {
       // 单笔画
       return [Number(x)];
     }
-    const glyph = form[x];
-    switch (glyph.default_type) {
-      case 0:
-        return glyph.component.map((x) => classifier[x.feature]);
-      case 1:
-        const sourceGlyph = form[glyph.slice.source];
-        const sourceSequence = sourceGlyph.component!.map(
-          (x) => classifier[x.feature],
-        );
-        return glyph.slice.indices.map((x) => sourceSequence[x]);
-      case 2:
-        return recursiveGetSequence(form, classifier, x);
-    }
+    return recursiveGetSequence(form, classifier, x);
   };
   const rootSequence = Object.fromEntries(
     roots.map((x) => [x, findSequence(x)]),

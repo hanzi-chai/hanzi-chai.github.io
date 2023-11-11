@@ -44,7 +44,7 @@ export const getValue = function (
 
 interface CreateProps {
   charOrName: string;
-  default_type: "component" | "slice" | "compound";
+  default_type: "component" | "compound";
 }
 
 export const RemoteContext = createContext(true);
@@ -58,18 +58,11 @@ export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => {
 
   const options = [
     { label: "部件", value: "component" },
-    { label: "切片", value: "slice" },
     { label: "复合体", value: "compound" },
   ];
-  const typemap: Record<keyof typeof formDefault, 0 | 1 | 2> = {
-    component: 0,
-    slice: 1,
-    compound: 2,
-  };
-
   const handle = async ({ charOrName, default_type }: CreateProps) => {
     const initial = {
-      default_type: typemap[default_type],
+      default_type,
       [default_type]: formDefault[default_type],
       gf0014_id: null,
       ambiguous: false,
@@ -231,7 +224,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
   const char = String.fromCodePoint(unicode);
   return (
     <Button
-      disabled={formCustomization[char] === undefined}
+      disabled={!remote && formCustomization[char] === undefined}
       onClick={async () => {
         if (remote) {
           const res = await remoteRemove(unicode);

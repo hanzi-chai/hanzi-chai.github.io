@@ -1,9 +1,10 @@
 import styled from "styled-components";
-import { Stroke } from "~/lib/data";
+import { BasicComponent, Component, Glyph, SVGGlyph, Stroke } from "~/lib/data";
 import { Empty, Typography } from "antd";
-import { useComponent, useSlice } from "./contants";
+import { useComponent, useForm } from "./contants";
 import { Index } from "./Utils";
-import { useWatch } from "antd/es/form/Form";
+import { FormInstance, useWatch } from "antd/es/form/Form";
+import { recursiveRenderGlyph } from "~/lib/form";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -42,29 +43,23 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
   </svg>
 );
 
-export const ComponentView = ({ char }: Index) => {
-  const { component } = useComponent(char);
-  return (
-    <>
-      <StrokesView glyph={component} />
-    </>
-  );
+export const ComponentView = ({ component }: { component: Component }) => {
+  const form = useForm();
+  let glyph: SVGGlyph;
+  if ("source" in component && component.source !== undefined) {
+    const sourceGlyph = recursiveRenderGlyph(component.source, form);
+    glyph = component.strokes.map((x) => {
+      if (typeof x === "number") return sourceGlyph[x];
+      return x;
+    });
+  } else {
+    glyph = (component as BasicComponent).strokes;
+  }
+  return <StrokesView glyph={glyph} />;
 };
 
 export const CompoundView = ({ char }: Index) => {
   return <Empty description="暂不支持复合体的预览" />;
-};
-
-export const SliceView = ({ char }: Index) => {
-  const glyph = useSlice(char);
-  const { source, indices } = glyph.slice!;
-  const { component } = useComponent(source);
-  const subglyph = indices.map((x) => component[x]);
-  return (
-    <>
-      <StrokesView glyph={subglyph} />
-    </>
-  );
 };
 
 const Overlay = styled.div`
@@ -77,11 +72,11 @@ const Overlay = styled.div`
   }
 `;
 
-const GlyphView = ({ form }: { form: any }) => {
+const GlyphView = ({ form }: { form: FormInstance<Glyph> }) => {
   const component = useWatch("component", form);
   return (
     <Overlay>
-      {component ? <StrokesView glyph={component} /> : <Empty />}
+      {component ? <ComponentView component={component} /> : <Empty />}
     </Overlay>
   );
 };

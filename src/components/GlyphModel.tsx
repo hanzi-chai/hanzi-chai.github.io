@@ -29,9 +29,12 @@ import {
   useState,
 } from "react";
 import {
+  BasicComponent,
   Block,
   Component,
+  ComponentGlyph,
   Compound,
+  CompoundGlyph,
   Draw,
   Glyph,
   GlyphOptionalUnicode,
@@ -86,47 +89,97 @@ interface ListItemWithRemove {
 const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
+  const formData = useForm();
   return (
-    <>
-      <Flex gap="middle" justify="space-between">
-        <Form.Item<Component> {...rest} name={[name, "feature"]}>
-          <Select<Feature>
-            options={Object.keys(classifier).map((x) => ({
-              label: x,
-              value: x,
-            }))}
-            onChange={(value) => {
-              const newStroke = getDummyStroke(value);
-              form.setFieldValue(["component", name], newStroke);
-            }}
-          />
-        </Form.Item>
-        <Space>
-          <Form.Item<Component>
-            {...rest}
-            name={[name, "start", 0]}
-            label="起点"
-          >
-            <NumberInput />
-          </Form.Item>
-          <Form.Item<Component> {...rest} name={[name, "start", 1]}>
-            <NumberInput />
-          </Form.Item>
-        </Space>
-        <Form.Item>
-          <Button onClick={remove}>删除笔画</Button>
-        </Form.Item>
-      </Flex>
-      <Form.List name={[name, "curveList"]}>
-        {(fields) => (
+    <Form.Item noStyle shouldUpdate={() => true}>
+      {({ getFieldValue }) => {
+        const source = getFieldValue(["component", "source"]);
+        const length = formData[source]?.component?.strokes?.length;
+        return typeof getFieldValue(["component", "strokes", name]) ===
+          "object" ? (
           <>
-            {fields.map((field) => (
-              <CurveForm {...field} key={field.key} />
-            ))}
+            <Flex gap="middle" justify="space-between">
+              <Form.Item<BasicComponent["strokes"]>
+                {...rest}
+                name={[name, "feature"]}
+              >
+                <Select<Feature>
+                  options={Object.keys(classifier).map((x) => ({
+                    label: x,
+                    value: x,
+                  }))}
+                  onChange={(value) => {
+                    const newStroke = getDummyStroke(value);
+                    form.setFieldValue(["component", name], newStroke);
+                  }}
+                />
+              </Form.Item>
+              <Flex gap="small">
+                <Form.List name={[name, "start"]}>
+                  {(fields) => (
+                    <>
+                      {fields.map((field) => (
+                        <Form.Item {...field} key={field.key}>
+                          <NumberInput />
+                        </Form.Item>
+                      ))}
+                    </>
+                  )}
+                </Form.List>
+              </Flex>
+              <Form.Item>
+                <Button
+                  onClick={() => {
+                    form.setFieldValue(["component", "strokes", name], 0);
+                  }}
+                  disabled={source === undefined}
+                >
+                  更改为引用
+                </Button>
+              </Form.Item>
+              <Form.Item>
+                <Button onClick={remove}>删除笔画</Button>
+              </Form.Item>
+            </Flex>
+            <Form.List name={[name, "curveList"]}>
+              {(fields) => (
+                <>
+                  {fields.map((field) => (
+                    <CurveForm {...field} key={field.key} />
+                  ))}
+                </>
+              )}
+            </Form.List>
           </>
-        )}
-      </Form.List>
-    </>
+        ) : (
+          <Flex gap="middle" justify="space-between">
+            <Form.Item name={[name]}>
+              <Select<number>
+                options={[...Array(length).keys()].map((x) => ({
+                  label: x,
+                  value: x,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                onClick={() => {
+                  form.setFieldValue(
+                    ["component", "strokes", name],
+                    getDummyStroke("横"),
+                  );
+                }}
+              >
+                更改为 SVG 笔画
+              </Button>
+            </Form.Item>
+            <Form.Item>
+              <Button onClick={remove}>删除笔画</Button>
+            </Form.Item>
+          </Flex>
+        );
+      }}
+    </Form.Item>
   );
 };
 
@@ -143,31 +196,40 @@ const ComponentForm = () => {
     { key: 4, label: "折类 IV", children: rawitems.slice(27) },
   ];
   return (
-    <Form.List name="component">
-      {(fields, { add, remove }) => (
-        <>
-          {fields.map((info, index) => (
-            <StrokeForm
-              info={info}
-              remove={() => remove(index)}
-              key={info.key}
-            />
-          ))}
-          <Form.Item>
-            <Dropdown
-              menu={{
-                items,
-                onClick: (info) => {
-                  add(getDummyStroke(info.key as Feature));
-                },
-              }}
-            >
-              <Button type="dashed">添加笔画</Button>
-            </Dropdown>
-          </Form.Item>
-        </>
-      )}
-    </Form.List>
+    <>
+      <Form.Item
+        name={["component", "source"]}
+        label="源字"
+        shouldUpdate={() => true}
+      >
+        <ItemSelect />
+      </Form.Item>
+      <Form.List name={["component", "strokes"]}>
+        {(fields, { add, remove }) => (
+          <>
+            {fields.map((info, index) => (
+              <StrokeForm
+                info={info}
+                remove={() => remove(index)}
+                key={info.key}
+              />
+            ))}
+            <Form.Item>
+              <Dropdown
+                menu={{
+                  items,
+                  onClick: (info) => {
+                    add(getDummyStroke(info.key as Feature));
+                  },
+                }}
+              >
+                <Button type="dashed">添加笔画</Button>
+              </Dropdown>
+            </Form.Item>
+          </>
+        )}
+      </Form.List>
+    </>
   );
 };
 
@@ -295,7 +357,6 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
 };
 
 const CompoundForm = () => {
-  const form = useContext(ModelContext);
   const items: MenuProps["items"] = operators.map((x) => ({
     label: x,
     key: x,
@@ -329,35 +390,13 @@ const CompoundForm = () => {
   );
 };
 
-const SliceForm = () => {
-  const form = useContext(ModelContext);
-  const source = useWatch(["slice", "source"], form);
-  const formData = useForm();
-  const options = formData[source]?.component?.map((x, i) => ({
-    label: x.feature,
-    value: i,
-  }));
-  return (
-    <Flex vertical>
-      <Form.Item<Glyph> label="源字" name={["slice", "source"]}>
-        <ItemSelect />
-      </Form.Item>
-      <Form.Item<Glyph> label="笔画" name={["slice", "indices"]}>
-        <Checkbox.Group options={options} />
-      </Form.Item>
-    </Flex>
-  );
-};
-
 const BasicForm = () => {
   const form = useContext(ModelContext);
   const hasComponent = useWatch("component", form) !== undefined;
-  const hasSlice = useWatch("slice", form) !== undefined;
   const hasCompound = useWatch("compound", form) !== undefined;
   const options = [
-    { label: "部件", value: 0, disabled: !hasComponent },
-    { label: "切片", value: 1, disabled: !hasSlice },
-    { label: "复合体", value: 2, disabled: !hasCompound },
+    { label: "部件", value: "component", disabled: !hasComponent },
+    { label: "复合体", value: "compound", disabled: !hasCompound },
   ];
   return (
     <>
@@ -391,7 +430,7 @@ const BasicForm = () => {
 
 interface SwitcherProps {
   name: string;
-  formName: "component" | "slice" | "compound";
+  formName: "component" | "compound";
   onChange: (b: boolean) => void;
 }
 
@@ -399,9 +438,8 @@ const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
   const form = useContext(ModelContext);
   const thisStatus = Form.useWatch(formName, form) !== undefined;
   const hasComponent = useWatch("component", form) !== undefined;
-  const hasSlice = useWatch("slice", form) !== undefined;
   const hasCompound = useWatch("compound", form) !== undefined;
-  const last = +hasComponent + +hasCompound + +hasSlice === 1;
+  const last = +hasComponent + +hasCompound === 1;
   return (
     <Flex justify="space-between" align="baseline">
       <Typography.Title level={2}>{name}数据</Typography.Title>
@@ -422,6 +460,16 @@ const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
   );
 };
 
+export const defaultGlyph: CompoundGlyph = {
+  unicode: 0,
+  name: null,
+  gf0014_id: null,
+  default_type: "compound",
+  component: undefined,
+  compound: [],
+  ambiguous: false,
+};
+
 const GlyphModel = ({
   char,
   setChar,
@@ -430,13 +478,13 @@ const GlyphModel = ({
 }: PropsWithChildren<IndexEdit2 & { form: FormInstance<Glyph> }>) => {
   const [hasComponent, setHasComponent] = useState(false);
   const [hasCompound, setHasCompound] = useState(false);
-  const [hasSlice, setHasSlice] = useState(false);
   const formData = useForm();
   useEffect(() => {
+    if (char === undefined) return;
     const data = formData[char];
     setHasComponent(data.component !== undefined);
     setHasCompound(data.compound !== undefined);
-    setHasSlice(data.slice !== undefined);
+    form.resetFields();
     form.setFieldsValue(data);
   }, [char]);
   return (
@@ -445,8 +493,6 @@ const GlyphModel = ({
       <BasicForm />
       <Switcher name="部件" formName="component" onChange={setHasComponent} />
       {hasComponent && <ComponentForm />}
-      <Switcher name="切片" formName="slice" onChange={setHasSlice} />
-      {hasSlice && <SliceForm />}
       <Switcher name="复合体" formName="compound" onChange={setHasCompound} />
       {hasCompound && <CompoundForm />}
     </Form>
@@ -460,30 +506,4 @@ export {
   StrokeForm,
   ComponentForm,
   CompoundForm,
-  SliceForm,
-};
-
-export const getValue = function (
-  slice: boolean,
-  newName: string,
-  char: string,
-  glyph: Glyph,
-): GlyphOptionalUnicode {
-  const unicode = length(newName) === 1 ? newName.codePointAt(0)! : undefined;
-  if (slice) {
-    return {
-      unicode,
-      name: newName,
-      default_type: 1,
-      gf0014_id: null,
-      slice: { source: char, indices: glyph.component!.map((_, i) => i) },
-      ambiguous: false,
-    };
-  } else {
-    const value: GlyphOptionalUnicode = deepcopy(glyph);
-    value.unicode = unicode;
-    value.name = length(newName) === 1 ? null : newName;
-    value.gf0014_id = null;
-    return value;
-  }
 };

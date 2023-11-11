@@ -74,7 +74,7 @@ const AnalysisCustomizer = () => {
         );
       })}
       <Flex justify="center" gap="large">
-        <ItemSelect char={newCustomization} onChange={setNew} />
+        <ItemSelect value={newCustomization} onChange={setNew} />
         <Button
           type="primary"
           onClick={() =>
