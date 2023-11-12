@@ -24,7 +24,7 @@ export const recursiveGetSequence = function (
   const { default_type, component, compound } = form[char];
   switch (default_type) {
     case "component":
-      if ("source" in component) {
+      if (component.source !== undefined) {
         const sourceSequence = recursiveGetSequence(
           form,
           classifier,
@@ -174,7 +174,7 @@ export const recursiveRenderGlyph = (
   if (char in glyphCache) return glyphCache[char];
   const component = form[char].component!;
   let glyph: SVGGlyph;
-  if ("source" in component) {
+  if (component.source !== undefined) {
     const sourceGlyph = recursiveRenderGlyph(component.source, form);
     glyph = component.strokes.map((x) => {
       if (typeof x === "number") return sourceGlyph[x];

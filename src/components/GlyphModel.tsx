@@ -104,13 +104,17 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                 name={[name, "feature"]}
               >
                 <Select<Feature>
+                  style={{ width: "96px" }}
                   options={Object.keys(classifier).map((x) => ({
                     label: x,
                     value: x,
                   }))}
                   onChange={(value) => {
                     const newStroke = getDummyStroke(value);
-                    form.setFieldValue(["component", name], newStroke);
+                    form.setFieldValue(
+                      ["component", "strokes", name],
+                      newStroke,
+                    );
                   }}
                 />
               </Form.Item>
@@ -183,27 +187,43 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
   );
 };
 
+const strokeOptions = Object.keys(schema).map((x) => ({
+  key: x,
+  value: x,
+  label: x,
+}));
+const classifiedStrokeOptions = [
+  { key: 0, label: "基本", children: strokeOptions.slice(0, 7) },
+  { key: 1, label: "折类 I", children: strokeOptions.slice(7, 13) },
+  { key: 2, label: "折类 II", children: strokeOptions.slice(13, 20) },
+  { key: 3, label: "折类 III", children: strokeOptions.slice(20, 27) },
+  { key: 4, label: "折类 IV", children: strokeOptions.slice(27) },
+];
+
 const ComponentForm = () => {
-  const rawitems = Object.keys(schema).map((x) => ({
-    key: x,
-    label: x,
-  }));
-  const items: MenuProps["items"] = [
-    { key: 0, label: "基本", children: rawitems.slice(0, 7) },
-    { key: 1, label: "折类 I", children: rawitems.slice(7, 13) },
-    { key: 2, label: "折类 II", children: rawitems.slice(13, 20) },
-    { key: 3, label: "折类 III", children: rawitems.slice(20, 27) },
-    { key: 4, label: "折类 IV", children: rawitems.slice(27) },
-  ];
+  const form = useContext(ModelContext);
+  const strokes = Form.useWatch(["component", "strokes"], form) as any[];
   return (
     <>
-      <Form.Item
-        name={["component", "source"]}
-        label="源字"
-        shouldUpdate={() => true}
-      >
-        <ItemSelect />
-      </Form.Item>
+      <Flex gap="middle">
+        <Form.Item
+          name={["component", "source"]}
+          label="源字"
+          shouldUpdate={() => true}
+        >
+          <ItemSelect />
+        </Form.Item>
+        <Form.Item shouldUpdate>
+          <Button
+            onClick={() =>
+              form.setFieldValue(["component", "source"], undefined)
+            }
+            disabled={strokes?.some((x) => typeof x === "number")}
+          >
+            清除
+          </Button>
+        </Form.Item>
+      </Flex>
       <Form.List name={["component", "strokes"]}>
         {(fields, { add, remove }) => (
           <>
@@ -217,7 +237,7 @@ const ComponentForm = () => {
             <Form.Item>
               <Dropdown
                 menu={{
-                  items,
+                  items: classifiedStrokeOptions,
                   onClick: (info) => {
                     add(getDummyStroke(info.key as Feature));
                   },

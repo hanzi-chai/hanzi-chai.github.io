@@ -171,13 +171,13 @@ const FormTable = () => {
       filters: [{ text: "非空", value: "" }].concat(
         Object.keys(classifier).map((x) => ({ text: x, value: x })),
       ),
-      onFilter: (value, record) =>
-        record.component
-          ? record.component.strokes.some(
-              (x) =>
-                typeof x === "object" && x.feature.startsWith(value as string),
-            )
-          : false,
+      onFilter: (value, record) => {
+        if (!record.component) return false;
+        if (value === "") return true;
+        return record.component.strokes.some(
+          (x) => typeof x === "object" && x.feature === (value as string),
+        );
+      },
       width: 128,
     },
     {

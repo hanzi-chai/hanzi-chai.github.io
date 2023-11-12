@@ -48,6 +48,7 @@ interface SVGStroke {
 type SVGGlyph = SVGStroke[];
 
 interface BasicComponent {
+  source: undefined;
   strokes: SVGStroke[];
 }
 

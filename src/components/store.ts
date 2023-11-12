@@ -38,7 +38,7 @@ export const formSlice = createSlice({
       state.form[after] = { ...value, unicode: after.codePointAt(0)! };
       // update references
       for (const [_, value] of Object.entries(state.form)) {
-        if (value.component !== undefined && "source" in value.component) {
+        if (value.component?.source !== undefined) {
           value.component.source = replaceIf(value.component.source);
         }
         if (value.compound !== undefined) {

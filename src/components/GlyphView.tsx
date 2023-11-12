@@ -46,7 +46,7 @@ export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
 export const ComponentView = ({ component }: { component: Component }) => {
   const form = useForm();
   let glyph: SVGGlyph;
-  if ("source" in component && component.source !== undefined) {
+  if (component.source !== undefined) {
     const sourceGlyph = recursiveRenderGlyph(component.source, form);
     glyph = component.strokes.map((x) => {
       if (typeof x === "number") return sourceGlyph[x];
@@ -76,7 +76,7 @@ const GlyphView = ({ form }: { form: FormInstance<Glyph> }) => {
   const component = useWatch("component", form);
   return (
     <Overlay>
-      {component ? <ComponentView component={component} /> : <Empty />}
+      {component?.strokes ? <ComponentView component={component} /> : <Empty />}
     </Overlay>
   );
 };
