@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import { Provider } from "react-redux";
-import { store } from "./components/store";
+import { store } from "./redux/store";
 import CusSpin from "~/components/CustomSpin";
 import AutoRoute from "~react-pages";
 

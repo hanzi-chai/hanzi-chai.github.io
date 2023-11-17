@@ -43,7 +43,7 @@ import {
   selectFormLoading,
   useAppDispatch,
   useAppSelector,
-} from "~/components/store";
+} from "~/redux/store";
 
 const items: MenuProps["items"] = [
   {

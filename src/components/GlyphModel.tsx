@@ -52,7 +52,7 @@ import {
   length,
 } from "~/lib/utils";
 import { FormInstance, useWatch } from "antd/es/form/Form";
-import { selectForm, useAppSelector } from "./store";
+import { selectForm, useAppSelector } from "../redux/store";
 import { useForm } from "./contants";
 
 export const ModelContext = createContext<FormInstance<Glyph>>({} as any);

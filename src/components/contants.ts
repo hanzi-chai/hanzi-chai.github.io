@@ -3,7 +3,7 @@ import defaultClassifier from "~/lib/classifier";
 import { displayName } from "~/lib/utils";
 import { useData } from "./context";
 import { ComponentGlyph, CompoundGlyph, Form, Repertoire } from "~/lib/data";
-import { selectForm, selectRepertoire, useAppSelector } from "./store";
+import { selectForm, selectRepertoire, useAppSelector } from "../redux/store";
 
 const useGlyph = (char: string) => {
   const form = useAppSelector(selectForm);

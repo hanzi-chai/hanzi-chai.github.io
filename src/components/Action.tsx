@@ -24,7 +24,7 @@ import {
   update,
   useAppDispatch,
   useAppSelector,
-} from "~/components/store";
+} from "~/redux/store";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
 import { useAdd, useData, useRemove } from "./context";
 import { useCode, useForm } from "./contants";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { formDefault, length, preprocessForm, unicodeBlock } from "~/lib/utils";
-import { loadForm, useAppDispatch } from "~/components/store";
+import { loadForm, useAppDispatch } from "~/redux/store";
 import { Layout } from "antd";
 import { listForm } from "~/lib/api";
 import FormTable from "~/components/FormTable";
