@@ -84,7 +84,7 @@ export const getDummyPartition = function (operator: Operator): Partition {
 };
 
 export const formDefault: Required<Pick<Glyph, "component" | "compound">> = {
-  component: { strokes: [] },
+  component: { strokes: [], source: undefined },
   compound: [{ operator: operators[0], operandList: ["一", "一"] }],
 };
 
@@ -140,7 +140,9 @@ export const preprocessRepertoire = (r: any[]) => {
 };
 
 export const preprocessForm = (f: any[]) => {
-  return Object.fromEntries(f.map((x) => [String.fromCodePoint(x.unicode), x]));
+  return Object.fromEntries(
+    f.map((x) => [String.fromCodePoint(x.unicode), x as Glyph]),
+  );
 };
 
 export const displayName = (x: string, v: Glyph) => {

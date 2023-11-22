@@ -89,6 +89,10 @@ export interface Cache {
   topology: Relation[][][];
 }
 
+export const buildCache = function (glyph: SVGGlyph, name: string = ""): Cache {
+  return { name, glyph, topology: findTopology(glyph) };
+};
+
 export const getComponentScheme = (
   component: Cache,
   rootData: Cache[],
@@ -187,7 +191,7 @@ export const recursiveRenderGlyph = (
   return glyph;
 };
 
-const renderComponentForm = (data: Config["data"], config: FormConfig) => {
+export const renderComponentForm = (data: Config["data"]) => {
   const { form } = data;
   const glyphCache: Record<string, SVGGlyph> = {};
   return Object.fromEntries(
@@ -202,12 +206,25 @@ const renderComponentForm = (data: Config["data"], config: FormConfig) => {
   );
 };
 
+export const renderComponentGlyphs = (data: Config["data"]) => {
+  const { form } = data;
+  const glyphCache: Record<string, SVGGlyph> = {};
+  return Object.fromEntries(
+    Object.entries(form)
+      .filter(([, g]) => g.default_type === "component")
+      .map(([char]) => {
+        const glyph = recursiveRenderGlyph(char, form, glyphCache);
+        return [char, glyph];
+      }),
+  );
+};
+
 export const disassembleComponents = (
   data: Config["data"],
   config: FormConfig,
 ) => {
   const { form, classifier } = data;
-  const componentCache = renderComponentForm(data, config);
+  const componentCache = renderComponentForm(data);
   const { mapping, grouping } = config;
   const roots = [...Object.keys(mapping), ...Object.keys(grouping)];
   const rootData = roots

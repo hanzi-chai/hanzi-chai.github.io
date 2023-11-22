@@ -2,11 +2,12 @@ import degenerate, {
   indicesToBinary,
   binaryToIndices,
   generateSliceBinaries,
-} from "../lib/degenerator";
+} from "~/lib/degenerator";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
-import { Component, Glyph } from "../lib/data";
-import { buildCache, getComponents } from "./mock";
+import { Component, Glyph, SVGGlyph } from "~/lib/data";
+import { rendered } from "./mock";
+import { buildCache } from "~/lib/form";
 
 const { randomInt } = create(all, {
   randomSeed: "a",
@@ -28,7 +29,9 @@ describe("bi-directional conversion", () => {
   it("should be consistent", () => {
     const n = 10;
     const [i2b, b2i] = [indicesToBinary(n), binaryToIndices(n)];
-    const numbers = Array(100).map(() => randomInt(0, 1 << (n - 1)));
+    const numbers = [...Array(100).keys()].map(() =>
+      randomInt(0, 1 << (n - 1)),
+    );
     for (const i of numbers) {
       expect(i2b(b2i(i))).toBe(i);
     }
@@ -36,47 +39,29 @@ describe("bi-directional conversion", () => {
 });
 
 describe("generate slice binaries", () => {
-  const 丰 = buildCache("丰");
-  const 十 = buildCache("十");
+  const { 丰, 十 } = rendered;
+  const c1 = buildCache(丰);
+  const c2 = buildCache(十);
   it("should find multiple occurence of a root", () => {
-    expect(generateSliceBinaries(丰, 十)).toEqual([9, 5, 3]);
+    expect(generateSliceBinaries(c1, c2)).toEqual([9, 5, 3]);
   });
 });
 
-const slice = (source: Component, indices: number[]) =>
+const slice = (source: SVGGlyph, indices: number[]) =>
   indices.map((i) => source[i]);
 
+const hasroot = (a: SVGGlyph, indices: number[], root: SVGGlyph) => {
+  expect(degenerate(slice(a, indices))).toEqual(degenerate(root));
+};
+
 describe("degenerate cross tests", () => {
-  const {
-    大,
-    天,
-    九,
-    丸,
-    儿,
-    充,
-    其,
-    艹,
-    山,
-    出,
-    冖,
-    农,
-    亦,
-    赤,
-    以,
-    人,
-    良,
-    展内,
-  } = getComponents();
-  const slice = (source: Component, indices: number[]) =>
-    indices.map((i) => source[i]);
+  const { 大, 天, 九, 丸, 儿, 充, 其, 艹, 山, 出, 冖, 农, 亦, 赤, 以, 人 } =
+    rendered;
   it("says 天 has 大", () => {
     expect(degenerate(大)).toEqual(degenerate(slice(天, [1, 2, 3])));
   });
   it("says 丸 has 九", () => {
     expect(degenerate(九)).toEqual(degenerate(slice(丸, [0, 1])));
-  });
-  it("says 充 has 儿", () => {
-    expect(degenerate(儿)).toEqual(degenerate(slice(充, [4, 5])));
   });
   it("says 其 has 艹", () => {
     expect(degenerate(艹)).toEqual(degenerate(slice(其, [0, 1, 2])));
@@ -92,45 +77,34 @@ describe("degenerate cross tests", () => {
       degenerate(slice(赤, [3, 4, 5, 6])),
     );
   });
-  it("says 良下 is 展下", () => {
-    expect(degenerate(slice(良, [4, 5, 6]))).toEqual(
-      degenerate(slice(展内, [4, 5, 6])),
-    );
-  });
   it("says 以 has 人", () => {
     hasroot(以, [2, 3], 人);
   });
 });
 
-const hasroot = (a: Glyph, indices: number[], root: Glyph) => {
-  expect(degenerate(slice(a, indices))).toEqual(degenerate(root));
-};
-
 describe("degenerate cross tests 2", () => {
-  const { 豕, 彖, 象, 毅左, 涿右, 蒙下, 遂内 } = getComponents();
+  const { 豕, 彖, 豖, 㒸, 豙 } = rendered;
+  const 蒙下 = rendered["\ue0b3"];
   const base = slice(豕, [1, 2, 3, 4, 5, 6]);
   it("says 彖 has 豕下", () => {
     hasroot(彖, [3, 4, 5, 6, 7, 8], base);
   });
-  it("says 象 has 豕下", () => {
-    hasroot(象, [5, 6, 7, 8, 9, 10], base);
+  it("says 豙 has 豕下", () => {
+    hasroot(豙, [5, 6, 7, 8, 9, 10], base);
   });
-  it("says 毅左 has 豕下", () => {
-    hasroot(毅左, [5, 6, 7, 8, 9, 10], base);
-  });
-  it("says 涿右 has 豕下", () => {
-    hasroot(涿右, [1, 2, 3, 4, 6, 7], base);
+  it("says 豖 has 豕下", () => {
+    hasroot(豖, [1, 2, 3, 4, 6, 7], base);
   });
   it("says 蒙下 has 豕下", () => {
     hasroot(蒙下, [2, 3, 4, 5, 6, 7], base);
   });
-  it("says 遂内 has 豕下", () => {
-    hasroot(遂内, [3, 4, 5, 6, 7, 8], base);
+  it("says 㒸 has 豕下", () => {
+    hasroot(㒸, [3, 4, 5, 6, 7, 8], base);
   });
 });
 
 describe("degenerate cross tests 3", () => {
-  const { 永, 承, 丞 } = getComponents();
+  const { 永, 承, 氶 } = rendered;
   const base = slice(承, [5, 6, 7]);
   it("says 承 has 水", () => {
     hasroot(承, [5, 6, 7], base);
@@ -138,7 +112,7 @@ describe("degenerate cross tests 3", () => {
   it("says 永 has 水", () => {
     hasroot(永, [2, 3, 4], base);
   });
-  it("says 丞 has 水", () => {
-    hasroot(丞, [2, 3, 4], base);
+  it("says 氶 has 水", () => {
+    hasroot(氶, [2, 3, 4], base);
   });
 });

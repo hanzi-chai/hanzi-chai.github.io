@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { length, bias, order, crossing, attaching } from "./selector";
-import select from "./selector";
-import { buildCache } from "./mock";
+import { buildCache } from "~/lib/form";
+import { length, bias, order, crossing, attaching } from "~/lib/selector";
+import select from "~/lib/selector";
+import { rendered } from "./mock";
 
-const 天 = buildCache("天");
+const { 天: raw } = rendered;
+const 天 = buildCache(raw);
 
 describe("length", () => {
   it("should measure the length of scheme", () => {
