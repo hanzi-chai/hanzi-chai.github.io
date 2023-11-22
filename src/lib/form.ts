@@ -1,4 +1,4 @@
-import { Classifier, Config, FormConfig } from "./config";
+import { Config, FormConfig, MergedData } from "./config";
 import {
   BasicComponent,
   Component,
@@ -15,13 +15,21 @@ import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import findTopology, { Relation } from "./topology";
 import { Extra } from "./element";
+import { Classifier } from "./classifier";
 
 export const recursiveGetSequence = function (
   form: Form,
   classifier: Classifier,
   char: string,
 ): number[] {
-  const { default_type, component, compound } = form[char];
+  const glyph = form[char];
+  if (!glyph)
+    throw new Error(
+      `Unknown char: ${char}, ${char
+        .codePointAt(0)!
+        .toString(16)}, ${char.codePointAt(0)!}`,
+    );
+  const { default_type, component, compound } = glyph;
   switch (default_type) {
     case "component":
       if (component.source !== undefined) {
@@ -32,7 +40,7 @@ export const recursiveGetSequence = function (
         );
         return component.strokes.map((x) => {
           if (typeof x === "number") {
-            return sourceSequence[x];
+            return sourceSequence[x]!;
           } else {
             return classifier[x.feature];
           }
@@ -40,13 +48,13 @@ export const recursiveGetSequence = function (
       }
       return component.strokes.map((x) => classifier[x.feature]);
     case "compound":
-      return compound[0].operandList
+      return compound[0]!.operandList
         .map((s) => recursiveGetSequence(form, classifier, s))
         .flat();
   }
 };
 
-const sequenceCache: Record<string, string> = {};
+const sequenceCache = new Map<string, string>();
 
 export const getSequence = (
   form: Form,
@@ -54,10 +62,10 @@ export const getSequence = (
   char: string,
 ) => {
   if (char.match(/\d+/)) return char;
-  let thisSequence: string = sequenceCache[char];
+  let thisSequence = sequenceCache.get(char);
   if (thisSequence !== undefined) return thisSequence;
   thisSequence = recursiveGetSequence(form, classifier, char).join("");
-  sequenceCache[char] = thisSequence;
+  sequenceCache.set(char, thisSequence);
   return thisSequence;
 };
 
@@ -160,6 +168,9 @@ export interface ComponentResult {
   schemes: SchemeWithData[];
 }
 
+export type ComponentCache = Map<string, ComponentResult>;
+export type CompoundCache = Map<string, CompoundResult>;
+
 interface SequenceTree {
   operator: Operator;
   operandList: (string[] | SequenceTree)[];
@@ -173,28 +184,32 @@ export interface CompoundResult {
 export const recursiveRenderGlyph = (
   char: string,
   form: Form,
-  glyphCache: Record<string, SVGGlyph> = {},
+  glyphCache: Map<string, SVGGlyph> = new Map(),
 ) => {
-  if (char in glyphCache) return glyphCache[char];
-  const component = form[char].component!;
+  const component = form[char]?.component;
+  if (component === undefined) {
+    throw new Error("char is not a component");
+  }
+  const cache = glyphCache.get(char);
+  if (cache) return cache;
   let glyph: SVGGlyph;
   if (component.source !== undefined) {
     const sourceGlyph = recursiveRenderGlyph(component.source, form);
     glyph = component.strokes.map((x) => {
-      if (typeof x === "number") return sourceGlyph[x];
+      if (typeof x === "number") return sourceGlyph[x]!;
       return x;
     });
   } else {
     glyph = component.strokes;
   }
-  glyphCache[char] = glyph;
+  glyphCache.set(char, glyph);
   return glyph;
 };
 
-export const renderComponentForm = (data: Config["data"]) => {
+export const renderComponentForm = (data: MergedData) => {
   const { form } = data;
-  const glyphCache: Record<string, SVGGlyph> = {};
-  return Object.fromEntries(
+  const glyphCache = new Map<string, SVGGlyph>();
+  return new Map(
     Object.entries(form)
       .filter(([, g]) => g.default_type === "component")
       .map(([char]) => {
@@ -206,9 +221,9 @@ export const renderComponentForm = (data: Config["data"]) => {
   );
 };
 
-export const renderComponentGlyphs = (data: Config["data"]) => {
+export const renderComponentGlyphs = (data: MergedData) => {
   const { form } = data;
-  const glyphCache: Record<string, SVGGlyph> = {};
+  const glyphCache = new Map<string, SVGGlyph>();
   return Object.fromEntries(
     Object.entries(form)
       .filter(([, g]) => g.default_type === "component")
@@ -219,19 +234,21 @@ export const renderComponentGlyphs = (data: Config["data"]) => {
   );
 };
 
-export const disassembleComponents = (
-  data: Config["data"],
+export const disassembleComponents = function (
+  data: MergedData,
   config: FormConfig,
-) => {
+): ComponentCache {
   const { form, classifier } = data;
   const componentCache = renderComponentForm(data);
   const { mapping, grouping } = config;
-  const roots = [...Object.keys(mapping), ...Object.keys(grouping)];
-  const rootData = roots
-    .filter((x) => form[x]?.default_type === "component")
-    .map((x) => componentCache[x]);
-  const result = Object.fromEntries(
-    Object.entries(componentCache).map(([char, cache]) => {
+  const roots = new Set([...Object.keys(mapping), ...Object.keys(grouping)]);
+  const rootData = [...componentCache]
+    .filter(([x]) => {
+      return roots.has(x);
+    })
+    .map(([, c]) => c);
+  const result = new Map(
+    [...componentCache].map(([char, cache]) => {
       return [char, getComponentScheme(cache, rootData, config, classifier)];
     }),
   );
@@ -239,79 +256,76 @@ export const disassembleComponents = (
 };
 
 const topologicalSort = (form: Form) => {
-  const compounds: Record<string, CompoundGlyph> = {};
+  let compounds = new Map<string, CompoundGlyph>();
   for (let i = 0; i != 10; ++i) {
-    const thisLevelCompound: Record<string, Glyph> = {};
+    const thisLevelCompound = new Map<string, CompoundGlyph>();
     for (const [k, glyph] of Object.entries(form)) {
-      if (compounds[k]) continue;
+      if (compounds.get(k)) continue;
       if (glyph.default_type !== "compound") continue;
       if (
-        glyph.compound[0].operandList.every(
+        glyph.compound[0]!.operandList.every(
           (x) =>
-            form[x].default_type === "component" || compounds[x] !== undefined,
+            form[x]!.default_type === "component" ||
+            compounds.get(x) !== undefined,
         )
       ) {
-        thisLevelCompound[k] = glyph;
+        thisLevelCompound.set(k, glyph);
       }
     }
-    Object.assign(compounds, thisLevelCompound);
+    compounds = new Map([...compounds, ...thisLevelCompound]);
   }
   return compounds;
 };
 
 export const disassembleCompounds = (
-  data: Config["data"],
+  data: MergedData,
   config: FormConfig,
-  prev: Record<string, ComponentResult>,
+  prev: ComponentCache,
 ) => {
   const { mapping } = config;
   const compounds = topologicalSort(data.form);
-  const result: Record<string, CompoundResult> = {};
-  const getResult = (s: string) => (prev[s] ? prev[s] : result[s]);
-  for (const [char, glyph] of Object.entries(compounds)) {
+  const compoundCache: CompoundCache = new Map();
+  const getResult = (s: string) => prev.get(s) || compoundCache.get(s);
+  for (const [char, glyph] of compounds.entries()) {
     if (mapping[char]) {
       // 复合体本身是一个字根
-      result[char] = { sequence: [char], all: [char] };
+      compoundCache.set(char, { sequence: [char], all: [char] });
       continue;
     }
-    const { operator, operandList } = glyph.compound[0];
-    const results = operandList.map(getResult);
-    if (results.every((x) => x !== undefined)) {
-      result[char] = {
-        sequence: results.map((x) => x.sequence).flat(),
-        all: { operator, operandList: results.map((x) => x.all) },
-      };
+    const { operator, operandList } = glyph.compound[0]!;
+    const operandResults = operandList.map(getResult);
+    if (operandResults.every((x) => x !== undefined)) {
+      const validResults = operandResults as CompoundResult[];
+      compoundCache.set(char, {
+        sequence: validResults.map((x) => x.sequence).flat(),
+        all: { operator, operandList: validResults.map((x) => x.all) },
+      });
     } else {
       console.error(char, operandList);
     }
   }
-  return result;
+  return compoundCache;
 };
 
-export const getFormCore = (data: Config["data"], config: FormConfig) => {
-  const s1 = disassembleComponents(data, config);
-  Object.assign(
-    s1,
-    Object.fromEntries(
-      Object.entries(config.analysis.customize).map(([component, sequence]) => {
-        const pseudoResult: ComponentResult = {
-          sequence: sequence,
-          all: sequence,
-          map: {},
-          schemes: [],
-        };
-        return [component, pseudoResult];
-      }),
-    ),
+export const getFormCore = (data: MergedData, config: FormConfig) => {
+  const componentCache = disassembleComponents(data, config);
+  const customizations = Object.entries(config.analysis.customize).map(
+    ([component, sequence]) => {
+      const pseudoResult: ComponentResult = {
+        sequence: sequence,
+        all: sequence,
+        map: {},
+        schemes: [],
+      };
+      return [component, pseudoResult] as const;
+    },
   );
-  const s2 = disassembleCompounds(data, config, s1);
-  return [s1, s2] as [
-    Record<string, ComponentResult>,
-    Record<string, ComponentResult>,
-  ];
+  const customized = new Map([...componentCache, ...customizations]);
+  const compoundCache = disassembleCompounds(data, config, customized);
+  return [componentCache, compoundCache] as const;
 };
 
-const getExtra = function (data: Config["data"], config: FormConfig): Extra {
+const getExtra = function (data: MergedData, config: FormConfig): Extra {
   const { form, classifier } = data;
   const { mapping, grouping } = config;
   const roots = Object.keys(mapping).concat(Object.keys(grouping));
@@ -332,14 +346,14 @@ const getExtra = function (data: Config["data"], config: FormConfig): Extra {
 
 export const getForm = (
   list: string[],
-  data: Config["data"],
+  data: MergedData,
   config: FormConfig,
 ) => {
   const extra = getExtra(data, config);
   const [componentResults, compoundResults] = getFormCore(data, config);
-  const value = Object.fromEntries(
+  const value = new Map(
     list.map((char) => {
-      const result = componentResults[char] || compoundResults[char];
+      const result = componentResults.get(char) || compoundResults.get(char);
       // 这里只处理一种情况，未来可以返回多个拆分
       return result === undefined
         ? [char, []]

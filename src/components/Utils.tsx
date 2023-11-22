@@ -12,9 +12,9 @@ import {
 } from "antd";
 import styled from "styled-components";
 import { useFormConfig } from "./context";
-import { useForm, useClassifier } from "./contants";
+import { useForm, useClassifier, useDisplay } from "./contants";
 import { getSequence } from "~/lib/form";
-import { displayName, isValidCJKChar } from "~/lib/utils";
+import { isValidCJKChar } from "~/lib/utils";
 import { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
@@ -92,6 +92,7 @@ export const RootSelect = ({
   const keys = withGrouped
     ? Object.keys(mapping).concat(Object.keys(grouping))
     : Object.keys(mapping);
+  const display = useDisplay();
   return (
     <Select
       style={{ width: "96px" }}
@@ -102,7 +103,7 @@ export const RootSelect = ({
         .filter((x) => x !== exclude)
         .map((x) => ({
           value: x,
-          label: displayName(x, form[x])!,
+          label: display(x),
         }))}
       value={char}
       onChange={onChange}
@@ -160,10 +161,9 @@ export const ItemSelect = (props: SelectProps) => {
   const form = useForm();
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char = props.value;
+  const display = useDisplay();
   useEffect(() => {
-    const initial = char
-      ? [{ value: char, label: displayName(char, form[char]) }]
-      : [];
+    const initial = char ? [{ value: char, label: display(char) }] : [];
     setData(initial);
   }, [props.value]);
   const onSearch = (input: string) => {
@@ -174,7 +174,7 @@ export const ItemSelect = (props: SelectProps) => {
     const allResults = Object.entries(form)
       .map(([x, v]) => ({
         value: x,
-        label: displayName(x, v),
+        label: display(x),
       }))
       .filter(({ value }) => {
         return getSequence(form, classifier, value).startsWith(input);

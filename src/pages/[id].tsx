@@ -35,7 +35,7 @@ import { useImmerReducer } from "use-immer";
 import { Uploader, exportYAML } from "~/components/Utils";
 import { examples } from "~/lib/example";
 import { Compound, Form, Repertoire } from "~/lib/data";
-import { preprocessForm, preprocessRepertoire } from "~/lib/utils";
+import { listToObject } from "~/lib/utils";
 import CusSpin from "~/components/CustomSpin";
 import {
   loadForm,
@@ -120,12 +120,12 @@ const EditorLayout = () => {
             <Button onClick={() => exportYAML(config, `export.yaml`)}>
               导出
             </Button>
-            {source !== undefined && (
+            {source && (
               <Button
                 onClick={() => {
                   dispatch({
                     type: "load",
-                    value: examples[source].self,
+                    value: examples[source],
                   });
                 }}
               >
@@ -157,21 +157,21 @@ const Contextualized = () => {
   const { pathname } = useLocation();
   const [_, id] = pathname.split("/");
   const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
-    return JSON.parse(localStorage.getItem(id)!) as Config;
+    return JSON.parse(localStorage.getItem(id!)!) as Config;
   });
   const appdispatch = useAppDispatch();
   const loading = useAppSelector(selectFormLoading);
   useEffect(() => {
     Promise.all([fetchJson("repertoire"), fetchJson("form")]).then(
       ([repertoire, form]) => {
-        appdispatch(loadForm(preprocessForm(form)));
-        appdispatch(loadRepertoire(preprocessRepertoire(repertoire)));
+        appdispatch(loadForm(listToObject(form)));
+        appdispatch(loadRepertoire(listToObject(repertoire)));
       },
     );
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(id, JSON.stringify(config));
+    localStorage.setItem(id!, JSON.stringify(config));
   }, [config, id]);
 
   return (

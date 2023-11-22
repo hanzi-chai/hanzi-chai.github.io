@@ -1,11 +1,13 @@
+import { Classifier, Feature } from "./classifier";
 import { Form, Repertoire } from "./data";
 import { CodableObject } from "./element";
+import { Example } from "./example";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
 type Selector = SieveName[];
 
-type Classifier = Record<string, number>;
+type PartialClassifier = Partial<Record<Feature, number>>;
 
 type Mapping = Record<string, string>;
 
@@ -46,7 +48,7 @@ interface Condition {
 
 interface Config {
   version: string;
-  source?: string;
+  source?: Example;
   info: {
     name: string;
     author: string;
@@ -56,7 +58,7 @@ interface Config {
   data: {
     form: Form;
     repertoire: Repertoire;
-    classifier: Classifier;
+    classifier: PartialClassifier;
   };
   form: FormConfig;
   pronunciation: PronunciationConfig;
@@ -66,12 +68,18 @@ interface Config {
   };
 }
 
+type MergedData = Config["data"] & { classifier: Classifier };
+
+type ExampleConfig = Required<Config>;
+
 export type {
   SieveName,
   Selector,
-  Classifier,
+  PartialClassifier,
   Mapping,
   Config,
+  MergedData,
+  ExampleConfig,
   FormConfig,
   PronunciationConfig,
   Source,

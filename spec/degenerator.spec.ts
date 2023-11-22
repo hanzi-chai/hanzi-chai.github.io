@@ -43,18 +43,20 @@ describe("generate slice binaries", () => {
   const c1 = buildCache(丰);
   const c2 = buildCache(十);
   it("should find multiple occurence of a root", () => {
+    console.log(c1, c2);
     expect(generateSliceBinaries(c1, c2)).toEqual([9, 5, 3]);
   });
 });
 
 const slice = (source: SVGGlyph, indices: number[]) =>
-  indices.map((i) => source[i]);
+  indices.map((i) => source[i]!);
 
 const hasroot = (a: SVGGlyph, indices: number[], root: SVGGlyph) => {
   expect(degenerate(slice(a, indices))).toEqual(degenerate(root));
 };
 
 describe("degenerate cross tests", () => {
+  // @ts-ignore
   const { 大, 天, 九, 丸, 儿, 充, 其, 艹, 山, 出, 冖, 农, 亦, 赤, 以, 人 } =
     rendered;
   it("says 天 has 大", () => {

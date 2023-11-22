@@ -1,9 +1,5 @@
-import { Config } from "./config";
-import _mswb from "../examples/mswb.yaml";
-import _flypy from "../examples/flypy.yaml";
-import _yima from "../examples/yima.yaml";
-
-const [mswb, flypy, yima] = [_mswb, _flypy, _yima] as Config[];
+import { Config, PartialClassifier } from "./config";
+import { examples } from "./example";
 
 const getInfo = function (name: string): Config["info"] {
   return {
@@ -16,9 +12,9 @@ const getInfo = function (name: string): Config["info"] {
 
 export const classifierTypes = ["国标五分类", "表形码六分类"] as const;
 export type ClassifierType = (typeof classifierTypes)[number];
-const classifierMap: Record<ClassifierType, Config["data"]["classifier"]> = {
+const classifierMap: Record<ClassifierType, PartialClassifier> = {
   国标五分类: {},
-  表形码六分类: mswb.data.classifier,
+  表形码六分类: examples.mswb.data.classifier,
 };
 
 const getData = function (ct: ClassifierType): Config["data"] {
@@ -32,26 +28,26 @@ const getData = function (ct: ClassifierType): Config["data"] {
 export const formTypes = ["米十五笔字根"] as const;
 export type FormTypes = (typeof formTypes)[number];
 const formMap: Record<FormTypes, Config["form"]> = {
-  米十五笔字根: mswb.form,
+  米十五笔字根: examples.mswb.form,
 };
 
 export const pronTypes = ["无", "拼音首字母", "声母", "双拼"] as const;
 export type PronTypes = (typeof pronTypes)[number];
 const pronMap: Record<PronTypes, Config["pronunciation"]> = {
   无: { alphabet: "", maxcodelen: 1, grouping: {}, mapping: {} },
-  拼音首字母: mswb.pronunciation,
+  拼音首字母: examples.mswb.pronunciation,
   声母: {
-    ...mswb.pronunciation!,
+    ...examples.mswb.pronunciation!,
     mapping: { zh: "v", ch: "i", sh: "u", 零: "o" },
   },
-  双拼: flypy.pronunciation,
+  双拼: examples.flypy.pronunciation,
 };
 
 export const encoderTypes = ["形音码", "双编形码（易）"] as const;
 export type EncoderTypes = (typeof encoderTypes)[number];
 const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
-  形音码: mswb.encoder,
-  "双编形码（易）": yima.encoder,
+  形音码: examples.mswb.encoder,
+  "双编形码（易）": examples.yima.encoder,
 };
 
 export type StarterType = {

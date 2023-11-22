@@ -28,12 +28,11 @@ export const formSlice = createSlice({
       delete state.form[String.fromCodePoint(action.payload)];
     },
     mutate: (state, action: PayloadAction<[number, number]>) => {
-      const [before, after] = action.payload.map((x) =>
-        String.fromCodePoint(x),
-      );
+      const before = String.fromCodePoint(action.payload[0]);
+      const after = String.fromCodePoint(action.payload[1]);
       const replaceIf = (s: string) => (s === before ? after : s);
       // update itself
-      const value = state.form[before];
+      const value = state.form[before]!;
       delete state.form[before];
       state.form[after] = { ...value, unicode: after.codePointAt(0)! };
       // update references

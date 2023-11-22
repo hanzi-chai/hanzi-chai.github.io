@@ -502,6 +502,7 @@ const GlyphModel = ({
   useEffect(() => {
     if (char === undefined) return;
     const data = formData[char];
+    if (data === undefined) return;
     setHasComponent(data.component !== undefined);
     setHasCompound(data.compound !== undefined);
     form.resetFields();

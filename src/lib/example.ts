@@ -1,16 +1,12 @@
 import mswb from "../examples/mswb.yaml";
+import flypy from "../examples/flypy.yaml";
 import yima from "../examples/yima.yaml";
-import { Config } from "./config";
+import { ExampleConfig } from "./config";
 
-export const examples = Object.fromEntries(
-  ([mswb] as Config[]).map((config) => {
-    return [
-      config.source,
-      {
-        key: config.source,
-        label: config.info.name,
-        self: config,
-      },
-    ] as const;
-  }),
-);
+export type Example = "mswb" | "flypy" | "yima";
+
+export const examples: Record<Example, ExampleConfig> = {
+  mswb: mswb as ExampleConfig,
+  flypy: flypy as ExampleConfig,
+  yima: yima as ExampleConfig,
+};

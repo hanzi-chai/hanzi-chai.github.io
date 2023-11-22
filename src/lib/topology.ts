@@ -274,7 +274,8 @@ const render = ({ feature, start, curveList }: Stroke) => {
   let previousPosition = start;
   for (const draw of curveList) {
     const curve = factory(previousPosition, draw);
-    previousPosition = curve.controls[curve.controls.length - 1];
+    previousPosition =
+      curve.type === "linear" ? curve.controls[1] : curve.controls[3];
     r.curveList.push(curve);
   }
   return r;

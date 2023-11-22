@@ -93,13 +93,13 @@ const EncoderGraph = () => {
       }
     });
     edges.forEach(({ source, target, label }) => {
-      const [from, to] = [idmap[source], idmap[target]];
+      const [from, to] = [idmap[source]!, idmap[target]!];
       if (label === undefined) {
-        sources[from].next = to;
+        sources[from]!.next = to;
       } else if (label === "是") {
-        conditions[from].positive = to;
+        conditions[from]!.positive = to;
       } else {
-        conditions[from].negative = to;
+        conditions[from]!.negative = to;
       }
     });
     dispatch({ type: "encoder", value: { sources, conditions } });

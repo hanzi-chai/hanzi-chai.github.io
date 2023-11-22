@@ -1,6 +1,14 @@
 import { Feature, schema } from "./classifier";
 import { Mapping } from "./config";
-import { Form, Glyph, Operator, Partition, Stroke, operators } from "./data";
+import {
+  Character,
+  Form,
+  Glyph,
+  Operator,
+  Partition,
+  Stroke,
+  operators,
+} from "./data";
 
 export const unicodeBlock = (code: number) => {
   // ASCII
@@ -95,8 +103,8 @@ export const reverse = (alphabet: string, mapping: Mapping) => {
     Array.from(alphabet).map((key) => [key, []]),
   );
   for (const [name, code] of Object.entries(mapping)) {
-    const [main] = [code[0]];
-    data[main].push({ name, code });
+    const main = code[0]!;
+    data[main]!.push({ name, code });
   }
   return data;
 };
@@ -108,7 +116,7 @@ export const getSupplemental = (form: Form, list: string[]) => {
   );
   for (const [char, glyph] of Object.entries(form)) {
     if (glyph.default_type === "compound") {
-      glyph.compound[0].operandList.forEach((x) => reverseForm[x].push(char));
+      glyph.compound[0]!.operandList.forEach((x) => reverseForm[x]!.push(char));
     }
   }
   const componentsNotChar = Object.entries(form)
@@ -119,32 +127,17 @@ export const getSupplemental = (form: Form, list: string[]) => {
   componentsNotChar.forEach((char) => {
     let trial = char;
     while (trial && !set.has(trial)) {
-      trial = reverseForm[trial][0];
+      trial = reverseForm[trial]![0]!;
     }
     if (trial) suppList.push(trial);
   });
   return Array.from(new Set(suppList));
 };
 
-export const preprocessRepertoire = (r: any[]) => {
+export const listToObject = function <T extends { unicode: number }>(
+  list: T[],
+) {
   return Object.fromEntries(
-    r.map((x) => [
-      String.fromCodePoint(x.unicode),
-      {
-        tygf: x.tygf,
-        gb2312: x.gb2312,
-        pinyin: JSON.parse(x.pinyin),
-      },
-    ]),
+    list.map((x) => [String.fromCodePoint(x.unicode), x]),
   );
-};
-
-export const preprocessForm = (f: any[]) => {
-  return Object.fromEntries(
-    f.map((x) => [String.fromCodePoint(x.unicode), x as Glyph]),
-  );
-};
-
-export const displayName = (x: string, v: Glyph) => {
-  return isValidChar(x) ? x : v.name!;
 };

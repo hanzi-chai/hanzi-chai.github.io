@@ -36,15 +36,15 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
     const end = cglyph.length - rglyph.length + rIndex + 1;
     for (let _ = queue.length; _ != 0; --_) {
       const indexList = queue.shift()!;
-      const start = indexList.length ? indexList[indexList.length - 1] + 1 : 0;
-      for (let cIndex = start; cIndex != end; ++cIndex) {
-        const cStroke = cglyph[cIndex];
+      const start = indexList.length ? indexList.at(-1)! + 1 : 0;
+      for (const [cIndex, cStroke] of cglyph.slice(start, end).entries()) {
         if (!strokeFeatureEqual(cStroke.feature, rStroke.feature)) continue;
-        const cStrokeTopology = ctopology[cIndex].filter((_, i) =>
+        const realIndex = cIndex + start;
+        const cStrokeTopology = ctopology[realIndex]!.filter((_, i) =>
           indexList.includes(i),
         );
         if (!isEqual(cStrokeTopology, rStrokeTopology)) continue;
-        queue.push(indexList.concat(cIndex));
+        queue.push(indexList.concat(realIndex));
       }
     }
     if (!queue) return [];

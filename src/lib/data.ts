@@ -74,7 +74,7 @@ export const operators = [
   "⿹",
   "⿺",
   "⿻",
-];
+] as const;
 
 type Operator = (typeof operators)[number];
 
@@ -93,8 +93,9 @@ interface Partition {
 type Compound = Partition[];
 
 interface Character {
+  unicode: number;
   pinyin: string[];
-  tygf: boolean;
+  tygf: 0 | 1 | 2 | 3;
   gb2312: boolean;
 }
 

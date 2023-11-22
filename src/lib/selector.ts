@@ -6,25 +6,28 @@ import { isEqual } from "underscore";
 
 type Scheme = number[];
 
-type Sieve<T extends number | number[]> = {
+type Comparable = number | number[];
+
+type Sieve<T extends Comparable> = {
   title: SieveName;
   name: string;
   key: (component: Cache, scheme: Scheme) => T;
   display?: (data: T) => string;
 };
 
-function isLess<T extends number | number[]>(a: T, b: T) {
+function isLess<T extends Comparable>(a: T, b: T) {
   if (typeof a === "number" && typeof b === "number") {
     return a < b;
   } else if (Array.isArray(a) && Array.isArray(b)) {
-    const n = a.length;
-    for (let i = 0; i != n; ++i) {
-      if (a[i] < b[i]) return true;
-      if (a[i] > b[i]) return false;
+    for (const [i, v] of a.entries()) {
+      const u = b[i];
+      if (u === undefined) return false;
+      if (v < u) return true;
+      if (v > u) return false;
     }
     return false;
   }
-  return undefined;
+  return false;
 }
 
 export const length: Sieve<number> = {
@@ -71,7 +74,7 @@ const makeTopologySieve = function (
         for (const k of bi) {
           for (const l of bj) {
             const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
-            const relations = component.topology[larger][smaller];
+            const relations = component.topology[larger]![smaller]!;
             r ||= relations.some((v) => v.type === relationType);
             a ||= relations.some((v) => avoidRelationType.includes(v.type));
           }

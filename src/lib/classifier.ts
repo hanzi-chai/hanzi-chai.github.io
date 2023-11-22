@@ -36,6 +36,8 @@ const classifier = {
 
 export type Feature = keyof typeof classifier;
 
+export type Classifier = typeof classifier;
+
 export const schema: Record<Feature, SVGCommand[]> = {
   横: ["h"],
   提: ["l"],

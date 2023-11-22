@@ -1,4 +1,4 @@
-import { Condition, Config, Mapping, Op, Source } from "./config";
+import { Condition, Config, Mapping, MergedData, Op, Source } from "./config";
 import { ComponentResult, CompoundResult, getForm } from "./form";
 import { renderName, findElement, Extra } from "./element";
 
@@ -20,12 +20,12 @@ export type TotalCache = Record<
   ComponentTotalResult[] | CompoundTotalResult[]
 >;
 
-export type EncoderResult = Record<string, string[]>;
+export type EncoderResult = Map<string, string[]>;
 
 const satisfy = (
   condition: Condition,
   result: TotalResult,
-  data: Config["data"],
+  data: MergedData,
   extra: Extra,
 ) => {
   const { object, operator, value } = condition;
@@ -51,22 +51,22 @@ const compile = (
     ? merge(pronunciation.grouping, pronunciation.mapping)
     : {};
   const totalMapping = Object.assign({}, formMerge, pronMerge);
-  return (result: TotalResult, data: Config["data"], extra: Extra) => {
+  return (result: TotalResult, data: MergedData, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as string[];
     while (node) {
       if (node.startsWith("s")) {
-        const { object, next, index }: Source = encoder.sources[node];
+        const { object, next, index }: Source = encoder.sources[node]!;
         if (node !== "s0") {
           const element = findElement(object!, result, data, extra);
           const elementcode = totalMapping[element!] || element!;
           const somecode =
-            index === undefined ? elementcode : elementcode[index];
+            index === undefined ? elementcode : elementcode[index]!;
           codes.push(somecode);
         }
         node = next;
       } else {
-        const condition: Condition = encoder.conditions[node];
+        const condition: Condition = encoder.conditions[node]!;
         if (satisfy(condition, result, data, extra)) {
           node = condition.positive;
         } else {
@@ -81,13 +81,13 @@ const compile = (
 export const getCache = (
   list: string[],
   form: Config["form"],
-  data: Config["data"],
+  data: MergedData,
 ) => {
   const [formResult, extra] = getForm(list, data, form);
   const result = Object.fromEntries(
     list.map((char) => {
-      const formData = formResult[char];
-      const pronunciationData = data.repertoire[char].pinyin;
+      const formData = formResult.get(char)!;
+      const pronunciationData = data.repertoire[char]!.pinyin;
       return [
         char,
         formData
@@ -113,14 +113,14 @@ const encode = (
   pronunciation: Config["pronunciation"],
   characters: string[],
   cache: TotalCache,
-  data: Config["data"],
+  data: MergedData,
   extra: Extra,
 ) => {
   const func = compile(encoder, form, pronunciation);
-  const result = Object.fromEntries(
+  const result = new Map(
     characters.map((char) => [
       char,
-      uniquify(cache[char].map((x) => func(x, data, extra))),
+      uniquify(cache[char]!.map((x) => func(x, data, extra))),
     ]),
   );
   return result;

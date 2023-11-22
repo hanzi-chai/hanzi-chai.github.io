@@ -27,14 +27,15 @@ import {
   useDisplay,
 } from "~/components/contants";
 import {
+  ComponentCache,
   ComponentResult,
+  CompoundCache,
   CompoundResult,
   disassembleComponents,
   disassembleCompounds,
   getFormCore,
   getSequence,
 } from "~/lib/form";
-import { Classifier } from "~/lib/config";
 import {
   EditorColumn,
   EditorRow,
@@ -45,7 +46,6 @@ import {
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import { MenuProps } from "rc-menu";
-import { displayName } from "~/lib/utils";
 
 const ResultSummary = ({
   char,
@@ -68,17 +68,17 @@ const ResultSummary = ({
 type GenericResult = ComponentResult & CompoundResult;
 
 const exportResult = (
-  componentResult: Record<string, ComponentResult>,
-  compoundResult: Record<string, CompoundResult>,
+  componentResult: ComponentCache,
+  compoundResult: CompoundCache,
   full?: boolean,
 ) => {
   const getContent = full
     ? (x: GenericResult) => x.all
     : (x: GenericResult) => x.sequence;
-  const allResult = [
-    ...Object.entries(componentResult),
-    ...Object.entries(compoundResult),
-  ] as [string, GenericResult][];
+  const allResult = [...componentResult, ...compoundResult] as [
+    string,
+    GenericResult,
+  ][];
   const output = Object.fromEntries(
     allResult.map(([x, v]) => [x, getContent(v)]),
   );
@@ -107,16 +107,17 @@ const AnalysisExporter = ({ componentResults, compoundResults }: any) => {
 const Analysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
-  const [componentResults, setComponentResult] = useState(
-    {} as Record<string, ComponentResult>,
+  const [componentResults, setComponentResult] = useState<ComponentCache>(
+    new Map(),
   );
-  const [compoundResults, setCompoundResult] = useState(
-    {} as Record<string, CompoundResult>,
+  const [compoundResults, setCompoundResult] = useState<CompoundCache>(
+    new Map(),
   );
   const classifier = useClassifier();
   const data = useAll();
   const form = useForm();
   const formConfig = useFormConfig();
+  const display = useDisplay();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const roots = Object.keys(formConfig.mapping).concat(
@@ -124,13 +125,12 @@ const Analysis = () => {
   );
   const rootsRef = Object.fromEntries(
     roots.map((x) => {
-      const glyph = form[x];
-      return [x, displayName(x, glyph)];
+      return [x, display(x)];
     }),
   );
 
   const displays = [
-    Object.entries(componentResults)
+    [...componentResults]
       .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
       .map(([key, res]) => {
         return {
@@ -139,13 +139,13 @@ const Analysis = () => {
           children: <ResultDetail data={res.schemes} map={res.map} />,
         };
       }),
-    Object.entries(compoundResults).map(([key, res]) => {
+    [...compoundResults].map(([key, res]) => {
       return {
         key,
         label: <ResultSummary char={key} rootSeries={res.sequence} />,
       };
     }),
-  ];
+  ] as const;
 
   return (
     <div style={{ padding: "16px", flex: "1", overflowY: "scroll" }}>
@@ -176,8 +176,8 @@ const Analysis = () => {
             </Button>
             <Button
               onClick={() => {
-                setComponentResult({});
-                setCompoundResult({});
+                setComponentResult(new Map());
+                setCompoundResult(new Map());
               }}
             >
               清空

@@ -1,14 +1,18 @@
 import Mapping from "~/components/Mapping";
 import { Flex, Form, Layout, Menu, Typography } from "antd";
 import { useState } from "react";
-import { useClassifier, useForm, useRepertoire } from "~/components/contants";
+import {
+  useClassifier,
+  useDisplay,
+  useForm,
+  useRepertoire,
+} from "~/components/contants";
 import { Outlet, useNavigate } from "react-router-dom";
 import { EditorColumn, EditorRow, Select } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
 import { AName, analyzerNames, pinyinAnalyzers } from "~/lib/element";
 import { getSequence } from "~/lib/form";
 import StrokeSearch from "~/components/StrokeSearch";
-import { displayName } from "~/lib/utils";
 import { useConfigType } from "~/components/context";
 
 const Elements = () => {
@@ -45,6 +49,7 @@ export const RootElementConfig = () => {
     .sort()
     .map(String);
   const allErbi = allStrokes.map((x) => allStrokes.map((y) => x + y)).flat();
+  const display = useDisplay();
 
   const form = useForm();
   const content = Object.keys(form)
@@ -72,7 +77,7 @@ export const RootElementConfig = () => {
           types={formElementTypes}
           defaultType="字根"
           contentMap={contentMap}
-          specialRendering={(x) => displayName(x, form[x])!}
+          specialRendering={(x) => display(x)}
         />
       </EditorColumn>
       <EditorColumn span={16}>

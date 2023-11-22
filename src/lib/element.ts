@@ -1,4 +1,4 @@
-import { Config } from "./config";
+import { Config, MergedData } from "./config";
 import { ComponentGlyph, Glyph } from "./data";
 import { TotalResult } from "./encoder";
 
@@ -114,11 +114,12 @@ function getslice<T>(a: T[], i: number, j: number) {
 export const findElement = (
   object: CodableObject,
   result: TotalResult,
-  data: Config["data"],
+  data: MergedData,
   extra: Extra,
 ) => {
   const { pinyin, sequence, all } = result;
   let root: string | undefined;
+  let strokes: number[] | undefined;
   switch (object.type) {
     case "汉字":
       return result.char;
@@ -127,28 +128,25 @@ export const findElement = (
     case "字根":
       return getindex(sequence, object.rootIndex);
     case "笔画":
-      root = getindex(sequence, object.rootIndex);
-      if (root === undefined) return undefined;
-      if (extra.rootSequence[root] === undefined) {
-        if (Math.abs(object.strokeIndex) === 1) return root;
-        return undefined;
-      }
-      const number = getindex(extra.rootSequence[root], object.strokeIndex);
-      return number === undefined ? undefined : number.toString();
     case "二笔":
       root = getindex(sequence, object.rootIndex);
       if (root === undefined) return undefined;
-      if (extra.rootSequence[root] === undefined) {
+      strokes = extra.rootSequence[root];
+      if (strokes === undefined) {
         if (Math.abs(object.strokeIndex) === 1) return root;
         return undefined;
+      }
+      if (object.type === "笔画") {
+        const number = getindex(strokes, object.strokeIndex);
+        return number?.toString();
       }
       const [i1, i2] = [
         object.strokeIndex * 2 - Math.sign(object.strokeIndex),
         object.strokeIndex * 2,
       ];
-      const stroke1 = getindex(extra.rootSequence[root], i1);
+      const stroke1 = getindex(strokes, i1);
       if (stroke1 === undefined) return undefined;
-      const stroke2 = getindex(extra.rootSequence[root], i2);
+      const stroke2 = getindex(strokes, i2);
       return [stroke1, stroke2].join("");
   }
 };

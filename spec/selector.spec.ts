@@ -5,7 +5,7 @@ import select from "~/lib/selector";
 import { rendered } from "./mock";
 
 const { 天: raw } = rendered;
-const 天 = buildCache(raw);
+const 天 = buildCache(raw!);
 
 describe("length", () => {
   it("should measure the length of scheme", () => {

@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import defaultClassifier from "~/lib/classifier";
-import { displayName } from "~/lib/utils";
+import { isValidChar } from "~/lib/utils";
 import { useData } from "./context";
 import { ComponentGlyph, CompoundGlyph, Form, Repertoire } from "~/lib/data";
 import { selectForm, selectRepertoire, useAppSelector } from "./store";
@@ -15,7 +15,7 @@ const useDisplay = () => {
   const formCustomized = useData().form;
   return (char: string) => {
     const glyph = formCustomized[char] || form[char];
-    return displayName(char, glyph)!;
+    return isValidChar(char) ? char : glyph?.name ?? "未知";
   };
 };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formDefault, length, preprocessForm, unicodeBlock } from "~/lib/utils";
+import { formDefault, length, listToObject, unicodeBlock } from "~/lib/utils";
 import { loadForm, useAppDispatch } from "~/components/store";
 import { Layout } from "antd";
 import { listForm } from "~/lib/api";
@@ -9,7 +9,7 @@ const AdminLayout = () => {
   const dispatch = useAppDispatch();
   useEffect(() => {
     listForm().then((data) => {
-      dispatch(loadForm(preprocessForm(data)));
+      dispatch(loadForm(listToObject(data)));
     });
   }, []);
 

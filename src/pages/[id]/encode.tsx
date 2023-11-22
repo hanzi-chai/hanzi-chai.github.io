@@ -30,7 +30,7 @@ const filtermap: Record<
   是:
     (s) =>
     ([, c]) =>
-      c[s],
+      !!c[s],
   否:
     (s) =>
     ([, c]) =>
@@ -39,7 +39,7 @@ const filtermap: Record<
 };
 
 const exportTable = (result: EncoderResult) => {
-  const blob = new Blob([JSON.stringify(result)], { type: "text/plain" });
+  const blob = new Blob([JSON.stringify([...result])], { type: "text/plain" });
   const a = document.createElement("a");
   a.download = `码表.json`;
   a.href = window.URL.createObjectURL(blob);
@@ -56,7 +56,7 @@ const Encoder = () => {
   const encoder = useEncoder();
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
-  const [result, setResult] = useState<EncoderResult>({});
+  const [result, setResult] = useState<EncoderResult>(new Map());
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   const [reference, setReference] = useState<Record<string, string[]>>({});
@@ -66,7 +66,7 @@ const Encoder = () => {
     .map(([x]) => x);
   const supplemental = getSupplemental(data.form, list);
   const filterMap: Record<FilterOption, (p: [string, string[]]) => boolean> = {
-    成字部件: ([char]) => data.form[char]?.default_type === 0,
+    成字部件: ([char]) => data.form[char]?.default_type === "component",
     非成字部件: ([char]) => supplemental.includes(char),
     所有汉字: () => true,
   };
@@ -84,13 +84,13 @@ const Encoder = () => {
     );
     setResult(rawresult);
   };
-  const lost = Object.keys(reference).filter((x) => reference[x].length === 0);
+  const lost = [...result].filter(([, v]) => v.length === 0).map(([x]) => x);
 
   let correct = 0,
     incorrect = 0,
     unknown = 0;
 
-  let dataSource = Object.entries(result)
+  let dataSource = [...result]
     .filter(([, v]) => v.length > 0)
     .filter(filterMap[filterOption])
     .map(([char, code]) => {
@@ -222,7 +222,7 @@ const Encoder = () => {
           </Button>
           <Button
             onClick={() => {
-              setResult({});
+              setResult(new Map());
             }}
           >
             清空

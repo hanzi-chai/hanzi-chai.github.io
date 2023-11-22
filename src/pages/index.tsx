@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "@reduxjs/toolkit";
 import { useImmer } from "use-immer";
-import { examples } from "~/lib/example";
+import { Example, examples } from "~/lib/example";
 import { Select, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
@@ -198,10 +198,15 @@ const HomeLayout = () => {
             <Dropdown
               placement="bottom"
               menu={{
-                items: Object.values(examples),
+                items: Object.values(examples)
+                  .filter((x) => x.source === "mswb")
+                  .map((x) => ({
+                    key: x.source,
+                    label: x.info.name,
+                  })),
                 onClick: (menu) => {
                   setConfigs((configs) => {
-                    configs[nanoid(9)] = examples[menu.key].self;
+                    configs[nanoid(9)] = examples[menu.key as Example];
                   });
                 },
               }}

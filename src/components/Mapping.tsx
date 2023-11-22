@@ -11,10 +11,10 @@ import {
 } from "antd";
 import { useContext, useState } from "react";
 import { useDesign, useGenericConfig } from "./context";
-import { useForm, useGlyph } from "./contants";
+import { useDisplay, useForm, useGlyph } from "./contants";
 import Root from "./Root";
 import Char from "./Char";
-import { MappedInfo, displayName, reverse } from "~/lib/utils";
+import { MappedInfo, reverse } from "~/lib/utils";
 import { RootSelect, Select } from "./Utils";
 import { Select as AntdSelect } from "antd";
 
@@ -32,11 +32,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   );
   const affiliates = Object.keys(grouping).filter((x) => grouping[x] === name);
   const [main, setMain] = useState(Object.keys(mapping)[0]);
-  const safeDisplay = (x: string) => {
-    return form[x] || "123456".includes(x)
-      ? displayName(x, form[x])
-      : "缺失字根" + x.codePointAt(0)!.toString(16);
-  };
+  const display = useDisplay();
   return (
     <Popover
       trigger={["click"]}
@@ -86,7 +82,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
               <span>已归并字根</span>
               {affiliates.map((x) => (
                 <Flex key={x} justify="space-between">
-                  <Root>{safeDisplay(x)}</Root>
+                  <Root>{display(x)}</Root>
                   <Button
                     onClick={() => {
                       design({
@@ -138,11 +134,9 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
       }
     >
       <Root>
-        {safeDisplay(name)}
+        {display(name)}
         <span style={{ fontSize: "0.8em" }}>
-          {affiliates.length
-            ? `(${affiliates.map(safeDisplay).join(",")})`
-            : ""}
+          {affiliates.length ? `(${affiliates.map(display).join(",")})` : ""}
         </span>{" "}
         {code.slice(1)}
       </Root>

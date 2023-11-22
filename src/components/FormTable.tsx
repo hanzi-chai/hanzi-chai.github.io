@@ -9,9 +9,8 @@ import {
   ItemSelect,
   Select,
 } from "~/components/Utils";
-import { useForm } from "~/components/contants";
+import { useDisplay, useForm } from "~/components/contants";
 import { Glyph, Operator, operators } from "~/lib/data";
-import { displayName } from "~/lib/utils";
 import {
   GlyphModel,
   ModelContext,
@@ -32,7 +31,7 @@ import classifier from "~/lib/classifier";
 import { ColumnType } from "antd/es/table/interface";
 
 interface CompoundFilter {
-  operator?: string;
+  operator?: Operator;
   operand?: string;
 }
 
@@ -43,6 +42,7 @@ const FormTable = () => {
   const [char, setChar] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [sequence, setSequence] = useState("");
+  const display = useDisplay();
 
   const dataSource = Object.values(form)
     .filter((x) =>
@@ -191,7 +191,7 @@ const FormTable = () => {
               <Space key={i}>
                 <span>{x.operator}</span>
                 {x.operandList.map((y, j) => (
-                  <Root key={j}>{displayName(y, form[y])}</Root>
+                  <Root key={j}>{display(y)}</Root>
                 ))}
               </Space>
             ))}

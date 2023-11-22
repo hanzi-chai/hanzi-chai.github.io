@@ -29,7 +29,7 @@ describe("interval position", () => {
 
 describe("linear relation", () => {
   const { 田 } = rendered;
-  const strokes = 田.map(render);
+  const strokes = 田!.map(render);
   const [l, t, r, h, v, b] = strokes
     .map((x) => x.curveList)
     .flat() as LinearCurve[];
@@ -70,7 +70,7 @@ describe("linear relation", () => {
 
 describe("linear relation 2", () => {
   const { 艹 } = rendered;
-  const strokes = 艹.map(render);
+  const strokes = 艹!.map(render);
   const [_, s1, s2] = strokes.map((x) => x.curveList).flat() as LinearCurve[];
   it("figures out all relations in 艹", () => {
     expect(linearRelation(s1, s2)).toEqual({
@@ -84,7 +84,7 @@ describe("linear relation 2", () => {
 describe("curve relation", () => {
   it("figures out all relations in 天", () => {
     const { 天 } = rendered;
-    const strokes = 天.map(render);
+    const strokes = 天!.map(render);
     const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
     expect(curveRelation(c1, c3)).toEqual({
       type: "连",
