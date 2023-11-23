@@ -43,7 +43,6 @@ describe("generate slice binaries", () => {
   const c1 = buildCache(丰);
   const c2 = buildCache(十);
   it("should find multiple occurence of a root", () => {
-    console.log(c1, c2);
     expect(generateSliceBinaries(c1, c2)).toEqual([9, 5, 3]);
   });
 });
@@ -57,8 +56,28 @@ const hasroot = (a: SVGGlyph, indices: number[], root: SVGGlyph) => {
 
 describe("degenerate cross tests", () => {
   // @ts-ignore
-  const { 大, 天, 九, 丸, 儿, 充, 其, 艹, 山, 出, 冖, 农, 亦, 赤, 以, 人 } =
-    rendered;
+  const {
+    大,
+    天,
+    九,
+    丸,
+    儿,
+    充,
+    其,
+    艹,
+    山,
+    出,
+    冖,
+    农,
+    亦,
+    赤,
+    以,
+    人,
+    氺,
+    丆,
+    疌,
+    龰,
+  } = rendered;
   it("says 天 has 大", () => {
     expect(degenerate(大)).toEqual(degenerate(slice(天, [1, 2, 3])));
   });
@@ -71,6 +90,10 @@ describe("degenerate cross tests", () => {
   it("says 出 has 山", () => {
     expect(degenerate(山)).toEqual(degenerate(slice(出, [2, 3, 4])));
   });
+  it("says 氺 doesn't have 丆", () => {
+    console.log(slice(氺, [2, 3]));
+    expect(degenerate(丆)).not.toEqual(degenerate(slice(氺, [2, 3])));
+  });
   it("says 农 has 冖", () => {
     expect(degenerate(冖)).toEqual(degenerate(slice(农, [0, 1])));
   });
@@ -81,6 +104,9 @@ describe("degenerate cross tests", () => {
   });
   it("says 以 has 人", () => {
     hasroot(以, [2, 3], 人);
+  });
+  it("says 疌 has 龰", () => {
+    hasroot(疌, [4, 5, 6, 7], 龰);
   });
 });
 

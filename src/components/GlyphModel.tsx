@@ -203,6 +203,12 @@ const classifiedStrokeOptions = [
 const ComponentForm = () => {
   const form = useContext(ModelContext);
   const strokes = Form.useWatch(["component", "strokes"], form) as any[];
+  const source = Form.useWatch(["component", "source"], form) as
+    | string
+    | undefined;
+  const formData = useForm();
+  const parent = source !== undefined ? formData[source] : undefined;
+  const parentLength = parent?.component!.strokes.length ?? 0;
   return (
     <>
       <Flex gap="middle">
@@ -234,18 +240,36 @@ const ComponentForm = () => {
                 key={info.key}
               />
             ))}
-            <Form.Item>
-              <Dropdown
-                menu={{
-                  items: classifiedStrokeOptions,
-                  onClick: (info) => {
-                    add(getDummyStroke(info.key as Feature));
-                  },
-                }}
-              >
-                <Button type="dashed">添加笔画</Button>
-              </Dropdown>
-            </Form.Item>
+            <Flex gap="middle" justify="center">
+              <Form.Item>
+                <Dropdown
+                  menu={{
+                    items: classifiedStrokeOptions,
+                    onClick: (info) => {
+                      add(getDummyStroke(info.key as Feature));
+                    },
+                  }}
+                >
+                  <Button type="dashed">添加笔画</Button>
+                </Dropdown>
+              </Form.Item>
+              <Form.Item>
+                <Dropdown
+                  disabled={parent === undefined}
+                  menu={{
+                    items: [...Array(parentLength).keys()].map((x) => ({
+                      key: x.toString(),
+                      label: x.toString(),
+                    })),
+                    onClick: (info) => {
+                      add(Number(info.key));
+                    },
+                  }}
+                >
+                  <Button type="dashed">添加笔画引用</Button>
+                </Dropdown>
+              </Form.Item>
+            </Flex>
           </>
         )}
       </Form.List>

@@ -13,7 +13,7 @@ import {
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import findTopology, { Relation } from "./topology";
+import findTopology, { StrokeRelation } from "./topology";
 import { Extra } from "./element";
 import { Classifier } from "./classifier";
 
@@ -64,7 +64,12 @@ export const getSequence = (
   if (char.match(/\d+/)) return char;
   let thisSequence = sequenceCache.get(char);
   if (thisSequence !== undefined) return thisSequence;
-  thisSequence = recursiveGetSequence(form, classifier, char).join("");
+  try {
+    thisSequence = recursiveGetSequence(form, classifier, char).join("");
+  } catch (e) {
+    console.log(char, char.codePointAt(0)!);
+    thisSequence = "";
+  }
   sequenceCache.set(char, thisSequence);
   return thisSequence;
 };
@@ -94,7 +99,7 @@ export const generateSchemes = (n: number, roots: number[]) => {
 export interface Cache {
   name: string;
   glyph: SVGGlyph;
-  topology: Relation[][][];
+  topology: StrokeRelation[][];
 }
 
 export const buildCache = function (glyph: SVGGlyph, name: string = ""): Cache {

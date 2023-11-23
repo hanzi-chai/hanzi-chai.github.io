@@ -6,6 +6,7 @@ import {
   multiply,
   divide,
   distance as _distance,
+  dot,
 } from "mathjs";
 
 type LinearCurve = {
@@ -142,9 +143,16 @@ const findCrossPoint = function (
   );
 };
 
-const isCollinear = (p: Point, q: Point, r: Point) => {
-  const [u, v] = [subtract(q, p), subtract(r, p)];
-  return area(u, v) === 0;
+/**
+ * Determine if the point is on a given segment
+ * @param from starting point
+ * @param to end point
+ * @param point another point
+ * @returns
+ */
+const isCollinear = (from: Point, to: Point, point: Point) => {
+  const [u, v] = [subtract(to, point), subtract(from, point)];
+  return area(u, v) === 0 && dot(u, v) < 0;
 };
 
 export {
