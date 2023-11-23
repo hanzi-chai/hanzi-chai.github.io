@@ -1,29 +1,27 @@
 import { expect, describe, it } from "vitest";
 import findTopology, {
-  Relation,
-  area,
+  CurveRelation,
+  StrokeRelation,
   curveRelation,
-  factory,
-  intervalPosition,
-  linearRelation,
-  render,
 } from "~/lib/topology";
+import { area, render } from "~/lib/bezier";
 import { CubicCurve, Draw, LinearCurve, Point } from "~/lib/data";
 import { rendered } from "./mock";
+import { getIntervalPosition, makeCurve } from "~/lib/bezier";
 
 describe("interval position", () => {
   it("works for easy cases", () => {
-    expect(intervalPosition([10, 20], [30, 40])).toBe(-1);
-    expect(intervalPosition([10, 20], [20, 40])).toBe(-0.5);
-    expect(intervalPosition([40, 50], [30, 40])).toBe(0.5);
-    expect(intervalPosition([50, 70], [30, 40])).toBe(1);
+    expect(getIntervalPosition([10, 20], [30, 40])).toBe(-1);
+    expect(getIntervalPosition([10, 20], [20, 40])).toBe(-0.5);
+    expect(getIntervalPosition([40, 50], [30, 40])).toBe(0.5);
+    expect(getIntervalPosition([50, 70], [30, 40])).toBe(1);
   });
   it("works for trickier cases", () => {
-    expect(intervalPosition([10, 20], [21, 25])).toBe(-1);
-    expect(intervalPosition([10, 20], [15, 25])).toBe(-0.5);
-    expect(intervalPosition([10, 30], [14, 25])).toBe(0);
-    expect(intervalPosition([20, 30], [16, 25])).toBe(0.5);
-    expect(intervalPosition([27, 34], [16, 25])).toBe(1);
+    expect(getIntervalPosition([10, 20], [21, 25])).toBe(-1);
+    expect(getIntervalPosition([10, 20], [15, 25])).toBe(-0.5);
+    expect(getIntervalPosition([10, 30], [14, 25])).toBe(0);
+    expect(getIntervalPosition([20, 30], [16, 25])).toBe(0.5);
+    expect(getIntervalPosition([27, 34], [16, 25])).toBe(1);
   });
 });
 
@@ -34,37 +32,37 @@ describe("linear relation", () => {
     .map((x) => x.curveList)
     .flat() as LinearCurve[];
   it("figures out all relations in 田", () => {
-    expect(linearRelation(l, t)).toEqual({
+    expect(curveRelation(l, t)).toEqual({
       type: "连",
       first: "前",
       second: "前",
     });
-    expect(linearRelation(t, r)).toEqual({
+    expect(curveRelation(t, r)).toEqual({
       type: "连",
       first: "后",
       second: "前",
     });
-    expect(linearRelation(r, b)).toEqual({
+    expect(curveRelation(r, b)).toEqual({
       type: "连",
       first: "后",
       second: "后",
     });
-    expect(linearRelation(l, h)).toEqual({
+    expect(curveRelation(l, h)).toEqual({
       type: "连",
       first: "中",
       second: "前",
     });
-    expect(linearRelation(r, h)).toEqual({
+    expect(curveRelation(r, h)).toEqual({
       type: "连",
       first: "中",
       second: "后",
     });
-    expect(linearRelation(v, b)).toEqual({
+    expect(curveRelation(v, b)).toEqual({
       type: "连",
       first: "后",
       second: "中",
     });
-    expect(linearRelation(h, v)).toEqual({ type: "交" });
+    expect(curveRelation(h, v)).toEqual({ type: "交" });
   });
 });
 
@@ -73,7 +71,7 @@ describe("linear relation 2", () => {
   const strokes = 艹!.map(render);
   const [_, s1, s2] = strokes.map((x) => x.curveList).flat() as LinearCurve[];
   it("figures out all relations in 艹", () => {
-    expect(linearRelation(s1, s2)).toEqual({
+    expect(curveRelation(s1, s2)).toEqual({
       type: "散",
       x: -1,
       y: 0,
@@ -168,19 +166,19 @@ describe("factory", () => {
     ],
   };
   it("makes cubic curves", () => {
-    expect(factory(p0, d1)).toEqual(c1);
+    expect(makeCurve(p0, d1)).toEqual(c1);
   });
   it("makes linear curves", () => {
-    expect(factory(p0, d2)).toEqual(c2);
-    expect(factory(p0, d3)).toEqual(c3);
-    expect(factory(p0, d4)).toEqual(c4);
+    expect(makeCurve(p0, d2)).toEqual(c2);
+    expect(makeCurve(p0, d3)).toEqual(c3);
+    expect(makeCurve(p0, d4)).toEqual(c4);
   });
 });
 
 describe("find topology interface", () => {
   it("works for a simple case", () => {
     const { 土 } = rendered;
-    const array: Relation[][][] = [
+    const array: StrokeRelation[][] = [
       [],
       [[{ type: "交" }]],
       [
