@@ -3,6 +3,7 @@ import findTopology, {
   CurveRelation,
   StrokeRelation,
   curveRelation,
+  renderSVGGlyph,
 } from "~/lib/topology";
 import { area, render } from "~/lib/bezier";
 import { CubicCurve, Draw, LinearCurve, Point } from "~/lib/data";
@@ -134,7 +135,6 @@ describe("factory", () => {
   const d1: Draw = { command: "c", parameterList: [5, 8, 23, 15, 49, 33] };
   const d2: Draw = { command: "h", parameterList: [10] };
   const d3: Draw = { command: "v", parameterList: [20] };
-  const d4: Draw = { command: "l", parameterList: [30, 40] };
   const c1: CubicCurve = {
     type: "cubic",
     controls: [
@@ -158,20 +158,12 @@ describe("factory", () => {
       [12, 54],
     ],
   };
-  const c4: LinearCurve = {
-    type: "linear",
-    controls: [
-      [12, 34],
-      [42, 74],
-    ],
-  };
   it("makes cubic curves", () => {
     expect(makeCurve(p0, d1)).toEqual(c1);
   });
   it("makes linear curves", () => {
     expect(makeCurve(p0, d2)).toEqual(c2);
     expect(makeCurve(p0, d3)).toEqual(c3);
-    expect(makeCurve(p0, d4)).toEqual(c4);
   });
 });
 
@@ -186,6 +178,6 @@ describe("find topology interface", () => {
         [{ type: "连", first: "中", second: "后" }],
       ],
     ];
-    expect(findTopology(土)).toEqual(array);
+    expect(findTopology(renderSVGGlyph(土))).toEqual(array);
   });
 });

@@ -6,7 +6,8 @@ import {
   Glyph,
   Operator,
   Partition,
-  Stroke,
+  Point,
+  SVGStroke,
   operators,
 } from "./data";
 
@@ -67,19 +68,20 @@ export const fullToHalf = (s: string) => {
   return result;
 };
 
-export const getDummyStroke = function (feature: Feature): Stroke {
+export const getDummyStroke = function (
+  feature: Feature,
+  start: Point = [0, 0],
+): SVGStroke {
   const typelist = schema[feature];
   return {
     feature,
-    start: [0, 0],
+    start,
     curveList: typelist.map((command) => {
       switch (command) {
         case "h":
           return { command, parameterList: [20] };
         case "v":
           return { command, parameterList: [20] };
-        case "l":
-          return { command, parameterList: [20, 20] };
         case "c":
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
       }

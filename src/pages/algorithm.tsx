@@ -19,7 +19,7 @@ const DegeneratorTable = () => {
   const data = useAll();
   const componentForm = renderComponentForm(data);
   const dataSource = [...componentForm.values()]
-    .filter((cache) => cache.glyph.length >= 3)
+    .filter((cache) => cache.glyph.length >= 5)
     .sort((a, b) => a.glyph.length - b.glyph.length);
   const toCompare = [...componentForm.values()].filter(
     (cache) => cache.glyph.length >= 2,

@@ -1,4 +1,4 @@
-import { Draw, Component, Point, Stroke, SVGGlyph } from "./data";
+import { Draw, Component, Point, SVGGlyph, SVGStroke } from "./data";
 import {
   add,
   subtract,
@@ -66,14 +66,11 @@ const makeCurve = function (
     case "v":
       p1 = add(start, [0, parameterList[0]]);
       break;
-    case "l":
-      p1 = add(start, parameterList);
-      break;
   }
   return { type: "linear", controls: [start, p1] };
 };
 
-const render = ({ feature, start, curveList }: Stroke) => {
+const render = ({ feature, start, curveList }: SVGStroke) => {
   const r: RenderedStroke = { feature, curveList: [] };
   let previousPosition = start;
   for (const draw of curveList) {
@@ -155,6 +152,34 @@ const isCollinear = (from: Point, to: Point, point: Point) => {
   return area(u, v) === 0 && dot(u, v) < 0;
 };
 
+const curveLength = (curve: Curve) => {
+  const [start, end] = getBoundingBox(curve);
+  return distance(start, end);
+};
+
+const sort = function (a: Interval): Interval {
+  return a.sort((a, b) => a - b);
+};
+
+const contains = (r1: Interval, r2: Interval) => {
+  return r1[0] <= r2[0] && r1[1] >= r2[1];
+};
+
+const _isBoundedBy = (curve: Curve, xrange: Interval, yrange: Interval) => {
+  const [start, end] = getBoundingBox(curve);
+  const thisXRange = sort([start[0], end[0]]);
+  const thisYRange = sort([start[1], end[1]]);
+  return contains(xrange, thisXRange) && contains(yrange, thisYRange);
+};
+
+const isBoundedBy = (
+  stroke: RenderedStroke,
+  xrange: Interval,
+  yrange: Interval,
+) => {
+  return stroke.curveList.every((x) => _isBoundedBy(x, xrange, yrange));
+};
+
 export {
   getBoundingBox,
   getIntervalPosition,
@@ -163,8 +188,10 @@ export {
   makeCurve,
   area,
   distance,
+  curveLength,
   findCrossPoint,
   isCollinear,
+  isBoundedBy,
 };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke };
 export type { Interval, Position };

@@ -1,8 +1,8 @@
-import { Cache, SchemeWithData } from "./form";
-import { SieveName } from "./config";
+import { Cache } from "./form";
+import { Selector, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
-import { Relation } from "./topology";
 import { isEqual } from "underscore";
+import { CurveRelation } from "./topology";
 
 type Scheme = number[];
 
@@ -10,7 +10,6 @@ type Comparable = number | number[];
 
 type Sieve<T extends Comparable> = {
   title: SieveName;
-  name: string;
   key: (component: Cache, scheme: Scheme) => T;
   display?: (data: T) => string;
 };
@@ -32,7 +31,6 @@ function isLess<T extends Comparable>(a: T, b: T) {
 
 export const length: Sieve<number> = {
   title: "根少优先",
-  name: "length",
   key: (_, scheme) => scheme.length,
 };
 
@@ -41,24 +39,24 @@ const countStrokes: (n: number) => number = (n) =>
 
 export const bias: Sieve<number[]> = {
   title: "取大优先",
-  name: "bias",
   key: (_, scheme) => scheme.map(countStrokes).map((x) => -x),
   display: (data: number[]) => "(" + data.map((x) => -x).join(", ") + ")",
 };
 
-export const order: Sieve<number[]> = {
+export const order: Sieve<number> = {
   title: "笔顺优先",
-  name: "order",
   key: (component, scheme) => {
-    return scheme.map((x) => binaryToIndices(component.glyph.length)(x)).flat();
+    const indices = scheme
+      .map((x) => binaryToIndices(component.glyph.length)(x))
+      .flat();
+    const isSorted = indices.slice(1).every((v, i) => indices[i]! < v);
+    return +!isSorted;
   },
-  display: (data: number[]) => "(" + data.join(", ") + ")",
 };
 
 const makeTopologySieve = function (
-  relationType: Relation["type"],
-  avoidRelationType: Relation["type"][],
-  name: string,
+  relationType: CurveRelation["type"],
+  avoidRelationType: CurveRelation["type"][],
   title: SieveName,
 ): Sieve<number> {
   const key: Sieve<number>["key"] = (component, scheme) => {
@@ -84,54 +82,47 @@ const makeTopologySieve = function (
     }
     return totalCrosses;
   };
-  return { name, key, title };
+  return { key, title };
 };
 
-export const crossing = makeTopologySieve("交", [], "crossing", "能连不交");
+export const crossing = makeTopologySieve("交", [], "能连不交");
 
-export const attaching = makeTopologySieve(
-  "连",
-  ["交"],
-  "attaching",
-  "能散不连",
-);
+export const attaching = makeTopologySieve("连", ["交"], "能散不连");
 
 export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   [length, order, bias, crossing, attaching].map((x) => [x.title, x]),
 );
 
-const select = (
-  selector: SieveName[],
-  component: Cache,
-  schemeList: Scheme[],
-) => {
+const select = (selector: Selector, component: Cache, schemeList: Scheme[]) => {
   const sieveList = selector.map((s) => sieveMap.get(s)!);
-  let currentSchemeList = [...schemeList];
-  const schemeData = new Map<string, Partial<SchemeWithData>>();
-  schemeList.forEach((v) => {
-    schemeData.set(v.toString(), {
-      key: v.toString(),
-    });
-  });
+  const schemeData = schemeList.map(
+    (_) => new Map<SieveName, number | number[]>(),
+  );
+  const exclusion = schemeList.map((_) => false);
   for (const sieve of sieveList) {
-    const scoreList = currentSchemeList.map((x) => {
-      const v = sieve.key(component, x);
-      const obj = schemeData.get(x.toString())!;
-      obj[sieve.name as "length"] = v as number;
-      return v;
-    });
-    let min = typeof scoreList[0] === "number" ? Infinity : [Infinity];
-    for (const score of scoreList) {
-      if (isLess(score, min)) min = score;
+    let min: number | number[] | undefined;
+    for (const [index, scheme] of schemeList.entries()) {
+      const data = schemeData[index]!;
+      const excluded = exclusion[index]!;
+      if (excluded) continue;
+      const value = sieve.key(component, scheme);
+      data.set(sieve.title, value);
+      if (min === undefined) {
+        min = value;
+      } else if (isLess(value, min)) {
+        min = value;
+      }
     }
-    currentSchemeList = currentSchemeList.filter((_, index) =>
-      isEqual(scoreList[index], min),
-    );
+    schemeData.forEach((data, index) => {
+      if (data.get(sieve.title) !== min) {
+        exclusion[index] = true;
+      }
+    });
   }
-  if (currentSchemeList.length !== 1) {
+  if (exclusion.filter((x) => !x).length !== 1) {
     console.error("undetermined component", component.name);
   }
-  return [currentSchemeList[0], schemeData] as [Scheme, typeof schemeData];
+  return [schemeList.find((v, i) => !exclusion[i])!, schemeData] as const;
 };
 
 export type { Scheme, Sieve };

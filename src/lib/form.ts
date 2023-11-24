@@ -1,19 +1,13 @@
-import { Config, FormConfig, MergedData } from "./config";
-import {
-  BasicComponent,
-  Component,
-  ComponentGlyph,
-  Compound,
-  CompoundGlyph,
-  Form,
-  Glyph,
-  Operator,
-  SVGGlyph,
-} from "./data";
+import { FormConfig, MergedData, SieveName } from "./config";
+import { Block, CompoundGlyph, Form, Operator, SVGGlyph } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import findTopology, { StrokeRelation } from "./topology";
+import findTopology, {
+  RenderedGlyph,
+  StrokeRelation,
+  renderSVGGlyph,
+} from "./topology";
 import { Extra } from "./element";
 import { Classifier } from "./classifier";
 
@@ -98,20 +92,21 @@ export const generateSchemes = (n: number, roots: number[]) => {
 
 export interface Cache {
   name: string;
-  glyph: SVGGlyph;
+  glyph: RenderedGlyph;
   topology: StrokeRelation[][];
 }
 
 export const buildCache = function (glyph: SVGGlyph, name: string = ""): Cache {
-  return { name, glyph, topology: findTopology(glyph) };
+  const renderedGlyph = renderSVGGlyph(glyph);
+  return { name, glyph: renderedGlyph, topology: findTopology(renderedGlyph) };
 };
 
-export const getComponentScheme = (
+export const getComponentScheme = function (
   component: Cache,
   rootData: Cache[],
   config: FormConfig,
   classifier: Classifier,
-) => {
+): ComponentResult {
   const {
     analysis: { selector },
     mapping,
@@ -119,9 +114,6 @@ export const getComponentScheme = (
   if (mapping[component.name])
     return {
       sequence: [component.name],
-      all: [component.name],
-      map: {},
-      schemes: [],
     };
   const rootMap = new Map<number, string>(
     component.glyph.map((stroke, index) => {
@@ -142,48 +134,61 @@ export const getComponentScheme = (
   const schemeList = generateSchemes(component.glyph.length, roots);
   const [bestScheme, schemeData] = select(selector, component, schemeList);
   const sequence = bestScheme.map((n) => rootMap.get(n)!);
+  const detail = bestScheme.map((n) => ({ name: rootMap.get(n)!, binary: n }));
   return {
     sequence,
-    all: sequence,
+    detail: detail,
+    strokes: component.glyph.length,
     map: reverseRootMap,
-    schemes: [...schemeData.values()].map((x) => ({
-      ...x,
-      roots: x
-        .key!.split(",")
-        .map(parseFloat)
-        .map((x) => rootMap.get(x)),
-    })),
-  } as ComponentResult;
+    schemes: schemeData.map((v, i) => {
+      return {
+        sequence: schemeList[i]!.map((x) => rootMap.get(x)!),
+        data: v,
+      };
+    }),
+  };
 };
 
+export type ComponentResult = ComponentRootResult | ComponentRegularResult;
+
 export interface SchemeWithData {
-  key: string;
-  roots: string[];
-  length: number;
-  order: number[];
-  crossing: number;
-  attaching: number;
-  bias: number[];
+  sequence: string[];
+  data: Map<SieveName, number | number[]>;
 }
 
-export interface ComponentResult {
+// 两个以上字根
+interface ComponentRegularResult {
   sequence: string[];
-  all: string[];
+  detail: { name: string; binary: number }[];
+  strokes: number;
   map: Record<string, number[][]>;
   schemes: SchemeWithData[];
+}
+
+// 本身是字根字，无拆分细节
+interface ComponentRootResult {
+  sequence: string[];
 }
 
 export type ComponentCache = Map<string, ComponentResult>;
 export type CompoundCache = Map<string, CompoundResult>;
 
-interface SequenceTree {
-  operator: Operator;
-  operandList: (string[] | SequenceTree)[];
+type PartitionResult = ComponentResult | CompoundResult;
+
+export type CompoundResult = CompoundRootResult | CompoundRegularResult;
+
+// 两个以上字根
+interface CompoundRegularResult {
+  sequence: string[];
+  detail: {
+    operator: Operator;
+    partitionResults: PartitionResult[];
+  };
 }
 
-export interface CompoundResult {
-  sequence: string[];
-  all: string[] | SequenceTree;
+// 本身是字根字，无拆分细节
+interface CompoundRootResult {
+  sequence: [string];
 }
 
 export const recursiveRenderGlyph = (
@@ -219,8 +224,9 @@ export const renderComponentForm = (data: MergedData) => {
       .filter(([, g]) => g.default_type === "component")
       .map(([char]) => {
         const glyph = recursiveRenderGlyph(char, form, glyphCache);
-        const topology = findTopology(glyph);
-        const cache: Cache = { glyph, topology, name: char };
+        const renderedGlyph = renderSVGGlyph(glyph);
+        const topology = findTopology(renderedGlyph);
+        const cache: Cache = { glyph: renderedGlyph, topology, name: char };
         return [char, cache];
       }),
   );
@@ -282,28 +288,71 @@ const topologicalSort = (form: Form) => {
   return compounds;
 };
 
+const assembleSequence = (
+  partitionResults: PartitionResult[],
+  order: Block[],
+) => {
+  const sequence: string[] = [];
+  const subsequences = partitionResults.map((x) => ({
+    rest: x.sequence,
+    taken: 0,
+  }));
+  for (const { index, strokes } of order) {
+    const data = subsequences[index]!;
+    if (strokes === 0) {
+      sequence.push(...data.rest);
+      data.rest = [];
+    } else {
+      const partitionResult = partitionResults[index]!;
+      if ("schemes" in partitionResult) {
+        const { detail, strokes: totalStrokes } = partitionResult;
+        const upperBound = 1 << (totalStrokes - data.taken);
+        const lowerBound = 1 << (totalStrokes - data.taken - strokes);
+        const toTake = detail.filter(
+          ({ binary }) => binary >= lowerBound && binary < upperBound,
+        ).length;
+        sequence.push(...data.rest.slice(0, toTake));
+        data.rest = data.rest.slice(toTake);
+      } else {
+        sequence.push(...data.rest);
+        data.rest = [];
+      }
+    }
+  }
+  return sequence;
+};
+
 export const disassembleCompounds = (
   data: MergedData,
   config: FormConfig,
-  prev: ComponentCache,
+  componentCache: ComponentCache,
 ) => {
   const { mapping } = config;
   const compounds = topologicalSort(data.form);
   const compoundCache: CompoundCache = new Map();
-  const getResult = (s: string) => prev.get(s) || compoundCache.get(s);
+  const getResult = function (s: string): PartitionResult | undefined {
+    return componentCache.get(s) || compoundCache.get(s);
+  };
   for (const [char, glyph] of compounds.entries()) {
     if (mapping[char]) {
       // 复合体本身是一个字根
-      compoundCache.set(char, { sequence: [char], all: [char] });
+      compoundCache.set(char, { sequence: [char] });
       continue;
     }
-    const { operator, operandList } = glyph.compound[0]!;
-    const operandResults = operandList.map(getResult);
-    if (operandResults.every((x) => x !== undefined)) {
-      const validResults = operandResults as CompoundResult[];
+    const { operator, operandList, order } = glyph.compound[0]!;
+    const rawPartitionResults = operandList.map(getResult);
+    if (rawPartitionResults.every((x) => x !== undefined)) {
+      const partitionResults = rawPartitionResults as PartitionResult[];
+      const sequence =
+        order === undefined
+          ? partitionResults.map((x) => x.sequence).flat()
+          : assembleSequence(partitionResults, order);
       compoundCache.set(char, {
-        sequence: validResults.map((x) => x.sequence).flat(),
-        all: { operator, operandList: validResults.map((x) => x.all) },
+        sequence,
+        detail: {
+          operator,
+          partitionResults,
+        },
       });
     } else {
       console.error(char, operandList);
@@ -314,20 +363,15 @@ export const disassembleCompounds = (
 
 export const getFormCore = (data: MergedData, config: FormConfig) => {
   const componentCache = disassembleComponents(data, config);
-  const customizations = Object.entries(config.analysis.customize).map(
-    ([component, sequence]) => {
-      const pseudoResult: ComponentResult = {
-        sequence: sequence,
-        all: sequence,
-        map: {},
-        schemes: [],
-      };
+  const customizations: ComponentCache = new Map(
+    Object.entries(config.analysis.customize).map(([component, sequence]) => {
+      const pseudoResult: ComponentResult = { sequence: sequence };
       return [component, pseudoResult] as const;
-    },
+    }),
   );
   const customized = new Map([...componentCache, ...customizations]);
   const compoundCache = disassembleCompounds(data, config, customized);
-  return [componentCache, compoundCache] as const;
+  return [customized, compoundCache] as const;
 };
 
 const getExtra = function (data: MergedData, config: FormConfig): Extra {
@@ -360,9 +404,7 @@ export const getForm = (
     list.map((char) => {
       const result = componentResults.get(char) || compoundResults.get(char);
       // 这里只处理一种情况，未来可以返回多个拆分
-      return result === undefined
-        ? [char, []]
-        : [char, [result] as ComponentResult[] | CompoundResult[]];
+      return result === undefined ? [char, []] : [char, [result]];
     }),
   );
   return [value, extra] as const;

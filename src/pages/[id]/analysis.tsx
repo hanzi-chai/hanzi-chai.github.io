@@ -31,18 +31,10 @@ import {
   ComponentResult,
   CompoundCache,
   CompoundResult,
-  disassembleComponents,
-  disassembleCompounds,
   getFormCore,
   getSequence,
 } from "~/lib/form";
-import {
-  EditorColumn,
-  EditorRow,
-  Select,
-  exportYAML,
-  exportJSON,
-} from "~/components/Utils";
+import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import { MenuProps } from "rc-menu";
@@ -65,27 +57,13 @@ const ResultSummary = ({
   );
 };
 
-type GenericResult = ComponentResult & CompoundResult;
-
-const exportResult = (
-  componentResult: ComponentCache,
-  compoundResult: CompoundCache,
-  full?: boolean,
-) => {
-  const getContent = full
-    ? (x: GenericResult) => x.all
-    : (x: GenericResult) => x.sequence;
-  const allResult = [...componentResult, ...compoundResult] as [
-    string,
-    GenericResult,
-  ][];
-  const output = Object.fromEntries(
-    allResult.map(([x, v]) => [x, getContent(v)]),
-  );
-  exportJSON(output, "chai.json");
-};
-
-const AnalysisExporter = ({ componentResults, compoundResults }: any) => {
+const AnalysisExporter = ({
+  componentResults,
+  compoundResults,
+}: {
+  componentResults: ComponentCache;
+  compoundResults: CompoundCache;
+}) => {
   const items: MenuProps["items"] = [
     { label: "不含结构数据", key: "sequence" },
     { label: "含结构数据", key: "all" },
@@ -95,7 +73,14 @@ const AnalysisExporter = ({ componentResults, compoundResults }: any) => {
       menu={{
         items,
         onClick: (info) => {
-          exportResult(componentResults, compoundResults, info.key === "all");
+          const allResult = [...componentResults, ...compoundResults] as [
+            string,
+            ComponentResult & CompoundResult,
+          ][];
+          const output = Object.fromEntries(
+            allResult.map(([x, v]) => [x, info.key === "all" ? v : v.sequence]),
+          );
+          exportJSON(output, "chai.json");
         },
       }}
     >
@@ -136,15 +121,22 @@ const Analysis = () => {
         return {
           key,
           label: <ResultSummary char={key} rootSeries={res.sequence} />,
-          children: <ResultDetail data={res.schemes} map={res.map} />,
+          children:
+            "schemes" in res ? (
+              <ResultDetail data={res.schemes} map={res.map} />
+            ) : (
+              <></>
+            ),
         };
       }),
-    [...compoundResults].map(([key, res]) => {
-      return {
-        key,
-        label: <ResultSummary char={key} rootSeries={res.sequence} />,
-      };
-    }),
+    [...compoundResults]
+      .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
+      .map(([key, res]) => {
+        return {
+          key,
+          label: <ResultSummary char={key} rootSeries={res.sequence} />,
+        };
+      }),
   ] as const;
 
   return (

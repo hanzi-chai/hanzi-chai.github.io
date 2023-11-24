@@ -117,7 +117,7 @@ export const findElement = (
   data: MergedData,
   extra: Extra,
 ) => {
-  const { pinyin, sequence, all } = result;
+  const { pinyin, sequence } = result;
   let root: string | undefined;
   let strokes: number[] | undefined;
   switch (object.type) {

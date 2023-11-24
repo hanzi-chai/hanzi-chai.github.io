@@ -2,6 +2,7 @@ import { sieveMap } from "~/lib/selector";
 import { EditorColumn, EditorRow, Select } from "./Utils";
 import {
   DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -30,18 +31,11 @@ const SortableItem = ({ sieve }: { sieve: SieveName }) => {
     transition,
   };
   return (
-    <Flex
-      key={sieve}
-      justify="space-evenly"
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-    >
-      <Button>
+    <Flex key={sieve} justify="space-evenly">
+      <Button ref={setNodeRef} style={style} {...attributes} {...listeners}>
         <MenuOutlined />
+        {sieve}
       </Button>
-      <Button>{sieve}</Button>
       <Button
         onClick={() => {
           design({
@@ -69,12 +63,12 @@ const Selector = () => {
     }),
   );
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
+    if (!over) return;
     if (active.id !== over.id) {
-      const oldIndex = selector.indexOf(active.id);
-      const newIndex = selector.indexOf(over.id);
+      const oldIndex = selector.indexOf(active.id as SieveName);
+      const newIndex = selector.indexOf(over.id as SieveName);
       design({
         subtype: "root-selector",
         action: "replace",
@@ -94,6 +88,7 @@ const Selector = () => {
       </DndContext>
       <Flex justify="center">
         <Dropdown
+          disabled={selector.length === [...sieveMap.keys()].length}
           menu={{
             items: ([...sieveMap.keys()] as SieveName[])
               .filter((x) => !selector.includes(x))
@@ -110,12 +105,7 @@ const Selector = () => {
               })),
           }}
         >
-          <Button
-            type="primary"
-            disabled={selector.length === [...sieveMap.keys()].length}
-          >
-            添加
-          </Button>
+          <Button type="primary">添加</Button>
         </Dropdown>
       </Flex>
     </Flex>

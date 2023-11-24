@@ -46,7 +46,7 @@ const FormTable = () => {
 
   const dataSource = Object.values(form)
     .filter((x) =>
-      getSequence(form, classifier, String.fromCodePoint(x.unicode)).startsWith(
+      getSequence(form, classifier, String.fromCodePoint(x.unicode)).includes(
         sequence,
       ),
     )

@@ -1,18 +1,16 @@
 import { Space, Table } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Root from "./Root";
-import { SchemeWithData } from "~/lib/form";
 import { useFormConfig } from "./context";
-import { Selector } from "~/lib/config";
+import { Selector, SieveName } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
 import { useDisplay } from "./contants";
+import { SchemeWithData } from "~/lib/form";
 
 const makeSorter = (selector: Selector) => {
-  const selectorFields = selector.map((x) => sieveMap.get(x)!.name);
-  return (a: Partial<SchemeWithData>, b: Partial<SchemeWithData>) => {
-    for (const f of selectorFields) {
-      const field = f as keyof SchemeWithData;
-      const [af, bf] = [a[field], b[field]];
+  return (a: SchemeWithData, b: SchemeWithData) => {
+    for (const sieve of selector) {
+      const [af, bf] = [a.data.get(sieve), b.data.get(sieve)];
       if (af === undefined && bf === undefined) return 0;
       if (af === undefined) return -1;
       if (bf === undefined) return 1;
@@ -27,7 +25,7 @@ const ResultDetail = ({
   data,
   map,
 }: {
-  data: Partial<SchemeWithData>[];
+  data: SchemeWithData[];
   map: Record<string, number[][]>;
 }) => {
   const {
@@ -35,14 +33,14 @@ const ResultDetail = ({
   } = useFormConfig();
   const display = useDisplay();
 
-  const columns: ColumnsType<Partial<SchemeWithData>> = [
+  const columns: ColumnsType<SchemeWithData> = [
     {
       title: "拆分方式",
-      dataIndex: "roots",
-      key: "roots",
-      render: (_, { roots }) => (
+      dataIndex: "sequence",
+      key: "sequence",
+      render: (_, { sequence }) => (
         <Space>
-          {roots!.map((root, index) => (
+          {sequence.map((root, index) => (
             <Root key={index}>{display(root)}</Root>
           ))}
         </Space>
@@ -51,16 +49,19 @@ const ResultDetail = ({
   ];
 
   for (const sieve of selector) {
-    const { title, name, display } = sieveMap.get(sieve)!;
-    let render: ColumnType<Partial<SchemeWithData>>["render"] = undefined;
-    if (display) {
-      render = (_, data) => {
-        const value = data[name as "length"] as number | undefined;
-        const cast = display as (data: number) => string;
-        return <span>{value && cast(value)}</span>;
-      };
-    }
-    columns.push({ title, dataIndex: name, key: name, render });
+    const { display } = sieveMap.get(sieve)!;
+    columns.push({
+      title: sieve,
+      key: sieve,
+      render: (_, { data }) => {
+        const value = data.get(sieve);
+        return (
+          <span>
+            {display && value ? display(value as number & number[]) : value}
+          </span>
+        );
+      },
+    });
   }
 
   return data.length ? (
@@ -75,6 +76,7 @@ const ResultDetail = ({
       </Space>
       <Table
         columns={columns}
+        rowKey={"sequence"}
         dataSource={data.sort(makeSorter(selector))}
         pagination={{ hideOnSinglePage: true, defaultPageSize: 20 }}
         size="small"

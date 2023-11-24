@@ -55,7 +55,6 @@ const hasroot = (a: SVGGlyph, indices: number[], root: SVGGlyph) => {
 };
 
 describe("degenerate cross tests", () => {
-  // @ts-ignore
   const {
     大,
     天,
@@ -91,7 +90,6 @@ describe("degenerate cross tests", () => {
     expect(degenerate(山)).toEqual(degenerate(slice(出, [2, 3, 4])));
   });
   it("says 氺 doesn't have 丆", () => {
-    console.log(slice(氺, [2, 3]));
     expect(degenerate(丆)).not.toEqual(degenerate(slice(氺, [2, 3])));
   });
   it("says 农 has 冖", () => {

@@ -21,7 +21,7 @@ describe("bias", () => {
 
 describe("order", () => {
   it("should measure the order of scheme", () => {
-    expect(order.key(天, [8, 7])).toEqual([0, 1, 2, 3]);
+    expect(order.key(天, [8, 7])).toEqual(0);
   });
 });
 

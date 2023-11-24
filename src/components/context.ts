@@ -2,6 +2,7 @@ import { Dispatch, createContext, useContext } from "react";
 import { Config, SieveName } from "~/lib/config";
 import { Glyph, Character } from "~/lib/data";
 import { useLocation } from "react-router-dom";
+import { Feature } from "~/lib/classifier";
 
 // Config 对象一共有 7 个字段，除了 version 和 source 不可变外，均可以通过 action 改变
 // LoadAction 可以直接替换 Config 本身
@@ -212,12 +213,13 @@ const useEncoder = () => {
 const useDesign = () => {
   const dispatch = useContext(DispatchContext);
   const index = useConfigType();
-  return (action: ElementSubAction) =>
+  return (action: ElementSubAction) => {
     dispatch({
       type: "element",
       index: index,
       ...action,
     });
+  };
 };
 
 // 从页面的路由推导出应该修改哪一组 data

@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Form, Glyph, GlyphOptionalUnicode, Repertoire } from "~/lib/data";
+import { Form, Glyph, Repertoire } from "~/lib/data";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 
 interface FormState {

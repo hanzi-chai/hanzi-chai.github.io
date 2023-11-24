@@ -40,7 +40,7 @@ export type Classifier = typeof classifier;
 
 export const schema: Record<Feature, SVGCommand[]> = {
   横: ["h"],
-  提: ["l"],
+  提: ["h"],
   竖: ["v"],
   竖钩: ["v"],
   撇: ["c"],
@@ -51,7 +51,7 @@ export const schema: Record<Feature, SVGCommand[]> = {
   横折: ["h", "v"],
   横折钩: ["h", "v"],
   横斜钩: ["h", "c"],
-  横折提: ["h", "v", "l"],
+  横折提: ["h", "v", "h"],
   横折折: ["h", "v", "h"],
   横折弯: ["h", "v", "h"],
   横撇弯钩: ["h", "c", "c"],
@@ -59,7 +59,7 @@ export const schema: Record<Feature, SVGCommand[]> = {
   横折折撇: ["h", "v", "h", "c"],
   横折折折: ["h", "v", "h", "v"],
   横折折折钩: ["h", "v", "h", "v"],
-  竖提: ["v", "l"],
+  竖提: ["v", "h"],
   竖折: ["v", "h"],
   竖弯: ["v", "h"],
   竖弯钩: ["v", "h"],

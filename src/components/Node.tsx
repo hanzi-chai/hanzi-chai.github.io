@@ -110,7 +110,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       setLayout(newnodes, newedges);
     },
   };
-  let items: (MenuItemType | MenuItemGroupType)[] = [];
+  const items: (MenuItemType | MenuItemGroupType)[] = [];
   if (id[0] === "s") {
     if (id !== "s0") items.push(deleteNode);
     if (!edges.some((e) => e.source === id))

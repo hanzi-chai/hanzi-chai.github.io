@@ -40,28 +40,22 @@ import {
   GlyphOptionalUnicode,
   Operator,
   Partition,
+  SVGStroke,
   Stroke,
   operators,
 } from "~/lib/data";
 import classifier, { Feature, schema } from "~/lib/classifier";
-import {
-  deepcopy,
-  formDefault,
-  getDummyPartition,
-  getDummyStroke,
-  length,
-} from "~/lib/utils";
+import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
 import { FormInstance, useWatch } from "antd/es/form/Form";
-import { selectForm, useAppSelector } from "./store";
 import { useForm } from "./contants";
 
-export const ModelContext = createContext<FormInstance<Glyph>>({} as any);
+export const ModelContext = createContext({} as FormInstance<Glyph>);
 
 const CurveForm = (field: any) => {
   const { name, ...rest } = field;
   return (
     <Flex gap="small">
-      <Form.Item<Stroke["curveList"]> {...rest} name={[name, "command"]}>
+      <Form.Item<SVGStroke["curveList"]> {...rest} name={[name, "command"]}>
         <AntdSelect style={{ width: "64px" }} disabled />
       </Form.Item>
       <Form.List name={[name, "parameterList"]}>
@@ -110,7 +104,12 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                     value: x,
                   }))}
                   onChange={(value) => {
-                    const newStroke = getDummyStroke(value);
+                    const oldStroke = form.getFieldValue([
+                      "component",
+                      "strokes",
+                      name,
+                    ]) as SVGStroke;
+                    const newStroke = getDummyStroke(value, oldStroke.start);
                     form.setFieldValue(
                       ["component", "strokes", name],
                       newStroke,
@@ -202,7 +201,7 @@ const classifiedStrokeOptions = [
 
 const ComponentForm = () => {
   const form = useContext(ModelContext);
-  const strokes = Form.useWatch(["component", "strokes"], form) as any[];
+  const strokes = Form.useWatch(["component", "strokes"], form) as Stroke[];
   const source = Form.useWatch(["component", "source"], form) as
     | string
     | undefined;

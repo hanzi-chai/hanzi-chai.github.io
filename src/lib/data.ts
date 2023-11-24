@@ -15,10 +15,6 @@ type Draw =
       parameterList: N1;
     }
   | {
-      command: "l";
-      parameterList: N2;
-    }
-  | {
       command: "c";
       parameterList: N6;
     };
@@ -129,7 +125,8 @@ export type {
   SVGCommand,
   Point,
   Draw,
-  SVGStroke as Stroke,
+  SVGStroke,
+  Stroke,
   Glyph,
   SVGGlyph,
   GlyphOptionalUnicode,

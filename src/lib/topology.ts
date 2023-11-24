@@ -1,5 +1,5 @@
 import { isEqual } from "underscore";
-import { Curve, LinearCurve, Stroke, SVGGlyph } from "./data";
+import { Curve, LinearCurve, SVGGlyph, SVGStroke } from "./data";
 import { subtract } from "mathjs";
 import {
   Position,
@@ -12,10 +12,11 @@ import {
   makeCurve,
 } from "./bezier";
 
-interface RenderedStroke {
-  feature: string;
+interface RenderedStroke extends Pick<SVGStroke, "feature"> {
   curveList: Curve[];
 }
+
+type RenderedGlyph = RenderedStroke[];
 
 interface CrossRelation {
   type: "交";
@@ -139,7 +140,7 @@ const strokeRelation = function (
 
 type StrokeRelation = CurveRelation[];
 
-const render = ({ feature, start, curveList }: Stroke) => {
+const renderSVGStroke = ({ feature, start, curveList }: SVGStroke) => {
   const r: RenderedStroke = { feature, curveList: [] };
   let previousPosition = start;
   for (const draw of curveList) {
@@ -151,8 +152,9 @@ const render = ({ feature, start, curveList }: Stroke) => {
   return r;
 };
 
-const findTopology = (glyph: SVGGlyph) => {
-  const renderedGlyph = glyph.map(render);
+const renderSVGGlyph = (glyph: SVGGlyph) => glyph.map(renderSVGStroke);
+
+const findTopology = (renderedGlyph: RenderedGlyph) => {
   const matrix = [] as StrokeRelation[][];
   for (const [index1, stroke1] of renderedGlyph.entries()) {
     const row = [] as StrokeRelation[];
@@ -166,5 +168,5 @@ const findTopology = (glyph: SVGGlyph) => {
 };
 
 export default findTopology;
-export { curveRelation, strokeRelation };
-export type { CurveRelation, StrokeRelation };
+export { curveRelation, strokeRelation, renderSVGStroke, renderSVGGlyph };
+export type { CurveRelation, StrokeRelation, RenderedGlyph };

@@ -28,7 +28,7 @@ const template =
   };
 
 export const listForm = async () =>
-  await template("GET")<any, undefined>("form/all");
+  await template("GET")<Glyph[], undefined>("form/all");
 
 export const post = template("POST");
 
