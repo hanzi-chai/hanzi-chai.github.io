@@ -1,7 +1,7 @@
 import { Cache } from "./form";
 import { Selector, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
-import { isEqual } from "underscore";
+import { isEqual } from "~/lib/utils";
 import { CurveRelation } from "./topology";
 
 type Scheme = number[];

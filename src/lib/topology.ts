@@ -1,4 +1,4 @@
-import { isEqual } from "underscore";
+import { isEqual } from "~/lib/utils";
 import { Curve, LinearCurve, SVGGlyph, SVGStroke } from "./data";
 import { subtract } from "mathjs";
 import {

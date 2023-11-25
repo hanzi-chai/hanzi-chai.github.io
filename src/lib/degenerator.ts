@@ -1,4 +1,4 @@
-import { isEqual } from "underscore";
+import { isEqual } from "~/lib/utils";
 import { Cache } from "./form";
 import { Component, SVGGlyph } from "./data";
 import findTopology, { renderSVGGlyph } from "./topology";

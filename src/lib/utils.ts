@@ -1,3 +1,5 @@
+//@ts-ignore
+import underscoreIsEqual from "underscore/modules/isEqual";
 import { Feature, schema } from "./classifier";
 import { Mapping } from "./config";
 import {
@@ -10,6 +12,19 @@ import {
   SVGStroke,
   operators,
 } from "./data";
+import { exp } from "mathjs";
+
+interface IsEqualFunction {
+  /**
+   * Performs an optimized deep comparison between `object` and `other`
+   * to determine if they should be considered equal.
+   * @param object Compare to `other`.
+   * @param other Compare to `object`.
+   * @returns True if `object` should be considered equal to `other`.
+   */
+  (object: any, other: any): boolean;
+}
+export const isEqual = underscoreIsEqual as IsEqualFunction;
 
 export const unicodeBlock = (code: number) => {
   // ASCII
