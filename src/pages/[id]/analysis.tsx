@@ -118,7 +118,11 @@ const Analysis = () => {
           label: <ResultSummary char={key} rootSeries={res.sequence} />,
           children:
             "schemes" in res ? (
-              <ResultDetail data={res.schemes} map={res.map} />
+              <ResultDetail
+                data={res.schemes}
+                map={res.map}
+                strokes={res.strokes}
+              />
             ) : null,
         };
       }),

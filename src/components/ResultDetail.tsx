@@ -6,6 +6,7 @@ import type { Selector } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
 import { useDisplay } from "./contants";
 import type { SchemeWithData } from "~/lib/form";
+import { binaryToIndices } from "~/lib/degenerator";
 
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {
@@ -24,9 +25,11 @@ const makeSorter = (selector: Selector) => {
 const ResultDetail = ({
   data,
   map,
+  strokes,
 }: {
   data: SchemeWithData[];
-  map: Record<string, number[][]>;
+  map: Map<number, string>;
+  strokes: number;
 }) => {
   const {
     analysis: { selector },
@@ -64,10 +67,22 @@ const ResultDetail = ({
     });
   }
 
+  const reversedRootMap = new Map<string, number[][]>();
+  const convert = binaryToIndices(strokes);
+  for (const [binary, name] of map) {
+    const prevList = reversedRootMap.get(name);
+    const indices = convert(binary);
+    if (prevList !== undefined) {
+      prevList.push(indices);
+    } else {
+      reversedRootMap.set(name, [indices]);
+    }
+  }
+
   return data.length ? (
     <>
       <Space>
-        {Object.entries(map).map(([s, v]) => (
+        {[...reversedRootMap].map(([s, v]) => (
           <Space key={s}>
             <Root>{display(s)}</Root>
             <span>{v.map((ar) => `(${ar.join(",")})`).join(" ")}</span>

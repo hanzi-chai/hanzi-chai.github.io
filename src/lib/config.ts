@@ -3,7 +3,15 @@ import type { Form, Repertoire } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./example";
 
-type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
+type SieveName =
+  | "根少优先"
+  | "连续笔顺"
+  | "全符笔顺"
+  | "能连不交"
+  | "能散不连"
+  | "同向笔画"
+  | "取大优先"
+  | "非形近根";
 
 type Selector = SieveName[];
 
@@ -18,8 +26,14 @@ interface BaseConfig {
   mapping: Mapping;
 }
 
+interface Degenerator {
+  feature: Partial<Record<Feature, Feature>>;
+  nocross: boolean;
+}
+
 interface FormConfig extends BaseConfig {
   analysis: {
+    degenerator: Degenerator;
     selector: Selector;
     customize: Record<string, string[]>;
   };
@@ -73,6 +87,7 @@ type MergedData = Config["data"] & { classifier: Classifier };
 type ExampleConfig = Required<Config>;
 
 export type {
+  Degenerator,
   SieveName,
   Selector,
   PartialClassifier,

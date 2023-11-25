@@ -9,13 +9,17 @@ import {
   dot,
 } from "mathjs";
 
-interface LinearCurve {
+type Orientation = "horizontal" | "vertical";
+
+type LinearCurve = {
   type: "linear";
+  orientation: Orientation;
   controls: [Point, Point];
-}
+};
 
 interface CubicCurve {
   type: "cubic";
+  orientation: Orientation;
   controls: [Point, Point, Point, Point];
 }
 
@@ -28,6 +32,18 @@ interface RenderedStroke {
 
 const getBoundingBox = (a: Curve) =>
   [a.controls[0], a.controls[a.controls.length - 1]] as [Point, Point];
+
+const getIntervalOnOrientation = function (a: Curve): [Interval, Interval] {
+  const start = a.controls[0];
+  const end = a.controls.at(-1)!;
+  const i1 = [start[0], end[0]].sort() as Interval;
+  const i2 = [start[1], end[1]].sort() as Interval;
+  if (a.orientation === "horizontal") {
+    return [i1, i2];
+  } else {
+    return [i2, i1];
+  }
+};
 
 const evaluate = function (a: Curve, t: number): Point {
   if (a.type === "linear") {
@@ -56,7 +72,11 @@ const makeCurve = function (
     const p1 = add(start, parameterList.slice(0, 2) as Point);
     const p2 = add(start, parameterList.slice(2, 4) as Point);
     const p3 = add(start, parameterList.slice(4) as Point);
-    return { type: "cubic", controls: [start, p1, p2, p3] };
+    return {
+      type: "cubic",
+      orientation: command === "c" ? "vertical" : "horizontal",
+      controls: [start, p1, p2, p3],
+    };
   }
   let p1: Point;
   switch (command) {
@@ -67,7 +87,11 @@ const makeCurve = function (
       p1 = add(start, [0, parameterList[0]]);
       break;
   }
-  return { type: "linear", controls: [start, p1] };
+  return {
+    type: "linear",
+    orientation: command === "v" ? "vertical" : "horizontal",
+    controls: [start, p1],
+  };
 };
 
 const render = ({ feature, start, curveList }: SVGStroke) => {
@@ -182,6 +206,7 @@ const isBoundedBy = (
 
 export {
   getBoundingBox,
+  getIntervalOnOrientation,
   getIntervalPosition,
   evaluate,
   render,

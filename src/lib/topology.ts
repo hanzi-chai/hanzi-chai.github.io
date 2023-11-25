@@ -1,12 +1,13 @@
 import { isEqual } from "~/lib/utils";
-import type { Curve, LinearCurve, SVGGlyph, SVGStroke } from "./data";
+import type { SVGGlyph, SVGStroke } from "./data";
 import { subtract } from "mathjs";
-import type { Position } from "./bezier";
+import type { Curve, LinearCurve, Position } from "./bezier";
 import {
   area,
   distance,
   findCrossPoint,
   getBoundingBox,
+  getIntervalOnOrientation,
   getIntervalPosition,
   isCollinear,
   makeCurve,
@@ -35,15 +36,31 @@ const makeAttachRelation = function (
   return { type: "连", first, second };
 };
 
-interface DisjointRelation {
+interface ParallelRelation {
+  type: "平行";
+  mainAxis: Position;
+  crossAxis: Position;
+}
+
+interface PerpendicularRelation {
   type: "散";
   x: Position;
   y: Position;
 }
 
+type DisjointRelation = ParallelRelation | PerpendicularRelation;
 type CurveRelation = CrossRelation | AttachRelation | DisjointRelation;
 
+const getParallelRelation = function (a: Curve, b: Curve): ParallelRelation {
+  const [amain, across] = getIntervalOnOrientation(a);
+  const [bmain, bcross] = getIntervalOnOrientation(b);
+  const mainPosition = getIntervalPosition(amain, bmain);
+  const crossPosition = getIntervalPosition(across, bcross);
+  return { type: "平行", mainAxis: mainPosition, crossAxis: crossPosition };
+};
+
 const getDisjointRelation = function (a: Curve, b: Curve): DisjointRelation {
+  if (a.orientation === b.orientation) return getParallelRelation(a, b);
   const [astart, aend] = getBoundingBox(a);
   const [bstart, bend] = getBoundingBox(b);
   return {
@@ -165,6 +182,10 @@ const findTopology = (renderedGlyph: RenderedGlyph) => {
     matrix.push(row);
   }
   return matrix;
+};
+
+const getMatrixElement = (matrix: StrokeRelation[][], i: number, j: number) => {
+  return i > j ? matrix[i]![j]! : matrix[j]![i]!;
 };
 
 export default findTopology;

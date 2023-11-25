@@ -104,10 +104,7 @@ export const getComponentScheme = function (
   config: FormConfig,
   classifier: Classifier,
 ): ComponentResult {
-  const {
-    analysis: { selector },
-    mapping,
-  } = config;
+  const { mapping } = config;
   if (mapping[component.name])
     return {
       sequence: [component.name],
@@ -118,25 +115,25 @@ export const getComponentScheme = function (
       return [binary, classifier[stroke.feature].toString()];
     }),
   );
-  const reverseRootMap = {} as Record<string, number[][]>;
   for (const root of rootData) {
-    const binaries = generateSliceBinaries(component, root);
+    const binaries = generateSliceBinaries(config, component, root);
     binaries.forEach((binary) => rootMap.set(binary, root.name));
-    if (binaries.length)
-      reverseRootMap[root.name] = binaries.map(
-        binaryToIndices(component.glyph.length),
-      );
   }
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
   const schemeList = generateSchemes(component.glyph.length, roots);
-  const [bestScheme, schemeData] = select(selector, component, schemeList);
+  const [bestScheme, schemeData] = select(
+    config,
+    component,
+    schemeList,
+    rootMap,
+  );
   const sequence = bestScheme.map((n) => rootMap.get(n)!);
   const detail = bestScheme.map((n) => ({ name: rootMap.get(n)!, binary: n }));
   return {
     sequence,
     detail: detail,
     strokes: component.glyph.length,
-    map: reverseRootMap,
+    map: rootMap,
     schemes: schemeData.map((v, i) => {
       return {
         sequence: schemeList[i]!.map((x) => rootMap.get(x)!),
@@ -158,7 +155,7 @@ interface ComponentRegularResult {
   sequence: string[];
   detail: { name: string; binary: number }[];
   strokes: number;
-  map: Record<string, number[][]>;
+  map: Map<number, string>;
   schemes: SchemeWithData[];
 }
 

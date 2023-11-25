@@ -19,18 +19,6 @@ type SVGCommand = Draw["command"];
 
 type Point = N2;
 
-interface LinearCurve {
-  type: "linear";
-  controls: [Point, Point];
-}
-
-interface CubicCurve {
-  type: "cubic";
-  controls: [Point, Point, Point, Point];
-}
-
-type Curve = LinearCurve | CubicCurve;
-
 interface SVGStroke {
   feature: Feature;
   start: Point;
@@ -136,9 +124,6 @@ export type {
   Compound,
   Operator,
   Character,
-  LinearCurve,
-  CubicCurve,
-  Curve,
   Form,
   Repertoire,
 };

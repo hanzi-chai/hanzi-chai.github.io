@@ -5,6 +5,8 @@ import { Component } from "./data";
 import findTopology, { renderSVGGlyph } from "./topology";
 import type { Interval } from "./bezier";
 import { curveLength, isBoundedBy, isCollinear } from "./bezier";
+import { Degenerator, FormConfig } from "./config";
+import { Feature } from "./classifier";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -19,14 +21,13 @@ export const binaryToIndices = (n: number) => (binary: number) => {
   return indices.filter((index) => binary & (1 << (n - index - 1)));
 };
 
-const simplifyMap = new Map<string, string>([
-  ["捺", "点"],
-  ["提", "横"],
-]);
-
-const strokeFeatureEqual = (s1: string, s2: string) => {
-  const simplify = (s: string) => simplifyMap.get(s) || s;
-  return simplify(s1) === simplify(s2);
+const strokeFeatureEqual = (
+  degenerator: Degenerator,
+  s1: Feature,
+  s2: Feature,
+) => {
+  const { feature } = degenerator;
+  return feature[s1] === feature[s2];
 };
 
 const verifySpecialRoots = (
@@ -75,11 +76,18 @@ const verifySpecialRoots = (
   return true;
 };
 
-export const generateSliceBinaries = (component: Cache, root: Cache) => {
+export const generateSliceBinaries = (
+  config: FormConfig,
+  component: Cache,
+  root: Cache,
+) => {
+  const {
+    analysis: { degenerator },
+  } = config;
   const { glyph: cglyph, topology: ctopology } = component;
   const { glyph: rglyph, topology: rtopology } = root;
   if (cglyph.length < rglyph.length) return [];
-  const queue = [[]] as number[][];
+  let queue = [[]] as number[][];
   for (const [rIndex, rStroke] of rglyph.entries()) {
     const rStrokeTopology = rtopology[rIndex];
     const end = cglyph.length - rglyph.length + rIndex + 1;
@@ -87,7 +95,8 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
       const indexList = queue.shift()!;
       const start = indexList.length ? indexList.at(-1)! + 1 : 0;
       for (const [cIndex, cStroke] of cglyph.slice(start, end).entries()) {
-        if (!strokeFeatureEqual(cStroke.feature, rStroke.feature)) continue;
+        if (!strokeFeatureEqual(degenerator, cStroke.feature, rStroke.feature))
+          continue;
         const realIndex = cIndex + start;
         const cStrokeTopology = ctopology[realIndex]!.filter((_, i) =>
           indexList.includes(i),
@@ -98,14 +107,27 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
     }
     if (!queue) return [];
   }
+  if (degenerator.nocross) {
+    const allindices = [...Array(cglyph.length).keys()];
+    queue = queue.filter((indices) => {
+      const others = allindices.filter((x) => !indices.includes(x));
+      const allCombinations = indices
+        .map((x) => others.map((y) => [x, y].sort() as [number, number]))
+        .flat();
+      return allCombinations.every(([x, y]) => {
+        const relation = ctopology[y]![x]!;
+        return relation.every((cr) => cr.type !== "交");
+      });
+    });
+  }
   return queue
     .filter((x) => verifySpecialRoots(component, root, x))
     .map(indicesToBinary(cglyph.length));
 };
 
-const degenerate = (glyph: SVGGlyph) => {
+const degenerate = (degenerator: Degenerator, glyph: SVGGlyph) => {
   return [
-    glyph.map((x) => x.feature).map((x) => simplifyMap.get(x) || x),
+    glyph.map((x) => x.feature).map((x) => degenerator.feature[x] || x),
     findTopology(renderSVGGlyph(glyph)),
   ] as const;
 };

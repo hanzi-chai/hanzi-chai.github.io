@@ -1,8 +1,8 @@
 import { expect, describe, it } from "vitest";
 import type { StrokeRelation } from "~/lib/topology";
 import findTopology, { curveRelation, renderSVGGlyph } from "~/lib/topology";
-import { area, render } from "~/lib/bezier";
-import type { CubicCurve, Draw, LinearCurve, Point } from "~/lib/data";
+import { CubicCurve, LinearCurve, area, render } from "~/lib/bezier";
+import type { Draw, Point } from "~/lib/data";
 import { rendered } from "./mock";
 import { getIntervalPosition, makeCurve } from "~/lib/bezier";
 
@@ -69,9 +69,9 @@ describe("linear relation 2", () => {
   const [_, s1, s2] = strokes.map((x) => x.curveList).flat() as LinearCurve[];
   it("figures out all relations in 艹", () => {
     expect(curveRelation(s1, s2)).toEqual({
-      type: "散",
-      x: -1,
-      y: 0,
+      type: "平行",
+      mainAxis: 0,
+      crossAxis: -1,
     });
   });
 });
@@ -103,15 +103,27 @@ describe("curve relation", () => {
     const { 义 } = rendered;
     const strokes = 义.map(render);
     const [c1, c2, c3] = strokes.map((x) => x.curveList).flat();
-    expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: -0.5 });
-    expect(curveRelation(c1, c3)).toEqual({ type: "散", x: 0, y: -0.5 });
+    expect(curveRelation(c1, c2)).toEqual({
+      type: "平行",
+      crossAxis: 0,
+      mainAxis: -0.5,
+    });
+    expect(curveRelation(c1, c3)).toEqual({
+      type: "平行",
+      crossAxis: 0,
+      mainAxis: -0.5,
+    });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
   });
   it("figures out all relations in 升", () => {
     const { 升 } = rendered;
     const strokes = 升.map(render);
     const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
-    expect(curveRelation(c1, c2)).toEqual({ type: "散", x: 0, y: -1 });
+    expect(curveRelation(c1, c2)).toEqual({
+      type: "平行",
+      mainAxis: 0,
+      crossAxis: -1,
+    });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
     expect(curveRelation(c2, c4)).toEqual({ type: "交" });
   });
@@ -133,6 +145,7 @@ describe("factory", () => {
   const d3: Draw = { command: "v", parameterList: [20] };
   const c1: CubicCurve = {
     type: "cubic",
+    orientation: "vertical",
     controls: [
       [12, 34],
       [17, 42],
@@ -142,6 +155,7 @@ describe("factory", () => {
   };
   const c2: LinearCurve = {
     type: "linear",
+    orientation: "horizontal",
     controls: [
       [12, 34],
       [22, 34],
@@ -149,6 +163,7 @@ describe("factory", () => {
   };
   const c3: LinearCurve = {
     type: "linear",
+    orientation: "vertical",
     controls: [
       [12, 34],
       [12, 54],
@@ -170,7 +185,7 @@ describe("find topology interface", () => {
       [],
       [[{ type: "交" }]],
       [
-        [{ type: "散", x: 0, y: 1 }],
+        [{ type: "平行", mainAxis: 0, crossAxis: 1 }],
         [{ type: "连", first: "中", second: "后" }],
       ],
     ];

@@ -1,4 +1,4 @@
-import degenerate, {
+import _degenerate, {
   indicesToBinary,
   binaryToIndices,
   generateSliceBinaries,
@@ -6,12 +6,16 @@ import degenerate, {
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
 import type { SVGGlyph } from "~/lib/data";
-import { rendered } from "./mock";
+import { config, rendered } from "./mock";
 import { buildCache } from "~/lib/form";
+import { Degenerator } from "~/lib/config";
 
 const { randomInt } = create(all, {
   randomSeed: "a",
 });
+
+const degenerate = (glyph: SVGGlyph) =>
+  _degenerate(config.analysis.degenerator, glyph);
 
 describe("indices to binary converter", () => {
   it("works on 5-stroke simple case", () => {
@@ -43,7 +47,7 @@ describe("generate slice binaries", () => {
   const c1 = buildCache(丰);
   const c2 = buildCache(十);
   it("should find multiple occurence of a root", () => {
-    expect(generateSliceBinaries(c1, c2)).toEqual([9, 5, 3]);
+    expect(generateSliceBinaries(config, c1, c2)).toEqual([9, 5, 3]);
   });
 });
 

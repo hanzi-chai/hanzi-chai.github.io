@@ -26,8 +26,13 @@ form:
   maxcodelen: 1
   alphabet: qwertyuiopasdfghjklzxcvbnm
   analysis:
+    degenerator:
+      feature:
+        捺: 点
+        提: 横
+      nocross: false
     selector:
-      - 笔顺优先
+      - 全符笔顺
       - 根少优先
       - 能连不交
       - 能散不连
