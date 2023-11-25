@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import path from "node:path";
-import { defineConfig, UserConfig } from "vite";
+import type { UserConfig } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
 import { importToCDN, autoComplete } from "vite-plugin-external-cdn";

@@ -54,22 +54,22 @@
     "@types/react-dom": "^18.2.14",
     "@types/styled-components": "^5.1.29",
     "@types/underscore": "^1.11.12",
-    "@typescript-eslint/eslint-plugin": "^6.8.0",
-    "@typescript-eslint/parser": "^6.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
     "@vitejs/plugin-react-swc": "^3.4.0",
     "@vitest/coverage-v8": "^0.34.6",
     "@vitest/ui": "^0.34.6",
-    "eslint": "^8.51.0",
+    "eslint": "^8.54.0",
+    "eslint-config-alloy": "^5.1.2",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "eslint-plugin-tsdoc": "^0.2.17",
-    "eslint-plugin-unused-imports": "^3.0.0",
     "fs-extra": "^11.1.1",
     "pre-commit": "^1.2.2",
     "ts-json-schema-generator": "^1.4.0",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.2",
+    "typescript": "^5.3.2",
+    "vite": "^4.0.0",
     "vite-plugin-external-cdn": "^1.0.1",
     "vite-plugin-pages": "^0.31.0",
     "vitest": "^0.34.6"
@@ -87,8 +87,9 @@
       "es2020": true
     },
     "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
+      "alloy",
+      "alloy/react",
+      "alloy/typescript",
       "plugin:react-hooks/recommended"
     ],
     "ignorePatterns": [
@@ -98,10 +99,10 @@
     "parser": "@typescript-eslint/parser",
     "plugins": [
       "react-refresh",
-      "unused-imports",
       "eslint-plugin-tsdoc"
     ],
     "rules": {
+      "max-params": "off",
       "react-refresh/only-export-components": [
         "warn",
         {
