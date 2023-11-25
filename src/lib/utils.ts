@@ -2,6 +2,7 @@ import { Feature, schema } from "./classifier";
 import { Mapping } from "./config";
 import {
   Character,
+  Draw,
   Form,
   Glyph,
   Operator,
@@ -71,18 +72,22 @@ export const fullToHalf = (s: string) => {
 export const getDummyStroke = function (
   feature: Feature,
   start: Point = [0, 0],
+  oldCurveList: Draw[] = [],
 ): SVGStroke {
   const typelist = schema[feature];
   return {
     feature,
     start,
-    curveList: typelist.map((command) => {
+    curveList: typelist.map((command, index) => {
+      if (oldCurveList[index]?.command === command) {
+        return oldCurveList[index]!;
+      }
       switch (command) {
         case "h":
-          return { command, parameterList: [20] };
         case "v":
           return { command, parameterList: [20] };
         case "c":
+        case "z":
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
       }
     }),
