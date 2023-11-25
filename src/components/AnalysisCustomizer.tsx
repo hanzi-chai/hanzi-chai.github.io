@@ -3,7 +3,9 @@ import { useDesign, useFormConfig } from "./context";
 import { Button, Flex } from "antd";
 import { ItemSelect, RootSelect, Select } from "./Utils";
 import Char from "./Char";
-import { PlusOutlined, MinusOutlined, DeleteOutlined } from "@ant-design/icons";
+import PlusOutlined from "@ant-design/icons/PlusOutlined";
+import MinusOutlined from "@ant-design/icons/MinusOutlined";
+import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import { useDisplay } from "./contants";
 
 const AnalysisCustomizer = () => {

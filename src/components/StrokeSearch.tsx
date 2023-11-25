@@ -1,5 +1,5 @@
 import { Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import SearchOutlined from "@ant-design/icons/SearchOutlined";
 import { fullToHalf, halfToFull } from "~/lib/utils";
 import { useClassifier } from "./contants";
 

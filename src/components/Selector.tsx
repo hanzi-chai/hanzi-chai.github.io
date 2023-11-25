@@ -18,7 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { SieveName } from "~/lib/config";
 import { useDesign, useFormConfig } from "./context";
 import { Button, Dropdown, Flex } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
+import MenuOutlined from "@ant-design/icons/MenuOutlined";
 
 const SortableItem = ({ sieve }: { sieve: SieveName }) => {
   const design = useDesign();

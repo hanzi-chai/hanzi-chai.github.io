@@ -1,11 +1,8 @@
 import { Layout, Menu, MenuProps } from "antd";
-import {
-  BorderOutlined,
-  AppstoreOutlined,
-  InfoCircleOutlined,
-  MenuOutlined,
-  NumberOutlined,
-} from "@ant-design/icons";
+import BorderOutlined from "@ant-design/icons/BorderOutlined";
+import InfoCircleOutlined from "@ant-design/icons/InfoCircleOutlined";
+import NumberOutlined from "@ant-design/icons/NumberOutlined";
+
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const items: MenuProps["items"] = [

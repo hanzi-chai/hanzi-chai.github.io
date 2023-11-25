@@ -12,7 +12,7 @@ import { store } from "./components/store";
 import CusSpin from "~/components/CustomSpin";
 import Error from "./components/Error";
 import AutoRoute from "~react-pages";
-console.log(AutoRoute);
+
 const idpath = AutoRoute.find((v) => v.path === ":id");
 idpath?.children?.forEach((v) => {
   if (v.path === "analysis" || v.path === "element") {

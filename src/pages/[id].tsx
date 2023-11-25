@@ -8,14 +8,12 @@ import React, {
   Suspense,
 } from "react";
 import { Button, Flex, Layout, Menu, Space, Typography, Upload } from "antd";
-import {
-  DatabaseOutlined,
-  MailOutlined,
-  SettingOutlined,
-  ProfileOutlined,
-  BoldOutlined,
-  CaretLeftFilled,
-} from "@ant-design/icons";
+import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
+import MailOutlined from "@ant-design/icons/MailOutlined";
+import SettingOutlined from "@ant-design/icons/SettingOutlined";
+import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
+import BoldOutlined from "@ant-design/icons/BoldOutlined";
+import CaretLeftFilled from "@ant-design/icons/CaretLeftFilled";
 import type { MenuProps } from "antd";
 import {
   ConfigContext,
