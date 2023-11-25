@@ -52,7 +52,7 @@ const makeCurve = function (
   start: Point,
   { command, parameterList }: Draw,
 ): Curve {
-  if (command === "c") {
+  if (command === "c" || command === "z") {
     const p1 = add(start, parameterList.slice(0, 2) as Point);
     const p2 = add(start, parameterList.slice(2, 4) as Point);
     const p3 = add(start, parameterList.slice(4) as Point);
