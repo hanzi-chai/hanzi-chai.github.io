@@ -7,15 +7,11 @@ type N6 = [number, number, number, number, number, number];
 
 type Draw =
   | {
-      command: "h";
+      command: "h" | "v";
       parameterList: N1;
     }
   | {
-      command: "v";
-      parameterList: N1;
-    }
-  | {
-      command: "c";
+      command: "c" | "z";
       parameterList: N6;
     };
 

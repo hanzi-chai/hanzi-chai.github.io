@@ -24,14 +24,17 @@ const FontView = ({ reference }: { reference: string }) => (
   </svg>
 );
 
-const processPath = ({ start, curveList }: Stroke) =>
+const processPath = ({ start, curveList }: SVGStroke) =>
   "M" +
   start.join(" ") +
   curveList
-    .map(({ command, parameterList }) => command + parameterList.join(" "))
+    .map(
+      ({ command, parameterList }) =>
+        command.replace("z", "c") + parameterList.join(" "),
+    )
     .join("");
 
-export const StrokesView = ({ glyph }: { glyph: Stroke[] }) => (
+export const StrokesView = ({ glyph }: { glyph: SVGStroke[] }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
@@ -56,7 +59,7 @@ export const ComponentView = ({ component }: { component: Component }) => {
   if (component.source !== undefined) {
     const sourceGlyph = recursiveRenderGlyph(component.source, form);
     glyph = component.strokes.map((x) => {
-      if (typeof x === "number") return sourceGlyph[x];
+      if (typeof x === "number") return sourceGlyph[x]!;
       return x;
     });
   } else {

@@ -36,6 +36,7 @@ import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
 import { useForm } from "./contants";
+import { recursiveRenderGlyph } from "~/lib/form";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);
 
@@ -97,7 +98,11 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                       "strokes",
                       name,
                     ]) as SVGStroke;
-                    const newStroke = getDummyStroke(value, oldStroke.start);
+                    const newStroke = getDummyStroke(
+                      value,
+                      oldStroke.start,
+                      oldStroke.curveList,
+                    );
                     form.setFieldValue(
                       ["component", "strokes", name],
                       newStroke,
@@ -155,9 +160,10 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
             <Form.Item>
               <Button
                 onClick={() => {
+                  const sourceGlyph = recursiveRenderGlyph(source, formData);
                   form.setFieldValue(
                     ["component", "strokes", name],
-                    getDummyStroke("横"),
+                    sourceGlyph[name]!,
                   );
                 }}
               >
