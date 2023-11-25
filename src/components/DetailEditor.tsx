@@ -1,15 +1,12 @@
 import { Panel, useReactFlow } from "reactflow";
-import { ConditionData, SourceData } from "./graph";
+import type { ConditionData, SourceData } from "./graph";
 import styled from "styled-components";
-import { Cascader, Flex, Form, Input, Typography } from "antd";
-import {
-  CodableObject,
-  parseList,
-  pinyinAnalyzers,
-  renderList,
-} from "~/lib/element";
+import { Cascader, Flex, Form, Typography } from "antd";
+import type { CodableObject } from "~/lib/element";
+import { parseList, pinyinAnalyzers, renderList } from "~/lib/element";
 import { Select } from "./Utils";
-import { Op, binaryOps, ops } from "~/lib/config";
+import type { Op } from "~/lib/config";
+import { binaryOps, ops } from "~/lib/config";
 import TextArea from "antd/es/input/TextArea";
 
 const Background = styled(Flex)`
@@ -30,7 +27,7 @@ interface Option {
   children?: Option[];
 }
 const DetailEditor = ({ selected }: { selected: string }) => {
-  const { setNodes, setEdges, getNodes, getEdges, getNode } = useReactFlow<
+  const { setNodes, getNodes, getNode } = useReactFlow<
     SourceData | ConditionData
   >();
   const nodes = getNodes();

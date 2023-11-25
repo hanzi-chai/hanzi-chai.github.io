@@ -1,7 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Form, Glyph, Repertoire } from "~/lib/data";
-import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
+import type { Form, Glyph, Repertoire } from "~/lib/data";
+import type { TypedUseSelectorHook } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 interface FormState {
   loading: boolean;
@@ -41,9 +43,9 @@ export const formSlice = createSlice({
           value.component.source = replaceIf(value.component.source);
         }
         if (value.compound !== undefined) {
-          value.compound.forEach(
-            (x) => (x.operandList = x.operandList.map(replaceIf)),
-          );
+          value.compound.forEach((x) => {
+            x.operandList = x.operandList.map(replaceIf);
+          });
         }
       }
     },

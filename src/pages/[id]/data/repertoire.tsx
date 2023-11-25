@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Button, Dropdown, Flex, Input, MenuProps, Space, Table } from "antd";
+import { Button,  Flex, Input,  Space, Table } from "antd";
 import { useAdd } from "~/components/context";
 import { useRepertoire } from "~/components/contants";
 import SearchOutlined from "@ant-design/icons/SearchOutlined"
 
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "~/components/Utils";
-import { Character } from "~/lib/data";
+import type { Character } from "~/lib/data";
 import { deepcopy } from "~/lib/utils";
 
 interface DataType extends Character {

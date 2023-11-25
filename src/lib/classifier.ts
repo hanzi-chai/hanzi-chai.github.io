@@ -1,4 +1,4 @@
-import { SVGCommand } from "./data";
+import type { SVGCommand } from "./data";
 
 const classifier = {
   横: 1,

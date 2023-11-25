@@ -1,8 +1,8 @@
 import { isEqual } from "~/lib/utils";
-import { Curve, LinearCurve, SVGGlyph, SVGStroke } from "./data";
+import type { Curve, LinearCurve, SVGGlyph, SVGStroke } from "./data";
 import { subtract } from "mathjs";
+import type { Position } from "./bezier";
 import {
-  Position,
   area,
   distance,
   findCrossPoint,

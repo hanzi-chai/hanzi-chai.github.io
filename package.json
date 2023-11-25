@@ -103,6 +103,7 @@
     ],
     "rules": {
       "max-params": "off",
+      "@typescript-eslint/consistent-type-assertions": "off",
       "react-refresh/only-export-components": [
         "warn",
         {

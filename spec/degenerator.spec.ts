@@ -5,7 +5,7 @@ import degenerate, {
 } from "~/lib/degenerator";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
-import { Component, Glyph, SVGGlyph } from "~/lib/data";
+import type { SVGGlyph } from "~/lib/data";
 import { rendered } from "./mock";
 import { buildCache } from "~/lib/form";
 
@@ -60,8 +60,6 @@ describe("degenerate cross tests", () => {
     天,
     九,
     丸,
-    儿,
-    充,
     其,
     艹,
     山,

@@ -1,4 +1,4 @@
-import { Draw, Component, Point, SVGGlyph, SVGStroke } from "./data";
+import type { Draw, Point, SVGStroke } from "./data";
 import {
   add,
   subtract,
@@ -9,15 +9,15 @@ import {
   dot,
 } from "mathjs";
 
-type LinearCurve = {
+interface LinearCurve {
   type: "linear";
   controls: [Point, Point];
-};
+}
 
-type CubicCurve = {
+interface CubicCurve {
   type: "cubic";
   controls: [Point, Point, Point, Point];
-};
+}
 
 type Curve = LinearCurve | CubicCurve;
 
@@ -142,9 +142,9 @@ const findCrossPoint = function (
 
 /**
  * Determine if the point is on a given segment
- * @param from starting point
- * @param to end point
- * @param point another point
+ * @param from - starting point
+ * @param to - end point
+ * @param point - another point
  * @returns
  */
 const isCollinear = (from: Point, to: Point, point: Point) => {

@@ -4,7 +4,8 @@ import { useClassifier } from "~/components/contants";
 import { Button, Flex, Space, notification } from "antd";
 import Root from "~/components/Root";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
-import { PropsWithChildren, useState } from "react";
+import type { PropsWithChildren} from "react";
+import { useState } from "react";
 import { blue } from "@ant-design/colors";
 
 function Draggable({ name }: { name: string }) {

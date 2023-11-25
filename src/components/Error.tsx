@@ -2,9 +2,9 @@
  * Error doundary page for Analysis & Elment router path.
  */
 
-import { Result, Typography } from "antd";
+import { Result } from "antd";
 
-export default function () {
+export default function ErrorResult() {
   return (
     <Result
       status="500"

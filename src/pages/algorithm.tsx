@@ -1,8 +1,8 @@
 import { Flex, Layout, Space, Table } from "antd";
-import { ColumnsType } from "antd/es/table";
+import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Root";
-import { useAll, useDisplay, useForm } from "~/components/contants";
+import { useAll, useDisplay } from "~/components/contants";
 import {
   loadForm,
   selectFormLoading,
@@ -11,7 +11,8 @@ import {
 } from "~/components/store";
 import { listForm } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
-import { Cache, renderComponentForm } from "~/lib/form";
+import type { Cache } from "~/lib/form";
+import { renderComponentForm } from "~/lib/form";
 import { listToObject } from "~/lib/utils";
 
 const DegeneratorTable = () => {
@@ -57,7 +58,7 @@ const DegeneratorTable = () => {
           <Flex gap="middle" wrap="wrap">
             {rootList.map(([name, slices]) => {
               return (
-                <Space>
+                <Space key={name}>
                   <Root>{display(name)}</Root>
                   {slices.map((x) => `(${convert(x).join(", ")})`).join(", ")}
                 </Space>

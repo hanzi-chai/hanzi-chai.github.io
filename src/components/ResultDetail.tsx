@@ -1,11 +1,11 @@
 import { Space, Table } from "antd";
-import type { ColumnType, ColumnsType } from "antd/es/table";
+import type { ColumnsType } from "antd/es/table";
 import Root from "./Root";
 import { useFormConfig } from "./context";
-import { Selector, SieveName } from "~/lib/config";
+import type { Selector } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
 import { useDisplay } from "./contants";
-import { SchemeWithData } from "~/lib/form";
+import type { SchemeWithData } from "~/lib/form";
 
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {
@@ -76,14 +76,14 @@ const ResultDetail = ({
       </Space>
       <Table
         columns={columns}
-        rowKey={"sequence"}
+        rowKey="sequence"
         dataSource={data.sort(makeSorter(selector))}
         pagination={{ hideOnSinglePage: true, defaultPageSize: 20 }}
         size="small"
       />
     </>
   ) : (
-    <div></div>
+    <div />
   );
 };
 

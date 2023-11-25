@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDesign, useFormConfig } from "./context";
 import { Button, Flex } from "antd";
-import { ItemSelect, RootSelect, Select } from "./Utils";
+import { ItemSelect, RootSelect } from "./Utils";
 import Char from "./Char";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";

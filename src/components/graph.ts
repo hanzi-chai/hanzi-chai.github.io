@@ -1,5 +1,5 @@
-import { Edge, Node } from "reactflow";
-import { Condition, Source } from "~/lib/config";
+import type { Edge, Node } from "reactflow";
+import type { Condition, Source } from "~/lib/config";
 import { add, sum } from "mathjs";
 
 export type SourceData = Omit<Source, "next">;
@@ -132,6 +132,9 @@ export const sortNodes = (a: Node, b: Node) => {
   const [typea, typeb] = [a.id[0], b.id[0]];
   if (typea === "s" && typeb === "c") return -1;
   if (typea === "c" && typeb === "s") return 1;
-  const [indexa, indexb] = [parseInt(a.id.slice(1)), parseInt(b.id.slice(1))];
+  const [indexa, indexb] = [
+    parseInt(a.id.slice(1), 10),
+    parseInt(b.id.slice(1), 10),
+  ];
   return indexa - indexb;
 };

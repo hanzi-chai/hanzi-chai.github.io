@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
 import {
   useEncoder,
@@ -7,12 +7,14 @@ import {
 } from "~/components/context";
 import { useAll } from "~/components/contants";
 
-import encode, { EncoderResult, getCache } from "~/lib/encoder";
-import Table, { ColumnsType } from "antd/es/table";
+import type { EncoderResult } from "~/lib/encoder";
+import encode, { getCache } from "~/lib/encoder";
+import type { ColumnsType } from "antd/es/table";
+import Table from "antd/es/table";
 import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
 import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
-import { Character } from "~/lib/data";
+import type { Character } from "~/lib/data";
 import { getSupplemental } from "~/lib/utils";
 
 interface EncodeResultTable {
@@ -86,9 +88,9 @@ const Encoder = () => {
   };
   const lost = [...result].filter(([, v]) => v.length === 0).map(([x]) => x);
 
-  let correct = 0,
-    incorrect = 0,
-    unknown = 0;
+  let correct = 0;
+  let incorrect = 0;
+  let unknown = 0;
 
   let dataSource = [...result]
     .filter(([, v]) => v.length > 0)
@@ -163,9 +165,7 @@ const Encoder = () => {
             showIcon
             closable
           />
-        ) : (
-          <></>
-        )}
+        ) : null}
         <Flex justify="center" align="center" gap="large">
           字集过滤
           <Space>

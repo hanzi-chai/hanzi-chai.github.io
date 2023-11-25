@@ -1,8 +1,7 @@
-import { createContext, useContext } from "react";
 import defaultClassifier from "~/lib/classifier";
 import { isValidChar } from "~/lib/utils";
 import { useData } from "./context";
-import { ComponentGlyph, CompoundGlyph, Form, Repertoire } from "~/lib/data";
+import type { ComponentGlyph, CompoundGlyph } from "~/lib/data";
 import { selectForm, selectRepertoire, useAppSelector } from "./store";
 
 const useGlyph = (char: string) => {
@@ -29,12 +28,12 @@ const useCompound = (char: string) => {
 
 const useRepertoire = () => {
   const repertoire = useAppSelector(selectRepertoire);
-  return Object.assign({}, repertoire, useData().repertoire);
+  return { ...repertoire, ...useData().repertoire };
 };
 
 const useForm = () => {
   const form = useAppSelector(selectForm);
-  return Object.assign({}, form, useData().form);
+  return { ...form, ...useData().form };
 };
 
 const useCode = () => {
@@ -47,7 +46,7 @@ const useCode = () => {
 
 const useClassifier = () => {
   const { classifier } = useData();
-  return Object.assign({}, defaultClassifier, classifier);
+  return { ...defaultClassifier, ...classifier };
 };
 
 const useAll = () => {

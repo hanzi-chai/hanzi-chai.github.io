@@ -1,30 +1,22 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
+import type { Connection, Node, Edge } from "reactflow";
 import ReactFlow, {
-  ReactFlowProvider,
   useNodesState,
   useEdgesState,
   useReactFlow,
-  useOnSelectionChange,
   Background,
   BackgroundVariant,
   Controls,
   addEdge,
-  Connection,
-  Node,
-  Edge,
-  Panel,
 } from "reactflow";
 import { DispatchContext, useEncoder } from "./context";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
-import { Condition, Config, Source } from "~/lib/config";
+import type { Condition, Source } from "~/lib/config";
+import type { SourceData, ConditionData } from "./graph";
 import {
-  SourceData,
-  SNode,
   makeSourceNode,
-  ConditionData,
-  CNode,
   makeConditionNode,
   getLayoutedElements,
   makeEdge,
@@ -76,9 +68,9 @@ const EncoderGraph = () => {
     const idmap = {} as Record<string, string>;
     const sources: Record<string, Source> = {};
     const conditions: Record<string, Condition> = {};
-    let sourceCount = 0,
-      conditionCount = 0,
-      newid: string;
+    let sourceCount = 0;
+    let conditionCount = 0;
+    let newid: string;
     nodes.forEach(({ id, data }) => {
       if ("operator" in data) {
         newid = `c${conditionCount}`;
@@ -121,7 +113,7 @@ const EncoderGraph = () => {
       nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
-      onSelectionChange={({ nodes, edges }) => {
+      onSelectionChange={({ nodes }) => {
         nodes[0] && setSelected(nodes[0].id);
       }}
       onNodesDelete={() => setSelected(undefined)}

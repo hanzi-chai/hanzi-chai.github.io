@@ -1,11 +1,9 @@
+import type { ColProps, RowProps, SelectProps } from "antd";
 import {
   Button,
   Col,
-  ColProps,
   InputNumber,
   Row,
-  RowProps,
-  SelectProps,
   Upload,
   Select as _Select,
   notification,
@@ -15,7 +13,7 @@ import { useFormConfig } from "./context";
 import { useForm, useClassifier, useDisplay } from "./contants";
 import { getSequence } from "~/lib/form";
 import { isValidCJKChar } from "~/lib/utils";
-import { Err } from "~/lib/api";
+import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
 import { dump } from "js-yaml";
@@ -120,15 +118,17 @@ export const RootSelect = ({
   );
 };
 
-export type Index = { char: string };
-export type IndexEdit2 = {
+export interface Index {
+  char: string;
+}
+export interface IndexEdit2 {
   char: string;
   setChar: (s?: string) => void;
-};
-export type IndexEdit3 = {
+}
+export interface IndexEdit3 {
   char: string;
   setChar: (s?: string) => void;
-};
+}
 
 const processExport = (blob: Blob, filename: string) => {
   const a = document.createElement("a");

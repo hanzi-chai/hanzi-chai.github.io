@@ -1,4 +1,5 @@
-import { Layout, Menu, MenuProps } from "antd";
+import type { MenuProps } from "antd";
+import { Layout, Menu } from "antd";
 import BorderOutlined from "@ant-design/icons/BorderOutlined";
 import InfoCircleOutlined from "@ant-design/icons/InfoCircleOutlined";
 import NumberOutlined from "@ant-design/icons/NumberOutlined";

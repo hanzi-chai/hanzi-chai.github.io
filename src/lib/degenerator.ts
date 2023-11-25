@@ -1,8 +1,10 @@
 import { isEqual } from "~/lib/utils";
-import { Cache } from "./form";
-import { Component, SVGGlyph } from "./data";
+import type { Cache } from "./form";
+import type { SVGGlyph } from "./data";
+import { Component } from "./data";
 import findTopology, { renderSVGGlyph } from "./topology";
-import { Interval, curveLength, isBoundedBy, isCollinear } from "./bezier";
+import type { Interval } from "./bezier";
+import { curveLength, isBoundedBy, isCollinear } from "./bezier";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -81,7 +83,7 @@ export const generateSliceBinaries = (component: Cache, root: Cache) => {
   for (const [rIndex, rStroke] of rglyph.entries()) {
     const rStrokeTopology = rtopology[rIndex];
     const end = cglyph.length - rglyph.length + rIndex + 1;
-    for (let _ = queue.length; _ != 0; --_) {
+    for (let _ = queue.length; _ !== 0; --_) {
       const indexList = queue.shift()!;
       const start = indexList.length ? indexList.at(-1)! + 1 : 0;
       for (const [cIndex, cStroke] of cglyph.slice(start, end).entries()) {

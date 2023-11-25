@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Char";
-import { ConfigProvider, Flex, Pagination } from "antd";
+import { Flex, Pagination } from "antd";
 import { useGenericConfig } from "./context";
 
 const Content = styled(Flex)`

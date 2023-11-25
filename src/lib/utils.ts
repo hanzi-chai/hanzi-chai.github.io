@@ -1,29 +1,26 @@
-//@ts-ignore
+// @ts-ignore
 import underscoreIsEqual from "underscore/modules/isEqual";
-import { Feature, schema } from "./classifier";
-import { Mapping } from "./config";
-import {
-  Character,
+import type { Feature } from "./classifier";
+import { schema } from "./classifier";
+import type { Mapping } from "./config";
+import type {
   Form,
   Glyph,
   Operator,
   Partition,
   Point,
   SVGStroke,
-  operators,
 } from "./data";
-import { exp } from "mathjs";
+import { operators } from "./data";
 
-interface IsEqualFunction {
-  /**
-   * Performs an optimized deep comparison between `object` and `other`
-   * to determine if they should be considered equal.
-   * @param object Compare to `other`.
-   * @param other Compare to `object`.
-   * @returns True if `object` should be considered equal to `other`.
-   */
-  (object: any, other: any): boolean;
-}
+/**
+ * Performs an optimized deep comparison between `object` and `other`
+ * to determine if they should be considered equal.
+ * @param object - Compare to `other`.
+ * @param other - Compare to `object`.
+ * @returns True if `object` should be considered equal to `other`.
+ */
+type IsEqualFunction = (object: any, other: any) => boolean;
 export const isEqual = underscoreIsEqual as IsEqualFunction;
 
 export const unicodeBlock = (code: number) => {
@@ -59,7 +56,7 @@ export function deepcopy<T>(t: T) {
 
 export const halfToFull = (s: string) => {
   let result = "";
-  for (let i = 0; i != s.length; ++i) {
+  for (let i = 0; i !== s.length; ++i) {
     const code = s.charCodeAt(i);
     if (code <= 128) {
       result += String.fromCharCode(code + 65248);
@@ -72,7 +69,7 @@ export const halfToFull = (s: string) => {
 
 export const fullToHalf = (s: string) => {
   let result = "";
-  for (let i = 0; i != s.length; ++i) {
+  for (let i = 0; i !== s.length; ++i) {
     const code = s.charCodeAt(i);
     if (65248 <= code && code <= 65248 + 128) {
       result += String.fromCharCode(code - 65248);
@@ -99,6 +96,8 @@ export const getDummyStroke = function (
           return { command, parameterList: [20] };
         case "c":
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
+        default:
+          throw new Error(`impossible type command: ${command}`);
       }
     }),
   };
@@ -113,7 +112,10 @@ export const formDefault: Required<Pick<Glyph, "component" | "compound">> = {
   compound: [{ operator: operators[0], operandList: ["一", "一"] }],
 };
 
-export type MappedInfo = { name: string; code: string };
+export interface MappedInfo {
+  name: string;
+  code: string;
+}
 
 export const reverse = (alphabet: string, mapping: Mapping) => {
   const data: Record<string, MappedInfo[]> = Object.fromEntries(

@@ -1,24 +1,19 @@
 import { Button, Dropdown } from "antd";
-import { PropsWithChildren, useContext } from "react";
-import {
-  Edge,
-  Handle,
-  Node,
-  NodeProps,
-  Position,
-  useReactFlow,
-} from "reactflow";
+import type { PropsWithChildren } from "react";
+import type { Edge, Node, NodeProps } from "reactflow";
+import { Handle, Position, useReactFlow } from "reactflow";
 import styled from "styled-components";
-import {
+import type {
   MenuItemGroupType,
   MenuItemType,
-  SubMenuType,
 } from "antd/es/menu/hooks/useItems";
+// import {
+//   SubMenuType,
+// } from "antd/es/menu/hooks/useItems";
+import type { SourceData, ConditionData } from "./graph";
 import {
-  SourceData,
   makeEdge,
   getLayoutedElements,
-  ConditionData,
   makeSourceNode,
   sortNodes,
   makeConditionNode,

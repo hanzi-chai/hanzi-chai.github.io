@@ -1,7 +1,7 @@
 import mswb from "../examples/mswb.yaml";
 import flypy from "../examples/flypy.yaml";
 import yima from "../examples/yima.yaml";
-import { ExampleConfig } from "./config";
+import type { ExampleConfig } from "./config";
 
 export type Example = "mswb" | "flypy" | "yima";
 

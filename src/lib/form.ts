@@ -1,15 +1,12 @@
-import { FormConfig, MergedData, SieveName } from "./config";
-import { Block, CompoundGlyph, Form, Operator, SVGGlyph } from "./data";
+import type { FormConfig, MergedData, SieveName } from "./config";
+import type { Block, CompoundGlyph, Form, Operator, SVGGlyph } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import findTopology, {
-  RenderedGlyph,
-  StrokeRelation,
-  renderSVGGlyph,
-} from "./topology";
-import { Extra } from "./element";
-import { Classifier } from "./classifier";
+import type { RenderedGlyph, StrokeRelation } from "./topology";
+import findTopology, { renderSVGGlyph } from "./topology";
+import type { Extra } from "./element";
+import type { Classifier } from "./classifier";
 
 export const recursiveGetSequence = function (
   form: Form,
@@ -96,7 +93,7 @@ export interface Cache {
   topology: StrokeRelation[][];
 }
 
-export const buildCache = function (glyph: SVGGlyph, name: string = ""): Cache {
+export const buildCache = function (glyph: SVGGlyph, name = ""): Cache {
   const renderedGlyph = renderSVGGlyph(glyph);
   return { name, glyph: renderedGlyph, topology: findTopology(renderedGlyph) };
 };
@@ -249,7 +246,7 @@ export const disassembleComponents = function (
   data: MergedData,
   config: FormConfig,
 ): ComponentCache {
-  const { form, classifier } = data;
+  const { classifier } = data;
   const componentCache = renderComponentForm(data);
   const { mapping, grouping } = config;
   const roots = new Set([...Object.keys(mapping), ...Object.keys(grouping)]);
@@ -268,7 +265,7 @@ export const disassembleComponents = function (
 
 const topologicalSort = (form: Form) => {
   let compounds = new Map<string, CompoundGlyph>();
-  for (let i = 0; i != 10; ++i) {
+  for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, CompoundGlyph>();
     for (const [k, glyph] of Object.entries(form)) {
       if (compounds.get(k)) continue;

@@ -1,7 +1,7 @@
-import { Classifier, Feature } from "./classifier";
-import { Form, Repertoire } from "./data";
-import { CodableObject } from "./element";
-import { Example } from "./example";
+import type { Classifier, Feature } from "./classifier";
+import type { Form, Repertoire } from "./data";
+import type { CodableObject } from "./element";
+import type { Example } from "./example";
 
 type SieveName = "根少优先" | "笔顺优先" | "能连不交" | "能散不连" | "取大优先";
 
@@ -25,7 +25,7 @@ interface FormConfig extends BaseConfig {
   };
 }
 
-interface PronunciationConfig extends BaseConfig {}
+type PronunciationConfig = BaseConfig;
 
 interface Source {
   object?: CodableObject;

@@ -1,4 +1,4 @@
-import { Flex, Input, Tabs, Typography } from "antd";
+import { Tabs } from "antd";
 import { useState } from "react";
 import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";

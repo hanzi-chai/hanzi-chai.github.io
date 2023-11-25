@@ -1,4 +1,4 @@
-import { Glyph, GlyphOptionalUnicode } from "./data";
+import type { Glyph, GlyphOptionalUnicode } from "./data";
 
 export const endpoint = "https://api.chaifen.app/";
 

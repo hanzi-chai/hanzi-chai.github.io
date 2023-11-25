@@ -1,9 +1,9 @@
+import type { FormListFieldData, MenuProps } from "antd";
 import {
   Button,
   Checkbox,
   Flex,
   Form,
-  FormListFieldData,
   Input,
   InputNumber,
   Radio,
@@ -12,41 +12,29 @@ import {
   Typography,
   Switch,
   Dropdown,
-  MenuProps,
 } from "antd";
-import {
-  IndexEdit2,
-  ItemSelect,
-  NumberInput,
-  Select,
-  errorFeedback,
-} from "./Utils";
-import {
-  PropsWithChildren,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import {
+import type { IndexEdit2 } from "./Utils";
+import { ItemSelect, NumberInput, Select } from "./Utils";
+import type { PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type {
   BasicComponent,
   Block,
-  Component,
-  ComponentGlyph,
   Compound,
   CompoundGlyph,
   Draw,
   Glyph,
-  GlyphOptionalUnicode,
   Operator,
   Partition,
   SVGStroke,
   Stroke,
-  operators,
 } from "~/lib/data";
-import classifier, { Feature, schema } from "~/lib/classifier";
+import { operators } from "~/lib/data";
+import type { Feature } from "~/lib/classifier";
+import classifier, { schema } from "~/lib/classifier";
 import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
-import { FormInstance, useWatch } from "antd/es/form/Form";
+import type { FormInstance } from "antd/es/form/Form";
+import { useWatch } from "antd/es/form/Form";
 import { useForm } from "./contants";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);
@@ -482,7 +470,7 @@ const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
   const thisStatus = Form.useWatch(formName, form) !== undefined;
   const hasComponent = useWatch("component", form) !== undefined;
   const hasCompound = useWatch("compound", form) !== undefined;
-  const last = +hasComponent + +hasCompound === 1;
+  const last = Number(hasComponent) + Number(hasCompound) === 1;
   return (
     <Flex justify="space-between" align="baseline">
       <Typography.Title level={2}>{name}数据</Typography.Title>

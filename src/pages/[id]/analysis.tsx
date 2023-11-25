@@ -4,13 +4,9 @@ import {
   Dropdown,
   Empty,
   Flex,
-  Layout,
-  Menu,
-  MenuItemProps,
   Pagination,
   Radio,
   Space,
-  Table,
   Typography,
 } from "antd";
 
@@ -18,7 +14,7 @@ import { Collapse } from "antd";
 import Char from "~/components/Char";
 import Root from "~/components/Root";
 import ResultDetail from "~/components/ResultDetail";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useFormConfig } from "~/components/context";
 import {
   useAll,
@@ -26,18 +22,17 @@ import {
   useClassifier,
   useDisplay,
 } from "~/components/contants";
-import {
+import type {
   ComponentCache,
   ComponentResult,
   CompoundCache,
   CompoundResult,
-  getFormCore,
-  getSequence,
 } from "~/lib/form";
+import { getFormCore, getSequence } from "~/lib/form";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
-import { MenuProps } from "rc-menu";
+import type { MenuProps } from "rc-menu";
 
 const ResultSummary = ({
   char,
@@ -124,9 +119,7 @@ const Analysis = () => {
           children:
             "schemes" in res ? (
               <ResultDetail data={res.schemes} map={res.map} />
-            ) : (
-              <></>
-            ),
+            ) : null,
         };
       }),
     [...compoundResults]
@@ -204,7 +197,7 @@ const Analysis = () => {
                 )}
                 accordion={true}
                 bordered={false}
-                size={"small"}
+                size="small"
                 defaultActiveKey={["1"]}
               />
               <Pagination

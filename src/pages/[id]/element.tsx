@@ -1,5 +1,5 @@
 import Mapping from "~/components/Mapping";
-import { Flex, Form, Layout, Menu, Typography } from "antd";
+import { Layout, Menu, Typography } from "antd";
 import { useState } from "react";
 import {
   useClassifier,
@@ -8,9 +8,10 @@ import {
   useRepertoire,
 } from "~/components/contants";
 import { Outlet, useNavigate } from "react-router-dom";
-import { EditorColumn, EditorRow, Select } from "~/components/Utils";
+import { EditorColumn, EditorRow } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
-import { AName, analyzerNames, pinyinAnalyzers } from "~/lib/element";
+import type { AName } from "~/lib/element";
+import { analyzerNames, pinyinAnalyzers } from "~/lib/element";
 import { getSequence } from "~/lib/form";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useConfigType } from "~/components/context";

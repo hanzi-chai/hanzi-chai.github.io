@@ -1,20 +1,11 @@
-import {
-  Button,
-  Dropdown,
-  Flex,
-  Form,
-  Input,
-  List,
-  MenuProps,
-  Popover,
-  Space,
-} from "antd";
-import { useContext, useState } from "react";
+import { Button, Flex, Form, Input, List, Popover, Space } from "antd";
+import { useState } from "react";
 import { useDesign, useGenericConfig } from "./context";
-import { useDisplay, useForm, useGlyph } from "./contants";
+import { useDisplay, useForm } from "./contants";
 import Root from "./Root";
 import Char from "./Char";
-import { MappedInfo, reverse } from "~/lib/utils";
+import type { MappedInfo } from "~/lib/utils";
+import { reverse } from "~/lib/utils";
 import { RootSelect, Select } from "./Utils";
 import { Select as AntdSelect } from "antd";
 
@@ -175,14 +166,14 @@ const Mapping = () => {
             <Flex gap="small" style={{ margin: "8px 0" }}>
               <Char>{key}</Char>
               <Flex gap="small" wrap="wrap">
-                {roots.map(({ name: name, code }) => (
+                {roots.map(({ name, code }) => (
                   <AdjustableRoot key={name} name={name} code={code} />
                 ))}
               </Flex>
             </Flex>
           );
         }}
-      ></List>
+      />
     </>
   );
 };

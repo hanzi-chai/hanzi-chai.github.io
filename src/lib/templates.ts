@@ -1,4 +1,4 @@
-import { Config, PartialClassifier } from "./config";
+import type { Config, PartialClassifier } from "./config";
 import { examples } from "./example";
 
 const getInfo = function (name: string): Config["info"] {
@@ -50,13 +50,13 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "双编形码（易）": examples.yima.encoder,
 };
 
-export type StarterType = {
+export interface StarterType {
   name: string;
   data: ClassifierType;
   form: FormTypes;
   pron: PronTypes;
   encoder: EncoderTypes;
-};
+}
 
 export const createConfig = function (starter: StarterType): Config {
   return {

@@ -1,12 +1,8 @@
 import { expect, describe, it } from "vitest";
-import findTopology, {
-  CurveRelation,
-  StrokeRelation,
-  curveRelation,
-  renderSVGGlyph,
-} from "~/lib/topology";
+import type { StrokeRelation } from "~/lib/topology";
+import findTopology, { curveRelation, renderSVGGlyph } from "~/lib/topology";
 import { area, render } from "~/lib/bezier";
-import { CubicCurve, Draw, LinearCurve, Point } from "~/lib/data";
+import type { CubicCurve, Draw, LinearCurve, Point } from "~/lib/data";
 import { rendered } from "./mock";
 import { getIntervalPosition, makeCurve } from "~/lib/bezier";
 

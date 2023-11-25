@@ -1,21 +1,15 @@
 import { Button, Checkbox, Form, Input, Popconfirm, Popover } from "antd";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import {
-  Err,
   remoteCreate,
   remoteCreateWithoutUnicode,
   remoteUpdate,
   remoteRemove,
   remoteMutate,
 } from "~/lib/api";
-import { Glyph, GlyphOptionalUnicode } from "~/lib/data";
-import {
-  Index,
-  IndexEdit2,
-  Select,
-  errorFeedback,
-  verifyNewName,
-} from "~/components/Utils";
+import type { Glyph, GlyphOptionalUnicode } from "~/lib/data";
+import type { IndexEdit2 } from "~/components/Utils";
+import { Select, errorFeedback, verifyNewName } from "~/components/Utils";
 import { deepcopy, length, isValidCJKChar, formDefault } from "~/lib/utils";
 import {
   mutate,
@@ -25,7 +19,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "~/components/store";
-import { GlyphModel, ModelContext } from "~/components/GlyphModel";
+import { ModelContext } from "~/components/GlyphModel";
 import { useAdd, useData, useRemove } from "./context";
 import { useCode, useForm } from "./contants";
 
@@ -119,13 +113,13 @@ export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => {
               {
                 required: true,
                 validator: (_, value) => {
-                  if (!value) return Promise.reject("不能为空");
+                  if (!value) return Promise.reject(new Error("不能为空"));
                   if (form[value as string] !== undefined)
-                    return Promise.reject("字符已存在");
+                    return Promise.reject(new Error("字符已存在"));
                   const valid = Array.from(value as string).every((x) =>
                     isValidCJKChar(x.codePointAt(0)!),
                   );
-                  if (!valid) return Promise.reject("限 CJK/扩展 A");
+                  if (!valid) return Promise.reject(new Error("限 CJK/扩展 A"));
                   return Promise.resolve();
                 },
               },

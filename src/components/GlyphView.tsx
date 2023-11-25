@@ -1,9 +1,16 @@
 import styled from "styled-components";
-import { BasicComponent, Component, Glyph, SVGGlyph, Stroke } from "~/lib/data";
-import { Empty, Typography } from "antd";
-import { useComponent, useForm } from "./contants";
-import { Index } from "./Utils";
-import { FormInstance, useWatch } from "antd/es/form/Form";
+import type {
+  BasicComponent,
+  Component,
+  Glyph,
+  SVGGlyph,
+  Stroke,
+} from "~/lib/data";
+import { Empty } from "antd";
+import { useForm } from "./contants";
+import type { Index } from "./Utils";
+import type { FormInstance } from "antd/es/form/Form";
+import { useWatch } from "antd/es/form/Form";
 import { recursiveRenderGlyph } from "~/lib/form";
 
 const FontView = ({ reference }: { reference: string }) => (

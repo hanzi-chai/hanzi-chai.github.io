@@ -1,8 +1,8 @@
-import { Dispatch, createContext, useContext } from "react";
-import { Config, SieveName } from "~/lib/config";
-import { Glyph, Character } from "~/lib/data";
+import type { Dispatch } from "react";
+import { createContext, useContext } from "react";
+import type { Config, SieveName } from "~/lib/config";
+import type { Glyph, Character } from "~/lib/data";
 import { useLocation } from "react-router-dom";
-import { Feature } from "~/lib/classifier";
 
 // Config 对象一共有 7 个字段，除了 version 和 source 不可变外，均可以通过 action 改变
 // LoadAction 可以直接替换 Config 本身
@@ -18,14 +18,14 @@ export type Action =
   | ElementAction
   | EncoderAction;
 
-type LoadAction = {
+interface LoadAction {
   type: "load";
   value: Config;
-};
-type InfoAction = {
+}
+interface InfoAction {
   type: "info";
   value: Config["info"];
-};
+}
 type DataAction = {
   type: "data";
   action: "add" | "remove";
@@ -38,7 +38,10 @@ type ElementAction = {
   type: "element";
   index: "form" | "pronunciation";
 } & ElementSubAction;
-type EncoderAction = { type: "encoder"; value: Config["encoder"] };
+interface EncoderAction {
+  type: "encoder";
+  value: Config["encoder"];
+}
 
 type ElementSubAction =
   | {

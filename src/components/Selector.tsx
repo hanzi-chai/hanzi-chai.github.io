@@ -1,8 +1,7 @@
 import { sieveMap } from "~/lib/selector";
-import { EditorColumn, EditorRow, Select } from "./Utils";
+import type { DragEndEvent } from "@dnd-kit/core";
 import {
   DndContext,
-  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -15,7 +14,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { SieveName } from "~/lib/config";
+import type { SieveName } from "~/lib/config";
 import { useDesign, useFormConfig } from "./context";
 import { Button, Dropdown, Flex } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";

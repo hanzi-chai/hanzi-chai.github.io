@@ -12,7 +12,7 @@ const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
   const classifier = useClassifier();
   const numbers = Object.values(classifier);
   const valid = Array.from(sequence).every((x) =>
-    numbers.includes(parseInt(x)),
+    numbers.includes(parseInt(x, 10)),
   );
   return (
     <Input

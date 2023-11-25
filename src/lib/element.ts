@@ -1,6 +1,5 @@
-import { Config, MergedData } from "./config";
-import { ComponentGlyph, Glyph } from "./data";
-import { TotalResult } from "./encoder";
+import type { MergedData } from "./config";
+import type { TotalResult } from "./encoder";
 
 export interface Extra {
   rootSequence: Record<string, number[]>;
@@ -128,7 +127,7 @@ export const findElement = (
     case "字根":
       return getindex(sequence, object.rootIndex);
     case "笔画":
-    case "二笔":
+    case "二笔": {
       root = getindex(sequence, object.rootIndex);
       if (root === undefined) return undefined;
       strokes = extra.rootSequence[root];
@@ -148,5 +147,6 @@ export const findElement = (
       if (stroke1 === undefined) return undefined;
       const stroke2 = getindex(strokes, i2);
       return [stroke1, stroke2].join("");
+    }
   }
 };

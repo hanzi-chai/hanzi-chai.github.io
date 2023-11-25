@@ -1,13 +1,5 @@
-import React, {
-  ChangeEvent,
-  Dispatch,
-  useContext,
-  useEffect,
-  useReducer,
-  useState,
-  Suspense,
-} from "react";
-import { Button, Flex, Layout, Menu, Space, Typography, Upload } from "antd";
+import React, { useContext, useEffect, Suspense } from "react";
+import { Button, Flex, Layout, Menu, Space, Typography } from "antd";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
 import SettingOutlined from "@ant-design/icons/SettingOutlined";
@@ -20,19 +12,12 @@ import {
   DispatchContext,
   configReducer,
 } from "~/components/context";
-import { Config } from "~/lib/config";
-import { dump, load } from "js-yaml";
-import {
-  Link,
-  Outlet,
-  useLoaderData,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import type { Config } from "~/lib/config";
+import { load } from "js-yaml";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
 import { Uploader, exportYAML } from "~/components/Utils";
 import { examples } from "~/lib/example";
-import { Compound, Form, Repertoire } from "~/lib/data";
 import { listToObject } from "~/lib/utils";
 import CusSpin from "~/components/CustomSpin";
 import {
@@ -172,18 +157,14 @@ const Contextualized = () => {
     localStorage.setItem(id!, JSON.stringify(config));
   }, [config, id]);
 
-  return (
-    <>
-      {loading ? (
-        <CusSpin tip="加载JSON数据…" />
-      ) : (
-        <ConfigContext.Provider value={config}>
-          <DispatchContext.Provider value={dispatch}>
-            <EditorLayout />
-          </DispatchContext.Provider>
-        </ConfigContext.Provider>
-      )}
-    </>
+  return loading ? (
+    <CusSpin tip="加载JSON数据…" />
+  ) : (
+    <ConfigContext.Provider value={config}>
+      <DispatchContext.Provider value={dispatch}>
+        <EditorLayout />
+      </DispatchContext.Provider>
+    </ConfigContext.Provider>
   );
 };
 

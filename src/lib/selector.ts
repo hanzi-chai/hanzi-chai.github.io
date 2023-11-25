@@ -1,18 +1,17 @@
-import { Cache } from "./form";
-import { Selector, SieveName } from "./config";
+import type { Cache } from "./form";
+import type { Selector, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
-import { isEqual } from "~/lib/utils";
-import { CurveRelation } from "./topology";
+import type { CurveRelation } from "./topology";
 
 type Scheme = number[];
 
 type Comparable = number | number[];
 
-type Sieve<T extends Comparable> = {
+interface Sieve<T extends Comparable> {
   title: SieveName;
   key: (component: Cache, scheme: Scheme) => T;
   display?: (data: T) => string;
-};
+}
 
 function isLess<T extends Comparable>(a: T, b: T) {
   if (typeof a === "number" && typeof b === "number") {
@@ -50,7 +49,7 @@ export const order: Sieve<number> = {
       .map((x) => binaryToIndices(component.glyph.length)(x))
       .flat();
     const isSorted = indices.slice(1).every((v, i) => indices[i]! < v);
-    return +!isSorted;
+    return Number(!isSorted);
   },
 };
 
@@ -67,8 +66,8 @@ const makeTopologySieve = function (
     for (const [i, bi] of parsedScheme.entries()) {
       for (const [j, bj] of parsedScheme.entries()) {
         if (j >= i) continue;
-        let r = false,
-          a = false;
+        let r = false;
+        let a = false;
         for (const k of bi) {
           for (const l of bj) {
             const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
@@ -77,7 +76,7 @@ const makeTopologySieve = function (
             a ||= relations.some((v) => avoidRelationType.includes(v.type));
           }
         }
-        if (!a) totalCrosses += +r;
+        if (!a) totalCrosses += Number(r);
       }
     }
     return totalCrosses;
@@ -96,9 +95,9 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
 const select = (selector: Selector, component: Cache, schemeList: Scheme[]) => {
   const sieveList = selector.map((s) => sieveMap.get(s)!);
   const schemeData = schemeList.map(
-    (_) => new Map<SieveName, number | number[]>(),
+    () => new Map<SieveName, number | number[]>(),
   );
-  const exclusion = schemeList.map((_) => false);
+  const exclusion = schemeList.map(() => false);
   for (const sieve of sieveList) {
     let min: number | number[] | undefined;
     for (const [index, scheme] of schemeList.entries()) {

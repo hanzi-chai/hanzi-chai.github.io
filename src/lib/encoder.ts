@@ -1,6 +1,15 @@
-import { Condition, Config, Mapping, MergedData, Op, Source } from "./config";
-import { ComponentResult, CompoundResult, getForm } from "./form";
-import { renderName, findElement, Extra } from "./element";
+import type {
+  Condition,
+  Config,
+  Mapping,
+  MergedData,
+  Op,
+  Source,
+} from "./config";
+import type { ComponentResult, CompoundResult } from "./form";
+import { getForm } from "./form";
+import type { Extra } from "./element";
+import { findElement } from "./element";
 
 export const table: Record<Op, (target?: string, value?: string) => boolean> = {
   是: (t, v) => t === v,
@@ -11,7 +20,10 @@ export const table: Record<Op, (target?: string, value?: string) => boolean> = {
   不存在: (t) => t === undefined,
 };
 
-type Metadata = { char: string; pinyin: string };
+interface Metadata {
+  char: string;
+  pinyin: string;
+}
 type ComponentTotalResult = ComponentResult & Metadata;
 type CompoundTotalResult = CompoundResult & Metadata;
 export type TotalResult = ComponentTotalResult | CompoundTotalResult;
@@ -50,7 +62,7 @@ const compile = (
   const pronMerge = pronunciation
     ? merge(pronunciation.grouping, pronunciation.mapping)
     : {};
-  const totalMapping = Object.assign({}, formMerge, pronMerge);
+  const totalMapping = { ...formMerge, ...pronMerge };
   return (result: TotalResult, data: MergedData, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as string[];

@@ -1,15 +1,15 @@
-import { Button, Form, Input, Modal, Select, notification } from "antd";
+import { Button, Form, Input, Modal, Select } from "antd";
 import { useState } from "react";
+import type { StarterType } from "~/lib/templates";
 import {
-  StarterType,
   classifierTypes,
   createConfig,
   encoderTypes,
   formTypes,
   pronTypes,
 } from "~/lib/templates";
-import { Updater } from "use-immer";
-import { Config } from "~/lib/config";
+import type { Updater } from "use-immer";
+import type { Config } from "~/lib/config";
 import { nanoid } from "@reduxjs/toolkit";
 
 const Starter = ({

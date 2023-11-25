@@ -1,4 +1,4 @@
-import { Feature } from "./classifier";
+import type { Feature } from "./classifier";
 
 type N1 = [number];
 type N2 = [number, number];
@@ -23,15 +23,15 @@ type SVGCommand = Draw["command"];
 
 type Point = N2;
 
-type LinearCurve = {
+interface LinearCurve {
   type: "linear";
   controls: [Point, Point];
-};
+}
 
-type CubicCurve = {
+interface CubicCurve {
   type: "cubic";
   controls: [Point, Point, Point, Point];
-};
+}
 
 type Curve = LinearCurve | CubicCurve;
 
@@ -95,14 +95,14 @@ interface Character {
   gb2312: boolean;
 }
 
-type GlyphBase = {
+interface GlyphBase {
   unicode: number;
   name: string | null;
   gf0014_id: number | null;
   component?: Component;
   compound?: Compound;
   ambiguous: boolean;
-};
+}
 
 interface ComponentGlyph extends GlyphBase {
   default_type: "component";
