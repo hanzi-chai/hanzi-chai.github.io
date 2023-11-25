@@ -4,7 +4,12 @@ import type { SVGGlyph } from "./data";
 import { Component } from "./data";
 import findTopology, { renderSVGGlyph } from "./topology";
 import type { Interval } from "./bezier";
-import { curveLength, isBoundedBy, isCollinear } from "./bezier";
+import {
+  curveLength,
+  isBoundedBy,
+  isCollinear,
+  sortTwoNumbers,
+} from "./bezier";
 import { Degenerator, FormConfig } from "./config";
 import { Feature } from "./classifier";
 
@@ -27,7 +32,9 @@ const strokeFeatureEqual = (
   s2: Feature,
 ) => {
   const { feature } = degenerator;
-  return feature[s1] === feature[s2];
+  const d1 = feature[s1] ?? s1;
+  const d2 = feature[s2] ?? s2;
+  return d1 === d2;
 };
 
 const verifySpecialRoots = (
@@ -112,7 +119,7 @@ export const generateSliceBinaries = (
     queue = queue.filter((indices) => {
       const others = allindices.filter((x) => !indices.includes(x));
       const allCombinations = indices
-        .map((x) => others.map((y) => [x, y].sort() as [number, number]))
+        .map((x) => others.map((y) => sortTwoNumbers([x, y])))
         .flat();
       return allCombinations.every(([x, y]) => {
         const relation = ctopology[y]![x]!;

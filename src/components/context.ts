@@ -3,6 +3,7 @@ import { createContext, useContext } from "react";
 import type { Config, SieveName } from "~/lib/config";
 import type { Glyph, Character } from "~/lib/data";
 import { useLocation } from "react-router-dom";
+import { Feature } from "~/lib/classifier";
 
 // Config 对象一共有 7 个字段，除了 version 和 source 不可变外，均可以通过 action 改变
 // LoadAction 可以直接替换 Config 本身
@@ -65,6 +66,16 @@ type ElementSubAction =
       value?: string;
     }
   | {
+      subtype: "root-degenerator";
+      action: "add" | "remove";
+      key: Feature;
+      value?: Feature;
+    }
+  | {
+      subtype: "root-degenerator-nocross";
+      action: "toggle";
+    }
+  | {
       subtype: "root-selector";
       action: "add" | "remove";
       value: SieveName;
@@ -83,11 +94,10 @@ type ElementSubAction =
 
 // 全部更改逻辑 TODO：重构为 Redux
 export const configReducer = (config: Config, action: Action) => {
-  const { type, value } = action;
   const { index } = action as ElementAction;
   const element = index === "form" ? config.form : config.pronunciation!;
   const root = config.form;
-  switch (type) {
+  switch (action.type) {
     case "load":
       config = action.value;
       break;
@@ -133,6 +143,20 @@ export const configReducer = (config: Config, action: Action) => {
               delete element.grouping[action.key];
               break;
           }
+          break;
+        case "root-degenerator":
+          switch (action.action) {
+            case "add":
+              root.analysis.degenerator.feature[action.key] = action.value!;
+              break;
+            case "remove":
+              delete root.analysis.degenerator.feature[action.key];
+              break;
+          }
+          break;
+        case "root-degenerator-nocross":
+          root.analysis.degenerator.nocross =
+            !root.analysis.degenerator.nocross;
           break;
         case "root-selector":
           switch (action.action) {

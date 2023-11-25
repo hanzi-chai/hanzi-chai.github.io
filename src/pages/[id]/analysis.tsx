@@ -33,6 +33,7 @@ import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import type { MenuProps } from "rc-menu";
+import Degenerator from "~/components/Degenerator";
 
 const ResultSummary = ({
   char,
@@ -141,6 +142,7 @@ const Analysis = () => {
       <EditorRow>
         <EditorColumn span={8}>
           <Typography.Title level={2}>字形分析</Typography.Title>
+          <Degenerator />
           <Selector />
           <Typography.Title level={2}>自定义分析</Typography.Title>
           <Typography.Title level={3}>部件</Typography.Title>

@@ -16,7 +16,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { SieveName } from "~/lib/config";
 import { useDesign, useFormConfig } from "./context";
-import { Button, Dropdown, Flex } from "antd";
+import { Button, Dropdown, Flex, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 
 const SortableItem = ({ sieve }: { sieve: SieveName }) => {
@@ -78,6 +78,7 @@ const Selector = () => {
 
   return (
     <Flex vertical gap="small">
+      <Typography.Title level={3}>拆分规则</Typography.Title>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <SortableContext items={selector}>
           {selector.map((sieve) => (

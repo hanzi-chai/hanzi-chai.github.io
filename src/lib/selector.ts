@@ -52,6 +52,16 @@ export const bias: Sieve<number[]> = {
 };
 
 /**
+ * 规则：取小优先
+ * 让顺序靠前的字根尽量取到更少的笔画
+ */
+export const unbias: Sieve<number[]> = {
+  title: "取小优先",
+  key: (scheme) => scheme.map(countStrokes),
+  display: (data: number[]) => "(" + data.join(", ") + ")",
+};
+
+/**
  * 规则：全符笔顺
  * 各个字根中笔画的顺序连在一起是否与整个部件的笔顺相同，相同者优先
  * 该规则采集自三码郑码的文档
@@ -165,9 +175,17 @@ export const orientation: Sieve<number> = {
 };
 
 export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
-  [length, order, order2, bias, crossing, attaching, similar, orientation].map(
-    (x) => [x.title, x],
-  ),
+  [
+    length,
+    order,
+    order2,
+    bias,
+    unbias,
+    crossing,
+    attaching,
+    similar,
+    orientation,
+  ].map((x) => [x.title, x]),
 );
 
 const select = (

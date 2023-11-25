@@ -30,14 +30,17 @@ interface RenderedStroke {
   curveList: Curve[];
 }
 
+export const sortTwoNumbers = (ar: [number, number]) =>
+  ar.sort((a, b) => a - b) as [number, number];
+
 const getBoundingBox = (a: Curve) =>
   [a.controls[0], a.controls[a.controls.length - 1]] as [Point, Point];
 
 const getIntervalOnOrientation = function (a: Curve): [Interval, Interval] {
   const start = a.controls[0];
   const end = a.controls.at(-1)!;
-  const i1 = [start[0], end[0]].sort() as Interval;
-  const i2 = [start[1], end[1]].sort() as Interval;
+  const i1 = sortTwoNumbers([start[0], end[0]]);
+  const i2 = sortTwoNumbers([start[1], end[1]]);
   if (a.orientation === "horizontal") {
     return [i1, i2];
   } else {
