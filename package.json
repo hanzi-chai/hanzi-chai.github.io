@@ -30,6 +30,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@jsdevtools/version-bump-prompt": "^6.1.0",
     "@reduxjs/toolkit": "^1.9.7",
+    "ahooks": "^3.7.8",
     "antd": "^5.11.4",
     "d3-array": "^3.2.4",
     "immer": "^10.0.3",

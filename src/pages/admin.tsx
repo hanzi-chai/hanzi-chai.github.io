@@ -4,8 +4,10 @@ import { loadForm, useAppDispatch } from "~/components/store";
 import { Layout } from "antd";
 import { listForm } from "~/lib/api";
 import FormTable from "~/components/FormTable";
+import { useChaifenTitle } from "~/lib/hooks";
 
 const AdminLayout = () => {
+  useChaifenTitle("部件检查");
   const dispatch = useAppDispatch();
   useEffect(() => {
     listForm().then((data) => {

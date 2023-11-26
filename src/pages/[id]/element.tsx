@@ -15,6 +15,7 @@ import { analyzerNames, pinyinAnalyzers } from "~/lib/element";
 import { getSequence } from "~/lib/form";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useConfigType } from "~/components/context";
+import { useChaifenTitle } from "~/lib/hooks";
 
 const Elements = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const formElementTypes = ["字根", "笔画", "二笔"] as const;
 type FormElementTypes = (typeof formElementTypes)[number];
 
 export const RootElementConfig = () => {
+  useChaifenTitle("字形元素");
   const [sequence, setSequence] = useState("");
   const classifier = useClassifier();
   const allStrokes = Array.from(new Set(Object.values(classifier)))
@@ -90,6 +92,7 @@ export const RootElementConfig = () => {
 };
 
 export const PhoneticElementConfig = () => {
+  useChaifenTitle("字音元素");
   const characters = useRepertoire();
   const syllables = [
     ...new Set(

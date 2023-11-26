@@ -22,6 +22,7 @@ import { load } from "js-yaml";
 import Starter from "~/components/Starter";
 import { post } from "~/lib/api";
 import { md5 } from "js-md5";
+import { useChaifenTitle } from "~/lib/hooks";
 
 type Status = "login" | "signup" | "signin";
 
@@ -135,6 +136,7 @@ const UserInfo = () => {
 };
 
 const HomeLayout = () => {
+  useChaifenTitle("首页");
   const [configs, setConfigs] = useImmer(() =>
     Object.fromEntries(
       Object.entries(localStorage)

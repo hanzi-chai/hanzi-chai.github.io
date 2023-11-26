@@ -8,6 +8,7 @@ import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import type { Character } from "~/lib/data";
 import { deepcopy } from "~/lib/utils";
+import { useChaifenTitle } from "~/lib/hooks";
 
 interface DataType extends Character {
   key: string;
@@ -38,6 +39,7 @@ const EditablePinyin = ({
 };
 
 const Repertoire: React.FC = () => {
+  useChaifenTitle('字音字集数据')
   const characters = useRepertoire();
   const modify = useAdd();
   const [input, setInput] = useState("");
