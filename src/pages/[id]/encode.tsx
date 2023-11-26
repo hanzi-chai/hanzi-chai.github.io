@@ -1,11 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
-import {
-  ConfigContext,
-  useEncoder,
-  useFormConfig,
-  usePronunciationConfig,
-} from "~/components/context";
+import { ConfigContext } from "~/components/context";
 import { useAll } from "~/components/contants";
 
 import type { EncoderResult } from "~/lib/encoder";
@@ -17,6 +12,7 @@ import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
 import type { Character } from "~/lib/data";
 import { getSupplemental } from "~/lib/utils";
+import { useChaifenTitle } from "~/lib/hooks";
 
 interface EncodeResultTable {
   char: string;
@@ -53,6 +49,7 @@ const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as con
 type FilterOption = (typeof filterOptions)[number];
 
 const Encoder = () => {
+  useChaifenTitle("编码");
   const data = useAll();
   const config = useContext(ConfigContext);
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");

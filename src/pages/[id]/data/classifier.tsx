@@ -7,6 +7,7 @@ import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PropsWithChildren} from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
+import { useChaifenTitle } from "~/lib/hooks";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -49,6 +50,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 };
 
 const Classifier = () => {
+  useChaifenTitle('笔画分类数据')
   const classifier = useClassifier();
   const modify = useAdd();
   const [categories, setCategories] = useState(

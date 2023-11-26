@@ -34,6 +34,7 @@ import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import type { MenuProps } from "rc-menu";
 import Degenerator from "~/components/Degenerator";
+import { useChaifenTitle } from "~/lib/hooks";
 
 const ResultSummary = ({
   char,
@@ -98,6 +99,7 @@ const AnalysisExporter = ({
 };
 
 const Analysis = () => {
+  useChaifenTitle("分析");
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
   const [componentCache, setComponentCache] = useState<ComponentCache>(

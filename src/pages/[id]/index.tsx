@@ -1,4 +1,5 @@
 import React, { useContext, useEffect } from "react";
+import { useChaifenTitle } from "~/lib/hooks";
 import { Button, Col, Form, Input, Typography } from "antd";
 import { DispatchContext, useInfo } from "~/components/context";
 import { Config } from "~/lib/config";
@@ -10,6 +11,7 @@ const Info: React.FC = () => {
   const info = useInfo();
   const dispatch = useContext(DispatchContext);
   const [antdForm] = useForm();
+  useChaifenTitle("基本信息");
   useEffect(() => {
     antdForm.setFieldsValue(info);
   }, [info]);
