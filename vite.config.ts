@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => {
           {
             name: "antd",
             var: "antd",
-            path: "dist/antd.min.js",
+            path: "dist/antd-with-locales.js",
           },
         ],
       }),
