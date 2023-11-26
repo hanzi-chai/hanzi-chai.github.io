@@ -108,7 +108,7 @@ export const configReducer = (config: Config, action: Action) => {
       switch (action.action) {
         case "add":
           // @ts-ignore
-          config.data[action.subtype][action.key] = value;
+          config.data[action.subtype][action.key] = action.value;
           break;
         case "remove":
           // @ts-ignore

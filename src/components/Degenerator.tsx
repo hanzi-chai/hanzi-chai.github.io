@@ -19,11 +19,22 @@ const Degenerator = () => {
       <Typography.Title level={3}>字根认同</Typography.Title>
       <Flex vertical gap="small" align="center">
         {Object.entries(degenerator.feature).map(([from, to]) => (
-          <Flex justify="center" align="center" gap="small">
+          <Flex justify="center" align="center" gap="small" key={from}>
             认为
-            <Select<Feature> value={from as Feature} options={options} />
+            <span>{from as Feature}</span>
             与
-            <Select<Feature> value={to} options={options} />
+            <Select<Feature>
+              value={to}
+              options={options}
+              onChange={(value) => {
+                design({
+                  subtype: "root-degenerator",
+                  action: "add",
+                  key: from as Feature,
+                  value,
+                });
+              }}
+            />
             相同
             <Button
               onClick={() => {

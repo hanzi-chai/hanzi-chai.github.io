@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --mode CF",
     "fetch": "node scripts/fetchCache.mjs",
+    "reference": "node scripts/fetchTable.mjs",
     "publish": "bump --tag --commit --push",
     "build:BEX": "vite build --mode BEX && node scripts/makeBex.cjs",
     "build:PAGES": "vite build --mode PAGES",

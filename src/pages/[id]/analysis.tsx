@@ -38,18 +38,30 @@ import Degenerator from "~/components/Degenerator";
 const ResultSummary = ({
   char,
   rootSeries,
+  overrideRootSeries,
 }: {
   char: string;
   rootSeries: string[];
+  overrideRootSeries?: string[];
 }) => {
   const display = useDisplay();
   return (
-    <Space>
-      <Char>{display(char)}</Char>
-      {rootSeries.map((x, index) => (
-        <Root key={index}>{display(x)}</Root>
-      ))}
-    </Space>
+    <Flex gap="middle">
+      <Space>
+        <Char>{display(char)}</Char>
+        {rootSeries.map((x, index) => (
+          <Root key={index}>{display(x)}</Root>
+        ))}
+      </Space>
+      {overrideRootSeries && (
+        <Space>
+          <span>（自定义：）</span>
+          {overrideRootSeries.map((x, index) => (
+            <Root key={index}>{display(x)}</Root>
+          ))}
+        </Space>
+      )}
+    </Flex>
   );
 };
 
@@ -88,19 +100,19 @@ const AnalysisExporter = ({
 const Analysis = () => {
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
-  const [componentResults, setComponentResult] = useState<ComponentCache>(
+  const [componentCache, setComponentCache] = useState<ComponentCache>(
     new Map(),
   );
-  const [compoundResults, setCompoundResult] = useState<CompoundCache>(
-    new Map(),
-  );
+  const [componentCustomizations, setComponentCustomizations] =
+    useState<ComponentCache>(new Map());
+  const [compoundCache, setCompoundCache] = useState<CompoundCache>(new Map());
   const classifier = useClassifier();
   const data = useAll();
   const form = useForm();
   const formConfig = useFormConfig();
   const display = useDisplay();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const roots = Object.keys(formConfig.mapping).concat(
     Object.keys(formConfig.grouping),
   );
@@ -111,12 +123,19 @@ const Analysis = () => {
   );
 
   const displays = [
-    [...componentResults]
+    [...componentCache]
       .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
+      .filter(([, v]) => v.sequence.length > 1)
       .map(([key, res]) => {
         return {
           key,
-          label: <ResultSummary char={key} rootSeries={res.sequence} />,
+          label: (
+            <ResultSummary
+              char={key}
+              rootSeries={res.sequence}
+              overrideRootSeries={componentCustomizations.get(key)?.sequence}
+            />
+          ),
           children:
             "schemes" in res ? (
               <ResultDetail
@@ -127,7 +146,7 @@ const Analysis = () => {
             ) : null,
         };
       }),
-    [...compoundResults]
+    [...compoundCache]
       .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
       .map(([key, res]) => {
         return {
@@ -155,27 +174,26 @@ const Analysis = () => {
             <Button
               type="primary"
               onClick={() => {
-                const [componentResults, compoundResults] = getFormCore(
-                  data,
-                  formConfig,
-                );
-                setComponentResult(componentResults);
-                setCompoundResult(compoundResults);
+                const { componentCache, customizations, compoundCache } =
+                  getFormCore(data, formConfig);
+                setComponentCache(componentCache);
+                setComponentCustomizations(customizations);
+                setCompoundCache(compoundCache);
               }}
             >
               计算
             </Button>
             <Button
               onClick={() => {
-                setComponentResult(new Map());
-                setCompoundResult(new Map());
+                setComponentCache(new Map());
+                setCompoundCache(new Map());
               }}
             >
               清空
             </Button>
             <AnalysisExporter
-              componentResults={componentResults}
-              compoundResults={compoundResults}
+              componentResults={componentCache}
+              compoundResults={compoundCache}
             />
             <Button
               onClick={() => {

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
 import {
+  ConfigContext,
   useEncoder,
   useFormConfig,
   usePronunciationConfig,
@@ -53,9 +54,7 @@ type FilterOption = (typeof filterOptions)[number];
 
 const Encoder = () => {
   const data = useAll();
-  const formConfig = useFormConfig();
-  const pronunciationConfig = usePronunciationConfig();
-  const encoder = useEncoder();
+  const config = useContext(ConfigContext);
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>(new Map());
@@ -73,19 +72,6 @@ const Encoder = () => {
     所有汉字: () => true,
   };
 
-  const compute = () => {
-    const [cache, extra] = getCache(list, formConfig, data);
-    const rawresult = encode(
-      encoder,
-      formConfig,
-      pronunciationConfig,
-      list,
-      cache,
-      data,
-      extra,
-    );
-    setResult(rawresult);
-  };
   const lost = [...result].filter(([, v]) => v.length === 0).map(([x]) => x);
 
   let correct = 0;
@@ -217,7 +203,13 @@ const Encoder = () => {
           </Flex>
         )}
         <Flex justify="center" gap="small">
-          <Button type="primary" onClick={compute}>
+          <Button
+            type="primary"
+            onClick={() => {
+              const rawresult = encode(config, list, data);
+              setResult(rawresult);
+            }}
+          >
             计算
           </Button>
           <Button

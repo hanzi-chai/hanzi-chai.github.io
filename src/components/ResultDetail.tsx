@@ -1,4 +1,4 @@
-import { Space, Table } from "antd";
+import { Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Root from "./Root";
 import { useFormConfig } from "./context";
@@ -72,6 +72,7 @@ const ResultDetail = ({
   for (const [binary, name] of map) {
     const prevList = reversedRootMap.get(name);
     const indices = convert(binary);
+    if (indices.length === 1) continue;
     if (prevList !== undefined) {
       prevList.push(indices);
     } else {
@@ -81,17 +82,17 @@ const ResultDetail = ({
 
   return data.length ? (
     <>
-      <Space>
+      <Flex wrap="wrap" gap="middle">
         {[...reversedRootMap].map(([s, v]) => (
           <Space key={s}>
             <Root>{display(s)}</Root>
             <span>{v.map((ar) => `(${ar.join(",")})`).join(" ")}</span>
           </Space>
         ))}
-      </Space>
+      </Flex>
       <Table
         columns={columns}
-        rowKey="sequence"
+        rowKey="scheme"
         dataSource={data.sort(makeSorter(selector))}
         pagination={{ hideOnSinglePage: true, defaultPageSize: 20 }}
         size="small"

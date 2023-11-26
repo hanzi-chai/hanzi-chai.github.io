@@ -91,7 +91,7 @@ export const order2: Sieve<number> = {
       binaryToIndices(component.glyph.length)(x),
     );
     const unSorted = indices.filter(
-      (x) => x.length - 1 === x.at(-1)! - x[0]!,
+      (x) => x.length - 1 !== x.at(-1)! - x[0]!,
     ).length;
     return unSorted;
   },

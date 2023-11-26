@@ -119,15 +119,9 @@ export const getCache = (
 
 const uniquify = (l: string[]) => [...new Set(l)].sort();
 
-const encode = (
-  encoder: Config["encoder"],
-  form: Config["form"],
-  pronunciation: Config["pronunciation"],
-  characters: string[],
-  cache: TotalCache,
-  data: MergedData,
-  extra: Extra,
-) => {
+const encode = (config: Config, characters: string[], data: MergedData) => {
+  const { form, pronunciation, encoder } = config;
+  const [cache, extra] = getCache(characters, form, data);
   const func = compile(encoder, form, pronunciation);
   const result = new Map(
     characters.map((char) => [

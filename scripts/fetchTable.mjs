@@ -7,9 +7,9 @@ import { writeFileSync, mkdirSync } from "node:fs";
 const endpoint = "https://api.chaifen.app/";
 
 mkdirSync("public/cache", { recursive: true });
-for (const name in ["mswb", "zhengma"]) {
+for (const name of ["mswb", "zhengma"]) {
   const form = JSON.stringify(
-    await fetch(endpoint + `ref/${name}`).then((res) => res.json()),
+    await fetch(endpoint + `reference/${name}`).then((res) => res.json()),
   );
   writeFileSync(`public/cache/${name}.json`, form);
 }
