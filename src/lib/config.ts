@@ -12,6 +12,7 @@ type SieveName =
   | "同向笔画"
   | "取大优先"
   | "取小优先"
+  | "结构完整"
   | "非形近根";
 
 type Selector = SieveName[];

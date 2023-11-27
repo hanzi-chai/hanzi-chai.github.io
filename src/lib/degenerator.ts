@@ -96,7 +96,7 @@ export const generateSliceBinaries = (
   if (cglyph.length < rglyph.length) return [];
   let queue = [[]] as number[][];
   for (const [rIndex, rStroke] of rglyph.entries()) {
-    const rStrokeTopology = rtopology[rIndex];
+    const rStrokeTopology = rtopology.matrix[rIndex]?.slice(0, rIndex);
     const end = cglyph.length - rglyph.length + rIndex + 1;
     for (let _ = queue.length; _ !== 0; --_) {
       const indexList = queue.shift()!;
@@ -105,7 +105,7 @@ export const generateSliceBinaries = (
         if (!strokeFeatureEqual(degenerator, cStroke.feature, rStroke.feature))
           continue;
         const realIndex = cIndex + start;
-        const cStrokeTopology = ctopology[realIndex]!.filter((_, i) =>
+        const cStrokeTopology = ctopology.matrix[realIndex]!.filter((_, i) =>
           indexList.includes(i),
         );
         if (!isEqual(cStrokeTopology, rStrokeTopology)) continue;
@@ -122,7 +122,7 @@ export const generateSliceBinaries = (
         .map((x) => others.map((y) => sortTwoNumbers([x, y])))
         .flat();
       return allCombinations.every(([x, y]) => {
-        const relation = ctopology[y]![x]!;
+        const relation = ctopology.matrix[y]![x]!;
         return relation.every((cr) => cr.type !== "交");
       });
     });

@@ -1,7 +1,9 @@
 import type { Cache } from "./form";
-import type { FormConfig, Selector, SieveName } from "./config";
+import type { FormConfig, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
-import type { CurveRelation } from "./topology";
+import { type CurveRelation } from "./topology";
+import { isEqual } from "underscore";
+import { sortTwoNumbers } from "./bezier";
 
 type Scheme = number[];
 
@@ -129,7 +131,7 @@ const makeTopologySieve = function (
         for (const k of bi) {
           for (const l of bj) {
             const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
-            const relations = component.topology[larger]![smaller]!;
+            const relations = component.topology.matrix[larger]![smaller]!;
             r ||= relations.some((v) => v.type === relationType);
             a ||= relations.some((v) => avoidRelationType.includes(v.type));
           }
@@ -149,9 +151,8 @@ export const attaching = makeTopologySieve("连", ["交"], "能散不连");
 export const orientation: Sieve<number> = {
   title: "同向笔画",
   key: (scheme, component) => {
-    const parsedScheme = scheme.map((x) =>
-      binaryToIndices(component.glyph.length)(x),
-    );
+    const n = component.glyph.length;
+    const parsedScheme = scheme.map(binaryToIndices(n));
     let totalCrosses = 0;
     for (const [i, bi] of parsedScheme.entries()) {
       for (const [j, bj] of parsedScheme.entries()) {
@@ -159,18 +160,54 @@ export const orientation: Sieve<number> = {
         let r = false;
         for (const k of bi) {
           for (const l of bj) {
-            const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
-            const relations = component.topology[larger]![smaller]!;
-            const isOverlapping = relations.some(
-              (v) => v.type === "平行" && v.mainAxis === 0,
+            const [smaller, larger] = sortTwoNumbers([k, l]);
+            const oriented = component.topology.orientedPairs.some((x) =>
+              isEqual(x, [larger, smaller]),
             );
-            r ||= isOverlapping;
+            r ||= oriented;
           }
         }
         totalCrosses += +r;
       }
     }
     return totalCrosses;
+  },
+};
+
+/**
+ * @param b1 以二进制数表示的切片
+ * @param b2 同上
+ * @returns 第一个切片是否包含第二个切片
+ */
+const contains = (b1: number, b2: number) => (b1 | b2) === b1;
+
+/**
+ * 规则：结构完整
+ * 避免框类部件被拆散
+ * 该规则采集自宇浩输入法的文档
+ * 参考：https://zhuyuhao.com/yuhao/docs/learn.html#结构完整
+ */
+export const integrity: Sieve<number> = {
+  title: "结构完整",
+  key: (scheme, _, __, rootMap) => {
+    const priorities = [
+      "口",
+      "囗",
+      "冂",
+      "\ue439" /* 见二 */,
+      "匚",
+      "凵",
+      "\ue009" /* 假右角 */,
+      "勹",
+      "尸",
+    ];
+    const shouldHave = [...rootMap]
+      .filter(([_, name]) => priorities.includes(name))
+      .map(([binary]) => binary);
+    const breaks = shouldHave.filter(
+      (x) => !scheme.some((binary) => contains(binary, x)),
+    ).length;
+    return breaks;
   },
 };
 
@@ -185,6 +222,7 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
     attaching,
     similar,
     orientation,
+    integrity,
   ].map((x) => [x.title, x]),
 );
 

@@ -171,23 +171,81 @@ const renderSVGStroke = ({ feature, start, curveList }: SVGStroke) => {
 
 const renderSVGGlyph = (glyph: SVGGlyph) => glyph.map(renderSVGStroke);
 
-const findTopology = (renderedGlyph: RenderedGlyph) => {
-  const matrix = [] as StrokeRelation[][];
+interface Topology {
+  matrix: StrokeRelation[][];
+  orientedPairs: [number, number][];
+}
+
+const isConforming = (r1: CurveRelation, r2: CurveRelation) => {
+  switch (r1.type) {
+    case "平行":
+      return r2.type === "平行";
+    case "散":
+      return true;
+    case "交":
+      return (
+        r2.type === "交" ||
+        (r2.type === "连" && r2.second === "中") ||
+        r2.type === "散"
+      );
+    case "连":
+      if (r1.second === "中") {
+        return (
+          r2.type === "交" ||
+          r2.type === "散" ||
+          (r2.type === "连" && r2.second === "中")
+        );
+      }
+      return (r2.type === "连" && r2.second === r1.second) || r2.type === "散";
+  }
+};
+
+const findTopology = function (renderedGlyph: RenderedGlyph) {
+  const topology: Topology = { matrix: [], orientedPairs: [] };
   for (const [index1, stroke1] of renderedGlyph.entries()) {
     const row = [] as StrokeRelation[];
     for (const [index2, stroke2] of renderedGlyph.entries()) {
-      if (index2 >= index1) break;
-      row.push(strokeRelation(stroke1, stroke2));
+      if (index1 === index2) row.push([]);
+      else row.push(strokeRelation(stroke1, stroke2));
     }
-    matrix.push(row);
+    topology.matrix.push(row);
   }
-  return matrix;
-};
-
-const getMatrixElement = (matrix: StrokeRelation[][], i: number, j: number) => {
-  return i > j ? matrix[i]![j]! : matrix[j]![i]!;
+  for (const [index1] of renderedGlyph.entries()) {
+    for (const [index2] of renderedGlyph.entries()) {
+      if (index2 >= index1) break;
+      const relations = topology.matrix[index1]![index2]!;
+      if (relations.some((v) => v.type === "交" || v.type === "连")) continue;
+      const parallelIndex = relations.findIndex(
+        (v) => v.type === "平行" && v.mainAxis === 0,
+      );
+      if (parallelIndex !== -1) {
+        topology.orientedPairs.push([index1, index2]);
+      }
+      // 想要严谨判断同向笔画特别困难，先不搞了
+      // if (parallelIndex === -1) continue;
+      // // drop this shit and compute from ab initio
+      // const index2Curves = renderedGlyph[index2]!.curveList;
+      // // we have: parallelIndex = index1Index * index2Curves + index2Index
+      // const index2Index = parallelIndex % index2Curves.length;
+      // const index1Index = (parallelIndex - index2Index) / index2Curves.length;
+      // // get all curves from all strokes other than k and l
+      // const otherStrokes = [...renderedGlyph.keys()].filter(
+      //   (_, index) => index !== index1 && index !== index2
+      // );
+      // if (
+      //   otherStrokes.every((x) => {
+      //     const r1 = topology.matrix[x]![index1]![index1Index]!;
+      //     const r2 = topology.matrix[x]![index2]![index2Index]!;
+      //     return isConforming(r1, r2) && isConforming(r2, r1);
+      //   })
+      // ) {
+      //   topology.orientedPairs.push([index1, index2]);
+      // }
+    }
+  }
+  return topology;
 };
 
 export default findTopology;
 export { curveRelation, strokeRelation, renderSVGStroke, renderSVGGlyph };
-export type { CurveRelation, StrokeRelation, RenderedGlyph };
+export type { CurveRelation, StrokeRelation, RenderedGlyph, Topology };

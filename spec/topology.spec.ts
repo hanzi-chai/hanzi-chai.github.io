@@ -182,13 +182,17 @@ describe("find topology interface", () => {
   it("works for a simple case", () => {
     const { 土 } = rendered;
     const array: StrokeRelation[][] = [
-      [],
-      [[{ type: "交" }]],
+      [[], [{ type: "交" }], [{ type: "平行", mainAxis: 0, crossAxis: -1 }]],
+      [[{ type: "交" }], [], [{ type: "连", first: "后", second: "中" }]],
       [
         [{ type: "平行", mainAxis: 0, crossAxis: 1 }],
         [{ type: "连", first: "中", second: "后" }],
+        [],
       ],
     ];
-    expect(findTopology(renderSVGGlyph(土))).toEqual(array);
+    expect(findTopology(renderSVGGlyph(土))).toEqual({
+      matrix: array,
+      orientedPairs: [[2, 0]],
+    });
   });
 });

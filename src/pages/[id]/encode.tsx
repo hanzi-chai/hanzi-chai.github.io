@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
 import {
   ConfigContext,
@@ -60,7 +60,11 @@ const Encoder = () => {
   const [result, setResult] = useState<EncoderResult>(new Map());
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
-  const [reference, setReference] = useState<Record<string, string[]>>({});
+  const [reference, setReference] = useState<EncoderResult>(() => {
+    const content = localStorage.getItem(config.info.name);
+    if (content === null) return new Map();
+    return new Map(Object.entries(JSON.parse(content)));
+  });
   const list = Object.entries(data.repertoire)
     .filter(filtermap[gb2312]("gb2312"))
     .filter(filtermap[tygf]("tygf"))
@@ -72,6 +76,13 @@ const Encoder = () => {
     所有汉字: () => true,
   };
 
+  useEffect(() => {
+    localStorage.setItem(
+      config.info.name,
+      JSON.stringify(Object.fromEntries([...reference])),
+    );
+  }, [reference]);
+
   const lost = [...result].filter(([, v]) => v.length === 0).map(([x]) => x);
 
   let correct = 0;
@@ -82,7 +93,7 @@ const Encoder = () => {
     .filter(([, v]) => v.length > 0)
     .filter(filterMap[filterOption])
     .map(([char, code]) => {
-      const refcode = reference ? reference[char] || [] : [];
+      const refcode = reference.get(char) || [];
       if (refcode.length) {
         if (code.filter((v) => refcode.includes(v)).length) {
           correct += 1;
@@ -183,11 +194,13 @@ const Encoder = () => {
           <Uploader
             text="导入 JSON 码表"
             action={(content) => {
-              setReference(JSON.parse(content));
+              const ref: EncoderResult = new Map(
+                Object.entries(JSON.parse(content)),
+              );
+              setReference(ref);
             }}
           />
-          {reference !== undefined &&
-            `已加载码表，条数：${Object.keys(reference).length}`}
+          {reference !== undefined && `已加载码表，条数：${reference.size}`}
         </Flex>
         {dev && (
           <Flex justify="center" align="center" gap="large">

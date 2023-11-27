@@ -3,7 +3,7 @@ import type { Block, CompoundGlyph, Form, Operator, SVGGlyph } from "./data";
 import { binaryToIndices, generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import type { RenderedGlyph, StrokeRelation } from "./topology";
+import type { RenderedGlyph, StrokeRelation, Topology } from "./topology";
 import findTopology, { renderSVGGlyph } from "./topology";
 import type { Extra } from "./element";
 import type { Classifier } from "./classifier";
@@ -39,9 +39,22 @@ export const recursiveGetSequence = function (
       }
       return component.strokes.map((x) => classifier[x.feature]);
     case "compound":
-      return compound[0]!.operandList
-        .map((s) => recursiveGetSequence(form, classifier, s))
-        .flat();
+      const { operandList, order } = compound[0]!;
+      const sequences = operandList.map((s) => ({
+        sequence: recursiveGetSequence(form, classifier, s),
+        taken: 0,
+      }));
+      if (order === undefined) return sequences.map((x) => x.sequence).flat();
+      const finalSequence: number[] = [];
+      for (const { index, strokes } of order) {
+        const s = sequences[index]!;
+        if (strokes === 0) finalSequence.push(...s.sequence);
+        else {
+          finalSequence.push(...s.sequence.slice(s.taken, strokes));
+          s.taken += strokes;
+        }
+      }
+      return finalSequence;
   }
 };
 
@@ -90,7 +103,7 @@ export const generateSchemes = (n: number, roots: number[]) => {
 export interface Cache {
   name: string;
   glyph: RenderedGlyph;
-  topology: StrokeRelation[][];
+  topology: Topology;
 }
 
 export const buildCache = function (glyph: SVGGlyph, name = ""): Cache {
