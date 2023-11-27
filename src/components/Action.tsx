@@ -43,13 +43,18 @@ interface CreateProps {
 
 export const RemoteContext = createContext(true);
 
-export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => {
+export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => (
+  <Popover content={<CreatePopoverContent setChar={setChar} />}>
+    <Button type="primary">新建</Button>
+  </Popover>
+);
+
+function CreatePopoverContent(props: any) {
   const dispatch = useAppDispatch();
   const add = useAdd();
   const remote = useContext(RemoteContext);
   const code = useCode();
   const form = useForm();
-
   const options = [
     { label: "部件", value: "component" },
     { label: "复合体", value: "compound" },
@@ -96,57 +101,49 @@ export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => {
       return charOrName;
     }
   };
-
   return (
-    <Popover
-      content={
-        <Form<CreateProps>
-          onFinish={async (values) => {
-            const char = await handle(values);
-            if (char !== undefined) setChar(char);
-          }}
-        >
-          <Form.Item<CreateProps>
-            label="名称"
-            name="charOrName"
-            rules={[
-              {
-                required: true,
-                validator: (_, value) => {
-                  if (!value) return Promise.reject(new Error("不能为空"));
-                  if (form[value as string] !== undefined)
-                    return Promise.reject(new Error("字符已存在"));
-                  const valid = Array.from(value as string).every((x) =>
-                    isValidCJKChar(x.codePointAt(0)!),
-                  );
-                  if (!valid) return Promise.reject(new Error("限 CJK/扩展 A"));
-                  return Promise.resolve();
-                },
-              },
-            ]}
-          >
-            <Input style={{ width: 128 }} />
-          </Form.Item>
-          <Form.Item<CreateProps>
-            label="类型"
-            name="default_type"
-            rules={[{ required: true }]}
-          >
-            <Select options={options} style={{ width: 128 }} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              确认
-            </Button>
-          </Form.Item>
-        </Form>
-      }
+    <Form<CreateProps>
+      onFinish={async (values) => {
+        const char = await handle(values);
+        if (char !== undefined) props.setChar(char);
+      }}
     >
-      <Button type="primary">新建</Button>
-    </Popover>
+      <Form.Item<CreateProps>
+        label="名称"
+        name="charOrName"
+        rules={[
+          {
+            required: true,
+            validator: (_, value) => {
+              if (!value) return Promise.reject(new Error("不能为空"));
+              if (form[value as string] !== undefined)
+                return Promise.reject(new Error("字符已存在"));
+              const valid = Array.from(value as string).every((x) =>
+                isValidCJKChar(x.codePointAt(0)!),
+              );
+              if (!valid) return Promise.reject(new Error("限 CJK/扩展 A"));
+              return Promise.resolve();
+            },
+          },
+        ]}
+      >
+        <Input style={{ width: 128 }} />
+      </Form.Item>
+      <Form.Item<CreateProps>
+        label="类型"
+        name="default_type"
+        rules={[{ required: true }]}
+      >
+        <Select options={options} style={{ width: 128 }} />
+      </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          确认
+        </Button>
+      </Form.Item>
+    </Form>
   );
-};
-
+}
 export const Mutate = ({ unicode }: { unicode: number }) => {
   const dispatch = useAppDispatch();
   const [newName, setNewName] = useState("");
