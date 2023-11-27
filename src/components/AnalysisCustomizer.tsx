@@ -22,7 +22,7 @@ function RootSelectPopover(props: RootSelectProps) {
     <Popover
       open={open}
       onOpenChange={(v) => setOpen(v)}
-      trigger={["hover", "click", "focus"]}
+      trigger="hover"
       content={
         <RootSelect
           {...props}
