@@ -16,12 +16,7 @@ import Root from "~/components/Root";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 import { useFormConfig } from "~/components/context";
-import {
-  useAll,
-  useForm,
-  useClassifier,
-  useDisplay,
-} from "~/components/contants";
+import { useAll, useForm, useDisplay } from "~/components/contants";
 import type {
   ComponentCache,
   ComponentResult,
@@ -35,6 +30,7 @@ import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import type { MenuProps } from "rc-menu";
 import Degenerator from "~/components/Degenerator";
 import { useChaifenTitle } from "~/lib/hooks";
+import classifier from "~/lib/classifier";
 
 const ResultSummary = ({
   char,
@@ -108,7 +104,6 @@ const Analysis = () => {
   const [componentCustomizations, setComponentCustomizations] =
     useState<ComponentCache>(new Map());
   const [compoundCache, setCompoundCache] = useState<CompoundCache>(new Map());
-  const classifier = useClassifier();
   const data = useAll();
   const form = useForm();
   const formConfig = useFormConfig();

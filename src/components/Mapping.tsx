@@ -126,10 +126,12 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
     >
       <Root>
         {display(name)}
-        <span style={{ fontSize: "0.8em" }}>
-          {affiliates.length ? `(${affiliates.map(display).join(",")})` : ""}
-        </span>{" "}
-        {code.slice(1)}
+        {affiliates.length >= 1 && (
+          <span style={{ fontSize: "0.8em" }}>
+            ({affiliates.map(display).join(",")})
+          </span>
+        )}
+        {code.length > 1 && <span>&nbsp;{code.slice(1)}</span>}
       </Root>
     </Popover>
   );

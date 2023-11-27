@@ -92,7 +92,7 @@ const Classifier = () => {
           </Button>
           <Button
             onClick={() => {
-              if (items[items.length - 1][1].length) {
+              if (items[items.length - 1]![1].length) {
                 notification.warning({
                   message: "不能删除分类",
                   description: "最后一个分类里还有笔画",

@@ -10,9 +10,9 @@ import {
 } from "antd";
 import styled from "styled-components";
 import { useFormConfig } from "./context";
-import { useForm, useClassifier, useDisplay } from "./contants";
+import { useForm, useDisplay } from "./contants";
 import { getSequence } from "~/lib/form";
-import { isValidCJKChar } from "~/lib/utils";
+import { isValidCJKChar, isValidChar } from "~/lib/utils";
 import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
@@ -86,7 +86,6 @@ export const RootSelect = ({
 }) => {
   const { mapping, grouping } = useFormConfig();
   const form = useForm();
-  const classifier = useClassifier();
   const keys = withGrouped
     ? Object.keys(mapping).concat(Object.keys(grouping))
     : Object.keys(mapping);
@@ -97,7 +96,7 @@ export const RootSelect = ({
       showSearch
       placeholder="输入笔画搜索"
       options={keys
-        .filter((x) => x.match(/[\u4E00-\uFFFF]/) || x.match(/\d+/))
+        .filter((x) => isValidChar(x) || x.match(/\d+/))
         .filter((x) => x !== exclude)
         .map((x) => ({
           value: x,

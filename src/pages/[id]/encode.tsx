@@ -58,7 +58,7 @@ const Encoder = () => {
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   const [reference, setReference] = useState<EncoderResult>(() => {
-    const content = localStorage.getItem(config.info.name);
+    const content = localStorage.getItem("." + config.info.name);
     if (content === null) return new Map();
     return new Map(Object.entries(JSON.parse(content)));
   });
@@ -75,7 +75,7 @@ const Encoder = () => {
 
   useEffect(() => {
     localStorage.setItem(
-      config.info.name,
+      "." + config.info.name,
       JSON.stringify(Object.fromEntries([...reference])),
     );
   }, [reference]);

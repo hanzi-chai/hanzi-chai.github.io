@@ -8,7 +8,7 @@ const ElementAdder = ({ element }: { element?: string }) => {
   const index = useConfigType();
   const design = useDesign();
   const [main, setMain] = useState(Object.keys(mapping)[0]);
-  const [keys, setKeys] = useState(Array(4).fill(alphabet[0]));
+  const [keys, setKeys] = useState([alphabet[0], "", "", ""]);
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: x,

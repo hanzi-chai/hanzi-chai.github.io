@@ -3,7 +3,7 @@ source: mswb
 info:
   name: 米十五笔
   version: 2023.05.30
-  author: 李明作、蓝落萧编
+  author: 李明
   description: http://xukt.ysepan.com/
 data:
   form: {}

@@ -4,6 +4,7 @@ import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type { Mapping } from "./config";
 import type {
+  Draw,
   Form,
   Glyph,
   Operator,

@@ -1,12 +1,7 @@
 import Mapping from "~/components/Mapping";
 import { Layout, Menu, Typography } from "antd";
 import { useState } from "react";
-import {
-  useClassifier,
-  useDisplay,
-  useForm,
-  useRepertoire,
-} from "~/components/contants";
+import { useDisplay, useForm, useRepertoire } from "~/components/contants";
 import { Outlet, useNavigate } from "react-router-dom";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
@@ -16,6 +11,7 @@ import { getSequence } from "~/lib/form";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useConfigType } from "~/components/context";
 import { useChaifenTitle } from "~/lib/hooks";
+import classifier from "~/lib/classifier";
 
 const Elements = () => {
   const navigate = useNavigate();
@@ -47,7 +43,6 @@ type FormElementTypes = (typeof formElementTypes)[number];
 export const RootElementConfig = () => {
   useChaifenTitle("字形元素");
   const [sequence, setSequence] = useState("");
-  const classifier = useClassifier();
   const allStrokes = Array.from(new Set(Object.values(classifier)))
     .sort()
     .map(String);

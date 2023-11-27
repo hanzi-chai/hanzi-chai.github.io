@@ -1,7 +1,7 @@
 import { Input } from "antd";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
 import { fullToHalf, halfToFull } from "~/lib/utils";
-import { useClassifier } from "./contants";
+import classifier from "~/lib/classifier";
 
 interface StrokeSearchProps {
   sequence: string;
@@ -9,7 +9,6 @@ interface StrokeSearchProps {
 }
 
 const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
-  const classifier = useClassifier();
   const numbers = Object.values(classifier);
   const valid = Array.from(sequence).every((x) =>
     numbers.includes(parseInt(x, 10)),
