@@ -1,6 +1,6 @@
 {
   "name": "汉字自动拆分系统",
-  "version": "0.0.0",
+  "version": "0.0.4-alpha.1",
   "manifest_version": 3,
   "author": "汉字自动拆分开发团队",
   "description": "为用户提供了一个方便的图形界面，使方案设计更加便捷。",
