@@ -4,9 +4,10 @@ import type { UserConfig } from "vite";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
-import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
-import { visualizer } from "rollup-plugin-visualizer";
 import Pages from "vite-plugin-pages";
+import { visualizer } from "rollup-plugin-visualizer";
+import { chunkSplitPlugin } from "vite-plugin-chunk-split";
+import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
 
 export default defineConfig(({ mode }) => {
   // https://vitejs.dev/config/
@@ -21,16 +22,32 @@ export default defineConfig(({ mode }) => {
       outDir: `dist/${mode.toLowerCase()}`,
       emptyOutDir: true,
       reportCompressedSize: false,
-      rollupOptions: {
-        output: {
-          manualChunks: manualChunksHandler,
-        },
-      },
     },
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
     },
-    plugins: [react(), yaml(), Pages()],
+    plugins: [
+      react(),
+      yaml(),
+      Pages({
+        importMode: "async",
+      }),
+      chunkSplitPlugin({
+        customSplitting: {
+          antd: [/node_modules\/antd/],
+          router: [/node_modules\/react-router/],
+          react: [/node_modules\/react(-dom)?\//],
+          "redux-immer": [
+            /node_modules\/@?(react-)?redux/,
+            /node_modules\/immer/,
+          ],
+          mathjs: [/node_modules\/mathjs/],
+          yaml: [/node_modules\/js-yaml/],
+          reactflow: [/node_modules\/@reactflow/],
+          tools: [/node_modules\/styled-components/, /node_modules\/js-md5/],
+        },
+      }),
+    ],
     test: {
       globals: true,
       coverage: {
@@ -90,38 +107,3 @@ export default defineConfig(({ mode }) => {
 
   return sharedConfig;
 });
-
-function manualChunksHandler(id: string) {
-  const nodeModulesIndex = id.indexOf("node_modules/");
-  if (nodeModulesIndex === -1) return;
-  const modulePathName = id.slice(nodeModulesIndex + 13);
-  /**
-   * moduleName 大约是这样：
-   *   mathjs
-   *   antd
-   */
-  const moduleName = modulePathName.slice(0, modulePathName.indexOf("/"));
-
-  const patterns = `
-  rc- async-validator
-  ant babel dayjs emotion toggle-selection @ctrl classnames csstype copy-to-clipboard
-  mathjs underscore decimal fraction complex escape-latex seedrandom tiny-emitter typed-function
-  dnd
-  yaml
-  reactflow dagrejs d3- zustand classcat
-  redux
-  react immer redux tslib scheduler
-  `;
-  for (let patternsLine of patterns.split("\n")) {
-    patternsLine = patternsLine.trim();
-    if (!patternsLine) continue;
-    const line = patternsLine.split(" ");
-    const ret = line[0];
-    for (let pat of line) {
-      pat = pat.trim();
-      if (!pat) continue;
-      if (moduleName.includes(pat)) return ret;
-    }
-  }
-  return "vendor";
-}

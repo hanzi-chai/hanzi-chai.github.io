@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * 处理浏览器扩展的脚本，必须在 `npm run build:BEX` 之后执行此脚本。
  * 过程如下：
@@ -10,7 +11,7 @@
 const { readFileSync, writeFileSync, copy } = require("fs-extra");
 const { resolve } = require("node:path");
 
-//const getAbsPath = (relativePath) => fileURLToPath(new URL(relativePath, import.meta.url))
+// const getAbsPath = (relativePath) => fileURLToPath(new URL(relativePath, import.meta.url))
 const getAbsPath = (relativePath) => resolve(__dirname, relativePath);
 const readJsonFile = (path) =>
   JSON.parse(readFileSync(path, { encoding: "utf-8" }));
