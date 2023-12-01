@@ -18,15 +18,14 @@ const readJsonFile = (path) =>
 
 const manifestPath = "../src/bex/manifest.json";
 const packagePath = "../package.json";
-
 const manifestContent = readJsonFile(getAbsPath(manifestPath));
 const packageContent = readJsonFile(getAbsPath(packagePath));
-manifestContent.version = packageContent.version;
+manifestContent.version = packageContent.version.replace(/[-a-zA-Z]+/, "");
+
+copy(getAbsPath("../src/bex"), getAbsPath("../dist/bex"));
 
 writeFileSync(
-  getAbsPath(manifestPath),
+  getAbsPath("../dist/bex/manifest.json"),
   JSON.stringify(manifestContent, undefined, 2),
   { encoding: "utf-8" },
 );
-
-copy(getAbsPath("../src/bex"), getAbsPath("../dist/bex"));
