@@ -8,8 +8,9 @@ import { getSequence } from "~/lib/form";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useChaifenTitle } from "~/lib/hooks";
 import classifier from "~/lib/classifier";
-import type { FormElementTypes } from "../element";
-import { formElementTypes } from "../element";
+
+const formElementTypes = ["字根", "笔画", "二笔"] as const;
+type FormElementTypes = (typeof formElementTypes)[number];
 
 export default function RootElementConfig() {
   useChaifenTitle("字形元素");
@@ -19,7 +20,6 @@ export default function RootElementConfig() {
     .map(String);
   const allErbi = allStrokes.map((x) => allStrokes.map((y) => x + y)).flat();
   const display = useDisplay();
-
   const form = useForm();
   const content = Object.keys(form)
     .filter((x) => {

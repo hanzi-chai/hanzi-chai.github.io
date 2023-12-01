@@ -1,47 +1,7 @@
-import type { MenuProps } from "antd";
-import { Layout, Menu } from "antd";
-import BorderOutlined from "@ant-design/icons/BorderOutlined";
-import InfoCircleOutlined from "@ant-design/icons/InfoCircleOutlined";
-import NumberOutlined from "@ant-design/icons/NumberOutlined";
-
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-
-const items: MenuProps["items"] = [
-  {
-    label: "字形",
-    key: "form",
-    icon: <BorderOutlined />,
-  },
-  {
-    label: "字音及字集",
-    key: "repertoire",
-    icon: <InfoCircleOutlined />,
-  },
-  {
-    label: "笔画分类",
-    key: "classifier",
-    icon: <NumberOutlined />,
-  },
-];
+import { Outlet, useLocation, Navigate } from "react-router-dom";
 
 export default function Data() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const mode = pathname.split("/")[3];
-  return (
-    <Layout style={{ flex: 1 }}>
-      <Layout.Sider theme="light">
-        <Menu
-          items={items}
-          selectedKeys={[mode]}
-          onClick={(e) => {
-            navigate(e.key);
-          }}
-        />
-      </Layout.Sider>
-      <div style={{ padding: "32px", height: "100%", flex: 1 }}>
-        <Outlet />
-      </div>
-    </Layout>
-  );
+  const shouldRedirect = pathname.split("/").length === 3;
+  return shouldRedirect ? <Navigate replace to="form" /> : <Outlet />;
 }
