@@ -42,7 +42,17 @@ const router = createRouter(AutoRoute);
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <GlobalStyle />
-    <ConfigProvider autoInsertSpaceInButton={false}>
+    <ConfigProvider
+      autoInsertSpaceInButton={false}
+      theme={{
+        components: {
+          Layout: {
+            headerHeight: 32,
+            headerBg: "#d9d9d9",
+          },
+        },
+      }}
+    >
       <Provider store={store}>
         <Suspense fallback={<CusSpin tip="加载APP…" />}>
           <RouterProvider router={router} />

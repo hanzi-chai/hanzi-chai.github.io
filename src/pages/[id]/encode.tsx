@@ -142,7 +142,7 @@ const Encoder = () => {
   }
   return (
     <EditorRow>
-      <EditorColumn span={12}>
+      <EditorColumn span={12} style={{ maxHeight: "40rem" }}>
         <ReactFlowProvider>
           <EncoderGraph />
         </ReactFlowProvider>
