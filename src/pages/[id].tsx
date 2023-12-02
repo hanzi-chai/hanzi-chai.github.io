@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, Suspense } from "react";
-import { Button, Flex, Layout, Menu, Space, Typography } from "antd";
+import { useContext, useEffect, Suspense, useState } from "react";
+import { Button, Flex, Layout, Menu, Avatar, Tooltip } from "antd";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
 import SettingOutlined from "@ant-design/icons/SettingOutlined";
 import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
 import BoldOutlined from "@ant-design/icons/BoldOutlined";
-import CaretLeftFilled from "@ant-design/icons/CaretLeftFilled";
+
 import type { MenuProps } from "antd";
 import {
   ConfigContext,
@@ -13,11 +13,8 @@ import {
   configReducer,
 } from "~/components/context";
 import type { Config } from "~/lib/config";
-import { load } from "js-yaml";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
-import { Uploader, exportYAML } from "~/components/Utils";
-import { examples } from "~/lib/example";
 import { listToObject } from "~/lib/utils";
 import CusSpin from "~/components/CustomSpin";
 import {
@@ -38,11 +35,35 @@ const items: MenuProps["items"] = [
     label: "数据",
     key: "data",
     icon: <DatabaseOutlined />,
+    children: [
+      {
+        label: "字形数据",
+        key: "data_form",
+      },
+      {
+        label: "字音字集",
+        key: "data_repertoire",
+      },
+      {
+        label: "笔画分类",
+        key: "data_classifier",
+      },
+    ],
   },
   {
     label: "元素",
     key: "element",
     icon: <SettingOutlined />,
+    children: [
+      {
+        label: "字形元素",
+        key: "ele_form",
+      },
+      {
+        label: "字音元素",
+        key: "ele_pronunciation",
+      },
+    ],
   },
   {
     label: "分析",
@@ -56,77 +77,115 @@ const items: MenuProps["items"] = [
   },
 ];
 
-const defaultChildren: Record<string, string> = {
-  data: "/form",
-  element: "/form",
+const keyToPath: Record<string, string> = {
+  index: "",
+  data_form: "data/form",
+  data_repertoire: "data/repertoire",
+  data_classifier: "data/classifier",
+  ele_form: "element/form",
+  ele_pronunciation: "element/pronunciation",
+  analysis: "analysis",
+  encode: "encode",
 };
 
-const EditorLayout = () => {
+const pathToKey: Record<string, string> = Object.fromEntries(
+  Object.entries(keyToPath).map(([k, p]) => [p, k]),
+);
+
+function EditorLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [_, __, panel] = pathname.split("/");
+  const relativePath = pathname.split("/").slice(2).join("/");
+  const selectKey = pathToKey[relativePath];
   const config = useContext(ConfigContext);
-  const dispatch = useContext(DispatchContext);
-  const { source } = config;
-
+  const [isCollapsed, setCollapsed] = useState(false);
   return (
-    <Layout
-      style={{ height: "100%", display: "flex", flexDirection: "column" }}
-    >
-      <Layout.Header>
-        <Flex justify="space-between" align="center">
-          <Flex gap="small">
+    <Layout hasSider>
+      <Layout.Sider
+        style={{
+          overflow: "auto",
+          height: "100vh",
+          position: "fixed",
+          zIndex: "999",
+          left: 0,
+          top: 0,
+          bottom: 0,
+        }}
+        breakpoint="md"
+        collapsible
+        collapsedWidth={58}
+        onCollapse={(v) => setCollapsed(v)}
+        width={160}
+      >
+        <Flex vertical>
+          <Tooltip
+            title="返回首页"
+            placement={isCollapsed ? "right" : "bottom"}
+            color="rgb(196,144,84)"
+          >
             <Link to="/">
-              <Button icon={<CaretLeftFilled />} />
-            </Link>
-            <Typography.Title style={{ fontSize: "24px", color: "white" }}>
-              {config.info.name}
-            </Typography.Title>
-          </Flex>
-          <Menu
-            onClick={(e) =>
-              navigate(
-                e.key === "index" ? "" : e.key + (defaultChildren[e.key] || ""),
-              )
-            }
-            selectedKeys={[panel || "index"]}
-            theme="dark"
-            mode="horizontal"
-            items={items}
-          />
-          <Space>
-            <Uploader
-              action={(s: string) => {
-                dispatch({ type: "load", value: load(s) as Config });
-              }}
-            />
-            <Button onClick={() => exportYAML(config, `export.yaml`)}>
-              导出
-            </Button>
-            {source && (
               <Button
-                onClick={() => {
-                  dispatch({
-                    type: "load",
-                    value: examples[source],
-                  });
+                block
+                type="text"
+                style={{
+                  height: isCollapsed ? "48px" : "64px",
+                  margin: "8px 0",
+                  color: "#999",
                 }}
               >
-                重置
+                <Avatar shape="square" src="/icon.webp" />
+                <br />
+                {isCollapsed ? null : (
+                  <div
+                    style={{
+                      marginTop: "2px",
+                      letterSpacing: "1px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    汉字自动拆分系统
+                  </div>
+                )}
               </Button>
-            )}
-          </Space>
+            </Link>
+          </Tooltip>
+          <Menu
+            theme="dark"
+            mode="inline"
+            items={items}
+            selectedKeys={[selectKey!]}
+            defaultOpenKeys={["data", "element"]}
+            onClick={(e) => navigate(keyToPath[e.key]!)}
+          />
         </Flex>
-      </Layout.Header>
-      <Suspense fallback={<CusSpin tip="加载标签页…" />}>
-        <Outlet />
-      </Suspense>
+      </Layout.Sider>
+      <Layout>
+        <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
+          <div>{config.info.name}</div>
+        </Layout.Header>
+        <Layout.Content
+          style={{
+            marginLeft: isCollapsed ? "58px" : "160px",
+            padding: "10px 24px",
+          }}
+        >
+          <Flex justify="center">
+            <div
+              style={{ maxWidth: "80rem", minWidth: "20rem", width: "80rem" }}
+            >
+              <Suspense fallback={<CusSpin tip="加载标签页…" />}>
+                <Outlet />
+              </Suspense>
+            </div>
+          </Flex>
+        </Layout.Content>
+      </Layout>
     </Layout>
   );
-};
+}
 
 const _cache: Record<string, any> = {};
-const fetchJson = async (filename: string) => {
+async function fetchJson(filename: string) {
   if (filename in _cache) {
     return _cache[filename];
   }
@@ -134,9 +193,9 @@ const fetchJson = async (filename: string) => {
   const json = await request.json();
   _cache[filename] = json;
   return json;
-};
+}
 
-const Contextualized = () => {
+export default function Contextualized() {
   const { pathname } = useLocation();
   const [_, id] = pathname.split("/");
   const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
@@ -166,6 +225,4 @@ const Contextualized = () => {
       </DispatchContext.Provider>
     </ConfigContext.Provider>
   );
-};
-
-export default Contextualized;
+}

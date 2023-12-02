@@ -154,7 +154,7 @@ const Analysis = () => {
   ] as const;
 
   return (
-    <div style={{ padding: "16px", flex: "1", overflowY: "scroll" }}>
+    <div style={{ padding: "16px", flex: "1", overflowY: "auto" }}>
       <EditorRow>
         <EditorColumn span={8}>
           <Typography.Title level={2}>字形分析</Typography.Title>

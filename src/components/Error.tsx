@@ -3,13 +3,15 @@
  */
 
 import { Result } from "antd";
+import ExportButtons from "./ExportButtons";
 
 export default function ErrorResult() {
   return (
     <Result
       status="500"
       title="数据异常"
-      subTitle="点击右上角的导出，把您的配置反馈给我们。"
+      subTitle="点击下方的导出按钮，把您的配置反馈给我们。"
+      extra={<ExportButtons />}
     />
   );
 }

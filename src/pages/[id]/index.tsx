@@ -1,9 +1,10 @@
 import React, { useContext, useEffect } from "react";
 import { useChaifenTitle } from "~/lib/hooks";
-import { Button, Col, Form, Input, Typography } from "antd";
+import { Button, Col, Form, Input, Row, Space, Typography } from "antd";
 import { DispatchContext, useInfo } from "~/components/context";
 import { Config } from "~/lib/config";
 import { useForm } from "antd/es/form/Form";
+import ExportButtons from "~/components/ExportButtons";
 
 type IInfo = Config["info"];
 
@@ -16,11 +17,17 @@ const Info: React.FC = () => {
     antdForm.setFieldsValue(info);
   }, [info]);
   return (
-    <Col span={6}>
-      <Typography.Title level={2}>基本信息</Typography.Title>
+    <Space direction="vertical">
+      <Typography.Title level={3}>导出配置</Typography.Title>
+      <ExportButtons />
+
+      <Typography.Title level={3}>基本信息</Typography.Title>
       <Form<IInfo>
+        style={{
+          minWidth: "28rem",
+        }}
         form={antdForm}
-        labelCol={{ span: 8 }}
+        labelCol={{ span: 6 }}
         wrapperCol={{ span: 16 }}
         initialValues={info}
         onFinish={(values) => {
@@ -45,7 +52,7 @@ const Info: React.FC = () => {
           </Button>
         </Form.Item>
       </Form>
-    </Col>
+    </Space>
   );
 };
 

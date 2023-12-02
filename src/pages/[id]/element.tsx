@@ -1,30 +1,7 @@
-import { Layout, Menu } from "antd";
-import { Outlet, useNavigate } from "react-router-dom";
-import { useConfigType } from "~/components/context";
+import { Outlet, useLocation, Navigate } from "react-router-dom";
 
-export const formElementTypes = ["字根", "笔画", "二笔"] as const;
-export type FormElementTypes = (typeof formElementTypes)[number];
-
-export default function Elements() {
-  const navigate = useNavigate();
-  const index = useConfigType();
-  return (
-    <Layout style={{ flex: 1, display: "flex" }}>
-      <Layout.Sider theme="light">
-        <Menu
-          items={[
-            { key: "form", label: "字形" },
-            { key: "pronunciation", label: "字音" },
-          ]}
-          selectedKeys={[index.toString()]}
-          onClick={(e) => {
-            navigate(e.key);
-          }}
-        />
-      </Layout.Sider>
-      <div style={{ padding: "0 32px", height: "100%", flexGrow: 1 }}>
-        <Outlet />
-      </div>
-    </Layout>
-  );
+export default function Element() {
+  const { pathname } = useLocation();
+  const shouldRedirect = pathname.split("/").length === 3;
+  return shouldRedirect ? <Navigate replace to="form" /> : <Outlet />;
 }
