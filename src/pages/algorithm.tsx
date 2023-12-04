@@ -11,8 +11,7 @@ import {
 } from "~/components/store";
 import { listForm } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
-import type { Cache } from "~/lib/form";
-import { renderComponentForm } from "~/lib/form";
+import { renderComponentForm, type ComputedComponent } from "~/lib/component";
 import { defaultForm } from "~/lib/templates";
 import { listToObject } from "~/lib/utils";
 
@@ -20,15 +19,15 @@ const DegeneratorTable = () => {
   const formLoading = useAppSelector(selectFormLoading);
   const data = useAll();
   const componentForm = renderComponentForm(data);
-  const dataSource = [...componentForm.values()]
+  const dataSource = Object.values(componentForm)
     .filter((cache) => cache.glyph.length >= 5)
     .sort((a, b) => a.glyph.length - b.glyph.length);
-  const toCompare = [...componentForm.values()].filter(
+  const toCompare = Object.values(componentForm).filter(
     (cache) => cache.glyph.length >= 2,
   );
   const display = useDisplay();
   const [page, setPage] = useState(1);
-  const columns: ColumnsType<Cache> = [
+  const columns: ColumnsType<ComputedComponent> = [
     {
       title: "部件",
       dataIndex: "name",

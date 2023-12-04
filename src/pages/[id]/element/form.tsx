@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useClassifier, useDisplay, useForm } from "~/components/contants";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
-import { getSequence } from "~/lib/form";
+import { getSequence } from "~/lib/component";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useChaifenTitle } from "~/lib/hooks";
 import classifier from "~/lib/classifier";

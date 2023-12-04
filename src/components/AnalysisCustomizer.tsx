@@ -9,7 +9,7 @@ import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import { useDisplay } from "./contants";
 
 interface RootSelectProps {
-  char?: string;
+  char: string;
   onChange: (s: string) => void;
   exclude: string;
   withGrouped?: boolean;
@@ -34,7 +34,7 @@ function RootSelectPopover(props: RootSelectProps) {
       }
     >
       <Button type="dashed" color="blue">
-        {display(props.char!)}
+        {display(props.char)}
       </Button>
     </Popover>
   );

@@ -4,14 +4,16 @@ import type {
   Component,
   Glyph,
   SVGGlyph,
+  SVGStroke,
   Stroke,
 } from "~/lib/data";
-import { Empty } from "antd";
+import { Empty, Result } from "antd";
 import { useForm } from "./contants";
 import type { Index } from "./Utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
-import { recursiveRenderGlyph } from "~/lib/form";
+import { recursiveRenderGlyph } from "~/lib/component";
+import ErrorResult from "./Error";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -55,17 +57,36 @@ export const StrokesView = ({ glyph }: { glyph: SVGStroke[] }) => (
 
 export const ComponentView = ({ component }: { component: Component }) => {
   const form = useForm();
-  let glyph: SVGGlyph;
+  const glyph: SVGGlyph = [];
+  let valid = true;
   if (component.source !== undefined) {
     const sourceGlyph = recursiveRenderGlyph(component.source, form);
-    glyph = component.strokes.map((x) => {
-      if (typeof x === "number") return sourceGlyph[x]!;
-      return x;
-    });
+    if (sourceGlyph instanceof Error) {
+      valid = false;
+    } else {
+      component.strokes.forEach((x) => {
+        if (typeof x === "number") {
+          const stroke = sourceGlyph[x];
+          if (stroke !== undefined) {
+            glyph.push(stroke);
+          } else {
+            valid = false;
+          }
+        } else {
+          glyph.push(x);
+        }
+        return x;
+      });
+    }
   } else {
-    glyph = (component as BasicComponent).strokes;
+    // ts cannot infer this, but conversion is safe
+    glyph.push(...(component as BasicComponent).strokes);
   }
-  return <StrokesView glyph={glyph} />;
+  return valid ? (
+    <StrokesView glyph={glyph} />
+  ) : (
+    <Result status="500" title="笔画引用不合法" />
+  );
 };
 
 export const CompoundView = ({ char }: Index) => {

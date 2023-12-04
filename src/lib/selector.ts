@@ -1,4 +1,8 @@
-import { MultipleSchemeError, type Cache, NoSchemeError } from "./form";
+import {
+  MultipleSchemeError,
+  type ComputedComponent,
+  NoSchemeError,
+} from "./component";
 import type { FormConfig, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import { type CurveRelation } from "./topology";
@@ -13,7 +17,7 @@ interface Sieve<T extends Comparable> {
   title: SieveName;
   key: (
     scheme: Scheme,
-    component: Cache,
+    component: ComputedComponent,
     config: FormConfig,
     rootMap: Map<number, string>,
   ) => T;
@@ -230,7 +234,7 @@ type Evaluation = Map<SieveName, number | number[]>;
 
 const select = (
   config: FormConfig,
-  component: Cache,
+  component: ComputedComponent,
   schemeList: Scheme[],
   rootMap: Map<number, string>,
 ) => {

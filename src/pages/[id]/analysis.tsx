@@ -17,13 +17,10 @@ import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 import { useFormConfig } from "~/components/context";
 import { useAll, useForm, useDisplay } from "~/components/contants";
-import type {
-  ComponentCache,
-  ComponentResult,
-  CompoundCache,
-  CompoundResult,
-} from "~/lib/form";
-import { getFormCore, getSequence } from "~/lib/form";
+import type { ComponentCache, ComponentResult } from "~/lib/component";
+import { getSequence } from "~/lib/component";
+import type { CompoundCache, CompoundResult } from "~/lib/compound";
+import { getFormCore } from "~/lib/form";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";

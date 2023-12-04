@@ -3,7 +3,7 @@ import type { StrokeRelation } from "~/lib/topology";
 import findTopology, { curveRelation, renderSVGGlyph } from "~/lib/topology";
 import { CubicCurve, LinearCurve, area, render } from "~/lib/bezier";
 import type { Draw, Point } from "~/lib/data";
-import { rendered } from "./mock";
+import { computedGlyphs } from "./mock";
 import { getIntervalPosition, makeCurve } from "~/lib/bezier";
 
 describe("interval position", () => {
@@ -23,11 +23,8 @@ describe("interval position", () => {
 });
 
 describe("linear relation", () => {
-  const { 田 } = rendered;
-  const strokes = 田!.map(render);
-  const [l, t, r, h, v, b] = strokes
-    .map((x) => x.curveList)
-    .flat() as LinearCurve[];
+  const { 田 } = computedGlyphs;
+  const [l, t, r, h, v, b] = 田.map((x) => x.curveList).flat() as LinearCurve[];
   it("figures out all relations in 田", () => {
     expect(curveRelation(l, t)).toEqual({
       type: "连",
@@ -64,9 +61,8 @@ describe("linear relation", () => {
 });
 
 describe("linear relation 2", () => {
-  const { 艹 } = rendered;
-  const strokes = 艹!.map(render);
-  const [_, s1, s2] = strokes.map((x) => x.curveList).flat() as LinearCurve[];
+  const { 艹 } = computedGlyphs;
+  const [_, s1, s2] = 艹.map((x) => x.curveList).flat() as LinearCurve[];
   it("figures out all relations in 艹", () => {
     expect(curveRelation(s1, s2)).toEqual({
       type: "平行",
@@ -78,9 +74,8 @@ describe("linear relation 2", () => {
 
 describe("curve relation", () => {
   it("figures out all relations in 天", () => {
-    const { 天 } = rendered;
-    const strokes = 天!.map(render);
-    const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
+    const { 天 } = computedGlyphs;
+    const [c1, c2, c3, c4] = 天.map((x) => x.curveList).flat();
     expect(curveRelation(c1, c3)).toEqual({
       type: "连",
       first: "中",
@@ -100,9 +95,8 @@ describe("curve relation", () => {
     });
   });
   it("figures out all relations in 义", () => {
-    const { 义 } = rendered;
-    const strokes = 义.map(render);
-    const [c1, c2, c3] = strokes.map((x) => x.curveList).flat();
+    const { 义 } = computedGlyphs;
+    const [c1, c2, c3] = 义.map((x) => x.curveList).flat();
     expect(curveRelation(c1, c2)).toEqual({
       type: "平行",
       crossAxis: 0,
@@ -116,9 +110,8 @@ describe("curve relation", () => {
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
   });
   it("figures out all relations in 升", () => {
-    const { 升 } = rendered;
-    const strokes = 升.map(render);
-    const [c1, c2, c3, c4] = strokes.map((x) => x.curveList).flat();
+    const { 升 } = computedGlyphs;
+    const [c1, c2, c3, c4] = 升.map((x) => x.curveList).flat();
     expect(curveRelation(c1, c2)).toEqual({
       type: "平行",
       mainAxis: 0,
@@ -180,7 +173,7 @@ describe("factory", () => {
 
 describe("find topology interface", () => {
   it("works for a simple case", () => {
-    const { 土 } = rendered;
+    const { 土 } = computedGlyphs;
     const array: StrokeRelation[][] = [
       [[], [{ type: "交" }], [{ type: "平行", mainAxis: 0, crossAxis: -1 }]],
       [[{ type: "交" }], [], [{ type: "连", first: "后", second: "中" }]],
@@ -190,7 +183,7 @@ describe("find topology interface", () => {
         [],
       ],
     ];
-    expect(findTopology(renderSVGGlyph(土))).toEqual({
+    expect(findTopology(土)).toEqual({
       matrix: array,
       orientedPairs: [[2, 0]],
     });

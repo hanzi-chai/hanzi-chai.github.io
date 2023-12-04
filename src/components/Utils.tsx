@@ -11,8 +11,8 @@ import {
 import styled from "styled-components";
 import { useFormConfig } from "./context";
 import { useForm, useDisplay } from "./contants";
-import { getSequence } from "~/lib/form";
-import { isValidCJKChar, isValidChar } from "~/lib/utils";
+import { getSequence } from "~/lib/component";
+import { isValidCJKChar } from "~/lib/utils";
 import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
