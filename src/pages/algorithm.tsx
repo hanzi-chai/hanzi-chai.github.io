@@ -13,6 +13,7 @@ import { listForm } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
 import type { Cache } from "~/lib/form";
 import { renderComponentForm } from "~/lib/form";
+import { defaultForm } from "~/lib/templates";
 import { listToObject } from "~/lib/utils";
 
 const DegeneratorTable = () => {
@@ -43,7 +44,7 @@ const DegeneratorTable = () => {
         const rootMap = new Map<string, number[]>();
         for (const another of toCompare) {
           if (another.name === record.name) continue;
-          const slices = generateSliceBinaries(record, another);
+          const slices = generateSliceBinaries(defaultForm, record, another);
           if (slices.length) {
             rootMap.set(another.name, slices);
           }

@@ -8,14 +8,17 @@ import findTopology, { renderSVGGlyph } from "./topology";
 import type { Extra } from "./element";
 import type { Classifier } from "./classifier";
 
-export const recursiveGetSequence = function (
+class UnknownCharError extends Error {}
+class InvalidGlyphError extends Error {}
+
+const recursiveGetSequence = function (
   form: Form,
   classifier: Classifier,
   char: string,
-): number[] {
+): number[] | UnknownCharError | InvalidGlyphError {
   const glyph = form[char];
   if (!glyph)
-    throw new Error(
+    return new UnknownCharError(
       `Unknown char: ${char}, ${char
         .codePointAt(0)!
         .toString(16)}, ${char.codePointAt(0)!}`,
@@ -29,6 +32,7 @@ export const recursiveGetSequence = function (
           classifier,
           component.source,
         );
+        if (sourceSequence instanceof Error) return new InvalidGlyphError();
         return component.strokes.map((x) => {
           if (typeof x === "number") {
             return sourceSequence[x]!;
@@ -39,19 +43,26 @@ export const recursiveGetSequence = function (
       }
       return component.strokes.map((x) => classifier[x.feature]);
     case "compound":
-      const { operandList, order } = compound[0]!;
-      const sequences = operandList.map((s) => ({
-        sequence: recursiveGetSequence(form, classifier, s),
-        taken: 0,
-      }));
+      const selectedPartition = compound[0];
+      if (selectedPartition === undefined) return new InvalidGlyphError();
+      const { operandList, order } = selectedPartition;
+      const sequences: { sequence: number[]; taken: number }[] = [];
+      for (const operand of operandList) {
+        const opearndSequence = recursiveGetSequence(form, classifier, operand);
+        if (opearndSequence instanceof Error) return new InvalidGlyphError();
+        sequences.push({ sequence: opearndSequence, taken: 0 });
+      }
       if (order === undefined) return sequences.map((x) => x.sequence).flat();
       const finalSequence: number[] = [];
       for (const { index, strokes } of order) {
-        const s = sequences[index]!;
-        if (strokes === 0) finalSequence.push(...s.sequence);
+        const sequenceData = sequences[index];
+        if (sequenceData === undefined) return new InvalidGlyphError();
+        if (strokes === 0) finalSequence.push(...sequenceData.sequence);
         else {
-          finalSequence.push(...s.sequence.slice(s.taken, strokes));
-          s.taken += strokes;
+          finalSequence.push(
+            ...sequenceData.sequence.slice(sequenceData.taken, strokes),
+          );
+          sequenceData.taken += strokes;
         }
       }
       return finalSequence;
@@ -68,18 +79,15 @@ export const getSequence = (
   if (char.match(/\d+/)) return char;
   let thisSequence = sequenceCache.get(char);
   if (thisSequence !== undefined) return thisSequence;
-  try {
-    thisSequence = recursiveGetSequence(form, classifier, char).join("");
-  } catch (e) {
-    console.log(char, char.codePointAt(0)!.toString(16));
-    thisSequence = "";
-  }
+  const recurseResult = recursiveGetSequence(form, classifier, char);
+  if (recurseResult instanceof Error) return "";
+  thisSequence = recurseResult.join("");
   sequenceCache.set(char, thisSequence);
   return thisSequence;
 };
 
 export const generateSchemes = (n: number, roots: number[]) => {
-  const schemeList = [] as number[][];
+  const schemeList: number[][] = [];
   const total = (1 << n) - 1;
   const combineNext = (partialSum: number, scheme: number[]) => {
     const restBin = total - partialSum;
@@ -111,12 +119,15 @@ export const buildCache = function (glyph: SVGGlyph, name = ""): Cache {
   return { name, glyph: renderedGlyph, topology: findTopology(renderedGlyph) };
 };
 
+export class NoSchemeError extends Error {}
+export class MultipleSchemeError extends Error {}
+
 export const getComponentScheme = function (
   component: Cache,
   rootData: Cache[],
   config: FormConfig,
   classifier: Classifier,
-): ComponentResult {
+): ComponentResult | NoSchemeError | MultipleSchemeError {
   const { mapping } = config;
   if (mapping[component.name])
     return {
@@ -134,12 +145,14 @@ export const getComponentScheme = function (
   }
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
   const schemeList = generateSchemes(component.glyph.length, roots);
-  const [bestScheme, schemeData] = select(
-    config,
-    component,
-    schemeList,
-    rootMap,
-  );
+  if (schemeList.length === 0) {
+    return new NoSchemeError("No scheme available for component");
+  }
+  const selectResult = select(config, component, schemeList, rootMap);
+  if (selectResult instanceof Error) {
+    return selectResult;
+  }
+  const [bestScheme, schemeData] = selectResult;
   const sequence = bestScheme.map((n) => rootMap.get(n)!);
   const detail = bestScheme.map((n) => ({ name: rootMap.get(n)!, binary: n }));
   return {
@@ -147,11 +160,11 @@ export const getComponentScheme = function (
     detail: detail,
     strokes: component.glyph.length,
     map: rootMap,
-    schemes: schemeData.map((v, i) => {
+    schemes: schemeData.map((v) => {
       return {
-        scheme: schemeList[i]!,
-        sequence: schemeList[i]!.map((x) => rootMap.get(x)!),
-        data: v,
+        scheme: v.scheme,
+        sequence: v.scheme.map((x) => rootMap.get(x)!),
+        data: v.evaluation,
       };
     }),
   };
@@ -258,7 +271,7 @@ export const renderComponentGlyphs = (data: MergedData) => {
 export const disassembleComponents = function (
   data: MergedData,
   config: FormConfig,
-): ComponentCache {
+): [ComponentCache, string[]] {
   const { classifier } = data;
   const componentCache = renderComponentForm(data);
   const { mapping, grouping } = config;
@@ -268,12 +281,17 @@ export const disassembleComponents = function (
       return roots.has(x);
     })
     .map(([, c]) => c);
-  const result = new Map(
-    [...componentCache].map(([char, cache]) => {
-      return [char, getComponentScheme(cache, rootData, config, classifier)];
-    }),
-  );
-  return result;
+  const result: ComponentCache = new Map();
+  const error: string[] = [];
+  [...componentCache].forEach(([char, cache]) => {
+    const scheme = getComponentScheme(cache, rootData, config, classifier);
+    if (scheme instanceof Error) {
+      error.push(char);
+    } else {
+      result.set(char, scheme);
+    }
+  });
+  return [result, error];
 };
 
 const topologicalSort = (form: Form) => {
@@ -283,18 +301,17 @@ const topologicalSort = (form: Form) => {
     for (const [k, glyph] of Object.entries(form)) {
       if (compounds.get(k)) continue;
       if (glyph.default_type !== "compound") continue;
-      try {
-        if (
-          glyph.compound[0]!.operandList.every(
-            (x) =>
-              form[x]!.default_type === "component" ||
-              compounds.get(x) !== undefined,
-          )
-        ) {
-          thisLevelCompound.set(k, glyph);
-        }
-      } catch {
-        console.log(k, glyph, k.codePointAt(0)!.toString(16));
+      // this will change later, allowing user to choose desired partition
+      const selectedPartition = glyph.compound[0];
+      if (selectedPartition === undefined) continue;
+      if (
+        selectedPartition.operandList.every(
+          (x) =>
+            form[x]?.default_type === "component" ||
+            compounds.get(x) !== undefined,
+        )
+      ) {
+        thisLevelCompound.set(k, glyph);
       }
     }
     compounds = new Map([...compounds, ...thisLevelCompound]);
@@ -344,6 +361,7 @@ const disassembleCompounds = (
   const { mapping } = config;
   const compounds = topologicalSort(data.form);
   const compoundCache: CompoundCache = new Map();
+  const compoundError: string[] = [];
   const getResult = function (s: string): PartitionResult | undefined {
     return componentCache.get(s) || compoundCache.get(s);
   };
@@ -356,6 +374,7 @@ const disassembleCompounds = (
     const { operator, operandList, order } = glyph.compound[0]!;
     const rawPartitionResults = operandList.map(getResult);
     if (rawPartitionResults.every((x) => x !== undefined)) {
+      // this is safe!
       const partitionResults = rawPartitionResults as PartitionResult[];
       const sequence =
         order === undefined
@@ -369,14 +388,14 @@ const disassembleCompounds = (
         },
       });
     } else {
-      console.error(char, operandList);
+      compoundError.push(char);
     }
   }
-  return compoundCache;
+  return [compoundCache, compoundError] as const;
 };
 
 export const getFormCore = (data: MergedData, config: FormConfig) => {
-  const componentCache = disassembleComponents(data, config);
+  const [componentCache, componentError] = disassembleComponents(data, config);
   const customizations: ComponentCache = new Map(
     Object.entries(config.analysis.customize).map(([component, sequence]) => {
       const pseudoResult: ComponentResult = { sequence: sequence };
@@ -384,8 +403,19 @@ export const getFormCore = (data: MergedData, config: FormConfig) => {
     }),
   );
   const customized = new Map([...componentCache, ...customizations]);
-  const compoundCache = disassembleCompounds(data, config, customized);
-  return { componentCache, customizations, customized, compoundCache };
+  const [compoundCache, compoundError] = disassembleCompounds(
+    data,
+    config,
+    customized,
+  );
+  return {
+    componentCache,
+    componentError,
+    customizations,
+    customized,
+    compoundCache,
+    compoundError,
+  };
 };
 
 const getExtra = function (data: MergedData, config: FormConfig): Extra {
@@ -397,7 +427,11 @@ const getExtra = function (data: MergedData, config: FormConfig): Extra {
       // 单笔画
       return [Number(x)];
     }
-    return recursiveGetSequence(form, classifier, x);
+    const sequence = recursiveGetSequence(form, classifier, x);
+    if (sequence instanceof Error) {
+      return [];
+    }
+    return sequence;
   };
   const rootSequence = Object.fromEntries(
     roots.map((x) => [x, findSequence(x)]),
