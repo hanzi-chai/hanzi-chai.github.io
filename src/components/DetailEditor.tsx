@@ -79,6 +79,10 @@ const DetailEditor = ({ selected }: { selected: string }) => {
       value: "汉字",
       label: "汉字",
     },
+    {
+      value: "结构",
+      label: "结构",
+    },
   ];
   const update = (data: SourceData | ConditionData) => {
     setNodes(

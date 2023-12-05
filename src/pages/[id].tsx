@@ -159,7 +159,7 @@ function EditorLayout() {
           />
         </Flex>
       </Layout.Sider>
-      <Layout>
+      <Layout style={{ height: "100vh" }}>
         <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
           <div>{config.info.name}</div>
         </Layout.Header>
@@ -169,7 +169,7 @@ function EditorLayout() {
             padding: "10px 24px",
           }}
         >
-          <Flex justify="center">
+          <Flex justify="center" style={{ height: "100%" }}>
             <div
               style={{ maxWidth: "80rem", minWidth: "20rem", width: "80rem" }}
             >
