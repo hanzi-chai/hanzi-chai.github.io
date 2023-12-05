@@ -101,8 +101,6 @@ export const getDummyStroke = function (
         case "c":
         case "z":
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
-        default:
-          throw new Error(`impossible type command: ${command}`);
       }
     }),
   };

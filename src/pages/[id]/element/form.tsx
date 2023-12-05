@@ -1,10 +1,10 @@
 import Mapping from "~/components/Mapping";
 import { Typography } from "antd";
 import { useState } from "react";
-import { useDisplay, useForm } from "~/components/contants";
+import { useClassifier, useDisplay, useForm } from "~/components/contants";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
-import { getSequence } from "~/lib/form";
+import { getSequence } from "~/lib/component";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useChaifenTitle } from "~/lib/hooks";
 import classifier from "~/lib/classifier";
@@ -15,7 +15,8 @@ type FormElementTypes = (typeof formElementTypes)[number];
 export default function RootElementConfig() {
   useChaifenTitle("字形元素");
   const [sequence, setSequence] = useState("");
-  const allStrokes = Array.from(new Set(Object.values(classifier)))
+  const customizedClassifier = useClassifier();
+  const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
   const allErbi = allStrokes.map((x) => allStrokes.map((y) => x + y)).flat();

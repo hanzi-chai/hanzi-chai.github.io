@@ -1,8 +1,5 @@
 import { isEqual } from "~/lib/utils";
-import type { Cache } from "./form";
-import type { SVGGlyph } from "./data";
-import { Component } from "./data";
-import findTopology, { renderSVGGlyph } from "./topology";
+import findTopology, { RenderedGlyph, renderSVGGlyph } from "./topology";
 import type { Interval } from "./bezier";
 import {
   curveLength,
@@ -12,6 +9,7 @@ import {
 } from "./bezier";
 import { Degenerator, FormConfig } from "./config";
 import { Feature } from "./classifier";
+import { ComputedComponent } from "./component";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -38,8 +36,8 @@ const strokeFeatureEqual = (
 };
 
 const verifySpecialRoots = (
-  component: Cache,
-  root: Cache,
+  component: ComputedComponent,
+  root: ComputedComponent,
   indices: number[],
 ) => {
   if (["土", "士"].includes(root.name)) {
@@ -85,8 +83,8 @@ const verifySpecialRoots = (
 
 export const generateSliceBinaries = (
   config: FormConfig,
-  component: Cache,
-  root: Cache,
+  component: ComputedComponent,
+  root: ComputedComponent,
 ) => {
   const {
     analysis: { degenerator },
@@ -132,10 +130,10 @@ export const generateSliceBinaries = (
     .map(indicesToBinary(cglyph.length));
 };
 
-const degenerate = (degenerator: Degenerator, glyph: SVGGlyph) => {
+const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
   return [
     glyph.map((x) => x.feature).map((x) => degenerator.feature[x] || x),
-    findTopology(renderSVGGlyph(glyph)),
+    findTopology(glyph),
   ] as const;
 };
 

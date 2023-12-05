@@ -31,6 +31,10 @@ interface This extends Base {
   type: "汉字";
 }
 
+interface Structure extends Base {
+  type: "结构";
+}
+
 interface Pronunciation extends Base {
   type: "字音";
   subtype: AName;
@@ -53,11 +57,18 @@ interface StrokePair extends Base {
   strokeIndex: number;
 }
 
-export type CodableObject = This | Pronunciation | Root | Stroke | StrokePair;
+export type CodableObject =
+  | This
+  | Structure
+  | Pronunciation
+  | Root
+  | Stroke
+  | StrokePair;
 
 export const renderName = (object: CodableObject) => {
   switch (object.type) {
     case "汉字":
+    case "结构":
       return object.type;
     case "字音":
       return object.subtype;
@@ -122,6 +133,11 @@ export const findElement = (
   switch (object.type) {
     case "汉字":
       return result.char;
+    case "结构":
+      if ("detail" in result && "operator" in result.detail) {
+        return result.detail.operator;
+      }
+      return undefined;
     case "字音":
       return pinyinAnalyzers[object.subtype](pinyin);
     case "字根":

@@ -8,6 +8,8 @@ import type { MappedInfo } from "~/lib/utils";
 import { reverse } from "~/lib/utils";
 import { RootSelect, Select } from "./Utils";
 import { Select as AntdSelect } from "antd";
+import { range } from "underscore";
+import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const design = useDesign();
@@ -141,24 +143,56 @@ const Mapping = () => {
   const { mapping, alphabet, maxcodelen } = useGenericConfig();
   const design = useDesign();
   const reversed = reverse(alphabet, mapping!);
+  const keyboard = Array.from(
+    "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?" + "qwertyuiopasdfghjkl;zxcvbnm,./",
+  );
+  const printable_ascii = range(32, 127).map((x) => String.fromCodePoint(x));
+  const [char, setChar] = useState<string | undefined>(undefined);
   return (
     <>
-      <Form.Item label="字母表">
-        <Input
-          value={alphabet}
-          onChange={(event) =>
-            design({ subtype: "generic-alphabet", value: event?.target.value })
-          }
-        />
-      </Form.Item>
-      <Form.Item label="最大编码长度">
+      <Form.Item label="编码类型">
         <Select
           value={maxcodelen}
           onChange={(event) => {
             design({ subtype: "generic-maxcodelen", value: event });
           }}
-          options={[1, 2, 3, 4].map((x) => ({ label: x, value: x }))}
+          options={[
+            { label: "单编码", value: 1 },
+            { label: "双编码", value: 2 },
+            { label: "三编码", value: 3 },
+            { label: "四编码", value: 4 },
+          ]}
         />
+      </Form.Item>
+      <Form.Item>
+        <Flex justify="center" gap="large">
+          <Button
+            onClick={() =>
+              design({
+                subtype: "generic-alphabet",
+                value: Array.from(alphabet).sort().join(""),
+              })
+            }
+          >
+            按字典序排序
+          </Button>
+          <Button
+            onClick={() =>
+              design({
+                subtype: "generic-alphabet",
+                value: Array.from(alphabet)
+                  .sort(
+                    (a, b) =>
+                      keyboard.findIndex((x) => x === a) -
+                      keyboard.findIndex((x) => x === b),
+                  )
+                  .join(""),
+              })
+            }
+          >
+            按键盘序排序
+          </Button>
+        </Flex>
       </Form.Item>
       <List
         dataSource={Object.entries(reversed)}
@@ -166,6 +200,21 @@ const Mapping = () => {
           const [key, roots] = item;
           return (
             <Flex gap="small" style={{ margin: "8px 0" }}>
+              <Button
+                shape="circle"
+                type="text"
+                danger
+                disabled={roots.length > 0}
+                onClick={() => {
+                  design({
+                    subtype: "generic-alphabet",
+                    value: Array.from(alphabet)
+                      .filter((x) => x !== key)
+                      .join(""),
+                  });
+                }}
+                icon={<DeleteOutlined />}
+              />
               <Char>{key}</Char>
               <Flex gap="small" wrap="wrap">
                 {roots.map(({ name, code }) => (
@@ -176,6 +225,30 @@ const Mapping = () => {
           );
         }}
       />
+      <Flex justify="center" gap="large">
+        <Select
+          value={char}
+          onChange={setChar}
+          options={printable_ascii
+            .filter((x) => !alphabet.includes(x))
+            .map((v) => ({
+              label: v === " " ? "空格" : v,
+              value: v,
+            }))}
+        />
+        <Button
+          type="primary"
+          disabled={char === undefined}
+          onClick={() =>
+            design({
+              subtype: "generic-alphabet",
+              value: alphabet + char,
+            })
+          }
+        >
+          添加
+        </Button>
+      </Flex>
     </>
   );
 };

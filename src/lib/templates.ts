@@ -30,7 +30,7 @@ const getData = function (ct: ClassifierType): Config["data"] {
   };
 };
 
-const defaultForm: FormConfig = {
+export const defaultForm: FormConfig = {
   alphabet: "qwertyuiopasdfghjklzxcvbnm",
   maxcodelen: 1,
   grouping: {},

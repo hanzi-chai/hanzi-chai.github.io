@@ -11,8 +11,8 @@ import {
 import styled from "styled-components";
 import { useFormConfig } from "./context";
 import { useForm, useDisplay } from "./contants";
-import { getSequence } from "~/lib/form";
-import { isValidCJKChar, isValidChar } from "~/lib/utils";
+import { getSequence } from "~/lib/component";
+import { isValidCJKChar } from "~/lib/utils";
 import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
@@ -96,7 +96,6 @@ export const RootSelect = ({
       showSearch
       placeholder="输入笔画搜索"
       options={keys
-        .filter((x) => isValidChar(x) || x.match(/\d+/))
         .filter((x) => x !== exclude)
         .map((x) => ({
           value: x,
@@ -104,9 +103,10 @@ export const RootSelect = ({
         }))}
       value={char}
       onChange={onChange}
-      filterOption={(input, option) =>
-        getSequence(form, classifier, option!.value).startsWith(input)
-      }
+      filterOption={(input, option) => {
+        if (option === undefined) return false;
+        return getSequence(form, classifier, option.value).startsWith(input);
+      }}
       filterSort={(a, b) => {
         return (
           getSequence(form, classifier, a.value).length -

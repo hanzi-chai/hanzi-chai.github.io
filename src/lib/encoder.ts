@@ -6,7 +6,8 @@ import type {
   Op,
   Source,
 } from "./config";
-import type { ComponentResult, CompoundResult } from "./form";
+import type { ComponentResult } from "./component";
+import type { CompoundResult } from "./compound";
 import { getForm } from "./form";
 import type { Extra } from "./element";
 import { findElement } from "./element";

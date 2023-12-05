@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { buildCache } from "~/lib/form";
-import { length, bias, order, crossing, attaching } from "~/lib/selector";
+import {
+  length,
+  bias,
+  order,
+  crossing,
+  attaching,
+  Scheme,
+} from "~/lib/selector";
 import select from "~/lib/selector";
 import { config, rendered } from "./mock";
-import { FormConfig } from "~/lib/config";
 
-const { 天: raw } = rendered;
-const 天 = buildCache(raw!);
+const { 天 } = rendered;
 
 const rootMap = new Map<number, string>();
 
@@ -45,16 +49,18 @@ describe("attaching", () => {
 describe("select", () => {
   it("should select the correct scheme for 天", () => {
     expect(
-      select(
-        config,
-        天,
-        [
-          [12, 3],
-          [8, 7],
-          [8, 4, 3],
-          [8, 4, 2, 1],
-        ],
-        rootMap,
+      (
+        select(
+          config,
+          天,
+          [
+            [12, 3],
+            [8, 7],
+            [8, 4, 3],
+            [8, 4, 2, 1],
+          ],
+          rootMap,
+        ) as [Scheme, unknown]
       )[0],
     ).toEqual([8, 7]);
   });

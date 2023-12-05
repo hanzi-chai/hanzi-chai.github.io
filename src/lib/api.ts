@@ -24,7 +24,7 @@ const template =
       headers: getHeader(),
       body: payload && JSON.stringify(payload),
     }).then((res) => res.json());
-    return response as R | Err;
+    return response as R;
   };
 
 export const listForm = async () =>

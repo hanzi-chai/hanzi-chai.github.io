@@ -36,7 +36,7 @@ import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
 import { useForm } from "./contants";
-import { recursiveRenderGlyph } from "~/lib/form";
+import { recursiveRenderGlyph } from "~/lib/component";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);
 
@@ -161,6 +161,7 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
               <Button
                 onClick={() => {
                   const sourceGlyph = recursiveRenderGlyph(source, formData);
+                  if (sourceGlyph instanceof Error) return;
                   form.setFieldValue(
                     ["component", "strokes", name],
                     sourceGlyph[name]!,
@@ -201,7 +202,7 @@ const ComponentForm = () => {
     | undefined;
   const formData = useForm();
   const parent = source !== undefined ? formData[source] : undefined;
-  const parentLength = parent?.component!.strokes.length ?? 0;
+  const parentLength = parent?.component?.strokes.length ?? 0;
   return (
     <>
       <Flex gap="middle">

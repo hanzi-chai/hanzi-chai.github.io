@@ -24,7 +24,7 @@ import {
   Update,
 } from "~/components/Action";
 import StrokeSearch from "~/components/StrokeSearch";
-import { getSequence } from "~/lib/form";
+import { getSequence } from "~/lib/component";
 import classifier from "~/lib/classifier";
 import type { ColumnType } from "antd/es/table/interface";
 
@@ -158,7 +158,7 @@ const FormTable = () => {
       width: 192,
       filters: [{ text: "只看非空", value: 1 }],
       onFilter: (value, record) => record.gf0014_id !== null,
-      sorter: (a, b) => a.gf0014_id! - b.gf0014_id!,
+      sorter: (a, b) => Number(a.gf0014_id) - Number(b.gf0014_id),
     },
     {
       title: "部件表示",
@@ -278,7 +278,8 @@ const FormTable = () => {
           current: page,
         }}
         onChange={(pagination) => {
-          setPage(pagination.current!);
+          const current = pagination.current;
+          current && setPage(current);
         }}
         style={{
           maxWidth: "1920px",

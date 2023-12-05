@@ -1,4 +1,8 @@
-import type { Cache } from "./form";
+import {
+  MultipleSchemeError,
+  type ComputedComponent,
+  NoSchemeError,
+} from "./component";
 import type { FormConfig, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import { type CurveRelation } from "./topology";
@@ -13,7 +17,7 @@ interface Sieve<T extends Comparable> {
   title: SieveName;
   key: (
     scheme: Scheme,
-    component: Cache,
+    component: ComputedComponent,
     config: FormConfig,
     rootMap: Map<number, string>,
   ) => T;
@@ -226,44 +230,47 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   ].map((x) => [x.title, x]),
 );
 
+type Evaluation = Map<SieveName, number | number[]>;
+
 const select = (
   config: FormConfig,
-  component: Cache,
+  component: ComputedComponent,
   schemeList: Scheme[],
   rootMap: Map<number, string>,
 ) => {
-  const {
-    analysis: { selector },
-  } = config;
-  const sieveList = selector.map((s) => sieveMap.get(s)!);
-  const schemeData = schemeList.map(
-    () => new Map<SieveName, number | number[]>(),
-  );
-  const exclusion = schemeList.map(() => false);
-  for (const sieve of sieveList) {
+  const schemeData = schemeList.map((scheme) => ({
+    scheme,
+    evaluation: new Map<SieveName, number | number[]>(),
+    excluded: false,
+  }));
+  for (const sieveName of config.analysis.selector) {
+    const sieve = sieveMap.get(sieveName)!;
     let min: number | number[] | undefined;
-    for (const [index, scheme] of schemeList.entries()) {
-      const data = schemeData[index]!;
-      const excluded = exclusion[index]!;
-      if (excluded) continue;
-      const value = sieve.key(scheme, component, config, rootMap);
-      data.set(sieve.title, value);
+    for (const data of schemeData) {
+      if (data.excluded) continue;
+      const value = sieve.key(data.scheme, component, config, rootMap);
+      data.evaluation.set(sieve.title, value);
       if (min === undefined) {
         min = value;
       } else if (isLess(value, min)) {
         min = value;
       }
     }
-    schemeData.forEach((data, index) => {
-      if (data.get(sieve.title) !== min) {
-        exclusion[index] = true;
+    schemeData.forEach((data) => {
+      if (data.evaluation.get(sieve.title) !== min) {
+        data.excluded = true;
       }
     });
   }
-  if (exclusion.filter((x) => !x).length !== 1) {
-    console.error("undetermined component", component.name);
+  // 1. If there are multiple schemes, error
+  if (schemeData.filter((x) => !x.excluded).length !== 1) {
+    return new MultipleSchemeError();
   }
-  return [schemeList.find((v, i) => !exclusion[i])!, schemeData] as const;
+  // 2. If there is no scheme, error
+  const best = schemeData.find((v) => !v.excluded);
+  if (best === undefined) return new NoSchemeError();
+  // Correct result
+  return [best.scheme, schemeData] as const;
 };
 
 export type { Scheme, Sieve };

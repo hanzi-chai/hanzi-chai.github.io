@@ -110,10 +110,10 @@ const linearRelation = function (
     subtract(aend, bstart),
   ];
   const uc = area(u, u1) * area(u, u2);
-  if (vc > 0 || uc > 0) {
-    return getDisjointRelation(a, b);
+  if (vc < 0 && uc < 0) {
+    return { type: "交" };
   }
-  return { type: "交" };
+  return getDisjointRelation(a, b);
 };
 
 const genericRelation = function (a: Curve, b: Curve): CurveRelation {
