@@ -27,7 +27,8 @@ import DetailEditor from "./DetailEditor";
 
 const EncoderGraph = () => {
   const { fitView, getNode } = useReactFlow();
-  const { sources, conditions } = useEncoder();
+  const encoder = useEncoder();
+  const { sources, conditions } = encoder;
   const dispatch = useContext(DispatchContext);
   const n1 = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),
@@ -94,7 +95,7 @@ const EncoderGraph = () => {
         conditions[from]!.negative = to;
       }
     });
-    dispatch({ type: "encoder", value: { sources, conditions } });
+    dispatch({ type: "encoder", value: { ...encoder, sources, conditions } });
   }, [nodes, edges, dispatch]);
   const onConnect = (connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true }, eds));

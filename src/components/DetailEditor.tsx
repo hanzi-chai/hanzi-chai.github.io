@@ -8,6 +8,7 @@ import { Select } from "./Utils";
 import type { Op } from "~/lib/config";
 import { binaryOps, ops } from "~/lib/config";
 import TextArea from "antd/es/input/TextArea";
+import { useFormConfig, usePronunciationConfig } from "./context";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -32,6 +33,9 @@ const DetailEditor = ({ selected }: { selected: string }) => {
   >();
   const nodes = getNodes();
   const { data } = getNode(selected)!;
+  const { alphabet: formAlphabet } = useFormConfig();
+  const { alphabet: pronAlphabet } = usePronunciationConfig();
+  const alphabet = Array.from(new Set([...formAlphabet, ...pronAlphabet]));
   const options: Option[] = [
     {
       value: "字音",
@@ -82,6 +86,14 @@ const DetailEditor = ({ selected }: { selected: string }) => {
     {
       value: "结构",
       label: "结构",
+    },
+    {
+      value: "固定",
+      label: "固定",
+      children: alphabet.map((v) => ({
+        value: v,
+        label: v,
+      })),
     },
   ];
   const update = (data: SourceData | ConditionData) => {

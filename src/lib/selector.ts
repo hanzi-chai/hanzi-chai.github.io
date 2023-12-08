@@ -117,6 +117,33 @@ export const similar: Sieve<number> = {
   },
 };
 
+/**
+ * 规则：强字根
+ * 尽量多使用特定的一些字根
+ * 该规则采集自郑码的文档
+ */
+export const strong: Sieve<number> = {
+  title: "多强字根",
+  key: (scheme, _, config, rootMap) => {
+    const strong = config.analysis.strong || [];
+    const roots = scheme.map((x) => rootMap.get(x)!);
+    return -roots.filter((x) => strong.includes(x)).length;
+  },
+};
+
+/**
+ * 规则：弱字根
+ * 尽量避免使用特定的一些字根
+ */
+export const weak: Sieve<number> = {
+  title: "少弱字根",
+  key: (scheme, _, config, rootMap) => {
+    const weak = config.analysis.weak || [];
+    const roots = scheme.map((x) => rootMap.get(x)!);
+    return roots.filter((x) => weak.includes(x)).length;
+  },
+};
+
 const makeTopologySieve = function (
   relationType: CurveRelation["type"],
   avoidRelationType: CurveRelation["type"][],
@@ -227,6 +254,8 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
     similar,
     orientation,
     integrity,
+    strong,
+    weak,
   ].map((x) => [x.title, x]),
 );
 

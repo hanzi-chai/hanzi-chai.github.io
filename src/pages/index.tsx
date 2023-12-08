@@ -201,7 +201,7 @@ const HomeLayout = () => {
               placement="bottom"
               menu={{
                 items: Object.values(examples)
-                  .filter((x) => x.source === "mswb")
+                  .filter((x) => x.source === "mswb" || x.source === "zhengma")
                   .map((x) => ({
                     key: x.source,
                     label: x.info.name,

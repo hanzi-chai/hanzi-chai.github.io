@@ -1,4 +1,4 @@
-version: 0.0.4-alpha.1
+version: 0.0.4-alpha.4
 source: zhengma
 info:
   name: 郑码
@@ -38,7 +38,6 @@ form:
     "\ue002": 工
     "\ue410": 工
     者: 耂
-    "\ue003": 王
     "\ue000": 丰
     龶: 丰
     春: "\ue064"
@@ -63,7 +62,6 @@ form:
     "\ue0b4": 匚
     "\ue416": 七
     "\ue417": 七
-    戊: 戈
     "\ue03f": 戈
     戋: 戈
     "\ue07c": "\ue018"
@@ -116,9 +114,7 @@ form:
     "\ue0d8": 乂
     饣: 食
     钅: 金
-    "\ue024": 斤
     爫: 爪
-    "\ue02a": 月
     "\ue0d2": 月
     "\ue425": 鱼
     "\ue020": 鱼
@@ -186,7 +182,6 @@ form:
     "\ue440": 女
     "\ue43d": 人
     "\ue0d6": 几
-    "\ue424": 儿
     "\ue0aa": 廿
     "\ue09c": 刂
     "\ue0a9": 罒
@@ -196,6 +191,31 @@ form:
     "\ue0a7": 女
     "\ue81b": 冂
     "\ue81a": 冂
+    "\ue445": 小
+    "\ue451": 止
+    "\ue439": 冂
+    "\ue431": 彐
+    "\ue404": 亻
+    "\ue43a": 土
+    "\ue0b0": 水
+    "\ue0b5": 水
+    "\ue043": 大
+    "\ue449": 大
+    "\ue448": "\ue42d"
+    "\ue04c": 木
+    朩: 木
+    "\ue0ba": 川
+    "\ue423": 鱼
+    "\ue0d0": 雨
+    "\ue0c8": 车
+    "\ue44b": 禾
+    "\ue009": 马
+    "\ue0c6": 足
+    "\ue418": 匚
+    "\ue0b6": 䒑
+    "\ue02a": 冂
+    "\ue442": 小
+    "\ue411": 牛
   mapping:
     '1': a
     '2': i
@@ -303,7 +323,6 @@ form:
     臼: nb
     鬼: nj
     八: o
-    "\ue077": od
     人: od
     入: oda
     彳: oi
@@ -391,16 +410,35 @@ form:
     女: zm
     巴: yia
     "\ue0a6": xk
+    戊: hm
+    "\ue41e": od
+    了: 'y'
+    "\ue024": pd
   analysis:
     degenerator:
       feature: {提: 横, 捺: 点}
       nocross: false
     selector:
+      - 结构完整
       - 根少优先
-      - 连续笔顺
+      - 全符笔顺
       - 能连不交
+      - 非形近根
       - 取大优先
-    customize: {}
+    customize:
+      我: [手, 戈]
+      曲: [日, "\ue001"]
+      五: [工, '5']
+      里: [日, 土]
+      兆: ["\ue997", 儿]
+      井: [二, "\ue0e3"]
+      夫: [二, 人]
+      孑: [了, '1']
+      及: ['6', '3', '4']
+    strong:
+      - '1'
+      - 二
+      - "\ue40f"
 pronunciation:
   alphabet: ''
   maxcodelen: 1
@@ -414,45 +452,92 @@ encoder:
       object: {type: 字根, rootIndex: 1}
       next: c0
     s2:
-      object: {type: 字根, rootIndex: 2}
+      object: {type: 字根, rootIndex: -2}
       index: 0
-      next: c1
+      next: s7
     s3:
-      object: {type: 二笔, rootIndex: 2, strokeIndex: 1}
-      next: s5
-    s4:
-      object: {type: 字根, rootIndex: 3}
-      index: 0
-      next: c2
-    s5:
       object: {type: 字根, rootIndex: 2}
-      index: 1
+      next: c5
+    s4:
+      object: {type: 固定, key: v}
+      next: s5
+    s5:
+      object: {type: 固定, key: v}
       next: null
     s6:
       object: {type: 字根, rootIndex: -1}
       index: 0
       next: null
     s7:
-      object: {type: 二笔, rootIndex: 3, strokeIndex: 1}
+      object: {type: 字根, rootIndex: -1}
+      index: 0
+      next: null
+    s8:
+      object: {type: 固定, key: a}
+      next: null
+    s9:
+      object: {type: 字根, rootIndex: 2}
+      index: 0
+      next: s12
+    s10:
+      object: {type: 字根, rootIndex: 2}
+      index: 0
+      next: s11
+    s11:
+      object: {type: 字根, rootIndex: 3}
+      next: null
+    s12:
+      object: {type: 字根, rootIndex: -2}
+      index: 0
+      next: s13
+    s13:
+      object: {type: 字根, rootIndex: -1}
+      index: 0
       next: null
   conditions:
     c0:
       object: {type: 字根, rootIndex: 2}
       operator: 存在
-      positive: s2
+      positive: c1
       negative: c3
     c1:
-      object: {type: 字根, rootIndex: 3}
-      operator: 存在
-      positive: s4
-      negative: s3
-    c2:
-      object: {type: 字根, rootIndex: 4}
-      operator: 存在
+      object: {type: 字根, rootIndex: 1}
+      operator: 编码匹配
+      value: ^[a-z]{3}$
       positive: s6
-      negative: s7
+      negative: c4
+    c2:
+      object: {type: 字根, rootIndex: 1}
+      operator: 编码匹配
+      value: ^[a-z]{2}$
+      positive: s2
+      negative: c7
     c3:
       object: {type: 字根, rootIndex: 1}
-      operator: 存在
-      positive: null
+      operator: 编码匹配
+      positive: s8
       negative: null
+      value: ^[a-z]$
+    c4:
+      object: {type: 字根, rootIndex: 3}
+      operator: 存在
+      positive: c2
+      negative: s3
+    c5:
+      object: {type: 字根, rootIndex: 1}
+      operator: 编码匹配
+      value: ^[a-z]$
+      positive: c6
+      negative: null
+    c6:
+      object: {type: 字根, rootIndex: 2}
+      operator: 编码匹配
+      value: ^[a-z]$
+      positive: s4
+      negative: null
+    c7:
+      object: {type: 字根, rootIndex: 4}
+      operator: 存在
+      positive: s9
+      negative: s10
+  maxlength: 4

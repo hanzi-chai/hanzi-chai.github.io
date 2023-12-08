@@ -12,11 +12,20 @@ import { getForm } from "./form";
 import type { Extra } from "./element";
 import { findElement } from "./element";
 
-export const table: Record<Op, (target?: string, value?: string) => boolean> = {
+export const table: Record<
+  Op,
+  (
+    target: string | undefined,
+    value: string | undefined,
+    totalMapping: Mapping,
+  ) => boolean
+> = {
   是: (t, v) => t === v,
   不是: (t, v) => t !== v,
   匹配: (t, v) => t !== undefined && new RegExp(v!).test(t),
   不匹配: (t, v) => t !== undefined && !new RegExp(v!).test(t),
+  编码匹配: (t, v, m) => t !== undefined && new RegExp(v!).test(m[t]!),
+  编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!).test(m[t]!),
   存在: (t) => t !== undefined,
   不存在: (t) => t === undefined,
 };
@@ -40,11 +49,12 @@ const satisfy = (
   result: TotalResult,
   data: MergedData,
   extra: Extra,
+  totalMapping: Mapping,
 ) => {
   const { object, operator, value } = condition;
   const target = findElement(object, result, data, extra);
   const fn = table[operator];
-  return fn(target, value);
+  return fn(target, value, totalMapping);
 };
 
 const merge = (grouping: Mapping, mapping: Mapping) => {
@@ -80,14 +90,15 @@ const compile = (
         node = next;
       } else {
         const condition: Condition = encoder.conditions[node]!;
-        if (satisfy(condition, result, data, extra)) {
+        if (satisfy(condition, result, data, extra, totalMapping)) {
           node = condition.positive;
         } else {
           node = condition.negative;
         }
       }
     }
-    return codes.join("");
+    const code = codes.join("");
+    return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
   };
 };
 

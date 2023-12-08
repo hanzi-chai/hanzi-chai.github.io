@@ -31,6 +31,11 @@ interface This extends Base {
   type: "汉字";
 }
 
+interface Constant extends Base {
+  type: "固定";
+  key: string;
+}
+
 interface Structure extends Base {
   type: "结构";
 }
@@ -59,6 +64,7 @@ interface StrokePair extends Base {
 
 export type CodableObject =
   | This
+  | Constant
   | Structure
   | Pronunciation
   | Root
@@ -70,6 +76,8 @@ export const renderName = (object: CodableObject) => {
     case "汉字":
     case "结构":
       return object.type;
+    case "固定":
+      return object.key;
     case "字音":
       return object.subtype;
     case "字根":
@@ -86,6 +94,8 @@ export const renderName = (object: CodableObject) => {
 export const renderList = (object: CodableObject) => {
   const list = [object.type];
   switch (object.type) {
+    case "固定":
+      return [...list, object.key];
     case "字音":
       return [...list, object.subtype];
     case "字根":
@@ -98,19 +108,29 @@ export const renderList = (object: CodableObject) => {
   return list;
 };
 
-export const parseList = (value: (string | number)[]) => {
-  const object = { type: value[0] };
-  switch (value[0] as CodableObject["type"]) {
+export const parseList = function (value: (string | number)[]): CodableObject {
+  const type = value[0] as CodableObject["type"];
+  switch (type) {
+    case "固定":
+      return { type, key: value[1] as string };
     case "字音":
-      return { ...object, subtype: value[1] };
+      return { type, subtype: value[1] as Pronunciation["subtype"] };
     case "字根":
-      return { ...object, rootIndex: value[1] };
+      return { type, rootIndex: value[1] as number };
     case "笔画":
-      return { ...object, rootIndex: value[1], strokeIndex: value[2] };
+      return {
+        type,
+        rootIndex: value[1] as number,
+        strokeIndex: value[2] as number,
+      };
     case "二笔":
-      return { ...object, rootIndex: value[1], strokeIndex: value[2] };
+      return {
+        type,
+        rootIndex: value[1] as number,
+        strokeIndex: value[2] as number,
+      };
   }
-  return object;
+  return { type };
 };
 
 function getindex<T>(a: T[], i: number): T | undefined {
@@ -133,6 +153,8 @@ export const findElement = (
   switch (object.type) {
     case "汉字":
       return result.char;
+    case "固定":
+      return object.key;
     case "结构":
       if ("detail" in result && "operator" in result.detail) {
         return result.detail.operator;

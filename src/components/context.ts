@@ -86,6 +86,12 @@ type ElementSubAction =
       value: SieveName[];
     }
   | {
+      subtype: "root-selector-strongweak";
+      variant: "strong" | "weak";
+      action: "add" | "remove";
+      value: string;
+    }
+  | {
       subtype: "root-customize";
       action: "add" | "remove";
       key: string;
@@ -170,6 +176,20 @@ export const configReducer = (config: Config, action: Action) => {
               break;
             case "replace":
               root.analysis.selector = action.value;
+          }
+          break;
+        case "root-selector-strongweak":
+          switch (action.action) {
+            case "add":
+              root.analysis[action.variant] = (
+                root.analysis[action.variant] ?? []
+              ).concat(action.value);
+              break;
+            case "remove":
+              root.analysis[action.variant] = root.analysis[
+                action.variant
+              ]?.filter((x) => x !== action.value);
+              break;
           }
           break;
         case "root-customize":
