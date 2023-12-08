@@ -4,7 +4,7 @@ import { useClassifier } from "~/components/contants";
 import { Button, Flex, Space, notification } from "antd";
 import Root from "~/components/Root";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
-import type { PropsWithChildren} from "react";
+import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
 import { useChaifenTitle } from "~/lib/hooks";
@@ -50,7 +50,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 };
 
 const Classifier = () => {
-  useChaifenTitle('笔画分类数据')
+  useChaifenTitle("笔画分类数据");
   const classifier = useClassifier();
   const modify = useAdd();
   const [categories, setCategories] = useState(

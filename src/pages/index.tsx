@@ -23,6 +23,7 @@ import Starter from "~/components/Starter";
 import { post } from "~/lib/api";
 import { md5 } from "js-md5";
 import { useChaifenTitle } from "~/lib/hooks";
+import init, { greet } from "libchai";
 
 type Status = "login" | "signup" | "signin";
 
@@ -158,6 +159,9 @@ const HomeLayout = () => {
     Object.keys(localStorage)
       .filter((x) => !configs[x] && !x.startsWith("."))
       .forEach((id) => localStorage.removeItem(id));
+    init().then(() => {
+      console.log("Hello from wasm!");
+    });
   }, [configs]);
 
   return (

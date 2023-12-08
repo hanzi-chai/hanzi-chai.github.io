@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Button,  Flex, Input,  Space, Table } from "antd";
+import { Button, Flex, Input, Space, Table } from "antd";
 import { useAdd } from "~/components/context";
 import { useRepertoire } from "~/components/contants";
-import SearchOutlined from "@ant-design/icons/SearchOutlined"
+import SearchOutlined from "@ant-design/icons/SearchOutlined";
 
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "~/components/Utils";
@@ -39,7 +39,7 @@ const EditablePinyin = ({
 };
 
 const Repertoire: React.FC = () => {
-  useChaifenTitle('字音字集数据')
+  useChaifenTitle("字音字集数据");
   const characters = useRepertoire();
   const modify = useAdd();
   const [input, setInput] = useState("");
