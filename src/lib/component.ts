@@ -6,6 +6,7 @@ import { bisectLeft, bisectRight } from "d3-array";
 import type { RenderedGlyph, Topology } from "./topology";
 import findTopology, { renderSVGGlyph } from "./topology";
 import type { Classifier } from "./classifier";
+import { isValidCJKChar, isValidChar } from "./utils";
 
 class UnknownCharError extends Error {}
 class InvalidGlyphError extends Error {}
@@ -253,6 +254,13 @@ export const disassembleComponents = function (
 ): [ComponentCache, string[]] {
   const { classifier } = data;
   const componentForm = renderComponentForm(data);
+  const composables = new Set<string>();
+  for (const { compound } of Object.values(data.form)) {
+    if (!compound) continue;
+    for (const partition of compound) {
+      partition.operandList.forEach((x) => composables.add(x));
+    }
+  }
   const { mapping, grouping } = config;
   const roots = new Set([...Object.keys(mapping), ...Object.keys(grouping)]);
   const rootData = Object.entries(componentForm)
@@ -263,6 +271,9 @@ export const disassembleComponents = function (
   const result: ComponentCache = new Map();
   const error: string[] = [];
   Object.entries(componentForm).forEach(([char, cache]) => {
+    if (!isValidCJKChar(char) && !composables.has(char)) {
+      return;
+    }
     const scheme = getComponentScheme(cache, rootData, config, classifier);
     if (scheme instanceof Error) {
       error.push(char);

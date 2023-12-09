@@ -16,8 +16,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { SieveName } from "~/lib/config";
 import { useDesign, useFormConfig } from "./context";
-import { Button, Dropdown, Flex, Typography } from "antd";
+import { Button, Dropdown, Flex, Space, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
+import PrioritizedRoots from "./PrioritizedRoots";
 
 const SortableItem = ({ sieve }: { sieve: SieveName }) => {
   const design = useDesign();
@@ -108,6 +109,8 @@ const Selector = () => {
           <Button type="primary">添加</Button>
         </Dropdown>
       </Flex>
+      {selector.includes("多强字根") && <PrioritizedRoots variant="strong" />}
+      {selector.includes("少弱字根") && <PrioritizedRoots variant="weak" />}
     </Flex>
   );
 };

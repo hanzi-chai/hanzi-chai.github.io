@@ -118,9 +118,7 @@ function CreatePopoverContent(props: any) {
               if (!value) return Promise.reject(new Error("不能为空"));
               if (form[value as string] !== undefined)
                 return Promise.reject(new Error("字符已存在"));
-              const valid = Array.from(value as string).every((x) =>
-                isValidCJKChar(x.codePointAt(0)!),
-              );
+              const valid = Array.from(value as string).every(isValidCJKChar);
               if (!valid) return Promise.reject(new Error("限 CJK/扩展 A"));
               return Promise.resolve();
             },
@@ -168,7 +166,7 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
       }}
     >
       <Button
-        disabled={isValidCJKChar(unicode)}
+        disabled={isValidCJKChar(String.fromCodePoint(unicode))}
         style={{ display: remote ? "initial" : "none" }}
       >
         替换为成字

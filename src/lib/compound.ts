@@ -86,7 +86,7 @@ export const disassembleCompounds = (
   config: FormConfig,
   componentCache: ComponentCache,
 ) => {
-  const { mapping } = config;
+  const { mapping, grouping } = config;
   const compounds = topologicalSort(data.form);
   const compoundCache: CompoundCache = new Map();
   const compoundError: string[] = [];
@@ -94,7 +94,7 @@ export const disassembleCompounds = (
     return componentCache.get(s) || compoundCache.get(s);
   };
   for (const [char, glyph] of compounds.entries()) {
-    if (mapping[char]) {
+    if (mapping[char] || grouping[char]) {
       // 复合体本身是一个字根
       compoundCache.set(char, { sequence: [char] });
       continue;

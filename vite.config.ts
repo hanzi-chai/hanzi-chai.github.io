@@ -5,6 +5,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
 import Pages from "vite-plugin-pages";
+import wasmpack from "vite-plugin-wasm-pack";
 import { visualizer } from "rollup-plugin-visualizer";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
@@ -17,6 +18,9 @@ export default defineConfig(({ mode }) => {
         "~/": `${path.resolve(__dirname, "src")}/`,
       },
     },
+    optimizeDeps: {
+      exclude: ["libchai"],
+    },
     build: {
       chunkSizeWarningLimit: 700,
       outDir: `dist/${mode.toLowerCase()}`,
@@ -28,6 +32,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      wasmpack("./libchai"),
       yaml(),
       Pages({
         importMode: "async",

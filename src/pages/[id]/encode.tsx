@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
-import { Alert, Button, Flex, Space, Switch, Typography } from "antd";
-import { ConfigContext } from "~/components/context";
+import { Alert, Button, Flex, Form, Space, Switch, Typography } from "antd";
+import { ConfigContext, DispatchContext } from "~/components/context";
 import { useAll } from "~/components/contants";
 
 import type { EncoderResult } from "~/lib/encoder";
@@ -52,6 +52,8 @@ const Encoder = () => {
   useChaifenTitle("编码");
   const data = useAll();
   const config = useContext(ConfigContext);
+  const dispatch = useContext(DispatchContext);
+  const { encoder } = config;
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>(new Map());
@@ -149,6 +151,23 @@ const Encoder = () => {
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>编码生成</Typography.Title>
+        <Form.Item label="最大码长限制">
+          <Select
+            value={encoder.maxlength}
+            options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+              .map((x) => ({
+                label: x.toString(),
+                value: x as number | undefined,
+              }))
+              .concat([{ label: "不限制", value: undefined }])}
+            onChange={(value) => {
+              dispatch({
+                type: "encoder",
+                value: { ...encoder, maxlength: value },
+              });
+            }}
+          />
+        </Form.Item>
         {lost.length ? (
           <Alert
             message="警告"

@@ -1,12 +1,14 @@
 {
   "name": "chai",
   "private": true,
-  "version": "0.0.4-alpha.3",
+  "version": "0.0.4-alpha.4",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode CF",
+    "start": "vite --mode CF",
+    "prestart": "npm run wasm",
     "fetch": "node scripts/fetchCache.mjs",
     "reference": "node scripts/fetchTable.mjs",
+    "wasm": "wasm-pack build ./libchai --target web",
     "publish": "bump --tag --commit --push",
     "build:BEX": "vite build --mode BEX && node scripts/makeBex.cjs",
     "build:PAGES": "vite build --mode PAGES",
@@ -35,6 +37,7 @@
     "immer": "^10.0.3",
     "js-md5": "^0.8.3",
     "js-yaml": "4.1.0",
+    "libchai": "^0.1.0",
     "mathjs": "12.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -46,8 +49,8 @@
     "use-immer": "^0.9.0"
   },
   "devDependencies": {
-    "@modyfi/vite-plugin-yaml": "^1.0.4",
     "@jsdevtools/version-bump-prompt": "^6.1.0",
+    "@modyfi/vite-plugin-yaml": "^1.0.4",
     "@types/d3-array": "^3.2.1",
     "@types/js-md5": "^0.7.2",
     "@types/js-yaml": "^4.0.9",
@@ -76,6 +79,7 @@
     "vite-plugin-chunk-split": "^0.5.0",
     "vite-plugin-external-cdn": "^1.0.1",
     "vite-plugin-pages": "^0.31.0",
+    "vite-plugin-wasm-pack": "^0.1.12",
     "vitest": "^0.34.6"
   },
   "peerDependencies": {

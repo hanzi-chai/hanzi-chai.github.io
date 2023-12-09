@@ -36,14 +36,15 @@ export const unicodeBlock = (code: number) => {
   return "unknown";
 };
 
-export const isValidCJKChar = (code: number) => {
+export const isValidCJKChar = (char: string) => {
+  const code = char.codePointAt(0)!;
   const block = unicodeBlock(code);
   return block === "cjk" || block === "cjk-a";
 };
 
 export const isValidChar = (char: string) => {
+  if (isValidCJKChar(char)) return true;
   const code = char.codePointAt(0)!;
-  if (isValidCJKChar(code)) return true;
   return unicodeBlock(code) === "ascii";
 };
 

@@ -13,6 +13,8 @@ type SieveName =
   | "取大优先"
   | "取小优先"
   | "结构完整"
+  | "多强字根"
+  | "少弱字根"
   | "非形近根";
 
 type Selector = SieveName[];
@@ -38,6 +40,8 @@ interface FormConfig extends BaseConfig {
     degenerator: Degenerator;
     selector: Selector;
     customize: Record<string, string[]>;
+    strong?: string[];
+    weak?: string[];
   };
 }
 
@@ -49,7 +53,14 @@ interface Source {
   next: string | null;
 }
 
-export const binaryOps = ["是", "不是", "匹配", "不匹配"] as const;
+export const binaryOps = [
+  "是",
+  "不是",
+  "匹配",
+  "不匹配",
+  "编码匹配",
+  "编码不匹配",
+] as const;
 export const unaryOps = ["存在", "不存在"] as const;
 export const ops = (unaryOps as readonly Op[]).concat(...binaryOps);
 export type Op = (typeof binaryOps)[number] | (typeof unaryOps)[number];
@@ -79,6 +90,7 @@ interface Config {
   form: FormConfig;
   pronunciation: PronunciationConfig;
   encoder: {
+    maxlength?: number;
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;
   };

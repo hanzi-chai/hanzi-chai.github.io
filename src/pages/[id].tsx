@@ -171,7 +171,12 @@ function EditorLayout() {
         >
           <Flex justify="center" style={{ height: "100%" }}>
             <div
-              style={{ maxWidth: "80rem", minWidth: "20rem", width: "80rem" }}
+              style={{
+                maxWidth: "100rem",
+                minWidth: "20rem",
+                width: "100rem",
+                overflowY: "auto",
+              }}
             >
               <Suspense fallback={<CusSpin tip="加载标签页…" />}>
                 <Outlet />
