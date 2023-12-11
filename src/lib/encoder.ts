@@ -64,28 +64,32 @@ const merge = (grouping: Mapping, mapping: Mapping) => {
   return Object.assign(compiledGrouping, mapping);
 };
 
-const compile = (
-  encoder: Config["encoder"],
-  form: Config["form"],
-  pronunciation: Config["pronunciation"],
-) => {
-  const formMerge = merge(form.grouping, form.mapping);
-  const pronMerge = pronunciation
-    ? merge(pronunciation.grouping, pronunciation.mapping)
-    : {};
-  const totalMapping = { ...formMerge, ...pronMerge };
+type IndexedElement = string | { element: string; index: number };
+
+const compile = (encoder: Config["encoder"], totalMapping: Mapping) => {
   return (result: TotalResult, data: MergedData, extra: Extra) => {
     let node: string | null = "s0";
-    const codes = [] as string[];
+    const codes = [] as IndexedElement[];
     while (node) {
       if (node.startsWith("s")) {
         const { object, next, index }: Source = encoder.sources[node]!;
         if (node !== "s0") {
           const element = findElement(object!, result, data, extra);
-          const elementcode = totalMapping[element!] || element!;
-          const somecode =
-            index === undefined ? elementcode : elementcode[index]!;
-          codes.push(somecode);
+          if (element === undefined) {
+            node = next;
+            continue;
+          }
+          const mappedElement = totalMapping[element];
+          if (mappedElement === undefined || mappedElement.length === 1) {
+            // 对于字面量和单码根，总是输出常规映射
+            codes.push(element);
+          } else if (index === undefined) {
+            for (let index = 0; index != mappedElement.length; ++index) {
+              codes.push({ element, index });
+            }
+          } else {
+            codes.push({ element, index });
+          }
         }
         node = next;
       } else {
@@ -97,8 +101,7 @@ const compile = (
         }
       }
     }
-    const code = codes.join("");
-    return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
+    return codes;
   };
 };
 
@@ -131,14 +134,52 @@ export const getCache = (
 
 const uniquify = (l: string[]) => [...new Set(l)].sort();
 
-const encode = (config: Config, characters: string[], data: MergedData) => {
-  const { form, pronunciation, encoder } = config;
+export const collect = (
+  config: Config,
+  characters: string[],
+  data: MergedData,
+) => {
+  const { form, encoder } = config;
+  const totalMapping = getTotalMapping(config);
   const [cache, extra] = getCache(characters, form, data);
-  const func = compile(encoder, form, pronunciation);
+  const func = compile(encoder, totalMapping);
   const result = new Map(
     characters.map((char) => [
       char,
-      uniquify(cache[char]!.map((x) => func(x, data, extra))),
+      cache[char]!.map((x) => func(x, data, extra)),
+    ]),
+  );
+  return result;
+};
+
+const getTotalMapping = (config: Config) => {
+  const { form, pronunciation } = config;
+  const formMerge = merge(form.grouping, form.mapping);
+  const pronMerge = pronunciation
+    ? merge(pronunciation.grouping, pronunciation.mapping)
+    : {};
+  const totalMapping = { ...formMerge, ...pronMerge };
+  return totalMapping;
+};
+
+const encode = (config: Config, characters: string[], data: MergedData) => {
+  const totalMapping = getTotalMapping(config);
+  const characterElements = collect(config, characters, data);
+  const { encoder } = config;
+  const process = (elements: IndexedElement[]) => {
+    const code = elements
+      .map((e) =>
+        typeof e === "string"
+          ? totalMapping[e] || e
+          : totalMapping[e.element]![e.index]!,
+      )
+      .join("");
+    return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
+  };
+  const result = new Map(
+    [...characterElements].map(([char, elements_list]) => [
+      char,
+      uniquify(elements_list.map((elements) => process(elements))),
     ]),
   );
   return result;

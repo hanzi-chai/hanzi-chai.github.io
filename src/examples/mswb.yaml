@@ -400,3 +400,12 @@ encoder:
       operator: 存在
       positive: s13
       negative: s14
+  maxlength: 4
+  auto_select_length: 4
+  rules:
+    - length_equal: 2
+      formula: "AaAbBaBb"
+    - length_equal: 3
+      formula: "AaBaCaCb"
+    - length_in_range: [4, 20]
+      formula: "AaBaCaZa"

@@ -129,7 +129,8 @@ export interface IndexEdit3 {
   setChar: (s?: string) => void;
 }
 
-const processExport = (blob: Blob, filename: string) => {
+const processExport = (content: string, filename: string) => {
+  const blob = new Blob([content], { type: "text/plain" });
   const a = document.createElement("a");
   a.download = filename;
   const url = window.URL.createObjectURL(blob);
@@ -143,8 +144,7 @@ export const exportYAML = (config: object, filename: string) => {
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `"\\u${c.codePointAt(0)!.toString(16)}"`;
   });
-  const blob = new Blob([fileContent], { type: "text/plain" });
-  processExport(blob, filename);
+  processExport(fileContent, filename);
 };
 
 export const exportJSON = (data: object, filename: string) => {
@@ -152,8 +152,12 @@ export const exportJSON = (data: object, filename: string) => {
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `\\u${c.codePointAt(0)!.toString(16)}`;
   });
-  const blob = new Blob([fileContent], { type: "text/plain" });
-  processExport(blob, filename);
+  processExport(fileContent, filename);
+};
+
+export const exportTSV = (data: string[][], filename: string) => {
+  const fileContent = data.map((x) => x.join("\t")).join("\n");
+  processExport(fileContent, filename);
 };
 
 export const ItemSelect = (props: SelectProps) => {

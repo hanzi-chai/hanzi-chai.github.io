@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      wasmpack("./libchai"),
+      // wasmpack("./libchai"),
       yaml(),
       Pages({
         importMode: "async",
