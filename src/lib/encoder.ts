@@ -75,20 +75,27 @@ const compile = (encoder: Config["encoder"], totalMapping: Mapping) => {
         const { object, next, index }: Source = encoder.sources[node]!;
         if (node !== "s0") {
           const element = findElement(object!, result, data, extra);
-          if (element === undefined) {
+          const mappedElement = element && totalMapping[element];
+          // 检查元素或键位是否有效
+          if (element === undefined || mappedElement === undefined) {
             node = next;
             continue;
           }
-          const mappedElement = totalMapping[element];
-          if (mappedElement === undefined || mappedElement.length === 1) {
-            // 对于字面量和单码根，总是输出常规映射
-            codes.push(element);
+          if (mappedElement.length === 1) {
+            // 对于单码根，单独判断一下，可以省略 ".0"
+            if (index === undefined || index === 0) {
+              codes.push(element);
+            }
           } else if (index === undefined) {
+            // 如果没有定义指标，就是全取
             for (let index = 0; index != mappedElement.length; ++index) {
               codes.push({ element, index });
             }
           } else {
-            codes.push({ element, index });
+            // 检查指标是否有效
+            if (mappedElement.length > index) {
+              codes.push({ element, index });
+            }
           }
         }
         node = next;
@@ -170,7 +177,7 @@ const encode = (config: Config, characters: string[], data: MergedData) => {
     const code = elements
       .map((e) =>
         typeof e === "string"
-          ? totalMapping[e] || e
+          ? totalMapping[e]!
           : totalMapping[e.element]![e.index]!,
       )
       .join("");

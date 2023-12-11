@@ -59,38 +59,6 @@ const ResultSummary = ({
   );
 };
 
-const AnalysisExporter = ({
-  componentResults,
-  compoundResults,
-}: {
-  componentResults: ComponentCache;
-  compoundResults: CompoundCache;
-}) => {
-  const items: MenuProps["items"] = [
-    { label: "不含结构数据", key: "sequence" },
-    { label: "含结构数据", key: "all" },
-  ];
-  return (
-    <Dropdown
-      menu={{
-        items,
-        onClick: (info) => {
-          const allResult = [...componentResults, ...compoundResults] as [
-            string,
-            ComponentResult & CompoundResult,
-          ][];
-          const output = Object.fromEntries(
-            allResult.map(([x, v]) => [x, info.key === "all" ? v : v.sequence]),
-          );
-          exportJSON(output, "chai.json");
-        },
-      }}
-    >
-      <Button>导出拆分结果</Button>
-    </Dropdown>
-  );
-};
-
 const Analysis = () => {
   useChaifenTitle("分析");
   const [sequence, setSequence] = useState("");
@@ -184,17 +152,6 @@ const Analysis = () => {
               }}
             >
               清空
-            </Button>
-            <AnalysisExporter
-              componentResults={componentCache}
-              compoundResults={compoundCache}
-            />
-            <Button
-              onClick={() => {
-                exportJSON(rootsRef, "roots.json");
-              }}
-            >
-              导出字根对照表
             </Button>
           </Flex>
           <Flex justify="center">

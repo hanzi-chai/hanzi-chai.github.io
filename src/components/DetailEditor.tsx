@@ -36,6 +36,9 @@ const DetailEditor = ({ selected }: { selected: string }) => {
   const { alphabet: formAlphabet } = useFormConfig();
   const { alphabet: pronAlphabet } = usePronunciationConfig();
   const alphabet = Array.from(new Set([...formAlphabet, ...pronAlphabet]));
+  const genericIndices = [...Array(10).keys()]
+    .map((x) => [x + 1, -(x + 1)])
+    .flat();
   const options: Option[] = [
     {
       value: "字音",
@@ -48,33 +51,33 @@ const DetailEditor = ({ selected }: { selected: string }) => {
     {
       value: "字根",
       label: "字根",
-      children: [1, 2, 3, 4, -1, -2, -3].map((v) => ({
+      children: genericIndices.map((v) => ({
         value: v,
-        label: v.toString(),
+        label: `第 ${v.toString()} 根`,
       })),
     },
     {
       value: "笔画",
       label: "笔画",
-      children: [1, 2, 3, 4, -1, -2, -3].map((v) => ({
+      children: genericIndices.map((v) => ({
         value: v,
-        label: v.toString(),
-        children: [1, 2, 3, 4, -1, -2, -3].map((v) => ({
+        label: `第 ${v.toString()} 根`,
+        children: genericIndices.map((v) => ({
           value: v,
-          label: v.toString(),
+          label: `第 ${v.toString()} 笔`,
         })),
       })),
     },
     {
       value: "二笔",
       label: "二笔",
-      children: [1, 2, 3, 4, -1, -2, -3].map((v) => ({
+      children: genericIndices.map((v) => ({
         value: v,
-        label: v.toString(),
-        children: [1, 2, -1, -2].map((v) => {
+        label: `第 ${v.toString()} 根`,
+        children: genericIndices.map((v) => {
           return {
             value: v,
-            label: `(${v * 2 - Math.sign(v)}, ${v * 2})`,
+            label: `第 (${v * 2 - Math.sign(v)}, ${v * 2}) 笔`,
           };
         }),
       })),

@@ -78,8 +78,8 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
       {({ getFieldValue }) => {
         const source = getFieldValue(["component", "source"]);
         const length = formData[source]?.component?.strokes?.length;
-        return typeof getFieldValue(["component", "strokes", name]) ===
-          "object" ? (
+        const value = getFieldValue(["component", "strokes", name]);
+        return typeof value === "object" ? (
           <>
             <Flex gap="middle" justify="space-between">
               <Form.Item<BasicComponent["strokes"]>
@@ -164,7 +164,7 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                   if (sourceGlyph instanceof Error) return;
                   form.setFieldValue(
                     ["component", "strokes", name],
-                    sourceGlyph[name]!,
+                    sourceGlyph[value]!,
                   );
                 }}
               >
@@ -211,7 +211,9 @@ const ComponentForm = () => {
           label="源字"
           shouldUpdate={() => true}
         >
-          <ItemSelect />
+          <ItemSelect
+            customFilter={([, glyph]) => glyph.component !== undefined}
+          />
         </Form.Item>
         <Form.Item shouldUpdate>
           <Button
@@ -275,15 +277,11 @@ const BlockModel = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   return (
     <Space>
-      <Form.Item<Block["index"]>
-        name={[name, "index"]}
-        label="部分"
-        colon={false}
-      >
+      <Form.Item<Block["index"]> name={[name, "index"]} colon={false}>
         <Select
           options={[0, 1, 2].map((x) => ({
             value: x,
-            label: x + 1,
+            label: `第 ${x + 1} 部`,
           }))}
         />
       </Form.Item>
@@ -291,7 +289,7 @@ const BlockModel = ({ info, remove }: ListItemWithRemove) => {
         <Select
           options={[...Array(10).keys()].map((x) => ({
             value: x,
-            label: x || "全取",
+            label: x === 0 ? "取剩余全部" : `取 ${x} 笔`,
           }))}
         />
       </Form.Item>
@@ -369,11 +367,11 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
           )}
         </Form.List>
       </Flex>
-      <Flex align="center" gap="small" wrap="wrap">
+      <Flex gap="small" wrap="wrap">
         <Form.Item label="笔顺" />
         <Form.List name={[info.name, "order"]}>
           {(fields, { add, remove }) => (
-            <>
+            <Flex vertical>
               {fields.map((info, i) => (
                 <BlockModel
                   key={info.key}
@@ -386,7 +384,7 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
                   添加笔画块
                 </Button>
               </Form.Item>
-            </>
+            </Flex>
           )}
         </Form.List>
       </Flex>

@@ -1,5 +1,5 @@
 import defaultClassifier from "~/lib/classifier";
-import { isValidChar } from "~/lib/utils";
+import { isPUA, isValidChar } from "~/lib/utils";
 import { useData } from "./context";
 import type { ComponentGlyph, CompoundGlyph } from "~/lib/data";
 import { selectForm, selectRepertoire, useAppSelector } from "./store";
@@ -14,7 +14,7 @@ const useDisplay = () => {
   const formCustomized = useData().form;
   return (char: string) => {
     const glyph = formCustomized[char] || form[char];
-    return isValidChar(char) ? char : glyph?.name ?? "未知";
+    return isPUA(char) ? glyph?.name ?? "未知" : char;
   };
 };
 
