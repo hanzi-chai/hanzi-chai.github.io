@@ -251,7 +251,7 @@ const Encoder = () => {
               const tsv = [...result]
                 .filter(([, code]) => code.length >= 1)
                 .map(([char, codes]) => [char, codes[0]!]);
-              exportTSV(tsv, "码表.txt");
+              exportTSV(tsv, "codes.txt");
             }}
           >
             导出码表
@@ -274,7 +274,7 @@ const Encoder = () => {
                     .join(" ");
                   return [char, summary];
                 });
-              exportTSV(tsv, "拆分表.txt");
+              exportTSV(tsv, "elements.txt");
             }}
           >
             导出拆分表

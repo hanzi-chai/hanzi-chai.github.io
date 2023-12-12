@@ -326,7 +326,30 @@ pronunciation:
   maxcodelen: 1
   alphabet: qwertyuiopasdfghjklzxcvbnm
   grouping: {}
-  mapping: {}
+  mapping:
+    b: b
+    p: p
+    m: m
+    f: f
+    d: d
+    t: t
+    'n': 'n'
+    l: l
+    g: g
+    k: k
+    h: h
+    j: j
+    q: q
+    x: x
+    z: z
+    c: c
+    s: s
+    r: r
+    'y': 'y'
+    w: w
+    a: a
+    o: o
+    e: e
 encoder:
   sources:
     s0:

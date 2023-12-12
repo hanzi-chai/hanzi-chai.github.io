@@ -17,7 +17,7 @@ export default function ExportButtons() {
           dispatch({ type: "load", value: load(s) as Config });
         }}
       />
-      <Button onClick={() => exportYAML(config, `export.yaml`)}>导出</Button>
+      <Button onClick={() => exportYAML(config, "config.yaml")}>导出</Button>
       {source && (
         <Button
           onClick={() => {

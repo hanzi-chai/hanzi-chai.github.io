@@ -66,7 +66,12 @@ const merge = (grouping: Mapping, mapping: Mapping) => {
 
 type IndexedElement = string | { element: string; index: number };
 
-const compile = (encoder: Config["encoder"], totalMapping: Mapping) => {
+const compile = (
+  encoder: Config["encoder"],
+  mapping: Mapping,
+  grouping: Mapping,
+) => {
+  const totalMapping = merge(mapping, grouping);
   return (result: TotalResult, data: MergedData, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
@@ -75,26 +80,31 @@ const compile = (encoder: Config["encoder"], totalMapping: Mapping) => {
         const { object, next, index }: Source = encoder.sources[node]!;
         if (node !== "s0") {
           const element = findElement(object!, result, data, extra);
-          const mappedElement = element && totalMapping[element];
           // 检查元素或键位是否有效
-          if (element === undefined || mappedElement === undefined) {
+          if (element === undefined) {
+            node = next;
+            continue;
+          }
+          const groupedElement = grouping[element] || element;
+          const mappedElement = mapping[groupedElement];
+          if (mappedElement === undefined) {
             node = next;
             continue;
           }
           if (mappedElement.length === 1) {
             // 对于单码根，单独判断一下，可以省略 ".0"
             if (index === undefined || index === 0) {
-              codes.push(element);
+              codes.push(groupedElement);
             }
           } else if (index === undefined) {
             // 如果没有定义指标，就是全取
             for (let index = 0; index != mappedElement.length; ++index) {
-              codes.push({ element, index });
+              codes.push({ element: groupedElement, index });
             }
           } else {
             // 检查指标是否有效
             if (mappedElement.length > index) {
-              codes.push({ element, index });
+              codes.push({ element: groupedElement, index });
             }
           }
         }
@@ -147,9 +157,9 @@ export const collect = (
   data: MergedData,
 ) => {
   const { form, encoder } = config;
-  const totalMapping = getTotalMapping(config);
+  const [mapping, grouping] = mergeMappingAndGrouping(config);
   const [cache, extra] = getCache(characters, form, data);
-  const func = compile(encoder, totalMapping);
+  const func = compile(encoder, mapping, grouping);
   const result = new Map(
     characters.map((char) => [
       char,
@@ -159,26 +169,21 @@ export const collect = (
   return result;
 };
 
-const getTotalMapping = (config: Config) => {
+const mergeMappingAndGrouping = (config: Config) => {
   const { form, pronunciation } = config;
-  const formMerge = merge(form.grouping, form.mapping);
-  const pronMerge = pronunciation
-    ? merge(pronunciation.grouping, pronunciation.mapping)
-    : {};
-  const totalMapping = { ...formMerge, ...pronMerge };
-  return totalMapping;
+  const grouping = { ...form.grouping, ...pronunciation.grouping };
+  const mapping = { ...form.mapping, ...pronunciation.mapping };
+  return [mapping, grouping] as const;
 };
 
 const encode = (config: Config, characters: string[], data: MergedData) => {
-  const totalMapping = getTotalMapping(config);
+  const [mapping, grouping] = mergeMappingAndGrouping(config);
   const characterElements = collect(config, characters, data);
   const { encoder } = config;
   const process = (elements: IndexedElement[]) => {
     const code = elements
       .map((e) =>
-        typeof e === "string"
-          ? totalMapping[e]!
-          : totalMapping[e.element]![e.index]!,
+        typeof e === "string" ? mapping[e]! : mapping[e.element]![e.index]!,
       )
       .join("");
     return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
