@@ -4,10 +4,16 @@ import { ConfigContext, DispatchContext } from "~/components/context";
 import { useAll } from "~/components/contants";
 
 import type { EncoderResult } from "~/lib/encoder";
-import encode, { getCache } from "~/lib/encoder";
+import encode, { collect, getCache } from "~/lib/encoder";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
+import {
+  EditorColumn,
+  EditorRow,
+  Select,
+  Uploader,
+  exportTSV,
+} from "~/components/Utils";
 import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
 import type { Character } from "~/lib/data";
@@ -35,14 +41,6 @@ const filtermap: Record<
     ([, c]) =>
       !c[s],
   未定义: () => () => true,
-};
-
-const exportTable = (result: EncoderResult) => {
-  const blob = new Blob([JSON.stringify([...result])], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.download = `码表.json`;
-  a.href = window.URL.createObjectURL(blob);
-  a.click();
 };
 
 const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as const;
@@ -250,10 +248,36 @@ const Encoder = () => {
           </Button>
           <Button
             onClick={() => {
-              exportTable(result);
+              const tsv = [...result]
+                .filter(([, code]) => code.length >= 1)
+                .map(([char, codes]) => [char, codes[0]!]);
+              exportTSV(tsv, "codes.txt");
             }}
           >
-            导出
+            导出码表
+          </Button>
+          <Button
+            onClick={() => {
+              const collection = collect(config, list, data);
+              const tsv = [...collection]
+                .filter(([, code]) => code.length >= 1)
+                .map(([char, elements_list]) => {
+                  // 目前只支持一种拆分
+                  const elements = elements_list[0]!;
+                  const summary = elements
+                    .map((x) => {
+                      if (typeof x === "string") return x;
+                      else {
+                        return `${x.element}.${x.index}`;
+                      }
+                    })
+                    .join(" ");
+                  return [char, summary];
+                });
+              exportTSV(tsv, "elements.txt");
+            }}
+          >
+            导出拆分表
           </Button>
         </Flex>
         <Table

@@ -17,6 +17,7 @@ import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
 import { dump } from "js-yaml";
+import { Glyph } from "~/lib/data";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -129,7 +130,8 @@ export interface IndexEdit3 {
   setChar: (s?: string) => void;
 }
 
-const processExport = (blob: Blob, filename: string) => {
+const processExport = (content: string, filename: string) => {
+  const blob = new Blob([content], { type: "text/plain" });
   const a = document.createElement("a");
   a.download = filename;
   const url = window.URL.createObjectURL(blob);
@@ -143,8 +145,7 @@ export const exportYAML = (config: object, filename: string) => {
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `"\\u${c.codePointAt(0)!.toString(16)}"`;
   });
-  const blob = new Blob([fileContent], { type: "text/plain" });
-  processExport(blob, filename);
+  processExport(fileContent, filename);
 };
 
 export const exportJSON = (data: object, filename: string) => {
@@ -152,11 +153,17 @@ export const exportJSON = (data: object, filename: string) => {
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `\\u${c.codePointAt(0)!.toString(16)}`;
   });
-  const blob = new Blob([fileContent], { type: "text/plain" });
-  processExport(blob, filename);
+  processExport(fileContent, filename);
 };
 
-export const ItemSelect = (props: SelectProps) => {
+export const exportTSV = (data: string[][], filename: string) => {
+  const fileContent = data.map((x) => x.join("\t")).join("\n");
+  processExport(fileContent, filename);
+};
+
+export const ItemSelect = (
+  props: SelectProps & { customFilter?: (e: [string, Glyph]) => boolean },
+) => {
   const form = useForm();
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char = props.value;
@@ -171,7 +178,8 @@ export const ItemSelect = (props: SelectProps) => {
       return;
     }
     const allResults = Object.entries(form)
-      .map(([x, v]) => ({
+      .filter(props.customFilter ?? ((_) => true))
+      .map(([x]) => ({
         value: x,
         label: display(x),
       }))

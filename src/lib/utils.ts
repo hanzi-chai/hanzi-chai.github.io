@@ -48,6 +48,11 @@ export const isValidChar = (char: string) => {
   return unicodeBlock(code) === "ascii";
 };
 
+export const isPUA = (char: string) => {
+  const code = char.codePointAt(0)!;
+  return unicodeBlock(code) === "pua";
+};
+
 export const length = (s: string) => {
   return Array.from(s).length;
 };

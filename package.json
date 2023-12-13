@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "start": "vite --mode CF",
-    "prestart": "npm run wasm",
     "fetch": "node scripts/fetchCache.mjs",
     "reference": "node scripts/fetchTable.mjs",
     "wasm": "wasm-pack build ./libchai --target web",

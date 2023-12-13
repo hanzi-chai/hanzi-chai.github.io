@@ -64,28 +64,49 @@ const merge = (grouping: Mapping, mapping: Mapping) => {
   return Object.assign(compiledGrouping, mapping);
 };
 
+type IndexedElement = string | { element: string; index: number };
+
 const compile = (
   encoder: Config["encoder"],
-  form: Config["form"],
-  pronunciation: Config["pronunciation"],
+  mapping: Mapping,
+  grouping: Mapping,
 ) => {
-  const formMerge = merge(form.grouping, form.mapping);
-  const pronMerge = pronunciation
-    ? merge(pronunciation.grouping, pronunciation.mapping)
-    : {};
-  const totalMapping = { ...formMerge, ...pronMerge };
+  const totalMapping = merge(mapping, grouping);
   return (result: TotalResult, data: MergedData, extra: Extra) => {
     let node: string | null = "s0";
-    const codes = [] as string[];
+    const codes = [] as IndexedElement[];
     while (node) {
       if (node.startsWith("s")) {
         const { object, next, index }: Source = encoder.sources[node]!;
         if (node !== "s0") {
           const element = findElement(object!, result, data, extra);
-          const elementcode = totalMapping[element!] || element!;
-          const somecode =
-            index === undefined ? elementcode : elementcode[index]!;
-          codes.push(somecode);
+          // 检查元素或键位是否有效
+          if (element === undefined) {
+            node = next;
+            continue;
+          }
+          const groupedElement = grouping[element] || element;
+          const mappedElement = mapping[groupedElement];
+          if (mappedElement === undefined) {
+            node = next;
+            continue;
+          }
+          if (mappedElement.length === 1) {
+            // 对于单码根，单独判断一下，可以省略 ".0"
+            if (index === undefined || index === 0) {
+              codes.push(groupedElement);
+            }
+          } else if (index === undefined) {
+            // 如果没有定义指标，就是全取
+            for (let index = 0; index != mappedElement.length; ++index) {
+              codes.push({ element: groupedElement, index });
+            }
+          } else {
+            // 检查指标是否有效
+            if (mappedElement.length > index) {
+              codes.push({ element: groupedElement, index });
+            }
+          }
         }
         node = next;
       } else {
@@ -97,8 +118,7 @@ const compile = (
         }
       }
     }
-    const code = codes.join("");
-    return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
+    return codes;
   };
 };
 
@@ -131,14 +151,47 @@ export const getCache = (
 
 const uniquify = (l: string[]) => [...new Set(l)].sort();
 
-const encode = (config: Config, characters: string[], data: MergedData) => {
-  const { form, pronunciation, encoder } = config;
+export const collect = (
+  config: Config,
+  characters: string[],
+  data: MergedData,
+) => {
+  const { form, encoder } = config;
+  const [mapping, grouping] = mergeMappingAndGrouping(config);
   const [cache, extra] = getCache(characters, form, data);
-  const func = compile(encoder, form, pronunciation);
+  const func = compile(encoder, mapping, grouping);
   const result = new Map(
     characters.map((char) => [
       char,
-      uniquify(cache[char]!.map((x) => func(x, data, extra))),
+      cache[char]!.map((x) => func(x, data, extra)),
+    ]),
+  );
+  return result;
+};
+
+const mergeMappingAndGrouping = (config: Config) => {
+  const { form, pronunciation } = config;
+  const grouping = { ...form.grouping, ...pronunciation.grouping };
+  const mapping = { ...form.mapping, ...pronunciation.mapping };
+  return [mapping, grouping] as const;
+};
+
+const encode = (config: Config, characters: string[], data: MergedData) => {
+  const [mapping, grouping] = mergeMappingAndGrouping(config);
+  const characterElements = collect(config, characters, data);
+  const { encoder } = config;
+  const process = (elements: IndexedElement[]) => {
+    const code = elements
+      .map((e) =>
+        typeof e === "string" ? mapping[e]! : mapping[e.element]![e.index]!,
+      )
+      .join("");
+    return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
+  };
+  const result = new Map(
+    [...characterElements].map(([char, elements_list]) => [
+      char,
+      uniquify(elements_list.map((elements) => process(elements))),
     ]),
   );
   return result;

@@ -8,8 +8,9 @@ import { getSequence } from "~/lib/component";
 import StrokeSearch from "~/components/StrokeSearch";
 import { useChaifenTitle } from "~/lib/hooks";
 import classifier from "~/lib/classifier";
+import { operators } from "~/lib/data";
 
-const formElementTypes = ["字根", "笔画", "二笔"] as const;
+const formElementTypes = ["字根", "笔画", "二笔", "结构"] as const;
 type FormElementTypes = (typeof formElementTypes)[number];
 
 export default function RootElementConfig() {
@@ -37,6 +38,7 @@ export default function RootElementConfig() {
     字根: content,
     笔画: allStrokes,
     二笔: allErbi,
+    结构: [...operators],
   } as Record<FormElementTypes, string[]>;
   return (
     <EditorRow>
