@@ -123,7 +123,9 @@
           "varsIgnorePattern": "^_"
         }
       ],
-      "tsdoc/syntax": "warn"
+      "tsdoc/syntax": "warn",
+      "no-undef": "error",
+      "no-undefined": "error"
     }
   },
   "hintConfig": {

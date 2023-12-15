@@ -22,34 +22,37 @@ type Selector = SieveName[];
 type PartialClassifier = Partial<Record<Feature, number>>;
 
 type Mapping = Record<string, string>;
+// 这个暂时没有启用
+type Grouping = Record<string, string | [string, number]>;
 
 interface BaseConfig {
   alphabet: string;
-  maxcodelen: number;
-  grouping: Mapping;
+  mapping_type?: number;
   mapping: Mapping;
+  grouping: Mapping;
 }
 
 interface Degenerator {
-  feature: Partial<Record<Feature, Feature>>;
-  nocross: boolean;
+  feature?: Partial<Record<Feature, Feature>>;
+  no_cross?: boolean;
 }
 
 interface FormConfig extends BaseConfig {
-  analysis: {
-    degenerator: Degenerator;
-    selector: Selector;
-    customize: Record<string, string[]>;
+  analysis?: {
+    degenerator?: Degenerator;
+    selector?: Selector;
+    customize?: Record<string, string[]>;
     strong?: string[];
     weak?: string[];
   };
 }
 
-type PronunciationConfig = BaseConfig;
-
 interface Source {
-  object?: CodableObject;
+  // 起始节点不应该有一个可编码对象，所以是 null；其他情况都有值
+  object: CodableObject | null;
+  // 如果只取其中几码就有值，否则为 undefined
   index?: number;
+  // next 是对下个节点的引用，所以是 null
   next: string | null;
 }
 
@@ -63,40 +66,62 @@ export const binaryOps = [
 ] as const;
 export const unaryOps = ["存在", "不存在"] as const;
 export const ops = (unaryOps as readonly Op[]).concat(...binaryOps);
-export type Op = (typeof binaryOps)[number] | (typeof unaryOps)[number];
+export type UnaryOp = (typeof unaryOps)[number];
+export type BinaryOp = (typeof binaryOps)[number];
+export type Op = UnaryOp | BinaryOp;
 
-interface Condition {
+export interface UnaryCondition {
   object: CodableObject;
-  operator: Op;
-  value?: string;
+  operator: UnaryOp;
   positive: string | null;
   negative: string | null;
 }
 
+export interface BinaryCondition {
+  object: CodableObject;
+  operator: BinaryOp;
+  value: string;
+  positive: string | null;
+  negative: string | null;
+}
+
+type Condition = UnaryCondition | BinaryCondition;
+
+type WordRule = { formula: string } & (
+  | { length_equal: number }
+  | { length_in_range: number[] }
+);
+
 interface Config {
-  version: string;
-  source?: Example;
-  info: {
-    name: string;
-    author: string;
-    version: string;
-    description: string;
+  version?: string;
+  // 有值表示它是从示例创建的，无值表示它是从模板创建的
+  source: Example | null;
+  info?: {
+    name?: string;
+    author?: string;
+    version?: string;
+    description?: string;
   };
-  data: {
-    form: Form;
-    repertoire: Repertoire;
-    classifier: PartialClassifier;
+  data?: {
+    form?: Form;
+    repertoire?: Repertoire;
+    classifier?: PartialClassifier;
   };
   form: FormConfig;
-  pronunciation: PronunciationConfig;
   encoder: {
-    maxlength?: number;
+    max_length?: number;
+    auto_select_length?: number;
+    rules?: WordRule[];
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;
   };
 }
 
-type MergedData = Config["data"] & { classifier: Classifier };
+type MergedData = {
+  form: Form;
+  repertoire: Repertoire;
+  classifier: Classifier;
+};
 
 type ExampleConfig = Required<Config>;
 
@@ -106,11 +131,11 @@ export type {
   Selector,
   PartialClassifier,
   Mapping,
+  Grouping,
   Config,
   MergedData,
   ExampleConfig,
   FormConfig,
-  PronunciationConfig,
   Source,
   Condition,
 };

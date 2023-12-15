@@ -101,7 +101,7 @@ type ElementSubAction =
 // 全部更改逻辑 TODO：重构为 Redux
 export const configReducer = (config: Config, action: Action) => {
   const { index } = action as ElementAction;
-  const element = index === "form" ? config.form : config.pronunciation!;
+  const element = config.form;
   const root = config.form;
   switch (action.type) {
     case "load":
@@ -128,7 +128,7 @@ export const configReducer = (config: Config, action: Action) => {
           element.alphabet = action.value;
           break;
         case "generic-maxcodelen":
-          element.maxcodelen = action.value;
+          element.mapping_type = action.value;
           break;
         case "generic-mapping":
           switch (action.action) {
@@ -151,6 +151,10 @@ export const configReducer = (config: Config, action: Action) => {
           }
           break;
         case "root-degenerator":
+          root.analysis = root.analysis || {};
+          root.analysis.degenerator = root.analysis.degenerator || {};
+          root.analysis.degenerator.feature =
+            root.analysis.degenerator.feature || {};
           switch (action.action) {
             case "add":
               root.analysis.degenerator.feature[action.key] = action.value!;
@@ -161,10 +165,14 @@ export const configReducer = (config: Config, action: Action) => {
           }
           break;
         case "root-degenerator-nocross":
-          root.analysis.degenerator.nocross =
-            !root.analysis.degenerator.nocross;
+          root.analysis = root.analysis || {};
+          root.analysis.degenerator = root.analysis.degenerator || {};
+          root.analysis.degenerator.no_cross =
+            !root.analysis.degenerator.no_cross;
           break;
         case "root-selector":
+          root.analysis = root.analysis || {};
+          root.analysis.selector = root.analysis.selector || [];
           switch (action.action) {
             case "add":
               root.analysis.selector.push(action.value);
@@ -179,6 +187,7 @@ export const configReducer = (config: Config, action: Action) => {
           }
           break;
         case "root-selector-strongweak":
+          root.analysis = root.analysis || {};
           switch (action.action) {
             case "add":
               root.analysis[action.variant] = (
@@ -193,6 +202,8 @@ export const configReducer = (config: Config, action: Action) => {
           }
           break;
         case "root-customize":
+          root.analysis = root.analysis || {};
+          root.analysis.customize = root.analysis.customize || {};
           switch (action.action) {
             case "add":
               root.analysis.customize[action.key] = action.value!;
@@ -232,24 +243,6 @@ const useFormConfig = () => {
   return form;
 };
 
-// pronunciation
-const usePronunciationConfig = () => {
-  const { pronunciation } = useContext(ConfigContext);
-  return pronunciation;
-};
-
-// 从页面的路由动态推导出应该用 form 还是 pronunciation
-const useConfigType = () => {
-  const { pathname } = useLocation();
-  return pathname.split("/")[3] as "form" | "pronunciation";
-};
-
-// 根据当前页面路由动态选择 form 或 pronunciation 中的一个
-const useGenericConfig = () => {
-  const config = useContext(ConfigContext);
-  return config[useConfigType()];
-};
-
 const useEncoder = () => {
   const { encoder } = useContext(ConfigContext);
   return encoder;
@@ -259,11 +252,10 @@ const useEncoder = () => {
 // useDesign 调用 ElementAction
 const useDesign = () => {
   const dispatch = useContext(DispatchContext);
-  const index = useConfigType();
   return (action: ElementSubAction) => {
     dispatch({
       type: "element",
-      index: index,
+      index: "form",
       ...action,
     });
   };
@@ -306,9 +298,6 @@ export {
   useInfo,
   useData,
   useFormConfig,
-  usePronunciationConfig,
-  useConfigType,
-  useGenericConfig,
   useEncoder,
   useAdd,
   useRemove,

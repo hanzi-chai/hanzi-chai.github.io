@@ -1,6 +1,8 @@
 import type {
+  BinaryCondition,
   Condition,
   Config,
+  Grouping,
   Mapping,
   MergedData,
   Op,
@@ -16,7 +18,7 @@ export const table: Record<
   Op,
   (
     target: string | undefined,
-    value: string | undefined,
+    value: string | null,
     totalMapping: Mapping,
   ) => boolean
 > = {
@@ -51,10 +53,10 @@ const satisfy = (
   extra: Extra,
   totalMapping: Mapping,
 ) => {
-  const { object, operator, value } = condition;
+  const { object, operator } = condition;
   const target = findElement(object, result, data, extra);
   const fn = table[operator];
-  return fn(target, value, totalMapping);
+  return fn(target, (condition as BinaryCondition).value, totalMapping);
 };
 
 const merge = (grouping: Mapping, mapping: Mapping) => {
@@ -157,9 +159,8 @@ export const collect = (
   data: MergedData,
 ) => {
   const { form, encoder } = config;
-  const [mapping, grouping] = mergeMappingAndGrouping(config);
   const [cache, extra] = getCache(characters, form, data);
-  const func = compile(encoder, mapping, grouping);
+  const func = compile(encoder, form.mapping, form.grouping);
   const result = new Map(
     characters.map((char) => [
       char,
@@ -169,24 +170,18 @@ export const collect = (
   return result;
 };
 
-const mergeMappingAndGrouping = (config: Config) => {
-  const { form, pronunciation } = config;
-  const grouping = { ...form.grouping, ...pronunciation.grouping };
-  const mapping = { ...form.mapping, ...pronunciation.mapping };
-  return [mapping, grouping] as const;
-};
-
 const encode = (config: Config, characters: string[], data: MergedData) => {
-  const [mapping, grouping] = mergeMappingAndGrouping(config);
   const characterElements = collect(config, characters, data);
   const { encoder } = config;
   const process = (elements: IndexedElement[]) => {
     const code = elements
       .map((e) =>
-        typeof e === "string" ? mapping[e]! : mapping[e.element]![e.index]!,
+        typeof e === "string"
+          ? config.form.mapping[e]!
+          : config.form.mapping[e.element]![e.index]!,
       )
       .join("");
-    return encoder.maxlength ? code.slice(0, encoder.maxlength) : code;
+    return encoder.max_length ? code.slice(0, encoder.max_length) : code;
   };
   const result = new Map(
     [...characterElements].map(([char, elements_list]) => [

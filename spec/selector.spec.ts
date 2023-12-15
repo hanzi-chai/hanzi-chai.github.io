@@ -8,7 +8,10 @@ import {
   Scheme,
 } from "~/lib/selector";
 import select from "~/lib/selector";
-import { config, rendered } from "./mock";
+import { rendered } from "./mock";
+import { defaultForm } from "~/lib/templates";
+
+const config = defaultForm;
 
 const { 天 } = rendered;
 

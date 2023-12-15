@@ -120,9 +120,7 @@ const EachSequence = ({
 const MemoEachSequence = memo(EachSequence);
 
 const AnalysisCustomizer = () => {
-  const {
-    analysis: { customize },
-  } = useFormConfig();
+  const customize = useFormConfig().analysis?.customize ?? {};
   const design = useCallback(useDesign, [])();
   const display = useCallback(useDisplay, [])();
   const [newCustomization, setNew] = useState<string | undefined>(undefined);

@@ -52,9 +52,7 @@ const SortableItem = ({ sieve }: { sieve: SieveName }) => {
 };
 
 const Selector = () => {
-  const {
-    analysis: { selector },
-  } = useFormConfig();
+  const selector = useFormConfig().analysis?.selector ?? [];
   const design = useDesign();
   const sensors = useSensors(
     useSensor(PointerSensor),

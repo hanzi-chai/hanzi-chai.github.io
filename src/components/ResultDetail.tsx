@@ -5,8 +5,8 @@ import { useFormConfig } from "./context";
 import type { Selector } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
 import { useDisplay } from "./contants";
-import type { SchemeWithData } from "~/lib/form";
 import { binaryToIndices } from "~/lib/degenerator";
+import { SchemeWithData } from "~/lib/component";
 
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {
@@ -31,9 +31,7 @@ const ResultDetail = ({
   map: Map<number, string>;
   strokes: number;
 }) => {
-  const {
-    analysis: { selector },
-  } = useFormConfig();
+  const selector = useFormConfig().analysis?.selector ?? [];
   const display = useDisplay();
 
   const columns: ColumnsType<SchemeWithData> = [

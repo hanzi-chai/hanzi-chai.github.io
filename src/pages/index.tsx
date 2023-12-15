@@ -188,8 +188,8 @@ const HomeLayout = () => {
                   ]}
                 >
                   <List.Item.Meta
-                    title={info.name}
-                    description={info.description}
+                    title={info?.name ?? "未命名"}
+                    description={info?.description ?? "无描述"}
                   />
                 </List.Item>
               );
@@ -203,7 +203,7 @@ const HomeLayout = () => {
                 items: Object.values(examples)
                   .filter((x) => x.source === "mswb" || x.source === "zhengma")
                   .map((x) => ({
-                    key: x.source,
+                    key: x.source!,
                     label: x.info.name,
                   })),
                 onClick: (menu) => {

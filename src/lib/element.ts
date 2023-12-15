@@ -9,9 +9,18 @@ interface Base {
   type: string;
 }
 
-export const analyzerNames = ["声", "韵", "调", "首字母", "末字母"] as const;
+export const pronunciationElementTypes = [
+  "声",
+  "韵",
+  "调",
+  "首字母",
+  "末字母",
+] as const;
 
-export type AName = (typeof analyzerNames)[number];
+export type PronunciationElementTypes =
+  (typeof pronunciationElementTypes)[number];
+
+const shengdiao = ["阴平", "阳平", "上声", "去声", "轻声"];
 
 export const pinyinAnalyzers = {
   声: (p: string) => {
@@ -22,10 +31,10 @@ export const pinyinAnalyzers = {
     const ym = p.match(/[aeiouv].*(?=\d)/) || ["零"];
     return ym[0];
   },
-  调: (p: string) => p.match(/\d/)![0],
+  调: (p: string) => shengdiao[Number(p.match(/\d/)![0]) - 1],
   首字母: (p: string) => p[0],
   末字母: (p: string) => p[p.length - 2],
-} as Record<AName, (p: string) => string>;
+} as Record<PronunciationElementTypes, (p: string) => string>;
 
 interface This extends Base {
   type: "汉字";
@@ -42,7 +51,7 @@ interface Structure extends Base {
 
 interface Pronunciation extends Base {
   type: "字音";
-  subtype: AName;
+  subtype: PronunciationElementTypes;
 }
 
 interface Root extends Base {
