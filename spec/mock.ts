@@ -13,7 +13,7 @@ export const repertoire: Repertoire = listToObject(
   rawrepertoire as Character[],
 );
 export const data: MergedData = { form, repertoire, classifier };
-export const rendered = renderComponentForm(data);
+export const [rendered] = renderComponentForm(data);
 export const computedGlyphs = Object.fromEntries(
   Object.entries(rendered).map(([k, v]) => [k, v.glyph]),
 );

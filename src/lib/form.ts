@@ -11,7 +11,7 @@ import type { Extra } from "./element";
 export const getFormCore = (data: MergedData, config: FormConfig) => {
   const [componentCache, componentError] = disassembleComponents(data, config);
   const customizations: ComponentCache = new Map(
-    Object.entries(config?.analysis?.customize ?? {}).map(
+    Object.entries(config.analysis?.customize ?? {}).map(
       ([component, sequence]) => {
         const pseudoResult: ComponentResult = { sequence: sequence };
         return [component, pseudoResult] as const;

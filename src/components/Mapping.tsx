@@ -129,7 +129,9 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
         </Flex>
       }
     >
-      <Root>
+      <Root
+        style={{ color: display(name) === "丢失的字根" ? "red" : "initial" }}
+      >
         {display(name)}
         {affiliates.length >= 1 && (
           <span style={{ fontSize: "0.8em" }}>
