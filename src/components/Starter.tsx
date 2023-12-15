@@ -6,7 +6,6 @@ import {
   createConfig,
   encoderTypes,
   formTypes,
-  pronTypes,
 } from "~/lib/templates";
 import type { Updater } from "use-immer";
 import type { Config } from "~/lib/config";
@@ -65,13 +64,6 @@ const Starter = ({
             rules={required}
           >
             <Select options={formTypes.map((x) => ({ value: x, label: x }))} />
-          </Form.Item>
-          <Form.Item<StarterType>
-            name="pron"
-            label="音码布局预设"
-            rules={required}
-          >
-            <Select options={pronTypes.map((x) => ({ value: x, label: x }))} />
           </Form.Item>
           <Form.Item<StarterType>
             name="encoder"

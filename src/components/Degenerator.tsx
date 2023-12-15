@@ -3,11 +3,11 @@ import { useDesign, useFormConfig } from "./context";
 import { Select } from "./Utils";
 import classifier, { Feature } from "~/lib/classifier";
 import { useState } from "react";
+import { defaultDegenerator } from "~/lib/degenerator";
 
 const Degenerator = () => {
-  const {
-    analysis: { degenerator },
-  } = useFormConfig();
+  const degenerator =
+    useFormConfig().analysis?.degenerator ?? defaultDegenerator;
   const design = useDesign();
   const [feature, setFeature] = useState<Feature>("横");
   const options = Object.keys(classifier).map((feature) => ({
@@ -18,7 +18,7 @@ const Degenerator = () => {
     <>
       <Typography.Title level={3}>字根认同</Typography.Title>
       <Flex vertical gap="small" align="center">
-        {Object.entries(degenerator.feature).map(([from, to]) => (
+        {Object.entries(degenerator.feature ?? {}).map(([from, to]) => (
           <Flex justify="center" align="center" gap="small" key={from}>
             认为
             <span>{from as Feature}</span>
@@ -66,7 +66,7 @@ const Degenerator = () => {
           </Button>
         </Flex>
         <Checkbox
-          checked={degenerator.nocross}
+          checked={degenerator.no_cross}
           onChange={() => {
             design({ subtype: "root-degenerator-nocross", action: "toggle" });
           }}

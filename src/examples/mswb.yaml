@@ -23,8 +23,8 @@ data:
     斜钩: 6
     横斜钩: 6
 form:
-  maxcodelen: 1
   alphabet: qwertyuiopasdfghjklzxcvbnm
+  mapping_type: 1
   analysis:
     degenerator:
       feature: {捺: 点, 提: 横}
@@ -57,6 +57,7 @@ form:
       羊: [丷, 三, '2']
       兆: [儿, "\ue42b"]
       必: [心, '3']
+      非: ['2', 三, '2', 三]
       韭: ['2', 三, '2', 三, '1']
       州: [川, "\ue448"]
       身: ['3', 冂, 三, '3']
@@ -322,11 +323,6 @@ form:
     "\ue405": m
     卜: m
     "\ue402": m
-pronunciation:
-  maxcodelen: 1
-  alphabet: qwertyuiopasdfghjklzxcvbnm
-  grouping: {}
-  mapping:
     b: b
     p: p
     m: m
@@ -353,6 +349,7 @@ pronunciation:
 encoder:
   sources:
     s0:
+      object: null
       next: s1
     s1:
       object: {type: 字根, rootIndex: 1}
@@ -423,12 +420,12 @@ encoder:
       operator: 存在
       positive: s13
       negative: s14
-  maxlength: 4
+  max_length: 4
   auto_select_length: 4
   rules:
     - length_equal: 2
       formula: "AaAbBaBb"
     - length_equal: 3
       formula: "AaBaCaCb"
-    - length_in_range: [4, 20]
+    - length_in_range: [4, 10]
       formula: "AaBaCaZa"

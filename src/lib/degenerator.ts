@@ -24,12 +24,19 @@ export const binaryToIndices = (n: number) => (binary: number) => {
   return indices.filter((index) => binary & (1 << (n - index - 1)));
 };
 
+export const defaultDegenerator: Degenerator = {
+  feature: {
+    捺: "点",
+  },
+  no_cross: false,
+};
+
 const strokeFeatureEqual = (
   degenerator: Degenerator,
   s1: Feature,
   s2: Feature,
 ) => {
-  const { feature } = degenerator;
+  const feature = degenerator.feature ?? {};
   const d1 = feature[s1] ?? s1;
   const d2 = feature[s2] ?? s2;
   return d1 === d2;
@@ -86,9 +93,7 @@ export const generateSliceBinaries = (
   component: ComputedComponent,
   root: ComputedComponent,
 ) => {
-  const {
-    analysis: { degenerator },
-  } = config;
+  const degenerator = config.analysis?.degenerator ?? defaultDegenerator;
   const { glyph: cglyph, topology: ctopology } = component;
   const { glyph: rglyph, topology: rtopology } = root;
   if (cglyph.length < rglyph.length) return [];
@@ -112,7 +117,7 @@ export const generateSliceBinaries = (
     }
     if (!queue) return [];
   }
-  if (degenerator.nocross) {
+  if (degenerator.no_cross) {
     const allindices = [...Array(cglyph.length).keys()];
     queue = queue.filter((indices) => {
       const others = allindices.filter((x) => !indices.includes(x));
@@ -131,8 +136,9 @@ export const generateSliceBinaries = (
 };
 
 const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
+  let featureMap = degenerator.feature ?? {};
   return [
-    glyph.map((x) => x.feature).map((x) => degenerator.feature[x] || x),
+    glyph.map((x) => x.feature).map((x) => featureMap[x] || x),
     findTopology(glyph),
   ] as const;
 };

@@ -207,7 +207,7 @@ export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
 export const Delete = ({ unicode }: { unicode: number }) => {
   const dispatch = useAppDispatch();
   const remote = useContext(RemoteContext);
-  const formCustomization = useData().form;
+  const formCustomization = useData()?.form ?? {};
   const form = useAppSelector(selectForm);
   const del = useRemove();
   const char = String.fromCodePoint(unicode);

@@ -1,5 +1,7 @@
 import type { Config, FormConfig, PartialClassifier } from "./config";
+import { defaultDegenerator } from "./degenerator";
 import { examples } from "./example";
+import { defaultSelector } from "./selector";
 
 const getInfo = function (name: string): Config["info"] {
   return {
@@ -18,8 +20,8 @@ export const classifierTypes = [
 export type ClassifierType = (typeof classifierTypes)[number];
 const classifierMap: Record<ClassifierType, PartialClassifier> = {
   国标五分类: {},
-  表形码六分类: examples.mswb.data.classifier,
-  郑码七分类: examples.zhengma.data.classifier,
+  表形码六分类: examples.mswb.data.classifier!,
+  郑码七分类: examples.zhengma.data.classifier!,
 };
 
 const getData = function (ct: ClassifierType): Config["data"] {
@@ -32,19 +34,11 @@ const getData = function (ct: ClassifierType): Config["data"] {
 
 export const defaultForm: FormConfig = {
   alphabet: "qwertyuiopasdfghjklzxcvbnm",
-  maxcodelen: 1,
   grouping: {},
   mapping: {},
   analysis: {
-    degenerator: {
-      feature: {
-        提: "横",
-        捺: "点",
-      },
-      nocross: false,
-    },
-    selector: ["根少优先", "连续笔顺", "能连不交", "取大优先"],
-    customize: {},
+    degenerator: defaultDegenerator,
+    selector: defaultSelector,
   },
 };
 
@@ -54,18 +48,6 @@ const formMap: Record<FormTypes, Config["form"]> = {
   郑码字根: examples.zhengma.form,
   米十五笔字根: examples.mswb.form,
   无: defaultForm,
-};
-
-export const pronTypes = ["无", "拼音首字母", "声母", "双拼"] as const;
-export type PronTypes = (typeof pronTypes)[number];
-const pronMap: Record<PronTypes, Config["pronunciation"]> = {
-  无: { alphabet: "", maxcodelen: 1, grouping: {}, mapping: {} },
-  拼音首字母: examples.mswb.pronunciation,
-  声母: {
-    ...examples.mswb.pronunciation!,
-    mapping: { zh: "v", ch: "i", sh: "u", 零: "o" },
-  },
-  双拼: examples.flypy.pronunciation,
 };
 
 export const encoderTypes = [
@@ -84,17 +66,16 @@ export interface StarterType {
   name: string;
   data: ClassifierType;
   form: FormTypes;
-  pron: PronTypes;
   encoder: EncoderTypes;
 }
 
 export const createConfig = function (starter: StarterType): Config {
   return {
     version: APP_VERSION,
+    source: null,
     info: getInfo(starter.name),
     data: getData(starter.data),
     form: formMap[starter.form],
-    pronunciation: pronMap[starter.pron],
     encoder: encoderMap[starter.encoder],
   };
 };

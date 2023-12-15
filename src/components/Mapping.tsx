@@ -1,6 +1,6 @@
 import { Button, Flex, Form, Input, List, Popover, Space } from "antd";
 import { useState } from "react";
-import { useDesign, useGenericConfig } from "./context";
+import { useDesign, useFormConfig } from "./context";
 import { useDisplay, useForm } from "./contants";
 import Root from "./Root";
 import Char from "./Char";
@@ -13,17 +13,20 @@ import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const design = useDesign();
-  const form = useForm();
-  const { alphabet, maxcodelen, grouping, mapping } = useGenericConfig();
+  const { alphabet, mapping_type, grouping, mapping } = useFormConfig();
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: x,
   }));
   const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
-  const keys = Array.from(code).concat(
-    Array(maxcodelen - code.length).fill(""),
-  );
-  const affiliates = Object.keys(grouping).filter((x) => grouping[x] === name);
+  const padding = Math.max((mapping_type ?? 1) - code.length, 0);
+  const keys = Array.from(code).concat(Array(padding).fill(""));
+  const affiliates = Object.entries(grouping)
+    .filter(([from, to]) => {
+      const main = typeof to === "string" ? to : to[0];
+      return main === name;
+    })
+    .map(([x]) => x);
   const [main, setMain] = useState(Object.keys(mapping)[0]);
   const display = useDisplay();
   return (
@@ -126,7 +129,9 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
         </Flex>
       }
     >
-      <Root>
+      <Root
+        style={{ color: display(name) === "丢失的字根" ? "red" : "initial" }}
+      >
         {display(name)}
         {affiliates.length >= 1 && (
           <span style={{ fontSize: "0.8em" }}>
@@ -140,7 +145,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
 };
 
 const Mapping = () => {
-  const { mapping, alphabet, maxcodelen } = useGenericConfig();
+  const { mapping, alphabet, mapping_type } = useFormConfig();
   const design = useDesign();
   const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(
@@ -152,7 +157,7 @@ const Mapping = () => {
     <>
       <Form.Item label="编码类型">
         <Select
-          value={maxcodelen}
+          value={mapping_type}
           onChange={(event) => {
             design({ subtype: "generic-maxcodelen", value: event });
           }}

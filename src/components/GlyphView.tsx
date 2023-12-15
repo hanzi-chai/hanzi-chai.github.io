@@ -13,7 +13,6 @@ import type { Index } from "./Utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
 import { recursiveRenderGlyph } from "~/lib/component";
-import ErrorResult from "./Error";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -60,23 +59,27 @@ export const ComponentView = ({ component }: { component: Component }) => {
   const glyph: SVGGlyph = [];
   let valid = true;
   if (component.source !== undefined) {
-    const sourceGlyph = recursiveRenderGlyph(component.source, form);
-    if (sourceGlyph instanceof Error) {
-      valid = false;
-    } else {
-      component.strokes.forEach((x) => {
-        if (typeof x === "number") {
-          const stroke = sourceGlyph[x];
-          if (stroke !== undefined) {
-            glyph.push(stroke);
+    try {
+      const sourceGlyph = recursiveRenderGlyph(component.source, form);
+      if (sourceGlyph instanceof Error) {
+        valid = false;
+      } else {
+        component.strokes.forEach((x) => {
+          if (typeof x === "number") {
+            const stroke = sourceGlyph[x];
+            if (stroke !== undefined) {
+              glyph.push(stroke);
+            } else {
+              valid = false;
+            }
           } else {
-            valid = false;
+            glyph.push(x);
           }
-        } else {
-          glyph.push(x);
-        }
-        return x;
-      });
+          return x;
+        });
+      }
+    } catch {
+      valid = false;
     }
   } else {
     // ts cannot infer this, but conversion is safe
@@ -85,7 +88,7 @@ export const ComponentView = ({ component }: { component: Component }) => {
   return valid ? (
     <StrokesView glyph={glyph} />
   ) : (
-    <Result status="500" title="笔画引用不合法" />
+    <Result status="500" title="无法渲染出 SVG 图形，请检查数据" />
   );
 };
 

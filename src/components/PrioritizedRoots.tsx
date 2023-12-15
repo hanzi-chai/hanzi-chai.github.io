@@ -7,7 +7,7 @@ import { useDisplay } from "./contants";
 
 const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
   const { analysis } = useFormConfig();
-  const list = analysis[variant];
+  const list = analysis ? analysis[variant] : [];
   const [current, setCurrent] = useState<string | undefined>(undefined);
   const design = useDesign();
   const display = useDisplay();

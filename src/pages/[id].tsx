@@ -54,16 +54,6 @@ const items: MenuProps["items"] = [
     label: "元素",
     key: "element",
     icon: <SettingOutlined />,
-    children: [
-      {
-        label: "字形元素",
-        key: "ele_form",
-      },
-      {
-        label: "字音元素",
-        key: "ele_pronunciation",
-      },
-    ],
   },
   {
     label: "分析",
@@ -82,8 +72,7 @@ const keyToPath: Record<string, string> = {
   data_form: "data/form",
   data_repertoire: "data/repertoire",
   data_classifier: "data/classifier",
-  ele_form: "element/form",
-  ele_pronunciation: "element/pronunciation",
+  element: "element",
   analysis: "analysis",
   encode: "encode",
 };
@@ -161,7 +150,7 @@ function EditorLayout() {
       </Layout.Sider>
       <Layout style={{ height: "100vh" }}>
         <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
-          <div>{config.info.name}</div>
+          <div>{config.info?.name ?? "未命名"}</div>
         </Layout.Header>
         <Layout.Content
           style={{

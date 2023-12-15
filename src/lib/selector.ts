@@ -9,6 +9,14 @@ import { type CurveRelation } from "./topology";
 import { isEqual } from "underscore";
 import { sortTwoNumbers } from "./bezier";
 
+export const defaultSelector: SieveName[] = [
+  "根少优先",
+  "能连不交",
+  "能散不连",
+  "全符笔顺",
+  "取大优先",
+];
+
 type Scheme = number[];
 
 type Comparable = number | number[];
@@ -125,7 +133,7 @@ export const similar: Sieve<number> = {
 export const strong: Sieve<number> = {
   title: "多强字根",
   key: (scheme, _, config, rootMap) => {
-    const strong = config.analysis.strong || [];
+    const strong = config.analysis?.strong || [];
     const roots = scheme.map((x) => rootMap.get(x)!);
     return -roots.filter((x) => strong.includes(x)).length;
   },
@@ -138,7 +146,7 @@ export const strong: Sieve<number> = {
 export const weak: Sieve<number> = {
   title: "少弱字根",
   key: (scheme, _, config, rootMap) => {
-    const weak = config.analysis.weak || [];
+    const weak = config.analysis?.weak || [];
     const roots = scheme.map((x) => rootMap.get(x)!);
     return roots.filter((x) => weak.includes(x)).length;
   },
@@ -272,7 +280,7 @@ const select = (
     evaluation: new Map<SieveName, number | number[]>(),
     excluded: false,
   }));
-  for (const sieveName of config.analysis.selector) {
+  for (const sieveName of config.analysis?.selector ?? defaultSelector) {
     const sieve = sieveMap.get(sieveName)!;
     let min: number | number[] | undefined;
     for (const data of schemeData) {

@@ -12,6 +12,7 @@ import {
   Typography,
   Switch,
   Dropdown,
+  notification,
 } from "antd";
 import type { IndexEdit2 } from "./Utils";
 import { ItemSelect, NumberInput, Select } from "./Utils";
@@ -20,12 +21,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type {
   BasicComponent,
   Block,
+  Component,
   Compound,
   CompoundGlyph,
   Draw,
   Glyph,
   Operator,
   Partition,
+  SVGGlyph,
   SVGStroke,
   Stroke,
 } from "~/lib/data";
@@ -160,8 +163,18 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
             <Form.Item>
               <Button
                 onClick={() => {
-                  const sourceGlyph = recursiveRenderGlyph(source, formData);
-                  if (sourceGlyph instanceof Error) return;
+                  let sourceGlyph: SVGGlyph | Error;
+                  try {
+                    sourceGlyph = recursiveRenderGlyph(source, formData);
+                  } catch {
+                    sourceGlyph = new Error();
+                  }
+                  if (sourceGlyph instanceof Error) {
+                    notification.error({
+                      message: "无法渲染 SVG 笔画，请检查输入",
+                    });
+                    return;
+                  }
                   form.setFieldValue(
                     ["component", "strokes", name],
                     sourceGlyph[value]!,
@@ -196,6 +209,7 @@ const classifiedStrokeOptions = [
 
 const ComponentForm = () => {
   const form = useContext(ModelContext);
+  const current = String.fromCodePoint(form.getFieldValue(["unicode"]) ?? 0x20);
   const strokes = Form.useWatch(["component", "strokes"], form) as Stroke[];
   const source = Form.useWatch(["component", "source"], form) as
     | string
@@ -212,7 +226,18 @@ const ComponentForm = () => {
           shouldUpdate={() => true}
         >
           <ItemSelect
-            customFilter={([, glyph]) => glyph.component !== undefined}
+            customFilter={([char, glyph]) => {
+              if (glyph.component === undefined) return false;
+              let pointer: string | undefined = char;
+              while (pointer != undefined) {
+                if (pointer === current) return false;
+                let component: Component | undefined =
+                  formData[pointer]?.component;
+                if (component === undefined) break;
+                pointer = component.source;
+              }
+              return true;
+            }}
           />
         </Form.Item>
         <Form.Item shouldUpdate>

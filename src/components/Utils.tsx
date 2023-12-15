@@ -97,6 +97,7 @@ export const RootSelect = ({
       showSearch
       placeholder="输入笔画搜索"
       options={keys
+        .filter((x) => form[x] || x.match(/\d+/))
         .filter((x) => x !== exclude)
         .map((x) => ({
           value: x,

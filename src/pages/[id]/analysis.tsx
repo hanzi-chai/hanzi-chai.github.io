@@ -1,5 +1,6 @@
 import StrokeSearch from "~/components/StrokeSearch";
 import {
+  Alert,
   Button,
   Dropdown,
   Empty,
@@ -8,6 +9,7 @@ import {
   Radio,
   Space,
   Typography,
+  notification,
 } from "antd";
 
 import { Collapse } from "antd";
@@ -69,20 +71,16 @@ const Analysis = () => {
   const [componentCustomizations, setComponentCustomizations] =
     useState<ComponentCache>(new Map());
   const [compoundCache, setCompoundCache] = useState<CompoundCache>(new Map());
+  const [error, setError] = useState({
+    componentError: [] as string[],
+    compoundError: [] as string[],
+  });
   const data = useAll();
   const form = useForm();
   const formConfig = useFormConfig();
-  const display = useDisplay();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const roots = Object.keys(formConfig.mapping).concat(
-    Object.keys(formConfig.grouping),
-  );
-  const rootsRef = Object.fromEntries(
-    roots.map((x) => {
-      return [x, display(x)];
-    }),
-  );
+  const display = useDisplay();
 
   const displays = [
     [...componentCache]
@@ -131,16 +129,38 @@ const Analysis = () => {
         </EditorColumn>
         <EditorColumn span={16}>
           <Typography.Title level={2}>分析结果</Typography.Title>
+          {error.componentError.length + error.compoundError.length > 0 ? (
+            <Alert
+              message="有些部件或复合体拆分时出错，请检查"
+              description={`部件：${error.componentError
+                .map(display)
+                .join("、")}\n复合体：${error.compoundError
+                .map(display)
+                .join("、")}`}
+              type="warning"
+              showIcon
+              closable
+            />
+          ) : null}
           <Flex gap="middle">
             <StrokeSearch sequence={sequence} setSequence={setSequence} />
             <Button
               type="primary"
               onClick={() => {
-                const { componentCache, customizations, compoundCache } =
-                  getFormCore(data, formConfig);
+                const {
+                  componentCache,
+                  componentError,
+                  customizations,
+                  compoundCache,
+                  compoundError,
+                } = getFormCore(data, formConfig);
                 setComponentCache(componentCache);
                 setComponentCustomizations(customizations);
                 setCompoundCache(compoundCache);
+                setError({
+                  componentError,
+                  compoundError,
+                });
               }}
             >
               计算

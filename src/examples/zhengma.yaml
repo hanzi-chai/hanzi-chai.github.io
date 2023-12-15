@@ -31,7 +31,7 @@ data:
     竖折折: 8
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
-  maxcodelen: 3
+  mapping_type: 3
   grouping:
     丅: 丁
     士: 土
@@ -439,14 +439,10 @@ form:
       - '1'
       - 二
       - "\ue40f"
-pronunciation:
-  alphabet: ''
-  maxcodelen: 1
-  grouping: {}
-  mapping: {}
 encoder:
   sources:
     s0:
+      object: null
       next: s1
     s1:
       object: {type: 字根, rootIndex: 1}
@@ -540,4 +536,5 @@ encoder:
       operator: 存在
       positive: s9
       negative: s10
-  maxlength: 4
+  max_length: 4
+  auto_select_length: 4

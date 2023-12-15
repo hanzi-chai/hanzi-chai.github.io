@@ -5,10 +5,10 @@ import { Cascader, Flex, Form, Typography } from "antd";
 import type { CodableObject } from "~/lib/element";
 import { parseList, pinyinAnalyzers, renderList } from "~/lib/element";
 import { Select } from "./Utils";
-import type { Op } from "~/lib/config";
-import { binaryOps, ops } from "~/lib/config";
+import type { Op, UnaryOp } from "~/lib/config";
+import { binaryOps, ops, unaryOps } from "~/lib/config";
 import TextArea from "antd/es/input/TextArea";
-import { useFormConfig, usePronunciationConfig } from "./context";
+import { useFormConfig } from "./context";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -33,9 +33,7 @@ const DetailEditor = ({ selected }: { selected: string }) => {
   >();
   const nodes = getNodes();
   const { data } = getNode(selected)!;
-  const { alphabet: formAlphabet } = useFormConfig();
-  const { alphabet: pronAlphabet } = usePronunciationConfig();
-  const alphabet = Array.from(new Set([...formAlphabet, ...pronAlphabet]));
+  const { alphabet } = useFormConfig();
   const genericIndices = [...Array(10).keys()]
     .map((x) => [x + 1, -(x + 1)])
     .flat();
@@ -93,7 +91,7 @@ const DetailEditor = ({ selected }: { selected: string }) => {
     {
       value: "固定",
       label: "固定",
-      children: alphabet.map((v) => ({
+      children: [...alphabet].map((v) => ({
         value: v,
         label: v,
       })),
@@ -131,7 +129,9 @@ const DetailEditor = ({ selected }: { selected: string }) => {
                 label: v === -1 ? "全取" : (v + 1).toString(),
               }))}
               onChange={(event) => {
-                update({ ...data, index: event === -1 ? undefined : event });
+                event === -1
+                  ? update({ ...data, index: undefined })
+                  : update({ ...data, index: event });
               }}
             />
           </Item>
@@ -147,17 +147,19 @@ const DetailEditor = ({ selected }: { selected: string }) => {
                   value: v,
                 }))}
                 onChange={(event) => {
-                  update({
-                    ...data,
-                    operator: event,
-                    value: (binaryOps as readonly Op[]).includes(event)
-                      ? ""
-                      : undefined,
-                  });
+                  if ((unaryOps as readonly Op[]).includes(event)) {
+                    update({ ...data, operator: event });
+                  } else {
+                    update({
+                      ...data,
+                      operator: event,
+                      value: "",
+                    });
+                  }
                 }}
               />
             </Item>
-            {data.value !== undefined && (
+            {"value" in data && (
               <Item label="取值">
                 <TextArea
                   rows={3}

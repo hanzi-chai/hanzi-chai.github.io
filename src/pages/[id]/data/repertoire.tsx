@@ -6,14 +6,9 @@ import SearchOutlined from "@ant-design/icons/SearchOutlined";
 
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "~/components/Utils";
-import type { Character } from "~/lib/data";
 import { deepcopy } from "~/lib/utils";
 import { useChaifenTitle } from "~/lib/hooks";
-
-interface DataType extends Character {
-  key: string;
-  self: Character;
-}
+import { Character } from "~/lib/data";
 
 const EditablePinyin = ({
   pinyin,
@@ -43,19 +38,17 @@ const Repertoire: React.FC = () => {
   const characters = useRepertoire();
   const modify = useAdd();
   const [input, setInput] = useState("");
-  const rawdata = Object.entries(characters).map(([k, v]) => ({
-    key: k,
-    self: v,
-    ...v,
-  }));
-  const dataSource = input ? rawdata.filter((x) => x.key === input) : rawdata;
+  const rawdata = Object.values(characters);
+  const dataSource = input
+    ? rawdata.filter((x) => String.fromCodePoint(x.unicode) === input)
+    : rawdata;
 
-  const columns: ColumnsType<DataType> = [
+  const columns: ColumnsType<Character> = [
     {
       title: "汉字",
       dataIndex: "key",
       render: (_, record) => {
-        return <span>{record.key}</span>;
+        return <span>{String.fromCodePoint(record.unicode)}</span>;
       },
     },
     {
@@ -76,6 +69,7 @@ const Repertoire: React.FC = () => {
       title: "字音",
       dataIndex: "pinyin",
       render: (_, record) => {
+        const key = String.fromCodePoint(record.unicode);
         return (
           <Flex justify="space-between">
             <Space size="middle">
@@ -84,23 +78,23 @@ const Repertoire: React.FC = () => {
                   key={i}
                   pinyin={x}
                   setPinyin={(pinyin) => {
-                    const modified = deepcopy(record.self);
+                    const modified = deepcopy(record);
                     modified.pinyin[i] = pinyin;
-                    modify(record.key, modified);
+                    modify(key, modified);
                   }}
                   deletePinyin={() => {
-                    const modified = deepcopy(record.self);
+                    const modified = deepcopy(record);
                     modified.pinyin.splice(i, 1);
-                    modify(record.key, modified);
+                    modify(key, modified);
                   }}
                 />
               ))}
             </Space>
             <Button
               onClick={() => {
-                const modified = deepcopy(record.self);
+                const modified = deepcopy(record);
                 modified.pinyin.push("");
-                modify(record.key, modified);
+                modify(key, modified);
               }}
             >
               添加
@@ -126,6 +120,7 @@ const Repertoire: React.FC = () => {
           <Table
             dataSource={dataSource}
             columns={columns}
+            rowKey={"unicode"}
             pagination={{
               total: dataSource.length,
               pageSize: 10,

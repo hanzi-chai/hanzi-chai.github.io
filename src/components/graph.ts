@@ -1,5 +1,10 @@
 import type { Edge, Node } from "reactflow";
-import type { Condition, Source } from "~/lib/config";
+import type {
+  BinaryCondition,
+  Condition,
+  Source,
+  UnaryCondition,
+} from "~/lib/config";
 import { add, sum } from "mathjs";
 
 export type SourceData = Omit<Source, "next">;
@@ -18,7 +23,9 @@ export const makeSourceNode = function (data: SourceData, id: string): SNode {
   };
 };
 
-export type ConditionData = Omit<Condition, "positive" | "negative">;
+export type ConditionData =
+  | Omit<UnaryCondition, "positive" | "negative">
+  | Omit<BinaryCondition, "positive" | "negative">;
 
 export type CNode = Node<ConditionData>;
 
@@ -70,8 +77,8 @@ export const getLayoutedElements = function (
     ]),
   );
   edges.forEach(({ source, target, label }) => {
-    graph[source].children.push([target, label as string]);
-    graph[source].children.sort((a, b) => {
+    graph[source]?.children.push([target, label as string]);
+    graph[source]?.children.sort((a, b) => {
       if (a[1] === "是" && b[1] === "否") return -1;
       if (a[1] === "否" && b[1] === "是") return 1;
       return 0;

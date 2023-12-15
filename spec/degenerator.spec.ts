@@ -2,19 +2,21 @@ import _degenerate, {
   indicesToBinary,
   binaryToIndices,
   generateSliceBinaries,
+  defaultDegenerator,
 } from "~/lib/degenerator";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
 import type { SVGGlyph } from "~/lib/data";
-import { config, computedGlyphs, rendered } from "./mock";
+import { computedGlyphs, rendered } from "./mock";
 import { RenderedGlyph } from "~/lib/topology";
+import { defaultForm } from "~/lib/templates";
 
 const { randomInt } = create(all, {
   randomSeed: "a",
 });
 
 const degenerate = (glyph: RenderedGlyph) =>
-  _degenerate(config.analysis.degenerator, glyph);
+  _degenerate(defaultDegenerator, glyph);
 
 describe("indices to binary converter", () => {
   it("works on 5-stroke simple case", () => {
@@ -44,7 +46,7 @@ describe("bi-directional conversion", () => {
 describe("generate slice binaries", () => {
   const { 丰, 十 } = rendered;
   it("should find multiple occurence of a root", () => {
-    expect(generateSliceBinaries(config, 丰, 十)).toEqual([9, 5, 3]);
+    expect(generateSliceBinaries(defaultForm, 丰, 十)).toEqual([9, 5, 3]);
   });
 });
 

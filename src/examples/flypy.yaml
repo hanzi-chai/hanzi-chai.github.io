@@ -1,6 +1,6 @@
-pronunciation:
+form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
-  maxcodelen: 1
+  mapping_type: 1
   grouping: {}
   mapping:
     zh: v

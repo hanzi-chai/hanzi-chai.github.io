@@ -6,15 +6,16 @@ import { selectForm, selectRepertoire, useAppSelector } from "./store";
 
 const useGlyph = (char: string) => {
   const form = useAppSelector(selectForm);
-  return useData().form[char] || form[char];
+  const customizations = useData()?.form ?? {};
+  return customizations[char] || form[char];
 };
 
 const useDisplay = () => {
   const form = useAppSelector(selectForm);
-  const formCustomized = useData().form;
+  const customizations = useData()?.form ?? {};
   return (char: string) => {
-    const glyph = formCustomized[char] || form[char];
-    return isPUA(char) ? glyph?.name ?? "未知" : char;
+    const glyph = customizations[char] || form[char];
+    return isPUA(char) ? glyph?.name ?? "丢失的字根" : char;
   };
 };
 
@@ -28,16 +29,18 @@ const useCompound = (char: string) => {
 
 const useRepertoire = () => {
   const repertoire = useAppSelector(selectRepertoire);
-  return { ...repertoire, ...useData().repertoire };
+  const customizations = useData()?.repertoire ?? {};
+  return { ...repertoire, ...customizations };
 };
 
 const useForm = () => {
   const form = useAppSelector(selectForm);
-  return { ...form, ...useData().form };
+  const customizations = useData()?.form ?? {};
+  return { ...form, ...customizations };
 };
 
 const useCode = () => {
-  const formCustomizations = useData().form;
+  const formCustomizations = useData()?.form ?? {};
   const maxCode = Math.max(
     ...Object.keys(formCustomizations).map((x) => x.codePointAt(0)!),
   );
@@ -45,7 +48,7 @@ const useCode = () => {
 };
 
 const useClassifier = () => {
-  const { classifier } = useData();
+  const classifier = useData()?.classifier ?? {};
   return { ...defaultClassifier, ...classifier };
 };
 

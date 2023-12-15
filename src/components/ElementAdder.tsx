@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Select, Button, Flex } from "antd";
-import { useDesign, useGenericConfig, useConfigType } from "./context";
+import { useDesign, useFormConfig } from "./context";
 import { RootSelect } from "./Utils";
 
 const ElementAdder = ({ element }: { element?: string }) => {
-  const { alphabet, maxcodelen, mapping } = useGenericConfig();
-  const index = useConfigType();
+  const { alphabet, mapping_type, mapping } = useFormConfig();
   const design = useDesign();
-  const [main, setMain] = useState(Object.keys(mapping)[0]);
+  const [main, setMain] = useState(Object.keys(mapping)[0]!);
   const [keys, setKeys] = useState([alphabet[0], "", "", ""]);
+  const [groupingStyle, setGroupingStyle] = useState(-1);
+  const allStyles = [-1].concat([...Array(mapping_type).keys()]);
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: x,
@@ -18,7 +19,7 @@ const ElementAdder = ({ element }: { element?: string }) => {
     <>
       <Flex justify="center" align="center" gap="small">
         <span>添加至</span>
-        {keys.slice(0, maxcodelen).map((key, index) => {
+        {keys.slice(0, mapping_type ?? 1).map((key, index) => {
           return (
             <Select
               key={index}
@@ -42,7 +43,7 @@ const ElementAdder = ({ element }: { element?: string }) => {
               subtype: "generic-mapping",
               action: "add",
               key: element!,
-              value: keys.slice(0, maxcodelen).join(""),
+              value: keys.slice(0, mapping_type ?? 1).join(""),
             });
             design({
               subtype: "generic-grouping",
@@ -54,37 +55,37 @@ const ElementAdder = ({ element }: { element?: string }) => {
           添加
         </Button>
       </Flex>
-      {index === "form" && (
-        <Flex justify="center" align="center" gap="small">
-          <span>归并至</span>
-          <RootSelect
-            char={undefined}
-            onChange={(event) => setMain(event)}
-            exclude=""
-          />
-          <Button
-            type="primary"
-            disabled={
-              element === undefined || Object.keys(mapping).length === 0
-            }
-            onClick={() => {
-              design({
-                subtype: "generic-grouping",
-                action: "add",
-                key: element!,
-                value: main,
-              });
-              design({
-                subtype: "generic-mapping",
-                action: "remove",
-                key: element!,
-              });
-            }}
-          >
-            归并
-          </Button>
-        </Flex>
-      )}
+      <Flex justify="center" align="center" gap="small">
+        <span>归并至</span>
+        <RootSelect
+          char={undefined}
+          onChange={(event) => setMain(event)}
+          exclude=""
+        />
+        {/* <Select style={{width: "128px"}} options={allStyles.map(x => ({
+          value: x,
+          label: x === -1 ? "完整归并" : `第 ${x + 1} 码归并`
+        }))} value={groupingStyle} onChange={setGroupingStyle}/> */}
+        <Button
+          type="primary"
+          disabled={element === undefined || Object.keys(mapping).length === 0}
+          onClick={() => {
+            design({
+              subtype: "generic-grouping",
+              action: "add",
+              key: element!,
+              value: main,
+            });
+            design({
+              subtype: "generic-mapping",
+              action: "remove",
+              key: element!,
+            });
+          }}
+        >
+          归并
+        </Button>
+      </Flex>
     </>
   );
 };

@@ -18,7 +18,7 @@ import { listToObject } from "~/lib/utils";
 const DegeneratorTable = () => {
   const formLoading = useAppSelector(selectFormLoading);
   const data = useAll();
-  const componentForm = renderComponentForm(data);
+  const [componentForm] = renderComponentForm(data);
   const dataSource = Object.values(componentForm)
     .filter((cache) => cache.glyph.length >= 5)
     .sort((a, b) => a.glyph.length - b.glyph.length);

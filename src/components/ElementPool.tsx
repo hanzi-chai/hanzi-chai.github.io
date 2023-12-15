@@ -2,7 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Char";
 import { Flex, Pagination } from "antd";
-import { useGenericConfig } from "./context";
+import { useFormConfig } from "./context";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -32,7 +32,7 @@ const ElementPool = ({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content.slice((page - 1) * pageSize, page * pageSize);
-  const { mapping, grouping } = useGenericConfig();
+  const { mapping, grouping } = useFormConfig();
   const type = (x: string) =>
     x === element ? "primary" : mapping[x] || grouping[x] ? "link" : "default";
   return (
