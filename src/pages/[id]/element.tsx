@@ -30,7 +30,9 @@ export default function RootElementConfig() {
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
-  const allErbi = allStrokes.map((x) => allStrokes.map((y) => x + y)).flat();
+  const allErbi = allStrokes
+    .map((x) => ["0"].concat(allStrokes).map((y) => x + y))
+    .flat();
   const display = useDisplay();
   const form = useForm();
   const characters = useRepertoire();
