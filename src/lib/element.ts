@@ -193,7 +193,7 @@ export const findElement = (
       const stroke1 = getindex(strokes, i1);
       if (stroke1 === undefined) return undefined;
       const stroke2 = getindex(strokes, i2);
-      return [stroke1, stroke2].join("");
+      return [stroke1, stroke2 ?? 0].join("");
     }
   }
 };

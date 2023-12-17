@@ -120,7 +120,7 @@ const compile = (
         }
       }
     }
-    return codes;
+    return codes.slice(0, encoder.max_length ?? codes.length);
   };
 };
 
