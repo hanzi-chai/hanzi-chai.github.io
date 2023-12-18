@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import type { Dispatch } from "react";
 import { createContext, useContext } from "react";
 import type { Config, SieveName } from "~/lib/config";

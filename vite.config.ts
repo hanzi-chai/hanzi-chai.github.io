@@ -31,7 +31,9 @@ export default defineConfig(({ mode }) => {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
     },
     plugins: [
-      react(),
+      react({
+        plugins: [["@swc-jotai/react-refresh", {}]],
+      }),
       // wasmpack("./libchai"),
       yaml(),
       Pages({

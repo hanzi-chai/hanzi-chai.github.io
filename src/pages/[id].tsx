@@ -24,11 +24,13 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "~/components/store";
+import { configIdAtom, configAtom } from "~/atoms/main";
+import { useAtom } from "jotai";
 
 const items: MenuProps["items"] = [
   {
     label: "基本",
-    key: "index",
+    key: "",
     icon: <MailOutlined />,
   },
   {
@@ -38,15 +40,15 @@ const items: MenuProps["items"] = [
     children: [
       {
         label: "字形数据",
-        key: "data_form",
+        key: "data/form",
       },
       {
         label: "字音字集",
-        key: "data_repertoire",
+        key: "data/repertoire",
       },
       {
         label: "笔画分类",
-        key: "data_classifier",
+        key: "data/classifier",
       },
     ],
   },
@@ -67,25 +69,11 @@ const items: MenuProps["items"] = [
   },
 ];
 
-const keyToPath: Record<string, string> = {
-  index: "",
-  data_form: "data/form",
-  data_repertoire: "data/repertoire",
-  data_classifier: "data/classifier",
-  element: "element",
-  analysis: "analysis",
-  encode: "encode",
-};
-
-const pathToKey: Record<string, string> = Object.fromEntries(
-  Object.entries(keyToPath).map(([k, p]) => [p, k]),
-);
-
 function EditorLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
-  const selectKey = pathToKey[relativePath];
+
   const config = useContext(ConfigContext);
   const [isCollapsed, setCollapsed] = useState(false);
   return (
@@ -142,9 +130,9 @@ function EditorLayout() {
             theme="dark"
             mode="inline"
             items={items}
-            selectedKeys={[selectKey!]}
+            selectedKeys={[relativePath]}
             defaultOpenKeys={["data", "element"]}
-            onClick={(e) => navigate(keyToPath[e.key]!)}
+            onClick={(e) => navigate(e.key)}
           />
         </Flex>
       </Layout.Sider>
@@ -197,6 +185,11 @@ export default function Contextualized() {
   });
   const appdispatch = useAppDispatch();
   const loading = useAppSelector(selectFormLoading);
+  const [id2, setid2] = useAtom(configIdAtom);
+  setid2(id!);
+  const [conf, setconf] = useAtom(configAtom);
+  console.log(conf);
+
   useEffect(() => {
     Promise.all([fetchJson("repertoire"), fetchJson("form")]).then(
       ([repertoire, form]) => {
@@ -215,6 +208,7 @@ export default function Contextualized() {
   ) : (
     <ConfigContext.Provider value={config}>
       <DispatchContext.Provider value={dispatch}>
+        <div style={{ textAlign: "right" }}>{id2}</div>
         <EditorLayout />
       </DispatchContext.Provider>
     </ConfigContext.Provider>
