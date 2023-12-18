@@ -68,21 +68,19 @@ export default function RootElementConfig() {
   return (
     <EditorRow>
       <EditorColumn span={8}>
-        <Typography.Title level={2}>来源</Typography.Title>
-        <Typography.Title level={3}>字形</Typography.Title>
+        <Typography.Title level={2}>元素</Typography.Title>
+        <Typography.Title level={3}>字形元素</Typography.Title>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
         <ElementPicker<FormElementTypes>
           types={formElementTypes}
           defaultType="字根"
           contentMap={contentMap}
-          specialRendering={(x) => display(x)}
         />
-        <Typography.Title level={3}>字音</Typography.Title>
+        <Typography.Title level={3}>字音元素</Typography.Title>
         <ElementPicker<PronunciationElementTypes>
           types={pronunciationElementTypes}
           defaultType="声"
           contentMap={pronContentMap}
-          specialRendering={(x) => display(x)}
         />
       </EditorColumn>
       <EditorColumn span={16}>

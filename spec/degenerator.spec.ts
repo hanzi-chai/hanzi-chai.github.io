@@ -143,3 +143,10 @@ describe("degenerate cross tests 3", () => {
     hasroot(氶, [2, 3, 4], base);
   });
 });
+
+describe("degenerate cross tests 4", () => {
+  const { 隶, 氺 } = computedGlyphs;
+  it("says 承 has 水", () => {
+    hasroot(隶, [3, 4, 5, 6, 7], 氺);
+  });
+});
