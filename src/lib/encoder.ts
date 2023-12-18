@@ -44,7 +44,13 @@ export type TotalCache = Record<
   ComponentTotalResult[] | CompoundTotalResult[]
 >;
 
-export type EncoderResult = Map<string, string[]>;
+export type EncoderResult = Map<
+  string,
+  {
+    code: string[];
+    sequence: IndexedElement[][];
+  }
+>;
 
 const satisfy = (
   condition: Condition,
@@ -66,7 +72,7 @@ const merge = (grouping: Mapping, mapping: Mapping) => {
   return Object.assign(compiledGrouping, mapping);
 };
 
-type IndexedElement = string | { element: string; index: number };
+export type IndexedElement = string | { element: string; index: number };
 
 const compile = (
   encoder: Config["encoder"],
@@ -151,7 +157,7 @@ export const getCache = (
   return [result, extra] as const;
 };
 
-const uniquify = (l: string[]) => [...new Set(l)].sort();
+export const uniquify = (l: string[]) => [...new Set(l)].sort();
 
 export const collect = (
   config: Config,
@@ -186,7 +192,10 @@ const encode = (config: Config, characters: string[], data: MergedData) => {
   const result = new Map(
     [...characterElements].map(([char, elements_list]) => [
       char,
-      uniquify(elements_list.map((elements) => process(elements))),
+      {
+        sequence: elements_list,
+        code: uniquify(elements_list.map((elements) => process(elements))),
+      },
     ]),
   );
   return result;
