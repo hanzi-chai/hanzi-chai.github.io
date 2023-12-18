@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react({
-        plugins: [["@swc-jotai/react-refresh", {}]],
+        // plugins: [["@swc-jotai/react-refresh", {}]],
       }),
       // wasmpack("./libchai"),
       yaml(),
