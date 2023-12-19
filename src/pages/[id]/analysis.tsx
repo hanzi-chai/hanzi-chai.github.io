@@ -117,100 +117,97 @@ const Analysis = () => {
   ] as const;
 
   return (
-    <div style={{ padding: "16px", flex: "1", overflowY: "auto" }}>
-      <EditorRow>
-        <EditorColumn span={8}>
-          <Typography.Title level={2}>字形分析</Typography.Title>
-          <Degenerator />
-          <Selector />
-          <Typography.Title level={2}>自定义分析</Typography.Title>
-          <Typography.Title level={3}>部件</Typography.Title>
-          <AnalysisCustomizer />
-        </EditorColumn>
-        <EditorColumn span={16}>
-          <Typography.Title level={2}>分析结果</Typography.Title>
-          {error.componentError.length + error.compoundError.length > 0 ? (
-            <Alert
-              message="有些部件或复合体拆分时出错，请检查"
-              description={`部件：${error.componentError
-                .map(display)
-                .join("、")}\n复合体：${error.compoundError
-                .map(display)
-                .join("、")}`}
-              type="warning"
-              showIcon
-              closable
+    <EditorRow>
+      <EditorColumn span={8}>
+        <Typography.Title level={2}>分析</Typography.Title>
+        <Degenerator />
+        <Selector />
+        <Typography.Title level={3}>自定义部件分析</Typography.Title>
+        <AnalysisCustomizer />
+      </EditorColumn>
+      <EditorColumn span={16}>
+        <Typography.Title level={2}>分析结果</Typography.Title>
+        {error.componentError.length + error.compoundError.length > 0 ? (
+          <Alert
+            message="有些部件或复合体拆分时出错，请检查"
+            description={`部件：${error.componentError
+              .map(display)
+              .join("、")}\n复合体：${error.compoundError
+              .map(display)
+              .join("、")}`}
+            type="warning"
+            showIcon
+            closable
+          />
+        ) : null}
+        <Flex gap="middle">
+          <StrokeSearch sequence={sequence} setSequence={setSequence} />
+          <Button
+            type="primary"
+            onClick={() => {
+              const {
+                componentCache,
+                componentError,
+                customizations,
+                compoundCache,
+                compoundError,
+              } = getFormCore(data, formConfig);
+              setComponentCache(componentCache);
+              setComponentCustomizations(customizations);
+              setCompoundCache(compoundCache);
+              setError({
+                componentError,
+                compoundError,
+              });
+            }}
+          >
+            计算
+          </Button>
+          <Button
+            onClick={() => {
+              setComponentCache(new Map());
+              setCompoundCache(new Map());
+            }}
+          >
+            清空
+          </Button>
+        </Flex>
+        <Flex justify="center">
+          <Radio.Group
+            value={step}
+            onChange={(e) => setStep(e.target.value as 0)}
+          >
+            <Radio.Button value={0}>部件拆分</Radio.Button>
+            <Radio.Button value={1}>复合体拆分</Radio.Button>
+          </Radio.Group>
+        </Flex>
+        {displays[step].length ? (
+          <>
+            <Collapse
+              items={displays[step].slice(
+                (page - 1) * pageSize,
+                page * pageSize,
+              )}
+              accordion={true}
+              bordered={false}
+              size="small"
+              defaultActiveKey={["1"]}
             />
-          ) : null}
-          <Flex gap="middle">
-            <StrokeSearch sequence={sequence} setSequence={setSequence} />
-            <Button
-              type="primary"
-              onClick={() => {
-                const {
-                  componentCache,
-                  componentError,
-                  customizations,
-                  compoundCache,
-                  compoundError,
-                } = getFormCore(data, formConfig);
-                setComponentCache(componentCache);
-                setComponentCustomizations(customizations);
-                setCompoundCache(compoundCache);
-                setError({
-                  componentError,
-                  compoundError,
-                });
+            <Pagination
+              current={page}
+              onChange={(page, pageSize) => {
+                setPage(page);
+                setPageSize(pageSize);
               }}
-            >
-              计算
-            </Button>
-            <Button
-              onClick={() => {
-                setComponentCache(new Map());
-                setCompoundCache(new Map());
-              }}
-            >
-              清空
-            </Button>
-          </Flex>
-          <Flex justify="center">
-            <Radio.Group
-              value={step}
-              onChange={(e) => setStep(e.target.value as 0)}
-            >
-              <Radio.Button value={0}>部件拆分</Radio.Button>
-              <Radio.Button value={1}>复合体拆分</Radio.Button>
-            </Radio.Group>
-          </Flex>
-          {displays[step].length ? (
-            <>
-              <Collapse
-                items={displays[step].slice(
-                  (page - 1) * pageSize,
-                  page * pageSize,
-                )}
-                accordion={true}
-                bordered={false}
-                size="small"
-                defaultActiveKey={["1"]}
-              />
-              <Pagination
-                current={page}
-                onChange={(page, pageSize) => {
-                  setPage(page);
-                  setPageSize(pageSize);
-                }}
-                total={displays[step].length}
-                pageSize={pageSize}
-              />
-            </>
-          ) : (
-            <Empty />
-          )}
-        </EditorColumn>
-      </EditorRow>
-    </div>
+              total={displays[step].length}
+              pageSize={pageSize}
+            />
+          </>
+        ) : (
+          <Empty />
+        )}
+      </EditorColumn>
+    </EditorRow>
   );
 };
 

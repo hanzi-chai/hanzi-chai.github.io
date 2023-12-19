@@ -24,9 +24,7 @@ const ScrollableRow = styled(Row)`
   overflow-y: auto;
 `;
 
-export const EditorRow = (props: RowProps) => (
-  <ScrollableRow {...props} gutter={32} />
-);
+export const EditorRow = (props: RowProps) => <ScrollableRow {...props} />;
 
 const ScrollableColumn = styled(Col)`
   height: 100%;
@@ -34,6 +32,8 @@ const ScrollableColumn = styled(Col)`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-left: 16px;
+  padding-right: 16px;
 `;
 
 export const EditorColumn = (props: ColProps) => (
@@ -54,16 +54,27 @@ export const Select = styled(_Select)`
 export const Uploader = ({
   action,
   text,
+  type,
 }: {
   action: (s: string) => void;
   text?: string;
+  type?: "yaml" | "json" | "txt";
 }) => {
   return (
     <Upload
-      accept=".yaml,.json"
+      accept={"." + (type ?? "yaml")}
       customRequest={({ file }) => {
         const reader = new FileReader();
-        reader.addEventListener("load", () => action(reader.result as string));
+        reader.addEventListener("load", () => {
+          const result = reader.result;
+          if (typeof result === "string") {
+            action(result);
+          } else {
+            notification.error({
+              message: "无法获取文件内容",
+            });
+          }
+        });
         reader.readAsText(file as File);
       }}
       maxCount={1}

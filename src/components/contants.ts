@@ -14,8 +14,9 @@ const useDisplay = () => {
   const form = useAppSelector(selectForm);
   const customizations = useData()?.form ?? {};
   return (char: string) => {
-    const glyph = customizations[char] || form[char];
-    return isPUA(char) ? glyph?.name ?? "丢失的字根" : char;
+    if (!isPUA(char)) return char;
+    const name = (customizations[char] || form[char])?.name;
+    return name ?? "丢失的字根";
   };
 };
 

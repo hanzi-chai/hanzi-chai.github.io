@@ -13,6 +13,24 @@ import type { CompoundResult } from "./compound";
 import { getForm } from "./form";
 import type { Extra } from "./element";
 import { findElement } from "./element";
+import { Character } from "./data";
+
+export const filtervalues = ["是", "否", "未定义"] as const;
+export type CharsetFilter = (typeof filtervalues)[number];
+export const filtermap: Record<
+  CharsetFilter,
+  (s: "gb2312" | "tygf") => (t: [string, Character]) => boolean
+> = {
+  是:
+    (s) =>
+    ([, c]) =>
+      !!c[s],
+  否:
+    (s) =>
+    ([, c]) =>
+      !c[s],
+  未定义: () => () => true,
+};
 
 export const table: Record<
   Op,

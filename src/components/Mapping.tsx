@@ -1,4 +1,4 @@
-import { Button, Flex, Form, Input, List, Popover, Space } from "antd";
+import { Alert, Button, Flex, Form, Input, List, Popover, Space } from "antd";
 import { useState } from "react";
 import { useDesign, useFormConfig } from "./context";
 import { useDisplay, useForm } from "./contants";
@@ -6,7 +6,7 @@ import Root from "./Root";
 import Char from "./Char";
 import type { MappedInfo } from "~/lib/utils";
 import { reverse } from "~/lib/utils";
-import { RootSelect, Select } from "./Utils";
+import { RootSelect, Select, Uploader } from "./Utils";
 import { Select as AntdSelect } from "antd";
 import { range } from "underscore";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
@@ -144,8 +144,44 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   );
 };
 
+interface ImportResult {
+  success: number;
+  unknownKeys: string[];
+  unknownValues: string[];
+}
+
+const ImportResultAlert = ({
+  success,
+  unknownKeys,
+  unknownValues,
+}: ImportResult) => {
+  const successFeedback = `${success} 个字根已导入。`;
+  const unknownKeysFeedback = `${
+    unknownKeys.length
+  } 个字根无法被系统识别：${unknownKeys.join("、")}。`;
+  const unknownValuesFeedback = `${
+    unknownValues.length
+  } 个字根的键位无法被系统识别：${unknownValues.join(", ")}。`;
+  return (
+    <Alert
+      showIcon
+      closable
+      type="warning"
+      message="导入完成"
+      description={
+        <>
+          <p>{successFeedback}</p>
+          {unknownKeys.length > 0 && <p>{unknownKeysFeedback}</p>}
+          {unknownValues.length > 0 && <p>{unknownValuesFeedback}</p>}
+        </>
+      }
+    />
+  );
+};
+
 const Mapping = () => {
   const { mapping, alphabet, mapping_type } = useFormConfig();
+  const form = useForm();
   const design = useDesign();
   const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(
@@ -153,11 +189,13 @@ const Mapping = () => {
   );
   const printable_ascii = range(32, 127).map((x) => String.fromCodePoint(x));
   const [char, setChar] = useState<string | undefined>(undefined);
+  const mapping_type_default = mapping_type ?? 1;
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
   return (
     <>
       <Form.Item label="编码类型">
         <Select
-          value={mapping_type}
+          value={mapping_type_default}
           onChange={(event) => {
             design({ subtype: "generic-maxcodelen", value: event });
           }}
@@ -169,36 +207,70 @@ const Mapping = () => {
           ]}
         />
       </Form.Item>
-      <Form.Item>
-        <Flex justify="center" gap="large">
-          <Button
-            onClick={() =>
-              design({
-                subtype: "generic-alphabet",
-                value: Array.from(alphabet).sort().join(""),
-              })
+      {importResult && <ImportResultAlert {...importResult} />}
+      <Flex justify="center" gap="large">
+        <Button
+          onClick={() =>
+            design({
+              subtype: "generic-alphabet",
+              value: Array.from(alphabet).sort().join(""),
+            })
+          }
+        >
+          按字典序排序
+        </Button>
+        <Button
+          onClick={() =>
+            design({
+              subtype: "generic-alphabet",
+              value: Array.from(alphabet)
+                .sort(
+                  (a, b) =>
+                    keyboard.findIndex((x) => x === a) -
+                    keyboard.findIndex((x) => x === b),
+                )
+                .join(""),
+            })
+          }
+        >
+          按键盘序排序
+        </Button>
+        <Uploader
+          action={(result) => {
+            const record: Record<string, string> = {};
+            const tsv = result
+              .trim()
+              .split("\n")
+              .map((x) => x.trim().split("\t"));
+            const unknownKeys: string[] = [];
+            const unknownValues: string[] = [];
+            for (const line of tsv) {
+              const [key, value] = line;
+              if (key === undefined || value === undefined) continue;
+              if (form[key] === undefined) {
+                unknownKeys.push(key);
+                continue;
+              }
+              if (Array.from(value).some((x) => !alphabet.includes(x))) {
+                unknownValues.push(key);
+                continue;
+              }
+              record[key] = value.slice(0, mapping_type_default);
             }
-          >
-            按字典序排序
-          </Button>
-          <Button
-            onClick={() =>
-              design({
-                subtype: "generic-alphabet",
-                value: Array.from(alphabet)
-                  .sort(
-                    (a, b) =>
-                      keyboard.findIndex((x) => x === a) -
-                      keyboard.findIndex((x) => x === b),
-                  )
-                  .join(""),
-              })
-            }
-          >
-            按键盘序排序
-          </Button>
-        </Flex>
-      </Form.Item>
+            design({
+              subtype: "generic-mapping-batch",
+              value: record,
+            });
+            setImportResult({
+              success: Object.keys(record).length,
+              unknownKeys,
+              unknownValues,
+            });
+          }}
+          text="导入键盘映射"
+          type="txt"
+        />
+      </Flex>
       <List
         dataSource={Object.entries(reversed)}
         renderItem={(item: [string, MappedInfo[]]) => {

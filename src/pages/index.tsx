@@ -216,6 +216,7 @@ const HomeLayout = () => {
               <Button>示例</Button>
             </Dropdown>
             <Uploader
+              type="yaml"
               action={(s) => {
                 setConfigs((configs) => {
                   configs[nanoid(9)] = load(s) as Config;
@@ -231,10 +232,16 @@ const HomeLayout = () => {
         justify="center"
         align="center"
         gap="large"
-        style={{ padding: "32px" }}
       >
-        <Image alt="favicon" src="/icon.webp" />
-        <Typography.Title>汉字自动拆分系统 v{APP_VERSION}</Typography.Title>
+        <Image
+          wrapperStyle={{ maxWidth: "50vh" }}
+          alt="favicon"
+          src="/icon.webp"
+        />
+        <Typography.Title>汉字自动拆分系统</Typography.Title>
+        <Typography.Title level={3} style={{ marginTop: "-2rem" }}>
+          v{APP_VERSION}
+        </Typography.Title>
         <Typography.Text>
           © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
         </Typography.Text>

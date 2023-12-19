@@ -77,7 +77,7 @@ const Selector = () => {
 
   return (
     <Flex vertical gap="small">
-      <Typography.Title level={3}>拆分规则</Typography.Title>
+      <Typography.Title level={3}>拆分方式筛选</Typography.Title>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <SortableContext items={selector}>
           {selector.map((sieve) => (
