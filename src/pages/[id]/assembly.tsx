@@ -10,8 +10,8 @@ import {
   TabsProps,
   Typography,
 } from "antd";
-import { ConfigContext } from "~/components/context";
-import { useAll, useDisplay } from "~/components/contants";
+import { useAtomValue, configAtom, useAll, useDisplay } from "~/atoms";
+
 import type {
   CharsetFilter,
   EncoderResult,
@@ -53,7 +53,7 @@ type ElementFilter = {
 const Encoder = () => {
   useChaifenTitle("编码");
   const data = useAll();
-  const config = useContext(ConfigContext);
+  const config = useAtomValue(configAtom);
   const display = useDisplay();
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");

@@ -2,21 +2,18 @@ import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Root";
-import { useAll, useDisplay } from "~/components/contants";
-import {
-  loadForm,
-  selectFormLoading,
-  useAppDispatch,
-  useAppSelector,
-} from "~/components/store";
+import { useAll, useDisplay } from "~/atoms";
 import { listForm } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
 import { renderComponentForm, type ComputedComponent } from "~/lib/component";
 import { defaultForm } from "~/lib/templates";
 import { listToObject } from "~/lib/utils";
+import { useSetAtom, useAtomValue, formAtom } from "~/atoms";
+import { isEmpty } from "lodash-es";
 
 const DegeneratorTable = () => {
-  const formLoading = useAppSelector(selectFormLoading);
+  const form = useAtomValue(formAtom);
+  const formLoading = isEmpty(form);
   const data = useAll();
   const [componentForm] = renderComponentForm(data);
   const dataSource = Object.values(componentForm)
@@ -92,10 +89,11 @@ const DegeneratorTable = () => {
 };
 
 const Algorithm = () => {
-  const dispatch = useAppDispatch();
+  const setForm = useSetAtom(formAtom);
+
   useEffect(() => {
     listForm().then((data) => {
-      dispatch(loadForm(listToObject(data)));
+      setForm(listToObject(data));
     });
   }, []);
 

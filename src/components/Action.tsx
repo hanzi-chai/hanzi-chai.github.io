@@ -11,17 +11,20 @@ import type { Glyph, GlyphOptionalUnicode } from "~/lib/data";
 import type { IndexEdit2 } from "~/components/Utils";
 import { Select, errorFeedback, verifyNewName } from "~/components/Utils";
 import { deepcopy, length, isValidCJKChar, formDefault } from "~/lib/utils";
-import {
-  mutate,
-  remove,
-  selectForm,
-  update,
-  useAppDispatch,
-  useAppSelector,
-} from "~/components/store";
 import { ModelContext } from "~/components/GlyphModel";
-import { useAdd, useData, useRemove } from "./context";
-import { useCode, useForm } from "./contants";
+import {
+  useCode,
+  useForm,
+  useAdd,
+  useRemove,
+  configDataAtom,
+  useAtomValue,
+  formAtom,
+  updateFormAtom,
+  useSetAtom,
+  removeFormAtom,
+  mutateFormAtom,
+} from "~/atoms";
 
 export const getValue = function (
   newName: string,
@@ -50,7 +53,6 @@ export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => (
 );
 
 function CreatePopoverContent(props: any) {
-  const dispatch = useAppDispatch();
   const add = useAdd();
   const remote = useContext(RemoteContext);
   const code = useCode();
@@ -59,6 +61,7 @@ function CreatePopoverContent(props: any) {
     { label: "部件", value: "component" },
     { label: "复合体", value: "compound" },
   ];
+  const updateForm = useSetAtom(updateFormAtom);
   const handle = async ({ charOrName, default_type }: CreateProps) => {
     const initial = {
       default_type,
@@ -77,7 +80,7 @@ function CreatePopoverContent(props: any) {
         if (errorFeedback(res)) return;
         const value = { ...payload, unicode: res } as Glyph;
         char = String.fromCodePoint(res);
-        dispatch(update(value));
+        updateForm(value);
       } else {
         const value = { ...payload, unicode: code } as Glyph;
         char = String.fromCodePoint(code);
@@ -94,7 +97,7 @@ function CreatePopoverContent(props: any) {
       if (remote) {
         const res = await remoteCreate(payload);
         if (errorFeedback(res)) return;
-        dispatch(update(payload));
+        updateForm(payload);
       } else {
         add(charOrName, payload);
       }
@@ -143,9 +146,9 @@ function CreatePopoverContent(props: any) {
   );
 }
 export const Mutate = ({ unicode }: { unicode: number }) => {
-  const dispatch = useAppDispatch();
   const [newName, setNewName] = useState("");
   const remote = useContext(RemoteContext);
+  const mutateForm = useSetAtom(mutateFormAtom);
   return (
     <Popconfirm
       title="新字形名称"
@@ -161,7 +164,7 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
         const newUnicode = newName.codePointAt(0)!;
         const res = await remoteMutate([unicode, newUnicode]);
         if (!errorFeedback(res)) {
-          dispatch(mutate([unicode, newUnicode]));
+          mutateForm([unicode, newUnicode]);
         }
       }}
     >
@@ -176,10 +179,10 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
 };
 
 export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
-  const dispatch = useAppDispatch();
   const model = useContext(ModelContext);
   const remote = useContext(RemoteContext);
   const add = useAdd();
+  const updateForm = useSetAtom(updateFormAtom);
   return (
     <Button
       type="primary"
@@ -189,7 +192,7 @@ export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
           // 管理模式
           const res = await remoteUpdate(values);
           if (!errorFeedback(res)) {
-            dispatch(update(values));
+            updateForm(values);
             setChar(undefined);
           }
         } else {
@@ -205,12 +208,12 @@ export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
 };
 
 export const Delete = ({ unicode }: { unicode: number }) => {
-  const dispatch = useAppDispatch();
   const remote = useContext(RemoteContext);
-  const formCustomization = useData()?.form ?? {};
-  const form = useAppSelector(selectForm);
+  const formCustomization = useAtomValue(configDataAtom)?.form ?? {};
+  const form = useAtomValue(formAtom);
   const del = useRemove();
   const char = String.fromCodePoint(unicode);
+  const removeForm = useSetAtom(removeFormAtom);
   return (
     <Button
       disabled={!remote && formCustomization[char] === undefined}
@@ -218,7 +221,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
         if (remote) {
           const res = await remoteRemove(unicode);
           if (!errorFeedback(res)) {
-            dispatch(remove(unicode));
+            removeForm(unicode);
           }
         } else {
           del(String.fromCodePoint(unicode));
@@ -237,8 +240,8 @@ export const QuickPatchAmbiguous = ({
   checked: boolean;
   record: Glyph;
 }) => {
-  const dispatch = useAppDispatch();
   const remote = useContext(RemoteContext);
+  const updateForm = useSetAtom(updateFormAtom);
   return (
     <Checkbox
       checked={checked}
@@ -248,7 +251,7 @@ export const QuickPatchAmbiguous = ({
         const values = { ...record, ambiguous: checked };
         const res = await remoteUpdate(values);
         if (!errorFeedback(res)) {
-          dispatch(update(values));
+          updateForm(values);
         }
       }}
     />

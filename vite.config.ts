@@ -44,10 +44,7 @@ export default defineConfig(({ mode }) => {
           antd: [/node_modules\/antd/],
           router: [/node_modules\/react-router/],
           react: [/node_modules\/react(-dom)?\//],
-          "redux-immer": [
-            /node_modules\/@?(react-)?redux/,
-            /node_modules\/immer/,
-          ],
+          immer: [/node_modules\/immer/],
           mathjs: [/node_modules\/mathjs/],
           yaml: [/node_modules\/js-yaml/],
           reactflow: [/node_modules\/@reactflow/],

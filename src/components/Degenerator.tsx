@@ -1,5 +1,12 @@
-import { Button, Checkbox, Dropdown, Flex, Space, Typography } from "antd";
-import { useDesign, useFormConfig } from "./context";
+import { Button, Checkbox, Flex, Typography } from "antd";
+import {
+  configAnalysisAtom,
+  useAtomValue,
+  useSetAtom,
+  addRootDegeneratorAtom,
+  removeRootDegeneratorAtom,
+  switchRootDegeneratorNocross,
+} from "~/atoms";
 import { Select } from "./Utils";
 import classifier, { Feature } from "~/lib/classifier";
 import { useState } from "react";
@@ -7,8 +14,7 @@ import { defaultDegenerator } from "~/lib/degenerator";
 
 const Degenerator = () => {
   const degenerator =
-    useFormConfig().analysis?.degenerator ?? defaultDegenerator;
-  const design = useDesign();
+    useAtomValue(configAnalysisAtom)?.degenerator ?? defaultDegenerator;
   const [feature, setFeature] = useState<Feature>("横");
   const options = Object.keys(classifier).map((feature) => ({
     label: feature,
@@ -26,24 +32,15 @@ const Degenerator = () => {
             <Select<Feature>
               value={to}
               options={options}
-              onChange={(value) => {
-                design({
-                  subtype: "root-degenerator",
-                  action: "add",
-                  key: from as Feature,
-                  value,
-                });
-              }}
+              onChange={(value) =>
+                useSetAtom(addRootDegeneratorAtom)(from as Feature, value)
+              }
             />
             相同
             <Button
-              onClick={() => {
-                design({
-                  subtype: "root-degenerator",
-                  action: "remove",
-                  key: from as Feature,
-                });
-              }}
+              onClick={() =>
+                useSetAtom(removeRootDegeneratorAtom)(from as Feature)
+              }
             >
               删除
             </Button>
@@ -53,23 +50,14 @@ const Degenerator = () => {
           <Select value={feature} options={options} onChange={setFeature} />
           <Button
             type="primary"
-            onClick={() => {
-              design({
-                subtype: "root-degenerator",
-                action: "add",
-                key: feature,
-                value: "横",
-              });
-            }}
+            onClick={() => useSetAtom(addRootDegeneratorAtom)(feature, "横")}
           >
             添加
           </Button>
         </Flex>
         <Checkbox
           checked={degenerator.no_cross}
-          onChange={() => {
-            design({ subtype: "root-degenerator-nocross", action: "toggle" });
-          }}
+          onChange={() => useSetAtom(switchRootDegeneratorNocross)()}
         >
           相交不拆
         </Checkbox>

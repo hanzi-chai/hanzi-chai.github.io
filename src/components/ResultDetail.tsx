@@ -1,10 +1,9 @@
 import { Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Root from "./Root";
-import { useFormConfig } from "./context";
+import { useDisplay, configAnalysisAtom, useAtomValue } from "~/atoms";
 import type { Selector } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
-import { useDisplay } from "./contants";
 import { binaryToIndices } from "~/lib/degenerator";
 import { SchemeWithData } from "~/lib/component";
 
@@ -31,7 +30,7 @@ const ResultDetail = ({
   map: Map<number, string>;
   strokes: number;
 }) => {
-  const selector = useFormConfig().analysis?.selector ?? [];
+  const selector = useAtomValue(configAnalysisAtom)?.selector ?? [];
   const display = useDisplay();
 
   const columns: ColumnsType<SchemeWithData> = [

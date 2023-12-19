@@ -1,10 +1,8 @@
 import { Button, Cascader, Flex, Form, Input, Space, Typography } from "antd";
 import { Select } from "./Utils";
-import { useContext } from "react";
-import { ConfigContext, DispatchContext } from "./context";
-import { useDisplay } from "./contants";
 import { Config } from "~/lib/config";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import { useAtom, configEncoderAtom, useAtomValue } from "~/atoms";
 
 const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
   { length_equal: 2, formula: "AaAbBaBb" },
@@ -13,11 +11,7 @@ const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
 ];
 
 const EncoderRules = () => {
-  const config = useContext(ConfigContext);
-  const dispatch = useContext(DispatchContext);
-  const display = useDisplay();
-  const { encoder } = config;
-
+  const [encoder, setEncoder] = useAtom(configEncoderAtom);
   const wordLengthArray = [...Array(9).keys()].map((x) => ({
     label: x + 2,
     value: x + 2,
@@ -35,12 +29,7 @@ const EncoderRules = () => {
                 value: x as number | undefined,
               }))
               .concat([{ label: "不限制", value: undefined }])}
-            onChange={(value) => {
-              dispatch({
-                type: "encoder",
-                value: { ...encoder, max_length: value },
-              });
-            }}
+            onChange={(value) => setEncoder({ ...encoder, max_length: value })}
           />
         </Form.Item>
         <Form.Item label="顶屏码长">
@@ -52,12 +41,9 @@ const EncoderRules = () => {
                 value: x as number | undefined,
               }))
               .concat([{ label: "不自动顶屏", value: undefined }])}
-            onChange={(value) => {
-              dispatch({
-                type: "encoder",
-                value: { ...encoder, auto_select_length: value },
-              });
-            }}
+            onChange={(value) =>
+              setEncoder({ ...encoder, auto_select_length: value })
+            }
           />
         </Form.Item>
       </Flex>

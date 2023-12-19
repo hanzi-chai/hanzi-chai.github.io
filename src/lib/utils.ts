@@ -136,7 +136,7 @@ export const getSupplemental = (form: Form, list: string[]) => {
           reverseForm[x]!.push(char),
         );
       } catch {
-        console.log(char, glyph);
+        console.error(char, glyph);
       }
     }
   }

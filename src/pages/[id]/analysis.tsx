@@ -12,13 +12,19 @@ import {
   notification,
 } from "antd";
 
+import {
+  useAtomValue,
+  configFormAtom,
+  useAll,
+  useForm,
+  useDisplay,
+} from "~/atoms";
 import { Collapse } from "antd";
 import Char from "~/components/Char";
 import Root from "~/components/Root";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
-import { useFormConfig } from "~/components/context";
-import { useAll, useForm, useDisplay } from "~/components/contants";
+
 import type { ComponentCache, ComponentResult } from "~/lib/component";
 import { getSequence } from "~/lib/component";
 import type { CompoundCache, CompoundResult } from "~/lib/compound";
@@ -77,7 +83,8 @@ const Analysis = () => {
   });
   const data = useAll();
   const form = useForm();
-  const formConfig = useFormConfig();
+
+  const formConfig = useAtomValue(configFormAtom);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useDisplay();

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Button, Flex, Input, Space, Table } from "antd";
-import { useAdd } from "~/components/context";
-import { useRepertoire } from "~/components/contants";
+import { useAdd, useRepertoire } from "~/atoms";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
 
 import type { ColumnsType } from "antd/es/table";

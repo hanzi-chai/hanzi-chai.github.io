@@ -7,8 +7,6 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { ConfigProvider } from "antd";
-import { Provider } from "react-redux";
-import { store } from "./components/store";
 import CusSpin from "~/components/CustomSpin";
 import Error from "./components/Error";
 import AutoRoute from "~react-pages";
@@ -53,11 +51,9 @@ createRoot(document.getElementById("root")!).render(
         },
       }}
     >
-      <Provider store={store}>
-        <Suspense fallback={<CusSpin tip="加载APP…" />}>
-          <RouterProvider router={router} />
-        </Suspense>
-      </Provider>
+      <Suspense fallback={<CusSpin tip="加载APP…" />}>
+        <RouterProvider router={router} />
+      </Suspense>
     </ConfigProvider>
   </StrictMode>,
 );

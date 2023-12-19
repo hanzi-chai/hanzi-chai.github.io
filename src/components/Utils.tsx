@@ -9,8 +9,7 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import { useFormConfig } from "./context";
-import { useForm, useDisplay } from "./contants";
+import { useForm, useDisplay, useAtomValue, configFormAtom } from "~/atoms";
 import { getSequence } from "~/lib/component";
 import { isValidCJKChar } from "~/lib/utils";
 import type { Err } from "~/lib/api";
@@ -96,7 +95,7 @@ export const RootSelect = ({
   exclude: string;
   withGrouped?: boolean;
 }) => {
-  const { mapping, grouping } = useFormConfig();
+  const { mapping, grouping } = useAtomValue(configFormAtom);
   const form = useForm();
   const keys = withGrouped
     ? Object.keys(mapping).concat(Object.keys(grouping))

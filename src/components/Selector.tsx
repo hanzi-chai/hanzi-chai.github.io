@@ -15,14 +15,20 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { SieveName } from "~/lib/config";
-import { useDesign, useFormConfig } from "./context";
+import {
+  useSetAtom,
+  useAtomValue,
+  removeRootSelectorAtom,
+  addRootSelectorAtom,
+  configAnalysisAtom,
+  replaceRootSelectorAtom,
+} from "~/atoms";
+
 import { Button, Dropdown, Flex, Space, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import PrioritizedRoots from "./PrioritizedRoots";
 
 const SortableItem = ({ sieve }: { sieve: SieveName }) => {
-  const design = useDesign();
-
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: sieve });
 
@@ -30,30 +36,21 @@ const SortableItem = ({ sieve }: { sieve: SieveName }) => {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  const removeRootSelector = useSetAtom(removeRootSelectorAtom);
   return (
     <Flex key={sieve} justify="space-evenly">
       <Button ref={setNodeRef} style={style} {...attributes} {...listeners}>
         <MenuOutlined />
         {sieve}
       </Button>
-      <Button
-        onClick={() => {
-          design({
-            subtype: "root-selector",
-            action: "remove",
-            value: sieve,
-          });
-        }}
-      >
-        删除
-      </Button>
+      <Button onClick={() => removeRootSelector(sieve)}>删除</Button>
     </Flex>
   );
 };
 
 const Selector = () => {
-  const selector = useFormConfig().analysis?.selector ?? [];
-  const design = useDesign();
+  const selector = useAtomValue(configAnalysisAtom)?.selector ?? [];
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -61,17 +58,15 @@ const Selector = () => {
     }),
   );
 
+  const replaceRootSelector = useSetAtom(replaceRootSelectorAtom);
+  const addRootSelector = useSetAtom(addRootSelectorAtom);
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
     if (active.id !== over.id) {
       const oldIndex = selector.indexOf(active.id as SieveName);
       const newIndex = selector.indexOf(over.id as SieveName);
-      design({
-        subtype: "root-selector",
-        action: "replace",
-        value: arrayMove(selector, oldIndex, newIndex),
-      });
+      replaceRootSelector(arrayMove(selector, oldIndex, newIndex));
     }
   }
 
@@ -94,13 +89,7 @@ const Selector = () => {
               .map((sieve) => ({
                 key: sieve,
                 label: sieve,
-                onClick: () => {
-                  design({
-                    subtype: "root-selector",
-                    action: "add",
-                    value: sieve,
-                  });
-                },
+                onClick: () => addRootSelector(sieve),
               })),
           }}
         >

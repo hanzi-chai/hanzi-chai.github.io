@@ -1,9 +1,8 @@
 import { Flex, Select, Switch, Typography } from "antd";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import EncoderRules from "~/components/EncoderRules";
 import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
-import { useAll } from "~/components/contants";
-import { ConfigContext, DispatchContext } from "~/components/context";
+import { useAll, configAtom, useAtomValue } from "~/atoms";
 import { CharsetFilter, EncoderResult, filtermap } from "~/lib/encoder";
 import { getSupplemental } from "~/lib/utils";
 
@@ -11,9 +10,8 @@ const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as con
 type FilterOption = (typeof filterOptions)[number];
 
 const Encode = () => {
-  const config = useContext(ConfigContext);
+  const config = useAtomValue(configAtom);
   const data = useAll();
-  const dispatch = useContext(DispatchContext);
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   const [reference, setReference] = useState<Map<string, string[]>>(() => {

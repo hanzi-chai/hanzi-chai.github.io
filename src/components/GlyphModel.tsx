@@ -38,7 +38,7 @@ import classifier, { schema } from "~/lib/classifier";
 import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
-import { useForm } from "./contants";
+import { useForm } from "~/atoms";
 import { recursiveRenderGlyph } from "~/lib/component";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);

@@ -2,8 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Char";
 import { Flex, Pagination, Popover } from "antd";
-import { useFormConfig } from "./context";
-import { useDisplay, useForm } from "./contants";
+import { useAtomValue, configFormAtom, useDisplay, useForm } from "~/atoms";
 import { isPUA } from "~/lib/utils";
 import { ComponentView } from "./GlyphView";
 
@@ -31,7 +30,7 @@ const ElementPool = ({ element, setElement, content }: PoolProps) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content.slice((page - 1) * pageSize, page * pageSize);
-  const { mapping, grouping } = useFormConfig();
+  const { mapping, grouping } = useAtomValue(configFormAtom);
   const type = (x: string) =>
     x === element ? "primary" : mapping[x] || grouping[x] ? "link" : "default";
   const display = useDisplay();

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { unicodeBlock } from "~/lib/utils";
-import { selectFormLoading, useAppSelector } from "~/components/store";
 import { Button, Flex, Form, Layout, Modal, Space, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
@@ -10,7 +9,7 @@ import {
   ItemSelect,
   Select,
 } from "~/components/Utils";
-import { useDisplay, useForm } from "~/components/contants";
+import { useDisplay, useForm } from "~/atoms";
 import type { Glyph, Operator } from "~/lib/data";
 import { operators } from "~/lib/data";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
@@ -34,7 +33,6 @@ interface CompoundFilter {
 }
 
 const FormTable = () => {
-  const formLoading = useAppSelector(selectFormLoading);
   const form = useForm();
   const [thisForm] = Form.useForm<Glyph>();
   const [char, setChar] = useState<string | undefined>(undefined);
@@ -272,7 +270,6 @@ const FormTable = () => {
         columns={columns}
         size="small"
         rowKey="unicode"
-        loading={formLoading}
         pagination={{
           pageSize: 50,
           current: page,

@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { Select, Button, Flex } from "antd";
-import { useDesign, useFormConfig } from "./context";
+import {
+  configFormAtom,
+  useAtomValue,
+  useSetAtom,
+  addGenericGroupingAtom,
+  addGenericMappingAtom,
+  removeGenericGroupingAtom,
+  removeGenericMappingAtom,
+} from "~/atoms";
 import { RootSelect } from "./Utils";
 
 const ElementAdder = ({ element }: { element?: string }) => {
-  const { alphabet, mapping_type, mapping } = useFormConfig();
-  const design = useDesign();
+  const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
   const [main, setMain] = useState(Object.keys(mapping)[0]!);
   const [keys, setKeys] = useState([alphabet[0], "", "", ""]);
   const [groupingStyle, setGroupingStyle] = useState(-1);
@@ -39,17 +46,11 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined}
           onClick={() => {
-            design({
-              subtype: "generic-mapping",
-              action: "add",
-              key: element!,
-              value: keys.slice(0, mapping_type ?? 1).join(""),
-            });
-            design({
-              subtype: "generic-grouping",
-              action: "remove",
-              key: element!,
-            });
+            useSetAtom(addGenericMappingAtom)(
+              element!,
+              keys.slice(0, mapping_type ?? 1).join(""),
+            );
+            useSetAtom(removeGenericGroupingAtom)(element!);
           }}
         >
           添加
@@ -70,17 +71,8 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined || Object.keys(mapping).length === 0}
           onClick={() => {
-            design({
-              subtype: "generic-grouping",
-              action: "add",
-              key: element!,
-              value: main,
-            });
-            design({
-              subtype: "generic-mapping",
-              action: "remove",
-              key: element!,
-            });
+            useSetAtom(addGenericGroupingAtom)(element!, main);
+            useSetAtom(removeGenericMappingAtom)(element!);
           }}
         >
           归并

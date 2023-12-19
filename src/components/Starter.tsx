@@ -9,7 +9,7 @@ import {
 } from "~/lib/templates";
 import type { Updater } from "use-immer";
 import type { Config } from "~/lib/config";
-import { nanoid } from "@reduxjs/toolkit";
+import { nanoid } from "nanoid";
 
 const Starter = ({
   setConfigs,

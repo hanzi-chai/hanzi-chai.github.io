@@ -1,16 +1,25 @@
 import { Button, Flex, Space, Typography } from "antd";
 import { RootSelect } from "./Utils";
-import { useDesign, useFormConfig } from "./context";
+import {
+  useAtomValue,
+  useSetAtom,
+  configAnalysisAtom,
+  useDisplay,
+  removeRootSelectorStrongWeakAtom,
+  addRootSelectorStrongWeakAtom,
+} from "~/atoms";
 import Root from "./Root";
 import { useState } from "react";
-import { useDisplay } from "./contants";
 
 const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
-  const { analysis } = useFormConfig();
+  const analysis = useAtomValue(configAnalysisAtom);
   const list = analysis ? analysis[variant] : [];
   const [current, setCurrent] = useState<string | undefined>(undefined);
-  const design = useDesign();
   const display = useDisplay();
+  const removeRootSelectorStrongWeak = useSetAtom(
+    removeRootSelectorStrongWeakAtom,
+  );
+  const addRootSelectorStrongWeak = useSetAtom(addRootSelectorStrongWeakAtom);
   return (
     <>
       <Typography.Title level={4}>
@@ -20,18 +29,7 @@ const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
         {(list ?? []).map((x) => (
           <Space key={x}>
             <Root>{display(x)}</Root>
-            <a
-              onClick={() =>
-                design({
-                  subtype: "root-selector-strongweak",
-                  variant,
-                  action: "remove",
-                  value: x,
-                })
-              }
-            >
-              删除
-            </a>
+            <a onClick={() => removeRootSelectorStrongWeak(variant, x)}>删除</a>
           </Space>
         ))}
       </Flex>
@@ -44,14 +42,7 @@ const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
         />
         <Button
           type="primary"
-          onClick={() =>
-            design({
-              subtype: "root-selector-strongweak",
-              variant: variant,
-              action: "add",
-              value: current!,
-            })
-          }
+          onClick={() => addRootSelectorStrongWeak(variant, current!)}
           disabled={current === undefined}
         >
           添加自定义

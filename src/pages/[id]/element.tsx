@@ -1,12 +1,7 @@
 import Mapping from "~/components/Mapping";
 import { Typography } from "antd";
 import { useState } from "react";
-import {
-  useClassifier,
-  useDisplay,
-  useForm,
-  useRepertoire,
-} from "~/components/contants";
+import { useClassifier, useDisplay, useForm, useRepertoire } from "~/atoms";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
 import { getSequence } from "~/lib/component";

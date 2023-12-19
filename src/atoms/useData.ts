@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import type { Config } from "~/lib/config";
 import type { Glyph, Character } from "~/lib/data";
-import { addDataAtom, removeDataAtom } from "./main";
+import { addDataAtom, removeDataAtom } from "./data";
 import { useSetAtom } from "jotai";
 
 /**  从页面的路由推导出应该修改哪一组 data */

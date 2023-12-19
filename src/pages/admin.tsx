@@ -1,17 +1,17 @@
 import { useEffect } from "react";
 import { listToObject } from "~/lib/utils";
-import { loadForm, useAppDispatch } from "~/components/store";
 import { Layout } from "antd";
 import { listForm } from "~/lib/api";
 import FormTable from "~/components/FormTable";
 import { useChaifenTitle } from "~/lib/hooks";
+import { formAtom, useSetAtom } from "~/atoms";
 
 const AdminLayout = () => {
   useChaifenTitle("部件检查");
-  const dispatch = useAppDispatch();
+  const setForm = useSetAtom(formAtom);
   useEffect(() => {
     listForm().then((data) => {
-      dispatch(loadForm(listToObject(data)));
+      setForm(listToObject(data));
     });
   }, []);
 

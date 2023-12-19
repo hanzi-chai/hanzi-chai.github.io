@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { useChaifenTitle } from "~/lib/hooks";
 import { Button, Col, Form, Input, Row, Space, Typography } from "antd";
-import { DispatchContext, useInfo } from "~/components/context";
+import { useAtomValue, configInfoAtom, useSetAtom, setInfoAtom } from "~/atoms";
 import { Config } from "~/lib/config";
 import { useForm } from "antd/es/form/Form";
 import ExportButtons from "~/components/ExportButtons";
@@ -9,9 +9,9 @@ import ExportButtons from "~/components/ExportButtons";
 type IInfo = Config["info"];
 
 const Info: React.FC = () => {
-  const info = useInfo();
-  const dispatch = useContext(DispatchContext);
+  const info = useAtomValue(configInfoAtom);
   const [antdForm] = useForm();
+  const setInfo = useSetAtom(setInfoAtom);
   useChaifenTitle("基本信息");
   useEffect(() => {
     antdForm.setFieldsValue(info);
@@ -30,9 +30,7 @@ const Info: React.FC = () => {
         labelCol={{ span: 6 }}
         wrapperCol={{ span: 16 }}
         initialValues={info}
-        onFinish={(values) => {
-          dispatch({ type: "info", value: values });
-        }}
+        onFinish={(values) => setInfo(values)}
       >
         <Form.Item<IInfo> label="方案名称" name="name">
           <Input />

@@ -1,4 +1,4 @@
-import { useContext, useEffect, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import { Button, Flex, Layout, Menu, Avatar, Tooltip, Empty } from "antd";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
@@ -9,26 +9,17 @@ import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
 import RiseOutlined from "@ant-design/icons/RiseOutlined";
 
 import type { MenuProps } from "antd";
-import {
-  ConfigContext,
-  DispatchContext,
-  configReducer,
-} from "~/components/context";
-import {} from "~/atoms";
-import type { Config } from "~/lib/config";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useImmerReducer } from "use-immer";
-import { listToObject } from "~/lib/utils";
 import CusSpin from "~/components/CustomSpin";
 import {
-  loadForm,
-  loadRepertoire,
-  selectFormLoading,
-  useAppDispatch,
-  useAppSelector,
-} from "~/components/store";
-import { configIdAtom, loadFormAtom, loadRepertoireAtom } from "~/atoms";
-import { useSetAtom, useAtomValue } from "jotai";
+  configIdAtom,
+  configAtom,
+  loadFormAtom,
+  loadRepertoireAtom,
+  useAtom,
+  useSetAtom,
+  useAtomValue,
+} from "~/atoms";
 
 const items: MenuProps["items"] = [
   {
@@ -87,7 +78,8 @@ function EditorLayout() {
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
 
-  const config = useContext(ConfigContext);
+  const config = useAtomValue(configAtom);
+
   const [isCollapsed, setCollapsed] = useState(false);
   return (
     <Layout hasSider>
@@ -180,64 +172,25 @@ function EditorLayout() {
 }
 
 function LoadFormAndRepertoire() {
-  const { pathname } = useLocation();
-  const [_, id] = pathname.split("/");
-  const setId = useSetAtom(configIdAtom);
-  setId(id!);
-
   const loadForm = useSetAtom(loadFormAtom);
   loadForm();
   const loadRepertoire = useSetAtom(loadRepertoireAtom);
   loadRepertoire();
-
   return null;
-}
-
-const _cache: Record<string, any> = {};
-async function fetchJson(filename: string) {
-  if (filename in _cache) {
-    return _cache[filename];
-  }
-  const request = await fetch(`/cache/${filename}.json`);
-  const json = await request.json();
-  _cache[filename] = json;
-  return json;
 }
 
 export default function Contextualized() {
   const { pathname } = useLocation();
   const [_, id] = pathname.split("/");
-  const [config, dispatch] = useImmerReducer(configReducer, undefined, () => {
-    return JSON.parse(localStorage.getItem(id!)!) as Config;
-  });
-  const appdispatch = useAppDispatch();
-  const loading = useAppSelector(selectFormLoading);
-
-  useEffect(() => {
-    Promise.all([fetchJson("repertoire"), fetchJson("form")]).then(
-      ([repertoire, form]) => {
-        appdispatch(loadForm(listToObject(form)));
-        appdispatch(loadRepertoire(listToObject(repertoire)));
-      },
-    );
-  }, []);
-
-  useEffect(() => {
-    if (config) {
-      localStorage.setItem(id!, JSON.stringify(config));
-    }
-  }, [config, id]);
+  const [id2, setId] = useAtom(configIdAtom);
+  if (!id2) setId(id!);
+  const config = useAtomValue(configAtom);
 
   if (!config) return <Empty description="无方案数据" />;
-
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
       <LoadFormAndRepertoire />
-      <ConfigContext.Provider value={config}>
-        <DispatchContext.Provider value={dispatch}>
-          <EditorLayout />
-        </DispatchContext.Provider>
-      </ConfigContext.Provider>
+      <EditorLayout />
     </Suspense>
   );
 }

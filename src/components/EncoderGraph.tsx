@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Connection, Node, Edge } from "reactflow";
 import ReactFlow, {
   useNodesState,
@@ -9,7 +9,8 @@ import ReactFlow, {
   Controls,
   addEdge,
 } from "reactflow";
-import { DispatchContext, useEncoder } from "./context";
+
+import { useAtom, configEncoderAtom } from "~/atoms";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
@@ -27,9 +28,8 @@ import DetailEditor from "./DetailEditor";
 
 const EncoderGraph = () => {
   const { fitView, getNode } = useReactFlow();
-  const encoder = useEncoder();
+  const [encoder, setEncoder] = useAtom(configEncoderAtom);
   const { sources, conditions } = encoder;
-  const dispatch = useContext(DispatchContext);
   const n1 = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),
   );
@@ -95,8 +95,8 @@ const EncoderGraph = () => {
         conditions[from]!.negative = to;
       }
     });
-    dispatch({ type: "encoder", value: { ...encoder, sources, conditions } });
-  }, [nodes, edges, dispatch]);
+    setEncoder({ ...encoder, sources, conditions });
+  }, [nodes, edges]);
   const onConnect = (connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
     const [lnodes, ledges] = getLayoutedElements(nodes, edges);
