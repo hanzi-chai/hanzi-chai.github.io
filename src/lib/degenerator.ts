@@ -1,4 +1,4 @@
-import { isEqual } from "~/lib/utils";
+import { isEqual } from "lodash-es";
 import findTopology, { RenderedGlyph, renderSVGGlyph } from "./topology";
 import type { Interval } from "./bezier";
 import {

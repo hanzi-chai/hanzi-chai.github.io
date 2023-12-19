@@ -14,6 +14,7 @@ import {
   DispatchContext,
   configReducer,
 } from "~/components/context";
+import {} from "~/atoms";
 import type { Config } from "~/lib/config";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useImmerReducer } from "use-immer";
@@ -26,8 +27,8 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "~/components/store";
-import { configIdAtom, configAtom } from "~/atoms/main";
-import { useAtom } from "jotai";
+import { configIdAtom, loadFormAtom, loadRepertoireAtom } from "~/atoms";
+import { useSetAtom, useAtomValue } from "jotai";
 
 const items: MenuProps["items"] = [
   {
@@ -178,6 +179,20 @@ function EditorLayout() {
   );
 }
 
+function LoadFormAndRepertoire() {
+  const { pathname } = useLocation();
+  const [_, id] = pathname.split("/");
+  const setId = useSetAtom(configIdAtom);
+  setId(id!);
+
+  const loadForm = useSetAtom(loadFormAtom);
+  loadForm();
+  const loadRepertoire = useSetAtom(loadRepertoireAtom);
+  loadRepertoire();
+
+  return null;
+}
+
 const _cache: Record<string, any> = {};
 async function fetchJson(filename: string) {
   if (filename in _cache) {
@@ -197,10 +212,6 @@ export default function Contextualized() {
   });
   const appdispatch = useAppDispatch();
   const loading = useAppSelector(selectFormLoading);
-  const [id2, setid2] = useAtom(configIdAtom);
-  setid2(id!);
-  const [conf, setconf] = useAtom(configAtom);
-  console.log(conf);
 
   useEffect(() => {
     Promise.all([fetchJson("repertoire"), fetchJson("form")]).then(
@@ -218,13 +229,15 @@ export default function Contextualized() {
   }, [config, id]);
 
   if (!config) return <Empty description="无方案数据" />;
-  if (loading) return <CusSpin tip="加载JSON数据…" />;
+
   return (
-    <ConfigContext.Provider value={config}>
-      <DispatchContext.Provider value={dispatch}>
-        <div style={{ textAlign: "right" }}>{id2}</div>
-        <EditorLayout />
-      </DispatchContext.Provider>
-    </ConfigContext.Provider>
+    <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
+      <LoadFormAndRepertoire />
+      <ConfigContext.Provider value={config}>
+        <DispatchContext.Provider value={dispatch}>
+          <EditorLayout />
+        </DispatchContext.Provider>
+      </ConfigContext.Provider>
+    </Suspense>
   );
 }

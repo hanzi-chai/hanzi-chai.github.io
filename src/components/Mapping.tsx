@@ -8,7 +8,7 @@ import type { MappedInfo } from "~/lib/utils";
 import { reverse } from "~/lib/utils";
 import { RootSelect, Select, Uploader } from "./Utils";
 import { Select as AntdSelect } from "antd";
-import { range } from "underscore";
+import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {

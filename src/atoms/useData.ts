@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import type { Config, SieveName } from "~/lib/config";
+import type { Config } from "~/lib/config";
 import type { Glyph, Character } from "~/lib/data";
 import { addDataAtom, removeDataAtom } from "./main";
 import { useSetAtom } from "jotai";

@@ -6,7 +6,7 @@ import {
 import type { FormConfig, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import { type CurveRelation } from "./topology";
-import { isEqual } from "underscore";
+import { isEqual } from "lodash-es";
 import { sortTwoNumbers } from "./bezier";
 
 export const defaultSelector: SieveName[] = [

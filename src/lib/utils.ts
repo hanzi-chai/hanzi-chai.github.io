@@ -1,5 +1,3 @@
-// @ts-ignore
-import underscoreIsEqual from "underscore/modules/isEqual";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type { Mapping } from "./config";
@@ -13,16 +11,7 @@ import type {
   SVGStroke,
 } from "./data";
 import { operators } from "./data";
-
-/**
- * Performs an optimized deep comparison between `object` and `other`
- * to determine if they should be considered equal.
- * @param object - Compare to `other`.
- * @param other - Compare to `object`.
- * @returns True if `object` should be considered equal to `other`.
- */
-type IsEqualFunction = (object: any, other: any) => boolean;
-export const isEqual = underscoreIsEqual as IsEqualFunction;
+import { cloneDeep } from "lodash-es";
 
 export const unicodeBlock = (code: number) => {
   // ASCII
@@ -57,9 +46,7 @@ export const length = (s: string) => {
   return Array.from(s).length;
 };
 
-export function deepcopy<T>(t: T) {
-  return JSON.parse(JSON.stringify(t)) as T;
-}
+export const deepcopy = window.structuredClone ?? cloneDeep;
 
 export const halfToFull = (s: string) => {
   let result = "";

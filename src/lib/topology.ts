@@ -1,4 +1,4 @@
-import { isEqual } from "~/lib/utils";
+import { isEqual } from "lodash-es";
 import type { SVGGlyph, SVGStroke } from "./data";
 import { subtract } from "mathjs";
 import type { Curve, LinearCurve, Position } from "./bezier";
