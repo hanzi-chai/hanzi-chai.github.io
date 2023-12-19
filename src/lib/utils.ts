@@ -46,7 +46,7 @@ export const length = (s: string) => {
   return Array.from(s).length;
 };
 
-export const deepcopy = window.structuredClone ?? cloneDeep;
+export const deepcopy = structuredClone ?? cloneDeep;
 
 export const halfToFull = (s: string) => {
   let result = "";
