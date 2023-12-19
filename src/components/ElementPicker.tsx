@@ -7,14 +7,12 @@ interface ElementPickerProps<T extends string> {
   types: readonly T[];
   defaultType: T;
   contentMap: Record<T, string[]>;
-  specialRendering?: (s: string) => string;
 }
 
 const ElementPicker = function <T extends string>({
   types,
   defaultType,
   contentMap,
-  specialRendering,
 }: ElementPickerProps<T>) {
   const [element, setElement] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<T>(defaultType);
@@ -32,7 +30,6 @@ const ElementPicker = function <T extends string>({
                 element={element}
                 setElement={setElement}
                 content={contentMap[a]}
-                specialRendering={specialRendering}
               />
             ),
           };

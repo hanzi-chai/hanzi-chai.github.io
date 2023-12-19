@@ -60,6 +60,10 @@ type ElementSubAction =
       value?: string;
     }
   | {
+      subtype: "generic-mapping-batch";
+      value: Record<string, string>;
+    }
+  | {
       subtype: "generic-grouping";
       action: "add" | "remove";
       key: string;
@@ -139,6 +143,9 @@ export const configReducer = (config: Config, action: Action) => {
               delete element.mapping[action.key];
               break;
           }
+          break;
+        case "generic-mapping-batch":
+          element.mapping = { ...element.mapping, ...action.value };
           break;
         case "generic-grouping":
           switch (action.action) {

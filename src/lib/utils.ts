@@ -144,7 +144,13 @@ export const getSupplemental = (form: Form, list: string[]) => {
   );
   for (const [char, glyph] of Object.entries(form)) {
     if (glyph.default_type === "compound") {
-      glyph.compound[0]!.operandList.forEach((x) => reverseForm[x]!.push(char));
+      try {
+        glyph.compound[0]!.operandList.forEach((x) =>
+          reverseForm[x]!.push(char),
+        );
+      } catch {
+        console.log(char, glyph);
+      }
     }
   }
   const componentsNotChar = Object.entries(form)

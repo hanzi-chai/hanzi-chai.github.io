@@ -13,6 +13,7 @@ export default function ExportButtons() {
   return (
     <Flex wrap="wrap" gap="small">
       <Uploader
+        type="yaml"
         action={(s: string) => {
           dispatch({ type: "load", value: load(s) as Config });
         }}

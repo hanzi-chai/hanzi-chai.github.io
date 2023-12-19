@@ -1,8 +1,11 @@
 import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Char";
-import { Flex, Pagination } from "antd";
+import { Flex, Pagination, Popover } from "antd";
 import { useFormConfig } from "./context";
+import { useDisplay, useForm } from "./contants";
+import { isPUA } from "~/lib/utils";
+import { ComponentView } from "./GlyphView";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -13,7 +16,6 @@ interface PoolProps {
   element?: string;
   setElement: (s: string | undefined) => void;
   content: string[];
-  specialRendering?: (s: string) => string;
 }
 
 const MyPagination = styled(Pagination)`
@@ -23,32 +25,51 @@ const MyPagination = styled(Pagination)`
   justify-content: center;
 `;
 
-const ElementPool = ({
-  element,
-  setElement,
-  content,
-  specialRendering,
-}: PoolProps) => {
+const PUADisplay = () => {};
+
+const ElementPool = ({ element, setElement, content }: PoolProps) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content.slice((page - 1) * pageSize, page * pageSize);
   const { mapping, grouping } = useFormConfig();
   const type = (x: string) =>
     x === element ? "primary" : mapping[x] || grouping[x] ? "link" : "default";
+  const display = useDisplay();
+  const form = useForm();
   return (
     <>
       <Content wrap="wrap">
-        {range.map((x) => (
-          <Char
-            key={x}
-            onClick={() => {
-              x === element ? setElement(undefined) : setElement(x);
-            }}
-            type={type(x)}
-          >
-            {specialRendering ? specialRendering(x) : x}
-          </Char>
-        ))}
+        {range.map((x) => {
+          const core = (
+            <Char
+              key={x}
+              onClick={() => {
+                x === element ? setElement(undefined) : setElement(x);
+              }}
+              type={type(x)}
+            >
+              {display(x)}
+            </Char>
+          );
+          const maybeGlyph = form[x];
+          if (isPUA(x) && maybeGlyph !== undefined) {
+            const { component } = maybeGlyph;
+            if (component) {
+              return (
+                <Popover
+                  content={
+                    <div style={{ width: "200px" }}>
+                      <ComponentView component={component} />
+                    </div>
+                  }
+                >
+                  {core}
+                </Popover>
+              );
+            }
+          }
+          return core;
+        })}
       </Content>
       <MyPagination
         current={page}

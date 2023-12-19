@@ -1,10 +1,12 @@
 import { useContext, useEffect, Suspense, useState } from "react";
-import { Button, Flex, Layout, Menu, Avatar, Tooltip } from "antd";
+import { Button, Flex, Layout, Menu, Avatar, Tooltip, Empty } from "antd";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
 import SettingOutlined from "@ant-design/icons/SettingOutlined";
 import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
 import BoldOutlined from "@ant-design/icons/BoldOutlined";
+import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
+import RiseOutlined from "@ant-design/icons/RiseOutlined";
 
 import type { MenuProps } from "antd";
 import {
@@ -32,6 +34,31 @@ const items: MenuProps["items"] = [
     icon: <MailOutlined />,
   },
   {
+    label: "元素",
+    key: "element",
+    icon: <SettingOutlined />,
+  },
+  {
+    label: "分析",
+    key: "analysis",
+    icon: <ProfileOutlined />,
+  },
+  {
+    label: "取码",
+    key: "assembly",
+    icon: <OrderedListOutlined />,
+  },
+  {
+    label: "编码",
+    key: "encode",
+    icon: <BoldOutlined />,
+  },
+  {
+    label: "优化",
+    key: "optimization",
+    icon: <RiseOutlined />,
+  },
+  {
     label: "数据",
     key: "data",
     icon: <DatabaseOutlined />,
@@ -50,21 +77,6 @@ const items: MenuProps["items"] = [
       },
     ],
   },
-  {
-    label: "元素",
-    key: "element",
-    icon: <SettingOutlined />,
-  },
-  {
-    label: "分析",
-    key: "analysis",
-    icon: <ProfileOutlined />,
-  },
-  {
-    label: "编码",
-    key: "encode",
-    icon: <BoldOutlined />,
-  },
 ];
 
 const keyToPath: Record<string, string> = {
@@ -74,7 +86,9 @@ const keyToPath: Record<string, string> = {
   data_classifier: "data/classifier",
   element: "element",
   analysis: "analysis",
+  assembly: "assembly",
   encode: "encode",
+  optimization: "optimization",
 };
 
 const pathToKey: Record<string, string> = Object.fromEntries(
@@ -207,12 +221,14 @@ export default function Contextualized() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(id!, JSON.stringify(config));
+    if (config) {
+      localStorage.setItem(id!, JSON.stringify(config));
+    }
   }, [config, id]);
 
-  return loading ? (
-    <CusSpin tip="加载JSON数据…" />
-  ) : (
+  if (!config) return <Empty description="无方案数据" />;
+  if (loading) return <CusSpin tip="加载JSON数据…" />;
+  return (
     <ConfigContext.Provider value={config}>
       <DispatchContext.Provider value={dispatch}>
         <EditorLayout />
