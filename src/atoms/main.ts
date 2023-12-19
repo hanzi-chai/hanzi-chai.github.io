@@ -6,7 +6,7 @@ import type { Feature } from "~/lib/classifier";
 import { focusAtom } from "jotai-optics";
 import * as O from "optics-ts/standalone";
 
-/** 需要在组件里手动修改它 */
+/** 需要在根组件里提前修改它 */
 export const configIdAtom = atom("");
 
 export const configStorageAtomAtom = atom((get) => {
@@ -14,6 +14,15 @@ export const configStorageAtomAtom = atom((get) => {
   console.log(id);
   return atomWithStorage(id, { data: { form: {} } } as Config);
 });
+
+/**
+ * Config 对象一共有 7 个字段，除了 version 和 source 不可变外，均可以通过 action 改变
+ * - LoadAction 可以直接替换 Config 本身
+ * - InfoAction 对应 info 字段
+ * - DataAction 对应 data 字段
+ * - ElementAction 对应 form 和 pronunciation 字段
+ * - EncoderAction 对应 encoder 字段
+ */
 
 export const configAtom = atom(
   (get) => get(get(configStorageAtomAtom)),
@@ -153,9 +162,9 @@ const opticsDegenerator = O.compose(
 
 export const switchRootDegeneratorNocross = atom(null, (get, set) => {
   const op = O.compose(opticsDegenerator, "no_cross", O.valueOr(false));
-  // @ts-ignore
   set(
     configAnalysisAtom,
+    // @ts-ignore
     O.modify(op)((v) => !v),
   );
 });
@@ -172,9 +181,9 @@ export const addRootSelectorAtom = atom(null, (get, set, value: SieveName) => {
 export const removeRootSelectorAtom = atom(
   null,
   (get, set, value: SieveName) => {
-    // @ts-ignore
     set(
       configAnalysisAtom,
+      // @ts-ignore
       O.modify(opticsRootSelector)((sele) => sele.filter((x) => x !== value)),
     );
   },
@@ -196,9 +205,9 @@ export const addRootSelectorStrongWeakAtom = atom(
   null,
   (get, set, variant: Variant, value: string) => {
     const op = O.compose(variant, O.valueOr([]));
-    // @ts-ignore
     set(
       configAnalysisAtom,
+      // @ts-ignore
       O.modify(op)((vari) => vari.concat(value)),
     );
   },
@@ -208,9 +217,9 @@ export const removeRootSelectorStrongWeakAtom = atom(
   null,
   (get, set, variant: Variant, value: string) => {
     const op = O.compose(variant, O.valueOr([]));
-    // @ts-ignore
     set(
       configAnalysisAtom,
+      // @ts-ignore
       O.modify(op)((vari) => vari.filter((x) => x !== value)),
     );
   },
