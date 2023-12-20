@@ -22,6 +22,10 @@ const ElementAdder = ({ element }: { element?: string }) => {
     value: x,
   }));
   const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
+  const removeGenericGrouping = useSetAtom(removeGenericGroupingAtom);
+  const addGenericMapping = useSetAtom(addGenericMappingAtom);
+  const addGenericGrouping = useSetAtom(addGenericGroupingAtom);
+  const removeGenericMapping = useSetAtom(removeGenericMappingAtom);
   return (
     <>
       <Flex justify="center" align="center" gap="small">
@@ -46,11 +50,11 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined}
           onClick={() => {
-            useSetAtom(addGenericMappingAtom)(
+            addGenericMapping(
               element!,
               keys.slice(0, mapping_type ?? 1).join(""),
             );
-            useSetAtom(removeGenericGroupingAtom)(element!);
+            removeGenericGrouping(element!);
           }}
         >
           添加
@@ -71,8 +75,8 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined || Object.keys(mapping).length === 0}
           onClick={() => {
-            useSetAtom(addGenericGroupingAtom)(element!, main);
-            useSetAtom(removeGenericMappingAtom)(element!);
+            addGenericGrouping(element!, main);
+            removeGenericMapping(element!);
           }}
         >
           归并

@@ -56,6 +56,7 @@ const ElementPool = ({ element, setElement, content }: PoolProps) => {
             if (component) {
               return (
                 <Popover
+                  key={x}
                   content={
                     <div style={{ width: "200px" }}>
                       <ComponentView component={component} />

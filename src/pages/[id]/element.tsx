@@ -55,6 +55,7 @@ export default function RootElementConfig() {
     二笔: allErbi,
     结构: [...operators],
   } as Record<FormElementTypes, string[]>;
+
   const pronContentMap = Object.fromEntries(
     Object.entries(pinyinAnalyzers).map(([p, fn]) => {
       return [p, [...new Set(syllables.map(fn))].sort()];
@@ -63,7 +64,6 @@ export default function RootElementConfig() {
   return (
     <EditorRow>
       <EditorColumn span={8}>
-        <Typography.Title level={2}>元素</Typography.Title>
         <Typography.Title level={3}>字形元素</Typography.Title>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
         <ElementPicker<FormElementTypes>
@@ -79,7 +79,7 @@ export default function RootElementConfig() {
         />
       </EditorColumn>
       <EditorColumn span={16}>
-        <Typography.Title level={2}>键盘映射</Typography.Title>
+        <Typography.Title level={3}>键盘映射</Typography.Title>
         <Mapping />
       </EditorColumn>
     </EditorRow>

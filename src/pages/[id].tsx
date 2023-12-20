@@ -11,12 +11,12 @@ import RiseOutlined from "@ant-design/icons/RiseOutlined";
 import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import CusSpin from "~/components/CustomSpin";
+import { DevTools } from "jotai-devtools";
 import {
   configIdAtom,
-  configAtom,
+  configInfoAtom,
   loadFormAtom,
   loadRepertoireAtom,
-  useAtom,
   useSetAtom,
   useAtomValue,
 } from "~/atoms";
@@ -78,7 +78,7 @@ function EditorLayout() {
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
 
-  const config = useAtomValue(configAtom);
+  const configInfo = useAtomValue(configInfoAtom);
 
   const [isCollapsed, setCollapsed] = useState(false);
   return (
@@ -143,7 +143,7 @@ function EditorLayout() {
       </Layout.Sider>
       <Layout style={{ height: "100vh" }}>
         <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
-          <div>{config.info?.name ?? "未命名"}</div>
+          <div>{configInfo?.name ?? "未命名"}</div>
         </Layout.Header>
         <Layout.Content
           style={{
@@ -181,16 +181,17 @@ function LoadFormAndRepertoire() {
 
 export default function Contextualized() {
   const { pathname } = useLocation();
-  const [_, id] = pathname.split("/");
-  const [id2, setId] = useAtom(configIdAtom);
-  if (!id2) setId(id!);
-  const config = useAtomValue(configAtom);
+  const id = pathname.split("/")[1]!;
+  if (!(id in localStorage)) {
+    return <Empty description="无方案数据" />;
+  }
+  useSetAtom(configIdAtom)(id);
 
-  if (!config) return <Empty description="无方案数据" />;
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
       <LoadFormAndRepertoire />
       <EditorLayout />
+      <DevTools />
     </Suspense>
   );
 }

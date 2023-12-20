@@ -16,6 +16,7 @@ async function fetchJson(filename: string) {
 }
 
 export const formAtom = atom<Form>({});
+formAtom.debugLabel = "form atom";
 
 export const loadFormAtom = atom(null, async (get, set) => {
   const data = (await fetchJson("form")) as Form;
@@ -60,6 +61,7 @@ export const mutateFormAtom = atom(
 );
 
 export const repertoireAtom = atom<Repertoire>({});
+repertoireAtom.debugLabel = "repertoire atom";
 export const loadRepertoireAtom = atom(null, async (get, set) => {
   const data = (await fetchJson("repertoire")) as Repertoire;
   set(repertoireAtom, data);

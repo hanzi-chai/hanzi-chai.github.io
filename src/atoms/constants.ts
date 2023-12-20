@@ -45,7 +45,6 @@ export const useForm = () => {
   const form = useAtomValue(formAtom);
   const configdata = useAtomValue(configDataAtom);
   const customizations = configdata?.form ?? {};
-
   return { ...form, ...customizations };
 };
 
