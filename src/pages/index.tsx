@@ -23,7 +23,6 @@ import Starter from "~/components/Starter";
 import { post } from "~/lib/api";
 import { md5 } from "js-md5";
 import { useChaifenTitle } from "~/lib/hooks";
-import { configIdAtom, useSetAtom } from "~/atoms";
 
 type Status = "login" | "signup" | "signin";
 
@@ -161,8 +160,6 @@ const HomeLayout = () => {
       .forEach((id) => localStorage.removeItem(id));
   }, [configs]);
 
-  const setId = useSetAtom(configIdAtom);
-
   return (
     <Layout style={{ height: "100%" }}>
       <Layout.Sider width={320} theme="light">
@@ -178,9 +175,7 @@ const HomeLayout = () => {
               return (
                 <List.Item
                   actions={[
-                    <Link to={id} onClick={() => setId(id)}>
-                      编辑
-                    </Link>,
+                    <Link to={id}>编辑</Link>,
                     <a
                       onClick={() =>
                         setConfigs((configs) => {

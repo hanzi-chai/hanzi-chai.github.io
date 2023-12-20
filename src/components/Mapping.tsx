@@ -1,6 +1,7 @@
 import { Alert, Button, Flex, Form, List, Popover, Space } from "antd";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
+  atom,
   useDisplay,
   useForm,
   useAtomValue,
@@ -13,6 +14,7 @@ import {
   setGenericMaxCodeLenAtom,
   setGenericAlphabetAtom,
   batchGenericMappingAtom,
+  configGroupingElementAtom,
 } from "~/atoms";
 
 import Root from "./Root";
@@ -23,94 +25,146 @@ import { RootSelect, Select, Uploader } from "./Utils";
 import { Select as AntdSelect } from "antd";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import { focusAtom } from "jotai-optics";
 
-const AdjustableRoot = ({ name, code }: MappedInfo) => {
-  const { alphabet, mapping_type, grouping, mapping } =
-    useAtomValue(configFormAtom);
-  const alphabetOptions = Array.from(alphabet).map((x) => ({
+const alphabetAtom = focusAtom(configFormAtom, (o) => o.prop("alphabet"));
+const mappingAtom = focusAtom(configFormAtom, (o) => o.prop("mapping"));
+const mappingTypeAtom = focusAtom(configFormAtom, (o) =>
+  o.prop("mapping_type"),
+);
+const alphabetOptionsAtom = atom((get) =>
+  Array.from(get(alphabetAtom)).map((x) => ({
     label: x,
     value: x,
-  }));
-  const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
-  const padding = Math.max((mapping_type ?? 1) - code.length, 0);
-  const keys = Array.from(code).concat(Array(padding).fill(""));
-  const affiliates = Object.entries(grouping)
-    .filter(([from, to]) => {
-      const main = typeof to === "string" ? to : to[0];
-      return main === name;
-    })
-    .map(([x]) => x);
-  const [main, setMain] = useState(Object.keys(mapping)[0]);
-  const display = useDisplay();
+  })),
+);
+const allOptionsAtom = atom((get) =>
+  [{ label: "无", value: "" }].concat(get(alphabetOptionsAtom)),
+);
+
+const useAffilia = (name: string) => {
+  const grouping = useAtomValue(configGroupingElementAtom);
+  const result = useMemo(
+    () =>
+      Object.entries(grouping)
+        .filter(([from, to]) => {
+          const main = typeof to === "string" ? to : to[0];
+          return main === name;
+        })
+        .map(([x]) => x),
+    [grouping],
+  );
+  return result;
+};
+
+interface AdjustableRootPopoverContentProps {
+  keys: string[];
+  name: string;
+  main: string;
+  setMain: Function;
+  code: string;
+}
+const AdjustableRootPopoverContent = ({
+  keys,
+  name,
+  main,
+  code,
+  setMain,
+}: AdjustableRootPopoverContentProps) => {
   const addGenericGrouping = useSetAtom(addGenericGroupingAtom);
   const addGenericMapping = useSetAtom(addGenericMappingAtom);
   const removeGenericGrouping = useSetAtom(removeGenericGroupingAtom);
   const removeGenericMapping = useSetAtom(removeGenericMappingAtom);
+  const allOptions = useAtomValue(allOptionsAtom);
+  const alphabetOptions = useAtomValue(alphabetOptionsAtom);
+  const affiliates = useAffilia(name);
+  const display = useDisplay();
+  return (
+    <Flex vertical gap="middle">
+      <Space>
+        {keys.map((key, index) => {
+          return (
+            <AntdSelect
+              key={index}
+              value={key}
+              onChange={(event) => {
+                keys[index] = event;
+                addGenericMapping(name, keys.join(""));
+              }}
+              options={index ? allOptions : alphabetOptions}
+            />
+          );
+        })}
+        <Button
+          onClick={() => {
+            removeGenericMapping(name);
+            affiliates?.map((x) => removeGenericGrouping(x));
+          }}
+        >
+          删除
+        </Button>
+      </Space>
+      {affiliates.length ? (
+        <Flex vertical>
+          <span>已归并字根</span>
+          {affiliates.map((x) => (
+            <Flex key={x} justify="space-between">
+              <Root>{display(x)}</Root>
+              <Button
+                onClick={() => {
+                  addGenericMapping(x, code);
+                  removeGenericGrouping(x);
+                }}
+              >
+                取消归并
+              </Button>
+            </Flex>
+          ))}
+        </Flex>
+      ) : (
+        <Space>
+          或归并至
+          <RootSelect
+            char={undefined}
+            onChange={(event) => setMain(event)}
+            exclude={name}
+          />
+          <Button
+            onClick={() => {
+              addGenericGrouping(name, main!);
+              removeGenericMapping(name);
+            }}
+          >
+            归并
+          </Button>
+        </Space>
+      )}
+    </Flex>
+  );
+};
+
+const AdjustableRoot = ({ name, code }: MappedInfo) => {
+  const mapping = useAtomValue(mappingAtom);
+  const mapping_type = useAtomValue(mappingTypeAtom);
+
+  const affiliates = useAffilia(name);
+  const padding = Math.max((mapping_type ?? 1) - code.length, 0);
+  const keys = Array.from(code).concat(Array(padding).fill(""));
+
+  const [main, setMain] = useState(Object.keys(mapping)[0]);
+  const display = useDisplay();
   return (
     <Popover
       trigger={["click"]}
       title="字根编码"
       content={
-        <Flex vertical gap="middle">
-          <Space>
-            {keys.map((key, index) => {
-              return (
-                <AntdSelect
-                  key={index}
-                  value={key}
-                  onChange={(event) => {
-                    keys[index] = event;
-                    addGenericMapping(name, keys.join(""));
-                  }}
-                  options={index ? allOptions : alphabetOptions}
-                />
-              );
-            })}
-            <Button
-              onClick={() => {
-                removeGenericMapping(name);
-                affiliates?.map((x) => removeGenericGrouping(x));
-              }}
-            >
-              删除
-            </Button>
-          </Space>
-          {affiliates.length ? (
-            <Flex vertical>
-              <span>已归并字根</span>
-              {affiliates.map((x) => (
-                <Flex key={x} justify="space-between">
-                  <Root>{display(x)}</Root>
-                  <Button
-                    onClick={() => {
-                      addGenericMapping(x, code);
-                      removeGenericGrouping(x);
-                    }}
-                  >
-                    取消归并
-                  </Button>
-                </Flex>
-              ))}
-            </Flex>
-          ) : (
-            <Space>
-              或归并至
-              <RootSelect
-                char={undefined}
-                onChange={(event) => setMain(event)}
-                exclude={name}
-              />
-              <Button
-                onClick={() => {
-                  addGenericGrouping(name, main!);
-                  removeGenericMapping(name);
-                }}
-              >
-                归并
-              </Button>
-            </Space>
-          )}
-        </Flex>
+        <AdjustableRootPopoverContent
+          keys={keys}
+          name={name}
+          main={main!}
+          code={code}
+          setMain={setMain}
+        />
       }
     >
       <Root
@@ -164,7 +218,10 @@ const ImportResultAlert = ({
 };
 
 const Mapping = () => {
-  const { mapping, alphabet, mapping_type } = useAtomValue(configFormAtom);
+  const mapping = useAtomValue(mappingAtom);
+  const alphabet = useAtomValue(alphabetAtom);
+  const mapping_type = useAtomValue(mappingTypeAtom);
+
   const form = useForm();
 
   const reversed = reverse(alphabet, mapping!);

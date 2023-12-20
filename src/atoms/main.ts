@@ -1,15 +1,13 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import type { Config, SieveName } from "~/lib/config";
-import type { Character, Glyph } from "~/lib/data";
-import type { Feature } from "~/lib/classifier";
+import type { Config } from "~/lib/config";
 import { focusAtom } from "jotai-optics";
-import * as O from "optics-ts/standalone";
 
 /** 需要在根组件里提前修改它 */
 export const configIdAtom = atom("");
+configIdAtom.debugLabel = "id";
 
-export const configStorageAtomAtom = atom((get) => {
+const configStorageAtomAtom = atom((get) => {
   const id = get(configIdAtom);
   return atomWithStorage(id, { data: { form: {} } } as Config);
 });
@@ -28,13 +26,19 @@ export const configAtom = atom(
   (get, set, value: Config) => set(get(configStorageAtomAtom), value),
 );
 
+configAtom.debugLabel = "main config atom";
+
 // 每个字段对应一种简写的办法
 export const configInfoAtom = focusAtom(configAtom, (o) => o.prop("info"));
+configInfoAtom.debugLabel = "config.info";
 export const configDataAtom = focusAtom(configAtom, (o) => o.prop("data"));
+configDataAtom.debugLabel = "config.data";
 export const configFormAtom = focusAtom(configAtom, (o) => o.prop("form"));
+configFormAtom.debugLabel = "config.form";
 export const configEncoderAtom = focusAtom(configAtom, (o) =>
   o.prop("encoder"),
 );
+configEncoderAtom.debugLabel = "config.encoder";
 
 ////////////////// case "info"
 
