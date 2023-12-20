@@ -140,13 +140,14 @@ const HomeLayout = () => {
   const [configs, setConfigs] = useImmer(() =>
     Object.fromEntries(
       Object.entries(localStorage)
-        .filter(([key]) => !key.startsWith("."))
+        .filter(([key]) => key[0] !== "." && key.length === 9)
         .map(([key, value]) => {
           const data = JSON.parse(value) as Config;
           return [key, data];
         }),
     ),
   );
+
   const [status, setStatus] = useState<Status>(() => {
     return localStorage.getItem(".user") ? "login" : "signin";
   });
@@ -156,7 +157,7 @@ const HomeLayout = () => {
       localStorage.setItem(id, JSON.stringify(config));
     });
     Object.keys(localStorage)
-      .filter((x) => !configs[x] && !x.startsWith("."))
+      .filter((x) => !configs[x] && x[0] !== "." && x.length === 9)
       .forEach((id) => localStorage.removeItem(id));
   }, [configs]);
 
