@@ -19,6 +19,7 @@ import {
   loadRepertoireAtom,
   useSetAtom,
   useAtomValue,
+  useAtom,
 } from "~/atoms";
 
 const items: MenuProps["items"] = [
@@ -182,10 +183,13 @@ function LoadFormAndRepertoire() {
 export default function Contextualized() {
   const { pathname } = useLocation();
   const id = pathname.split("/")[1]!;
+
   if (!(id in localStorage)) {
     return <Empty description="无方案数据" />;
   }
-  useSetAtom(configIdAtom)(id);
+  const [Id2, setId2] = useAtom(configIdAtom);
+  setId2(id);
+  if (!Id2) return null;
 
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>

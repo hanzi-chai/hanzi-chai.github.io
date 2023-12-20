@@ -10,8 +10,9 @@ async function fetchJson(filename: string) {
     return _cache[filename];
   }
   const request = await fetch(`/cache/${filename}.json`);
-  const json = await request.json();
-  _cache[filename] = listToObject(json);
+  let json = await request.json();
+  json = listToObject(json);
+  _cache[filename] = json;
   return json;
 }
 

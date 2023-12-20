@@ -30,7 +30,8 @@ const ElementPool = ({ element, setElement, content }: PoolProps) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const range = content.slice((page - 1) * pageSize, page * pageSize);
-  const { mapping, grouping } = useAtomValue(configFormAtom);
+  const configForm = useAtomValue(configFormAtom);
+  const { mapping, grouping } = configForm;
   const type = (x: string) =>
     x === element ? "primary" : mapping[x] || grouping[x] ? "link" : "default";
   const display = useDisplay();

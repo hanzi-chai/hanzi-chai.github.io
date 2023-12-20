@@ -48,14 +48,12 @@ export default function RootElementConfig() {
         getSequence(form, classifier, x).length -
         getSequence(form, classifier, y).length,
     );
-
   const contentMap = {
     字根: content,
     笔画: allStrokes,
     二笔: allErbi,
     结构: [...operators],
   } as Record<FormElementTypes, string[]>;
-
   const pronContentMap = Object.fromEntries(
     Object.entries(pinyinAnalyzers).map(([p, fn]) => {
       return [p, [...new Set(syllables.map(fn))].sort()];
