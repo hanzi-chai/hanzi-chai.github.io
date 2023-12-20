@@ -10,6 +10,7 @@ import {
   removeGenericMappingAtom,
 } from "~/atoms";
 import { RootSelect } from "./Utils";
+import { alphabetOptionsAtom } from "./Mapping";
 
 const ElementAdder = ({ element }: { element?: string }) => {
   const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
@@ -17,10 +18,8 @@ const ElementAdder = ({ element }: { element?: string }) => {
   const [keys, setKeys] = useState([alphabet[0], "", "", ""]);
   const [groupingStyle, setGroupingStyle] = useState(-1);
   const allStyles = [-1].concat([...Array(mapping_type).keys()]);
-  const alphabetOptions = Array.from(alphabet).map((x) => ({
-    label: x,
-    value: x,
-  }));
+  const alphabetOptions = useAtomValue(alphabetOptionsAtom);
+
   const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
   const removeGenericGrouping = useSetAtom(removeGenericGroupingAtom);
   const addGenericMapping = useSetAtom(addGenericMappingAtom);

@@ -25,15 +25,9 @@ import { RootSelect, Select, Uploader } from "./Utils";
 import { Select as AntdSelect } from "antd";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import { focusAtom } from "jotai-optics";
 
-const alphabetAtom = focusAtom(configFormAtom, (o) => o.prop("alphabet"));
-const mappingAtom = focusAtom(configFormAtom, (o) => o.prop("mapping"));
-const mappingTypeAtom = focusAtom(configFormAtom, (o) =>
-  o.prop("mapping_type"),
-);
-const alphabetOptionsAtom = atom((get) =>
-  Array.from(get(alphabetAtom)).map((x) => ({
+export const alphabetOptionsAtom = atom((get) =>
+  Array.from(get(configFormAtom).alphabet).map((x) => ({
     label: x,
     value: x,
   })),
@@ -144,8 +138,7 @@ const AdjustableRootPopoverContent = ({
 };
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
-  const mapping = useAtomValue(mappingAtom);
-  const mapping_type = useAtomValue(mappingTypeAtom);
+  const { mapping_type, mapping } = useAtomValue(configFormAtom);
 
   const affiliates = useAffilia(name);
   const padding = Math.max((mapping_type ?? 1) - code.length, 0);
@@ -218,9 +211,7 @@ const ImportResultAlert = ({
 };
 
 const Mapping = () => {
-  const mapping = useAtomValue(mappingAtom);
-  const alphabet = useAtomValue(alphabetAtom);
-  const mapping_type = useAtomValue(mappingTypeAtom);
+  const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
 
   const form = useForm();
 
