@@ -11,7 +11,11 @@ import type {
   SVGStroke,
 } from "./data";
 import { operators } from "./data";
-import { cloneDeep } from "lodash-es";
+import { cloneDeep, range } from "lodash-es";
+
+export const printableAscii = range(33, 127).map((x) =>
+  String.fromCodePoint(x),
+);
 
 export const unicodeBlock = (code: number) => {
   // ASCII

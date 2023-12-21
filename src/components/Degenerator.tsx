@@ -15,6 +15,9 @@ import { defaultDegenerator } from "~/lib/degenerator";
 const Degenerator = () => {
   const degenerator =
     useAtomValue(configAnalysisAtom)?.degenerator ?? defaultDegenerator;
+  const addRootDegenerator = useSetAtom(addRootDegeneratorAtom);
+  const removeRootDegenerator = useSetAtom(removeRootDegeneratorAtom);
+  const switchNoCross = useSetAtom(switchRootDegeneratorNocross);
   const [feature, setFeature] = useState<Feature>("横");
   const options = Object.keys(classifier).map((feature) => ({
     label: feature,
@@ -32,16 +35,10 @@ const Degenerator = () => {
             <Select<Feature>
               value={to}
               options={options}
-              onChange={(value) =>
-                useSetAtom(addRootDegeneratorAtom)(from as Feature, value)
-              }
+              onChange={(value) => addRootDegenerator(from as Feature, value)}
             />
             相同
-            <Button
-              onClick={() =>
-                useSetAtom(removeRootDegeneratorAtom)(from as Feature)
-              }
-            >
+            <Button onClick={() => removeRootDegenerator(from as Feature)}>
               删除
             </Button>
           </Flex>
@@ -50,15 +47,12 @@ const Degenerator = () => {
           <Select value={feature} options={options} onChange={setFeature} />
           <Button
             type="primary"
-            onClick={() => useSetAtom(addRootDegeneratorAtom)(feature, "横")}
+            onClick={() => addRootDegenerator(feature, "横")}
           >
             添加
           </Button>
         </Flex>
-        <Checkbox
-          checked={degenerator.no_cross}
-          onChange={() => useSetAtom(switchRootDegeneratorNocross)()}
-        >
+        <Checkbox checked={degenerator.no_cross} onChange={switchNoCross}>
           相交不拆
         </Checkbox>
       </Flex>

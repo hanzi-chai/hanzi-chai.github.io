@@ -2,8 +2,11 @@ import type { ColProps, RowProps, SelectProps } from "antd";
 import {
   Button,
   Col,
+  Dropdown,
+  Flex,
   InputNumber,
   Row,
+  Space,
   Upload,
   Select as _Select,
   notification,
@@ -17,6 +20,10 @@ import { useEffect, useState } from "react";
 import classifier from "~/lib/classifier";
 import { dump } from "js-yaml";
 import { Glyph } from "~/lib/data";
+import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import PlusOutlined from "@ant-design/icons/PlusOutlined";
+import MinusOutlined from "@ant-design/icons/MinusOutlined";
+import Root from "./Root";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -92,7 +99,7 @@ export const RootSelect = ({
 }: {
   char?: string;
   onChange: (s: string) => void;
-  exclude: string;
+  exclude?: string;
   withGrouped?: boolean;
 }) => {
   const { mapping, grouping } = useAtomValue(configFormAtom);
@@ -172,9 +179,12 @@ export const exportTSV = (data: string[][], filename: string) => {
   processExport(fileContent, filename);
 };
 
-export const ItemSelect = (
-  props: SelectProps & { customFilter?: (e: [string, Glyph]) => boolean },
-) => {
+interface ItemSelectProps extends SelectProps {
+  customFilter?: (e: [string, Glyph]) => boolean;
+}
+
+export const ItemSelect = (props: ItemSelectProps) => {
+  const { customFilter, ...rest } = props;
   const form = useForm();
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char = props.value;
@@ -216,7 +226,7 @@ export const ItemSelect = (
     filterOption: false,
     onSearch,
   };
-  return <Select style={{ width: "96px" }} {...props} {...commonProps} />;
+  return <Select style={{ width: "96px" }} {...rest} {...commonProps} />;
 };
 
 export const errorFeedback = function <T extends number | boolean>(
@@ -245,4 +255,71 @@ export const verifyNewName = (newName: string) => {
     return false;
   }
   return true;
+};
+
+type Click = { onClick: () => void };
+
+export const PlusButton = ({ onClick }: Click) => {
+  return (
+    <Button
+      shape="circle"
+      type="text"
+      onClick={onClick}
+      icon={<PlusOutlined />}
+    />
+  );
+};
+
+export const MinusButton = ({ onClick }: Click) => {
+  return (
+    <Button
+      shape="circle"
+      type="text"
+      onClick={onClick}
+      icon={<MinusOutlined />}
+    />
+  );
+};
+
+export const DeleteButton = ({ onClick }: Click) => {
+  return (
+    <Button
+      shape="circle"
+      type="text"
+      danger
+      onClick={onClick}
+      icon={<DeleteOutlined />}
+    />
+  );
+};
+
+export const KeyList = ({
+  keys,
+  setKeys,
+  allKeys,
+}: {
+  keys: string[];
+  setKeys: (s: string[]) => void;
+  allKeys: string[];
+}) => {
+  const [currentKey, setCurrentKey] = useState(allKeys[0]!);
+  return (
+    <Flex justify="space-between">
+      <Space>
+        {keys.map((x, index) => (
+          <Root key={index}>{x}</Root>
+        ))}
+      </Space>
+      <Space>
+        <PlusButton onClick={() => setKeys(keys.concat(currentKey))} />
+        <Select
+          value={currentKey}
+          options={allKeys.map((k) => ({ label: k, value: k }))}
+          style={{ width: 72 }}
+          onChange={setCurrentKey}
+        />
+        <MinusButton onClick={() => setKeys(keys.slice(0, keys.length - 1))} />
+      </Space>
+    </Flex>
+  );
 };

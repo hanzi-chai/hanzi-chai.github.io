@@ -43,11 +43,16 @@ const getExtra = function (data: MergedData, config: FormConfig): Extra {
       // 单笔画
       return [Number(x)];
     }
-    const sequence = recursiveGetSequence(form, classifier, x);
-    if (sequence instanceof Error) {
+    try {
+      const sequence = recursiveGetSequence(form, classifier, x);
+      if (sequence instanceof Error) {
+        return [];
+      }
+      return sequence;
+    } catch {
+      console.log(x);
       return [];
     }
-    return sequence;
   };
   const rootSequence = Object.fromEntries(
     roots.map((x) => [x, findSequence(x)]),

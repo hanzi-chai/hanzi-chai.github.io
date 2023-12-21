@@ -34,7 +34,7 @@ const items: MenuProps["items"] = [
     icon: <SettingOutlined />,
   },
   {
-    label: "分析",
+    label: "拆分",
     key: "analysis",
     icon: <ProfileOutlined />,
   },

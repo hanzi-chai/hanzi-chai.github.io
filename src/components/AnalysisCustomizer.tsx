@@ -8,11 +8,14 @@ import {
   configAnalysisAtom,
 } from "~/atoms";
 import { Button, Flex, Popover } from "antd";
-import { ItemSelect, RootSelect } from "./Utils";
+import {
+  DeleteButton,
+  ItemSelect,
+  MinusButton,
+  PlusButton,
+  RootSelect,
+} from "./Utils";
 import Char from "./Char";
-import PlusOutlined from "@ant-design/icons/PlusOutlined";
-import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 
 interface RootSelectProps {
   char: string;
@@ -77,27 +80,15 @@ const EachSequence = ({
             exclude=""
           />
         ))}
-        <Button
-          shape="circle"
-          type="text"
+        <PlusButton
           onClick={() => addRootCustomize(component, sequence.concat("1"))}
-          icon={<PlusOutlined />}
         />
-        <Button
-          shape="circle"
-          type="text"
+        <MinusButton
           onClick={() =>
             addRootCustomize(component, sequence.slice(0, sequence.length - 1))
           }
-          icon={<MinusOutlined />}
         />
-        <Button
-          shape="circle"
-          type="text"
-          danger
-          onClick={() => removeRootCustomize(component)}
-          icon={<DeleteOutlined />}
-        />
+        <DeleteButton onClick={() => removeRootCustomize(component)} />
       </Flex>
     </Flex>
   );
@@ -121,7 +112,13 @@ const AnalysisCustomizer = () => {
         />
       ))}
       <Flex justify="center" gap="large">
-        <ItemSelect value={newCustomization} onChange={setNew} />
+        <ItemSelect
+          value={newCustomization}
+          onChange={setNew}
+          customFilter={([_, glyph]) => {
+            return glyph.default_type === "component";
+          }}
+        />
         <Button
           type="primary"
           onClick={() => addRootCustomize(newCustomization!, ["1"])}

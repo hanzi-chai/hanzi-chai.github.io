@@ -1,4 +1,4 @@
-version: 0.0.4-alpha.4
+version: 0.0.5-alpha.4
 source: mswb
 info:
   name: 米十五笔
@@ -6,8 +6,6 @@ info:
   author: 李明
   description: http://xukt.ysepan.com/
 data:
-  form: {}
-  repertoire: {}
   classifier:
     竖钩: 5
     竖提: 6
@@ -347,6 +345,23 @@ form:
     o: o
     e: e
 encoder:
+  max_length: 4 # 最大码长，不得大于等于 6
+  auto_select_length: 4 # 顶屏码长
+  # auto_select_pattern: "^[a-z]{2}$" # 顶屏匹配模式，四二顶等特殊顶功需要写。设置 pattern 之后，length 不再生效
+  select_keys: [_, ;] # 候选字词依次使用哪些选择键上屏。默认为只有空格 "_"
+  short_code_schemes:
+    - { prefix: 1 } # 取全码的前一码为简码
+    - { prefix: 2 } # 取全码的前两码为简码
+    - { prefix: 3 } # 取全码的前三码为简码
+    # - { prefix: 2, count: 2 } # 取全码的前两码为简码，并且出二简二重
+    # - { prefix: 1, count: 3, select_keys: ",./" } # 取全码的前一码为简码，并且出一简三重，这个特定码长上的选择键的顺序可以覆盖全局的选择键，但是这些键必须也在全局选择键中至少出现一次
+  rules:
+    - length_equal: 2
+      formula: "AaAbBaBb"
+    - length_equal: 3
+      formula: "AaBaCaCb"
+    - length_in_range: [4, 10]
+      formula: "AaBaCaZa"
   sources:
     s0:
       object: null
@@ -420,12 +435,48 @@ encoder:
       operator: 存在
       positive: s13
       negative: s14
-  max_length: 4
-  auto_select_length: 4
-  rules:
-    - length_equal: 2
-      formula: "AaAbBaBb"
-    - length_equal: 3
-      formula: "AaBaCaCb"
-    - length_in_range: [4, 10]
-      formula: "AaBaCaZa"
+optimization:
+  objective:
+    characters_full:
+      # duplication: 10.0 # 减少单字全码动态选重率
+      # key_equivalence: 0.1 # 减少单字全码用指
+      # pair_equivalence: 0.1 # 减少单字全码当量
+      tiers:
+        # - { top: 1500, duplication: 7.0 } # 减少单字全码前 1500 静态选重率
+        # - { top: 3000, duplication: 5.0 } # 减少单字全码前 3000 静态选重率
+        - { duplication: 10.0 } # 减少单字全码静态选重率
+    characters_short:
+      duplication: 20.0 # 减少单字简码动态选重率
+      key_equivalence: 0.5 # 减少单字简码用指
+      pair_equivalence: 0.8 # 减少单字简码当量
+      levels:
+        - { length: 4, frequency: 10.0 } # 减少四键字频率，也就是说增加二键字（一级简码）和三键字（二级简码）频率
+      tiers:
+        - { top: 1500, duplication: 5.0 } # 减少单字简码前 1500 静态选重率
+        - { top: 3000, duplication: 5.0 } # 减少单字简码前 3000 静态选重率
+        - { duplication: 20.0 } # 减少单字简码静态选重率以及二简的数量
+    words_full:
+      duplication: 5.0 # 减少词语全码动态选重率
+      key_equivalence: 0.1 # 减少词组全码用指
+      pair_equivalence: 0.1 # 减少词组全码当量
+      tiers:
+        # - { top: 2000, duplication: 1.0 } # 减少词语全码前 2000 静态选重率
+        - { top: 10000, duplication: 1.0 } # 减少词语全码前 10000 静态选重率
+  constraints: 
+    elements:
+      - { element: 木 }
+      - { element: 丁, keys: [s, d, f, j, k, l] }
+    # indices:
+    #   - { index: 1 } # 双编码方案可以利用这个来批量固定某些元素的第二码
+    # element_indices:
+    #   - { element: 月, index: 1 } # 双编码方案固定某个元素的某一码
+    # grouping:
+    #   - [{element: 土, index: 0}, {element: 士, index: 0}] # 双编码方案让某一个元素的某一码和另一个元素的另一码绑定在一起，单编码直接利用归并功能即可
+  metaheuristic:
+    algorithm: SimulatedAnnealing # 退火算法
+    runtime: 10 # 可以提供运行时间而不提供运行参数
+    # parameters:
+    #   t_max: 1.0 # 最高温度
+    #   t_min: 1.0e-6 # 最低温度
+    #   steps: 100000 # 步数
+    report_after: 0.9 # 进度条达到 90% 之后，再开始保存方案

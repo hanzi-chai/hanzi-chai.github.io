@@ -10,7 +10,7 @@ import ReactFlow, {
   addEdge,
 } from "reactflow";
 
-import { useAtom, configEncoderAtom } from "~/atoms";
+import { useAtom, encoderAtom } from "~/atoms";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
@@ -28,7 +28,7 @@ import DetailEditor from "./DetailEditor";
 
 const EncoderGraph = () => {
   const { fitView, getNode } = useReactFlow();
-  const [encoder, setEncoder] = useAtom(configEncoderAtom);
+  const [encoder, setEncoder] = useAtom(encoderAtom);
   const { sources, conditions } = encoder;
   const n1 = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),

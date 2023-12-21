@@ -1,7 +1,7 @@
 {
   "name": "chai",
   "private": true,
-  "version": "0.0.5-alpha.2",
+  "version": "0.0.5-alpha.4",
   "type": "module",
   "scripts": {
     "start": "vite --mode CF",

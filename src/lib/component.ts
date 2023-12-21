@@ -15,7 +15,11 @@ export const recursiveGetSequence = function (
   form: Form,
   classifier: Classifier,
   char: string,
+  depth: number = 0,
 ): number[] | UnknownCharError | InvalidGlyphError {
+  if (depth >= 10) {
+    return new InvalidGlyphError();
+  }
   const glyph = form[char];
   if (!glyph)
     return new UnknownCharError(
@@ -24,55 +28,62 @@ export const recursiveGetSequence = function (
         .toString(16)}, ${char.codePointAt(0)!}`,
     );
   const { default_type, component, compound } = glyph;
-  switch (default_type) {
-    case "component":
-      if (component.source !== undefined) {
-        const sourceSequence = recursiveGetSequence(
-          form,
-          classifier,
-          component.source,
-        );
-        if (sourceSequence instanceof Error) return new InvalidGlyphError();
-        const strokes: number[] = [];
-        component.strokes.forEach((x) => {
-          if (typeof x === "number") {
-            const sourceClass = sourceSequence[x];
-            if (sourceClass !== undefined) {
-              strokes.push(sourceClass);
-            } else {
-              return new InvalidGlyphError();
-            }
+  if (component !== undefined) {
+    if (component.source !== undefined) {
+      const sourceSequence = recursiveGetSequence(
+        form,
+        classifier,
+        component.source,
+        depth + 1,
+      );
+      if (sourceSequence instanceof Error) return new InvalidGlyphError();
+      const strokes: number[] = [];
+      component.strokes.forEach((x) => {
+        if (typeof x === "number") {
+          const sourceClass = sourceSequence[x];
+          if (sourceClass !== undefined) {
+            strokes.push(sourceClass);
           } else {
-            strokes.push(classifier[x.feature]);
+            return new InvalidGlyphError();
           }
-        });
-        return strokes;
-      }
-      return component.strokes.map((x) => classifier[x.feature]);
-    case "compound":
-      const selectedPartition = compound[0];
-      if (selectedPartition === undefined) return new InvalidGlyphError();
-      const { operandList, order } = selectedPartition;
-      const sequences: { sequence: number[]; taken: number }[] = [];
-      for (const operand of operandList) {
-        const opearndSequence = recursiveGetSequence(form, classifier, operand);
-        if (opearndSequence instanceof Error) return new InvalidGlyphError();
-        sequences.push({ sequence: opearndSequence, taken: 0 });
-      }
-      if (order === undefined) return sequences.map((x) => x.sequence).flat();
-      const finalSequence: number[] = [];
-      for (const { index, strokes } of order) {
-        const sequenceData = sequences[index];
-        if (sequenceData === undefined) return new InvalidGlyphError();
-        if (strokes === 0) finalSequence.push(...sequenceData.sequence);
-        else {
-          finalSequence.push(
-            ...sequenceData.sequence.slice(sequenceData.taken, strokes),
-          );
-          sequenceData.taken += strokes;
+        } else {
+          strokes.push(classifier[x.feature]);
         }
+      });
+      return strokes;
+    }
+    return component.strokes.map((x) => classifier[x.feature]);
+  } else if (compound !== undefined) {
+    const selectedPartition = compound[0];
+    if (selectedPartition === undefined) return new InvalidGlyphError();
+    const { operandList, order } = selectedPartition;
+    const sequences: { sequence: number[]; taken: number }[] = [];
+    for (const operand of operandList) {
+      const opearndSequence = recursiveGetSequence(
+        form,
+        classifier,
+        operand,
+        depth + 1,
+      );
+      if (opearndSequence instanceof Error) return new InvalidGlyphError();
+      sequences.push({ sequence: opearndSequence, taken: 0 });
+    }
+    if (order === undefined) return sequences.map((x) => x.sequence).flat();
+    const finalSequence: number[] = [];
+    for (const { index, strokes } of order) {
+      const sequenceData = sequences[index];
+      if (sequenceData === undefined) return new InvalidGlyphError();
+      if (strokes === 0) finalSequence.push(...sequenceData.sequence);
+      else {
+        finalSequence.push(
+          ...sequenceData.sequence.slice(sequenceData.taken, strokes),
+        );
+        sequenceData.taken += strokes;
       }
-      return finalSequence;
+    }
+    return finalSequence;
+  } else {
+    return new InvalidGlyphError();
   }
 };
 

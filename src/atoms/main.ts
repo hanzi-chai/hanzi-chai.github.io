@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import type { Config } from "~/lib/config";
 import { focusAtom } from "jotai-optics";
+import * as O from "optics-ts/standalone";
 
 /** 需要在根组件里提前修改它 */
 export const configIdAtom = atom("");
@@ -35,22 +36,23 @@ export const configDataAtom = focusAtom(configAtom, (o) => o.prop("data"));
 configDataAtom.debugLabel = "config.data";
 export const configFormAtom = focusAtom(configAtom, (o) => o.prop("form"));
 configFormAtom.debugLabel = "config.form";
-export const configEncoderAtom = focusAtom(configAtom, (o) =>
-  o.prop("encoder"),
+export const encoderAtom = focusAtom(configAtom, (o) => o.prop("encoder"));
+encoderAtom.debugLabel = "config.encoder";
+
+export const defaultOptimization: NonNullable<Config["optimization"]> = {
+  objective: {},
+  metaheuristic: {
+    algorithm: "SimulatedAnnealing",
+  },
+};
+
+export const optimAtom = focusAtom(configAtom, (o) =>
+  o.prop("optimization").valueOr(defaultOptimization),
 );
-configEncoderAtom.debugLabel = "config.encoder";
+optimAtom.debugLabel = "config.optimization";
 
 ////////////////// case "info"
 
 export const setInfoAtom = atom(null, (get, set, value: Config["info"]) =>
   set(configInfoAtom, value),
-);
-
-////////////////// case "encoder"
-
-export const setEncoderAtom = atom(
-  null,
-  (get, set, value: Config["encoder"]) => {
-    set(configEncoderAtom, value);
-  },
 );

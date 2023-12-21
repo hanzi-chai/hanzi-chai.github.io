@@ -20,7 +20,7 @@ import {
 import Root from "./Root";
 import Char from "./Char";
 import type { MappedInfo } from "~/lib/utils";
-import { reverse } from "~/lib/utils";
+import { isPUA, reverse } from "~/lib/utils";
 import { RootSelect, Select, Uploader } from "./Utils";
 import { Select as AntdSelect } from "antd";
 import { range } from "lodash-es";
@@ -276,7 +276,12 @@ const Mapping = () => {
             for (const line of tsv) {
               const [key, value] = line;
               if (key === undefined || value === undefined) continue;
-              if (form[key] === undefined) {
+              const maybeGlyph = form[key];
+              if (maybeGlyph === undefined || isPUA(key)) {
+                unknownKeys.push(key);
+                continue;
+              }
+              if (maybeGlyph.component?.strokes.length === 1) {
                 unknownKeys.push(key);
                 continue;
               }

@@ -9,7 +9,7 @@ import {
   ItemSelect,
   Select,
 } from "~/components/Utils";
-import { useDisplay, useForm } from "~/atoms";
+import { configDataAtom, useAtomValue, useDisplay, useForm } from "~/atoms";
 import type { Glyph, Operator } from "~/lib/data";
 import { operators } from "~/lib/data";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
@@ -34,6 +34,8 @@ interface CompoundFilter {
 
 const FormTable = () => {
   const form = useForm();
+  const configData = useAtomValue(configDataAtom);
+  const customizedForm = configData?.form ?? {};
   const [thisForm] = Form.useForm<Glyph>();
   const [char, setChar] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -231,6 +233,15 @@ const FormTable = () => {
           <Mutate unicode={record.unicode} />
         </Space>
       ),
+      filters: [
+        { text: "已编辑", value: 1 },
+        { text: "未编辑", value: 0 },
+      ],
+      onFilter: (value, record) => {
+        const char = String.fromCodePoint(record.unicode);
+        const customized = customizedForm[char] !== undefined;
+        return value === 1 ? customized : !customized;
+      },
     },
   ];
   return (

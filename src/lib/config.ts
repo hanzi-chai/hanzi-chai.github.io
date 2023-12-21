@@ -92,6 +92,80 @@ type WordRule = { formula: string } & (
   | { length_in_range: number[] }
 );
 
+export interface LevelWeights {
+  length: number;
+  frequency: number;
+}
+
+export interface TierWeights {
+  top?: number;
+  duplication?: number;
+  levels?: LevelWeights[];
+}
+
+export interface FingeringWeights {
+  same_hand?: number;
+  same_finger_large_jump?: number;
+  same_finger_small_jump?: number;
+  little_finger_inteference?: number;
+  awkward_upside_down?: number;
+}
+
+export interface PartialWeights {
+  tiers?: TierWeights[];
+  duplication?: number;
+  key_equivalence?: number;
+  pair_equivalence?: number;
+  fingering?: FingeringWeights;
+  levels?: LevelWeights[];
+}
+
+export interface AtomicConstraint {
+  element?: string;
+  index?: number;
+  keys?: string[];
+}
+
+export interface GroupConstraint {
+  element: string;
+  index: number;
+}
+
+export interface Objective {
+  characters_full?: PartialWeights;
+  characters_short?: PartialWeights;
+  words_full?: PartialWeights;
+  words_short?: PartialWeights;
+}
+
+interface Constraints {
+  elements?: AtomicConstraint[];
+  indices?: AtomicConstraint[];
+  element_indices?: AtomicConstraint[];
+  grouping?: GroupConstraint[][];
+}
+
+export interface Solver {
+  algorithm: "SimulatedAnnealing";
+  runtime?: number;
+  report_after?: number;
+  parameters?: {
+    t_max: number;
+    t_min: number;
+    steps: number;
+  };
+  search_method?: {
+    random_move: number;
+    random_swap: number;
+  };
+}
+
+interface ShortCodeScheme {
+  prefix: number;
+  count?: number;
+  select_keys?: string[];
+}
+
 interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
@@ -111,9 +185,17 @@ interface Config {
   encoder: {
     max_length?: number;
     auto_select_length?: number;
+    auto_select_pattern?: string;
+    select_keys?: string[];
+    short_code_schemes?: ShortCodeScheme[];
     rules?: WordRule[];
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;
+  };
+  optimization?: {
+    objective: Objective;
+    constraints?: Constraints;
+    metaheuristic: Solver;
   };
 }
 

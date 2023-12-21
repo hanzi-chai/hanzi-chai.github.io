@@ -68,7 +68,7 @@ const ResultSummary = ({
 };
 
 const Analysis = () => {
-  useChaifenTitle("分析");
+  useChaifenTitle("拆分");
   const [sequence, setSequence] = useState("");
   const [step, setStep] = useState(0 as 0 | 1);
   const [componentCache, setComponentCache] = useState<ComponentCache>(
@@ -126,14 +126,17 @@ const Analysis = () => {
   return (
     <EditorRow>
       <EditorColumn span={8}>
-        <Typography.Title level={2}>分析</Typography.Title>
+        <Typography.Title level={2}>规则</Typography.Title>
         <Degenerator />
         <Selector />
-        <Typography.Title level={3}>自定义部件分析</Typography.Title>
+        <Typography.Title level={3}>自定义部件拆分</Typography.Title>
+        <Typography.Text>
+          此处只能自定义部件拆分，复合体的拆分无法自定义。如需改变复合体的拆分结果，请在字形数据中改变它的分部方式。
+        </Typography.Text>
         <AnalysisCustomizer />
       </EditorColumn>
       <EditorColumn span={16}>
-        <Typography.Title level={2}>分析结果</Typography.Title>
+        <Typography.Title level={2}>拆分结果</Typography.Title>
         {error.componentError.length + error.compoundError.length > 0 ? (
           <Alert
             message="有些部件或复合体拆分时出错，请检查"
