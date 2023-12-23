@@ -194,6 +194,25 @@ export const collect = (
   return result;
 };
 
+export const autoSplit = (collection: Map<string, IndexedElement[][]>) => {
+  const tsv = [...collection]
+    .filter(([, code]) => code.length >= 1)
+    .map(([char, elements_list]) => {
+      // 目前只支持一种拆分
+      const elements = elements_list[0]!;
+      const summary = elements
+        .map((x) => {
+          if (typeof x === "string") return x;
+          else {
+            return `${x.element}.${x.index}`;
+          }
+        })
+        .join(" ");
+      return [char, summary] as [string, string];
+    });
+  return tsv;
+};
+
 const encode = (config: Config, characters: string[], data: MergedData) => {
   const characterElements = collect(config, characters, data);
   const { encoder } = config;
