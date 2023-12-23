@@ -9,10 +9,16 @@ import {
   Switch,
   Typography,
 } from "antd";
-import { atom, useAtom, useAtomValue } from "jotai";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
-import { useMemo, useState } from "react";
-import { configFormAtom } from "~/atoms";
+import { Suspense, useMemo, useState } from "react";
+import {
+  configFormAtom,
+  loadCFAtom,
+  loadKEAtom,
+  loadPEAtom,
+  loadWFAtom,
+} from "~/atoms";
 import {
   constraintsAtom,
   metaheuristicAtom,
@@ -20,6 +26,8 @@ import {
   parametersAtom,
   searchMethodAtom,
 } from "~/atoms/optimization";
+import CustomSpin from "~/components/CustomSpin";
+import Evaluator from "~/components/Evaluator";
 import {
   DeleteButton,
   EditorColumn,
@@ -570,6 +578,18 @@ const GroupConstraintList = () => {
   );
 };
 
+function LoadAssets() {
+  const loadCF = useSetAtom(loadCFAtom);
+  loadCF();
+  const loadWF = useSetAtom(loadWFAtom);
+  loadWF();
+  const loadKE = useSetAtom(loadKEAtom);
+  loadKE();
+  const loadPE = useSetAtom(loadPEAtom);
+  loadPE();
+  return null;
+}
+
 const Optimization = () => {
   const [metaheuristic, setMetaheuristic] = useAtom(metaheuristicAtom);
   const [searchMethod, setSearchMethod] = useAtom(searchMethodAtom);
@@ -674,7 +694,11 @@ const Optimization = () => {
         <GroupConstraintList />
       </EditorColumn>
       <EditorColumn span={12}>
-        <Typography.Title level={2}>优化进度</Typography.Title>
+        <Typography.Title level={2}>优化</Typography.Title>
+        <Suspense fallback={<CustomSpin tip="加载数据" />}>
+          <LoadAssets />
+          <Evaluator />
+        </Suspense>
       </EditorColumn>
     </EditorRow>
   );

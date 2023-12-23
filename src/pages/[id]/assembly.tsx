@@ -18,6 +18,7 @@ import type {
   IndexedElement,
 } from "~/lib/encoder";
 import encode, {
+  autoSplit,
   collect,
   filtermap,
   filtervalues,
@@ -296,21 +297,7 @@ const Encoder = () => {
           <Button
             onClick={() => {
               const collection = collect(config, list, data);
-              const tsv = [...collection]
-                .filter(([, code]) => code.length >= 1)
-                .map(([char, elements_list]) => {
-                  // 目前只支持一种拆分
-                  const elements = elements_list[0]!;
-                  const summary = elements
-                    .map((x) => {
-                      if (typeof x === "string") return x;
-                      else {
-                        return `${x.element}.${x.index}`;
-                      }
-                    })
-                    .join(" ");
-                  return [char, summary];
-                });
+              const tsv = autoSplit(collection);
               exportTSV(tsv, "elements.txt");
             }}
           >
