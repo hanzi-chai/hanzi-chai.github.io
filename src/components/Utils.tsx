@@ -37,7 +37,6 @@ const ScrollableColumn = styled(Col)`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   padding-left: 16px;
   padding-right: 16px;
 `;
@@ -163,7 +162,7 @@ export const exportYAML = (config: object, filename: string) => {
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `"\\u${c.codePointAt(0)!.toString(16)}"`;
   });
-  processExport(fileContent, filename);
+  processExport(fileContent, filename + ".yaml");
 };
 
 export const exportJSON = (data: object, filename: string) => {
