@@ -252,7 +252,7 @@ export const renderComponentForm = (data: MergedData) => {
   const componentForm: Record<string, ComputedComponent> = {};
   const badChars: string[] = [];
   for (const [char, value] of Object.entries(form)) {
-    if (value.default_type !== "component") continue;
+    if (value.component === undefined) continue;
     try {
       const glyph = recursiveRenderGlyph(char, form, glyphCache);
       if (glyph instanceof Error) {

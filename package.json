@@ -7,7 +7,6 @@
     "start": "vite --mode CF",
     "fetch": "node scripts/fetchCache.mjs",
     "reference": "node scripts/fetchTable.mjs",
-    "wasm": "wasm-pack build ./libchai --target web",
     "publish": "bump --tag --commit --push",
     "build:BEX": "vite build --mode BEX && node scripts/makeBex.cjs",
     "build:PAGES": "vite build --mode PAGES",
@@ -37,7 +36,7 @@
     "jotai-optics": "^0.3.1",
     "js-md5": "^0.8.3",
     "js-yaml": "4.1.0",
-    "libchai": "file:./libchai/pkg",
+    "libchai": "^0.1.1",
     "lodash-es": "^4.17.21",
     "mathjs": "12.1.0",
     "nanoid": "^5.0.4",
@@ -65,8 +64,8 @@
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
-    "@vitest/coverage-v8": "^0.34.6",
-    "@vitest/ui": "^0.34.6",
+    "@vitest/coverage-v8": "^1.1.0",
+    "@vitest/ui": "^1.1.0",
     "eslint": "^8.54.0",
     "eslint-config-alloy": "^5.1.2",
     "eslint-plugin-react": "^7.33.2",
@@ -76,7 +75,7 @@
     "fs-extra": "^11.1.1",
     "jotai-devtools": "^0.7.1",
     "pre-commit": "^1.2.2",
-    "rollup-plugin-visualizer": "^5.9.3",
+    "rollup-plugin-visualizer": "^5.11.0",
     "ts-json-schema-generator": "^1.4.0",
     "typescript": "^5.3.2",
     "vite": "^4.5.0",
@@ -85,7 +84,7 @@
     "vite-plugin-pages": "^0.31.0",
     "vite-plugin-wasm": "^3.3.0",
     "vite-plugin-wasm-pack": "^0.1.12",
-    "vitest": "^0.34.6"
+    "vitest": "^1.1.0"
   },
   "peerDependencies": {
     "decimal.js": "^10.4.3"

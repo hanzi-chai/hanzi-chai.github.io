@@ -16,7 +16,9 @@ export default function ExportButtons() {
           setConfig(load(s) as Config);
         }}
       />
-      <Button onClick={() => exportYAML(config, "config.yaml")}>导出</Button>
+      <Button onClick={() => exportYAML(config, config.info?.name ?? "config")}>
+        导出
+      </Button>
       {source && (
         <Button onClick={() => setConfig(examples[source])}>重置</Button>
       )}

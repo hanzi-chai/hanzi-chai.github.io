@@ -638,7 +638,7 @@ const Optimization = () => {
                 }}
               />
             </Form.Item>
-            <Form.Item label="结果汇报">
+            <Form.Item label="保存进度">
               <InputNumber
                 value={report_after ?? 0.9}
                 onChange={(value) => {
