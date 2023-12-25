@@ -1,11 +1,11 @@
 {
   "name": "chai",
   "private": true,
-  "version": "0.0.5-alpha.4",
+  "version": "0.0.5-alpha.5",
   "type": "module",
   "scripts": {
     "start": "vite --mode CF",
-    "fetch": "node scripts/fetchCache.mjs",
+    "fetch": "node scripts/fetchCache.mjs && node scripts/fetchAssets.mjs",
     "reference": "node scripts/fetchTable.mjs",
     "publish": "bump --tag --commit --push",
     "build:BEX": "vite build --mode BEX && node scripts/makeBex.cjs",
@@ -66,6 +66,7 @@
     "@vitejs/plugin-react-swc": "^3.5.0",
     "@vitest/coverage-v8": "^1.1.0",
     "@vitest/ui": "^1.1.0",
+    "axios": "^1.6.2",
     "eslint": "^8.54.0",
     "eslint-config-alloy": "^5.1.2",
     "eslint-plugin-react": "^7.33.2",
