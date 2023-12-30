@@ -1,4 +1,4 @@
-import type { MergedData } from "./config";
+import type { MergedData, Rule } from "./config";
 import type { TotalResult } from "./encoder";
 
 export interface Extra {
@@ -10,9 +10,11 @@ interface Base {
 }
 
 export const pronunciationElementTypes = [
-  "声",
-  "韵",
-  "调",
+  "声母",
+  "双拼声母",
+  "韵母",
+  "双拼韵母",
+  "声调",
   "首字母",
   "末字母",
 ] as const;
@@ -22,19 +24,52 @@ export type PronunciationElementTypes =
 
 const shengdiao = ["阴平", "阳平", "上声", "去声", "轻声"];
 
-export const pinyinAnalyzers = {
-  声: (p: string) => {
-    const sm = p.match(/^[bpmfdtnlgkhjqxzcsryw]h?/) || ["零"];
-    return sm[0];
-  },
-  韵: (p: string) => {
-    const ym = p.match(/[aeiouv].*(?=\d)/) || ["零"];
-    return ym[0];
-  },
-  调: (p: string) => shengdiao[Number(p.match(/\d/)![0]) - 1],
-  首字母: (p: string) => p[0],
-  末字母: (p: string) => p[p.length - 2],
-} as Record<PronunciationElementTypes, (p: string) => string>;
+const r = String.raw;
+
+export const pinyinAnalyzers: Record<PronunciationElementTypes, Rule[]> = {
+  声母: [
+    { type: "xform", from: "^([bpmfdtnlgkhjqxzcsr]h?|^).+$", to: "$1" },
+    { type: "xform", from: "^$", to: "0" },
+  ],
+  双拼声母: [
+    { type: "xform", from: "^([bpmfdtnlgkhjqxzcsryw]h?|^).+$", to: "$1" },
+    { type: "xform", from: "^$", to: "0" },
+  ],
+  韵母: [
+    // 恢复 v
+    { type: "xform", from: "^([jqxy])u", to: "$1v" },
+    // 恢复合、齐、撮口的韵母形式
+    { type: "xform", from: "yv", to: "v" },
+    { type: "xform", from: "yi?", to: "i" },
+    { type: "xform", from: "wu?", to: "u" },
+    // 恢复 iou, uei, uen
+    { type: "xform", from: "iu", to: "iou" },
+    { type: "xform", from: "u([in])", to: "ue$1" },
+    { type: "xform", from: r`^.*?([aeiouv].*|m|ng?)\d$`, to: "$1" },
+  ],
+  双拼韵母: [{ type: "xform", from: r`^.*?([aeiouv].*|m|ng?)\d$`, to: "$1" }],
+  声调: [{ type: "xform", from: r`.+(\d)`, to: "$1" }],
+  首字母: [{ type: "xform", from: r`^(.).+`, to: "$1" }],
+  末字母: [{ type: "xform", from: r`.*(.)\d`, to: "$1" }],
+};
+
+export const applyRules = (rules: Rule[], syllable: string) => {
+  let result = syllable;
+  for (const { type, from, to } of rules) {
+    switch (type) {
+      case "xform":
+        result = result.replace(new RegExp(from), to);
+        break;
+      case "xlit":
+        result = result.replace(new RegExp(`[${from}]`), (s) => {
+          const index = from.indexOf(s);
+          return to[index] || "";
+        });
+        break;
+    }
+  }
+  return result;
+};
 
 interface This extends Base {
   type: "汉字";
@@ -170,7 +205,7 @@ export const findElement = (
       }
       return undefined;
     case "字音":
-      return pinyinAnalyzers[object.subtype](pinyin);
+      return applyRules(pinyinAnalyzers[object.subtype], pinyin);
     case "字根":
       return getindex(sequence, object.rootIndex);
     case "笔画":

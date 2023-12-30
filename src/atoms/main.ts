@@ -34,6 +34,10 @@ export const configInfoAtom = focusAtom(configAtom, (o) => o.prop("info"));
 configInfoAtom.debugLabel = "config.info";
 export const configDataAtom = focusAtom(configAtom, (o) => o.prop("data"));
 configDataAtom.debugLabel = "config.data";
+export const algebraAtom = focusAtom(configAtom, (o) =>
+  o.prop("algebra").valueOr({}),
+);
+algebraAtom.debugLabel = "config.algebra";
 export const configFormAtom = focusAtom(configAtom, (o) => o.prop("form"));
 configFormAtom.debugLabel = "config.form";
 export const encoderAtom = focusAtom(configAtom, (o) => o.prop("encoder"));
