@@ -166,6 +166,20 @@ interface ShortCodeScheme {
   select_keys?: string[];
 }
 
+export type Rule = Transformation | Transliteration;
+
+interface Transformation {
+  type: "xform";
+  from: string;
+  to: string;
+}
+
+interface Transliteration {
+  type: "xlit";
+  from: string;
+  to: string;
+}
+
 interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
@@ -181,6 +195,7 @@ interface Config {
     repertoire?: Repertoire;
     classifier?: PartialClassifier;
   };
+  algebra?: Record<string, Rule[]>;
   form: FormConfig;
   encoder: {
     max_length?: number;

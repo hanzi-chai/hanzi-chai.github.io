@@ -11,6 +11,7 @@ import classifier from "~/lib/classifier";
 import { operators } from "~/lib/data";
 import {
   PronunciationElementTypes,
+  applyRules,
   pinyinAnalyzers,
   pronunciationElementTypes,
 } from "~/lib/element";
@@ -48,33 +49,31 @@ export default function RootElementConfig() {
         getSequence(form, classifier, x).length -
         getSequence(form, classifier, y).length,
     );
-  const contentMap = {
-    字根: content,
-    笔画: allStrokes,
-    二笔: allErbi,
-    结构: [...operators],
-  } as Record<FormElementTypes, string[]>;
-  const pronContentMap = Object.fromEntries(
-    Object.entries(pinyinAnalyzers).map(([p, fn]) => {
-      return [p, [...new Set(syllables.map(fn))].sort()];
+  const formContentMap: Map<FormElementTypes, string[]> = new Map([
+    ["字根", content],
+    ["笔画", allStrokes],
+    ["二笔", allErbi],
+    ["结构", [...operators]],
+  ]);
+  const pronContentMap: Map<PronunciationElementTypes, string[]> = new Map(
+    Object.entries(pinyinAnalyzers).map(([name, rules]) => {
+      const list = [
+        ...new Set(syllables.map((s) => applyRules(rules, s))),
+      ].sort();
+      return [
+        name as PronunciationElementTypes,
+        list.map((x) => name + "-" + x),
+      ];
     }),
-  ) as Record<PronunciationElementTypes, string[]>;
+  );
   return (
     <EditorRow>
       <EditorColumn span={8}>
         <Typography.Title level={3}>字形元素</Typography.Title>
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
-        <ElementPicker<FormElementTypes>
-          types={formElementTypes}
-          defaultType="字根"
-          contentMap={contentMap}
-        />
+        <ElementPicker<FormElementTypes> content={formContentMap} />
         <Typography.Title level={3}>字音元素</Typography.Title>
-        <ElementPicker<PronunciationElementTypes>
-          types={pronunciationElementTypes}
-          defaultType="声"
-          contentMap={pronContentMap}
-        />
+        <ElementPicker<PronunciationElementTypes> content={pronContentMap} />
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={3}>键盘映射</Typography.Title>

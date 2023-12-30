@@ -321,29 +321,29 @@ form:
     "\ue405": m
     卜: m
     "\ue402": m
-    b: b
-    p: p
-    m: m
-    f: f
-    d: d
-    t: t
-    'n': 'n'
-    l: l
-    g: g
-    k: k
-    h: h
-    j: j
-    q: q
-    x: x
-    z: z
-    c: c
-    s: s
-    r: r
-    'y': 'y'
-    w: w
-    a: a
-    o: o
-    e: e
+    首字母-b: b
+    首字母-p: p
+    首字母-m: m
+    首字母-f: f
+    首字母-d: d
+    首字母-t: t
+    首字母-n: 'n'
+    首字母-l: l
+    首字母-g: g
+    首字母-k: k
+    首字母-h: h
+    首字母-j: j
+    首字母-q: q
+    首字母-x: x
+    首字母-z: z
+    首字母-c: c
+    首字母-s: s
+    首字母-r: r
+    首字母-y: 'y'
+    首字母-w: w
+    首字母-a: a
+    首字母-o: o
+    首字母-e: e
 encoder:
   max_length: 4 # 最大码长，不得大于等于 6
   auto_select_length: 4 # 顶屏码长

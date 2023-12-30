@@ -1,35 +1,39 @@
-import { Tabs } from "antd";
+import { Button, Tabs } from "antd";
 import { useState } from "react";
 import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";
+import styled from "styled-components";
 
 interface ElementPickerProps<T extends string> {
-  types: readonly T[];
-  defaultType: T;
-  contentMap: Record<T, string[]>;
+  content: Map<T, string[]>;
 }
 
+const Wrapper = styled(Tabs)`
+  & .ant-tabs-nav-wrap {
+    transform: none !important;
+  }
+`;
+
 const ElementPicker = function <T extends string>({
-  types,
-  defaultType,
-  contentMap,
+  content,
 }: ElementPickerProps<T>) {
   const [element, setElement] = useState<string | undefined>(undefined);
+  const defaultType = [...content.keys()][0]!;
   const [mode, setMode] = useState<T>(defaultType);
   return (
     <>
-      <Tabs
+      <Wrapper
         activeKey={mode}
-        centered
-        items={types.map((a) => {
+        tabBarExtraContent={<Button>添加</Button>}
+        items={[...content].map(([name, elements]) => {
           return {
-            label: a,
-            key: a,
+            label: name,
+            key: name,
             children: (
               <ElementPool
                 element={element}
                 setElement={setElement}
-                content={contentMap[a]}
+                content={elements}
               />
             ),
           };
