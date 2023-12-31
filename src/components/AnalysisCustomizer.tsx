@@ -13,18 +13,12 @@ import {
   ItemSelect,
   MinusButton,
   PlusButton,
-  RootSelect,
+  ElementSelect,
+  ElementSelectProps,
 } from "./Utils";
 import Char from "./Char";
 
-interface RootSelectProps {
-  char: string;
-  onChange: (s: string) => void;
-  exclude: string;
-  withGrouped?: boolean;
-}
-
-function RootSelectPopover(props: RootSelectProps) {
+function RootSelectPopover(props: ElementSelectProps) {
   const display = useDisplay();
   const [open, setOpen] = useState(false);
   return (
@@ -33,7 +27,7 @@ function RootSelectPopover(props: RootSelectProps) {
       onOpenChange={(v) => setOpen(v)}
       trigger="hover"
       content={
-        <RootSelect
+        <ElementSelect
           {...props}
           onChange={(v) => {
             props.onChange(v);
@@ -43,7 +37,7 @@ function RootSelectPopover(props: RootSelectProps) {
       }
     >
       <Button type="dashed" color="blue">
-        {display(props.char)}
+        {display(props.char!)}
       </Button>
     </Popover>
   );
@@ -68,16 +62,15 @@ const EachSequence = ({
       <Flex gap="small">
         {sequence.map((x, i) => (
           <RootSelectPopover
-            withGrouped
             key={i}
             char={x}
+            onlyRootsAndStrokes
             onChange={(s) =>
               addRootCustomize(
                 component,
                 sequence.map((y, j) => (i === j ? s : y)),
               )
             }
-            exclude=""
           />
         ))}
         <PlusButton

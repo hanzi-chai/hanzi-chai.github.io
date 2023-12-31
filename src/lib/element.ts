@@ -1,4 +1,4 @@
-import type { MergedData, Rule } from "./config";
+import type { Config, MergedData, Rule } from "./config";
 import type { TotalResult } from "./encoder";
 
 export interface Extra {
@@ -26,13 +26,9 @@ const shengdiao = ["阴平", "阳平", "上声", "去声", "轻声"];
 
 const r = String.raw;
 
-export const pinyinAnalyzers: Record<PronunciationElementTypes, Rule[]> = {
+export const defaultAlgebra: Record<PronunciationElementTypes, Rule[]> = {
   声母: [
     { type: "xform", from: "^([bpmfdtnlgkhjqxzcsr]h?|^).+$", to: "$1" },
-    { type: "xform", from: "^$", to: "0" },
-  ],
-  双拼声母: [
-    { type: "xform", from: "^([bpmfdtnlgkhjqxzcsryw]h?|^).+$", to: "$1" },
     { type: "xform", from: "^$", to: "0" },
   ],
   韵母: [
@@ -47,13 +43,17 @@ export const pinyinAnalyzers: Record<PronunciationElementTypes, Rule[]> = {
     { type: "xform", from: "u([in])", to: "ue$1" },
     { type: "xform", from: r`^.*?([aeiouv].*|m|ng?)\d$`, to: "$1" },
   ],
+  双拼声母: [
+    { type: "xform", from: "^([bpmfdtnlgkhjqxzcsryw]h?|^).+$", to: "$1" },
+    { type: "xform", from: "^$", to: "0" },
+  ],
   双拼韵母: [{ type: "xform", from: r`^.*?([aeiouv].*|m|ng?)\d$`, to: "$1" }],
   声调: [{ type: "xform", from: r`.+(\d)`, to: "$1" }],
   首字母: [{ type: "xform", from: r`^(.).+`, to: "$1" }],
   末字母: [{ type: "xform", from: r`.*(.)\d`, to: "$1" }],
 };
 
-export const applyRules = (rules: Rule[], syllable: string) => {
+export const applyRules = (name: string, rules: Rule[], syllable: string) => {
   let result = syllable;
   for (const { type, from, to } of rules) {
     switch (type) {
@@ -68,7 +68,7 @@ export const applyRules = (rules: Rule[], syllable: string) => {
         break;
     }
   }
-  return result;
+  return name + "-" + result;
 };
 
 interface This extends Base {
@@ -158,7 +158,7 @@ export const parseList = function (value: (string | number)[]): CodableObject {
     case "固定":
       return { type, key: value[1] as string };
     case "字音":
-      return { type, subtype: value[1] as Pronunciation["subtype"] };
+      return { type, subtype: value[1] as PronunciationElementTypes };
     case "字根":
       return { type, rootIndex: value[1] as number };
     case "笔画":
@@ -188,7 +188,7 @@ function getslice<T>(a: T[], i: number, j: number) {
 export const findElement = (
   object: CodableObject,
   result: TotalResult,
-  data: MergedData,
+  config: Config,
   extra: Extra,
 ) => {
   const { pinyin, sequence } = result;
@@ -205,7 +205,9 @@ export const findElement = (
       }
       return undefined;
     case "字音":
-      return applyRules(pinyinAnalyzers[object.subtype], pinyin);
+      const name = object.subtype;
+      const rules = defaultAlgebra[name] || config.algebra?.[name];
+      return applyRules(name, rules, pinyin);
     case "字根":
       return getindex(sequence, object.rootIndex);
     case "笔画":

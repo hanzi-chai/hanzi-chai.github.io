@@ -73,12 +73,12 @@ export type EncoderResult = Map<
 const satisfy = (
   condition: Condition,
   result: TotalResult,
-  data: MergedData,
+  config: Config,
   extra: Extra,
   totalMapping: Mapping,
 ) => {
   const { object, operator } = condition;
-  const target = findElement(object, result, data, extra);
+  const target = findElement(object, result, config, extra);
   const fn = table[operator];
   return fn(target, (condition as BinaryCondition).value, totalMapping);
 };
@@ -92,20 +92,17 @@ const merge = (grouping: Mapping, mapping: Mapping) => {
 
 export type IndexedElement = string | { element: string; index: number };
 
-const compile = (
-  encoder: Config["encoder"],
-  mapping: Mapping,
-  grouping: Mapping,
-) => {
+const compile = (config: Config) => {
+  const { mapping, grouping } = config.form;
   const totalMapping = merge(mapping, grouping);
   return (result: TotalResult, data: MergedData, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
     while (node) {
       if (node.startsWith("s")) {
-        const { object, next, index }: Source = encoder.sources[node]!;
+        const { object, next, index }: Source = config.encoder.sources[node]!;
         if (node !== "s0") {
-          const element = findElement(object!, result, data, extra);
+          const element = findElement(object!, result, config, extra);
           // 检查元素或键位是否有效
           if (element === undefined) {
             node = next;
@@ -136,15 +133,15 @@ const compile = (
         }
         node = next;
       } else {
-        const condition: Condition = encoder.conditions[node]!;
-        if (satisfy(condition, result, data, extra, totalMapping)) {
+        const condition: Condition = config.encoder.conditions[node]!;
+        if (satisfy(condition, result, config, extra, totalMapping)) {
           node = condition.positive;
         } else {
           node = condition.negative;
         }
       }
     }
-    return codes.slice(0, encoder.max_length ?? codes.length);
+    return codes.slice(0, config.encoder.max_length ?? codes.length);
   };
 };
 
@@ -182,9 +179,8 @@ export const collect = (
   characters: string[],
   data: MergedData,
 ) => {
-  const { form, encoder } = config;
-  const [cache, extra] = getCache(characters, form, data);
-  const func = compile(encoder, form.mapping, form.grouping);
+  const [cache, extra] = getCache(characters, config.form, data);
+  const func = compile(config);
   const result = new Map(
     characters.map((char) => [
       char,

@@ -24,8 +24,6 @@ const MyPagination = styled(Pagination)`
   justify-content: center;
 `;
 
-const PUADisplay = () => {};
-
 const ElementPool = ({ element, setElement, content }: PoolProps) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
