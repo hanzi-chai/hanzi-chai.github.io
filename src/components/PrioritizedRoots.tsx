@@ -1,5 +1,5 @@
 import { Button, Flex, Space, Typography } from "antd";
-import { RootSelect } from "./Utils";
+import { ElementSelect } from "./Utils";
 import {
   useAtomValue,
   useSetAtom,
@@ -34,11 +34,10 @@ const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
         ))}
       </Flex>
       <Flex justify="center" gap="large">
-        <RootSelect
+        <ElementSelect
           char={current}
           onChange={setCurrent}
-          exclude=""
-          withGrouped
+          onlyRootsAndStrokes
         />
         <Button
           type="primary"

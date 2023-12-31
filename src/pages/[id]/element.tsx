@@ -1,7 +1,14 @@
 import Mapping from "~/components/Mapping";
-import { Typography } from "antd";
+import { Button, Flex, Typography } from "antd";
 import { useState } from "react";
-import { useClassifier, useDisplay, useForm, useRepertoire } from "~/atoms";
+import {
+  algebraAtom,
+  useAtomValue,
+  useClassifier,
+  useDisplay,
+  useForm,
+  useRepertoire,
+} from "~/atoms";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import ElementPicker from "~/components/ElementPicker";
 import { getSequence } from "~/lib/component";
@@ -12,7 +19,7 @@ import { operators } from "~/lib/data";
 import {
   PronunciationElementTypes,
   applyRules,
-  pinyinAnalyzers,
+  defaultAlgebra,
   pronunciationElementTypes,
 } from "~/lib/element";
 
@@ -23,6 +30,7 @@ export default function RootElementConfig() {
   useChaifenTitle("元素");
   const [sequence, setSequence] = useState("");
   const customizedClassifier = useClassifier();
+  const algebra = useAtomValue(algebraAtom);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
@@ -55,15 +63,16 @@ export default function RootElementConfig() {
     ["二笔", allErbi],
     ["结构", [...operators]],
   ]);
+  const mergedAlgebras = [
+    ...Object.entries(defaultAlgebra),
+    ...Object.entries(algebra),
+  ];
   const pronContentMap: Map<PronunciationElementTypes, string[]> = new Map(
-    Object.entries(pinyinAnalyzers).map(([name, rules]) => {
+    mergedAlgebras.map(([name, rules]) => {
       const list = [
-        ...new Set(syllables.map((s) => applyRules(rules, s))),
+        ...new Set(syllables.map((s) => applyRules(name, rules, s))),
       ].sort();
-      return [
-        name as PronunciationElementTypes,
-        list.map((x) => name + "-" + x),
-      ];
+      return [name as PronunciationElementTypes, list];
     }),
   );
   return (
@@ -73,7 +82,22 @@ export default function RootElementConfig() {
         <StrokeSearch sequence={sequence} setSequence={setSequence} />
         <ElementPicker<FormElementTypes> content={formContentMap} />
         <Typography.Title level={3}>字音元素</Typography.Title>
-        <ElementPicker<PronunciationElementTypes> content={pronContentMap} />
+        <ul>
+          <li>
+            「声母」和「韵母」是按照《汉语拼音方案》中所规定的声母和韵母来切分一个音节，例如
+            yan 分析为零声母 + ian；
+          </li>
+          <li>
+            「双拼声母」和「双拼韵母」是按照自然码等双拼方案中的习惯来切分一个音节，例如
+            yan 分析为 y + an；
+          </li>
+          <li>「首字母」和「末字母」是二笔和形音码等方案中采取的元素类型；</li>
+          <li>您可利用拼写运算创造新的字音元素类型。</li>
+        </ul>
+        <ElementPicker<PronunciationElementTypes>
+          content={pronContentMap}
+          editable
+        />
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={3}>键盘映射</Typography.Title>

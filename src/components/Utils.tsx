@@ -90,40 +90,53 @@ export const Uploader = ({
   );
 };
 
-export const RootSelect = ({
-  char,
-  onChange,
-  exclude,
-  withGrouped,
-}: {
+export interface ElementSelectProps {
   char?: string;
   onChange: (s: string) => void;
-  exclude?: string;
-  withGrouped?: boolean;
-}) => {
+  customFilter?: (s: string) => boolean;
+  excludeGrouped?: boolean;
+  onlyRootsAndStrokes?: boolean;
+}
+
+export const ElementSelect = ({
+  char,
+  onChange,
+  customFilter,
+  excludeGrouped,
+  onlyRootsAndStrokes,
+}: ElementSelectProps) => {
   const { mapping, grouping } = useAtomValue(configFormAtom);
   const form = useForm();
-  const keys = withGrouped
-    ? Object.keys(mapping).concat(Object.keys(grouping))
-    : Object.keys(mapping);
+  let keys = Object.keys(mapping).concat(Object.keys(grouping));
+  if (excludeGrouped) {
+    keys = keys.filter((x) => grouping[x] === undefined);
+  }
+  if (onlyRootsAndStrokes) {
+    keys = keys.filter((x) => form[x] || x.match(/\d/));
+  }
+  if (customFilter) {
+    keys = keys.filter(customFilter);
+  }
   const display = useDisplay();
   return (
     <Select
       style={{ width: "96px" }}
       showSearch
       placeholder="输入笔画搜索"
-      options={keys
-        .filter((x) => form[x] || x.match(/\d+/))
-        .filter((x) => x !== exclude)
-        .map((x) => ({
-          value: x,
-          label: display(x),
-        }))}
+      options={keys.map((x) => ({
+        value: x,
+        label: display(x),
+      }))}
       value={char}
       onChange={onChange}
       filterOption={(input, option) => {
         if (option === undefined) return false;
-        return getSequence(form, classifier, option.value).startsWith(input);
+        const value = option.value;
+        if (form[value] !== undefined) {
+          return getSequence(form, classifier, option.value).startsWith(input);
+        } else {
+          return value.includes(input);
+        }
       }}
       filterSort={(a, b) => {
         return (

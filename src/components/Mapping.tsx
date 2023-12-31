@@ -21,7 +21,7 @@ import Root from "./Root";
 import Char from "./Char";
 import type { MappedInfo } from "~/lib/utils";
 import { isPUA, reverse } from "~/lib/utils";
-import { RootSelect, Select, Uploader } from "./Utils";
+import { ElementSelect, Select, Uploader } from "./Utils";
 import { Select as AntdSelect } from "antd";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
@@ -118,10 +118,11 @@ const AdjustableRootPopoverContent = ({
       ) : (
         <Space>
           或归并至
-          <RootSelect
+          <ElementSelect
+            excludeGrouped
             char={undefined}
             onChange={(event) => setMain(event)}
-            exclude={name}
+            customFilter={(s) => s !== name}
           />
           <Button
             onClick={() => {

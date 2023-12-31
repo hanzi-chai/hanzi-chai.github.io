@@ -35,7 +35,7 @@ import {
   KeyList,
   MinusButton,
   PlusButton,
-  RootSelect,
+  ElementSelect,
   Select,
 } from "~/components/Utils";
 import {
@@ -415,7 +415,8 @@ const ConstraintList = ({
             <Flex key={index} align="center" gap="small">
               将
               {type !== "indices" ? (
-                <RootSelect
+                <ElementSelect
+                  excludeGrouped
                   char={element}
                   onChange={(char) =>
                     setList(
@@ -538,7 +539,8 @@ const GroupConstraintList = () => {
             </Flex>
             {group.map(({ element, index: idx }, subindex) => (
               <Space key={subindex}>
-                <RootSelect
+                <ElementSelect
+                  excludeGrouped
                   char={element}
                   onChange={(value) =>
                     updateListAt(

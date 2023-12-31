@@ -3,12 +3,12 @@ import type { ConditionData, SourceData } from "./graph";
 import styled from "styled-components";
 import { Cascader, Flex, Form, Typography } from "antd";
 import type { CodableObject } from "~/lib/element";
-import { parseList, pinyinAnalyzers, renderList } from "~/lib/element";
+import { parseList, defaultAlgebra, renderList } from "~/lib/element";
 import { Select } from "./Utils";
 import type { Op, UnaryOp } from "~/lib/config";
 import { binaryOps, ops, unaryOps } from "~/lib/config";
 import TextArea from "antd/es/input/TextArea";
-import { useAtomValue, configFormAtom } from "~/atoms";
+import { useAtomValue, configFormAtom, algebraAtom } from "~/atoms";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -34,6 +34,7 @@ const DetailEditor = ({ selected }: { selected: string }) => {
   const nodes = getNodes();
   const { data } = getNode(selected)!;
   const { alphabet } = useAtomValue(configFormAtom);
+  const algebra = useAtomValue(algebraAtom);
   const genericIndices = [...Array(10).keys()]
     .map((x) => [x + 1, -(x + 1)])
     .flat();
@@ -41,10 +42,12 @@ const DetailEditor = ({ selected }: { selected: string }) => {
     {
       value: "字音",
       label: "字音",
-      children: Object.keys(pinyinAnalyzers).map((v) => ({
-        value: v,
-        label: v,
-      })),
+      children: [...Object.keys(defaultAlgebra), ...Object.keys(algebra)].map(
+        (v) => ({
+          value: v,
+          label: v,
+        }),
+      ),
     },
     {
       value: "字根",

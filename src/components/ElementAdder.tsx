@@ -9,7 +9,7 @@ import {
   removeGenericGroupingAtom,
   removeGenericMappingAtom,
 } from "~/atoms";
-import { RootSelect } from "./Utils";
+import { ElementSelect } from "./Utils";
 import { alphabetOptionsAtom } from "./Mapping";
 
 const ElementAdder = ({ element }: { element?: string }) => {
@@ -61,10 +61,10 @@ const ElementAdder = ({ element }: { element?: string }) => {
       </Flex>
       <Flex justify="center" align="center" gap="small">
         <span>归并至</span>
-        <RootSelect
+        <ElementSelect
+          excludeGrouped
           char={undefined}
           onChange={(event) => setMain(event)}
-          exclude=""
         />
         {/* <Select style={{width: "128px"}} options={allStyles.map(x => ({
           value: x,

@@ -19,6 +19,7 @@ export const useDisplay = () => {
   const customizations = configdata?.form ?? {};
 
   return (char: string) => {
+    if (char.includes("-")) return char.split("-")[1]!;
     if (!isPUA(char)) return char;
     const name = (customizations[char] || form[char])?.name;
     return name ?? "丢失的字根";

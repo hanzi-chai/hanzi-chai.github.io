@@ -30,7 +30,7 @@ import {
   EditorColumn,
   EditorRow,
   ItemSelect,
-  RootSelect,
+  ElementSelect,
   Select,
   Uploader,
   exportTSV,
@@ -119,10 +119,10 @@ const Encoder = () => {
               onChange={(value) => update("duplication", value.target.checked)}
             />
           </Form.Item>
-          <Form.Item label="包含字根">
-            <RootSelect
+          <Form.Item label="包含元素">
+            <ElementSelect
+              excludeGrouped
               char={element}
-              exclude=""
               onChange={(value) => update("element", value)}
             />
           </Form.Item>
