@@ -1,6 +1,11 @@
 import styled from "styled-components";
-import { classifierCustomizationAtom, useSetAtom } from "~/atoms";
-import { useClassifier } from "~/atoms";
+import {
+  classifierCustomizationAtom,
+  customClassifierAtom,
+  useAddAtom,
+  useAtomValue,
+  useSetAtom,
+} from "~/atoms";
 import { Button, Flex, Space, notification } from "antd";
 import Root from "~/components/Root";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
@@ -53,8 +58,8 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 
 const Classifier = () => {
   useChaifenTitle("笔画分类数据");
-  const classifier = useClassifier();
-  const setClassifier = useSetAtom(classifierCustomizationAtom);
+  const classifier = useAtomValue(customClassifierAtom);
+  const add = useAddAtom(classifierCustomizationAtom);
   const [categories, setCategories] = useState(
     Math.max(...Object.values(classifier)),
   );
@@ -73,7 +78,7 @@ const Classifier = () => {
       onDragEnd={(event) => {
         const { active, over } = event;
         if (over) {
-          setClassifier(O.set(O.prop(active.id as Feature), over.id as number));
+          add(active.id as Feature, over.id as number);
         }
       }}
     >

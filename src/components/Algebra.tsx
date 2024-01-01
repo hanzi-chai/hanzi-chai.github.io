@@ -11,7 +11,7 @@ import { Button, Form, Space, notification } from "antd";
 import { CloseCircleOutlined, CopyOutlined } from "@ant-design/icons";
 import { Rule } from "~/lib/config";
 import { useAtom } from "jotai";
-import { algebraAtom } from "~/atoms";
+import { algebraAtom, useAddAtom } from "~/atoms";
 import { defaultAlgebra } from "~/lib/element";
 
 interface AlgebraForm {
@@ -30,6 +30,7 @@ export default function ({
 }) {
   const [form] = Form.useForm<AlgebraForm>();
   const [algebra, setAlgebra] = useAtom(algebraAtom);
+  const addAlgebra = useAddAtom(algebraAtom);
   return (
     <ModalForm<AlgebraForm>
       title={title}
@@ -42,7 +43,7 @@ export default function ({
       }}
       initialValues={initialValues}
       onFinish={async (values) => {
-        setAlgebra({ ...algebra, [values.name]: values.rules });
+        addAlgebra(values.name, values.rules);
         notification.success({
           message: "提交成功",
         });

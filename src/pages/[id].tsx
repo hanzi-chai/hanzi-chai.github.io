@@ -15,12 +15,14 @@ import { DevTools } from "jotai-devtools";
 import {
   configIdAtom,
   infoAtom,
-  loadFormAtom,
-  loadRepertoireAtom,
   useSetAtom,
   useAtomValue,
   useAtom,
+  formAtom,
+  fetchJson,
+  repertoireAtom,
 } from "~/atoms";
+import { listToObject } from "~/lib/utils";
 
 const items: MenuProps["items"] = [
   {
@@ -78,7 +80,6 @@ function EditorLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
-
   const configInfo = useAtomValue(infoAtom);
 
   const [isCollapsed, setCollapsed] = useState(false);
@@ -173,10 +174,10 @@ function EditorLayout() {
 }
 
 function LoadFormAndRepertoire() {
-  const loadForm = useSetAtom(loadFormAtom);
-  loadForm();
-  const loadRepertoire = useSetAtom(loadRepertoireAtom);
-  loadRepertoire();
+  const setForm = useSetAtom(formAtom);
+  fetchJson("form").then((value) => setForm(listToObject(value)));
+  const setRepertoire = useSetAtom(repertoireAtom);
+  fetchJson("repertoire").then((value) => setRepertoire(listToObject(value)));
   return null;
 }
 

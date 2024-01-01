@@ -13,9 +13,9 @@ import { useState } from "react";
 import {
   characterFrequencyAtom,
   configAtom,
+  customDataAtom,
   keyEquivalenceAtom,
   pairEquivalenceAtom,
-  useAll,
   wordFrequencyAtom,
 } from "~/atoms";
 import { autoSplit, collect } from "~/lib/encoder";
@@ -57,7 +57,7 @@ const Evaluator = () => {
     words,
     assets,
   };
-  const data = useAll();
+  const data = useAtomValue(customDataAtom);
   const list = Object.entries(data.repertoire)
     .filter(([_, v]) => v.gb2312)
     .filter(([_, v]) => v.tygf > 0)

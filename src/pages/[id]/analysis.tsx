@@ -15,9 +15,9 @@ import {
 import {
   useAtomValue,
   configFormAtom,
-  useAll,
-  useForm,
-  useDisplay,
+  customDataAtom,
+  sequenceAtom,
+  displayAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import Char from "~/components/Char";
@@ -26,16 +26,13 @@ import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 
 import type { ComponentCache, ComponentResult } from "~/lib/component";
-import { getSequence } from "~/lib/component";
 import type { CompoundCache, CompoundResult } from "~/lib/compound";
 import { getFormCore } from "~/lib/form";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
-import type { MenuProps } from "rc-menu";
 import Degenerator from "~/components/Degenerator";
 import { useChaifenTitle } from "~/lib/hooks";
-import classifier from "~/lib/classifier";
 
 const ResultSummary = ({
   char,
@@ -46,7 +43,7 @@ const ResultSummary = ({
   rootSeries: string[];
   overrideRootSeries?: string[];
 }) => {
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   return (
     <Flex gap="middle">
       <Space>
@@ -81,17 +78,17 @@ const Analysis = () => {
     componentError: [] as string[],
     compoundError: [] as string[],
   });
-  const data = useAll();
-  const form = useForm();
+  const data = useAtomValue(customDataAtom);
+  const sequenceMap = useAtomValue(sequenceAtom);
 
   const formConfig = useAtomValue(configFormAtom);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
 
   const displays = [
     [...componentCache]
-      .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
+      .filter(([x]) => sequenceMap.get(x)?.startsWith(sequence))
       .filter(([, v]) => v.sequence.length > 1)
       .map(([key, res]) => {
         return {
@@ -114,7 +111,7 @@ const Analysis = () => {
         };
       }),
     [...compoundCache]
-      .filter(([x]) => getSequence(form, classifier, x).startsWith(sequence))
+      .filter(([x]) => sequenceMap.get(x)?.startsWith(sequence))
       .map(([key, res]) => {
         return {
           key,
@@ -151,7 +148,7 @@ const Analysis = () => {
           />
         ) : null}
         <Flex gap="middle">
-          <StrokeSearch sequence={sequence} setSequence={setSequence} />
+          <StrokeSearch setSequence={setSequence} />
           <Button
             type="primary"
             onClick={() => {

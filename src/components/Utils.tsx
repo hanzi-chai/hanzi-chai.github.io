@@ -12,12 +12,17 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import { useForm, useDisplay, useAtomValue, configFormAtom } from "~/atoms";
-import { getSequence } from "~/lib/component";
+import {
+  useAtomValue,
+  configFormAtom,
+  customFormAtom,
+  sequenceAtom,
+  sortedCustomFormAtom,
+  displayAtom,
+} from "~/atoms";
 import { isValidCJKChar } from "~/lib/utils";
 import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
-import classifier from "~/lib/classifier";
 import { dump } from "js-yaml";
 import { Glyph } from "~/lib/data";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
@@ -106,7 +111,8 @@ export const ElementSelect = ({
   onlyRootsAndStrokes,
 }: ElementSelectProps) => {
   const { mapping, grouping } = useAtomValue(configFormAtom);
-  const form = useForm();
+  const sequenceMap = useAtomValue(sequenceAtom);
+  const form = useAtomValue(customFormAtom);
   let keys = Object.keys(mapping).concat(Object.keys(grouping));
   if (excludeGrouped) {
     keys = keys.filter((x) => grouping[x] === undefined);
@@ -117,7 +123,7 @@ export const ElementSelect = ({
   if (customFilter) {
     keys = keys.filter(customFilter);
   }
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   return (
     <Select
       style={{ width: "96px" }}
@@ -133,15 +139,15 @@ export const ElementSelect = ({
         if (option === undefined) return false;
         const value = option.value;
         if (form[value] !== undefined) {
-          return getSequence(form, classifier, option.value).startsWith(input);
+          return sequenceMap.get(value)!.startsWith(input);
         } else {
           return value.includes(input);
         }
       }}
       filterSort={(a, b) => {
         return (
-          getSequence(form, classifier, a.value).length -
-          getSequence(form, classifier, b.value).length
+          (sequenceMap.get(a.value) ?? "").length -
+          (sequenceMap.get(b.value) ?? "").length
         );
       }}
     />
@@ -197,10 +203,11 @@ interface ItemSelectProps extends SelectProps {
 
 export const ItemSelect = (props: ItemSelectProps) => {
   const { customFilter, ...rest } = props;
-  const form = useForm();
+  const sortedForm = useAtomValue(sortedCustomFormAtom);
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char = props.value;
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
+  const sequenceMap = useAtomValue(sequenceAtom);
   useEffect(() => {
     const initial = char ? [{ value: char, label: display(char) }] : [];
     setData(initial);
@@ -210,24 +217,17 @@ export const ItemSelect = (props: ItemSelectProps) => {
       setData([]);
       return;
     }
-    const allResults = Object.entries(form)
+    const allResults = sortedForm
       .filter(props.customFilter ?? ((_) => true))
       .map(([x]) => ({
         value: x,
         label: display(x),
       }))
       .filter(({ value }) => {
-        return getSequence(form, classifier, value).startsWith(input);
-      })
-      .sort((a, b) => {
-        return (
-          getSequence(form, classifier, a.value).length -
-          getSequence(form, classifier, b.value).length
-        );
+        return sequenceMap.get(value)?.startsWith(input);
       });
     const minResults = allResults.filter(
-      ({ value }) =>
-        getSequence(form, classifier, value).length === input.length,
+      ({ value }) => sequenceMap.get(value)?.length === input.length,
     );
     setData(allResults.slice(0, Math.max(5, minResults.length)));
   };

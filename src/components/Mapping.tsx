@@ -2,19 +2,17 @@ import { Alert, Button, Flex, Form, List, Popover, Space } from "antd";
 import { useState, useMemo } from "react";
 import {
   atom,
-  useDisplay,
-  useForm,
   useAtomValue,
   useSetAtom,
   configFormAtom,
-  addGenericGroupingAtom,
-  addGenericMappingAtom,
-  removeGenericGroupingAtom,
-  removeGenericMappingAtom,
-  setGenericMaxCodeLenAtom,
-  setGenericAlphabetAtom,
-  batchGenericMappingAtom,
-  configGroupingElementAtom,
+  groupingAtom,
+  customFormAtom,
+  displayAtom,
+  alphabetAtom,
+  mappingTypeAtom,
+  mappingAtom,
+  useAddAtom,
+  useRemoveAtom,
 } from "~/atoms";
 
 import Root from "./Root";
@@ -37,7 +35,7 @@ const allOptionsAtom = atom((get) =>
 );
 
 const useAffilia = (name: string) => {
-  const grouping = useAtomValue(configGroupingElementAtom);
+  const grouping = useAtomValue(groupingAtom);
   const result = useMemo(
     () =>
       Object.entries(grouping)
@@ -65,14 +63,14 @@ const AdjustableRootPopoverContent = ({
   code,
   setMain,
 }: AdjustableRootPopoverContentProps) => {
-  const addGenericGrouping = useSetAtom(addGenericGroupingAtom);
-  const addGenericMapping = useSetAtom(addGenericMappingAtom);
-  const removeGenericGrouping = useSetAtom(removeGenericGroupingAtom);
-  const removeGenericMapping = useSetAtom(removeGenericMappingAtom);
+  const addMapping = useAddAtom(mappingAtom);
+  const addGrouping = useAddAtom(groupingAtom);
+  const removeMapping = useRemoveAtom(mappingAtom);
+  const removeGrouping = useRemoveAtom(groupingAtom);
   const allOptions = useAtomValue(allOptionsAtom);
   const alphabetOptions = useAtomValue(alphabetOptionsAtom);
   const affiliates = useAffilia(name);
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   return (
     <Flex vertical gap="middle">
       <Space>
@@ -83,7 +81,7 @@ const AdjustableRootPopoverContent = ({
               value={key}
               onChange={(event) => {
                 keys[index] = event;
-                addGenericMapping(name, keys.join(""));
+                addMapping(name, keys.join(""));
               }}
               options={index ? allOptions : alphabetOptions}
             />
@@ -91,8 +89,8 @@ const AdjustableRootPopoverContent = ({
         })}
         <Button
           onClick={() => {
-            removeGenericMapping(name);
-            affiliates?.map((x) => removeGenericGrouping(x));
+            removeMapping(name);
+            affiliates?.map((x) => removeGrouping(x));
           }}
         >
           删除
@@ -106,8 +104,8 @@ const AdjustableRootPopoverContent = ({
               <Root>{display(x)}</Root>
               <Button
                 onClick={() => {
-                  addGenericMapping(x, code);
-                  removeGenericGrouping(x);
+                  addMapping(x, code);
+                  removeGrouping(x);
                 }}
               >
                 取消归并
@@ -126,8 +124,8 @@ const AdjustableRootPopoverContent = ({
           />
           <Button
             onClick={() => {
-              addGenericGrouping(name, main!);
-              removeGenericMapping(name);
+              addGrouping(name, main!);
+              removeMapping(name);
             }}
           >
             归并
@@ -146,7 +144,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const keys = Array.from(code).concat(Array(padding).fill(""));
 
   const [main, setMain] = useState(Object.keys(mapping)[0]);
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   return (
     <Popover
       trigger={["click"]}
@@ -213,9 +211,7 @@ const ImportResultAlert = ({
 
 const Mapping = () => {
   const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
-
-  const form = useForm();
-
+  const form = useAtomValue(customFormAtom);
   const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?" + "qwertyuiopasdfghjkl;zxcvbnm,./",
@@ -224,15 +220,15 @@ const Mapping = () => {
   const [char, setChar] = useState<string | undefined>(undefined);
   const mapping_type_default = mapping_type ?? 1;
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const setGenericMaxCodelen = useSetAtom(setGenericMaxCodeLenAtom);
-  const setGenericAlphabet = useSetAtom(setGenericAlphabetAtom);
-  const batchGenericMapping = useSetAtom(batchGenericMappingAtom);
+  const setMappingType = useSetAtom(mappingTypeAtom);
+  const setAlphabet = useSetAtom(alphabetAtom);
+  const setMapping = useSetAtom(mappingAtom);
   return (
     <>
       <Form.Item label="编码类型">
         <Select
           value={mapping_type_default}
-          onChange={(event) => setGenericMaxCodelen(event)}
+          onChange={(event) => setMappingType(event)}
           options={[
             { label: "单编码", value: 1 },
             { label: "双编码", value: 2 },
@@ -244,15 +240,13 @@ const Mapping = () => {
       {importResult && <ImportResultAlert {...importResult} />}
       <Flex justify="center" gap="large">
         <Button
-          onClick={() =>
-            setGenericAlphabet(Array.from(alphabet).sort().join(""))
-          }
+          onClick={() => setAlphabet(Array.from(alphabet).sort().join(""))}
         >
           按字典序排序
         </Button>
         <Button
           onClick={() =>
-            setGenericAlphabet(
+            setAlphabet(
               Array.from(alphabet)
                 .sort(
                   (a, b) =>
@@ -292,7 +286,7 @@ const Mapping = () => {
               }
               record[key] = value.slice(0, mapping_type_default);
             }
-            batchGenericMapping(record);
+            setMapping((mapping) => ({ ...mapping, ...record }));
             setImportResult({
               success: Object.keys(record).length,
               unknownKeys,
@@ -315,7 +309,7 @@ const Mapping = () => {
                 danger
                 disabled={roots.length > 0}
                 onClick={() =>
-                  setGenericAlphabet(
+                  setAlphabet(
                     Array.from(alphabet)
                       .filter((x) => x !== key)
                       .join(""),
@@ -347,7 +341,7 @@ const Mapping = () => {
         <Button
           type="primary"
           disabled={char === undefined}
-          onClick={() => setGenericAlphabet(alphabet + char)}
+          onClick={() => setAlphabet(alphabet + char)}
         >
           添加
         </Button>

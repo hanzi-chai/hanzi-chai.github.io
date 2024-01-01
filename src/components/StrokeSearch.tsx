@@ -1,29 +1,21 @@
 import { Input } from "antd";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
 import { fullToHalf, halfToFull } from "~/lib/utils";
-import classifier from "~/lib/classifier";
 
 interface StrokeSearchProps {
-  sequence: string;
   setSequence: (s: string) => void;
+  disabled?: boolean;
 }
 
-const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
-  const numbers = Object.values(classifier);
-  const valid = Array.from(sequence).every((x) =>
-    numbers.includes(parseInt(x, 10)),
-  );
+export default function ({ setSequence, disabled }: StrokeSearchProps) {
   return (
     <Input
-      placeholder="输入笔画（１２３４５．．．）搜索"
-      status={valid ? undefined : "error"}
+      placeholder="输入笔画（１２３４５．．．）或汉字搜索"
       onChange={(event) => {
         setSequence(fullToHalf(event.target.value));
       }}
       prefix={<SearchOutlined />}
-      value={halfToFull(sequence)}
+      disabled={disabled}
     />
   );
-};
-
-export default StrokeSearch;
+}

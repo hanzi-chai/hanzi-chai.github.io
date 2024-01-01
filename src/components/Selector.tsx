@@ -15,20 +15,19 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { SieveName } from "~/lib/config";
-import {
-  useSetAtom,
-  useAtomValue,
-  removeRootSelectorAtom,
-  addRootSelectorAtom,
-  configAnalysisAtom,
-  replaceRootSelectorAtom,
-} from "~/atoms";
+import { useAtom, selectorAtom, useAppendAtom, useExcludeAtom } from "~/atoms";
 
 import { Button, Dropdown, Flex, Space, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import PrioritizedRoots from "./PrioritizedRoots";
 
-const SortableItem = ({ sieve }: { sieve: SieveName }) => {
+const SortableItem = ({
+  sieve,
+  index,
+}: {
+  sieve: SieveName;
+  index: number;
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: sieve });
 
@@ -36,37 +35,34 @@ const SortableItem = ({ sieve }: { sieve: SieveName }) => {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  const removeRootSelector = useSetAtom(removeRootSelectorAtom);
+  const excludeSelector = useExcludeAtom(selectorAtom);
   return (
     <Flex key={sieve} justify="space-evenly">
       <Button ref={setNodeRef} style={style} {...attributes} {...listeners}>
         <MenuOutlined />
         {sieve}
       </Button>
-      <Button onClick={() => removeRootSelector(sieve)}>删除</Button>
+      <Button onClick={() => excludeSelector(index)}>删除</Button>
     </Flex>
   );
 };
 
 const Selector = () => {
-  const selector = useAtomValue(configAnalysisAtom)?.selector ?? [];
-
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  const replaceRootSelector = useSetAtom(replaceRootSelectorAtom);
-  const addRootSelector = useSetAtom(addRootSelectorAtom);
+  const [selector, setSelector] = useAtom(selectorAtom);
+  const appendSelector = useAppendAtom(selectorAtom);
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
     if (active.id !== over.id) {
       const oldIndex = selector.indexOf(active.id as SieveName);
       const newIndex = selector.indexOf(over.id as SieveName);
-      replaceRootSelector(arrayMove(selector, oldIndex, newIndex));
+      setSelector(arrayMove(selector, oldIndex, newIndex));
     }
   }
 
@@ -75,8 +71,8 @@ const Selector = () => {
       <Typography.Title level={3}>拆分方式筛选</Typography.Title>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <SortableContext items={selector}>
-          {selector.map((sieve) => (
-            <SortableItem sieve={sieve} key={sieve} />
+          {selector.map((sieve, index) => (
+            <SortableItem sieve={sieve} key={sieve} index={index} />
           ))}
         </SortableContext>
       </DndContext>
@@ -89,7 +85,7 @@ const Selector = () => {
               .map((sieve) => ({
                 key: sieve,
                 label: sieve,
-                onClick: () => addRootSelector(sieve),
+                onClick: () => appendSelector(sieve),
               })),
           }}
         >

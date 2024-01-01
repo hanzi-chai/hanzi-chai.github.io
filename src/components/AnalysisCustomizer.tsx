@@ -2,10 +2,11 @@ import { useState, memo, useCallback } from "react";
 import {
   useSetAtom,
   useAtomValue,
-  addRootCustomizeAtom,
-  removeRootCustomizeAtom,
-  useDisplay,
-  configAnalysisAtom,
+  analysisAtom,
+  displayAtom,
+  useAddAtom,
+  customizeAtom,
+  useRemoveAtom,
 } from "~/atoms";
 import { Button, Flex, Popover } from "antd";
 import {
@@ -19,7 +20,7 @@ import {
 import Char from "./Char";
 
 function RootSelectPopover(props: ElementSelectProps) {
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   const [open, setOpen] = useState(false);
   return (
     <Popover
@@ -53,8 +54,8 @@ const EachSequence = ({
   display: Function;
 }) => {
   const sequence = sequencejoin.split(" ");
-  const addRootCustomize = useSetAtom(addRootCustomizeAtom);
-  const removeRootCustomize = useSetAtom(removeRootCustomizeAtom);
+  const addCustomization = useAddAtom(customizeAtom);
+  const removeCustomization = useRemoveAtom(customizeAtom);
 
   return (
     <Flex justify="space-between" key={component}>
@@ -66,7 +67,7 @@ const EachSequence = ({
             char={x}
             onlyRootsAndStrokes
             onChange={(s) =>
-              addRootCustomize(
+              addCustomization(
                 component,
                 sequence.map((y, j) => (i === j ? s : y)),
               )
@@ -74,14 +75,14 @@ const EachSequence = ({
           />
         ))}
         <PlusButton
-          onClick={() => addRootCustomize(component, sequence.concat("1"))}
+          onClick={() => addCustomization(component, sequence.concat("1"))}
         />
         <MinusButton
           onClick={() =>
-            addRootCustomize(component, sequence.slice(0, sequence.length - 1))
+            addCustomization(component, sequence.slice(0, sequence.length - 1))
           }
         />
-        <DeleteButton onClick={() => removeRootCustomize(component)} />
+        <DeleteButton onClick={() => removeCustomization(component)} />
       </Flex>
     </Flex>
   );
@@ -90,10 +91,10 @@ const EachSequence = ({
 const MemoEachSequence = memo(EachSequence);
 
 const AnalysisCustomizer = () => {
-  const customize = useAtomValue(configAnalysisAtom)?.customize ?? {};
-  const display = useCallback(useDisplay, [])();
+  const customize = useAtomValue(analysisAtom)?.customize ?? {};
+  const display = useAtomValue(displayAtom);
   const [newCustomization, setNew] = useState<string | undefined>(undefined);
-  const addRootCustomize = useSetAtom(addRootCustomizeAtom);
+  const addCustomization = useAddAtom(customizeAtom);
   return (
     <>
       {Object.entries(customize).map(([component, sequence]) => (
@@ -114,7 +115,7 @@ const AnalysisCustomizer = () => {
         />
         <Button
           type="primary"
-          onClick={() => addRootCustomize(newCustomization!, ["1"])}
+          onClick={() => addCustomization(newCustomization!, ["1"])}
           disabled={newCustomization === undefined}
         >
           添加自定义

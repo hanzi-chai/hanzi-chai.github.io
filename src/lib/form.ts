@@ -44,7 +44,7 @@ const getExtra = function (data: MergedData, config: FormConfig): Extra {
       return [Number(x)];
     }
     try {
-      const sequence = recursiveGetSequence(form, classifier, x);
+      const sequence = recursiveGetSequence(form, x);
       if (sequence instanceof Error) {
         return [];
       }

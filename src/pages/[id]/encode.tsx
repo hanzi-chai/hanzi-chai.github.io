@@ -2,7 +2,7 @@ import { Flex, Select, Switch, Typography } from "antd";
 import { useEffect, useState } from "react";
 import EncoderRules from "~/components/EncoderRules";
 import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
-import { useAll, configAtom, useAtomValue } from "~/atoms";
+import { configAtom, customDataAtom, useAtomValue } from "~/atoms";
 import { CharsetFilter, EncoderResult, filtermap } from "~/lib/encoder";
 import { getSupplemental } from "~/lib/utils";
 
@@ -11,7 +11,7 @@ type FilterOption = (typeof filterOptions)[number];
 
 const Encode = () => {
   const config = useAtomValue(configAtom);
-  const data = useAll();
+  const data = useAtomValue(customDataAtom);
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   const [reference, setReference] = useState<Map<string, string[]>>(() => {

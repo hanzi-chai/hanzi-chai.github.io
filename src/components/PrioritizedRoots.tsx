@@ -2,34 +2,34 @@ import { Button, Flex, Space, Typography } from "antd";
 import { ElementSelect } from "./Utils";
 import {
   useAtomValue,
-  useSetAtom,
-  configAnalysisAtom,
-  useDisplay,
-  removeRootSelectorStrongWeakAtom,
-  addRootSelectorStrongWeakAtom,
+  analysisAtom,
+  displayAtom,
+  useExcludeAtom,
+  strongAtom,
+  useAppendAtom,
+  weakAtom,
 } from "~/atoms";
 import Root from "./Root";
 import { useState } from "react";
 
 const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
-  const analysis = useAtomValue(configAnalysisAtom);
+  const analysis = useAtomValue(analysisAtom);
   const list = analysis ? analysis[variant] : [];
   const [current, setCurrent] = useState<string | undefined>(undefined);
-  const display = useDisplay();
-  const removeRootSelectorStrongWeak = useSetAtom(
-    removeRootSelectorStrongWeakAtom,
-  );
-  const addRootSelectorStrongWeak = useSetAtom(addRootSelectorStrongWeakAtom);
+  const atom = variant === "strong" ? strongAtom : weakAtom;
+  const display = useAtomValue(displayAtom);
+  const exclude = useExcludeAtom(atom);
+  const append = useAppendAtom(atom);
   return (
     <>
       <Typography.Title level={4}>
         {variant === "strong" ? "强" : "弱"}字根
       </Typography.Title>
       <Flex wrap="wrap" gap="small">
-        {(list ?? []).map((x) => (
+        {(list ?? []).map((x, i) => (
           <Space key={x}>
             <Root>{display(x)}</Root>
-            <a onClick={() => removeRootSelectorStrongWeak(variant, x)}>删除</a>
+            <a onClick={() => exclude(i)}>删除</a>
           </Space>
         ))}
       </Flex>
@@ -41,7 +41,7 @@ const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
         />
         <Button
           type="primary"
-          onClick={() => addRootSelectorStrongWeak(variant, current!)}
+          onClick={() => append(current!)}
           disabled={current === undefined}
         >
           添加自定义

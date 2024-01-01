@@ -8,7 +8,7 @@ import type {
   Stroke,
 } from "~/lib/data";
 import { Empty, Result } from "antd";
-import { useForm } from "~/atoms";
+import { customFormAtom, useAtomValue } from "~/atoms";
 import type { Index } from "./Utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
@@ -55,7 +55,7 @@ export const StrokesView = ({ glyph }: { glyph: SVGStroke[] }) => (
 );
 
 export const ComponentView = ({ component }: { component: Component }) => {
-  const form = useForm();
+  const form = useAtomValue(customFormAtom);
   const glyph: SVGGlyph = [];
   let valid = true;
   if (component.source !== undefined) {

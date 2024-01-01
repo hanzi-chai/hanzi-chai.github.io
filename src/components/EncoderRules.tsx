@@ -1,7 +1,7 @@
 import { Button, Cascader, Flex, Form, Input, Space, Typography } from "antd";
 import { DeleteButton, KeyList, Select } from "./Utils";
 import { Config } from "~/lib/config";
-import { useAtom, useAtomValue, configFormAtom } from "~/atoms";
+import { useAtom, useAtomValue, configFormAtom, useListAtom } from "~/atoms";
 import {
   autoSelectLengthAtom,
   autoSelectPatternAtom,
@@ -11,8 +11,6 @@ import {
   wordRulesAtom,
 } from "~/atoms/encoder";
 import { printableAscii } from "~/lib/utils";
-import { useState } from "react";
-import Root from "./Root";
 
 const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
   { length_equal: 2, formula: "AaAbBaBb" },
@@ -27,15 +25,14 @@ const EncoderRules = () => {
     autoSelectPatternAtom,
   );
   const [selectKeys, setSelectKeys] = useAtom(selectKeysAtom);
-  const [wordRules, setWordRules] = useAtom(wordRulesAtom);
-  const [shortCodeSchemes, setShortCodeSchemes] = useAtom(shortCodeSchemesAtom);
+  const [wordRules, appendRule, excludeRule, modifyRule] =
+    useListAtom(wordRulesAtom);
+  const [shortCodeSchemes, appendScheme, excludeScheme, modifyScheme] =
+    useListAtom(shortCodeSchemesAtom);
   const wordLengthArray = [...Array(9).keys()].map((x) => ({
     label: x + 2,
     value: x + 2,
   }));
-  const currentSelectKeys = selectKeys ?? [];
-  const currentWordRules = wordRules ?? defaultRules;
-  const currentShortCodeSchemes = shortCodeSchemes ?? [];
   const { alphabet } = useAtomValue(configFormAtom);
   const allowedSelectKeys = printableAscii.filter((x) => !alphabet.includes(x));
   return (
@@ -73,14 +70,14 @@ const EncoderRules = () => {
       </Flex>
       <Form.Item label="选择键">
         <KeyList
-          keys={currentSelectKeys}
+          keys={selectKeys}
           setKeys={setSelectKeys}
           allKeys={allowedSelectKeys}
         />
       </Form.Item>
       <Typography.Title level={3}>简码</Typography.Title>
       <Flex vertical align="center">
-        {currentShortCodeSchemes.map((scheme, index) => {
+        {shortCodeSchemes.map((scheme, index) => {
           return (
             <Flex key={index} gap="middle">
               <Form.Item label="规则">
@@ -91,11 +88,7 @@ const EncoderRules = () => {
                     value: x,
                   }))}
                   onChange={(value) => {
-                    setShortCodeSchemes(
-                      currentShortCodeSchemes.map((s, i) =>
-                        i === index ? { ...s, prefix: value } : s,
-                      ),
-                    );
+                    modifyScheme(index, { ...scheme, prefix: value });
                   }}
                 />
               </Form.Item>
@@ -107,37 +100,23 @@ const EncoderRules = () => {
                     value: x,
                   }))}
                   onChange={(value) => {
-                    setShortCodeSchemes(
-                      currentShortCodeSchemes.map((s, i) =>
-                        i === index ? { ...s, count: value } : s,
-                      ),
-                    );
+                    modifyScheme(index, { ...scheme, count: value });
                   }}
                 />
               </Form.Item>
-              <DeleteButton
-                onClick={() => {
-                  setShortCodeSchemes(
-                    currentShortCodeSchemes.filter((_, i) => i !== index),
-                  );
-                }}
-              />
+              <DeleteButton onClick={() => excludeScheme(index)} />
             </Flex>
           );
         })}
         <Space>
-          <Button
-            onClick={() =>
-              setShortCodeSchemes(currentShortCodeSchemes.concat({ prefix: 2 }))
-            }
-          >
+          <Button onClick={() => appendScheme({ prefix: 2 })}>
             添加简码规则
           </Button>
         </Space>
       </Flex>
       <Typography.Title level={3}>构词</Typography.Title>
       <Flex vertical align="center">
-        {currentWordRules.map((rule, index) => {
+        {wordRules.map((rule, index) => {
           return (
             <Flex key={index} gap="middle" justify="center">
               {"length_equal" in rule ? (
@@ -147,11 +126,7 @@ const EncoderRules = () => {
                     value={rule.length_equal}
                     options={wordLengthArray}
                     onChange={(value) => {
-                      setWordRules(
-                        currentWordRules.map((r, i) =>
-                          i === index ? { ...rule, length_equal: value } : r,
-                        ),
-                      );
+                      modifyRule(index, { ...rule, length_equal: value });
                     }}
                   />
                 </Form.Item>
@@ -169,16 +144,10 @@ const EncoderRules = () => {
                         ),
                       }))}
                     onChange={(value) => {
-                      setWordRules(
-                        currentWordRules.map((r, i) =>
-                          i === index
-                            ? {
-                                ...rule,
-                                length_in_range: value as [number, number],
-                              }
-                            : r,
-                        ),
-                      );
+                      modifyRule(index, {
+                        ...rule,
+                        length_in_range: value as [number, number],
+                      });
                     }}
                   />
                 </Form.Item>
@@ -186,36 +155,18 @@ const EncoderRules = () => {
               <Form.Item label="规则">
                 <Input
                   value={rule.formula}
-                  onChange={(e) => {
-                    setWordRules(
-                      currentWordRules.map((r, i) =>
-                        i === index ? { ...rule, formula: e.target.value } : r,
-                      ),
-                    );
-                  }}
+                  onChange={(e) =>
+                    modifyRule(index, { ...rule, formula: e.target.value })
+                  }
                 />
               </Form.Item>
-              <DeleteButton
-                onClick={() => {
-                  setWordRules(currentWordRules.filter((_, i) => i !== index));
-                }}
-              />
+              <DeleteButton onClick={() => excludeRule(index)} />
             </Flex>
           );
         })}
         <Space>
-          <Button
-            onClick={() =>
-              setWordRules(currentWordRules.concat(defaultRules[0]!))
-            }
-          >
-            添加规则
-          </Button>
-          <Button
-            onClick={() =>
-              setWordRules(currentWordRules.concat(defaultRules[2]!))
-            }
-          >
+          <Button onClick={() => appendRule(defaultRules[0]!)}>添加规则</Button>
+          <Button onClick={() => appendRule(defaultRules[2]!)}>
             添加规则（范围）
           </Button>
         </Space>

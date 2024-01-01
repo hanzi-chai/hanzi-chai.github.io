@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { unicodeBlock } from "~/lib/utils";
 import { Button, Flex, Form, Layout, Modal, Space, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -9,7 +9,14 @@ import {
   ItemSelect,
   Select,
 } from "~/components/Utils";
-import { dataAtom, useAtomValue, useDisplay, useForm } from "~/atoms";
+import {
+  customFormAtom,
+  displayAtom,
+  formCustomizationAtom,
+  sequenceAtom,
+  sortedCustomFormAtom,
+  useAtomValue,
+} from "~/atoms";
 import type { Glyph, Operator } from "~/lib/data";
 import { operators } from "~/lib/data";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
@@ -23,7 +30,6 @@ import {
   Update,
 } from "~/components/Action";
 import StrokeSearch from "~/components/StrokeSearch";
-import { getSequence } from "~/lib/component";
 import classifier from "~/lib/classifier";
 import type { ColumnType } from "antd/es/table/interface";
 
@@ -33,27 +39,23 @@ interface CompoundFilter {
 }
 
 const FormTable = () => {
-  const form = useForm();
-  const configData = useAtomValue(dataAtom);
-  const customizedForm = configData?.form ?? {};
+  const formCustomization = useAtomValue(formCustomizationAtom);
+  const sequenceMap = useAtomValue(sequenceAtom);
   const [thisForm] = Form.useForm<Glyph>();
   const [char, setChar] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [sequence, setSequence] = useState("");
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
+  const sortedForm = useAtomValue(sortedCustomFormAtom);
 
-  const dataSource = Object.values(form)
-    .filter((x) =>
-      getSequence(form, classifier, String.fromCodePoint(x.unicode)).includes(
-        sequence,
-      ),
+  const dataSource = sortedForm
+    .filter(
+      ([char, glyph]) =>
+        (glyph.name ?? "").includes(sequence) ||
+        char.includes(sequence) ||
+        sequenceMap.get(char)?.startsWith(sequence),
     )
-    .sort((a, b) => {
-      return (
-        getSequence(form, classifier, String.fromCodePoint(a.unicode)).length -
-        getSequence(form, classifier, String.fromCodePoint(b.unicode)).length
-      );
-    });
+    .map(([, glyph]) => glyph);
 
   const compoundFilter: ColumnType<Glyph> = {
     filterDropdown: ({
@@ -239,7 +241,7 @@ const FormTable = () => {
       ],
       onFilter: (value, record) => {
         const char = String.fromCodePoint(record.unicode);
-        const customized = customizedForm[char] !== undefined;
+        const customized = formCustomization[char] !== undefined;
         return value === 1 ? customized : !customized;
       },
     },
@@ -252,8 +254,8 @@ const FormTable = () => {
       gap="large"
       align="center"
     >
-      <Flex style={{ maxWidth: "960px" }} gap="middle">
-        <StrokeSearch sequence={sequence} setSequence={setSequence} />
+      <Flex style={{ width: "720px" }} gap="middle" justify="center">
+        <StrokeSearch setSequence={setSequence} />
         <Create setChar={setChar} />
       </Flex>
       <ModelContext.Provider value={thisForm}>

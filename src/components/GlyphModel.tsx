@@ -38,7 +38,7 @@ import classifier, { schema } from "~/lib/classifier";
 import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
-import { useForm } from "~/atoms";
+import { customFormAtom, useAtomValue } from "~/atoms";
 import { recursiveRenderGlyph } from "~/lib/component";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);
@@ -75,7 +75,7 @@ interface ListItemWithRemove {
 const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
-  const formData = useForm();
+  const formData = useAtomValue(customFormAtom);
   return (
     <Form.Item noStyle shouldUpdate={() => true}>
       {({ getFieldValue }) => {
@@ -214,7 +214,7 @@ const ComponentForm = () => {
   const source = Form.useWatch(["component", "source"], form) as
     | string
     | undefined;
-  const formData = useForm();
+  const formData = useAtomValue(customFormAtom);
   const parent = source !== undefined ? formData[source] : undefined;
   const parentLength = parent?.component?.strokes.length ?? 0;
   return (
@@ -547,7 +547,7 @@ const GlyphModel = ({
 }: PropsWithChildren<IndexEdit2 & { form: FormInstance<Glyph> }>) => {
   const [hasComponent, setHasComponent] = useState(false);
   const [hasCompound, setHasCompound] = useState(false);
-  const formData = useForm();
+  const formData = useAtomValue(customFormAtom);
   useEffect(() => {
     if (char === undefined) return;
     const data = formData[char];

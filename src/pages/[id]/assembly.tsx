@@ -10,7 +10,7 @@ import {
   TabsProps,
   Typography,
 } from "antd";
-import { useAtomValue, configAtom, useAll, useDisplay } from "~/atoms";
+import { useAtomValue, configAtom, customDataAtom, displayAtom } from "~/atoms";
 
 import type {
   CharsetFilter,
@@ -53,9 +53,9 @@ type ElementFilter = {
 
 const Encoder = () => {
   useChaifenTitle("编码");
-  const data = useAll();
+  const data = useAtomValue(customDataAtom);
   const config = useAtomValue(configAtom);
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>(new Map());

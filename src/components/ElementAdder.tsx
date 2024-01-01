@@ -3,11 +3,10 @@ import { Select, Button, Flex } from "antd";
 import {
   configFormAtom,
   useAtomValue,
-  useSetAtom,
-  addGenericGroupingAtom,
-  addGenericMappingAtom,
-  removeGenericGroupingAtom,
-  removeGenericMappingAtom,
+  useAddAtom,
+  mappingAtom,
+  groupingAtom,
+  useRemoveAtom,
 } from "~/atoms";
 import { ElementSelect } from "./Utils";
 import { alphabetOptionsAtom } from "./Mapping";
@@ -16,15 +15,13 @@ const ElementAdder = ({ element }: { element?: string }) => {
   const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
   const [main, setMain] = useState(Object.keys(mapping)[0]!);
   const [keys, setKeys] = useState([alphabet[0], "", "", ""]);
-  const [groupingStyle, setGroupingStyle] = useState(-1);
-  const allStyles = [-1].concat([...Array(mapping_type).keys()]);
   const alphabetOptions = useAtomValue(alphabetOptionsAtom);
 
   const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
-  const removeGenericGrouping = useSetAtom(removeGenericGroupingAtom);
-  const addGenericMapping = useSetAtom(addGenericMappingAtom);
-  const addGenericGrouping = useSetAtom(addGenericGroupingAtom);
-  const removeGenericMapping = useSetAtom(removeGenericMappingAtom);
+  const addMapping = useAddAtom(mappingAtom);
+  const addGrouping = useAddAtom(groupingAtom);
+  const removeMapping = useRemoveAtom(mappingAtom);
+  const removeGrouping = useRemoveAtom(groupingAtom);
   return (
     <>
       <Flex justify="center" align="center" gap="small">
@@ -49,11 +46,8 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined}
           onClick={() => {
-            addGenericMapping(
-              element!,
-              keys.slice(0, mapping_type ?? 1).join(""),
-            );
-            removeGenericGrouping(element!);
+            addMapping(element!, keys.slice(0, mapping_type ?? 1).join(""));
+            removeGrouping(element!);
           }}
         >
           添加
@@ -74,8 +68,8 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined || Object.keys(mapping).length === 0}
           onClick={() => {
-            addGenericGrouping(element!, main);
-            removeGenericMapping(element!);
+            addGrouping(element!, main);
+            removeMapping(element!);
           }}
         >
           归并

@@ -13,9 +13,6 @@ import { Select, errorFeedback, verifyNewName } from "~/components/Utils";
 import { deepcopy, length, isValidCJKChar, formDefault } from "~/lib/utils";
 import { ModelContext } from "~/components/GlyphModel";
 import {
-  useCode,
-  useForm,
-  dataAtom,
   useAtomValue,
   formAtom,
   updateFormAtom,
@@ -24,6 +21,10 @@ import {
   mutateFormAtom,
   formCustomizationAtom,
   useAtom,
+  customFormAtom,
+  nextUnicodeAtom,
+  useAddAtom,
+  useRemoveAtom,
 } from "~/atoms";
 import * as O from "optics-ts/standalone";
 
@@ -54,13 +55,10 @@ export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => (
 );
 
 function CreatePopoverContent(props: any) {
-  const setForm = useSetAtom(formCustomizationAtom);
-  const add = (key: string, value: Glyph) => {
-    setForm(O.set(O.prop(key), value));
-  };
+  const add = useAddAtom(formCustomizationAtom);
   const remote = useContext(RemoteContext);
-  const code = useCode();
-  const form = useForm();
+  const code = useAtomValue(nextUnicodeAtom);
+  const form = useAtomValue(customFormAtom);
   const options = [
     { label: "部件", value: "component" },
     { label: "复合体", value: "compound" },
@@ -185,10 +183,7 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
 export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
   const model = useContext(ModelContext);
   const remote = useContext(RemoteContext);
-  const setForm = useSetAtom(formCustomizationAtom);
-  const add = (key: string, value: Glyph) => {
-    setForm(O.set(O.prop(key), value));
-  };
+  const add = useAddAtom(formCustomizationAtom);
   const updateForm = useSetAtom(updateFormAtom);
   return (
     <Button
@@ -216,9 +211,9 @@ export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
 
 export const Delete = ({ unicode }: { unicode: number }) => {
   const remote = useContext(RemoteContext);
-  const [formCustomization, setForm] = useAtom(formCustomizationAtom);
+  const formCustomization = useAtomValue(formCustomizationAtom);
+  const remove = useRemoveAtom(formCustomizationAtom);
   const form = useAtomValue(formAtom);
-  const del = (key: string) => setForm(O.remove(O.atKey(key)));
   const char = String.fromCodePoint(unicode);
   const removeForm = useSetAtom(removeFormAtom);
   return (
@@ -231,7 +226,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
             removeForm(unicode);
           }
         } else {
-          del(String.fromCodePoint(unicode));
+          remove(String.fromCodePoint(unicode));
         }
       }}
     >

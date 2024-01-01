@@ -7,18 +7,23 @@ import type { RenderedGlyph, Topology } from "./topology";
 import findTopology, { renderSVGGlyph } from "./topology";
 import type { Classifier } from "./classifier";
 import { isValidCJKChar, isValidChar } from "./utils";
+import classifier from "./classifier";
 
 class UnknownCharError extends Error {}
 class InvalidGlyphError extends Error {}
 
 export const recursiveGetSequence = function (
   form: Form,
-  classifier: Classifier,
   char: string,
+  cache: Map<string, string> = new Map(),
   depth: number = 0,
 ): number[] | UnknownCharError | InvalidGlyphError {
   if (depth >= 10) {
     return new InvalidGlyphError();
+  }
+  const cached = cache.get(char);
+  if (cached) {
+    return Array.from(cached).map(Number);
   }
   const glyph = form[char];
   if (!glyph)
@@ -27,13 +32,13 @@ export const recursiveGetSequence = function (
         .codePointAt(0)!
         .toString(16)}, ${char.codePointAt(0)!}`,
     );
-  const { default_type, component, compound } = glyph;
+  const { component, compound } = glyph;
   if (component !== undefined) {
     if (component.source !== undefined) {
       const sourceSequence = recursiveGetSequence(
         form,
-        classifier,
         component.source,
+        cache,
         depth + 1,
       );
       if (sourceSequence instanceof Error) return new InvalidGlyphError();
@@ -61,8 +66,8 @@ export const recursiveGetSequence = function (
     for (const operand of operandList) {
       const opearndSequence = recursiveGetSequence(
         form,
-        classifier,
         operand,
+        cache,
         depth + 1,
       );
       if (opearndSequence instanceof Error) return new InvalidGlyphError();
@@ -87,25 +92,19 @@ export const recursiveGetSequence = function (
   }
 };
 
-const sequenceCache = new Map<string, string>();
-
 export const getSequence = (
   form: Form,
-  classifier: Classifier,
   char: string,
+  cache?: Map<string, string>,
 ) => {
   if (char.match(/\d+/)) return char;
-  let thisSequence = sequenceCache.get(char);
-  if (thisSequence !== undefined) return thisSequence;
   try {
-    const recurseResult = recursiveGetSequence(form, classifier, char);
+    const recurseResult = recursiveGetSequence(form, char, cache);
     if (recurseResult instanceof Error) {
       console.error("无法获取笔画", char, char.codePointAt(0)!.toString(16));
       return "";
     }
-    thisSequence = recurseResult.join("");
-    sequenceCache.set(char, thisSequence);
-    return thisSequence;
+    return recurseResult.join("");
   } catch {
     console.error("无法获取笔画", char, char.codePointAt(0)!.toString(16));
     return "";

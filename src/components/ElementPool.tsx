@@ -2,85 +2,118 @@ import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Char";
 import { Flex, Pagination, Popover } from "antd";
-import { useAtomValue, configFormAtom, useDisplay, useForm } from "~/atoms";
+import {
+  useAtomValue,
+  configFormAtom,
+  customFormAtom,
+  sequenceAtom,
+  displayAtom,
+} from "~/atoms";
 import { isPUA } from "~/lib/utils";
 import { ComponentView } from "./GlyphView";
+import StrokeSearch from "./StrokeSearch";
 
 const Content = styled(Flex)`
   padding: 8px;
   border: 1px solid black;
+  width: 100%;
 `;
 
 interface PoolProps {
   element?: string;
   setElement: (s: string | undefined) => void;
   content: string[];
+  strokeFilter?: boolean;
 }
 
-const MyPagination = styled(Pagination)`
-  margin: 16px 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-`;
-
-const ElementPool = ({ element, setElement, content }: PoolProps) => {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
-  const range = content.slice((page - 1) * pageSize, page * pageSize);
+const Element = ({
+  element: x,
+  setElement,
+  currentElement,
+}: {
+  element: string;
+  setElement: (s: string | undefined) => void;
+  currentElement?: string;
+}) => {
   const configForm = useAtomValue(configFormAtom);
   const { mapping, grouping } = configForm;
-  const type = (x: string) =>
-    x === element ? "primary" : mapping[x] || grouping[x] ? "link" : "default";
-  const display = useDisplay();
-  const form = useForm();
+  const form = useAtomValue(customFormAtom);
+  const type =
+    x === currentElement
+      ? "primary"
+      : mapping[x] || grouping[x]
+        ? "link"
+        : "default";
+  const display = useAtomValue(displayAtom);
+  const core = (
+    <Char
+      onClick={() => setElement(x === currentElement ? undefined : x)}
+      type={type}
+    >
+      {display(x)}
+    </Char>
+  );
+  const component = form[x]?.component;
+  if (isPUA(x) && component !== undefined) {
+    return (
+      <Popover
+        content={
+          <div style={{ width: "200px" }}>
+            <ComponentView component={component} />
+          </div>
+        }
+      >
+        {core}
+      </Popover>
+    );
+  }
+  return core;
+};
+
+const MyPagination = styled(Pagination)``;
+
+const ElementPool = ({
+  element,
+  setElement,
+  content,
+  strokeFilter,
+}: PoolProps) => {
+  const [page, setPage] = useState(1);
+  const pageSize = 100;
+  const [sequence, setSequence] = useState("");
+  const sequenceMap = useAtomValue(sequenceAtom);
+  const filtered = strokeFilter
+    ? content.filter((x) => {
+        const thisSequence = sequenceMap.get(x) ?? "";
+        return thisSequence.length > 1 && thisSequence.startsWith(sequence);
+      })
+    : content;
+  const range = filtered.slice((page - 1) * pageSize, page * pageSize);
   return (
-    <>
+    <Flex vertical gap="middle" align="center">
+      {strokeFilter && <StrokeSearch setSequence={setSequence} />}
       <Content wrap="wrap">
-        {range.map((x) => {
-          const core = (
-            <Char
-              key={x}
-              onClick={() => {
-                x === element ? setElement(undefined) : setElement(x);
-              }}
-              type={type(x)}
-            >
-              {display(x)}
-            </Char>
-          );
-          const maybeGlyph = form[x];
-          if (isPUA(x) && maybeGlyph !== undefined) {
-            const { component } = maybeGlyph;
-            if (component) {
-              return (
-                <Popover
-                  key={x}
-                  content={
-                    <div style={{ width: "200px" }}>
-                      <ComponentView component={component} />
-                    </div>
-                  }
-                >
-                  {core}
-                </Popover>
-              );
-            }
-          }
-          return core;
-        })}
+        {range.map((x) => (
+          <Element
+            key={x}
+            element={x}
+            currentElement={element}
+            setElement={setElement}
+          />
+        ))}
       </Content>
-      <MyPagination
-        current={page}
-        onChange={(page, pageSize) => {
-          setPage(page);
-          setPageSize(pageSize);
-        }}
-        total={content.length}
-        pageSize={pageSize}
-        pageSizeOptions={[50, 100, 200, 300]}
-      />
-    </>
+      {content.length > pageSize && (
+        <MyPagination
+          current={page}
+          onChange={(page) => {
+            setPage(page);
+          }}
+          showSizeChanger={false}
+          total={content.length}
+          pageSize={pageSize}
+        />
+      )}
+    </Flex>
   );
 };
 

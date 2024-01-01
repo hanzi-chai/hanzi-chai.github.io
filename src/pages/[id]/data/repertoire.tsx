@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Button, Flex, Input, Space, Table } from "antd";
 import {
+  customRepertoireAtom,
   repertoireCustomizationAtom,
-  useRepertoire,
+  useAddAtom,
+  useAtomValue,
   useSetAtom,
 } from "~/atoms";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
@@ -39,11 +41,8 @@ const EditablePinyin = ({
 
 const Repertoire: React.FC = () => {
   useChaifenTitle("字音字集数据");
-  const characters = useRepertoire();
-  const setCharacters = useSetAtom(repertoireCustomizationAtom);
-  const modify = (key: string, value: Character) => {
-    setCharacters(O.set(O.prop(key), value));
-  };
+  const characters = useAtomValue(customRepertoireAtom);
+  const add = useAddAtom(repertoireCustomizationAtom);
   const [input, setInput] = useState("");
   const rawdata = Object.values(characters);
   const dataSource = input
@@ -87,12 +86,12 @@ const Repertoire: React.FC = () => {
                   setPinyin={(pinyin) => {
                     const modified = deepcopy(record);
                     modified.pinyin[i] = pinyin;
-                    modify(key, modified);
+                    add(key, modified);
                   }}
                   deletePinyin={() => {
                     const modified = deepcopy(record);
                     modified.pinyin.splice(i, 1);
-                    modify(key, modified);
+                    add(key, modified);
                   }}
                 />
               ))}
@@ -101,7 +100,7 @@ const Repertoire: React.FC = () => {
               onClick={() => {
                 const modified = deepcopy(record);
                 modified.pinyin.push("");
-                modify(key, modified);
+                add(key, modified);
               }}
             >
               添加

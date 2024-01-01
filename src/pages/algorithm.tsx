@@ -2,7 +2,7 @@ import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Root";
-import { useAll, useDisplay } from "~/atoms";
+import { customDataAtom, displayAtom } from "~/atoms";
 import { listForm } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
 import { renderComponentForm, type ComputedComponent } from "~/lib/component";
@@ -14,7 +14,7 @@ import { isEmpty } from "lodash-es";
 const DegeneratorTable = () => {
   const form = useAtomValue(formAtom);
   const formLoading = isEmpty(form);
-  const data = useAll();
+  const data = useAtomValue(customDataAtom);
   const [componentForm] = renderComponentForm(data);
   const dataSource = Object.values(componentForm)
     .filter((cache) => cache.glyph.length >= 5)
@@ -22,7 +22,7 @@ const DegeneratorTable = () => {
   const toCompare = Object.values(componentForm).filter(
     (cache) => cache.glyph.length >= 2,
   );
-  const display = useDisplay();
+  const display = useAtomValue(displayAtom);
   const [page, setPage] = useState(1);
   const columns: ColumnsType<ComputedComponent> = [
     {

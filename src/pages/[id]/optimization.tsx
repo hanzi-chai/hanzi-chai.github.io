@@ -13,11 +13,12 @@ import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useState } from "react";
 import {
+  characterFrequencyAtom,
   configFormAtom,
-  loadCFAtom,
-  loadKEAtom,
-  loadPEAtom,
-  loadWFAtom,
+  fetchJson,
+  keyEquivalenceAtom,
+  pairEquivalenceAtom,
+  wordFrequencyAtom,
 } from "~/atoms";
 import {
   constraintsAtom,
@@ -581,14 +582,14 @@ const GroupConstraintList = () => {
 };
 
 function LoadAssets() {
-  const loadCF = useSetAtom(loadCFAtom);
-  loadCF();
-  const loadWF = useSetAtom(loadWFAtom);
-  loadWF();
-  const loadKE = useSetAtom(loadKEAtom);
-  loadKE();
-  const loadPE = useSetAtom(loadPEAtom);
-  loadPE();
+  const setCF = useSetAtom(characterFrequencyAtom);
+  const setWF = useSetAtom(wordFrequencyAtom);
+  const setKE = useSetAtom(keyEquivalenceAtom);
+  const setPE = useSetAtom(pairEquivalenceAtom);
+  fetchJson("character_frequency").then(setCF);
+  fetchJson("word_frequency").then(setWF);
+  fetchJson("key_equivalence").then(setKE);
+  fetchJson("pair_equivalence").then(setPE);
   return null;
 }
 

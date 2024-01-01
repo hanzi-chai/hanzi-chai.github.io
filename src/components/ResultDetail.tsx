@@ -1,7 +1,7 @@
 import { Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Root from "./Root";
-import { useDisplay, configAnalysisAtom, useAtomValue } from "~/atoms";
+import { analysisAtom, displayAtom, useAtomValue } from "~/atoms";
 import type { Selector } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
 import { binaryToIndices } from "~/lib/degenerator";
@@ -30,8 +30,8 @@ const ResultDetail = ({
   map: Map<number, string>;
   strokes: number;
 }) => {
-  const selector = useAtomValue(configAnalysisAtom)?.selector ?? [];
-  const display = useDisplay();
+  const selector = useAtomValue(analysisAtom)?.selector ?? [];
+  const display = useAtomValue(displayAtom);
 
   const columns: ColumnsType<SchemeWithData> = [
     {

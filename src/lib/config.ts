@@ -19,7 +19,7 @@ type SieveName =
 
 type Selector = SieveName[];
 
-type PartialClassifier = Partial<Record<Feature, number>>;
+type PartialClassifier = Partial<Classifier>;
 
 type Mapping = Record<string, string>;
 // 这个暂时没有启用
@@ -33,18 +33,20 @@ interface BaseConfig {
 }
 
 interface Degenerator {
-  feature?: Partial<Record<Feature, Feature>>;
+  feature?: Record<Feature, Feature>;
   no_cross?: boolean;
 }
 
+export interface Analysis {
+  degenerator?: Degenerator;
+  selector?: Selector;
+  customize?: Record<string, string[]>;
+  strong?: string[];
+  weak?: string[];
+}
+
 interface FormConfig extends BaseConfig {
-  analysis?: {
-    degenerator?: Degenerator;
-    selector?: Selector;
-    customize?: Record<string, string[]>;
-    strong?: string[];
-    weak?: string[];
-  };
+  analysis?: Analysis;
 }
 
 interface Source {
@@ -87,7 +89,7 @@ export interface BinaryCondition {
 
 type Condition = UnaryCondition | BinaryCondition;
 
-type WordRule = { formula: string } & (
+export type WordRule = { formula: string } & (
   | { length_equal: number }
   | { length_in_range: number[] }
 );
@@ -173,7 +175,7 @@ export interface Solver {
   };
 }
 
-interface ShortCodeScheme {
+export interface ShortCodeScheme {
   prefix: number;
   count?: number;
   select_keys?: string[];
@@ -210,7 +212,7 @@ interface Config {
   data?: {
     form?: Form;
     repertoire?: Repertoire;
-    classifier?: PartialClassifier;
+    classifier?: Record<Feature, number>;
   };
   algebra?: Algebra;
   form: FormConfig;
