@@ -10,7 +10,6 @@ import type {
 } from "~/lib/data";
 import { Empty, Result } from "antd";
 import { customFormAtom, useAtomValue } from "~/atoms";
-import type { Index } from "./Utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
 import {

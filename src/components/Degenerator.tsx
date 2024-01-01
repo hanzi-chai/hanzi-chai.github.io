@@ -9,7 +9,7 @@ import {
   degeneratorFeatureAtom,
   degeneratorNoCrossAtom,
 } from "~/atoms";
-import { Select } from "./Utils";
+import { DeleteButton, Select } from "./Utils";
 import classifier, { Feature } from "~/lib/classifier";
 import { useState } from "react";
 import { defaultDegenerator } from "~/lib/degenerator";
@@ -39,7 +39,7 @@ const Degenerator = () => {
               onChange={(value) => addFeature(from as Feature, value)}
             />
             相同
-            <Button onClick={() => removeFeature(from as Feature)}>删除</Button>
+            <DeleteButton onClick={() => removeFeature(from as Feature)} />
           </Flex>
         ))}
         <Flex gap="middle">

@@ -19,10 +19,10 @@ import Root from "./Root";
 import Char from "./Char";
 import type { MappedInfo } from "~/lib/utils";
 import { isPUA, reverse } from "~/lib/utils";
-import { ElementSelect, Select, Uploader } from "./Utils";
-import { Select as AntdSelect } from "antd";
+import { DeleteButton, Select, Uploader } from "./Utils";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import ElementSelect from "./ElementSelect";
 
 export const alphabetOptionsAtom = atom((get) =>
   Array.from(get(configFormAtom).alphabet).map((x) => ({
@@ -76,7 +76,8 @@ const AdjustableRootPopoverContent = ({
       <Space>
         {keys.map((key, index) => {
           return (
-            <AntdSelect
+            <Select
+              style={{ width: 64 }}
               key={index}
               value={key}
               onChange={(event) => {
@@ -87,14 +88,12 @@ const AdjustableRootPopoverContent = ({
             />
           );
         })}
-        <Button
+        <DeleteButton
           onClick={() => {
             removeMapping(name);
             affiliates?.map((x) => removeGrouping(x));
           }}
-        >
-          删除
-        </Button>
+        />
       </Space>
       {affiliates.length ? (
         <Flex vertical>

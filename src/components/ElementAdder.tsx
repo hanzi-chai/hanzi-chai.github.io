@@ -8,7 +8,7 @@ import {
   groupingAtom,
   useRemoveAtom,
 } from "~/atoms";
-import { ElementSelect } from "./Utils";
+import ElementSelect from "./ElementSelect";
 import { alphabetOptionsAtom } from "./Mapping";
 
 const ElementAdder = ({ element }: { element?: string }) => {

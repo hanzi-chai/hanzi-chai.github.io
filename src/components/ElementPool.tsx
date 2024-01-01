@@ -11,7 +11,7 @@ import {
 } from "~/atoms";
 import { isPUA } from "~/lib/utils";
 import { ComponentView, CompoundView } from "./GlyphView";
-import StrokeSearch from "./StrokeSearch";
+import StrokeSearch, { makeFilter } from "./GlyphSearch";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -83,11 +83,13 @@ const ElementPool = ({
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(sequenceAtom);
+  const form = useAtomValue(customFormAtom);
   const filtered = strokeFilter
-    ? content.filter((x) => {
-        const thisSequence = sequenceMap.get(x) ?? "";
-        return thisSequence.length > 1 && thisSequence.startsWith(sequence);
-      })
+    ? content.filter(
+        (x) =>
+          makeFilter(sequence, form, sequenceMap)(x) &&
+          (sequenceMap.get(x)?.length ?? 0) > 1,
+      )
     : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
   return (

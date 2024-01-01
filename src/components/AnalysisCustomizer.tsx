@@ -9,15 +9,11 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 import { Button, Flex, Popover } from "antd";
-import {
-  DeleteButton,
-  ItemSelect,
-  MinusButton,
-  PlusButton,
-  ElementSelect,
-  ElementSelectProps,
-} from "./Utils";
+import { DeleteButton, MinusButton, PlusButton } from "./Utils";
 import Char from "./Char";
+import Root from "./Root";
+import ElementSelect, { ElementSelectProps } from "./ElementSelect";
+import { GlyphSelect } from "./GlyphSelect";
 
 function RootSelectPopover(props: ElementSelectProps) {
   const display = useAtomValue(displayAtom);
@@ -37,9 +33,7 @@ function RootSelectPopover(props: ElementSelectProps) {
         />
       }
     >
-      <Button type="dashed" color="blue">
-        {display(props.char!)}
-      </Button>
+      <Root>{display(props.char!)}</Root>
     </Popover>
   );
 }
@@ -96,7 +90,7 @@ const AnalysisCustomizer = () => {
   const [newCustomization, setNew] = useState<string | undefined>(undefined);
   const addCustomization = useAddAtom(customizeAtom);
   return (
-    <>
+    <Flex vertical gap="small">
       {Object.entries(customize).map(([component, sequence]) => (
         <MemoEachSequence
           component={component}
@@ -106,7 +100,7 @@ const AnalysisCustomizer = () => {
         />
       ))}
       <Flex justify="center" gap="large">
-        <ItemSelect
+        <GlyphSelect
           value={newCustomization}
           onChange={setNew}
           customFilter={([_, glyph]) => {
@@ -121,7 +115,7 @@ const AnalysisCustomizer = () => {
           添加自定义
         </Button>
       </Flex>
-    </>
+    </Flex>
   );
 };
 

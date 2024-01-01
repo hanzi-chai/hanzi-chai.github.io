@@ -14,8 +14,7 @@ import {
   Dropdown,
   notification,
 } from "antd";
-import type { IndexEdit2 } from "./Utils";
-import { ItemSelect, NumberInput, Select } from "./Utils";
+import { DeleteButton, NumberInput, Select } from "./Utils";
 import type { PropsWithChildren } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import type {
@@ -40,6 +39,7 @@ import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
 import { customFormAtom, useAtomValue } from "~/atoms";
 import { recursiveRenderGlyph } from "~/lib/component";
+import { GlyphSelect } from "./GlyphSelect";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);
 
@@ -137,7 +137,7 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                 </Button>
               </Form.Item>
               <Form.Item>
-                <Button onClick={remove}>删除笔画</Button>
+                <DeleteButton onClick={remove} />
               </Form.Item>
             </Flex>
             <Form.List name={[name, "curveList"]}>
@@ -185,7 +185,7 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
               </Button>
             </Form.Item>
             <Form.Item>
-              <Button onClick={remove}>删除笔画</Button>
+              <DeleteButton onClick={remove} />
             </Form.Item>
           </Flex>
         );
@@ -225,7 +225,7 @@ const ComponentForm = () => {
           label="源字"
           shouldUpdate={() => true}
         >
-          <ItemSelect
+          <GlyphSelect
             customFilter={([char, glyph]) => {
               if (glyph.component === undefined) return false;
               let pointer: string | undefined = char;
@@ -367,14 +367,14 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
                   label={`第 ${i + 1} 部`}
                   name={info.name}
                 >
-                  <ItemSelect />
+                  <GlyphSelect />
                 </Form.Item>
               ))}
             </>
           )}
         </Form.List>
         <Form.Item>
-          <Button onClick={remove}>删除分部方式</Button>
+          <DeleteButton onClick={remove} />
         </Form.Item>
       </Flex>
       <Flex align="center" gap="small" wrap="wrap">
@@ -541,10 +541,9 @@ export const defaultGlyph: CompoundGlyph = {
 
 const GlyphModel = ({
   char,
-  setChar,
   form,
   children,
-}: PropsWithChildren<IndexEdit2 & { form: FormInstance<Glyph> }>) => {
+}: PropsWithChildren<{ char?: string; form: FormInstance<Glyph> }>) => {
   const [hasComponent, setHasComponent] = useState(false);
   const [hasCompound, setHasCompound] = useState(false);
   const formData = useAtomValue(customFormAtom);

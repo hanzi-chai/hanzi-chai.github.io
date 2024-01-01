@@ -29,8 +29,6 @@ import Table from "antd/es/table";
 import {
   EditorColumn,
   EditorRow,
-  ItemSelect,
-  ElementSelect,
   Select,
   Uploader,
   exportTSV,
@@ -39,6 +37,7 @@ import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
 import { useChaifenTitle } from "~/lib/hooks";
 import type { ColumnType } from "antd/es/table/interface";
+import ElementSelect from "~/components/ElementSelect";
 
 interface EncodeResultTable {
   char: string;

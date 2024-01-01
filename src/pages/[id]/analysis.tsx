@@ -1,4 +1,4 @@
-import StrokeSearch from "~/components/StrokeSearch";
+import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
 import {
   Alert,
   Button,
@@ -88,7 +88,7 @@ const Analysis = () => {
 
   const displays = [
     [...componentCache]
-      .filter(([x]) => sequenceMap.get(x)?.startsWith(sequence))
+      .filter(([x]) => makeFilter(sequence, data.form, sequenceMap)(x))
       .filter(([, v]) => v.sequence.length > 1)
       .map(([key, res]) => {
         return {
@@ -127,9 +127,9 @@ const Analysis = () => {
         <Degenerator />
         <Selector />
         <Typography.Title level={3}>自定义部件拆分</Typography.Title>
-        <Typography.Text>
+        <Typography.Paragraph>
           此处只能自定义部件拆分，复合体的拆分无法自定义。如需改变复合体的拆分结果，请在字形数据中改变它的分部方式。
-        </Typography.Text>
+        </Typography.Paragraph>
         <AnalysisCustomizer />
       </EditorColumn>
       <EditorColumn span={16}>
@@ -147,8 +147,7 @@ const Analysis = () => {
             closable
           />
         ) : null}
-        <Flex gap="middle">
-          <StrokeSearch setSequence={setSequence} />
+        <Flex gap="middle" justify="center" style={{ marginBottom: "16px" }}>
           <Button
             type="primary"
             onClick={() => {
@@ -179,14 +178,16 @@ const Analysis = () => {
             清空
           </Button>
         </Flex>
-        <Flex justify="center">
+        <Flex gap="middle" style={{ marginBottom: "16px" }}>
           <Radio.Group
             value={step}
             onChange={(e) => setStep(e.target.value as 0)}
+            style={{ minWidth: "200px" }}
           >
             <Radio.Button value={0}>部件拆分</Radio.Button>
             <Radio.Button value={1}>复合体拆分</Radio.Button>
           </Radio.Group>
+          <StrokeSearch setSequence={setSequence} />
         </Flex>
         {displays[step].length ? (
           <>

@@ -1,5 +1,4 @@
 import { Button, Flex, Space, Typography } from "antd";
-import { ElementSelect } from "./Utils";
 import {
   useAtomValue,
   analysisAtom,
@@ -11,6 +10,7 @@ import {
 } from "~/atoms";
 import Root from "./Root";
 import { useState } from "react";
+import ElementSelect from "./ElementSelect";
 
 const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
   const analysis = useAtomValue(analysisAtom);

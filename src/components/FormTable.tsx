@@ -3,12 +3,7 @@ import { unicodeBlock } from "~/lib/utils";
 import { Button, Flex, Form, Layout, Modal, Space, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import {
-  EditorColumn,
-  EditorRow,
-  ItemSelect,
-  Select,
-} from "~/components/Utils";
+import { EditorColumn, EditorRow, Select } from "~/components/Utils";
 import {
   customFormAtom,
   displayAtom,
@@ -29,9 +24,10 @@ import {
   QuickPatchAmbiguous,
   Update,
 } from "~/components/Action";
-import StrokeSearch from "~/components/StrokeSearch";
+import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
 import classifier from "~/lib/classifier";
 import type { ColumnType } from "antd/es/table/interface";
+import { GlyphSelect } from "./GlyphSelect";
 
 interface CompoundFilter {
   operator?: Operator;
@@ -39,22 +35,18 @@ interface CompoundFilter {
 }
 
 const FormTable = () => {
+  const form = useAtomValue(customFormAtom);
   const formCustomization = useAtomValue(formCustomizationAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [thisForm] = Form.useForm<Glyph>();
   const [char, setChar] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
-  const [sequence, setSequence] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const display = useAtomValue(displayAtom);
   const sortedForm = useAtomValue(sortedCustomFormAtom);
 
   const dataSource = sortedForm
-    .filter(
-      ([char, glyph]) =>
-        (glyph.name ?? "").includes(sequence) ||
-        char.includes(sequence) ||
-        sequenceMap.get(char)?.startsWith(sequence),
-    )
+    .filter(([x]) => makeFilter(searchInput, form, sequenceMap)(x))
     .map(([, glyph]) => glyph);
 
   const compoundFilter: ColumnType<Glyph> = {
@@ -82,7 +74,7 @@ const FormTable = () => {
             />
           </Form.Item>
           <Form.Item label="包含部件">
-            <ItemSelect
+            <GlyphSelect
               value={operand}
               onChange={(value) => update("operand", value)}
             />
@@ -255,7 +247,7 @@ const FormTable = () => {
       align="center"
     >
       <Flex style={{ width: "720px" }} gap="middle" justify="center">
-        <StrokeSearch setSequence={setSequence} />
+        <StrokeSearch setSequence={setSearchInput} />
         <Create setChar={setChar} />
       </Flex>
       <ModelContext.Provider value={thisForm}>
@@ -273,7 +265,7 @@ const FormTable = () => {
               <GlyphView form={thisForm} />
             </EditorColumn>
             <EditorColumn span={12}>
-              <GlyphModel char={char!} setChar={setChar} form={thisForm} />
+              <GlyphModel char={char!} form={thisForm} />
             </EditorColumn>
           </EditorRow>
         </Modal>

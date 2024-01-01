@@ -8,7 +8,6 @@ import {
   remoteMutate,
 } from "~/lib/api";
 import type { Glyph, GlyphOptionalUnicode } from "~/lib/data";
-import type { IndexEdit2 } from "~/components/Utils";
 import { Select, errorFeedback, verifyNewName } from "~/components/Utils";
 import { deepcopy, length, isValidCJKChar, formDefault } from "~/lib/utils";
 import { ModelContext } from "~/components/GlyphModel";
@@ -26,7 +25,6 @@ import {
   useAddAtom,
   useRemoveAtom,
 } from "~/atoms";
-import * as O from "optics-ts/standalone";
 
 export const getValue = function (
   newName: string,
@@ -48,13 +46,13 @@ interface CreateProps {
 
 export const RemoteContext = createContext(true);
 
-export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => (
+export const Create = ({ setChar }: { setChar: (s?: string) => void }) => (
   <Popover content={<CreatePopoverContent setChar={setChar} />}>
     <Button type="primary">新建</Button>
   </Popover>
 );
 
-function CreatePopoverContent(props: any) {
+function CreatePopoverContent({ setChar }: { setChar: (s?: string) => void }) {
   const add = useAddAtom(formCustomizationAtom);
   const remote = useContext(RemoteContext);
   const code = useAtomValue(nextUnicodeAtom);
@@ -110,7 +108,7 @@ function CreatePopoverContent(props: any) {
     <Form<CreateProps>
       onFinish={async (values) => {
         const char = await handle(values);
-        if (char !== undefined) props.setChar(char);
+        if (char !== undefined) setChar(char);
       }}
     >
       <Form.Item<CreateProps>
@@ -180,7 +178,7 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
   );
 };
 
-export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
+export const Update = ({ setChar }: { setChar: (s?: string) => void }) => {
   const model = useContext(ModelContext);
   const remote = useContext(RemoteContext);
   const add = useAddAtom(formCustomizationAtom);

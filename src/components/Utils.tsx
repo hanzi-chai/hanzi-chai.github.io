@@ -1,8 +1,7 @@
-import type { ColProps, RowProps, SelectProps } from "antd";
+import type { ColProps, RowProps } from "antd";
 import {
   Button,
   Col,
-  Dropdown,
   Flex,
   InputNumber,
   Row,
@@ -12,19 +11,10 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import {
-  useAtomValue,
-  configFormAtom,
-  customFormAtom,
-  sequenceAtom,
-  sortedCustomFormAtom,
-  displayAtom,
-} from "~/atoms";
 import { isValidCJKChar } from "~/lib/utils";
 import type { Err } from "~/lib/api";
 import { useEffect, useState } from "react";
 import { dump } from "js-yaml";
-import { Glyph } from "~/lib/data";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
@@ -95,77 +85,6 @@ export const Uploader = ({
   );
 };
 
-export interface ElementSelectProps {
-  char?: string;
-  onChange: (s: string) => void;
-  customFilter?: (s: string) => boolean;
-  excludeGrouped?: boolean;
-  onlyRootsAndStrokes?: boolean;
-}
-
-export const ElementSelect = ({
-  char,
-  onChange,
-  customFilter,
-  excludeGrouped,
-  onlyRootsAndStrokes,
-}: ElementSelectProps) => {
-  const { mapping, grouping } = useAtomValue(configFormAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(customFormAtom);
-  let keys = Object.keys(mapping).concat(Object.keys(grouping));
-  if (excludeGrouped) {
-    keys = keys.filter((x) => grouping[x] === undefined);
-  }
-  if (onlyRootsAndStrokes) {
-    keys = keys.filter((x) => form[x] || x.match(/\d/));
-  }
-  if (customFilter) {
-    keys = keys.filter(customFilter);
-  }
-  const display = useAtomValue(displayAtom);
-  return (
-    <Select
-      style={{ width: "96px" }}
-      showSearch
-      placeholder="输入笔画搜索"
-      options={keys.map((x) => ({
-        value: x,
-        label: display(x),
-      }))}
-      value={char}
-      onChange={onChange}
-      filterOption={(input, option) => {
-        if (option === undefined) return false;
-        const value = option.value;
-        if (form[value] !== undefined) {
-          return sequenceMap.get(value)!.startsWith(input);
-        } else {
-          return value.includes(input);
-        }
-      }}
-      filterSort={(a, b) => {
-        return (
-          (sequenceMap.get(a.value) ?? "").length -
-          (sequenceMap.get(b.value) ?? "").length
-        );
-      }}
-    />
-  );
-};
-
-export interface Index {
-  char: string;
-}
-export interface IndexEdit2 {
-  char: string;
-  setChar: (s?: string) => void;
-}
-export interface IndexEdit3 {
-  char: string;
-  setChar: (s?: string) => void;
-}
-
 const processExport = (content: string, filename: string) => {
   const blob = new Blob([content], { type: "text/plain" });
   const a = document.createElement("a");
@@ -195,50 +114,6 @@ export const exportJSON = (data: object, filename: string) => {
 export const exportTSV = (data: string[][], filename: string) => {
   const fileContent = data.map((x) => x.join("\t")).join("\n");
   processExport(fileContent, filename);
-};
-
-interface ItemSelectProps extends SelectProps {
-  customFilter?: (e: [string, Glyph]) => boolean;
-}
-
-export const ItemSelect = (props: ItemSelectProps) => {
-  const { customFilter, ...rest } = props;
-  const sortedForm = useAtomValue(sortedCustomFormAtom);
-  const [data, setData] = useState<SelectProps["options"]>([]);
-  const char = props.value;
-  const display = useAtomValue(displayAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  useEffect(() => {
-    const initial = char ? [{ value: char, label: display(char) }] : [];
-    setData(initial);
-  }, [props.value]);
-  const onSearch = (input: string) => {
-    if (input.length === 0) {
-      setData([]);
-      return;
-    }
-    const allResults = sortedForm
-      .filter(props.customFilter ?? ((_) => true))
-      .map(([x]) => ({
-        value: x,
-        label: display(x),
-      }))
-      .filter(({ value }) => {
-        return sequenceMap.get(value)?.startsWith(input);
-      });
-    const minResults = allResults.filter(
-      ({ value }) => sequenceMap.get(value)?.length === input.length,
-    );
-    setData(allResults.slice(0, Math.max(5, minResults.length)));
-  };
-  const commonProps: SelectProps = {
-    showSearch: true,
-    placeholder: "输入笔画搜索",
-    options: data,
-    filterOption: false,
-    onSearch,
-  };
-  return <Select style={{ width: "96px" }} {...rest} {...commonProps} />;
 };
 
 export const errorFeedback = function <T extends number | boolean>(
