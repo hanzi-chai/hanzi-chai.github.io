@@ -298,13 +298,18 @@ const ComponentForm = () => {
   );
 };
 
-const BlockModel = ({ info, remove }: ListItemWithRemove) => {
+const BlockModel = ({
+  info,
+  remove,
+  parts,
+}: ListItemWithRemove & { parts: 2 | 3 }) => {
   const { key, name, ...rest } = info;
+  const options = parts === 2 ? [0, 1] : [0, 1, 2];
   return (
     <Space>
       <Form.Item<Block["index"]> name={[name, "index"]} colon={false}>
         <Select
-          options={[0, 1, 2].map((x) => ({
+          options={options.map((x) => ({
             value: x,
             label: `第 ${x + 1} 部`,
           }))}
@@ -328,10 +333,12 @@ const BlockModel = ({ info, remove }: ListItemWithRemove) => {
 const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
+  const parts = form.getFieldValue(["compound", info.name, "operandList"])
+    .length as 2 | 3;
   return (
     <>
       <Typography.Title level={3}>分部方式 {name + 1}</Typography.Title>
-      <Flex gap="middle">
+      <Flex gap="0px 8px" wrap="wrap">
         <Form.Item<Compound> label="结构" name={[info.name, "operator"]}>
           <Select<Operator>
             options={operators.map((x) => ({ value: x, label: x }))}
@@ -402,6 +409,7 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
                   key={info.key}
                   info={info}
                   remove={() => remove(i)}
+                  parts={parts}
                 />
               ))}
               <Form.Item>

@@ -15,7 +15,7 @@ const StrokeSearch = ({ sequence, setSequence }: StrokeSearchProps) => {
   );
   return (
     <Input
-      placeholder="输入笔画搜索（１２３４５．．）"
+      placeholder="输入笔画（１２３４５．．．）搜索"
       status={valid ? undefined : "error"}
       onChange={(event) => {
         setSequence(fullToHalf(event.target.value));

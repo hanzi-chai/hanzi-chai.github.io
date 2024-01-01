@@ -145,6 +145,19 @@ interface Constraints {
   grouping?: GroupConstraint[][];
 }
 
+export interface Optimization {
+  objective: Objective;
+  constraints?: Constraints;
+  metaheuristic: Solver;
+}
+
+export const defaultOptimization: Optimization = {
+  objective: {},
+  metaheuristic: {
+    algorithm: "SimulatedAnnealing",
+  },
+};
+
 export interface Solver {
   algorithm: "SimulatedAnnealing";
   runtime?: number;
@@ -180,22 +193,26 @@ interface Transliteration {
   to: string;
 }
 
+export interface Info {
+  name?: string;
+  author?: string;
+  version?: string;
+  description?: string;
+}
+
+export type Algebra = Record<string, Rule[]>;
+
 interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: Example | null;
-  info?: {
-    name?: string;
-    author?: string;
-    version?: string;
-    description?: string;
-  };
+  info?: Info;
   data?: {
     form?: Form;
     repertoire?: Repertoire;
     classifier?: PartialClassifier;
   };
-  algebra?: Record<string, Rule[]>;
+  algebra?: Algebra;
   form: FormConfig;
   encoder: {
     max_length?: number;
@@ -207,11 +224,7 @@ interface Config {
     sources: Record<string, Source>;
     conditions: Record<string, Condition>;
   };
-  optimization?: {
-    objective: Objective;
-    constraints?: Constraints;
-    metaheuristic: Solver;
-  };
+  optimization?: Optimization;
 }
 
 type MergedData = {

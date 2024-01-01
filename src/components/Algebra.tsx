@@ -38,7 +38,7 @@ export default function ({
       autoFocusFirstInput
       modalProps={{
         destroyOnClose: true,
-        onCancel: () => console.log("run"),
+        onCancel: () => {},
       }}
       initialValues={initialValues}
       onFinish={async (values) => {

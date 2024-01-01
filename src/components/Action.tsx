@@ -15,16 +15,17 @@ import { ModelContext } from "~/components/GlyphModel";
 import {
   useCode,
   useForm,
-  useAdd,
-  useRemove,
-  configDataAtom,
+  dataAtom,
   useAtomValue,
   formAtom,
   updateFormAtom,
   useSetAtom,
   removeFormAtom,
   mutateFormAtom,
+  formCustomizationAtom,
+  useAtom,
 } from "~/atoms";
+import * as O from "optics-ts/standalone";
 
 export const getValue = function (
   newName: string,
@@ -53,7 +54,10 @@ export const Create = ({ setChar }: Omit<IndexEdit2, "char">) => (
 );
 
 function CreatePopoverContent(props: any) {
-  const add = useAdd();
+  const setForm = useSetAtom(formCustomizationAtom);
+  const add = (key: string, value: Glyph) => {
+    setForm(O.set(O.prop(key), value));
+  };
   const remote = useContext(RemoteContext);
   const code = useCode();
   const form = useForm();
@@ -181,7 +185,10 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
 export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
   const model = useContext(ModelContext);
   const remote = useContext(RemoteContext);
-  const add = useAdd();
+  const setForm = useSetAtom(formCustomizationAtom);
+  const add = (key: string, value: Glyph) => {
+    setForm(O.set(O.prop(key), value));
+  };
   const updateForm = useSetAtom(updateFormAtom);
   return (
     <Button
@@ -209,9 +216,9 @@ export const Update = ({ setChar }: Omit<IndexEdit2, "char">) => {
 
 export const Delete = ({ unicode }: { unicode: number }) => {
   const remote = useContext(RemoteContext);
-  const formCustomization = useAtomValue(configDataAtom)?.form ?? {};
+  const [formCustomization, setForm] = useAtom(formCustomizationAtom);
   const form = useAtomValue(formAtom);
-  const del = useRemove();
+  const del = (key: string) => setForm(O.remove(O.atKey(key)));
   const char = String.fromCodePoint(unicode);
   const removeForm = useSetAtom(removeFormAtom);
   return (

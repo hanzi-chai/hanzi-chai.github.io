@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Button, Flex, Input, Space, Table } from "antd";
-import { useAdd, useRepertoire } from "~/atoms";
+import {
+  repertoireCustomizationAtom,
+  useRepertoire,
+  useSetAtom,
+} from "~/atoms";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
+import * as O from "optics-ts/standalone";
 
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "~/components/Utils";
@@ -35,7 +40,10 @@ const EditablePinyin = ({
 const Repertoire: React.FC = () => {
   useChaifenTitle("字音字集数据");
   const characters = useRepertoire();
-  const modify = useAdd();
+  const setCharacters = useSetAtom(repertoireCustomizationAtom);
+  const modify = (key: string, value: Character) => {
+    setCharacters(O.set(O.prop(key), value));
+  };
   const [input, setInput] = useState("");
   const rawdata = Object.values(characters);
   const dataSource = input

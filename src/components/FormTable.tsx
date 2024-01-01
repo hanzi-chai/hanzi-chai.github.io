@@ -9,7 +9,7 @@ import {
   ItemSelect,
   Select,
 } from "~/components/Utils";
-import { configDataAtom, useAtomValue, useDisplay, useForm } from "~/atoms";
+import { dataAtom, useAtomValue, useDisplay, useForm } from "~/atoms";
 import type { Glyph, Operator } from "~/lib/data";
 import { operators } from "~/lib/data";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
@@ -34,7 +34,7 @@ interface CompoundFilter {
 
 const FormTable = () => {
   const form = useForm();
-  const configData = useAtomValue(configDataAtom);
+  const configData = useAtomValue(dataAtom);
   const customizedForm = configData?.form ?? {};
   const [thisForm] = Form.useForm<Glyph>();
   const [char, setChar] = useState<string | undefined>(undefined);

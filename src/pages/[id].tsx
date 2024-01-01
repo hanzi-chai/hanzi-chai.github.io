@@ -14,7 +14,7 @@ import CusSpin from "~/components/CustomSpin";
 import { DevTools } from "jotai-devtools";
 import {
   configIdAtom,
-  configInfoAtom,
+  infoAtom,
   loadFormAtom,
   loadRepertoireAtom,
   useSetAtom,
@@ -79,7 +79,7 @@ function EditorLayout() {
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
 
-  const configInfo = useAtomValue(configInfoAtom);
+  const configInfo = useAtomValue(infoAtom);
 
   const [isCollapsed, setCollapsed] = useState(false);
   return (

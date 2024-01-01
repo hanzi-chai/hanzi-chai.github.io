@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useAdd } from "~/atoms";
+import { classifierCustomizationAtom, useSetAtom } from "~/atoms";
 import { useClassifier } from "~/atoms";
 import { Button, Flex, Space, notification } from "antd";
 import Root from "~/components/Root";
@@ -8,6 +8,8 @@ import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
 import { useChaifenTitle } from "~/lib/hooks";
+import * as O from "optics-ts/standalone";
+import { Feature } from "~/lib/classifier";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -52,7 +54,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 const Classifier = () => {
   useChaifenTitle("笔画分类数据");
   const classifier = useClassifier();
-  const modify = useAdd();
+  const setClassifier = useSetAtom(classifierCustomizationAtom);
   const [categories, setCategories] = useState(
     Math.max(...Object.values(classifier)),
   );
@@ -71,7 +73,7 @@ const Classifier = () => {
       onDragEnd={(event) => {
         const { active, over } = event;
         if (over) {
-          modify(active.id as string, over.id as number);
+          setClassifier(O.set(O.prop(active.id as Feature), over.id as number));
         }
       }}
     >

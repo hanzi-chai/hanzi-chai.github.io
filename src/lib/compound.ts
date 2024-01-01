@@ -57,7 +57,10 @@ const assembleSequence = (
     taken: 0,
   }));
   for (const { index, strokes } of order) {
-    const data = subsequences[index]!;
+    const data = subsequences[index];
+    if (data === undefined) {
+      continue;
+    }
     if (strokes === 0) {
       sequence.push(...data.rest);
       data.rest = [];

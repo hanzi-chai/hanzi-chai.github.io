@@ -50,7 +50,6 @@ const getExtra = function (data: MergedData, config: FormConfig): Extra {
       }
       return sequence;
     } catch {
-      console.log(x);
       return [];
     }
   };
