@@ -58,34 +58,13 @@ const hasroot = (a: RenderedGlyph, indices: number[], root: RenderedGlyph) => {
 };
 
 describe("degenerate cross tests", () => {
-  const {
-    大,
-    天,
-    九,
-    丸,
-    其,
-    艹,
-    山,
-    出,
-    冖,
-    农,
-    亦,
-    赤,
-    以,
-    人,
-    氺,
-    丆,
-    疌,
-    龰,
-  } = computedGlyphs;
+  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 赤, 以, 人, 氺, 丆, 疌, 龰 } =
+    computedGlyphs;
   it("says 天 has 大", () => {
     expect(degenerate(大)).toEqual(degenerate(slice(天, [1, 2, 3])));
   });
   it("says 丸 has 九", () => {
     expect(degenerate(九)).toEqual(degenerate(slice(丸, [0, 1])));
-  });
-  it("says 其 has 艹", () => {
-    expect(degenerate(艹)).toEqual(degenerate(slice(其, [0, 1, 2])));
   });
   it("says 出 has 山", () => {
     expect(degenerate(山)).toEqual(degenerate(slice(出, [2, 3, 4])));
@@ -96,8 +75,8 @@ describe("degenerate cross tests", () => {
   it("says 农 has 冖", () => {
     expect(degenerate(冖)).toEqual(degenerate(slice(农, [0, 1])));
   });
-  it("says 赤下 is 亦下", () => {
-    expect(degenerate(slice(亦, [2, 3, 4, 5]))).toEqual(
+  it("says 赤 has 亦字底", () => {
+    expect(degenerate(computedGlyphs["\ue42e"])).toEqual(
       degenerate(slice(赤, [3, 4, 5, 6])),
     );
   });

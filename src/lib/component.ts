@@ -1,5 +1,5 @@
 import type { FormConfig, MergedData, SieveName } from "./config";
-import type { Form, SVGGlyph } from "./data";
+import type { Component, Compound, Form, SVGGlyph } from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -8,6 +8,7 @@ import findTopology, { renderSVGGlyph } from "./topology";
 import type { Classifier } from "./classifier";
 import { isValidCJKChar, isValidChar } from "./utils";
 import classifier from "./classifier";
+import { affineMerge } from "./affine";
 
 class UnknownCharError extends Error {}
 class InvalidGlyphError extends Error {}
@@ -214,20 +215,18 @@ interface ComponentRootResult {
 
 export type ComponentCache = Map<string, ComponentResult>;
 
-export const recursiveRenderGlyph = function (
-  char: string,
+export const recursiveRenderComponent = function (
+  component: Component,
   form: Form,
   glyphCache: Map<string, SVGGlyph> = new Map(),
-): SVGGlyph | InvalidGlyphError {
-  const component = form[char]?.component;
-  if (component === undefined) {
-    return new InvalidGlyphError();
-  }
-  const cache = glyphCache.get(char);
-  if (cache) return cache;
+) {
   const glyph: SVGGlyph = [];
   if (component.source !== undefined) {
-    const sourceGlyph = recursiveRenderGlyph(component.source, form);
+    const sourceGlyph = recursiveRenderGlyph(
+      component.source,
+      form,
+      glyphCache,
+    );
     if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
     component.strokes.forEach((x) => {
       if (typeof x === "number") {
@@ -241,8 +240,62 @@ export const recursiveRenderGlyph = function (
   } else {
     glyph.push(...component.strokes);
   }
-  glyphCache.set(char, glyph);
   return glyph;
+};
+
+export const recursiveRenderCompound = function (
+  compound: Compound,
+  form: Form,
+  glyphCache: Map<string, SVGGlyph> = new Map(),
+) {
+  const partition = compound[0];
+  if (partition === undefined) {
+    return new InvalidGlyphError();
+  }
+  const glyphs: SVGGlyph[] = [];
+  for (const char of partition.operandList) {
+    const maybe = recursiveRenderGlyph(char, form, glyphCache);
+    if (maybe instanceof InvalidGlyphError) {
+      return maybe;
+    }
+    glyphs.push(maybe);
+  }
+  return affineMerge(partition.operator, glyphs);
+};
+
+export const recursiveRenderGlyph = function (
+  char: string,
+  form: Form,
+  glyphCache: Map<string, SVGGlyph> = new Map(),
+): SVGGlyph | InvalidGlyphError {
+  const cache = glyphCache.get(char);
+  if (cache) return cache;
+  const value = form[char];
+  if (value === undefined) {
+    return new InvalidGlyphError();
+  }
+  const component = value.component;
+  const compound = value.compound;
+  if (component !== undefined) {
+    const glyph = recursiveRenderComponent(component, form, glyphCache);
+    if (!(glyph instanceof InvalidGlyphError)) glyphCache.set(char, glyph);
+    return glyph;
+  } else if (compound !== undefined) {
+    const glyph = recursiveRenderCompound(compound, form, glyphCache);
+    if (!(glyph instanceof InvalidGlyphError)) glyphCache.set(char, glyph);
+    return glyph;
+  } else return new InvalidGlyphError();
+};
+
+const computeComponent = (name: string, glyph: SVGGlyph) => {
+  const renderedGlyph = renderSVGGlyph(glyph);
+  const topology = findTopology(renderedGlyph);
+  const cache: ComputedComponent = {
+    glyph: renderedGlyph,
+    topology,
+    name,
+  };
+  return cache;
 };
 
 export const renderComponentForm = (data: MergedData) => {
@@ -251,26 +304,38 @@ export const renderComponentForm = (data: MergedData) => {
   const componentForm: Record<string, ComputedComponent> = {};
   const badChars: string[] = [];
   for (const [char, value] of Object.entries(form)) {
-    if (value.component === undefined) continue;
+    if (value.default_type !== "component") continue;
     try {
       const glyph = recursiveRenderGlyph(char, form, glyphCache);
       if (glyph instanceof Error) {
         badChars.push(char);
         continue;
       }
-      const renderedGlyph = renderSVGGlyph(glyph);
-      const topology = findTopology(renderedGlyph);
-      const cache: ComputedComponent = {
-        glyph: renderedGlyph,
-        topology,
-        name: char,
-      };
-      componentForm[char] = cache;
+      componentForm[char] = computeComponent(char, glyph);
     } catch {
       badChars.push(char);
     }
   }
   return [componentForm, badChars] as const;
+};
+
+export const renderRootList = (data: MergedData, config: FormConfig) => {
+  const { mapping, grouping } = config;
+  const glyphCache = new Map<string, SVGGlyph>();
+  const roots = [...Object.keys(mapping), ...Object.keys(grouping)].filter(
+    (x) => data.form[x] !== undefined,
+  );
+  const rootList: ComputedComponent[] = [];
+  for (const root of roots) {
+    try {
+      const glyph = recursiveRenderGlyph(root, data.form, glyphCache);
+      if (glyph instanceof Error) {
+        continue;
+      }
+      rootList.push(computeComponent(root, glyph));
+    } catch {}
+  }
+  return rootList;
 };
 
 export const disassembleComponents = function (
@@ -279,6 +344,7 @@ export const disassembleComponents = function (
 ): [ComponentCache, string[]] {
   const { classifier } = data;
   const [componentForm, badChars] = renderComponentForm(data);
+  const rootList = renderRootList(data, config);
   const composables = new Set<string>();
   for (const { compound } of Object.values(data.form)) {
     if (!compound) continue;
@@ -286,20 +352,13 @@ export const disassembleComponents = function (
       partition.operandList.forEach((x) => composables.add(x));
     }
   }
-  const { mapping, grouping } = config;
-  const roots = new Set([...Object.keys(mapping), ...Object.keys(grouping)]);
-  const rootData = Object.entries(componentForm)
-    .filter(([x]) => {
-      return roots.has(x);
-    })
-    .map(([, c]) => c);
   const result: ComponentCache = new Map();
   const error: string[] = [];
   Object.entries(componentForm).forEach(([char, cache]) => {
     if (!isValidCJKChar(char) && !composables.has(char)) {
       return;
     }
-    const scheme = getComponentScheme(cache, rootData, config, classifier);
+    const scheme = getComponentScheme(cache, rootList, config, classifier);
     if (scheme instanceof Error) {
       error.push(char);
     } else {

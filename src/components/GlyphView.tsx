@@ -2,6 +2,7 @@ import styled from "styled-components";
 import type {
   BasicComponent,
   Component,
+  Compound,
   Glyph,
   SVGGlyph,
   SVGStroke,
@@ -12,7 +13,11 @@ import { customFormAtom, useAtomValue } from "~/atoms";
 import type { Index } from "./Utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
-import { recursiveRenderGlyph } from "~/lib/component";
+import {
+  recursiveRenderComponent,
+  recursiveRenderCompound,
+  recursiveRenderGlyph,
+} from "~/lib/component";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -56,44 +61,22 @@ export const StrokesView = ({ glyph }: { glyph: SVGStroke[] }) => (
 
 export const ComponentView = ({ component }: { component: Component }) => {
   const form = useAtomValue(customFormAtom);
-  const glyph: SVGGlyph = [];
-  let valid = true;
-  if (component.source !== undefined) {
-    try {
-      const sourceGlyph = recursiveRenderGlyph(component.source, form);
-      if (sourceGlyph instanceof Error) {
-        valid = false;
-      } else {
-        component.strokes.forEach((x) => {
-          if (typeof x === "number") {
-            const stroke = sourceGlyph[x];
-            if (stroke !== undefined) {
-              glyph.push(stroke);
-            } else {
-              valid = false;
-            }
-          } else {
-            glyph.push(x);
-          }
-          return x;
-        });
-      }
-    } catch {
-      valid = false;
-    }
-  } else {
-    // ts cannot infer this, but conversion is safe
-    glyph.push(...(component as BasicComponent).strokes);
-  }
-  return valid ? (
+  const glyph = recursiveRenderComponent(component, form);
+  return !(glyph instanceof Error) ? (
     <StrokesView glyph={glyph} />
   ) : (
     <Result status="500" title="无法渲染出 SVG 图形，请检查数据" />
   );
 };
 
-export const CompoundView = ({ char }: Index) => {
-  return <Empty description="暂不支持复合体的预览" />;
+export const CompoundView = ({ compound }: { compound: Compound }) => {
+  const form = useAtomValue(customFormAtom);
+  const glyph = recursiveRenderCompound(compound, form);
+  return !(glyph instanceof Error) ? (
+    <StrokesView glyph={glyph} />
+  ) : (
+    <Result status="500" title="无法渲染出 SVG 图形，请检查数据" />
+  );
 };
 
 const Overlay = styled.div`
@@ -108,9 +91,14 @@ const Overlay = styled.div`
 
 const GlyphView = ({ form }: { form: FormInstance<Glyph> }) => {
   const component = useWatch("component", form);
+  const compound = useWatch("compound", form) ?? [];
   return (
     <Overlay>
-      {component?.strokes ? <ComponentView component={component} /> : <Empty />}
+      {component ? (
+        <ComponentView component={component} />
+      ) : (
+        <CompoundView compound={compound} />
+      )}
     </Overlay>
   );
 };

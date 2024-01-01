@@ -10,7 +10,7 @@ import {
   displayAtom,
 } from "~/atoms";
 import { isPUA } from "~/lib/utils";
-import { ComponentView } from "./GlyphView";
+import { ComponentView, CompoundView } from "./GlyphView";
 import StrokeSearch from "./StrokeSearch";
 
 const Content = styled(Flex)`
@@ -53,16 +53,17 @@ const Element = ({
       {display(x)}
     </Char>
   );
-  const component = form[x]?.component;
-  if (isPUA(x) && component !== undefined) {
+  if (isPUA(x)) {
+    const component = form[x]?.component;
+    const compound = form[x]?.compound;
+    const preview =
+      component !== undefined ? (
+        <ComponentView component={component} />
+      ) : compound !== undefined ? (
+        <CompoundView compound={compound} />
+      ) : null;
     return (
-      <Popover
-        content={
-          <div style={{ width: "200px" }}>
-            <ComponentView component={component} />
-          </div>
-        }
-      >
+      <Popover content={<div style={{ width: "200px" }}>{preview}</div>}>
         {core}
       </Popover>
     );
