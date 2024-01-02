@@ -21,15 +21,19 @@ type Selector = SieveName[];
 
 type PartialClassifier = Partial<Classifier>;
 
-type Mapping = Record<string, string>;
-// 这个暂时没有启用
-type Grouping = Record<string, string | [string, number]>;
+type Element = string;
+
+export type Key = string | { element: string; index: number };
+
+type Mapping = Record<Element, string | Key[]>;
+
+type Grouping = Record<Element, Element>;
 
 interface BaseConfig {
   alphabet: string;
   mapping_type?: number;
   mapping: Mapping;
-  grouping: Mapping;
+  grouping: Grouping;
 }
 
 interface Degenerator {
@@ -128,11 +132,6 @@ export interface AtomicConstraint {
   keys?: string[];
 }
 
-export interface GroupConstraint {
-  element: string;
-  index: number;
-}
-
 export interface Objective {
   characters_full?: PartialWeights;
   characters_short?: PartialWeights;
@@ -140,11 +139,10 @@ export interface Objective {
   words_short?: PartialWeights;
 }
 
-interface Constraints {
+export interface Constraints {
   elements?: AtomicConstraint[];
   indices?: AtomicConstraint[];
   element_indices?: AtomicConstraint[];
-  grouping?: GroupConstraint[][];
 }
 
 export interface Optimization {

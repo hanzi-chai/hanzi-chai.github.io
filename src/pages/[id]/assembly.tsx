@@ -32,6 +32,7 @@ import {
   Select,
   Uploader,
   exportTSV,
+  renderSuperScript,
 } from "~/components/Utils";
 import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
@@ -68,11 +69,10 @@ const Encoder = () => {
     .map(([x]) => x);
 
   const renderIndexed = (element: IndexedElement) => {
-    const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
     if (typeof element === "string") {
       return display(element);
     } else {
-      return display(element.element) + superscripts[element.index + 1];
+      return renderSuperScript(display(element.element), element.index);
     }
   };
 

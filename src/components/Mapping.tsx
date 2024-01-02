@@ -19,91 +19,120 @@ import Root from "./Root";
 import Char from "./Char";
 import type { MappedInfo } from "~/lib/utils";
 import { isPUA, reverse } from "~/lib/utils";
-import { DeleteButton, Select, Uploader } from "./Utils";
+import {
+  DeleteButton,
+  Select,
+  Uploader,
+  joinKeys,
+  renderMapped,
+} from "./Utils";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
+import KeySelect from "./KeySelect";
+import { Key } from "~/lib/config";
 
-export const alphabetOptionsAtom = atom((get) =>
-  Array.from(get(configFormAtom).alphabet).map((x) => ({
-    label: x,
-    value: x,
-  })),
-);
-const allOptionsAtom = atom((get) =>
-  [{ label: "无", value: "" }].concat(get(alphabetOptionsAtom)),
-);
-
-const useAffilia = (name: string) => {
+const useAffiliates = (name: string) => {
+  const mapping = useAtomValue(mappingAtom);
   const grouping = useAtomValue(groupingAtom);
-  const result = useMemo(
+  const fullAffiliates = useMemo(
     () =>
       Object.entries(grouping)
-        .filter(([from, to]) => {
-          const main = typeof to === "string" ? to : to[0];
-          return main === name;
-        })
+        .filter(([, to]) => to === name)
         .map(([x]) => x),
     [grouping],
   );
-  return result;
+  const partialAffiliates = useMemo(
+    () =>
+      Object.entries(mapping).filter(([, mapped]) => {
+        if (typeof mapped === "string") return false;
+        const key = mapped[0];
+        if (typeof key !== "object") return false;
+        return key.element === name;
+      }) as [string, Key[]][],
+    [mapping],
+  );
+  return [fullAffiliates, partialAffiliates] as const;
 };
 
-interface AdjustableRootPopoverContentProps {
-  keys: string[];
-  name: string;
-  main: string;
-  setMain: Function;
-  code: string;
-}
-const AdjustableRootPopoverContent = ({
-  keys,
+const KeysEditor = ({
   name,
-  main,
-  code,
-  setMain,
-}: AdjustableRootPopoverContentProps) => {
+  keys,
+  onDelete,
+}: {
+  name: string;
+  keys: Key[];
+  onDelete?: () => void;
+}) => {
   const addMapping = useAddAtom(mappingAtom);
   const addGrouping = useAddAtom(groupingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
   const removeGrouping = useRemoveAtom(groupingAtom);
-  const allOptions = useAtomValue(allOptionsAtom);
-  const alphabetOptions = useAtomValue(alphabetOptionsAtom);
-  const affiliates = useAffilia(name);
   const display = useAtomValue(displayAtom);
   return (
-    <Flex vertical gap="middle">
+    <Flex justify="space-between" gap="large">
+      <Root>{display(name)}</Root>
       <Space>
         {keys.map((key, index) => {
           return (
-            <Select
-              style={{ width: 64 }}
+            <KeySelect
               key={index}
               value={key}
               onChange={(event) => {
                 keys[index] = event;
                 addMapping(name, keys.join(""));
               }}
-              options={index ? allOptions : alphabetOptions}
+              allowEmpty={index !== 0}
             />
           );
         })}
         <DeleteButton
           onClick={() => {
             removeMapping(name);
-            affiliates?.map((x) => removeGrouping(x));
+            if (onDelete) {
+              onDelete();
+            }
           }}
         />
       </Space>
-      {affiliates.length ? (
-        <Flex vertical>
-          <span>已归并字根</span>
+    </Flex>
+  );
+};
+
+interface AdjustableRootPopoverContentProps {
+  keys: Key[];
+  name: string;
+  main: string;
+  setMain: Function;
+}
+const AdjustableRootPopoverContent = ({
+  keys,
+  name,
+  main,
+  setMain,
+}: AdjustableRootPopoverContentProps) => {
+  const addMapping = useAddAtom(mappingAtom);
+  const addGrouping = useAddAtom(groupingAtom);
+  const removeMapping = useRemoveAtom(mappingAtom);
+  const removeGrouping = useRemoveAtom(groupingAtom);
+  const [affiliates, partialAffiliates] = useAffiliates(name);
+  const display = useAtomValue(displayAtom);
+  return (
+    <Flex vertical gap="middle">
+      <KeysEditor
+        name={name}
+        keys={keys}
+        onDelete={() => affiliates?.map((x) => removeGrouping(x))}
+      />
+      {affiliates.length > 0 && (
+        <Flex vertical gap="small">
+          <span>归并元素</span>
           {affiliates.map((x) => (
             <Flex key={x} justify="space-between">
               <Root>{display(x)}</Root>
               <Button
                 onClick={() => {
-                  addMapping(x, code);
+                  addMapping(x, joinKeys(keys));
                   removeGrouping(x);
                 }}
               >
@@ -112,7 +141,16 @@ const AdjustableRootPopoverContent = ({
             </Flex>
           ))}
         </Flex>
-      ) : (
+      )}
+      {partialAffiliates.length > 0 && (
+        <Flex vertical gap="small">
+          <span>部分归并元素</span>
+          {partialAffiliates.map(([x, keys]) => (
+            <KeysEditor name={x} keys={keys} />
+          ))}
+        </Flex>
+      )}
+      {affiliates.length === 0 && partialAffiliates.length === 0 && (
         <Space>
           或归并至
           <ElementSelect
@@ -138,7 +176,7 @@ const AdjustableRootPopoverContent = ({
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const { mapping_type, mapping } = useAtomValue(configFormAtom);
 
-  const affiliates = useAffilia(name);
+  const [affiliates, partialAffiliates] = useAffiliates(name);
   const padding = Math.max((mapping_type ?? 1) - code.length, 0);
   const keys = Array.from(code).concat(Array(padding).fill(""));
 
@@ -147,27 +185,39 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   return (
     <Popover
       trigger={["click"]}
-      title="字根编码"
       content={
         <AdjustableRootPopoverContent
           keys={keys}
           name={name}
           main={main!}
-          code={code}
           setMain={setMain}
         />
       }
     >
       <Root
-        style={{ color: display(name) === "丢失的字根" ? "red" : "initial" }}
+        style={{ color: display(name) === "丢失的元素" ? "red" : "initial" }}
       >
-        {display(name)}
-        {affiliates.length >= 1 && (
-          <span style={{ fontSize: "0.8em" }}>
-            ({affiliates.map(display).join(",")})
-          </span>
-        )}
-        {code.length > 1 && <span>&nbsp;{code.slice(1)}</span>}
+        <Space size={4}>
+          {display(name)}
+          {affiliates.length >= 1 && (
+            <span style={{ fontSize: "0.8em" }}>
+              ({affiliates.map(display).join(",")})
+            </span>
+          )}
+          {code.length > 1 && (
+            <span style={{ fontSize: "0.8em" }}>
+              {renderMapped(code.slice(1))}
+            </span>
+          )}
+          {partialAffiliates.length >= 1 &&
+            partialAffiliates.map(([element, mapped], index) => (
+              <span style={{ fontSize: "0.8em" }} key={index}>
+                [{display(element)}
+                &nbsp;
+                {renderMapped(mapped.slice(1))}]
+              </span>
+            ))}
+        </Space>
       </Root>
     </Popover>
   );

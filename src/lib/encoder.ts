@@ -37,7 +37,7 @@ export const table: Record<
   (
     target: string | undefined,
     value: string | null,
-    totalMapping: Mapping,
+    totalMapping: Record<string, string>,
   ) => boolean
 > = {
   是: (t, v) => t === v,
@@ -75,7 +75,7 @@ const satisfy = (
   result: TotalResult,
   config: Config,
   extra: Extra,
-  totalMapping: Mapping,
+  totalMapping: Record<string, string>,
 ) => {
   const { object, operator } = condition;
   const target = findElement(object, result, config, extra);
@@ -83,11 +83,22 @@ const satisfy = (
   return fn(target, (condition as BinaryCondition).value, totalMapping);
 };
 
-const merge = (grouping: Mapping, mapping: Mapping) => {
+const merge = (mapping: Mapping, grouping: Grouping) => {
+  const compiledMapping: Record<string, string> = {};
+  for (const [element, mapped] of Object.entries(mapping)) {
+    compiledMapping[element] =
+      typeof mapped === "string"
+        ? mapped
+        : mapped
+            .map((x) =>
+              typeof x === "string" ? x : mapping[x.element]?.[x.index],
+            )
+            .join("");
+  }
   const compiledGrouping = Object.fromEntries(
-    Object.entries(grouping).map(([x, y]) => [x, mapping[y]]),
+    Object.entries(grouping).map(([x, y]) => [x, compiledMapping[y]!]),
   );
-  return Object.assign(compiledGrouping, mapping);
+  return Object.assign(compiledGrouping, compiledMapping);
 };
 
 export type IndexedElement = string | { element: string; index: number };
@@ -121,13 +132,22 @@ const compile = (config: Config) => {
             }
           } else if (index === undefined) {
             // 如果没有定义指标，就是全取
-            for (let index = 0; index != mappedElement.length; ++index) {
-              codes.push({ element: groupedElement, index });
+            for (const [index, key] of Array.from(mappedElement).entries()) {
+              codes.push(
+                typeof key === "string"
+                  ? { element: groupedElement, index }
+                  : key,
+              );
             }
           } else {
             // 检查指标是否有效
-            if (mappedElement.length > index) {
-              codes.push({ element: groupedElement, index });
+            const key = mappedElement[index];
+            if (key !== undefined) {
+              codes.push(
+                typeof key === "string"
+                  ? { element: groupedElement, index }
+                  : key,
+              );
             }
           }
         }

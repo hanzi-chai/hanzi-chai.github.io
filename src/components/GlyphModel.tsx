@@ -1,32 +1,28 @@
 import type { FormListFieldData, MenuProps } from "antd";
 import {
   Button,
-  Checkbox,
   Flex,
   Form,
   Input,
-  InputNumber,
-  Radio,
-  Select as AntdSelect,
-  Space,
   Typography,
   Switch,
   Dropdown,
   notification,
 } from "antd";
-import { DeleteButton, NumberInput, Select } from "./Utils";
-import type { PropsWithChildren } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  DeleteButton,
+  EditorColumn,
+  EditorRow,
+  NumberInput,
+  Select,
+  errorFeedback,
+} from "./Utils";
+import { ReactNode, createContext, useContext } from "react";
 import type {
-  BasicComponent,
-  Block,
   Component,
-  Compound,
   CompoundGlyph,
-  Draw,
   Glyph,
   Operator,
-  Partition,
   SVGGlyph,
   SVGStroke,
   Stroke,
@@ -37,35 +33,65 @@ import classifier, { schema } from "~/lib/classifier";
 import { formDefault, getDummyPartition, getDummyStroke } from "~/lib/utils";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
-import { customFormAtom, useAtomValue } from "~/atoms";
+import {
+  customFormAtom,
+  formCustomizationAtom,
+  updateFormAtom,
+  useAddAtom,
+  useAtomValue,
+  useSetAtom,
+} from "~/atoms";
 import { recursiveRenderGlyph } from "~/lib/component";
 import { GlyphSelect } from "./GlyphSelect";
+import {
+  ModalForm,
+  ProFormCheckbox,
+  ProFormDependency,
+  ProFormDigit,
+  ProFormGroup,
+  ProFormList,
+  ProFormListProps,
+  ProFormRadio,
+  ProFormSelect,
+  ProFormText,
+} from "@ant-design/pro-components";
+import { RemoteContext } from "./Action";
+import GlyphView from "./GlyphView";
+import { remoteUpdate } from "~/lib/api";
+import styled from "styled-components";
 
 export const ModelContext = createContext({} as FormInstance<Glyph>);
 
-const CurveForm = (field: any) => {
-  const { name, ...rest } = field;
+const InlineFlex = styled.div`
+  display: inline-flex;
+  margin-right: 8px;
+`;
+
+export const InlineRender = ({
+  listDom,
+  action,
+}: {
+  listDom: ReactNode;
+  action: ReactNode;
+}) => (
+  <InlineFlex>
+    {listDom}
+    {action}
+  </InlineFlex>
+);
+
+function StaticList<T>(props: ProFormListProps<T>) {
   return (
-    <Flex gap="small">
-      <Form.Item<SVGStroke["curveList"]> {...rest} name={[name, "command"]}>
-        <AntdSelect style={{ width: "64px" }} disabled />
-      </Form.Item>
-      <Form.List name={[name, "parameterList"]}>
-        {(fields) => (
-          <>
-            {fields.map((field) => {
-              return (
-                <Form.Item<Draw["parameterList"]> {...field} key={field.key}>
-                  <NumberInput />
-                </Form.Item>
-              );
-            })}
-          </>
-        )}
-      </Form.List>
-    </Flex>
+    <ProFormList
+      {...props}
+      copyIconProps={false}
+      deleteIconProps={false}
+      creatorButtonProps={false}
+    >
+      {props.children}
+    </ProFormList>
   );
-};
+}
 
 interface ListItemWithRemove {
   info: FormListFieldData;
@@ -77,42 +103,37 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
   const form = useContext(ModelContext);
   const formData = useAtomValue(customFormAtom);
   return (
-    <Form.Item noStyle shouldUpdate={() => true}>
-      {({ getFieldValue }) => {
-        const source = getFieldValue(["component", "source"]);
-        const length = formData[source]?.component?.strokes?.length;
-        const value = getFieldValue(["component", "strokes", name]);
+    <ProFormDependency name={["component"]}>
+      {(props) => {
+        const component = props.component as Component;
+        const source = component.source!;
+        const length = formData[source]?.component?.strokes.length;
+        const value = component.strokes[name]!;
         return typeof value === "object" ? (
           <>
-            <Flex gap="middle" justify="space-between">
-              <Form.Item<BasicComponent["strokes"]>
+            <Flex gap="middle">
+              <ProFormSelect<Feature>
                 {...rest}
                 name={[name, "feature"]}
-              >
-                <Select<Feature>
-                  style={{ width: "96px" }}
-                  options={Object.keys(classifier).map((x) => ({
-                    label: x,
-                    value: x,
-                  }))}
-                  onChange={(value) => {
-                    const oldStroke = form.getFieldValue([
-                      "component",
-                      "strokes",
-                      name,
-                    ]) as SVGStroke;
-                    const newStroke = getDummyStroke(
-                      value,
-                      oldStroke.start,
-                      oldStroke.curveList,
-                    );
-                    form.setFieldValue(
-                      ["component", "strokes", name],
-                      newStroke,
-                    );
-                  }}
-                />
-              </Form.Item>
+                style={{ width: "96px" }}
+                options={Object.keys(classifier).map((x) => ({
+                  label: x,
+                  value: x,
+                }))}
+                onChange={(value) => {
+                  const oldStroke = form.getFieldValue([
+                    "component",
+                    "strokes",
+                    name,
+                  ]) as SVGStroke;
+                  const newStroke = getDummyStroke(
+                    value,
+                    oldStroke.start,
+                    oldStroke.curveList,
+                  );
+                  form.setFieldValue(["component", "strokes", name], newStroke);
+                }}
+              />
               <Flex gap="small">
                 <Form.List name={[name, "start"]}>
                   {(fields) => (
@@ -126,6 +147,7 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                   )}
                 </Form.List>
               </Flex>
+              <div style={{ flex: 1 }}></div>
               <Form.Item>
                 <Button
                   onClick={() => {
@@ -140,26 +162,29 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
                 <DeleteButton onClick={remove} />
               </Form.Item>
             </Flex>
-            <Form.List name={[name, "curveList"]}>
-              {(fields) => (
-                <>
-                  {fields.map((field) => (
-                    <CurveForm {...field} key={field.key} />
-                  ))}
-                </>
-              )}
-            </Form.List>
+            <StaticList name={[name, "curveList"]}>
+              <ProFormGroup key="group">
+                <ProFormSelect {...rest} name="command" disabled />
+                <StaticList name="parameterList" itemRender={InlineRender}>
+                  {(meta) => (
+                    <Form.Item noStyle {...meta}>
+                      <NumberInput />
+                    </Form.Item>
+                  )}
+                </StaticList>
+              </ProFormGroup>
+            </StaticList>
           </>
         ) : (
           <Flex gap="middle" justify="space-between">
-            <Form.Item name={[name]}>
-              <Select<number>
-                options={[...Array(length).keys()].map((x) => ({
-                  label: x,
-                  value: x,
-                }))}
-              />
-            </Form.Item>
+            <ProFormSelect
+              name={[name]}
+              options={[...Array(length).keys()].map((x) => ({
+                label: x,
+                value: x,
+              }))}
+            />
+            <div style={{ flex: 1 }}></div>
             <Form.Item>
               <Button
                 onClick={() => {
@@ -190,7 +215,7 @@ const StrokeForm = ({ info, remove }: ListItemWithRemove) => {
           </Flex>
         );
       }}
-    </Form.Item>
+    </ProFormDependency>
   );
 };
 
@@ -218,209 +243,162 @@ const ComponentForm = () => {
   const parent = source !== undefined ? formData[source] : undefined;
   const parentLength = parent?.component?.strokes.length ?? 0;
   return (
-    <>
-      <Flex gap="middle">
-        <Form.Item
-          name={["component", "source"]}
-          label="源字"
-          shouldUpdate={() => true}
-        >
-          <GlyphSelect
-            customFilter={([char, glyph]) => {
-              if (glyph.component === undefined) return false;
-              let pointer: string | undefined = char;
-              while (pointer != undefined) {
-                if (pointer === current) return false;
-                let component: Component | undefined =
-                  formData[pointer]?.component;
-                if (component === undefined) break;
-                pointer = component.source;
-              }
-              return true;
-            }}
-          />
-        </Form.Item>
-        <Form.Item shouldUpdate>
-          <Button
-            onClick={() =>
-              form.setFieldValue(["component", "source"], undefined)
-            }
-            disabled={strokes?.some((x) => typeof x === "number")}
-          >
-            清除
-          </Button>
-        </Form.Item>
-      </Flex>
-      <Form.List name={["component", "strokes"]}>
-        {(fields, { add, remove }) => (
+    <ProFormDependency<Glyph> name={["component"]}>
+      {({ component }) => {
+        if (component === undefined) {
+          return null;
+        }
+        return (
           <>
-            {fields.map((info, index) => (
-              <StrokeForm
-                info={info}
-                remove={() => remove(index)}
-                key={info.key}
-              />
-            ))}
-            <Flex gap="middle" justify="center">
-              <Form.Item>
-                <Dropdown
-                  menu={{
-                    items: classifiedStrokeOptions,
-                    onClick: (info) => {
-                      add(getDummyStroke(info.key as Feature));
-                    },
+            <Flex gap="middle">
+              <Form.Item
+                name={["component", "source"]}
+                label="源字"
+                shouldUpdate
+              >
+                <GlyphSelect
+                  customFilter={([char, glyph]) => {
+                    if (glyph.component === undefined) return false;
+                    let pointer: string | undefined = char;
+                    while (pointer != undefined) {
+                      if (pointer === current) return false;
+                      let component: Component | undefined =
+                        formData[pointer]?.component;
+                      if (component === undefined) break;
+                      pointer = component.source;
+                    }
+                    return true;
                   }}
-                >
-                  <Button type="dashed">添加笔画</Button>
-                </Dropdown>
+                />
               </Form.Item>
-              <Form.Item>
-                <Dropdown
-                  disabled={parent === undefined}
-                  menu={{
-                    items: [...Array(parentLength).keys()].map((x) => ({
-                      key: x.toString(),
-                      label: x.toString(),
-                    })),
-                    onClick: (info) => {
-                      add(Number(info.key));
-                    },
-                  }}
+              <Form.Item shouldUpdate>
+                <Button
+                  onClick={() =>
+                    form.setFieldValue(["component", "source"], undefined)
+                  }
+                  disabled={strokes?.some((x) => typeof x === "number")}
                 >
-                  <Button type="dashed">添加笔画引用</Button>
-                </Dropdown>
+                  清除
+                </Button>
               </Form.Item>
             </Flex>
+            <Form.List name={["component", "strokes"]}>
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map((info, index) => (
+                    <StrokeForm
+                      info={info}
+                      remove={() => remove(index)}
+                      key={info.key}
+                    />
+                  ))}
+                  <Flex gap="middle" justify="center">
+                    <Form.Item>
+                      <Dropdown
+                        menu={{
+                          items: classifiedStrokeOptions,
+                          onClick: (info) => {
+                            add(getDummyStroke(info.key as Feature));
+                          },
+                        }}
+                      >
+                        <Button type="dashed">添加笔画</Button>
+                      </Dropdown>
+                    </Form.Item>
+                    <Form.Item>
+                      <Dropdown
+                        disabled={parent === undefined}
+                        menu={{
+                          items: [...Array(parentLength).keys()].map((x) => ({
+                            key: x.toString(),
+                            label: x.toString(),
+                          })),
+                          onClick: (info) => {
+                            add(Number(info.key));
+                          },
+                        }}
+                      >
+                        <Button type="dashed">添加笔画引用</Button>
+                      </Dropdown>
+                    </Form.Item>
+                  </Flex>
+                </>
+              )}
+            </Form.List>
           </>
-        )}
-      </Form.List>
-    </>
-  );
-};
-
-const BlockModel = ({
-  info,
-  remove,
-  parts,
-}: ListItemWithRemove & { parts: 2 | 3 }) => {
-  const { key, name, ...rest } = info;
-  const options = parts === 2 ? [0, 1] : [0, 1, 2];
-  return (
-    <Space>
-      <Form.Item<Block["index"]> name={[name, "index"]} colon={false}>
-        <Select
-          options={options.map((x) => ({
-            value: x,
-            label: `第 ${x + 1} 部`,
-          }))}
-        />
-      </Form.Item>
-      <Form.Item<Block["strokes"]> name={[name, "strokes"]}>
-        <Select
-          options={[...Array(10).keys()].map((x) => ({
-            value: x,
-            label: x === 0 ? "取剩余全部" : `取 ${x} 笔`,
-          }))}
-        />
-      </Form.Item>
-      <Form.Item>
-        <a onClick={remove}>删除</a>
-      </Form.Item>
-    </Space>
+        );
+      }}
+    </ProFormDependency>
   );
 };
 
 const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
   const { key, name, ...rest } = info;
   const form = useContext(ModelContext);
-  const parts = form.getFieldValue(["compound", info.name, "operandList"])
-    .length as 2 | 3;
+  const list = useWatch(["compound", info.name, "operandList"], form);
+  const parts = list?.length as 2 | 3;
   return (
     <>
       <Typography.Title level={3}>分部方式 {name + 1}</Typography.Title>
       <Flex gap="0px 8px" wrap="wrap">
-        <Form.Item<Compound> label="结构" name={[info.name, "operator"]}>
-          <Select<Operator>
-            options={operators.map((x) => ({ value: x, label: x }))}
-            onChange={(value) => {
-              const list = form.getFieldValue([
-                "compound",
-                info.name,
-                "operandList",
-              ]);
-              const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
-              const newList = list.concat("一").slice(0, newLength);
-              form.setFieldValue(
-                ["compound", info.name, "operandList"],
-                newList,
-              );
-            }}
-          />
-        </Form.Item>
-        <Form.List name={[info.name, "operandList"]}>
-          {(fields) => (
-            <>
-              {fields.map((info, i) => (
-                <Form.Item<Partition["operandList"]>
-                  {...info}
-                  key={info.key}
-                  label={`第 ${i + 1} 部`}
-                  name={info.name}
-                >
-                  <GlyphSelect />
-                </Form.Item>
-              ))}
-            </>
+        <ProFormSelect
+          label="结构"
+          name={[info.name, "operator"]}
+          onChange={(value) => {
+            const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
+            const newList = list.concat("一").slice(0, newLength);
+            form.setFieldValue(["compound", info.name, "operandList"], newList);
+          }}
+          options={operators.map((x) => ({ value: x, label: x }))}
+          style={{ width: "96px" }}
+        ></ProFormSelect>
+        <StaticList name={[info.name, "operandList"]} itemRender={InlineRender}>
+          {(meta, i) => (
+            <Form.Item noStyle {...meta}>
+              <GlyphSelect style={{ width: "96px" }} />
+            </Form.Item>
           )}
-        </Form.List>
+        </StaticList>
         <Form.Item>
           <DeleteButton onClick={remove} />
         </Form.Item>
       </Flex>
-      <Flex align="center" gap="small" wrap="wrap">
-        <Form.Item label="标签" />
-        <Form.List name={[info.name, "tags"]}>
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map((info, i) => (
-                <Space key={info.key}>
-                  <Form.Item<Partition["tags"]> {...info} name={info.name}>
-                    <Input style={{ width: "96px" }} />
-                  </Form.Item>
-                  <Form.Item>
-                    <a onClick={() => remove(i)}>删除</a>
-                  </Form.Item>
-                </Space>
-              ))}
-              <Form.Item>
-                <Button onClick={() => add("形声")}>添加标签</Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
-      </Flex>
-      <Flex gap="small" wrap="wrap">
-        <Form.Item label="笔顺" />
-        <Form.List name={[info.name, "order"]}>
-          {(fields, { add, remove }) => (
-            <Flex vertical>
-              {fields.map((info, i) => (
-                <BlockModel
-                  key={info.key}
-                  info={info}
-                  remove={() => remove(i)}
-                  parts={parts}
-                />
-              ))}
-              <Form.Item>
-                <Button onClick={() => add({ index: 0, strokes: 0 })}>
-                  添加笔画块
-                </Button>
-              </Form.Item>
-            </Flex>
-          )}
-        </Form.List>
-      </Flex>
+      <ProFormList
+        label="标签"
+        name={[info.name, "tags"]}
+        itemRender={InlineRender}
+        copyIconProps={false}
+        creatorRecord={() => ({ toString: () => "形声" })}
+      >
+        {(meta) => (
+          <Form.Item noStyle {...meta}>
+            <Input style={{ width: "96px" }} />
+          </Form.Item>
+        )}
+      </ProFormList>
+      <ProFormList
+        label="笔顺"
+        name={[info.name, "order"]}
+        copyIconProps={false}
+        creatorRecord={{ index: 0, strokes: 0 }}
+      >
+        <ProFormGroup>
+          <ProFormSelect
+            name="index"
+            options={[...Array(parts).keys()].map((x) => ({
+              value: x,
+              label: `第 ${x + 1} 部`,
+            }))}
+          />
+          <ProFormSelect
+            name="strokes"
+            options={[...Array(10).keys()].map((x) => ({
+              value: x,
+              label: x === 0 ? "取剩余全部" : `取 ${x} 笔`,
+            }))}
+          />
+        </ProFormGroup>
+      </ProFormList>
     </>
   );
 };
@@ -470,29 +448,23 @@ const BasicForm = () => {
   return (
     <>
       <Typography.Title level={2}>基本信息</Typography.Title>
-      <Flex gap="middle">
-        <Form.Item<Glyph> label="Unicode" name="unicode">
-          <InputNumber disabled />
-        </Form.Item>
-        <Form.Item<Glyph> label="名称" name="name">
-          <Input />
-        </Form.Item>
-      </Flex>
-      <Flex gap="middle">
-        <Form.Item<Glyph> label="类型" name="default_type">
-          <Radio.Group optionType="button" options={options} />
-        </Form.Item>
-        <Form.Item<Glyph> label="歧义" name="ambiguous" valuePropName="checked">
-          <Checkbox />
-        </Form.Item>
-        <Form.Item<Glyph>
+      <ProFormGroup>
+        <ProFormDigit label="Unicode" name="unicode" disabled width="xs" />
+        <ProFormText label="名称" name="name" width="xs" />
+        <ProFormCheckbox label="歧义" name="ambiguous" disabled />
+        <ProFormDigit
           label="GF0014 序号"
           name="gf0014_id"
+          disabled
           rules={[{ type: "integer", min: 1, max: 514 }]}
-        >
-          <InputNumber />
-        </Form.Item>
-      </Flex>
+          width="xs"
+        />
+        <ProFormRadio.Group
+          label="类型"
+          name="default_type"
+          options={options}
+        />
+      </ProFormGroup>
     </>
   );
 };
@@ -500,12 +472,11 @@ const BasicForm = () => {
 interface SwitcherProps {
   name: string;
   formName: "component" | "compound";
-  onChange: (b: boolean) => void;
 }
 
-const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
+const Switcher = ({ name, formName }: SwitcherProps) => {
   const form = useContext(ModelContext);
-  const thisStatus = Form.useWatch(formName, form) !== undefined;
+  const thisStatus = useWatch(formName, form) !== undefined;
   const hasComponent = useWatch("component", form) !== undefined;
   const hasCompound = useWatch("compound", form) !== undefined;
   const last = Number(hasComponent) + Number(hasCompound) === 1;
@@ -516,13 +487,10 @@ const Switcher = ({ name, formName, onChange }: SwitcherProps) => {
         checked={thisStatus}
         disabled={last && thisStatus}
         onChange={(value) => {
-          if (value === false) {
-            form.setFieldValue(formName, undefined);
-          } else {
-            const initial = formDefault[formName];
-            form.setFieldValue(formName, initial);
-          }
-          onChange(!thisStatus);
+          form.setFieldValue(
+            formName,
+            value ? formDefault[formName] : undefined,
+          );
         }}
       />
     </Flex>
@@ -540,39 +508,54 @@ export const defaultGlyph: CompoundGlyph = {
 };
 
 const GlyphModel = ({
-  char,
+  open,
+  setOpen,
   form,
-  children,
-}: PropsWithChildren<{ char?: string; form: FormInstance<Glyph> }>) => {
-  const [hasComponent, setHasComponent] = useState(false);
-  const [hasCompound, setHasCompound] = useState(false);
-  const formData = useAtomValue(customFormAtom);
-  useEffect(() => {
-    if (char === undefined) return;
-    const data = formData[char];
-    if (data === undefined) return;
-    setHasComponent(data.component !== undefined);
-    setHasCompound(data.compound !== undefined);
-    form.resetFields();
-    form.setFieldsValue(data);
-  }, [char]);
+}: {
+  open: boolean;
+  setOpen: (o: boolean) => void;
+  form: FormInstance<Glyph>;
+}) => {
+  const remote = useContext(RemoteContext);
+  const add = useAddAtom(formCustomizationAtom);
+  const updateForm = useSetAtom(updateFormAtom);
   return (
-    <Form<Glyph> form={form}>
-      {children}
-      <BasicForm />
-      <Switcher name="部件" formName="component" onChange={setHasComponent} />
-      {hasComponent && <ComponentForm />}
-      <Switcher name="复合体" formName="compound" onChange={setHasCompound} />
-      {hasCompound && <CompoundForm />}
-    </Form>
+    <ModalForm<Glyph>
+      form={form}
+      layout="horizontal"
+      open={open}
+      onOpenChange={setOpen}
+      onFinish={async (values) => {
+        if (remote) {
+          // 管理模式
+          const res = await remoteUpdate(values);
+          if (!errorFeedback(res)) {
+            updateForm(values);
+          }
+        } else {
+          // 用户模式
+          add(String.fromCodePoint(values.unicode), values);
+        }
+      }}
+      width="90%"
+    >
+      <ModelContext.Provider value={form}>
+        <EditorRow>
+          <EditorColumn span={8}>
+            <BasicForm />
+            <Typography.Title level={2}>预览</Typography.Title>
+            <GlyphView form={form} />
+          </EditorColumn>
+          <EditorColumn span={16}>
+            <Switcher name="部件" formName="component" />
+            <ComponentForm />
+            <Switcher name="复合体" formName="compound" />
+            <CompoundForm />
+          </EditorColumn>
+        </EditorRow>
+      </ModelContext.Provider>
+    </ModalForm>
   );
 };
 
-export {
-  GlyphModel,
-  BasicForm,
-  CurveForm,
-  StrokeForm,
-  ComponentForm,
-  CompoundForm,
-};
+export { GlyphModel, BasicForm, StrokeForm, ComponentForm, CompoundForm };

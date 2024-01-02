@@ -9,15 +9,14 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
-import { alphabetOptionsAtom } from "./Mapping";
+import KeySelect from "./KeySelect";
+import { Key } from "~/lib/config";
+import { joinKeys } from "./Utils";
 
 const ElementAdder = ({ element }: { element?: string }) => {
   const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
   const [main, setMain] = useState(Object.keys(mapping)[0]!);
-  const [keys, setKeys] = useState([alphabet[0], "", "", ""]);
-  const alphabetOptions = useAtomValue(alphabetOptionsAtom);
-
-  const allOptions = [{ label: "无", value: "" }].concat(alphabetOptions);
+  const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
   const addMapping = useAddAtom(mappingAtom);
   const addGrouping = useAddAtom(groupingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
@@ -28,9 +27,10 @@ const ElementAdder = ({ element }: { element?: string }) => {
         <span>添加至</span>
         {keys.slice(0, mapping_type ?? 1).map((key, index) => {
           return (
-            <Select
+            <KeySelect
               key={index}
               value={key}
+              allowEmpty={index !== 0}
               onChange={(event) =>
                 setKeys((keys) =>
                   keys.map((v, i) => {
@@ -38,7 +38,6 @@ const ElementAdder = ({ element }: { element?: string }) => {
                   }),
                 )
               }
-              options={index ? allOptions : alphabetOptions}
             />
           );
         })}
@@ -46,7 +45,8 @@ const ElementAdder = ({ element }: { element?: string }) => {
           type="primary"
           disabled={element === undefined}
           onClick={() => {
-            addMapping(element!, keys.slice(0, mapping_type ?? 1).join(""));
+            const slice = keys.slice(0, mapping_type ?? 1);
+            addMapping(element!, joinKeys(slice));
             removeGrouping(element!);
           }}
         >

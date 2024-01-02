@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { unicodeBlock } from "~/lib/utils";
-import { Button, Flex, Form, Layout, Modal, Space, Typography } from "antd";
+import { Button, Flex, Form, Layout, Space } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import { EditorColumn, EditorRow, Select } from "~/components/Utils";
+import { Select } from "~/components/Utils";
 import {
   customFormAtom,
   displayAtom,
@@ -15,14 +15,12 @@ import {
 import type { Glyph, Operator } from "~/lib/data";
 import { operators } from "~/lib/data";
 import { GlyphModel, ModelContext } from "~/components/GlyphModel";
-import GlyphView from "~/components/GlyphView";
 import Root from "~/components/Root";
 import {
   Create,
   Delete,
   Mutate,
   QuickPatchAmbiguous,
-  Update,
 } from "~/components/Action";
 import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
 import classifier from "~/lib/classifier";
@@ -38,12 +36,12 @@ const FormTable = () => {
   const form = useAtomValue(customFormAtom);
   const formCustomization = useAtomValue(formCustomizationAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
-  const [thisForm] = Form.useForm<Glyph>();
-  const [char, setChar] = useState<string | undefined>(undefined);
+  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const display = useAtomValue(displayAtom);
   const sortedForm = useAtomValue(sortedCustomFormAtom);
+  const [formInstance] = Form.useForm<Glyph>();
 
   const dataSource = sortedForm
     .filter(([x]) => makeFilter(searchInput, form, sequenceMap)(x))
@@ -220,7 +218,13 @@ const FormTable = () => {
       key: "option",
       render: (_, record) => (
         <Space>
-          <Button onClick={() => setChar(String.fromCodePoint(record.unicode))}>
+          <Button
+            onClick={() => {
+              formInstance.resetFields();
+              formInstance.setFieldsValue(record);
+              setOpen(true);
+            }}
+          >
             编辑
           </Button>
           <Delete unicode={record.unicode} />
@@ -248,28 +252,19 @@ const FormTable = () => {
     >
       <Flex style={{ width: "720px" }} gap="middle" justify="center">
         <StrokeSearch setSequence={setSearchInput} />
-        <Create setChar={setChar} />
-      </Flex>
-      <ModelContext.Provider value={thisForm}>
-        <Modal
-          open={char !== undefined}
-          onCancel={() => {
-            setChar(undefined);
+        <Create
+          onCreate={(char) => {
+            const glyph = form[char];
+            if (glyph === undefined) {
+              return;
+            }
+            formInstance.resetFields();
+            formInstance.setFieldsValue(glyph);
+            setOpen(true);
           }}
-          footer={<Update setChar={setChar} />}
-          width="80%"
-        >
-          <EditorRow>
-            <EditorColumn span={12}>
-              <Typography.Title level={2}>预览</Typography.Title>
-              <GlyphView form={thisForm} />
-            </EditorColumn>
-            <EditorColumn span={12}>
-              <GlyphModel char={char!} form={thisForm} />
-            </EditorColumn>
-          </EditorRow>
-        </Modal>
-      </ModelContext.Provider>
+        />
+      </Flex>
+      <GlyphModel open={open} setOpen={setOpen} form={formInstance} />
       <Table<Glyph>
         dataSource={dataSource}
         columns={columns}

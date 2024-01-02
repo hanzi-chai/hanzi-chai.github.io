@@ -7,14 +7,10 @@ import {
   algebraAtom,
   customClassifierAtom,
   customRepertoireAtom,
-  sequenceAtom,
   sortedCustomFormAtom,
-  useAddAtom,
-  useAtom,
   useAtomValue,
   useRemoveAtom,
 } from "~/atoms";
-import { deepcopy } from "~/lib/utils";
 import Algebra from "./Algebra";
 import {
   PronunciationElementTypes,

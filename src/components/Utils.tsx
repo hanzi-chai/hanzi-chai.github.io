@@ -19,6 +19,7 @@ import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
 import Root from "./Root";
+import { Key } from "~/lib/config";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -48,7 +49,7 @@ export const NumberInput = styled(InputNumber)`
 `;
 
 export const Select = styled(_Select)`
-  width: 128px;
+  width: 96px;
 ` as typeof _Select;
 
 export const Uploader = ({
@@ -209,4 +210,22 @@ export const KeyList = ({
       </Space>
     </Flex>
   );
+};
+
+export const renderSuperScript = (element: string, index: number) => {
+  const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  return element + superscripts[index + 1];
+};
+
+export const joinKeys = (keys: Key[]) => {
+  return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
+};
+
+export const renderMapped = (mapped: string | Key[]) => {
+  if (typeof mapped === "string") {
+    return mapped;
+  }
+  return mapped.map((x) => {
+    return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
+  });
 };

@@ -18,70 +18,30 @@ import {
   fetchJson,
   keyEquivalenceAtom,
   pairEquivalenceAtom,
+  useListAtom,
   wordFrequencyAtom,
 } from "~/atoms";
-import {
-  constraintsAtom,
-  metaheuristicAtom,
-  objectiveAtom,
-  parametersAtom,
-  searchMethodAtom,
-} from "~/atoms/optimization";
+import { constraintsAtom, objectiveAtom } from "~/atoms/optimization";
 import CustomSpin from "~/components/CustomSpin";
+import ElementSelect from "~/components/ElementSelect";
 import Evaluator from "~/components/Evaluator";
+import SolverForm from "~/components/SolverForm";
 import {
   DeleteButton,
   EditorColumn,
   EditorRow,
   KeyList,
-  MinusButton,
-  PlusButton,
-  ElementSelect,
   Select,
 } from "~/components/Utils";
 import {
   AtomicConstraint,
-  GroupConstraint,
+  Constraints,
   LevelWeights,
   Objective,
   PartialWeights,
   Solver,
   TierWeights,
 } from "~/lib/config";
-
-const Parameters = () => {
-  const [parameters, setParameters] = useAtom(parametersAtom);
-  const currentParameters = parameters as NonNullable<Solver["parameters"]>;
-  const { t_max, t_min, steps } = currentParameters;
-  return (
-    <>
-      <Form.Item label="最高温">
-        <InputNumber
-          value={t_max}
-          onChange={(value) =>
-            setParameters({ ...currentParameters, t_max: value ?? 0 })
-          }
-        />
-      </Form.Item>
-      <Form.Item label="最低温">
-        <InputNumber
-          value={t_min}
-          onChange={(value) =>
-            setParameters({ ...currentParameters, t_min: value ?? 0 })
-          }
-        />
-      </Form.Item>
-      <Form.Item label="步数">
-        <InputNumber
-          value={steps}
-          onChange={(value) =>
-            setParameters({ ...currentParameters, steps: value ?? 0 })
-          }
-        />
-      </Form.Item>
-    </>
-  );
-};
 
 const AtomicObjective = ({
   title,
@@ -377,14 +337,12 @@ const PartialObjective = ({
   );
 };
 
-type ConstraintType = "elements" | "indices" | "element_indices";
-
 const ConstraintList = ({
   title,
   type,
 }: {
   title: string;
-  type: ConstraintType;
+  type: keyof Constraints;
 }) => {
   const listAtom = useMemo(
     () =>
@@ -395,14 +353,15 @@ const ConstraintList = ({
             indices: undefined,
             element_indices: undefined,
           })
-          .prop(type),
+          .prop(type)
+          .valueOr([] as AtomicConstraint[]),
       ),
     [type],
   );
 
-  const [list, setList] = useAtom(listAtom);
+  const [list, append, exclude, modify] = useListAtom(listAtom);
   const { alphabet } = useAtomValue(configFormAtom);
-  const defaultConstraints: Record<ConstraintType, AtomicConstraint> = {
+  const defaultConstraints: Record<keyof Constraints, AtomicConstraint> = {
     elements: { element: "1" },
     indices: { index: 1 },
     element_indices: { element: "1", index: 1 },
@@ -410,173 +369,69 @@ const ConstraintList = ({
   return (
     <>
       <Typography.Title level={3}>{title}</Typography.Title>
-      {(list ?? []).map(({ element, index: idx, keys }, index) => {
-        return (
-          <Flex vertical gap="small" key={index}>
-            <Flex key={index} align="center" gap="small">
-              将
-              {type !== "indices" ? (
-                <ElementSelect
-                  excludeGrouped
-                  char={element}
-                  onChange={(char) =>
-                    setList(
-                      list?.map((x, i) =>
-                        i === index ? { ...x, element: char } : x,
-                      ),
-                    )
-                  }
-                />
-              ) : (
-                "所有元素"
-              )}
-              的
-              {type !== "elements" ? (
-                <Select
-                  value={idx}
-                  options={[0, 1, 2, 3].map((x) => ({
-                    label: `第 ${x + 1} 码`,
-                    value: x,
-                  }))}
-                  onChange={(value) =>
-                    setList(
-                      list?.map((x, i) =>
-                        i === index ? { ...x, index: value } : x,
-                      ),
-                    )
-                  }
-                />
-              ) : (
-                "所有码"
-              )}
-              限制在
-              <Select
-                value={keys === undefined}
-                options={[
-                  { label: "当前按键", value: true },
-                  { label: "指定按键", value: false },
-                ]}
-                onChange={(value) =>
-                  setList(
-                    list?.map((x, i) =>
-                      i === index ? { ...x, keys: value ? undefined : [] } : x,
-                    ),
-                  )
-                }
-              />
-              <DeleteButton
-                onClick={() =>
-                  setList((list ?? []).filter((_, i) => i !== index))
-                }
-              />
-            </Flex>
-            {keys && (
-              <KeyList
-                keys={keys}
-                setKeys={(ks) =>
-                  setList(
-                    list?.map((x, i) => (i === index ? { ...x, keys: ks } : x)),
-                  )
-                }
-                allKeys={[...alphabet]}
-              />
-            )}
-          </Flex>
-        );
-      })}
-      <Button
-        onClick={() => setList((list ?? []).concat(defaultConstraints[type]))}
-      >
-        添加约束
-      </Button>
-    </>
-  );
-};
-
-const GroupConstraintList = () => {
-  const listAtom = useMemo(
-    () =>
-      focusAtom(constraintsAtom, (o) =>
-        o
-          .valueOr({
-            grouping: undefined,
-          })
-          .prop("grouping")
-          .valueOr([] as GroupConstraint[][]),
-      ),
-    [],
-  );
-
-  const defaultGroup: GroupConstraint[] = [
-    { element: "土", index: 0 },
-    { element: "士", index: 0 },
-  ];
-
-  const [list, setList] = useAtom(listAtom);
-  const updateListAt = (index: number, group: GroupConstraint[]) => {
-    setList(list.map((x, i) => (i === index ? group : x)));
-  };
-  return (
-    <>
-      <Typography.Title level={3}>绑定约束</Typography.Title>
-      {list.map((group, index) => {
-        return (
-          <Flex vertical key={index}>
-            <Flex align="center" gap="small">
-              将以下元素的码位绑定在一起：
-              <PlusButton
-                onClick={() =>
-                  updateListAt(index, group.concat({ element: "1", index: 0 }))
-                }
-              />
-              <MinusButton
-                onClick={() =>
-                  updateListAt(index, group.slice(0, group.length - 1))
-                }
-              />
-              <DeleteButton
-                onClick={() => setList(list.filter((_, i) => i !== index))}
-              />
-            </Flex>
-            {group.map(({ element, index: idx }, subindex) => (
-              <Space key={subindex}>
-                <ElementSelect
-                  excludeGrouped
-                  char={element}
-                  onChange={(value) =>
-                    updateListAt(
-                      index,
-                      group.map((x, i) =>
-                        i === subindex ? { ...x, element: value } : x,
-                      ),
-                    )
-                  }
-                />
+      <Flex vertical gap="small">
+        {list.map((constraint, index) => {
+          const { element, index: idx, keys } = constraint;
+          return (
+            <Flex vertical gap="small" key={index}>
+              <Flex key={index} align="center" gap="small">
+                将
+                {type !== "indices" ? (
+                  <ElementSelect
+                    excludeGrouped
+                    char={element}
+                    onChange={(char) =>
+                      modify(index, { ...constraint, element: char })
+                    }
+                  />
+                ) : (
+                  "所有元素"
+                )}
                 的
+                {type !== "elements" ? (
+                  <Select
+                    value={idx}
+                    options={[0, 1, 2, 3].map((x) => ({
+                      label: `第 ${x + 1} 码`,
+                      value: x,
+                    }))}
+                    onChange={(value) =>
+                      modify(index, { ...constraint, index: value })
+                    }
+                  />
+                ) : (
+                  "所有码"
+                )}
+                限制在
                 <Select
-                  style={{ width: "96px" }}
-                  value={idx}
-                  options={[0, 1, 2, 3].map((x) => ({
-                    label: `第 ${x + 1} 码`,
-                    value: x,
-                  }))}
+                  value={keys === undefined}
+                  options={[
+                    { label: "当前按键", value: true },
+                    { label: "指定按键", value: false },
+                  ]}
                   onChange={(value) =>
-                    updateListAt(
-                      index,
-                      group.map((x, i) =>
-                        i === subindex ? { ...x, index: value } : x,
-                      ),
-                    )
+                    modify(index, {
+                      ...constraint,
+                      keys: value ? undefined : [],
+                    })
                   }
                 />
-              </Space>
-            ))}
-          </Flex>
-        );
-      })}
-      <Button onClick={() => setList(list.concat([defaultGroup]))}>
-        添加约束
-      </Button>
+                <DeleteButton onClick={() => exclude(index)} />
+              </Flex>
+              {keys && (
+                <KeyList
+                  keys={keys}
+                  setKeys={(ks) => modify(index, { ...constraint, keys: ks })}
+                  allKeys={[...alphabet]}
+                />
+              )}
+            </Flex>
+          );
+        })}
+        <Button onClick={() => append(defaultConstraints[type])}>
+          添加约束
+        </Button>
+      </Flex>
     </>
   );
 };
@@ -594,11 +449,6 @@ function LoadAssets() {
 }
 
 const Optimization = () => {
-  const [metaheuristic, setMetaheuristic] = useAtom(metaheuristicAtom);
-  const [searchMethod, setSearchMethod] = useAtom(searchMethodAtom);
-  const { algorithm, parameters, report_after } = metaheuristic;
-  const auto = parameters === undefined;
-
   return (
     <EditorRow>
       <EditorColumn span={12}>
@@ -608,93 +458,11 @@ const Optimization = () => {
         <PartialObjective title="词语全码" type="words_full" />
         <PartialObjective title="词语简码" type="words_short" />
         <Typography.Title level={2}>优化方法</Typography.Title>
-        <Flex vertical align="center">
-          <Flex gap="large">
-            <Form.Item label="算法">
-              <Select<Solver["algorithm"]>
-                value={algorithm}
-                options={[{ label: "退火算法", value: "SimulatedAnnealing" }]}
-                onChange={(value) =>
-                  setMetaheuristic({
-                    algorithm: value,
-                    runtime: 10,
-                  })
-                }
-              />
-            </Form.Item>
-            <Form.Item label="自动调参">
-              <Checkbox
-                checked={auto}
-                onChange={(e) => {
-                  const meta = e.target.checked
-                    ? { ...metaheuristic, runtime: 10, parameters: undefined }
-                    : {
-                        ...metaheuristic,
-                        parameters: {
-                          t_max: 1.0,
-                          t_min: 1.0e-6,
-                          steps: 10000,
-                        },
-                        runtime: undefined,
-                      };
-                  setMetaheuristic(meta);
-                }}
-              />
-            </Form.Item>
-            <Form.Item label="保存进度">
-              <InputNumber
-                value={report_after ?? 0.9}
-                onChange={(value) => {
-                  setMetaheuristic({
-                    ...metaheuristic,
-                    report_after: value ?? 0,
-                  });
-                }}
-              />
-            </Form.Item>
-          </Flex>
-          <Flex gap="large">
-            <Form.Item label="随机移动">
-              <InputNumber
-                value={searchMethod.random_move}
-                onChange={(value) =>
-                  setSearchMethod({ ...searchMethod, random_move: value ?? 0 })
-                }
-              />
-            </Form.Item>
-            <Form.Item label="随机交换">
-              <InputNumber
-                value={searchMethod.random_swap}
-                onChange={(value) =>
-                  setSearchMethod({ ...searchMethod, random_swap: value ?? 0 })
-                }
-              />
-            </Form.Item>
-          </Flex>
-          <Flex gap="large">
-            {auto ? (
-              <Form.Item label="运行时间">
-                <InputNumber
-                  value={metaheuristic.runtime ?? 10}
-                  onChange={(value) => {
-                    setMetaheuristic({
-                      ...metaheuristic,
-                      runtime: value ?? undefined,
-                    });
-                  }}
-                />
-                分钟
-              </Form.Item>
-            ) : (
-              <Parameters />
-            )}
-          </Flex>
-        </Flex>
+        <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>
         <ConstraintList title="元素约束" type="elements" />
         <ConstraintList title="码位约束" type="indices" />
         <ConstraintList title="元素 + 码位约束" type="element_indices" />
-        <GroupConstraintList />
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>优化</Typography.Title>

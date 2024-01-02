@@ -1,61 +1,49 @@
 import React, { useState } from "react";
-import { Button, Flex, Input, Space, Table } from "antd";
+import { Button, Flex, Form, FormInstance, Input, Space, Table } from "antd";
 import {
   customRepertoireAtom,
   repertoireCustomizationAtom,
   useAddAtom,
   useAtomValue,
-  useSetAtom,
 } from "~/atoms";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
-import * as O from "optics-ts/standalone";
-
 import type { ColumnsType } from "antd/es/table";
 import { EditorColumn, EditorRow } from "~/components/Utils";
-import { deepcopy } from "~/lib/utils";
+import { unicodeBlock } from "~/lib/utils";
 import { useChaifenTitle } from "~/lib/hooks";
 import { Character } from "~/lib/data";
-
-const EditablePinyin = ({
-  pinyin,
-  setPinyin,
-  deletePinyin,
-}: {
-  pinyin: string;
-  setPinyin: (s: string) => void;
-  deletePinyin: () => void;
-}) => {
-  return (
-    <Space>
-      <Input
-        style={{ width: "80px" }}
-        value={pinyin}
-        onChange={(event) => {
-          setPinyin(event.target.value);
-        }}
-      />
-      <a onClick={deletePinyin}>删除</a>
-    </Space>
-  );
-};
+import {
+  ModalForm,
+  ProFormCheckbox,
+  ProFormDigit,
+  ProFormGroup,
+  ProFormList,
+  ProFormText,
+} from "@ant-design/pro-components";
+import { InlineRender } from "~/components/GlyphModel";
 
 const Repertoire: React.FC = () => {
   useChaifenTitle("字音字集数据");
   const characters = useAtomValue(customRepertoireAtom);
-  const add = useAddAtom(repertoireCustomizationAtom);
+  const repertoireCustomization = useAtomValue(repertoireCustomizationAtom);
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const rawdata = Object.values(characters);
+  const [formInstance] = Form.useForm<Character>();
   const dataSource = input
     ? rawdata.filter((x) => String.fromCodePoint(x.unicode) === input)
     : rawdata;
 
   const columns: ColumnsType<Character> = [
     {
-      title: "汉字",
-      dataIndex: "key",
-      render: (_, record) => {
-        return <span>{String.fromCodePoint(record.unicode)}</span>;
+      title: "Unicode",
+      dataIndex: "unicode",
+      render: (_, { unicode }) => {
+        const hex = unicode.toString(16).toUpperCase();
+        const valid = ["cjk", "cjk-a"].includes(unicodeBlock(unicode));
+        return valid ? String.fromCodePoint(unicode) + ` (${hex})` : hex;
       },
+      width: 128,
     },
     {
       title: "通用规范",
@@ -63,6 +51,7 @@ const Repertoire: React.FC = () => {
       render: (_, record) => {
         return <span>{record.tygf ? "是" : "否"}</span>;
       },
+      width: 128,
     },
     {
       title: "GB/T 2312",
@@ -70,43 +59,40 @@ const Repertoire: React.FC = () => {
       render: (_, record) => {
         return <span>{record.gb2312 ? "是" : "否"}</span>;
       },
+      width: 128,
     },
     {
       title: "字音",
       dataIndex: "pinyin",
       render: (_, record) => {
-        const key = String.fromCodePoint(record.unicode);
-        return (
-          <Flex justify="space-between">
-            <Space size="middle">
-              {record.pinyin.map((x, i) => (
-                <EditablePinyin
-                  key={i}
-                  pinyin={x}
-                  setPinyin={(pinyin) => {
-                    const modified = deepcopy(record);
-                    modified.pinyin[i] = pinyin;
-                    add(key, modified);
-                  }}
-                  deletePinyin={() => {
-                    const modified = deepcopy(record);
-                    modified.pinyin.splice(i, 1);
-                    add(key, modified);
-                  }}
-                />
-              ))}
-            </Space>
-            <Button
-              onClick={() => {
-                const modified = deepcopy(record);
-                modified.pinyin.push("");
-                add(key, modified);
-              }}
-            >
-              添加
-            </Button>
-          </Flex>
-        );
+        return record.pinyin.join(", ");
+      },
+      width: 256,
+    },
+    {
+      title: "操作",
+      key: "option",
+      render: (_, record) => (
+        <Space>
+          <Button
+            onClick={() => {
+              formInstance.resetFields();
+              formInstance.setFieldsValue(record);
+              setOpen(true);
+            }}
+          >
+            编辑
+          </Button>
+        </Space>
+      ),
+      filters: [
+        { text: "已编辑", value: 1 },
+        { text: "未编辑", value: 0 },
+      ],
+      onFilter: (value, record) => {
+        const char = String.fromCodePoint(record.unicode);
+        const customized = repertoireCustomization[char] !== undefined;
+        return value === 1 ? customized : !customized;
       },
     },
   ];
@@ -114,7 +100,7 @@ const Repertoire: React.FC = () => {
   return (
     <EditorRow>
       <EditorColumn span={24}>
-        <Flex vertical gap="middle">
+        <Flex vertical gap="middle" align="center">
           <Input
             placeholder="搜索汉字"
             prefix={<SearchOutlined />}
@@ -123,18 +109,65 @@ const Repertoire: React.FC = () => {
               setInput(event.target.value);
             }}
           />
+          <CharacterModel open={open} setOpen={setOpen} form={formInstance} />
           <Table
             dataSource={dataSource}
             columns={columns}
-            rowKey={"unicode"}
+            size="small"
+            rowKey="unicode"
             pagination={{
               total: dataSource.length,
-              pageSize: 10,
+              pageSize: 50,
+            }}
+            style={{
+              maxWidth: "1920px",
             }}
           />
         </Flex>
       </EditorColumn>
     </EditorRow>
+  );
+};
+
+const CharacterModel = ({
+  open,
+  setOpen,
+  form,
+}: {
+  open: boolean;
+  setOpen: (o: boolean) => void;
+  form: FormInstance<Character>;
+}) => {
+  const add = useAddAtom(repertoireCustomizationAtom);
+  return (
+    <ModalForm<Character>
+      form={form}
+      layout="horizontal"
+      open={open}
+      onOpenChange={setOpen}
+      onFinish={async (values) => {
+        add(String.fromCodePoint(values.unicode), values);
+      }}
+    >
+      <ProFormGroup>
+        <ProFormDigit label="Unicode" name="unicode" disabled width="xs" />
+        <ProFormDigit label="通用规范" name="tygf" disabled width="xs" />
+        <ProFormCheckbox label="GB/T 2312" name="gb2312" disabled />
+        <ProFormList
+          label="拼音"
+          name="pinyin"
+          itemRender={InlineRender}
+          copyIconProps={false}
+          creatorRecord={() => ({ toString: () => "" })}
+        >
+          {(meta) => (
+            <Form.Item noStyle {...meta}>
+              <Input style={{ width: "128px" }} />
+            </Form.Item>
+          )}
+        </ProFormList>
+      </ProFormGroup>
+    </ModalForm>
   );
 };
 

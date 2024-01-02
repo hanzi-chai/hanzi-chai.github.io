@@ -1,6 +1,6 @@
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
-import type { Mapping } from "./config";
+import type { Key, Mapping } from "./config";
 import type {
   Draw,
   Form,
@@ -88,7 +88,7 @@ export const formDefault: Required<Pick<Glyph, "component" | "compound">> = {
 
 export interface MappedInfo {
   name: string;
-  code: string;
+  code: string | Key[];
 }
 
 export const reverse = (alphabet: string, mapping: Mapping) => {
@@ -97,7 +97,9 @@ export const reverse = (alphabet: string, mapping: Mapping) => {
   );
   for (const [name, code] of Object.entries(mapping)) {
     const main = code[0]!;
-    data[main]!.push({ name, code });
+    if (typeof main === "string") {
+      data[main]!.push({ name, code });
+    }
   }
   return data;
 };

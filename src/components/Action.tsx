@@ -46,13 +46,13 @@ interface CreateProps {
 
 export const RemoteContext = createContext(true);
 
-export const Create = ({ setChar }: { setChar: (s?: string) => void }) => (
-  <Popover content={<CreatePopoverContent setChar={setChar} />}>
+export const Create = ({ onCreate }: { onCreate: (s: string) => void }) => (
+  <Popover content={<CreatePopoverContent onCreate={onCreate} />}>
     <Button type="primary">新建</Button>
   </Popover>
 );
 
-function CreatePopoverContent({ setChar }: { setChar: (s?: string) => void }) {
+function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
   const add = useAddAtom(formCustomizationAtom);
   const remote = useContext(RemoteContext);
   const code = useAtomValue(nextUnicodeAtom);
@@ -108,7 +108,7 @@ function CreatePopoverContent({ setChar }: { setChar: (s?: string) => void }) {
     <Form<CreateProps>
       onFinish={async (values) => {
         const char = await handle(values);
-        if (char !== undefined) setChar(char);
+        if (char !== undefined) onCreate(char);
       }}
     >
       <Form.Item<CreateProps>
@@ -175,35 +175,6 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
         替换为成字
       </Button>
     </Popconfirm>
-  );
-};
-
-export const Update = ({ setChar }: { setChar: (s?: string) => void }) => {
-  const model = useContext(ModelContext);
-  const remote = useContext(RemoteContext);
-  const add = useAddAtom(formCustomizationAtom);
-  const updateForm = useSetAtom(updateFormAtom);
-  return (
-    <Button
-      type="primary"
-      onClick={async () => {
-        const values = model.getFieldsValue();
-        if (remote) {
-          // 管理模式
-          const res = await remoteUpdate(values);
-          if (!errorFeedback(res)) {
-            updateForm(values);
-            setChar(undefined);
-          }
-        } else {
-          // 用户模式
-          add(String.fromCodePoint(values.unicode), values);
-          setChar(undefined);
-        }
-      }}
-    >
-      更新
-    </Button>
   );
 };
 
