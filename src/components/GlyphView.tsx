@@ -89,12 +89,13 @@ const Overlay = styled.div`
 `;
 
 const GlyphView = ({ form }: { form: FormInstance<Glyph> }) => {
+  const type = useWatch("default_type", form);
   const component = useWatch("component", form);
   const compound = useWatch("compound", form) ?? [];
   return (
     <Overlay>
-      {component ? (
-        <ComponentView component={component} />
+      {type === "component" ? (
+        <ComponentView component={component!} />
       ) : (
         <CompoundView compound={compound} />
       )}

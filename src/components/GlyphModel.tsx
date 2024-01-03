@@ -8,6 +8,7 @@ import {
   Switch,
   Dropdown,
   notification,
+  AutoComplete,
 } from "antd";
 import {
   DeleteButton,
@@ -36,6 +37,7 @@ import { useWatch } from "antd/es/form/Form";
 import {
   customFormAtom,
   formCustomizationAtom,
+  tagsAtom,
   updateFormAtom,
   useAddAtom,
   useAtomValue,
@@ -337,6 +339,7 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
   const form = useContext(ModelContext);
   const list = useWatch(["compound", info.name, "operandList"], form);
   const parts = list?.length as 2 | 3;
+  const tags = useAtomValue(tagsAtom);
   return (
     <>
       <Typography.Title level={3}>分部方式 {name + 1}</Typography.Title>
@@ -372,7 +375,10 @@ const PartitionModel = ({ info, remove }: ListItemWithRemove) => {
       >
         {(meta) => (
           <Form.Item noStyle {...meta}>
-            <Input style={{ width: "96px" }} />
+            <AutoComplete
+              style={{ width: "96px" }}
+              options={tags.map((x) => ({ label: x, value: x }))}
+            />
           </Form.Item>
         )}
       </ProFormList>
@@ -497,16 +503,6 @@ const Switcher = ({ name, formName }: SwitcherProps) => {
   );
 };
 
-export const defaultGlyph: CompoundGlyph = {
-  unicode: 0,
-  name: null,
-  gf0014_id: null,
-  default_type: "compound",
-  component: undefined,
-  compound: [],
-  ambiguous: false,
-};
-
 const GlyphModel = ({
   open,
   setOpen,
@@ -525,12 +521,15 @@ const GlyphModel = ({
       layout="horizontal"
       open={open}
       onOpenChange={setOpen}
+      omitNil={false}
       onFinish={async (values) => {
+        console.log(values);
         if (remote) {
           // 管理模式
           const res = await remoteUpdate(values);
           if (!errorFeedback(res)) {
             updateForm(values);
+            setOpen(false);
           }
         } else {
           // 用户模式

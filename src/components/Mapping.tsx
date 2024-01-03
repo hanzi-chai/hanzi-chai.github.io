@@ -80,7 +80,7 @@ const KeysEditor = ({
               value={key}
               onChange={(event) => {
                 keys[index] = event;
-                addMapping(name, keys.join(""));
+                addMapping(name, joinKeys(keys));
               }}
               allowEmpty={index !== 0}
             />

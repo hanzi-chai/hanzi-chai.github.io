@@ -58,6 +58,18 @@ export const sequenceAtom = atom((get) => {
   return result;
 });
 
+export const tagsAtom = atom((get) => {
+  const form = get(customFormAtom);
+  const allTags = new Set<string>();
+  for (const { compound } of Object.values(form)) {
+    if (compound === undefined) continue;
+    for (const { tags } of compound) {
+      tags?.forEach((s) => allTags.add(s));
+    }
+  }
+  return Array.from(allTags).sort();
+});
+
 export const customRepertoireAtom = atom((get) => {
   const repertoire = get(repertoireAtom);
   const customization = get(repertoireCustomizationAtom);

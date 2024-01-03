@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { unicodeBlock } from "~/lib/utils";
-import { Button, Flex, Form, Layout, Space } from "antd";
+import { AutoComplete, Button, Flex, Form, Layout, Space } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import { Select } from "~/components/Utils";
@@ -10,6 +10,7 @@ import {
   formCustomizationAtom,
   sequenceAtom,
   sortedCustomFormAtom,
+  tagsAtom,
   useAtomValue,
 } from "~/atoms";
 import type { Glyph, Operator } from "~/lib/data";
@@ -30,7 +31,12 @@ import { GlyphSelect } from "./GlyphSelect";
 interface CompoundFilter {
   operator?: Operator;
   operand?: string;
+  tag?: string;
 }
+
+const parseFilter = (key: React.Key) => {
+  return JSON.parse((key || "{}") as string) as CompoundFilter;
+};
 
 const FormTable = () => {
   const form = useAtomValue(customFormAtom);
@@ -42,6 +48,7 @@ const FormTable = () => {
   const display = useAtomValue(displayAtom);
   const sortedForm = useAtomValue(sortedCustomFormAtom);
   const [formInstance] = Form.useForm<Glyph>();
+  const tags = useAtomValue(tagsAtom);
 
   const dataSource = sortedForm
     .filter(([x]) => makeFilter(searchInput, form, sequenceMap)(x))
@@ -54,12 +61,10 @@ const FormTable = () => {
       confirm,
       clearFilters,
     }) => {
-      const f = JSON.parse(
-        (selectedKeys[0] || "{}") as string,
-      ) as CompoundFilter;
-      const { operator, operand } = f;
+      const filter = parseFilter(selectedKeys[0]!);
+      const { operator, operand, tag } = filter;
       const update = (field: keyof CompoundFilter, value: string) =>
-        setSelectedKeys([JSON.stringify({ ...f, [field]: value })]);
+        setSelectedKeys([JSON.stringify({ ...filter, [field]: value })]);
       return (
         <Flex vertical style={{ padding: 16 }}>
           <Form.Item label="结构">
@@ -71,10 +76,17 @@ const FormTable = () => {
               )}
             />
           </Form.Item>
-          <Form.Item label="包含部件">
+          <Form.Item label="部件">
             <GlyphSelect
               value={operand}
               onChange={(value) => update("operand", value)}
+            />
+          </Form.Item>
+          <Form.Item label="标签">
+            <Select
+              value={tag}
+              onChange={(value) => update("tag", value)}
+              options={tags.map((x) => ({ label: x, value: x }))}
             />
           </Form.Item>
           <Flex justify="space-between">
@@ -93,9 +105,7 @@ const FormTable = () => {
       );
     },
     onFilter: (value, record) => {
-      const { operator, operand } = JSON.parse(
-        (value || "{}") as string,
-      ) as CompoundFilter;
+      const { operator, operand, tag } = parseFilter(value as React.Key);
       if (!record.compound) return false;
       if (
         operator &&
@@ -106,6 +116,8 @@ const FormTable = () => {
         operand &&
         record.compound.every((x) => !x.operandList.includes(operand))
       )
+        return false;
+      if (tag && record.compound.every((x) => !x.tags?.includes(tag)))
         return false;
       return true;
     },
