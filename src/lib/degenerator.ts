@@ -27,7 +27,7 @@ export const binaryToIndices = (n: number) => (binary: number) => {
 export const defaultDegenerator: Degenerator = {
   feature: {
     捺: "点",
-  },
+  } as Record<Feature, Feature>,
   no_cross: false,
 };
 
@@ -36,7 +36,7 @@ const strokeFeatureEqual = (
   s1: Feature,
   s2: Feature,
 ) => {
-  const feature = degenerator.feature ?? {};
+  const feature = degenerator.feature ?? ({} as Record<Feature, Feature>);
   const d1 = feature[s1] ?? s1;
   const d2 = feature[s2] ?? s2;
   return d1 === d2;
@@ -136,7 +136,7 @@ export const generateSliceBinaries = (
 };
 
 const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
-  let featureMap = degenerator.feature ?? {};
+  let featureMap = degenerator.feature ?? ({} as Record<Feature, Feature>);
   return [
     glyph.map((x) => x.feature).map((x) => featureMap[x] || x),
     findTopology(glyph),

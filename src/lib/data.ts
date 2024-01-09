@@ -1,11 +1,11 @@
 import type { Feature } from "./classifier";
 
-type N1 = [number];
-type N2 = [number, number];
-type N3 = [number, number, number];
-type N6 = [number, number, number, number, number, number];
+export type N1 = [number];
+export type N2 = [number, number];
+export type N3 = [number, number, number];
+export type N6 = [number, number, number, number, number, number];
 
-type Draw =
+export type Draw =
   | {
       command: "h" | "v";
       parameterList: N1;
@@ -15,31 +15,38 @@ type Draw =
       parameterList: N6;
     };
 
-type SVGCommand = Draw["command"];
+export type SVGCommand = Draw["command"];
 
-type Point = N2;
+export type Point = N2;
 
-interface SVGStroke {
+export interface SVGStroke {
   feature: Feature;
   start: Point;
   curveList: Draw[];
 }
 
-type SVGGlyph = SVGStroke[];
+export type SVGGlyph = SVGStroke[];
+export type Stroke = SVGStroke | number;
 
-interface BasicComponent {
-  source: undefined;
+export type Component = {
+  type: "component";
+  tags?: string[];
+} & (
+  | {
+      source: undefined;
+      strokes: SVGStroke[];
+    }
+  | {
+      source: string;
+      strokes: Stroke[];
+    }
+);
+
+export interface RenderedComponent {
+  type: "component";
+  tags?: string[];
   strokes: SVGStroke[];
 }
-
-type Stroke = SVGStroke | number;
-
-interface DerivedComponent {
-  source: string;
-  strokes: Stroke[];
-}
-
-type Component = BasicComponent | DerivedComponent;
 
 export const operators = [
   "⿰",
@@ -56,74 +63,37 @@ export const operators = [
   "⿻",
 ] as const;
 
-type Operator = (typeof operators)[number];
+export type Operator = (typeof operators)[number];
 
-interface Block {
+export interface Block {
   index: number;
   strokes: number;
 }
 
-interface Partition {
+export interface Compound {
+  type: "compound";
   operator: Operator;
   operandList: string[];
   tags?: string[];
   order?: Block[];
 }
 
-type Compound = Partition[];
-
-interface Character {
+export interface Character {
   unicode: number;
-  pinyin: string[];
   tygf: 0 | 1 | 2 | 3;
   gb2312: boolean;
-}
-
-interface GlyphBase {
-  unicode: number;
   name: string | null;
   gf0014_id: number | null;
-  component?: Component;
-  compound?: Compound;
+  readings: string[];
+  glyphs: (Component | Compound)[];
   ambiguous: boolean;
 }
 
-interface ComponentGlyph extends GlyphBase {
-  default_type: "component";
-  component: Component;
+export interface DeterminedCharacter
+  extends Omit<Character, "glyphs" | "ambiguous"> {
+  glyph: RenderedComponent | Compound | undefined;
 }
 
-interface CompoundGlyph extends GlyphBase {
-  default_type: "compound";
-  compound: Compound;
-}
+export type DeterminedRepertoire = Record<string, DeterminedCharacter>;
 
-type Glyph = ComponentGlyph | CompoundGlyph;
-type GlyphOptionalUnicode = Omit<Glyph, "unicode"> & { unicode?: number };
-
-type Form = Record<string, Glyph>;
-type Repertoire = Record<string, Character>;
-
-export type { N1, N2, N3, N6 };
-export type {
-  SVGCommand,
-  Point,
-  Draw,
-  SVGStroke,
-  Stroke,
-  Glyph,
-  SVGGlyph,
-  GlyphOptionalUnicode,
-  ComponentGlyph,
-  CompoundGlyph,
-  Partition,
-  Block,
-  BasicComponent,
-  DerivedComponent,
-  Component,
-  Compound,
-  Operator,
-  Character,
-  Form,
-  Repertoire,
-};
+export type Repertoire = Record<string, Character>;

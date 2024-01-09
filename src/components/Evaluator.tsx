@@ -13,7 +13,7 @@ import { useState } from "react";
 import {
   characterFrequencyAtom,
   configAtom,
-  customDataAtom,
+  determinedRepertoireAtom,
   keyEquivalenceAtom,
   pairEquivalenceAtom,
   wordFrequencyAtom,
@@ -57,8 +57,8 @@ const Evaluator = () => {
     words,
     assets,
   };
-  const data = useAtomValue(customDataAtom);
-  const list = Object.entries(data.repertoire)
+  const data = useAtomValue(determinedRepertoireAtom);
+  const list = Object.entries(data)
     .filter(([_, v]) => v.gb2312)
     .filter(([_, v]) => v.tygf > 0)
     .map(([x]) => x);

@@ -5,6 +5,7 @@ import {
   type Algebra,
   type Config,
   type Info,
+  Customization,
 } from "~/lib/config";
 import { focusAtom } from "jotai-optics";
 
@@ -14,14 +15,14 @@ configIdAtom.debugLabel = "id";
 
 const configStorageAtomAtom = atom((get) => {
   const id = get(configIdAtom);
-  return atomWithStorage(id, { data: { form: {} } } as Config);
+  return atomWithStorage(id, {} as Config);
 });
 
 export const configAtom = atom(
   (get) => get(get(configStorageAtomAtom)),
   (get, set, value: Config) => set(get(configStorageAtomAtom), value),
 );
-configAtom.debugLabel = "main config atom";
+configAtom.debugLabel = "config";
 
 export const infoAtom = focusAtom(configAtom, (o) =>
   o.prop("info").valueOr({} as Info),

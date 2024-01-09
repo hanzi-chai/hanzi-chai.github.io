@@ -4,16 +4,15 @@ import type {
   Config,
   Grouping,
   Mapping,
-  MergedData,
   Op,
   Source,
 } from "./config";
 import type { ComponentResult } from "./component";
 import type { CompoundResult } from "./compound";
-import { getForm } from "./form";
+import { getForm } from "./repertoire";
 import type { Extra } from "./element";
 import { findElement } from "./element";
-import { Character } from "./data";
+import { Character, DeterminedRepertoire } from "./data";
 
 export const filtervalues = ["是", "否", "未定义"] as const;
 export type CharsetFilter = (typeof filtervalues)[number];
@@ -106,7 +105,7 @@ export type IndexedElement = string | { element: string; index: number };
 const compile = (config: Config) => {
   const { mapping, grouping } = config.form;
   const totalMapping = merge(mapping, grouping);
-  return (result: TotalResult, data: MergedData, extra: Extra) => {
+  return (result: TotalResult, data: DeterminedRepertoire, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
     while (node) {
@@ -168,13 +167,13 @@ const compile = (config: Config) => {
 export const getCache = (
   list: string[],
   form: Config["form"],
-  data: MergedData,
+  data: DeterminedRepertoire,
 ) => {
   const [formResult, extra] = getForm(list, data, form);
   const result = Object.fromEntries(
     list.map((char) => {
       const formData = formResult.get(char)!;
-      const pronunciationData = data.repertoire[char]!.pinyin;
+      const pronunciationData = data[char]!.readings;
       return [
         char,
         formData
@@ -197,7 +196,7 @@ export const uniquify = (l: string[]) => [...new Set(l)].sort();
 export const collect = (
   config: Config,
   characters: string[],
-  data: MergedData,
+  data: DeterminedRepertoire,
 ) => {
   const [cache, extra] = getCache(characters, config.form, data);
   const func = compile(config);
@@ -229,7 +228,11 @@ export const autoSplit = (collection: Map<string, IndexedElement[][]>) => {
   return tsv;
 };
 
-const encode = (config: Config, characters: string[], data: MergedData) => {
+const encode = (
+  config: Config,
+  characters: string[],
+  data: DeterminedRepertoire,
+) => {
   const characterElements = collect(config, characters, data);
   const { encoder } = config;
   const process = (elements: IndexedElement[]) => {

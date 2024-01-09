@@ -1,23 +1,25 @@
 import { useEffect } from "react";
 import { listToObject } from "~/lib/utils";
 import { Layout } from "antd";
-import { listForm } from "~/lib/api";
-import FormTable from "~/components/FormTable";
+import { list } from "~/lib/api";
+import CharacterTable from "~/components/CharacterTable";
 import { useChaifenTitle } from "~/lib/hooks";
-import { formAtom, useSetAtom } from "~/atoms";
+import { repertoireAtom, useSetAtom } from "~/atoms";
+import { DevTools } from "jotai-devtools";
 
 const AdminLayout = () => {
   useChaifenTitle("部件检查");
-  const setForm = useSetAtom(formAtom);
+  const load = useSetAtom(repertoireAtom);
   useEffect(() => {
-    listForm().then((data) => {
-      setForm(listToObject(data));
+    list().then((data) => {
+      load(listToObject(data));
     });
   }, []);
 
   return (
     <Layout style={{ height: "100%" }}>
-      <FormTable />
+      <CharacterTable />
+      <DevTools />
     </Layout>
   );
 };

@@ -19,7 +19,7 @@
     "preview": "vite preview --mode CF --outDir dist/cf",
     "format": "npx prettier . --write && git add .",
     "test": "vitest",
-    "testui": "vitest --ui",
+    "testui": "vitest --ui --coverage",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {

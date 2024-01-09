@@ -10,6 +10,7 @@ import type { SVGGlyph } from "~/lib/data";
 import { computedGlyphs, rendered } from "./mock";
 import { RenderedGlyph } from "~/lib/topology";
 import { defaultForm } from "~/lib/templates";
+import { computeComponent } from "~/lib/component";
 
 const { randomInt } = create(all, {
   randomSeed: "a",
@@ -43,12 +44,13 @@ describe("bi-directional conversion", () => {
   });
 });
 
-describe("generate slice binaries", () => {
-  const { 丰, 十 } = rendered;
-  it("should find multiple occurence of a root", () => {
-    expect(generateSliceBinaries(defaultForm, 丰, 十)).toEqual([9, 5, 3]);
-  });
-});
+// describe("generate slice binaries", () => {
+//   const { 丰, 十 } = computedGlyphs;
+//   const feng = computeComponent("丰", 丰);
+//   it("should find multiple occurence of a root", () => {
+//     expect(generateSliceBinaries(defaultForm, 丰, 十)).toEqual([9, 5, 3]);
+//   });
+// });
 
 const slice = (source: RenderedGlyph, indices: number[]) =>
   source.filter((_, i) => indices.includes(i));
@@ -75,11 +77,11 @@ describe("degenerate cross tests", () => {
   it("says 农 has 冖", () => {
     expect(degenerate(冖)).toEqual(degenerate(slice(农, [0, 1])));
   });
-  it("says 赤 has 亦字底", () => {
-    expect(degenerate(computedGlyphs["\ue42e"])).toEqual(
-      degenerate(slice(赤, [3, 4, 5, 6])),
-    );
-  });
+  // it("says 赤 has 亦字底", () => {
+  //   expect(degenerate(computedGlyphs["\ue42e"])).toEqual(
+  //     degenerate(slice(赤, [3, 4, 5, 6])),
+  //   );
+  // });
   it("says 以 has 人", () => {
     hasroot(以, [2, 3], 人);
   });

@@ -1,19 +1,16 @@
 import { listToObject } from "~/lib/utils";
-import rawform from "../public/cache/form.json";
 import rawrepertoire from "../public/cache/repertoire.json";
-import type { Character, Form, Glyph, Repertoire } from "~/lib/data";
-import type { FormConfig, MergedData } from "~/lib/config";
-import classifier from "~/lib/classifier";
-import { renderComponentForm } from "~/lib/component";
-import { defaultDegenerator } from "~/lib/degenerator";
-import { defaultSelector } from "~/lib/selector";
+import type { Character, RenderedComponent, Repertoire } from "~/lib/data";
+import { determine } from "~/lib/repertoire";
+import { computeComponent } from "~/lib/component";
 
-export const form: Form = listToObject(rawform as Glyph[]);
-export const repertoire: Repertoire = listToObject(
-  rawrepertoire as Character[],
-);
-export const data: MergedData = { form, repertoire, classifier };
-export const [rendered] = renderComponentForm(data);
+export const repertoire: Repertoire = listToObject(rawrepertoire);
+export const rendered = determine(repertoire);
 export const computedGlyphs = Object.fromEntries(
-  Object.entries(rendered).map(([k, v]) => [k, v.glyph]),
+  Object.entries(rendered)
+    .filter(([k, v]) => v.glyph?.type === "component")
+    .map(([k, v]) => {
+      const glyph = (v.glyph as RenderedComponent).strokes;
+      return [k, computeComponent(k, glyph).glyph];
+    }),
 );

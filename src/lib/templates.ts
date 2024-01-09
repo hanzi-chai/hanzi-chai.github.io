@@ -20,16 +20,8 @@ export const classifierTypes = [
 export type ClassifierType = (typeof classifierTypes)[number];
 const classifierMap: Record<ClassifierType, PartialClassifier> = {
   国标五分类: {},
-  表形码六分类: examples.mswb.data.classifier!,
-  郑码七分类: examples.zhengma.data.classifier!,
-};
-
-const getData = function (ct: ClassifierType): Config["data"] {
-  return {
-    form: {},
-    repertoire: {},
-    classifier: classifierMap[ct],
-  };
+  表形码六分类: examples.mswb.form!.analysis!.classifier!,
+  郑码七分类: examples.zhengma.form!.analysis!.classifier!,
 };
 
 export const defaultForm: FormConfig = {
@@ -74,7 +66,6 @@ export const createConfig = function (starter: StarterType): Config {
     version: APP_VERSION,
     source: null,
     info: getInfo(starter.name),
-    data: getData(starter.data),
     form: formMap[starter.form],
     encoder: encoderMap[starter.encoder],
   };

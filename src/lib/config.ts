@@ -1,9 +1,9 @@
 import type { Classifier, Feature } from "./classifier";
-import type { Form, Repertoire } from "./data";
+import type { Component, Compound, Repertoire } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./example";
 
-type SieveName =
+export type SieveName =
   | "根少优先"
   | "连续笔顺"
   | "全符笔顺"
@@ -17,17 +17,17 @@ type SieveName =
   | "少弱字根"
   | "非形近根";
 
-type Selector = SieveName[];
+export type Selector = SieveName[];
 
-type PartialClassifier = Partial<Classifier>;
+export type PartialClassifier = Partial<Classifier>;
 
-type Element = string;
+export type Element = string;
 
 export type Key = string | { element: string; index: number };
 
-type Mapping = Record<Element, string | Key[]>;
+export type Mapping = Record<Element, string | Key[]>;
 
-type Grouping = Record<Element, Element>;
+export type Grouping = Record<Element, Element>;
 
 interface BaseConfig {
   alphabet: string;
@@ -36,12 +36,13 @@ interface BaseConfig {
   grouping: Grouping;
 }
 
-interface Degenerator {
+export interface Degenerator {
   feature?: Record<Feature, Feature>;
   no_cross?: boolean;
 }
 
 export interface Analysis {
+  classifier?: Record<Feature, number>;
   degenerator?: Degenerator;
   selector?: Selector;
   customize?: Record<string, string[]>;
@@ -49,11 +50,11 @@ export interface Analysis {
   weak?: string[];
 }
 
-interface FormConfig extends BaseConfig {
+export interface FormConfig extends BaseConfig {
   analysis?: Analysis;
 }
 
-interface Source {
+export interface Source {
   // 起始节点不应该有一个可编码对象，所以是 null；其他情况都有值
   object: CodableObject | null;
   // 如果只取其中几码就有值，否则为 undefined
@@ -91,7 +92,7 @@ export interface BinaryCondition {
   negative: string | null;
 }
 
-type Condition = UnaryCondition | BinaryCondition;
+export type Condition = UnaryCondition | BinaryCondition;
 
 export type WordRule = { formula: string } & (
   | { length_equal: number }
@@ -202,50 +203,38 @@ export interface Info {
 
 export type Algebra = Record<string, Rule[]>;
 
-interface Config {
+export interface EncoderConfig {
+  max_length?: number;
+  auto_select_length?: number;
+  auto_select_pattern?: string;
+  select_keys?: string[];
+  short_code_schemes?: ShortCodeScheme[];
+  rules?: WordRule[];
+  sources: Record<string, Source>;
+  conditions: Record<string, Condition>;
+}
+
+export interface Patch {
+  readings: string[];
+  glyph: Component | Compound;
+}
+
+export type Customization = Record<string, Patch>;
+
+export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: Example | null;
   info?: Info;
   data?: {
-    form?: Form;
     repertoire?: Repertoire;
-    classifier?: Record<Feature, number>;
+    customization?: Customization;
+    tags?: string[];
   };
   algebra?: Algebra;
   form: FormConfig;
-  encoder: {
-    max_length?: number;
-    auto_select_length?: number;
-    auto_select_pattern?: string;
-    select_keys?: string[];
-    short_code_schemes?: ShortCodeScheme[];
-    rules?: WordRule[];
-    sources: Record<string, Source>;
-    conditions: Record<string, Condition>;
-  };
+  encoder: EncoderConfig;
   optimization?: Optimization;
 }
 
-type MergedData = {
-  form: Form;
-  repertoire: Repertoire;
-  classifier: Classifier;
-};
-
-type ExampleConfig = Required<Config>;
-
-export type {
-  Degenerator,
-  SieveName,
-  Selector,
-  PartialClassifier,
-  Mapping,
-  Grouping,
-  Config,
-  MergedData,
-  ExampleConfig,
-  FormConfig,
-  Source,
-  Condition,
-};
+export type ExampleConfig = Required<Config>;

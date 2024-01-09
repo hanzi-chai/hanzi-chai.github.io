@@ -1,46 +1,55 @@
-import type { Character, Form, Glyph, Repertoire } from "~/lib/data";
-type Subtype = "form" | "repertoire" | "classifier";
-import { dataAtom } from "./config";
-import { focusAtom } from "jotai-optics";
-import { Classifier, Feature } from "~/lib/classifier";
 import { atom, useAtomValue } from "jotai";
-import { formAtom, repertoireAtom } from "./constants";
+import { repertoireAtom } from "./constants";
 import { isPUA } from "~/lib/utils";
-import defaultClassifier from "~/lib/classifier";
 import { getSequence } from "~/lib/component";
-import { PartialClassifier } from "~/lib/config";
+import { dataAtom } from ".";
+import { focusAtom } from "jotai-optics";
+import {
+  Component,
+  Compound,
+  DeterminedCharacter,
+  Repertoire,
+} from "~/lib/data";
+import { Customization } from "~/lib/config";
+import { determine } from "~/lib/repertoire";
 
-export const formCustomizationAtom = focusAtom(dataAtom, (o) =>
-  o.prop("form").valueOr({} as Form),
-);
-
-export const repertoireCustomizationAtom = focusAtom(dataAtom, (o) =>
+export const userRepertoireAtom = focusAtom(dataAtom, (o) =>
   o.prop("repertoire").valueOr({} as Repertoire),
 );
-
-export const classifierCustomizationAtom = focusAtom(dataAtom, (o) =>
-  o.prop("classifier").valueOr({} as Record<Feature, number>),
+userRepertoireAtom.debugLabel = "config.data.repertoire";
+export const customizationAtom = focusAtom(dataAtom, (o) =>
+  o.prop("customization").valueOr({} as Customization),
+);
+customizationAtom.debugLabel = "config.data.customization";
+export const userTagsAtom = focusAtom(dataAtom, (o) =>
+  o.prop("tags").valueOr([] as string[]),
 );
 
+export const allRepertoireAtom = atom((get) => {
+  const repertoire = get(repertoireAtom);
+  const userRepertoire = get(userRepertoireAtom);
+  return { ...repertoire, ...userRepertoire };
+});
+
 export const displayAtom = atom((get) => {
-  const form = get(formAtom);
-  const customization = get(formCustomizationAtom);
+  const repertoire = get(allRepertoireAtom);
   return (char: string) => {
     if (char.includes("-")) return char.split("-")[1]!;
     if (!isPUA(char)) return char;
-    const name = (customization[char] || form[char])?.name;
+    const name = repertoire[char]?.name;
     return name ?? "丢失的字根";
   };
 });
 
-export const customFormAtom = atom((get) => {
-  const form = get(formAtom);
-  const customization = get(formCustomizationAtom);
-  return { ...form, ...customization };
+export const determinedRepertoireAtom = atom((get) => {
+  const repertoire = get(allRepertoireAtom);
+  const customization = get(customizationAtom);
+  const tags = get(userTagsAtom);
+  return determine(repertoire);
 });
 
 export const sortedCustomFormAtom = atom((get) => {
-  const form = get(customFormAtom);
+  const form = get(determinedRepertoireAtom);
   const sequence = get(sequenceAtom);
   return Object.entries(form).sort((a, b) => {
     return (
@@ -50,47 +59,29 @@ export const sortedCustomFormAtom = atom((get) => {
 });
 
 export const sequenceAtom = atom((get) => {
-  const form = get(customFormAtom);
+  const form = get(determinedRepertoireAtom);
   const result = new Map<string, string>();
-  for (const char of Object.keys(form)) {
-    result.set(char, getSequence(form, char, result));
+  for (const [char, value] of Object.entries(form)) {
+    if (value.glyph !== undefined) {
+      result.set(char, getSequence(form, char, result));
+    }
   }
   return result;
 });
 
 export const tagsAtom = atom((get) => {
-  const form = get(customFormAtom);
+  const form = get(allRepertoireAtom);
   const allTags = new Set<string>();
-  for (const { compound } of Object.values(form)) {
-    if (compound === undefined) continue;
-    for (const { tags } of compound) {
+  for (const { glyphs } of Object.values(form)) {
+    for (const { tags } of glyphs) {
       tags?.forEach((s) => allTags.add(s));
     }
   }
   return Array.from(allTags).sort();
 });
 
-export const customRepertoireAtom = atom((get) => {
-  const repertoire = get(repertoireAtom);
-  const customization = get(repertoireCustomizationAtom);
-  return { ...repertoire, ...customization };
-});
-
-export const customClassifierAtom = atom((get) => {
-  const customization = get(classifierCustomizationAtom);
-  return { ...defaultClassifier, ...customization };
-});
-
-export const customDataAtom = atom((get) => {
-  return {
-    form: get(customFormAtom),
-    repertoire: get(customRepertoireAtom),
-    classifier: get(customClassifierAtom),
-  };
-});
-
 export const nextUnicodeAtom = atom((get) => {
-  const customization = get(formCustomizationAtom);
+  const customization = get(userRepertoireAtom);
   const maxCode = Math.max(
     ...Object.keys(customization).map((x) => x.codePointAt(0)!),
   );

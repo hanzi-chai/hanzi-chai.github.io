@@ -27,7 +27,7 @@ import { useState } from "react";
 
 import type { ComponentCache, ComponentResult } from "~/lib/component";
 import type { CompoundCache, CompoundResult } from "~/lib/compound";
-import { getFormCore } from "~/lib/form";
+import { getFormCore } from "~/lib/repertoire";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";

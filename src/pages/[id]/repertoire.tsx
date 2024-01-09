@@ -1,6 +1,6 @@
 import { Flex } from "antd";
 import { RemoteContext } from "~/components/Action";
-import FormTable from "~/components/FormTable";
+import CharacterTable from "~/components/CharacterTable";
 import { useChaifenTitle } from "~/lib/hooks";
 
 const FormData = () => {
@@ -8,7 +8,7 @@ const FormData = () => {
   return (
     <Flex vertical gap="middle" style={{ height: "100%" }}>
       <RemoteContext.Provider value={false}>
-        <FormTable />
+        <CharacterTable />
       </RemoteContext.Provider>
     </Flex>
   );

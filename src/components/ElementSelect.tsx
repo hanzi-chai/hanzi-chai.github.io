@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import {
   configFormAtom,
-  customFormAtom,
+  determinedRepertoireAtom,
   displayAtom,
   sequenceAtom,
 } from "~/atoms";
@@ -24,7 +24,7 @@ export default function ElementSelect({
 }: ElementSelectProps) {
   const { mapping, grouping } = useAtomValue(configFormAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(customFormAtom);
+  const form = useAtomValue(determinedRepertoireAtom);
   let keys = Object.keys(mapping).concat(Object.keys(grouping));
   if (excludeGrouped) {
     keys = keys.filter((x) => grouping[x] === undefined);
