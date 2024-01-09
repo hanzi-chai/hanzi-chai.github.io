@@ -1,4 +1,4 @@
-import type { Glyph, GlyphOptionalUnicode } from "./data";
+import type { Character } from "./data";
 
 export const endpoint = "https://api.chaifen.app/";
 
@@ -27,24 +27,32 @@ const template =
     return response as R;
   };
 
-export const listForm = async () =>
-  await template("GET")<Glyph[], undefined>("form/all");
+export const list = async () =>
+  await template("GET")<Character[], undefined>("repertoire/all");
 
 export const post = template("POST");
 
-export const remoteCreateWithoutUnicode = (payload: GlyphOptionalUnicode) =>
-  template("POST")<number, GlyphOptionalUnicode>(`form`, payload);
+interface PUA {
+  type: "component" | "compound";
+  name: string;
+}
 
-export const remoteCreate = (payload: Glyph) =>
-  template("POST")<number, Glyph>(`form/${payload.unicode}`, payload);
+interface Mutation {
+  old: number;
+  new: number;
+}
 
-export const remoteUpdate = (payload: Glyph) =>
-  template("PUT")<boolean, Glyph>(`form/${payload.unicode}`, payload);
+export const remoteCreateWithoutUnicode = (payload: PUA) =>
+  template("POST")<number, PUA>(`repertoire`, payload);
+
+export const remoteCreate = (payload: Character) =>
+  template("POST")<number, Character>(`repertoire/${payload.unicode}`, payload);
+
+export const remoteUpdate = (payload: Character) =>
+  template("PUT")<boolean, Character>(`repertoire/${payload.unicode}`, payload);
 
 export const remoteRemove = (unicode: number) =>
-  template("DELETE")<boolean, Glyph>(`form/${unicode}`);
+  template("DELETE")<boolean, Character>(`repertoire/${unicode}`);
 
-export const remoteMutate = (payload: [number, number]) => {
-  const [unicode, newUnicode] = payload;
-  return template("PATCH")<boolean, number>(`form/${unicode}`, newUnicode);
-};
+export const remoteMutate = (payload: Mutation) =>
+  template("PUT")<boolean, Mutation>(`repertoire`, payload);

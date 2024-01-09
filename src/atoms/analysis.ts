@@ -1,6 +1,8 @@
 import type { Analysis, Degenerator, Selector, SieveName } from "~/lib/config";
 import { focusAtom } from "jotai-optics";
 import { configFormAtom } from "./config";
+import classifier, { Feature } from "~/lib/classifier";
+import { atom } from "jotai";
 
 export const analysisAtom = focusAtom(configFormAtom, (o) =>
   o.prop("analysis").valueOr({} as Analysis),
@@ -33,3 +35,12 @@ export const weakAtom = focusAtom(analysisAtom, (o) =>
 export const customizeAtom = focusAtom(analysisAtom, (o) =>
   o.prop("customize").valueOr({} as NonNullable<Analysis["customize"]>),
 );
+
+export const classifierCustomizationAtom = focusAtom(analysisAtom, (o) =>
+  o.prop("classifier").valueOr({} as Record<Feature, number>),
+);
+
+export const customClassifierAtom = atom((get) => {
+  const customization = get(classifierCustomizationAtom);
+  return { ...classifier, ...customization };
+});

@@ -1,5 +1,11 @@
-import type { FormConfig, MergedData, SieveName } from "./config";
-import type { Component, Compound, Form, SVGGlyph } from "./data";
+import type { FormConfig, SieveName } from "./config";
+import type {
+  Component,
+  Compound,
+  DeterminedRepertoire,
+  Repertoire,
+  SVGGlyph,
+} from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
@@ -14,59 +20,33 @@ class UnknownCharError extends Error {}
 class InvalidGlyphError extends Error {}
 
 export const recursiveGetSequence = function (
-  form: Form,
-  char: string,
+  repertoire: DeterminedRepertoire,
+  name: string,
   cache: Map<string, string> = new Map(),
   depth: number = 0,
 ): number[] | UnknownCharError | InvalidGlyphError {
   if (depth >= 10) {
     return new InvalidGlyphError();
   }
-  const cached = cache.get(char);
+  const cached = cache.get(name);
   if (cached) {
     return Array.from(cached).map(Number);
   }
-  const glyph = form[char];
-  if (!glyph)
+  const glyph = repertoire[name]?.glyph;
+  if (glyph === undefined)
     return new UnknownCharError(
-      `Unknown char: ${char}, ${char
+      `Unknown char: ${name}, ${name
         .codePointAt(0)!
-        .toString(16)}, ${char.codePointAt(0)!}`,
+        .toString(16)}, ${name.codePointAt(0)!}`,
     );
-  const { component, compound } = glyph;
-  if (component !== undefined) {
-    if (component.source !== undefined) {
-      const sourceSequence = recursiveGetSequence(
-        form,
-        component.source,
-        cache,
-        depth + 1,
-      );
-      if (sourceSequence instanceof Error) return new InvalidGlyphError();
-      const strokes: number[] = [];
-      component.strokes.forEach((x) => {
-        if (typeof x === "number") {
-          const sourceClass = sourceSequence[x];
-          if (sourceClass !== undefined) {
-            strokes.push(sourceClass);
-          } else {
-            return new InvalidGlyphError();
-          }
-        } else {
-          strokes.push(classifier[x.feature]);
-        }
-      });
-      return strokes;
-    }
-    return component.strokes.map((x) => classifier[x.feature]);
-  } else if (compound !== undefined) {
-    const selectedPartition = compound[0];
-    if (selectedPartition === undefined) return new InvalidGlyphError();
-    const { operandList, order } = selectedPartition;
+  if (glyph.type === "component") {
+    return glyph.strokes.map((x) => classifier[x.feature]);
+  } else {
+    const { operandList, order } = glyph;
     const sequences: { sequence: number[]; taken: number }[] = [];
     for (const operand of operandList) {
       const opearndSequence = recursiveGetSequence(
-        form,
+        repertoire,
         operand,
         cache,
         depth + 1,
@@ -88,21 +68,23 @@ export const recursiveGetSequence = function (
       }
     }
     return finalSequence;
-  } else {
-    return new InvalidGlyphError();
   }
 };
 
 export const getSequence = (
-  form: Form,
+  repertoire: DeterminedRepertoire,
   char: string,
   cache?: Map<string, string>,
 ) => {
   if (char.match(/\d+/)) return char;
   try {
-    const recurseResult = recursiveGetSequence(form, char, cache);
+    const recurseResult = recursiveGetSequence(repertoire, char, cache);
     if (recurseResult instanceof Error) {
-      console.error("无法获取笔画", char, char.codePointAt(0)!.toString(16));
+      console.error(
+        `无法获取笔画（${recurseResult.message}）`,
+        char,
+        char.codePointAt(0)!.toString(16),
+      );
       return "";
     }
     return recurseResult.join("");
@@ -217,14 +199,14 @@ export type ComponentCache = Map<string, ComponentResult>;
 
 export const recursiveRenderComponent = function (
   component: Component,
-  form: Form,
+  repertoire: Repertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
 ) {
   const glyph: SVGGlyph = [];
   if (component.source !== undefined) {
     const sourceGlyph = recursiveRenderGlyph(
       component.source,
-      form,
+      repertoire,
       glyphCache,
     );
     if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
@@ -245,49 +227,54 @@ export const recursiveRenderComponent = function (
 
 export const recursiveRenderCompound = function (
   compound: Compound,
-  form: Form,
+  repertoire: Repertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
 ) {
-  const partition = compound[0];
-  if (partition === undefined) {
-    return new InvalidGlyphError();
-  }
   const glyphs: SVGGlyph[] = [];
-  for (const char of partition.operandList) {
-    const maybe = recursiveRenderGlyph(char, form, glyphCache);
+  for (const char of compound.operandList) {
+    const maybe = recursiveRenderGlyph(char, repertoire, glyphCache);
     if (maybe instanceof InvalidGlyphError) {
       return maybe;
     }
     glyphs.push(maybe);
   }
-  return affineMerge(partition.operator, glyphs);
+  return affineMerge(compound.operator, glyphs);
 };
 
 export const recursiveRenderGlyph = function (
   char: string,
-  form: Form,
+  repertoire: Repertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
 ): SVGGlyph | InvalidGlyphError {
   const cache = glyphCache.get(char);
   if (cache) return cache;
-  const value = form[char];
-  if (value === undefined) {
+  const glyphs = repertoire[char]?.glyphs;
+  if (glyphs === undefined) {
     return new InvalidGlyphError();
   }
-  const component = value.component;
-  const compound = value.compound;
+  let result: SVGGlyph | InvalidGlyphError;
+  const component = glyphs.find((x) => x.type === "component");
   if (component !== undefined) {
-    const glyph = recursiveRenderComponent(component, form, glyphCache);
-    if (!(glyph instanceof InvalidGlyphError)) glyphCache.set(char, glyph);
-    return glyph;
-  } else if (compound !== undefined) {
-    const glyph = recursiveRenderCompound(compound, form, glyphCache);
-    if (!(glyph instanceof InvalidGlyphError)) glyphCache.set(char, glyph);
-    return glyph;
-  } else return new InvalidGlyphError();
+    result = recursiveRenderComponent(
+      component as Component,
+      repertoire,
+      glyphCache,
+    );
+  } else {
+    const compound = glyphs[0];
+    result = recursiveRenderCompound(
+      compound as Compound,
+      repertoire,
+      glyphCache,
+    );
+  }
+  if (!(result instanceof InvalidGlyphError)) {
+    glyphCache.set(char, result);
+  }
+  return result;
 };
 
-const computeComponent = (name: string, glyph: SVGGlyph) => {
+export const computeComponent = (name: string, glyph: SVGGlyph) => {
   const renderedGlyph = renderSVGGlyph(glyph);
   const topology = findTopology(renderedGlyph);
   const cache: ComputedComponent = {
@@ -298,72 +285,50 @@ const computeComponent = (name: string, glyph: SVGGlyph) => {
   return cache;
 };
 
-export const renderComponentForm = (data: MergedData) => {
-  const { form } = data;
-  const glyphCache = new Map<string, SVGGlyph>();
-  const componentForm: Record<string, ComputedComponent> = {};
-  const badChars: string[] = [];
-  for (const [char, value] of Object.entries(form)) {
-    if (value.default_type !== "component") continue;
-    try {
-      const glyph = recursiveRenderGlyph(char, form, glyphCache);
-      if (glyph instanceof Error) {
-        badChars.push(char);
-        continue;
-      }
-      componentForm[char] = computeComponent(char, glyph);
-    } catch {
-      badChars.push(char);
-    }
-  }
-  return [componentForm, badChars] as const;
-};
-
-export const renderRootList = (data: MergedData, config: FormConfig) => {
+export const renderRootList = (
+  data: DeterminedRepertoire,
+  config: FormConfig,
+) => {
   const { mapping, grouping } = config;
   const glyphCache = new Map<string, SVGGlyph>();
   const roots = [...Object.keys(mapping), ...Object.keys(grouping)].filter(
-    (x) => data.form[x] !== undefined,
+    (x) => data[x] !== undefined,
   );
   const rootList: ComputedComponent[] = [];
   for (const root of roots) {
-    try {
-      const glyph = recursiveRenderGlyph(root, data.form, glyphCache);
-      if (glyph instanceof Error) {
-        continue;
-      }
-      rootList.push(computeComponent(root, glyph));
-    } catch {}
+    const glyph = data[root]?.glyph;
+    if (glyph?.type === "component") {
+      rootList.push(computeComponent(root, glyph.strokes));
+    }
   }
   return rootList;
 };
 
 export const disassembleComponents = function (
-  data: MergedData,
+  data: DeterminedRepertoire,
   config: FormConfig,
+  classifier: Classifier,
 ): [ComponentCache, string[]] {
-  const { classifier } = data;
-  const [componentForm, badChars] = renderComponentForm(data);
   const rootList = renderRootList(data, config);
   const composables = new Set<string>();
-  for (const { compound } of Object.values(data.form)) {
-    if (!compound) continue;
-    for (const partition of compound) {
-      partition.operandList.forEach((x) => composables.add(x));
-    }
+  for (const { glyph } of Object.values(data)) {
+    if (glyph?.type !== "compound") continue;
+    glyph!.operandList.forEach((x) => composables.add(x));
   }
   const result: ComponentCache = new Map();
   const error: string[] = [];
-  Object.entries(componentForm).forEach(([char, cache]) => {
-    if (!isValidCJKChar(char) && !composables.has(char)) {
+  Object.entries(data).forEach(([name, character]) => {
+    if (character.glyph?.type !== "component") return;
+    const cache = computeComponent(name, character.glyph.strokes);
+    if (!isValidCJKChar(name) && !composables.has(name)) {
       return;
     }
     const scheme = getComponentScheme(cache, rootList, config, classifier);
     if (scheme instanceof Error) {
-      error.push(char);
+      error.push(name);
     } else {
-      result.set(char, scheme);
+      result.set(name, scheme);
     }
   });
-  return [result, badChars.concat(error)];
+  return [result, error];
 };

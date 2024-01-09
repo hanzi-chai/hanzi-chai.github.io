@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { displayAtom, sequenceAtom, sortedCustomFormAtom } from "~/atoms";
 import { Select } from "./Utils";
 import { SelectProps } from "antd";
-import { Glyph } from "~/lib/data";
+import { Character, DeterminedCharacter } from "~/lib/data";
 
 interface ItemSelectProps extends SelectProps {
-  customFilter?: (e: [string, Glyph]) => boolean;
+  customFilter?: (e: [string, DeterminedCharacter]) => boolean;
 }
 
 export const GlyphSelect = (props: ItemSelectProps) => {

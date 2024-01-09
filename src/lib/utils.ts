@@ -2,11 +2,11 @@ import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type { Key, Mapping } from "./config";
 import type {
+  Component,
+  Compound,
+  DeterminedRepertoire,
   Draw,
-  Form,
-  Glyph,
   Operator,
-  Partition,
   Point,
   SVGStroke,
 } from "./data";
@@ -52,6 +52,14 @@ export const length = (s: string) => {
 
 export const deepcopy = structuredClone ?? cloneDeep;
 
+export const getDummyComponent = function (): Component {
+  return {
+    type: "component",
+    source: undefined,
+    strokes: [getDummyStroke("横")],
+  };
+};
+
 export const getDummyStroke = function (
   feature: Feature,
   start: Point = [0, 0],
@@ -77,13 +85,8 @@ export const getDummyStroke = function (
   };
 };
 
-export const getDummyPartition = function (operator: Operator): Partition {
-  return { operator, operandList: ["一", "一"] };
-};
-
-export const formDefault: Required<Pick<Glyph, "component" | "compound">> = {
-  component: { strokes: [], source: undefined },
-  compound: [{ operator: operators[0], operandList: ["一", "一"] }],
+export const getDummyPartition = function (operator: Operator): Compound {
+  return { type: "compound", operator, operandList: ["一", "一"] };
 };
 
 export interface MappedInfo {
@@ -104,24 +107,22 @@ export const reverse = (alphabet: string, mapping: Mapping) => {
   return data;
 };
 
-export const getSupplemental = (form: Form, list: string[]) => {
+export const getSupplemental = (form: DeterminedRepertoire, list: string[]) => {
   const set = new Set(list);
   const reverseForm: Record<string, string[]> = Object.fromEntries(
     Object.entries(form).map(([x]) => [x, []]),
   );
   for (const [char, glyph] of Object.entries(form)) {
-    if (glyph.default_type === "compound") {
+    if (glyph.glyph?.type === "compound") {
       try {
-        glyph.compound[0]!.operandList.forEach((x) =>
-          reverseForm[x]!.push(char),
-        );
+        glyph.glyph!.operandList.forEach((x) => reverseForm[x]!.push(char));
       } catch {
         console.error(char, glyph);
       }
     }
   }
   const componentsNotChar = Object.entries(form)
-    .filter(([, v]) => v.default_type === "component")
+    .filter(([, v]) => v.glyph?.type === "component")
     .map(([x]) => x)
     .filter((x) => !set.has(x));
   const suppList: string[] = [];

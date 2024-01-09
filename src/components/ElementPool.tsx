@@ -5,7 +5,7 @@ import { Flex, Pagination, Popover } from "antd";
 import {
   useAtomValue,
   configFormAtom,
-  customFormAtom,
+  determinedRepertoireAtom,
   sequenceAtom,
   displayAtom,
 } from "~/atoms";
@@ -37,7 +37,7 @@ const Element = ({
 }) => {
   const configForm = useAtomValue(configFormAtom);
   const { mapping, grouping } = configForm;
-  const form = useAtomValue(customFormAtom);
+  const form = useAtomValue(determinedRepertoireAtom);
   const type =
     x === currentElement
       ? "primary"
@@ -83,7 +83,7 @@ const ElementPool = ({
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(customFormAtom);
+  const form = useAtomValue(determinedRepertoireAtom);
   const filtered = strokeFilter
     ? content.filter(
         (x) =>

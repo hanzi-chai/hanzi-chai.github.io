@@ -1,15 +1,19 @@
 import styled from "styled-components";
 import type {
-  BasicComponent,
+  Character,
   Component,
   Compound,
-  Glyph,
   SVGGlyph,
   SVGStroke,
   Stroke,
 } from "~/lib/data";
 import { Empty, Result } from "antd";
-import { customFormAtom, useAtomValue } from "~/atoms";
+import {
+  allRepertoireAtom,
+  determinedRepertoireAtom,
+  tagsAtom,
+  useAtomValue,
+} from "~/atoms";
 import type { FormInstance } from "antd/es/form/Form";
 import { useWatch } from "antd/es/form/Form";
 import {
@@ -17,6 +21,7 @@ import {
   recursiveRenderCompound,
   recursiveRenderGlyph,
 } from "~/lib/component";
+import { findGlyph } from "~/lib/repertoire";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -59,8 +64,8 @@ export const StrokesView = ({ glyph }: { glyph: SVGStroke[] }) => (
 );
 
 export const ComponentView = ({ component }: { component: Component }) => {
-  const form = useAtomValue(customFormAtom);
-  const glyph = recursiveRenderComponent(component, form);
+  const allRepertoire = useAtomValue(allRepertoireAtom);
+  const glyph = recursiveRenderComponent(component, allRepertoire);
   return !(glyph instanceof Error) ? (
     <StrokesView glyph={glyph} />
   ) : (
@@ -69,8 +74,8 @@ export const ComponentView = ({ component }: { component: Component }) => {
 };
 
 export const CompoundView = ({ compound }: { compound: Compound }) => {
-  const form = useAtomValue(customFormAtom);
-  const glyph = recursiveRenderCompound(compound, form);
+  const allRepertoire = useAtomValue(allRepertoireAtom);
+  const glyph = recursiveRenderCompound(compound, allRepertoire);
   return !(glyph instanceof Error) ? (
     <StrokesView glyph={glyph} />
   ) : (
@@ -88,16 +93,19 @@ const Overlay = styled.div`
   }
 `;
 
-const GlyphView = ({ form }: { form: FormInstance<Glyph> }) => {
-  const type = useWatch("default_type", form);
-  const component = useWatch("component", form);
-  const compound = useWatch("compound", form) ?? [];
+const GlyphView = ({ form }: { form: FormInstance<Character> }) => {
+  const glyphs = useWatch("glyphs", form);
+  const tags = useAtomValue(tagsAtom);
+  if (glyphs === undefined) {
+    return null;
+  }
+  const glyph = findGlyph(glyphs, tags);
   return (
     <Overlay>
-      {type === "component" ? (
-        <ComponentView component={component!} />
+      {glyph === undefined ? null : glyph.type === "component" ? (
+        <ComponentView component={glyph} />
       ) : (
-        <CompoundView compound={compound} />
+        <CompoundView compound={glyph} />
       )}
     </Overlay>
   );

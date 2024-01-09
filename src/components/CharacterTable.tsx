@@ -1,21 +1,30 @@
-import React, { useMemo, useState } from "react";
+import React, { useInsertionEffect, useMemo, useState } from "react";
 import { unicodeBlock } from "~/lib/utils";
-import { AutoComplete, Button, Flex, Form, Layout, Space } from "antd";
+import {
+  AutoComplete,
+  Button,
+  Checkbox,
+  Flex,
+  Form,
+  Layout,
+  Space,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import { Select } from "~/components/Utils";
 import {
-  customFormAtom,
+  allRepertoireAtom,
+  determinedRepertoireAtom,
   displayAtom,
-  formCustomizationAtom,
   sequenceAtom,
   sortedCustomFormAtom,
   tagsAtom,
   useAtomValue,
+  userRepertoireAtom,
 } from "~/atoms";
-import type { Glyph, Operator } from "~/lib/data";
+import type { Character, Component, Operator } from "~/lib/data";
 import { operators } from "~/lib/data";
-import { GlyphModel, ModelContext } from "~/components/GlyphModel";
+import CharacterModel, { ModelContext } from "~/components/CharacterModel";
 import Root from "~/components/Root";
 import {
   Create,
@@ -26,7 +35,7 @@ import {
 import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
 import classifier from "~/lib/classifier";
 import type { ColumnType } from "antd/es/table/interface";
-import { GlyphSelect } from "./GlyphSelect";
+import { GlyphSelect } from "./CharacterSelect";
 
 interface CompoundFilter {
   operator?: Operator;
@@ -38,23 +47,24 @@ const parseFilter = (key: React.Key) => {
   return JSON.parse((key || "{}") as string) as CompoundFilter;
 };
 
-const FormTable = () => {
-  const form = useAtomValue(customFormAtom);
-  const formCustomization = useAtomValue(formCustomizationAtom);
+const CharacterTable = () => {
+  const allRepertoire = useAtomValue(allRepertoireAtom);
+  const userRepertoire = useAtomValue(userRepertoireAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const display = useAtomValue(displayAtom);
-  const sortedForm = useAtomValue(sortedCustomFormAtom);
-  const [formInstance] = Form.useForm<Glyph>();
+  const [formInstance] = Form.useForm<Character>();
   const tags = useAtomValue(tagsAtom);
+  const getLength = (a: string) => sequenceMap.get(a)?.length ?? Infinity;
 
-  const dataSource = sortedForm
-    .filter(([x]) => makeFilter(searchInput, form, sequenceMap)(x))
+  const dataSource = Object.entries(allRepertoire)
+    .sort(([a], [b]) => getLength(a) - getLength(b))
+    .filter(([x]) => makeFilter(searchInput, allRepertoire, sequenceMap)(x))
     .map(([, glyph]) => glyph);
 
-  const compoundFilter: ColumnType<Glyph> = {
+  const compoundFilter: ColumnType<Character> = {
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
@@ -104,26 +114,26 @@ const FormTable = () => {
         </Flex>
       );
     },
-    onFilter: (value, record) => {
+    onFilter: (value, { glyphs }) => {
       const { operator, operand, tag } = parseFilter(value as React.Key);
-      if (!record.compound) return false;
-      if (
-        operator &&
-        record.compound.every((x) => !x.operator.startsWith(operator))
-      )
-        return false;
-      if (
-        operand &&
-        record.compound.every((x) => !x.operandList.includes(operand))
-      )
-        return false;
-      if (tag && record.compound.every((x) => !x.tags?.includes(tag)))
-        return false;
+      // if (glyphs.length === 0) return false;
+      // if (
+      //   operator &&
+      //   glyphs.every((x) => !x.operator.startsWith(operator))
+      // )
+      //   return false;
+      // if (
+      //   operand &&
+      //   record.compound.every((x) => !x.operandList.includes(operand))
+      // )
+      //   return false;
+      // if (tag && record.compound.every((x) => !x.tags?.includes(tag)))
+      //   return false;
       return true;
     },
   };
 
-  const columns: ColumnsType<Glyph> = [
+  const columns: ColumnsType<Character> = [
     {
       title: "Unicode",
       dataIndex: "unicode",
@@ -142,6 +152,40 @@ const FormTable = () => {
       },
       sorter: (a, b) => a.unicode - b.unicode,
       sortDirections: ["ascend", "descend"],
+      width: 128,
+    },
+    {
+      title: "通用规范",
+      dataIndex: "tygf",
+      width: 96,
+      render: (_, record) => {
+        return <Checkbox checked={record.tygf === 1} />;
+      },
+      filters: [
+        { text: "是", value: 1 },
+        { text: "否", value: 0 },
+      ],
+      onFilter: (value, record) => value === record.tygf,
+    },
+    {
+      title: "GB 2312",
+      dataIndex: "gb2312",
+      render: (_, record) => {
+        return <Checkbox checked={record.gb2312} />;
+      },
+      width: 96,
+      filters: [
+        { text: "是", value: true },
+        { text: "否", value: false },
+      ],
+      onFilter: (value, record) => value === record.gb2312,
+    },
+    {
+      title: "字音",
+      dataIndex: "pinyin",
+      render: (_, record) => {
+        return record.readings.join(", ");
+      },
       width: 128,
     },
     {
@@ -167,16 +211,18 @@ const FormTable = () => {
     {
       title: "部件表示",
       dataIndex: "component",
-      render: (_, record) => {
-        return record.component !== undefined ? "有" : "无";
+      render: (_, { glyphs }) => {
+        return glyphs.some((x) => x.type === "component") ? "有" : "无";
       },
       filters: [{ text: "非空", value: "" }].concat(
         Object.keys(classifier).map((x) => ({ text: x, value: x })),
       ),
-      onFilter: (value, record) => {
-        if (!record.component) return false;
+      onFilter: (value, { glyphs }) => {
+        if (!glyphs.some((x) => x.type === "component")) return false;
         if (value === "") return true;
-        return record.component.strokes.some(
+        return (
+          glyphs.filter((x) => x.type === "component")[0] as Component
+        ).strokes.some(
           (x) => typeof x === "object" && x.feature === (value as string),
         );
       },
@@ -186,32 +232,31 @@ const FormTable = () => {
       title: "复合体表示",
       dataIndex: "compound",
       ...compoundFilter,
-      render: (_, record) => {
+      render: (_, { glyphs }) => {
         return (
           <Flex gap="small">
-            {record.compound?.map((x, i) => (
-              <Space key={i}>
-                <span>{x.operator}</span>
-                {x.operandList.map((y, j) => (
-                  <Root key={j}>{display(y)}</Root>
-                ))}
-              </Space>
-            ))}
+            {glyphs.map((x, i) =>
+              x.type === "compound" ? (
+                <Space key={i}>
+                  <span>{x.operator}</span>
+                  {x.operandList.map((y, j) => (
+                    <Root key={j}>{display(y)}</Root>
+                  ))}
+                </Space>
+              ) : null,
+            )}
           </Flex>
         );
       },
       width: 256,
       sorter: (a, b) => {
-        const [as, bs] = [
-          a.compound?.at(0)?.operandList.join() || "",
-          b.compound?.at(0)?.operandList.join() || "",
-        ];
+        const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
         return as.localeCompare(bs);
       },
       sortDirections: ["ascend", "descend"],
     },
     {
-      title: "分部歧义标记",
+      title: "分部歧义",
       dataIndex: "ambiguous",
       render: (_, record) => {
         return (
@@ -223,7 +268,7 @@ const FormTable = () => {
         { text: "只看无歧义", value: 0 },
       ],
       onFilter: (value, record) => Number(record.ambiguous) === value,
-      width: 128,
+      width: 96,
     },
     {
       title: "操作",
@@ -249,7 +294,7 @@ const FormTable = () => {
       ],
       onFilter: (value, record) => {
         const char = String.fromCodePoint(record.unicode);
-        const customized = formCustomization[char] !== undefined;
+        const customized = userRepertoire[char] !== undefined;
         return value === 1 ? customized : !customized;
       },
     },
@@ -266,7 +311,7 @@ const FormTable = () => {
         <StrokeSearch setSequence={setSearchInput} />
         <Create
           onCreate={(char) => {
-            const glyph = form[char];
+            const glyph = allRepertoire[char];
             if (glyph === undefined) {
               return;
             }
@@ -276,8 +321,8 @@ const FormTable = () => {
           }}
         />
       </Flex>
-      <GlyphModel open={open} setOpen={setOpen} form={formInstance} />
-      <Table<Glyph>
+      <CharacterModel open={open} setOpen={setOpen} form={formInstance} />
+      <Table<Character>
         dataSource={dataSource}
         columns={columns}
         size="small"
@@ -298,4 +343,4 @@ const FormTable = () => {
   );
 };
 
-export default FormTable;
+export default CharacterTable;

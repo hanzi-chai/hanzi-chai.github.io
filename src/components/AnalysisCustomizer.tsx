@@ -13,7 +13,7 @@ import { DeleteButton, MinusButton, PlusButton } from "./Utils";
 import Char from "./Char";
 import Root from "./Root";
 import ElementSelect, { ElementSelectProps } from "./ElementSelect";
-import { GlyphSelect } from "./GlyphSelect";
+import { GlyphSelect } from "./CharacterSelect";
 
 function RootSelectPopover(props: ElementSelectProps) {
   const display = useAtomValue(displayAtom);

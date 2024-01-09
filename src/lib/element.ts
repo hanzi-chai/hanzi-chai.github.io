@@ -1,4 +1,4 @@
-import type { Config, MergedData, Rule } from "./config";
+import type { Config, Rule } from "./config";
 import type { TotalResult } from "./encoder";
 
 export interface Extra {

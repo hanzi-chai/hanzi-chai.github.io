@@ -3,7 +3,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Root";
 import { customDataAtom, displayAtom } from "~/atoms";
-import { listForm } from "~/lib/api";
+import { list } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
 import { renderComponentForm, type ComputedComponent } from "~/lib/component";
 import { defaultForm } from "~/lib/templates";
@@ -92,7 +92,7 @@ const Algorithm = () => {
   const setForm = useSetAtom(formAtom);
 
   useEffect(() => {
-    listForm().then((data) => {
+    list().then((data) => {
       setForm(listToObject(data));
     });
   }, []);
