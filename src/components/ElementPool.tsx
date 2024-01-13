@@ -4,13 +4,13 @@ import Char from "./Char";
 import { Flex, Pagination, Popover } from "antd";
 import {
   useAtomValue,
-  configFormAtom,
   determinedRepertoireAtom,
   sequenceAtom,
   displayAtom,
+  keyboardsAtom,
 } from "~/atoms";
 import { isPUA } from "~/lib/utils";
-import { ComponentView, CompoundView } from "./GlyphView";
+import { ComponentView, CompoundView, StrokesView } from "./GlyphView";
 import StrokeSearch, { makeFilter } from "./GlyphSearch";
 
 const Content = styled(Flex)`
@@ -35,9 +35,9 @@ const Element = ({
   setElement: (s: string | undefined) => void;
   currentElement?: string;
 }) => {
-  const configForm = useAtomValue(configFormAtom);
-  const { mapping, grouping } = configForm;
-  const form = useAtomValue(determinedRepertoireAtom);
+  const keyboard = useAtomValue(keyboardsAtom)[0]!;
+  const { mapping, grouping } = keyboard;
+  const determiedRepertoire = useAtomValue(determinedRepertoireAtom);
   const type =
     x === currentElement
       ? "primary"
@@ -53,22 +53,20 @@ const Element = ({
       {display(x)}
     </Char>
   );
-  if (isPUA(x)) {
-    const component = form[x]?.component;
-    const compound = form[x]?.compound;
-    const preview =
-      component !== undefined ? (
-        <ComponentView component={component} />
-      ) : compound !== undefined ? (
-        <CompoundView compound={compound} />
-      ) : null;
-    return (
-      <Popover content={<div style={{ width: "200px" }}>{preview}</div>}>
-        {core}
-      </Popover>
+  if (!isPUA(x)) return core;
+  const glyph = determiedRepertoire[x]?.glyph;
+  if (glyph === undefined) return core;
+  const preview =
+    glyph.type === "component" ? (
+      <StrokesView glyph={glyph.strokes} />
+    ) : (
+      <CompoundView compound={glyph} />
     );
-  }
-  return core;
+  return (
+    <Popover content={<div style={{ width: "200px" }}>{preview}</div>}>
+      {core}
+    </Popover>
+  );
 };
 
 const MyPagination = styled(Pagination)``;
@@ -83,11 +81,11 @@ const ElementPool = ({
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(determinedRepertoireAtom);
+  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
   const filtered = strokeFilter
     ? content.filter(
         (x) =>
-          makeFilter(sequence, form, sequenceMap)(x) &&
+          makeFilter(sequence, determinedRepertoire, sequenceMap)(x) &&
           (sequenceMap.get(x)?.length ?? 0) > 1,
       )
     : content;

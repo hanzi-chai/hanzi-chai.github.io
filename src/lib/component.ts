@@ -1,9 +1,9 @@
-import type { FormConfig, SieveName } from "./config";
+import type { KeyboardConfig, SieveName } from "./config";
 import type {
   Component,
   Compound,
-  DeterminedRepertoire,
   Repertoire,
+  PrimitiveRepertoire,
   SVGGlyph,
 } from "./data";
 import { generateSliceBinaries } from "./degenerator";
@@ -13,14 +13,14 @@ import type { RenderedGlyph, Topology } from "./topology";
 import findTopology, { renderSVGGlyph } from "./topology";
 import type { Classifier } from "./classifier";
 import { isValidCJKChar, isValidChar } from "./utils";
-import classifier from "./classifier";
+import defaultClassifier from "./classifier";
 import { affineMerge } from "./affine";
 
 class UnknownCharError extends Error {}
 class InvalidGlyphError extends Error {}
 
 export const recursiveGetSequence = function (
-  repertoire: DeterminedRepertoire,
+  repertoire: Repertoire,
   name: string,
   cache: Map<string, string> = new Map(),
   depth: number = 0,
@@ -40,7 +40,7 @@ export const recursiveGetSequence = function (
         .toString(16)}, ${name.codePointAt(0)!}`,
     );
   if (glyph.type === "component") {
-    return glyph.strokes.map((x) => classifier[x.feature]);
+    return glyph.strokes.map((x) => defaultClassifier[x.feature]);
   } else {
     const { operandList, order } = glyph;
     const sequences: { sequence: number[]; taken: number }[] = [];
@@ -72,7 +72,7 @@ export const recursiveGetSequence = function (
 };
 
 export const getSequence = (
-  repertoire: DeterminedRepertoire,
+  repertoire: Repertoire,
   char: string,
   cache?: Map<string, string>,
 ) => {
@@ -128,7 +128,7 @@ export class MultipleSchemeError extends Error {}
 const getComponentScheme = function (
   component: ComputedComponent,
   rootData: ComputedComponent[],
-  config: FormConfig,
+  config: KeyboardConfig,
   classifier: Classifier,
 ): ComponentResult | NoSchemeError | MultipleSchemeError {
   const { mapping } = config;
@@ -199,79 +199,50 @@ export type ComponentCache = Map<string, ComponentResult>;
 
 export const recursiveRenderComponent = function (
   component: Component,
-  repertoire: Repertoire,
+  repertoire: PrimitiveRepertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
-) {
+): SVGGlyph | InvalidGlyphError {
+  if (component.source === undefined) return component.strokes;
+  const sourceComponent = repertoire[component.source]?.glyphs.find(
+    (x) => x.type === "component",
+  );
+  if (sourceComponent?.type !== "component") return new InvalidGlyphError();
+  const sourceGlyph = recursiveRenderComponent(
+    sourceComponent,
+    repertoire,
+    glyphCache,
+  );
+  if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
   const glyph: SVGGlyph = [];
-  if (component.source !== undefined) {
-    const sourceGlyph = recursiveRenderGlyph(
-      component.source,
-      repertoire,
-      glyphCache,
-    );
-    if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
-    component.strokes.forEach((x) => {
-      if (typeof x === "number") {
-        const sourceStroke = sourceGlyph[x];
-        if (sourceStroke === undefined) return new InvalidGlyphError();
-        glyph.push(sourceStroke);
-      } else {
-        glyph.push(x);
-      }
-    });
-  } else {
-    glyph.push(...component.strokes);
-  }
+  component.strokes.forEach((x) => {
+    if (typeof x === "number") {
+      const sourceStroke = sourceGlyph[x];
+      if (sourceStroke === undefined) return new InvalidGlyphError();
+      glyph.push(sourceStroke);
+    } else {
+      glyph.push(x);
+    }
+  });
   return glyph;
 };
 
 export const recursiveRenderCompound = function (
   compound: Compound,
   repertoire: Repertoire,
-  glyphCache: Map<string, SVGGlyph> = new Map(),
-) {
+): SVGGlyph | InvalidGlyphError {
   const glyphs: SVGGlyph[] = [];
   for (const char of compound.operandList) {
-    const maybe = recursiveRenderGlyph(char, repertoire, glyphCache);
-    if (maybe instanceof InvalidGlyphError) {
-      return maybe;
+    const glyph = repertoire[char]?.glyph;
+    if (glyph === undefined) return new InvalidGlyphError();
+    if (glyph.type === "component") {
+      glyphs.push(glyph.strokes);
+    } else {
+      const rendered = recursiveRenderCompound(glyph, repertoire);
+      if (rendered instanceof Error) return rendered;
+      glyphs.push(rendered);
     }
-    glyphs.push(maybe);
   }
   return affineMerge(compound.operator, glyphs);
-};
-
-export const recursiveRenderGlyph = function (
-  char: string,
-  repertoire: Repertoire,
-  glyphCache: Map<string, SVGGlyph> = new Map(),
-): SVGGlyph | InvalidGlyphError {
-  const cache = glyphCache.get(char);
-  if (cache) return cache;
-  const glyphs = repertoire[char]?.glyphs;
-  if (glyphs === undefined) {
-    return new InvalidGlyphError();
-  }
-  let result: SVGGlyph | InvalidGlyphError;
-  const component = glyphs.find((x) => x.type === "component");
-  if (component !== undefined) {
-    result = recursiveRenderComponent(
-      component as Component,
-      repertoire,
-      glyphCache,
-    );
-  } else {
-    const compound = glyphs[0];
-    result = recursiveRenderCompound(
-      compound as Compound,
-      repertoire,
-      glyphCache,
-    );
-  }
-  if (!(result instanceof InvalidGlyphError)) {
-    glyphCache.set(char, result);
-  }
-  return result;
 };
 
 export const computeComponent = (name: string, glyph: SVGGlyph) => {
@@ -285,10 +256,7 @@ export const computeComponent = (name: string, glyph: SVGGlyph) => {
   return cache;
 };
 
-export const renderRootList = (
-  data: DeterminedRepertoire,
-  config: FormConfig,
-) => {
+export const renderRootList = (data: Repertoire, config: KeyboardConfig) => {
   const { mapping, grouping } = config;
   const glyphCache = new Map<string, SVGGlyph>();
   const roots = [...Object.keys(mapping), ...Object.keys(grouping)].filter(
@@ -305,8 +273,8 @@ export const renderRootList = (
 };
 
 export const disassembleComponents = function (
-  data: DeterminedRepertoire,
-  config: FormConfig,
+  data: Repertoire,
+  config: KeyboardConfig,
   classifier: Classifier,
 ): [ComponentCache, string[]] {
   const rootList = renderRootList(data, config);

@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { Repertoire } from "~/lib/data";
+import type { PrimitiveRepertoire } from "~/lib/data";
 import { produce } from "immer";
 import { Equivalence, Frequency } from "~/components/Evaluator";
 
@@ -14,18 +14,18 @@ export async function fetchJson(filename: string) {
   return json;
 }
 
-export const repertoireAtom = atom<Repertoire>({});
+export const repertoireAtom = atom<PrimitiveRepertoire>({});
 repertoireAtom.debugLabel = "repertoire";
 
-export const mutateFormAtom = atom(
+export const mutateRepertoireAtom = atom(
   null,
   (get, set, twoUnicode: [number, number]) => {
     const before = String.fromCodePoint(twoUnicode[0]);
     const after = String.fromCodePoint(twoUnicode[1]);
     const replaceIf = (s: string) => (s === before ? after : s);
 
-    set(repertoireAtom, (oldForm) =>
-      produce(oldForm, (state) => {
+    set(repertoireAtom, (previous) =>
+      produce(previous, (state) => {
         // update itself
         const value = state[before]!;
         delete state[before];

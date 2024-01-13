@@ -1,6 +1,6 @@
 import { Input } from "antd";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
-import { Form } from "~/lib/data";
+import { Repertoire } from "~/lib/data";
 
 interface StrokeSearchProps {
   setSequence: (s: string) => void;
@@ -8,7 +8,7 @@ interface StrokeSearchProps {
 }
 
 export const makeFilter =
-  (input: string, form: Form, sequence: Map<string, string>) =>
+  (input: string, form: Repertoire, sequence: Map<string, string>) =>
   (char: string) => {
     let name = form[char]?.name ?? "";
     let seq = sequence.get(char) ?? "";

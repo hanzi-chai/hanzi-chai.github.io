@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import type {
-  Character,
+  PrimitveCharacter,
   Component,
   Compound,
   SVGGlyph,
@@ -19,7 +19,6 @@ import { useWatch } from "antd/es/form/Form";
 import {
   recursiveRenderComponent,
   recursiveRenderCompound,
-  recursiveRenderGlyph,
 } from "~/lib/component";
 import { findGlyph } from "~/lib/repertoire";
 
@@ -74,8 +73,8 @@ export const ComponentView = ({ component }: { component: Component }) => {
 };
 
 export const CompoundView = ({ compound }: { compound: Compound }) => {
-  const allRepertoire = useAtomValue(allRepertoireAtom);
-  const glyph = recursiveRenderCompound(compound, allRepertoire);
+  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const glyph = recursiveRenderCompound(compound, determinedRepertoire);
   return !(glyph instanceof Error) ? (
     <StrokesView glyph={glyph} />
   ) : (
@@ -92,23 +91,3 @@ const Overlay = styled.div`
     grid-area: 1 / 1 / 1 / 1;
   }
 `;
-
-const GlyphView = ({ form }: { form: FormInstance<Character> }) => {
-  const glyphs = useWatch("glyphs", form);
-  const tags = useAtomValue(tagsAtom);
-  if (glyphs === undefined) {
-    return null;
-  }
-  const glyph = findGlyph(glyphs, tags);
-  return (
-    <Overlay>
-      {glyph === undefined ? null : glyph.type === "component" ? (
-        <ComponentView component={glyph} />
-      ) : (
-        <CompoundView compound={glyph} />
-      )}
-    </Overlay>
-  );
-};
-
-export default GlyphView;

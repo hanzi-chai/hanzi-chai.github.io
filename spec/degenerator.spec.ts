@@ -9,7 +9,7 @@ import { create, all } from "mathjs";
 import type { SVGGlyph } from "~/lib/data";
 import { computedGlyphs, rendered } from "./mock";
 import { RenderedGlyph } from "~/lib/topology";
-import { defaultForm } from "~/lib/templates";
+import { defaultKeyboard } from "~/lib/templates";
 import { computeComponent } from "~/lib/component";
 
 const { randomInt } = create(all, {

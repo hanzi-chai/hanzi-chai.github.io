@@ -18,7 +18,6 @@ import {
   useSetAtom,
   useAtomValue,
   useAtom,
-  formAtom,
   fetchJson,
   repertoireAtom,
 } from "~/atoms";
@@ -57,22 +56,13 @@ const items: MenuProps["items"] = [
   },
   {
     label: "数据",
-    key: "data",
+    key: "repertoire",
     icon: <DatabaseOutlined />,
-    children: [
-      {
-        label: "字形数据",
-        key: "data/form",
-      },
-      {
-        label: "字音字集",
-        key: "data/repertoire",
-      },
-      {
-        label: "笔画分类",
-        key: "data/classifier",
-      },
-    ],
+  },
+  {
+    label: "笔画分类",
+    key: "classifier",
+    icon: <DatabaseOutlined />,
   },
 ];
 
@@ -173,9 +163,7 @@ function EditorLayout() {
   );
 }
 
-function LoadFormAndRepertoire() {
-  const setForm = useSetAtom(formAtom);
-  fetchJson("form").then((value) => setForm(listToObject(value)));
+function LoadRepertoire() {
   const setRepertoire = useSetAtom(repertoireAtom);
   fetchJson("repertoire").then((value) => setRepertoire(listToObject(value)));
   return null;
@@ -194,7 +182,7 @@ export default function Contextualized() {
 
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
-      <LoadFormAndRepertoire />
+      <LoadRepertoire />
       <EditorLayout />
       <DevTools />
     </Suspense>

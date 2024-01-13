@@ -4,7 +4,7 @@ import {
   atom,
   useAtomValue,
   useSetAtom,
-  configFormAtom,
+  keyboardsAtom,
   groupingAtom,
   determinedRepertoireAtom,
   displayAtom,
@@ -174,7 +174,7 @@ const AdjustableRootPopoverContent = ({
 };
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
-  const { mapping_type, mapping } = useAtomValue(configFormAtom);
+  const { mapping_type, mapping } = useAtomValue(keyboardsAtom);
 
   const [affiliates, partialAffiliates] = useAffiliates(name);
   const padding = Math.max((mapping_type ?? 1) - code.length, 0);
@@ -259,7 +259,7 @@ const ImportResultAlert = ({
 };
 
 const Mapping = () => {
-  const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
+  const { alphabet, mapping_type, mapping } = useAtomValue(keyboardsAtom);
   const form = useAtomValue(determinedRepertoireAtom);
   const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(

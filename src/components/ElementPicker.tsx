@@ -7,7 +7,7 @@ import {
   algebraAtom,
   customClassifierAtom,
   determinedRepertoireAtom,
-  sortedCustomFormAtom,
+  sortedRepertoireAtom,
   useAtomValue,
   useRemoveAtom,
 } from "~/atoms";
@@ -62,12 +62,12 @@ const AlgebraEditor = function ({
   );
 };
 
-const formElementTypes = ["字根", "笔画", "二笔", "结构"] as const;
-type FormElementTypes = (typeof formElementTypes)[number];
+const shapeElementTypes = ["字根", "笔画", "二笔", "结构"] as const;
+type ShapeElementTypes = (typeof shapeElementTypes)[number];
 
 export const FormElementPicker = function () {
   const customizedClassifier = useAtomValue(customClassifierAtom);
-  const sortedForm = useAtomValue(sortedCustomFormAtom);
+  const sortedForm = useAtomValue(sortedRepertoireAtom);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
@@ -75,14 +75,14 @@ export const FormElementPicker = function () {
     .map((x) => ["0"].concat(allStrokes).map((y) => x + y))
     .flat();
   const allGlyph = sortedForm.map(([x]) => x);
-  const content: Map<FormElementTypes, string[]> = new Map([
+  const content: Map<ShapeElementTypes, string[]> = new Map([
     ["字根", allGlyph],
     ["笔画", allStrokes],
     ["二笔", allErbi],
     ["结构", [...operators]],
   ]);
   const [element, setElement] = useState<string | undefined>(undefined);
-  const [type, setType] = useState<FormElementTypes>("字根");
+  const [type, setType] = useState<ShapeElementTypes>("字根");
   return (
     <Flex vertical gap="small">
       <Wrapper
@@ -102,7 +102,7 @@ export const FormElementPicker = function () {
           };
         })}
         onChange={(e) => {
-          setType(e as FormElementTypes);
+          setType(e as ShapeElementTypes);
         }}
       />
       <ElementAdder element={element} />

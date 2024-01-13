@@ -4,7 +4,7 @@ import type { Key, Mapping } from "./config";
 import type {
   Component,
   Compound,
-  DeterminedRepertoire,
+  Repertoire,
   Draw,
   Operator,
   Point,
@@ -107,12 +107,12 @@ export const reverse = (alphabet: string, mapping: Mapping) => {
   return data;
 };
 
-export const getSupplemental = (form: DeterminedRepertoire, list: string[]) => {
+export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
   const set = new Set(list);
   const reverseForm: Record<string, string[]> = Object.fromEntries(
-    Object.entries(form).map(([x]) => [x, []]),
+    Object.entries(repertoire).map(([x]) => [x, []]),
   );
-  for (const [char, glyph] of Object.entries(form)) {
+  for (const [char, glyph] of Object.entries(repertoire)) {
     if (glyph.glyph?.type === "compound") {
       try {
         glyph.glyph!.operandList.forEach((x) => reverseForm[x]!.push(char));
@@ -121,7 +121,7 @@ export const getSupplemental = (form: DeterminedRepertoire, list: string[]) => {
       }
     }
   }
-  const componentsNotChar = Object.entries(form)
+  const componentsNotChar = Object.entries(repertoire)
     .filter(([, v]) => v.glyph?.type === "component")
     .map(([x]) => x)
     .filter((x) => !set.has(x));

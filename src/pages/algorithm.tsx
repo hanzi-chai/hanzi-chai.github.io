@@ -2,21 +2,20 @@ import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Root";
-import { customDataAtom, displayAtom } from "~/atoms";
+import { determinedRepertoireAtom, displayAtom } from "~/atoms";
 import { list } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
-import { renderComponentForm, type ComputedComponent } from "~/lib/component";
-import { defaultForm } from "~/lib/templates";
+import { type ComputedComponent } from "~/lib/component";
+import { defaultKeyboard } from "~/lib/templates";
 import { listToObject } from "~/lib/utils";
-import { useSetAtom, useAtomValue, formAtom } from "~/atoms";
+import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
 
 const DegeneratorTable = () => {
-  const form = useAtomValue(formAtom);
-  const formLoading = isEmpty(form);
-  const data = useAtomValue(customDataAtom);
-  const [componentForm] = renderComponentForm(data);
-  const dataSource = Object.values(componentForm)
+  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const formLoading = isEmpty(repertoire);
+  const dataSource = Object.values(repertoire)
+    .filter((value) => value.glyph?.type === "component")
     .filter((cache) => cache.glyph.length >= 5)
     .sort((a, b) => a.glyph.length - b.glyph.length);
   const toCompare = Object.values(componentForm).filter(
@@ -40,7 +39,11 @@ const DegeneratorTable = () => {
         const rootMap = new Map<string, number[]>();
         for (const another of toCompare) {
           if (another.name === record.name) continue;
-          const slices = generateSliceBinaries(defaultForm, record, another);
+          const slices = generateSliceBinaries(
+            defaultKeyboard,
+            record,
+            another,
+          );
           if (slices.length) {
             rootMap.set(another.name, slices);
           }

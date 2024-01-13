@@ -37,6 +37,12 @@ const classifier = {
   斜钩: 5,
 };
 
+export const mergeClassifier = (
+  partialClassifier?: Record<Feature, number>,
+) => {
+  return { ...classifier, ...(partialClassifier ?? {}) };
+};
+
 export type Feature = keyof typeof classifier;
 
 export type Classifier = typeof classifier;

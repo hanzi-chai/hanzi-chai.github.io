@@ -9,10 +9,10 @@ import type {
 } from "./config";
 import type { ComponentResult } from "./component";
 import type { CompoundResult } from "./compound";
-import { getForm } from "./repertoire";
+import { getAnalysis } from "./repertoire";
 import type { Extra } from "./element";
 import { findElement } from "./element";
-import { Character, DeterminedRepertoire } from "./data";
+import { PrimitveCharacter, Character, Repertoire } from "./data";
 
 export const filtervalues = ["是", "否", "未定义"] as const;
 export type CharsetFilter = (typeof filtervalues)[number];
@@ -103,9 +103,9 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 export type IndexedElement = string | { element: string; index: number };
 
 const compile = (config: Config) => {
-  const { mapping, grouping } = config.form;
+  const { mapping, grouping } = config.keyboards;
   const totalMapping = merge(mapping, grouping);
-  return (result: TotalResult, data: DeterminedRepertoire, extra: Extra) => {
+  return (result: TotalResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
     while (node) {
@@ -166,10 +166,10 @@ const compile = (config: Config) => {
 
 export const getCache = (
   list: string[],
-  form: Config["form"],
-  data: DeterminedRepertoire,
+  form: Config["keyboards"],
+  data: Repertoire,
 ) => {
-  const [formResult, extra] = getForm(list, data, form);
+  const [formResult, extra] = getAnalysis(list, data, form);
   const result = Object.fromEntries(
     list.map((char) => {
       const formData = formResult.get(char)!;
@@ -196,9 +196,9 @@ export const uniquify = (l: string[]) => [...new Set(l)].sort();
 export const collect = (
   config: Config,
   characters: string[],
-  data: DeterminedRepertoire,
+  data: Repertoire,
 ) => {
-  const [cache, extra] = getCache(characters, config.form, data);
+  const [cache, extra] = getCache(characters, config.keyboards, data);
   const func = compile(config);
   const result = new Map(
     characters.map((char) => [
@@ -228,19 +228,15 @@ export const autoSplit = (collection: Map<string, IndexedElement[][]>) => {
   return tsv;
 };
 
-const encode = (
-  config: Config,
-  characters: string[],
-  data: DeterminedRepertoire,
-) => {
+const encode = (config: Config, characters: string[], data: Repertoire) => {
   const characterElements = collect(config, characters, data);
   const { encoder } = config;
   const process = (elements: IndexedElement[]) => {
     const code = elements
       .map((e) =>
         typeof e === "string"
-          ? config.form.mapping[e]!
-          : config.form.mapping[e.element]![e.index]!,
+          ? config.keyboards.mapping[e]!
+          : config.keyboards.mapping[e.element]![e.index]!,
       )
       .join("");
     return encoder.max_length ? code.slice(0, encoder.max_length) : code;

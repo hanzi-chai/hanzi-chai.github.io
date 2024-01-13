@@ -2,7 +2,7 @@ import { Flex, Select, Switch, Typography } from "antd";
 import { useEffect, useState } from "react";
 import EncoderRules from "~/components/EncoderRules";
 import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
-import { configAtom, customDataAtom, useAtomValue } from "~/atoms";
+import { configAtom, determinedRepertoireAtom, useAtomValue } from "~/atoms";
 import { CharsetFilter, EncoderResult, filtermap } from "~/lib/encoder";
 import { getSupplemental } from "~/lib/utils";
 
@@ -11,7 +11,7 @@ type FilterOption = (typeof filterOptions)[number];
 
 const Encode = () => {
   const config = useAtomValue(configAtom);
-  const data = useAtomValue(customDataAtom);
+  const data = useAtomValue(determinedRepertoireAtom);
   const [dev, setDev] = useState(false);
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   const [reference, setReference] = useState<Map<string, string[]>>(() => {
@@ -20,17 +20,17 @@ const Encode = () => {
     return new Map(Object.entries(JSON.parse(content)));
   });
   const filterMap: Record<FilterOption, (p: [string, string[]]) => boolean> = {
-    成字部件: ([char]) => data.form[char]?.default_type === "component",
+    成字部件: ([char]) => data[char]?.glyph?.type === "component",
     非成字部件: ([char]) => supplemental.includes(char),
     所有汉字: () => true,
   };
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
-  const list = Object.entries(data.repertoire)
+  const list = Object.entries(data)
     .filter(filtermap[gb2312]("gb2312"))
     .filter(filtermap[tygf]("tygf"))
     .map(([x]) => x);
-  const supplemental = getSupplemental(data.form, list);
+  const supplemental = getSupplemental(data, list);
   const [result, setResult] = useState<EncoderResult>(new Map());
 
   useEffect(() => {

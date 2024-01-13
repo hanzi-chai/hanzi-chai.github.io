@@ -3,7 +3,7 @@ import { RemoteContext } from "~/components/Action";
 import CharacterTable from "~/components/CharacterTable";
 import { useChaifenTitle } from "~/lib/hooks";
 
-const FormData = () => {
+export default () => {
   useChaifenTitle("字形数据");
   return (
     <Flex vertical gap="middle" style={{ height: "100%" }}>
@@ -13,5 +13,3 @@ const FormData = () => {
     </Flex>
   );
 };
-
-export default FormData;

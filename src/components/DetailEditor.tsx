@@ -8,7 +8,7 @@ import { Select } from "./Utils";
 import type { Op, UnaryOp } from "~/lib/config";
 import { binaryOps, ops, unaryOps } from "~/lib/config";
 import TextArea from "antd/es/input/TextArea";
-import { useAtomValue, configFormAtom, algebraAtom } from "~/atoms";
+import { useAtomValue, keyboardsAtom, algebraAtom } from "~/atoms";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -33,7 +33,7 @@ const DetailEditor = ({ selected }: { selected: string }) => {
   >();
   const nodes = getNodes();
   const { data } = getNode(selected)!;
-  const { alphabet } = useAtomValue(configFormAtom);
+  const { alphabet } = useAtomValue(keyboardsAtom);
   const algebra = useAtomValue(algebraAtom);
   const genericIndices = [...Array(10).keys()]
     .map((x) => [x + 1, -(x + 1)])

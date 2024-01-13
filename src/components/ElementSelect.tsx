@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
 import {
-  configFormAtom,
+  keyboardsAtom,
   determinedRepertoireAtom,
   displayAtom,
   sequenceAtom,
@@ -22,15 +22,15 @@ export default function ElementSelect({
   excludeGrouped,
   onlyRootsAndStrokes,
 }: ElementSelectProps) {
-  const { mapping, grouping } = useAtomValue(configFormAtom);
+  const { mapping, grouping } = useAtomValue(keyboardsAtom)[0]!;
   const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(determinedRepertoireAtom);
   let keys = Object.keys(mapping).concat(Object.keys(grouping));
   if (excludeGrouped) {
     keys = keys.filter((x) => grouping[x] === undefined);
   }
   if (onlyRootsAndStrokes) {
-    keys = keys.filter((x) => form[x] || x.match(/\d/));
+    keys = keys.filter((x) => repertoire[x] || x.match(/\d/));
   }
   if (customFilter) {
     keys = keys.filter(customFilter);
@@ -49,7 +49,7 @@ export default function ElementSelect({
       filterOption={(input, option) => {
         if (option === undefined) return false;
         const value = option.value;
-        if (form[value] !== undefined) {
+        if (repertoire[value] !== undefined) {
           return sequenceMap.get(value)!.startsWith(input);
         } else {
           return value.includes(input);
