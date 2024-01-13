@@ -145,7 +145,7 @@ export const verifyNewName = (newName: string) => {
   return true;
 };
 
-type Click = { onClick: () => void };
+type Click = { onClick: () => void; disabled?: boolean };
 
 export const PlusButton = ({ onClick }: Click) => {
   return (
@@ -169,13 +169,14 @@ export const MinusButton = ({ onClick }: Click) => {
   );
 };
 
-export const DeleteButton = ({ onClick }: Click) => {
+export const DeleteButton = ({ onClick, disabled }: Click) => {
   return (
     <Button
       shape="circle"
       type="text"
       danger
       onClick={onClick}
+      disabled={disabled}
       icon={<DeleteOutlined />}
     />
   );

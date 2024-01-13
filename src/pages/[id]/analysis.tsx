@@ -2,22 +2,21 @@ import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
 import {
   Alert,
   Button,
-  Dropdown,
   Empty,
   Flex,
   Pagination,
   Radio,
   Space,
   Typography,
-  notification,
 } from "antd";
 
 import {
   useAtomValue,
-  configFormAtom,
-  customDataAtom,
   sequenceAtom,
   displayAtom,
+  determinedRepertoireAtom,
+  keyboardsAtom,
+  configAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import Char from "~/components/Char";
@@ -27,7 +26,7 @@ import { useState } from "react";
 
 import type { ComponentCache, ComponentResult } from "~/lib/component";
 import type { CompoundCache, CompoundResult } from "~/lib/compound";
-import { getFormCore } from "~/lib/repertoire";
+import { getAnalysisCore } from "~/lib/repertoire";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
@@ -78,17 +77,19 @@ const Analysis = () => {
     componentError: [] as string[],
     compoundError: [] as string[],
   });
-  const data = useAtomValue(customDataAtom);
+  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
 
-  const formConfig = useAtomValue(configFormAtom);
+  const config = useAtomValue(configAtom);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
 
   const displays = [
     [...componentCache]
-      .filter(([x]) => makeFilter(sequence, data.form, sequenceMap)(x))
+      .filter(([x]) =>
+        makeFilter(sequence, determinedRepertoire, sequenceMap)(x),
+      )
       .filter(([, v]) => v.sequence.length > 1)
       .map(([key, res]) => {
         return {
@@ -157,7 +158,7 @@ const Analysis = () => {
                 customizations,
                 compoundCache,
                 compoundError,
-              } = getFormCore(data, formConfig);
+              } = getAnalysisCore(determinedRepertoire, config);
               setComponentCache(componentCache);
               setComponentCustomizations(customizations);
               setCompoundCache(compoundCache);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Select, Button, Flex } from "antd";
 import {
-  configFormAtom,
+  keyboardsAtom,
   useAtomValue,
   useAddAtom,
   mappingAtom,
@@ -14,7 +14,7 @@ import { Key } from "~/lib/config";
 import { joinKeys } from "./Utils";
 
 const ElementAdder = ({ element }: { element?: string }) => {
-  const { alphabet, mapping_type, mapping } = useAtomValue(configFormAtom);
+  const { alphabet, mapping_type, mapping } = useAtomValue(keyboardsAtom);
   const [main, setMain] = useState(Object.keys(mapping)[0]!);
   const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
   const addMapping = useAddAtom(mappingAtom);

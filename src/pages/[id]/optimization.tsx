@@ -14,7 +14,7 @@ import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useState } from "react";
 import {
   characterFrequencyAtom,
-  configFormAtom,
+  keyboardsAtom,
   fetchJson,
   keyEquivalenceAtom,
   pairEquivalenceAtom,
@@ -360,7 +360,7 @@ const ConstraintList = ({
   );
 
   const [list, append, exclude, modify] = useListAtom(listAtom);
-  const { alphabet } = useAtomValue(configFormAtom);
+  const { alphabet } = useAtomValue(keyboardsAtom);
   const defaultConstraints: Record<keyof Constraints, AtomicConstraint> = {
     elements: { element: "1" },
     indices: { index: 1 },

@@ -1,19 +1,19 @@
+import { mergeClassifier } from "./classifier";
 import {
   ComponentCache,
   ComponentResult,
   disassembleComponents,
   recursiveGetSequence,
   recursiveRenderComponent,
-  recursiveRenderGlyph,
 } from "./component";
 import { disassembleCompounds } from "./compound";
-import type { FormConfig } from "./config";
+import { Config, KeyboardConfig } from "./config";
 import {
   Component,
   Compound,
-  DeterminedCharacter,
-  DeterminedRepertoire,
+  Character,
   Repertoire,
+  PrimitiveRepertoire,
   SVGGlyph,
 } from "./data";
 import type { Extra } from "./element";
@@ -26,14 +26,14 @@ export const findGlyph = (glyphs: (Component | Compound)[], tags: string[]) => {
   return glyphs[0];
 };
 
-export const determine = (repertoire: Repertoire) => {
-  const determined: DeterminedRepertoire = {};
+export const determine = (repertoire: PrimitiveRepertoire) => {
+  const determined: Repertoire = {};
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
     const { ambiguous, glyphs, ...rest } = character;
     // const glyph = customization[name]?.glyph ?? findGlyph(glyphs, tags);
     const rawglyph = glyphs[0];
-    let glyph: DeterminedCharacter["glyph"];
+    let glyph: Character["glyph"];
     if (rawglyph?.type === "component") {
       const svgglyph = recursiveRenderComponent(
         rawglyph,
@@ -47,17 +47,17 @@ export const determine = (repertoire: Repertoire) => {
     } else {
       glyph = rawglyph;
     }
-    const determined_character: DeterminedCharacter = { ...rest, glyph };
+    const determined_character: Character = { ...rest, glyph };
     determined[name] = determined_character;
   }
   return determined;
 };
 
-export const getFormCore = (data: DeterminedRepertoire, config: FormConfig) => {
+export const getAnalysisCore = (data: Repertoire, config: Config) => {
   const [componentCache, componentError] = disassembleComponents(
     data,
-    config,
-    config.analysis?.classifier!,
+    config.keyboards[0]!,
+    mergeClassifier(config.analysis?.classifier),
   );
   const customizations: ComponentCache = new Map(
     Object.entries(config.analysis?.customize ?? {}).map(
@@ -83,11 +83,8 @@ export const getFormCore = (data: DeterminedRepertoire, config: FormConfig) => {
   };
 };
 
-const getExtra = function (
-  data: DeterminedRepertoire,
-  config: FormConfig,
-): Extra {
-  const { mapping, grouping } = config;
+const getExtra = function (data: Repertoire, config: Config): Extra {
+  const { mapping, grouping } = config.keyboards[0]!;
   const roots = Object.keys(mapping).concat(Object.keys(grouping));
   const findSequence = (x: string) => {
     if (data[x] === undefined) {
@@ -112,13 +109,13 @@ const getExtra = function (
   };
 };
 
-export const getForm = (
+export const getAnalysis = (
   list: string[],
-  data: DeterminedRepertoire,
-  config: FormConfig,
+  data: Repertoire,
+  config: Config,
 ) => {
   const extra = getExtra(data, config);
-  const { customized, compoundCache } = getFormCore(data, config);
+  const { customized, compoundCache } = getAnalysisCore(data, config);
   const value = new Map(
     list.map((char) => {
       const result = customized.get(char) || compoundCache.get(char);

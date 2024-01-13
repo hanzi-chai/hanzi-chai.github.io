@@ -1,12 +1,11 @@
 import { ComponentCache, ComponentResult } from "./component";
-import { FormConfig } from "./config";
 import {
   Block,
   Compound,
-  DeterminedCharacter,
-  DeterminedRepertoire,
-  Operator,
+  Character,
   Repertoire,
+  Operator,
+  PrimitiveRepertoire,
 } from "./data";
 
 export type CompoundCache = Map<string, CompoundResult>;
@@ -29,10 +28,10 @@ interface CompoundRootResult {
   sequence: [string];
 }
 
-const topologicalSort = (form: DeterminedRepertoire) => {
-  let compounds = new Map<string, DeterminedCharacter>();
+const topologicalSort = (form: Repertoire) => {
+  let compounds = new Map<string, Character>();
   for (let i = 0; i !== 10; ++i) {
-    const thisLevelCompound = new Map<string, DeterminedCharacter>();
+    const thisLevelCompound = new Map<string, Character>();
     for (const [k, character] of Object.entries(form)) {
       if (compounds.get(k)) continue;
       const glyph = character.glyph;
@@ -91,7 +90,7 @@ const assembleSequence = (
 };
 
 export const disassembleCompounds = (
-  data: DeterminedRepertoire,
+  data: Repertoire,
   config: FormConfig,
   componentCache: ComponentCache,
 ) => {

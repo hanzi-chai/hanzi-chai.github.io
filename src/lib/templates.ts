@@ -1,4 +1,9 @@
-import type { Config, FormConfig, PartialClassifier } from "./config";
+import type {
+  Analysis,
+  Config,
+  KeyboardConfig,
+  PartialClassifier,
+} from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { examples } from "./example";
 import { defaultSelector } from "./selector";
@@ -20,26 +25,27 @@ export const classifierTypes = [
 export type ClassifierType = (typeof classifierTypes)[number];
 const classifierMap: Record<ClassifierType, PartialClassifier> = {
   国标五分类: {},
-  表形码六分类: examples.mswb.form!.analysis!.classifier!,
-  郑码七分类: examples.zhengma.form!.analysis!.classifier!,
+  表形码六分类: examples.mswb.analysis!.classifier!,
+  郑码七分类: examples.zhengma.analysis!.classifier!,
 };
 
-export const defaultForm: FormConfig = {
+export const defaultAnalysis: Analysis = {
+  degenerator: defaultDegenerator,
+  selector: defaultSelector,
+};
+
+export const defaultKeyboard: KeyboardConfig = {
   alphabet: "qwertyuiopasdfghjklzxcvbnm",
   grouping: {},
   mapping: {},
-  analysis: {
-    degenerator: defaultDegenerator,
-    selector: defaultSelector,
-  },
 };
 
-export const formTypes = ["郑码字根", "米十五笔字根", "无"] as const;
-export type FormTypes = (typeof formTypes)[number];
-const formMap: Record<FormTypes, Config["form"]> = {
-  郑码字根: examples.zhengma.form,
-  米十五笔字根: examples.mswb.form,
-  无: defaultForm,
+export const keyboardTypes = ["郑码字根", "米十五笔字根", "无"] as const;
+export type KeyboardTypes = (typeof keyboardTypes)[number];
+const keyboardMap: Record<KeyboardTypes, Config["keyboards"]> = {
+  郑码字根: examples.zhengma.keyboards,
+  米十五笔字根: examples.mswb.keyboards,
+  无: [defaultKeyboard],
 };
 
 export const encoderTypes = [
@@ -57,7 +63,7 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
 export interface StarterType {
   name: string;
   data: ClassifierType;
-  form: FormTypes;
+  keyboard: KeyboardTypes;
   encoder: EncoderTypes;
 }
 
@@ -66,7 +72,7 @@ export const createConfig = function (starter: StarterType): Config {
     version: APP_VERSION,
     source: null,
     info: getInfo(starter.name),
-    form: formMap[starter.form],
+    keyboards: keyboardMap[starter.keyboard],
     encoder: encoderMap[starter.encoder],
   };
 };

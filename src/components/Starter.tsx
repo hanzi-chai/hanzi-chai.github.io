@@ -5,7 +5,7 @@ import {
   classifierTypes,
   createConfig,
   encoderTypes,
-  formTypes,
+  keyboardTypes,
 } from "~/lib/templates";
 import type { Updater } from "use-immer";
 import type { Config } from "~/lib/config";
@@ -63,7 +63,9 @@ const Starter = ({
             label="形码布局预设"
             rules={required}
           >
-            <Select options={formTypes.map((x) => ({ value: x, label: x }))} />
+            <Select
+              options={keyboardTypes.map((x) => ({ value: x, label: x }))}
+            />
           </Form.Item>
           <Form.Item<StarterType>
             name="encoder"

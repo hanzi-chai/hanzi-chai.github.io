@@ -1,5 +1,5 @@
 import type { Classifier, Feature } from "./classifier";
-import type { Component, Compound, Repertoire } from "./data";
+import type { Component, Compound, PrimitiveRepertoire } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./example";
 
@@ -29,7 +29,7 @@ export type Mapping = Record<Element, string | Key[]>;
 
 export type Grouping = Record<Element, Element>;
 
-interface BaseConfig {
+export interface KeyboardConfig {
   alphabet: string;
   mapping_type?: number;
   mapping: Mapping;
@@ -48,10 +48,6 @@ export interface Analysis {
   customize?: Record<string, string[]>;
   strong?: string[];
   weak?: string[];
-}
-
-export interface FormConfig extends BaseConfig {
-  analysis?: Analysis;
 }
 
 export interface Source {
@@ -214,25 +210,25 @@ export interface EncoderConfig {
   conditions: Record<string, Condition>;
 }
 
-export interface Patch {
-  readings: string[];
-  glyph: Component | Compound;
-}
+export type CustomGlyph = Record<string, Component | Compound>;
+export type CustomReadings = Record<string, string[]>;
 
-export type Customization = Record<string, Patch>;
+export type UserData = {
+  repertoire?: PrimitiveRepertoire;
+  glyph_customization?: CustomGlyph;
+  reading_customization?: CustomReadings;
+  tags?: string[];
+};
 
 export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: Example | null;
   info?: Info;
-  data?: {
-    repertoire?: Repertoire;
-    customization?: Customization;
-    tags?: string[];
-  };
+  data?: UserData;
+  analysis?: Analysis;
   algebra?: Algebra;
-  form: FormConfig;
+  keyboards: KeyboardConfig[];
   encoder: EncoderConfig;
   optimization?: Optimization;
 }

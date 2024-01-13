@@ -104,7 +104,7 @@ const AnalysisCustomizer = () => {
           value={newCustomization}
           onChange={setNew}
           customFilter={([_, glyph]) => {
-            return glyph.default_type === "component";
+            return glyph.glyph?.type === "component";
           }}
         />
         <Button

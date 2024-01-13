@@ -1,304 +1,300 @@
-import React, { useInsertionEffect, useMemo, useState } from "react";
-import { unicodeBlock } from "~/lib/utils";
+import React, { useContext, useState } from "react";
 import {
-  AutoComplete,
+  getDummyComponent,
+  getDummyPartition,
+  isPUA,
+  unicodeBlock,
+} from "~/lib/utils";
+import {
   Button,
   Checkbox,
+  Dropdown,
   Flex,
   Form,
   Layout,
+  MenuProps,
   Space,
 } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import type { ColumnType, ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import { Select } from "~/components/Utils";
 import {
   allRepertoireAtom,
+  customGlyphAtom,
   determinedRepertoireAtom,
   displayAtom,
+  repertoireAtom,
   sequenceAtom,
-  sortedCustomFormAtom,
   tagsAtom,
+  useAddAtom,
   useAtomValue,
   userRepertoireAtom,
 } from "~/atoms";
-import type { Character, Component, Operator } from "~/lib/data";
-import { operators } from "~/lib/data";
-import CharacterModel, { ModelContext } from "~/components/CharacterModel";
-import Root from "~/components/Root";
+import type { PrimitveCharacter, Component, Compound } from "~/lib/data";
 import {
+  Add,
   Create,
   Delete,
   Mutate,
   QuickPatchAmbiguous,
+  RemoteContext,
 } from "~/components/Action";
 import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
-import classifier from "~/lib/classifier";
-import type { ColumnType } from "antd/es/table/interface";
-import { GlyphSelect } from "./CharacterSelect";
+import ComponentForm from "./ComponentForm";
+import CompoundForm from "./CompoundForm";
+import { remoteUpdate } from "~/lib/api";
+import { DeleteButton, PlusButton, errorFeedback } from "./Utils";
+import Root from "./Root";
+import * as O from "optics-ts/standalone";
 
-interface CompoundFilter {
-  operator?: Operator;
-  operand?: string;
-  tag?: string;
-}
-
-const parseFilter = (key: React.Key) => {
-  return JSON.parse((key || "{}") as string) as CompoundFilter;
-};
+type Column = ColumnType<PrimitveCharacter>;
 
 const CharacterTable = () => {
   const allRepertoire = useAtomValue(allRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
+  const addUser = useAddAtom(userRepertoireAtom);
+  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const customGlyph = useAtomValue(customGlyphAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
-  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const display = useAtomValue(displayAtom);
-  const [formInstance] = Form.useForm<Character>();
-  const tags = useAtomValue(tagsAtom);
   const getLength = (a: string) => sequenceMap.get(a)?.length ?? Infinity;
+  const remote = useContext(RemoteContext);
+  const add = useAddAtom(repertoireAtom);
+  const filter = makeFilter(searchInput, determinedRepertoire, sequenceMap);
+  const isUserPUA = (a: string) =>
+    -Number(a.codePointAt(0)! >= 0xf000 && a.codePointAt(0)! <= 0x10000);
 
   const dataSource = Object.entries(allRepertoire)
     .sort(([a], [b]) => getLength(a) - getLength(b))
-    .filter(([x]) => makeFilter(searchInput, allRepertoire, sequenceMap)(x))
+    .sort(([a], [b]) => isUserPUA(a) - isUserPUA(b))
+    .filter(([x]) => filter(x))
     .map(([, glyph]) => glyph);
 
-  const compoundFilter: ColumnType<Character> = {
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => {
-      const filter = parseFilter(selectedKeys[0]!);
-      const { operator, operand, tag } = filter;
-      const update = (field: keyof CompoundFilter, value: string) =>
-        setSelectedKeys([JSON.stringify({ ...filter, [field]: value })]);
+  const unicodeColumn: Column = {
+    title: "Unicode",
+    dataIndex: "unicode",
+    render: (_, { unicode, name }) => {
+      const char = String.fromCodePoint(unicode);
+      const hex = unicode.toString(16).toUpperCase();
+      return (isPUA(char) ? name : char) + ` (${hex})`;
+    },
+    filters: [
+      { text: "CJK 基本集", value: "cjk" },
+      { text: "CJK 扩展集 A", value: "cjk-a" },
+      { text: "非成字", value: "pua" },
+    ],
+    onFilter: (value, record) => {
+      return unicodeBlock(record.unicode) === value;
+    },
+    sorter: (a, b) => a.unicode - b.unicode,
+    sortDirections: ["ascend", "descend"],
+    width: 128,
+  };
+
+  const tygfColumn: Column = {
+    title: "通用规范",
+    dataIndex: "tygf",
+    width: 96,
+    render: (_, record) => {
+      return <Checkbox checked={record.tygf === 1} />;
+    },
+    filters: [
+      { text: "是", value: 1 },
+      { text: "否", value: 0 },
+    ],
+    onFilter: (value, record) => value === record.tygf,
+  };
+
+  const gb2312: Column = {
+    title: "GB 2312",
+    dataIndex: "gb2312",
+    render: (_, record) => {
+      return <Checkbox checked={record.gb2312} />;
+    },
+    width: 96,
+    filters: [
+      { text: "是", value: true },
+      { text: "否", value: false },
+    ],
+    onFilter: (value, record) => value === record.gb2312,
+  };
+
+  const readings: Column = {
+    title: "系统字音",
+    dataIndex: "readings",
+    render: (_, record) => {
       return (
-        <Flex vertical style={{ padding: 16 }}>
-          <Form.Item label="结构">
-            <Select<Operator>
-              value={operator}
-              onChange={(value) => update("operator", value)}
-              options={[{ value: "", label: "任意" }].concat(
-                operators.map((x) => ({ value: x, label: x })),
-              )}
-            />
-          </Form.Item>
-          <Form.Item label="部件">
-            <GlyphSelect
-              value={operand}
-              onChange={(value) => update("operand", value)}
-            />
-          </Form.Item>
-          <Form.Item label="标签">
-            <Select
-              value={tag}
-              onChange={(value) => update("tag", value)}
-              options={tags.map((x) => ({ label: x, value: x }))}
-            />
-          </Form.Item>
-          <Flex justify="space-between">
-            <Button
-              type="link"
-              onClick={() => clearFilters && clearFilters()}
-              size="small"
-            >
-              Reset
-            </Button>
-            <Button type="primary" onClick={() => confirm()} size="small">
-              OK
-            </Button>
-          </Flex>
+        <Space>
+          {record.readings.map((reading, index) => (
+            <Root key={index}>{reading}</Root>
+          ))}
+        </Space>
+      );
+    },
+    width: 128,
+  };
+
+  const gf0014: Column = {
+    title: "GF0014",
+    dataIndex: "gf0014_id",
+    width: 128,
+    filters: [{ text: "只看非空", value: 1 }],
+    onFilter: (_, record) => record.gf0014_id !== null,
+    sorter: (a, b) => Number(a.gf0014_id) - Number(b.gf0014_id),
+  };
+
+  const glyphs: Column = {
+    title: "系统字形",
+    render: (_, character) => {
+      const { glyphs, unicode } = character;
+      const char = String.fromCodePoint(unicode);
+      const inlineUpdate = async (newCharacter: PrimitveCharacter) => {
+        if (userRepertoire[char] !== undefined) {
+          addUser(char, newCharacter);
+          return true;
+        }
+        const res = await remoteUpdate(newCharacter);
+        if (!errorFeedback(res)) {
+          add(char, newCharacter);
+        }
+        return true;
+      };
+      return (
+        <Flex gap="small">
+          {glyphs.map((x, i) => {
+            const lens = O.compose("glyphs", O.at(i));
+            return (
+              <Space key={i}>
+                {x.type === "compound" ? (
+                  <CompoundForm
+                    key={i}
+                    title={`${x.operator} ${x.operandList
+                      .map(display)
+                      .join(" ")}`}
+                    initialValues={x}
+                    onFinish={(values) =>
+                      inlineUpdate(O.set(lens, values, character))
+                    }
+                  />
+                ) : (
+                  <ComponentForm
+                    key={i}
+                    title={`部件`}
+                    initialValues={x}
+                    current={String.fromCodePoint(unicode)}
+                    onFinish={(values) =>
+                      inlineUpdate(O.set(lens, values, character))
+                    }
+                  />
+                )}
+                <DeleteButton
+                  onClick={() => inlineUpdate(O.remove(lens, character))}
+                />
+              </Space>
+            );
+          })}
         </Flex>
       );
     },
-    onFilter: (value, { glyphs }) => {
-      const { operator, operand, tag } = parseFilter(value as React.Key);
-      // if (glyphs.length === 0) return false;
-      // if (
-      //   operator &&
-      //   glyphs.every((x) => !x.operator.startsWith(operator))
-      // )
-      //   return false;
-      // if (
-      //   operand &&
-      //   record.compound.every((x) => !x.operandList.includes(operand))
-      // )
-      //   return false;
-      // if (tag && record.compound.every((x) => !x.tags?.includes(tag)))
-      //   return false;
-      return true;
+    width: 256,
+    sorter: (a, b) => {
+      const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
+      return as.localeCompare(bs);
+    },
+    sortDirections: ["ascend", "descend"],
+  };
+
+  const customGlyphColumn: Column = {
+    title: "自定义字形",
+    render: (_, character) => {
+      const { glyphs, unicode } = character;
+      const char = String.fromCodePoint(unicode);
+      const customized = customGlyph[char];
+      if (customized === undefined) return null;
+      return (
+        <Flex gap="small">
+          {customized.type === "compound" ? (
+            <CompoundForm
+              title={
+                customized.operator +
+                customized.operandList.map(display).join(" ")
+              }
+              initialValues={customized}
+              onFinish={async (values) => true}
+            />
+          ) : (
+            <ComponentForm
+              title={`部件`}
+              initialValues={customized}
+              current={String.fromCodePoint(unicode)}
+              onFinish={async (values) => true}
+            />
+          )}
+        </Flex>
+      );
+    },
+    width: 192,
+    sorter: (a, b) => {
+      const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
+      return as.localeCompare(bs);
+    },
+    sortDirections: ["ascend", "descend"],
+  };
+
+  const ambiguous: Column = {
+    title: "分部歧义",
+    dataIndex: "ambiguous",
+    render: (_, record) => {
+      return <QuickPatchAmbiguous checked={record.ambiguous} record={record} />;
+    },
+    filters: [
+      { text: "只看有歧义", value: 1 },
+      { text: "只看无歧义", value: 0 },
+    ],
+    onFilter: (value, record) => Number(record.ambiguous) === value,
+    width: 96,
+  };
+
+  const operations: Column = {
+    title: "操作",
+    key: "option",
+    render: (_, record) => (
+      <Space>
+        <Add character={record} />
+        <Mutate unicode={record.unicode} />
+        <Delete unicode={record.unicode} />
+      </Space>
+    ),
+    filters: [
+      { text: "已编辑", value: 1 },
+      { text: "未编辑", value: 0 },
+    ],
+    onFilter: (value, record) => {
+      const char = String.fromCodePoint(record.unicode);
+      const customized = userRepertoire[char] !== undefined;
+      return value === 1 ? customized : !customized;
     },
   };
 
-  const columns: ColumnsType<Character> = [
-    {
-      title: "Unicode",
-      dataIndex: "unicode",
-      render: (_, { unicode }) => {
-        const hex = unicode.toString(16).toUpperCase();
-        const valid = ["cjk", "cjk-a"].includes(unicodeBlock(unicode));
-        return valid ? String.fromCodePoint(unicode) + ` (${hex})` : hex;
-      },
-      filters: [
-        { text: "CJK 基本集", value: "cjk" },
-        { text: "CJK 扩展集 A", value: "cjk-a" },
-        { text: "非成字", value: "pua" },
-      ],
-      onFilter: (value, record) => {
-        return unicodeBlock(record.unicode) === value;
-      },
-      sorter: (a, b) => a.unicode - b.unicode,
-      sortDirections: ["ascend", "descend"],
-      width: 128,
-    },
-    {
-      title: "通用规范",
-      dataIndex: "tygf",
-      width: 96,
-      render: (_, record) => {
-        return <Checkbox checked={record.tygf === 1} />;
-      },
-      filters: [
-        { text: "是", value: 1 },
-        { text: "否", value: 0 },
-      ],
-      onFilter: (value, record) => value === record.tygf,
-    },
-    {
-      title: "GB 2312",
-      dataIndex: "gb2312",
-      render: (_, record) => {
-        return <Checkbox checked={record.gb2312} />;
-      },
-      width: 96,
-      filters: [
-        { text: "是", value: true },
-        { text: "否", value: false },
-      ],
-      onFilter: (value, record) => value === record.gb2312,
-    },
-    {
-      title: "字音",
-      dataIndex: "pinyin",
-      render: (_, record) => {
-        return record.readings.join(", ");
-      },
-      width: 128,
-    },
-    {
-      title: "别名",
-      dataIndex: "name",
-      width: 128,
-      filters: [
-        { text: "有", value: true },
-        { text: "无", value: false },
-      ],
-      onFilter: (value, record) => {
-        return record.name !== null;
-      },
-    },
-    {
-      title: "GF0014 部件序号",
-      dataIndex: "gf0014_id",
-      width: 192,
-      filters: [{ text: "只看非空", value: 1 }],
-      onFilter: (value, record) => record.gf0014_id !== null,
-      sorter: (a, b) => Number(a.gf0014_id) - Number(b.gf0014_id),
-    },
-    {
-      title: "部件表示",
-      dataIndex: "component",
-      render: (_, { glyphs }) => {
-        return glyphs.some((x) => x.type === "component") ? "有" : "无";
-      },
-      filters: [{ text: "非空", value: "" }].concat(
-        Object.keys(classifier).map((x) => ({ text: x, value: x })),
-      ),
-      onFilter: (value, { glyphs }) => {
-        if (!glyphs.some((x) => x.type === "component")) return false;
-        if (value === "") return true;
-        return (
-          glyphs.filter((x) => x.type === "component")[0] as Component
-        ).strokes.some(
-          (x) => typeof x === "object" && x.feature === (value as string),
-        );
-      },
-      width: 128,
-    },
-    {
-      title: "复合体表示",
-      dataIndex: "compound",
-      ...compoundFilter,
-      render: (_, { glyphs }) => {
-        return (
-          <Flex gap="small">
-            {glyphs.map((x, i) =>
-              x.type === "compound" ? (
-                <Space key={i}>
-                  <span>{x.operator}</span>
-                  {x.operandList.map((y, j) => (
-                    <Root key={j}>{display(y)}</Root>
-                  ))}
-                </Space>
-              ) : null,
-            )}
-          </Flex>
-        );
-      },
-      width: 256,
-      sorter: (a, b) => {
-        const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
-        return as.localeCompare(bs);
-      },
-      sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "分部歧义",
-      dataIndex: "ambiguous",
-      render: (_, record) => {
-        return (
-          <QuickPatchAmbiguous checked={record.ambiguous} record={record} />
-        );
-      },
-      filters: [
-        { text: "只看有歧义", value: 1 },
-        { text: "只看无歧义", value: 0 },
-      ],
-      onFilter: (value, record) => Number(record.ambiguous) === value,
-      width: 96,
-    },
-    {
-      title: "操作",
-      key: "option",
-      render: (_, record) => (
-        <Space>
-          <Button
-            onClick={() => {
-              formInstance.resetFields();
-              formInstance.setFieldsValue(record);
-              setOpen(true);
-            }}
-          >
-            编辑
-          </Button>
-          <Delete unicode={record.unicode} />
-          <Mutate unicode={record.unicode} />
-        </Space>
-      ),
-      filters: [
-        { text: "已编辑", value: 1 },
-        { text: "未编辑", value: 0 },
-      ],
-      onFilter: (value, record) => {
-        const char = String.fromCodePoint(record.unicode);
-        const customized = userRepertoire[char] !== undefined;
-        return value === 1 ? customized : !customized;
-      },
-    },
+  const adminColumns = [
+    unicodeColumn,
+    readings,
+    glyphs,
+    gf0014,
+    ambiguous,
+    operations,
   ];
+  const userColumns = [
+    unicodeColumn,
+    readings,
+    glyphs,
+    customGlyphColumn,
+    operations,
+  ];
+  const columns: ColumnsType<PrimitveCharacter> = remote
+    ? adminColumns
+    : userColumns;
   return (
     <Flex
       component={Layout.Content}
@@ -309,20 +305,9 @@ const CharacterTable = () => {
     >
       <Flex style={{ width: "720px" }} gap="middle" justify="center">
         <StrokeSearch setSequence={setSearchInput} />
-        <Create
-          onCreate={(char) => {
-            const glyph = allRepertoire[char];
-            if (glyph === undefined) {
-              return;
-            }
-            formInstance.resetFields();
-            formInstance.setFieldsValue(glyph);
-            setOpen(true);
-          }}
-        />
+        <Create onCreate={(char) => {}} />
       </Flex>
-      <CharacterModel open={open} setOpen={setOpen} form={formInstance} />
-      <Table<Character>
+      <Table<PrimitveCharacter>
         dataSource={dataSource}
         columns={columns}
         size="small"

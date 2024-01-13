@@ -9,9 +9,9 @@ import {
 } from "~/lib/selector";
 import select from "~/lib/selector";
 import { rendered } from "./mock";
-import { defaultForm } from "~/lib/templates";
+import { defaultKeyboard } from "~/lib/templates";
 
-const config = defaultForm;
+const config = defaultKeyboard;
 
 const { 天 } = rendered;
 

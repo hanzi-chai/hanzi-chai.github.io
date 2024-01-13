@@ -1,7 +1,7 @@
 import { Button, Cascader, Flex, Form, Input, Space, Typography } from "antd";
 import { DeleteButton, KeyList, Select } from "./Utils";
 import { Config } from "~/lib/config";
-import { useAtom, useAtomValue, configFormAtom, useListAtom } from "~/atoms";
+import { useAtom, useAtomValue, keyboardsAtom, useListAtom } from "~/atoms";
 import {
   autoSelectLengthAtom,
   autoSelectPatternAtom,
@@ -33,7 +33,7 @@ const EncoderRules = () => {
     label: x + 2,
     value: x + 2,
   }));
-  const { alphabet } = useAtomValue(configFormAtom);
+  const { alphabet } = useAtomValue(keyboardsAtom);
   const allowedSelectKeys = printableAscii.filter((x) => !alphabet.includes(x));
   return (
     <>

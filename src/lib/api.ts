@@ -1,4 +1,4 @@
-import type { Character } from "./data";
+import type { PrimitveCharacter } from "./data";
 
 export const endpoint = "https://api.chaifen.app/";
 
@@ -28,7 +28,7 @@ const template =
   };
 
 export const list = async () =>
-  await template("GET")<Character[], undefined>("repertoire/all");
+  await template("GET")<PrimitveCharacter[], undefined>("repertoire/all");
 
 export const post = template("POST");
 
@@ -45,14 +45,20 @@ interface Mutation {
 export const remoteCreateWithoutUnicode = (payload: PUA) =>
   template("POST")<number, PUA>(`repertoire`, payload);
 
-export const remoteCreate = (payload: Character) =>
-  template("POST")<number, Character>(`repertoire/${payload.unicode}`, payload);
+export const remoteCreate = (payload: PrimitveCharacter) =>
+  template("POST")<number, PrimitveCharacter>(
+    `repertoire/${payload.unicode}`,
+    payload,
+  );
 
-export const remoteUpdate = (payload: Character) =>
-  template("PUT")<boolean, Character>(`repertoire/${payload.unicode}`, payload);
+export const remoteUpdate = (payload: PrimitveCharacter) =>
+  template("PUT")<boolean, PrimitveCharacter>(
+    `repertoire/${payload.unicode}`,
+    payload,
+  );
 
 export const remoteRemove = (unicode: number) =>
-  template("DELETE")<boolean, Character>(`repertoire/${unicode}`);
+  template("DELETE")<boolean, PrimitveCharacter>(`repertoire/${unicode}`);
 
 export const remoteMutate = (payload: Mutation) =>
   template("PUT")<boolean, Mutation>(`repertoire`, payload);

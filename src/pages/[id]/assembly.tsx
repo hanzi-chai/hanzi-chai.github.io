@@ -10,7 +10,12 @@ import {
   TabsProps,
   Typography,
 } from "antd";
-import { useAtomValue, configAtom, customDataAtom, displayAtom } from "~/atoms";
+import {
+  useAtomValue,
+  configAtom,
+  displayAtom,
+  determinedRepertoireAtom,
+} from "~/atoms";
 
 import type {
   CharsetFilter,
@@ -53,13 +58,13 @@ type ElementFilter = {
 
 const Encoder = () => {
   useChaifenTitle("编码");
-  const data = useAtomValue(customDataAtom);
+  const data = useAtomValue(determinedRepertoireAtom);
   const config = useAtomValue(configAtom);
   const display = useAtomValue(displayAtom);
   const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>(new Map());
-  const list = Object.entries(data.repertoire)
+  const list = Object.entries(data)
     .filter(filtermap[gb2312]("gb2312"))
     .filter(filtermap[tygf]("tygf"))
     .map(([x]) => x);
@@ -206,7 +211,7 @@ const Encoder = () => {
       },
       sorter: (a, b) => a.code.join(", ").localeCompare(b.code.join(", ")),
       sortDirections: ["ascend", "descend"],
-      filters: [...config.form.alphabet]
+      filters: [...config.keyboards.alphabet]
         .sort()
         .map((x) => ({ text: x, value: x })),
       onFilter: (value, record) => {

@@ -1,17 +1,17 @@
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { displayAtom, sequenceAtom, sortedCustomFormAtom } from "~/atoms";
+import { displayAtom, sequenceAtom, sortedRepertoireAtom } from "~/atoms";
 import { Select } from "./Utils";
 import { SelectProps } from "antd";
-import { Character, DeterminedCharacter } from "~/lib/data";
+import { PrimitveCharacter, Character } from "~/lib/data";
 
 interface ItemSelectProps extends SelectProps {
-  customFilter?: (e: [string, DeterminedCharacter]) => boolean;
+  customFilter?: (e: [string, Character]) => boolean;
 }
 
 export const GlyphSelect = (props: ItemSelectProps) => {
   const { customFilter, ...rest } = props;
-  const sortedForm = useAtomValue(sortedCustomFormAtom);
+  const sortedRepertoire = useAtomValue(sortedRepertoireAtom);
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char = props.value;
   const display = useAtomValue(displayAtom);
@@ -25,7 +25,7 @@ export const GlyphSelect = (props: ItemSelectProps) => {
       setData([]);
       return;
     }
-    const allResults = sortedForm
+    const allResults = sortedRepertoire
       .filter(props.customFilter ?? ((_) => true))
       .map(([x]) => ({
         value: x,
