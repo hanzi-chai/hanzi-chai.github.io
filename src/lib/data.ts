@@ -25,28 +25,28 @@ export interface SVGStroke {
   curveList: Draw[];
 }
 
+export interface ReferenceStroke {
+  feature: "reference";
+  index: number;
+}
+
 export type SVGGlyph = SVGStroke[];
-export type Stroke = SVGStroke | number;
+export type Stroke = SVGStroke | ReferenceStroke;
 
-export type Component = {
-  type: "component";
+export interface DerivedComponent {
+  type: "derived_component";
   tags?: string[];
-} & (
-  | {
-      source: undefined;
-      strokes: SVGStroke[];
-    }
-  | {
-      source: string;
-      strokes: Stroke[];
-    }
-);
+  source: string;
+  strokes: Stroke[];
+}
 
-export interface RenderedComponent {
-  type: "component";
+export interface BasicComponent {
+  type: "basic_component";
   tags?: string[];
   strokes: SVGStroke[];
 }
+
+export type Component = BasicComponent | DerivedComponent;
 
 export const operators = [
   "⿰",
@@ -85,13 +85,13 @@ export interface PrimitveCharacter {
   name: string | null;
   gf0014_id: number | null;
   readings: string[];
-  glyphs: (Component | Compound)[];
+  glyphs: (BasicComponent | DerivedComponent | Compound)[];
   ambiguous: boolean;
 }
 
 export interface Character
   extends Omit<PrimitveCharacter, "glyphs" | "ambiguous"> {
-  glyph: RenderedComponent | Compound | undefined;
+  glyph: BasicComponent | Compound | undefined;
 }
 
 export type PrimitiveRepertoire = Record<string, PrimitveCharacter>;

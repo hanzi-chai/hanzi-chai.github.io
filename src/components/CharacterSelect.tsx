@@ -4,12 +4,13 @@ import { displayAtom, sequenceAtom, sortedRepertoireAtom } from "~/atoms";
 import { Select } from "./Utils";
 import { SelectProps } from "antd";
 import { PrimitveCharacter, Character } from "~/lib/data";
+import { ProFormSelect, ProFormSelectProps } from "@ant-design/pro-components";
 
 interface ItemSelectProps extends SelectProps {
   customFilter?: (e: [string, Character]) => boolean;
 }
 
-export const GlyphSelect = (props: ItemSelectProps) => {
+export const GlyphSelect = (props: ItemSelectProps & ProFormSelectProps) => {
   const { customFilter, ...rest } = props;
   const sortedRepertoire = useAtomValue(sortedRepertoireAtom);
   const [data, setData] = useState<SelectProps["options"]>([]);
@@ -39,7 +40,7 @@ export const GlyphSelect = (props: ItemSelectProps) => {
     );
     setData(allResults.slice(0, Math.max(5, minResults.length)));
   };
-  const commonProps: SelectProps = {
+  const commonProps: SelectProps & ProFormSelectProps = {
     showSearch: true,
     placeholder: "输入笔画搜索",
     options: data,

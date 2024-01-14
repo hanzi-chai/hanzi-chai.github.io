@@ -7,7 +7,7 @@ import {
   useSetAtom,
 } from "~/atoms";
 import { Button, Flex, Space, notification } from "antd";
-import Root from "~/components/Root";
+import Root from "~/components/Element";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";

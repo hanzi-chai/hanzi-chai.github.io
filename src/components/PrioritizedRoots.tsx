@@ -8,7 +8,7 @@ import {
   useAppendAtom,
   weakAtom,
 } from "~/atoms";
-import Root from "./Root";
+import Root from "./Element";
 import { useState } from "react";
 import ElementSelect from "./ElementSelect";
 

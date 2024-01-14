@@ -1,35 +1,20 @@
 import React, { useContext, useState } from "react";
-import {
-  getDummyComponent,
-  getDummyPartition,
-  isPUA,
-  unicodeBlock,
-} from "~/lib/utils";
-import {
-  Button,
-  Checkbox,
-  Dropdown,
-  Flex,
-  Form,
-  Layout,
-  MenuProps,
-  Space,
-} from "antd";
+import { isPUA, unicodeBlock } from "~/lib/utils";
+import { Checkbox, Flex, Layout, Space } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
   allRepertoireAtom,
   customGlyphAtom,
-  determinedRepertoireAtom,
   displayAtom,
   repertoireAtom,
   sequenceAtom,
-  tagsAtom,
   useAddAtom,
   useAtomValue,
   userRepertoireAtom,
+  userTagsAtom,
 } from "~/atoms";
-import type { PrimitveCharacter, Component, Compound } from "~/lib/data";
+import type { PrimitveCharacter } from "~/lib/data";
 import {
   Add,
   Create,
@@ -38,13 +23,18 @@ import {
   QuickPatchAmbiguous,
   RemoteContext,
 } from "~/components/Action";
-import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
+import StrokeSearch, { makeFilter } from "~/components/CharacterSearch";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/lib/api";
 import { DeleteButton, PlusButton, errorFeedback } from "./Utils";
-import Root from "./Root";
+import Root from "./Element";
 import * as O from "optics-ts/standalone";
+import CharacterQuery, {
+  CharacterFilter,
+  makeCharacterFilter,
+} from "./CharacterQuery";
+import TagPicker from "./TagPicker";
 
 type Column = ColumnType<PrimitveCharacter>;
 
@@ -52,16 +42,16 @@ const CharacterTable = () => {
   const allRepertoire = useAtomValue(allRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
   const addUser = useAddAtom(userRepertoireAtom);
-  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const userTags = useAtomValue(userTagsAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
+  const [filterProps, setFilterProps] = useState<CharacterFilter>({});
   const display = useAtomValue(displayAtom);
   const getLength = (a: string) => sequenceMap.get(a)?.length ?? Infinity;
   const remote = useContext(RemoteContext);
   const add = useAddAtom(repertoireAtom);
-  const filter = makeFilter(searchInput, determinedRepertoire, sequenceMap);
+  const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
   const isUserPUA = (a: string) =>
     -Number(a.codePointAt(0)! >= 0xf000 && a.codePointAt(0)! <= 0x10000);
 
@@ -154,6 +144,7 @@ const CharacterTable = () => {
           addUser(char, newCharacter);
           return true;
         }
+        console.log(newCharacter);
         const res = await remoteUpdate(newCharacter);
         if (!errorFeedback(res)) {
           add(char, newCharacter);
@@ -164,6 +155,7 @@ const CharacterTable = () => {
         <Flex gap="small">
           {glyphs.map((x, i) => {
             const lens = O.compose("glyphs", O.at(i));
+            const primary = userTags.some((tag) => x.tags?.includes(tag));
             return (
               <Space key={i}>
                 {x.type === "compound" ? (
@@ -176,6 +168,7 @@ const CharacterTable = () => {
                     onFinish={(values) =>
                       inlineUpdate(O.set(lens, values, character))
                     }
+                    primary={primary}
                   />
                 ) : (
                   <ComponentForm
@@ -186,6 +179,7 @@ const CharacterTable = () => {
                     onFinish={(values) =>
                       inlineUpdate(O.set(lens, values, character))
                     }
+                    primary={primary}
                   />
                 )}
                 <DeleteButton
@@ -298,15 +292,14 @@ const CharacterTable = () => {
   return (
     <Flex
       component={Layout.Content}
-      style={{ padding: "32px", overflowY: "auto" }}
+      style={{ padding: "32px", overflowY: "scroll" }}
       vertical
       gap="large"
       align="center"
     >
-      <Flex style={{ width: "720px" }} gap="middle" justify="center">
-        <StrokeSearch setSequence={setSearchInput} />
-        <Create onCreate={(char) => {}} />
-      </Flex>
+      <CharacterQuery setFilter={setFilterProps} />
+      <TagPicker />
+      <Create onCreate={(char) => {}} />
       <Table<PrimitveCharacter>
         dataSource={dataSource}
         columns={columns}

@@ -1,12 +1,13 @@
 import { atom, useAtomValue } from "jotai";
 import { repertoireAtom } from "./constants";
 import { isPUA } from "~/lib/utils";
-import { getSequence } from "~/lib/component";
+import { recursiveRenderCompound } from "~/lib/component";
 import { dataAtom } from ".";
 import { focusAtom } from "jotai-optics";
-import { PrimitiveRepertoire } from "~/lib/data";
+import { PrimitiveRepertoire, SVGGlyph } from "~/lib/data";
 import { CustomGlyph } from "~/lib/config";
 import { determine } from "~/lib/repertoire";
+import classifier from "~/lib/classifier";
 
 export const userRepertoireAtom = focusAtom(dataAtom, (o) =>
   o.prop("repertoire").valueOr({} as PrimitiveRepertoire),
@@ -44,7 +45,23 @@ export const determinedRepertoireAtom = atom((get) => {
   const repertoire = get(allRepertoireAtom);
   const customization = get(customGlyphAtom);
   const tags = get(userTagsAtom);
-  return determine(repertoire);
+  return determine(repertoire, customization, tags);
+});
+
+export const glyphAtom = atom((get) => {
+  const determinedRepertoire = get(determinedRepertoireAtom);
+  const result = new Map<string, SVGGlyph>();
+  for (const [char, { glyph }] of Object.entries(determinedRepertoire)) {
+    if (glyph === undefined) continue;
+    if (glyph.type === "basic_component") {
+      result.set(char, glyph.strokes);
+    } else {
+      const svgglyph = recursiveRenderCompound(glyph, determinedRepertoire);
+      if (svgglyph instanceof Error) continue;
+      result.set(char, svgglyph);
+    }
+  }
+  return result;
 });
 
 export const sortedRepertoireAtom = atom((get) => {
@@ -58,25 +75,25 @@ export const sortedRepertoireAtom = atom((get) => {
 });
 
 export const sequenceAtom = atom((get) => {
-  const determinedRepertoire = get(determinedRepertoireAtom);
-  const result = new Map<string, string>();
-  for (const [char, value] of Object.entries(determinedRepertoire)) {
-    if (value.glyph !== undefined) {
-      result.set(char, getSequence(determinedRepertoire, char, result));
-    }
-  }
+  const determinedRepertoire = get(glyphAtom);
+  const result = new Map<string, string>(
+    [...determinedRepertoire].map(([name, glyph]) => [
+      name,
+      glyph.map((x) => classifier[x.feature]).join(""),
+    ]),
+  );
   return result;
 });
 
 export const tagsAtom = atom((get) => {
   const allRepertoire = get(allRepertoireAtom);
-  const allTags = new Set<string>();
+  const allTags = new Map<string, number>();
   for (const { glyphs } of Object.values(allRepertoire)) {
     for (const { tags } of glyphs) {
-      tags?.forEach((s) => allTags.add(s));
+      tags?.forEach((s) => allTags.set(s, (allTags.get(s) ?? 0) + 1));
     }
   }
-  return Array.from(allTags).sort();
+  return [...allTags].sort((a, b) => b[1] - a[1]).map((x) => x[0]);
 });
 
 export const nextUnicodeAtom = atom((get) => {

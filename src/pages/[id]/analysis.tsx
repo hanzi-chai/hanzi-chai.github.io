@@ -1,4 +1,4 @@
-import StrokeSearch, { makeFilter } from "~/components/GlyphSearch";
+import StrokeSearch, { makeFilter } from "~/components/CharacterSearch";
 import {
   Alert,
   Button,
@@ -9,18 +9,16 @@ import {
   Space,
   Typography,
 } from "antd";
-
 import {
   useAtomValue,
   sequenceAtom,
   displayAtom,
   determinedRepertoireAtom,
-  keyboardsAtom,
   configAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
-import Char from "~/components/Char";
-import Root from "~/components/Root";
+import Char from "~/components/Character";
+import Root from "~/components/Element";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 
@@ -32,6 +30,10 @@ import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import Degenerator from "~/components/Degenerator";
 import { useChaifenTitle } from "~/lib/hooks";
+import CharacterQuery, {
+  CharacterFilter,
+  makeCharacterFilter,
+} from "~/components/CharacterQuery";
 
 const ResultSummary = ({
   char,
@@ -65,7 +67,7 @@ const ResultSummary = ({
 
 const Analysis = () => {
   useChaifenTitle("拆分");
-  const [sequence, setSequence] = useState("");
+  const [filter, setFilter] = useState<CharacterFilter>({});
   const [step, setStep] = useState(0 as 0 | 1);
   const [componentCache, setComponentCache] = useState<ComponentCache>(
     new Map(),
@@ -84,12 +86,15 @@ const Analysis = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
+  const filterFn = makeCharacterFilter(
+    filter,
+    determinedRepertoire,
+    sequenceMap,
+  );
 
   const displays = [
     [...componentCache]
-      .filter(([x]) =>
-        makeFilter(sequence, determinedRepertoire, sequenceMap)(x),
-      )
+      .filter(([x]) => filterFn(x))
       .filter(([, v]) => v.sequence.length > 1)
       .map(([key, res]) => {
         return {
@@ -112,7 +117,7 @@ const Analysis = () => {
         };
       }),
     [...compoundCache]
-      .filter(([x]) => sequenceMap.get(x)?.startsWith(sequence))
+      .filter(([x]) => filterFn(x))
       .map(([key, res]) => {
         return {
           key,
@@ -149,6 +154,14 @@ const Analysis = () => {
           />
         ) : null}
         <Flex gap="middle" justify="center" style={{ marginBottom: "16px" }}>
+          <Radio.Group
+            value={step}
+            onChange={(e) => setStep(e.target.value as 0)}
+            style={{ minWidth: "200px" }}
+          >
+            <Radio.Button value={0}>部件拆分</Radio.Button>
+            <Radio.Button value={1}>复合体拆分</Radio.Button>
+          </Radio.Group>
           <Button
             type="primary"
             onClick={() => {
@@ -179,17 +192,7 @@ const Analysis = () => {
             清空
           </Button>
         </Flex>
-        <Flex gap="middle" style={{ marginBottom: "16px" }}>
-          <Radio.Group
-            value={step}
-            onChange={(e) => setStep(e.target.value as 0)}
-            style={{ minWidth: "200px" }}
-          >
-            <Radio.Button value={0}>部件拆分</Radio.Button>
-            <Radio.Button value={1}>复合体拆分</Radio.Button>
-          </Radio.Group>
-          <StrokeSearch setSequence={setSequence} />
-        </Flex>
+        <CharacterQuery setFilter={setFilter} />
         {displays[step].length ? (
           <>
             <Collapse

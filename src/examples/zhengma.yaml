@@ -5,9 +5,7 @@ info:
   author: 郑易里
   version: 0.1.0
   description: 从模板创建
-data:
-  form: {}
-  repertoire: {}
+analysis:
   classifier:
     斜钩: 6
     横折提: 6
@@ -29,6 +27,30 @@ data:
     竖折撇: 8
     竖折折钩: 8
     竖折折: 8
+  degenerator:
+    feature: {提: 横, 捺: 点}
+    nocross: false
+  selector:
+    - 结构完整
+    - 根少优先
+    - 全符笔顺
+    - 能连不交
+    - 非形近根
+    - 取大优先
+  customize:
+    我: [手, 戈]
+    曲: [日, "\ue001"]
+    五: [工, '5']
+    里: [日, 土]
+    兆: ["\ue997", 儿]
+    井: [二, "\ue0e3"]
+    夫: [二, 人]
+    孑: [了, '1']
+    及: ['6', '3', '4']
+  strong:
+    - '1'
+    - 二
+    - "\ue40f"
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping_type: 3
@@ -414,31 +436,6 @@ form:
     "\ue41e": od
     了: 'y'
     "\ue024": pd
-  analysis:
-    degenerator:
-      feature: {提: 横, 捺: 点}
-      nocross: false
-    selector:
-      - 结构完整
-      - 根少优先
-      - 全符笔顺
-      - 能连不交
-      - 非形近根
-      - 取大优先
-    customize:
-      我: [手, 戈]
-      曲: [日, "\ue001"]
-      五: [工, '5']
-      里: [日, 土]
-      兆: ["\ue997", 儿]
-      井: [二, "\ue0e3"]
-      夫: [二, 人]
-      孑: [了, '1']
-      及: ['6', '3', '4']
-    strong:
-      - '1'
-      - 二
-      - "\ue40f"
 encoder:
   sources:
     s0:

@@ -59,7 +59,7 @@ const Starter = ({
             />
           </Form.Item>
           <Form.Item<StarterType>
-            name="form"
+            name="keyboard"
             label="形码布局预设"
             rules={required}
           >

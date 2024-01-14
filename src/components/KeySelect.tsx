@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue } from "jotai";
 import {
   alphabetAtom,
-  keyboardsAtom,
+  keyboardAtom,
   determinedRepertoireAtom,
   displayAtom,
   mappingAtom,

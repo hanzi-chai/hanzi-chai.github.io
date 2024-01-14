@@ -5,8 +5,8 @@ import {
   type Algebra,
   type Config,
   type Info,
-  CustomGlyph,
   Analysis,
+  UserData,
 } from "~/lib/config";
 import { focusAtom } from "jotai-optics";
 
@@ -30,7 +30,7 @@ export const infoAtom = focusAtom(configAtom, (o) =>
 );
 infoAtom.debugLabel = "config.info";
 export const dataAtom = focusAtom(configAtom, (o) =>
-  o.prop("data").valueOr({} as NonNullable<Config["data"]>),
+  o.prop("data").valueOr({} as UserData),
 );
 dataAtom.debugLabel = "config.data";
 export const analysisAtom = focusAtom(configAtom, (o) =>
@@ -41,8 +41,8 @@ export const algebraAtom = focusAtom(configAtom, (o) =>
   o.prop("algebra").valueOr({} as Algebra),
 );
 algebraAtom.debugLabel = "config.algebra";
-export const keyboardsAtom = focusAtom(configAtom, (o) => o.prop("keyboards"));
-keyboardsAtom.debugLabel = "config.keyboards";
+export const keyboardAtom = focusAtom(configAtom, (o) => o.prop("form"));
+keyboardAtom.debugLabel = "config.keyboards";
 export const encoderAtom = focusAtom(configAtom, (o) => o.prop("encoder"));
 encoderAtom.debugLabel = "config.encoder";
 export const optimAtom = focusAtom(configAtom, (o) =>

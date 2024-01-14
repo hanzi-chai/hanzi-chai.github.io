@@ -27,8 +27,9 @@ import {
   deepcopy,
   length,
   isValidCJKChar,
-  getDummyComponent,
-  getDummyPartition,
+  getDummyBasicComponent,
+  getDummyCompound,
+  getDummyDerivedComponent,
 } from "~/lib/utils";
 import {
   useAtomValue,
@@ -43,7 +44,12 @@ import {
   repertoireAtom,
   customGlyphAtom,
 } from "~/atoms";
-import { PrimitveCharacter, Component, Compound } from "~/lib/data";
+import {
+  PrimitveCharacter,
+  DerivedComponent,
+  Compound,
+  Component,
+} from "~/lib/data";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { MenuProps } from "antd/lib";
@@ -79,7 +85,9 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
       gf0014_id: null,
       readings: [],
       glyphs: [
-        type === "component" ? getDummyComponent() : getDummyPartition("⿰"),
+        type === "component"
+          ? getDummyDerivedComponent()
+          : getDummyCompound("⿰"),
       ],
       ambiguous: false,
     };
@@ -261,8 +269,8 @@ export const Add = ({ character }: { character: PrimitveCharacter }) => {
       key: -1,
       label: (
         <ComponentForm
-          title="添加自定义部件"
-          initialValues={getDummyComponent()}
+          title="添加自定义衍生部件"
+          initialValues={getDummyDerivedComponent()}
           current={name}
           onFinish={onFinish}
           noButton
@@ -274,7 +282,7 @@ export const Add = ({ character }: { character: PrimitveCharacter }) => {
       label: (
         <CompoundForm
           title="添加自定义复合体"
-          initialValues={getDummyPartition("⿰")}
+          initialValues={getDummyCompound("⿰")}
           onFinish={onFinish}
           noButton
         />

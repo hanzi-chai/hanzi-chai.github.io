@@ -1,6 +1,6 @@
 import { Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import Root from "./Root";
+import Root from "./Element";
 import { analysisAtom, displayAtom, useAtomValue } from "~/atoms";
 import type { Selector } from "~/lib/config";
 import { sieveMap } from "~/lib/selector";
