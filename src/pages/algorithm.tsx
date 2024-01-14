@@ -1,7 +1,7 @@
 import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
-import Root from "~/components/Root";
+import Root from "~/components/Element";
 import { determinedRepertoireAtom, displayAtom } from "~/atoms";
 import { list } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";

@@ -1,17 +1,18 @@
 import { useState } from "react";
 import styled from "styled-components";
-import Char from "./Char";
+import Char from "./Character";
 import { Flex, Pagination, Popover } from "antd";
 import {
   useAtomValue,
   determinedRepertoireAtom,
   sequenceAtom,
   displayAtom,
-  keyboardsAtom,
+  keyboardAtom,
+  glyphAtom,
 } from "~/atoms";
 import { isPUA } from "~/lib/utils";
-import { ComponentView, CompoundView, StrokesView } from "./GlyphView";
-import StrokeSearch, { makeFilter } from "./GlyphSearch";
+import { StrokesView } from "./GlyphView";
+import StrokeSearch, { makeFilter } from "./CharacterSearch";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -35,9 +36,10 @@ const Element = ({
   setElement: (s: string | undefined) => void;
   currentElement?: string;
 }) => {
-  const keyboard = useAtomValue(keyboardsAtom)[0]!;
+  const keyboard = useAtomValue(keyboardAtom);
   const { mapping, grouping } = keyboard;
   const determiedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const glyphMap = useAtomValue(glyphAtom);
   const type =
     x === currentElement
       ? "primary"
@@ -54,16 +56,14 @@ const Element = ({
     </Char>
   );
   if (!isPUA(x)) return core;
-  const glyph = determiedRepertoire[x]?.glyph;
+  const glyph = glyphMap.get(x);
   if (glyph === undefined) return core;
-  const preview =
-    glyph.type === "component" ? (
-      <StrokesView glyph={glyph.strokes} />
-    ) : (
-      <CompoundView compound={glyph} />
-    );
   return (
-    <Popover content={<div style={{ width: "200px" }}>{preview}</div>}>
+    <Popover
+      content={
+        <div style={{ width: "200px" }}>{<StrokesView glyph={glyph} />}</div>
+      }
+    >
       {core}
     </Popover>
   );

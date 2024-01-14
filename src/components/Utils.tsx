@@ -18,7 +18,7 @@ import { dump } from "js-yaml";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import Root from "./Root";
+import Root from "./Element";
 import { Key } from "~/lib/config";
 
 const ScrollableRow = styled(Row)`

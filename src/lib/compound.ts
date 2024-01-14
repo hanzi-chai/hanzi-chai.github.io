@@ -1,4 +1,5 @@
 import { ComponentCache, ComponentResult } from "./component";
+import { Config } from "./config";
 import {
   Block,
   Compound,
@@ -32,19 +33,18 @@ const topologicalSort = (form: Repertoire) => {
   let compounds = new Map<string, Character>();
   for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, Character>();
-    for (const [k, character] of Object.entries(form)) {
-      if (compounds.get(k)) continue;
-      const glyph = character.glyph;
+    for (const [name, character] of Object.entries(form)) {
+      const { glyph } = character;
+      if (compounds.get(name)) continue;
       if (glyph === undefined || glyph.type !== "compound") continue;
-      // this will change later, allowing user to choose desired partition
       if (
         glyph.operandList.every(
           (x) =>
-            form[x]?.glyph?.type === "component" ||
+            form[x]?.glyph?.type === "basic_component" ||
             compounds.get(x) !== undefined,
         )
       ) {
-        thisLevelCompound.set(k, character);
+        thisLevelCompound.set(name, character);
       }
     }
     compounds = new Map([...compounds, ...thisLevelCompound]);
@@ -91,10 +91,10 @@ const assembleSequence = (
 
 export const disassembleCompounds = (
   data: Repertoire,
-  config: FormConfig,
+  config: Config,
   componentCache: ComponentCache,
 ) => {
-  const { mapping, grouping } = config;
+  const { mapping, grouping } = config.form;
   const compounds = topologicalSort(data);
   const compoundCache: CompoundCache = new Map();
   const compoundError: string[] = [];

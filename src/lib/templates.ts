@@ -42,10 +42,10 @@ export const defaultKeyboard: KeyboardConfig = {
 
 export const keyboardTypes = ["郑码字根", "米十五笔字根", "无"] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
-const keyboardMap: Record<KeyboardTypes, Config["keyboards"]> = {
-  郑码字根: examples.zhengma.keyboards,
-  米十五笔字根: examples.mswb.keyboards,
-  无: [defaultKeyboard],
+const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
+  郑码字根: examples.zhengma.form,
+  米十五笔字根: examples.mswb.form,
+  无: defaultKeyboard,
 };
 
 export const encoderTypes = [
@@ -72,7 +72,7 @@ export const createConfig = function (starter: StarterType): Config {
     version: APP_VERSION,
     source: null,
     info: getInfo(starter.name),
-    keyboards: keyboardMap[starter.keyboard],
+    form: keyboardMap[starter.keyboard],
     encoder: encoderMap[starter.encoder],
   };
 };

@@ -4,7 +4,7 @@ import {
   atom,
   useAtomValue,
   useSetAtom,
-  keyboardsAtom,
+  keyboardAtom,
   groupingAtom,
   determinedRepertoireAtom,
   displayAtom,
@@ -15,8 +15,8 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 
-import Root from "./Root";
-import Char from "./Char";
+import Root from "./Element";
+import Char from "./Character";
 import type { MappedInfo } from "~/lib/utils";
 import { isPUA, reverse } from "~/lib/utils";
 import {
@@ -174,7 +174,7 @@ const AdjustableRootPopoverContent = ({
 };
 
 const AdjustableRoot = ({ name, code }: MappedInfo) => {
-  const { mapping_type, mapping } = useAtomValue(keyboardsAtom);
+  const { mapping_type, mapping } = useAtomValue(keyboardAtom);
 
   const [affiliates, partialAffiliates] = useAffiliates(name);
   const padding = Math.max((mapping_type ?? 1) - code.length, 0);
@@ -259,8 +259,8 @@ const ImportResultAlert = ({
 };
 
 const Mapping = () => {
-  const { alphabet, mapping_type, mapping } = useAtomValue(keyboardsAtom);
-  const form = useAtomValue(determinedRepertoireAtom);
+  const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
+  const repertoire = useAtomValue(determinedRepertoireAtom);
   const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?" + "qwertyuiopasdfghjkl;zxcvbnm,./",
@@ -320,12 +320,12 @@ const Mapping = () => {
             for (const line of tsv) {
               const [key, value] = line;
               if (key === undefined || value === undefined) continue;
-              const maybeGlyph = form[key];
-              if (maybeGlyph === undefined || isPUA(key)) {
+              const glyph = repertoire[key]?.glyph;
+              if (glyph === undefined || isPUA(key)) {
                 unknownKeys.push(key);
                 continue;
               }
-              if (maybeGlyph.component?.strokes.length === 1) {
+              if ("strokes" in glyph && glyph.strokes.length == 1) {
                 unknownKeys.push(key);
                 continue;
               }

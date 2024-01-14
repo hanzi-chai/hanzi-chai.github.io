@@ -65,8 +65,7 @@ const Encoder = () => {
   const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>(new Map());
   const list = Object.entries(data)
-    .filter(filtermap[gb2312]("gb2312"))
-    .filter(filtermap[tygf]("tygf"))
+    .filter(([, v]) => v.gb2312 && v.tygf > 0)
     .map(([x]) => x);
 
   const lost = [...result]
@@ -211,7 +210,7 @@ const Encoder = () => {
       },
       sorter: (a, b) => a.code.join(", ").localeCompare(b.code.join(", ")),
       sortDirections: ["ascend", "descend"],
-      filters: [...config.keyboards.alphabet]
+      filters: [...config.form.alphabet]
         .sort()
         .map((x) => ({ text: x, value: x })),
       onFilter: (value, record) => {
@@ -253,7 +252,7 @@ const Encoder = () => {
             closable
           />
         ) : null}
-        <Flex justify="center" align="center" gap="large">
+        {/* <Flex justify="center" align="center" gap="large">
           字集过滤
           <Space>
             GB/T 2312
@@ -277,7 +276,7 @@ const Encoder = () => {
               onChange={(value) => setTYGF(value)}
             />
           </Space>
-        </Flex>
+        </Flex> */}
         <Flex justify="center" gap="small">
           <Button
             type="primary"

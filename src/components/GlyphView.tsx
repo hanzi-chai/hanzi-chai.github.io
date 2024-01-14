@@ -1,26 +1,8 @@
 import styled from "styled-components";
-import type {
-  PrimitveCharacter,
-  Component,
-  Compound,
-  SVGGlyph,
-  SVGStroke,
-  Stroke,
-} from "~/lib/data";
+import type { Compound, SVGStroke } from "~/lib/data";
 import { Empty, Result } from "antd";
-import {
-  allRepertoireAtom,
-  determinedRepertoireAtom,
-  tagsAtom,
-  useAtomValue,
-} from "~/atoms";
-import type { FormInstance } from "antd/es/form/Form";
-import { useWatch } from "antd/es/form/Form";
-import {
-  recursiveRenderComponent,
-  recursiveRenderCompound,
-} from "~/lib/component";
-import { findGlyph } from "~/lib/repertoire";
+import { determinedRepertoireAtom, useAtomValue } from "~/atoms";
+import { recursiveRenderCompound } from "~/lib/component";
 
 const FontView = ({ reference }: { reference: string }) => (
   <svg
@@ -62,27 +44,7 @@ export const StrokesView = ({ glyph }: { glyph: SVGStroke[] }) => (
   </svg>
 );
 
-export const ComponentView = ({ component }: { component: Component }) => {
-  const allRepertoire = useAtomValue(allRepertoireAtom);
-  const glyph = recursiveRenderComponent(component, allRepertoire);
-  return !(glyph instanceof Error) ? (
-    <StrokesView glyph={glyph} />
-  ) : (
-    <Result status="500" title="无法渲染出 SVG 图形，请检查数据" />
-  );
-};
-
-export const CompoundView = ({ compound }: { compound: Compound }) => {
-  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
-  const glyph = recursiveRenderCompound(compound, determinedRepertoire);
-  return !(glyph instanceof Error) ? (
-    <StrokesView glyph={glyph} />
-  ) : (
-    <Result status="500" title="无法渲染出 SVG 图形，请检查数据" />
-  );
-};
-
-const Overlay = styled.div`
+export const Box = styled.div`
   border: 1px solid black;
   aspect-ratio: 1;
   display: grid;

@@ -1,5 +1,10 @@
 import type { Classifier, Feature } from "./classifier";
-import type { Component, Compound, PrimitiveRepertoire } from "./data";
+import type {
+  DerivedComponent,
+  Compound,
+  PrimitiveRepertoire,
+  Component,
+} from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./example";
 
@@ -228,7 +233,7 @@ export interface Config {
   data?: UserData;
   analysis?: Analysis;
   algebra?: Algebra;
-  keyboards: KeyboardConfig[];
+  form: KeyboardConfig;
   encoder: EncoderConfig;
   optimization?: Optimization;
 }

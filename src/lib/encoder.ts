@@ -103,7 +103,7 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 export type IndexedElement = string | { element: string; index: number };
 
 const compile = (config: Config) => {
-  const { mapping, grouping } = config.keyboards;
+  const { mapping, grouping } = config.form;
   const totalMapping = merge(mapping, grouping);
   return (result: TotalResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
@@ -164,12 +164,8 @@ const compile = (config: Config) => {
   };
 };
 
-export const getCache = (
-  list: string[],
-  form: Config["keyboards"],
-  data: Repertoire,
-) => {
-  const [formResult, extra] = getAnalysis(list, data, form);
+export const getCache = (list: string[], config: Config, data: Repertoire) => {
+  const [formResult, extra] = getAnalysis(list, data, config);
   const result = Object.fromEntries(
     list.map((char) => {
       const formData = formResult.get(char)!;
@@ -198,7 +194,7 @@ export const collect = (
   characters: string[],
   data: Repertoire,
 ) => {
-  const [cache, extra] = getCache(characters, config.keyboards, data);
+  const [cache, extra] = getCache(characters, config, data);
   const func = compile(config);
   const result = new Map(
     characters.map((char) => [
@@ -235,8 +231,8 @@ const encode = (config: Config, characters: string[], data: Repertoire) => {
     const code = elements
       .map((e) =>
         typeof e === "string"
-          ? config.keyboards.mapping[e]!
-          : config.keyboards.mapping[e.element]![e.index]!,
+          ? config.form.mapping[e]!
+          : config.form.mapping[e.element]![e.index]!,
       )
       .join("");
     return encoder.max_length ? code.slice(0, encoder.max_length) : code;

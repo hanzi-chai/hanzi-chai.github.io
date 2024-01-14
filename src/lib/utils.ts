@@ -2,13 +2,15 @@ import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type { Key, Mapping } from "./config";
 import type {
-  Component,
+  DerivedComponent,
   Compound,
   Repertoire,
   Draw,
   Operator,
   Point,
   SVGStroke,
+  BasicComponent,
+  ReferenceStroke,
 } from "./data";
 import { operators } from "./data";
 import { cloneDeep, range } from "lodash-es";
@@ -52,15 +54,29 @@ export const length = (s: string) => {
 
 export const deepcopy = structuredClone ?? cloneDeep;
 
-export const getDummyComponent = function (): Component {
+export const getDummyBasicComponent = function (): BasicComponent {
   return {
-    type: "component",
-    source: undefined,
-    strokes: [getDummyStroke("横")],
+    type: "basic_component",
+    strokes: [getDummySVGStroke("横")],
   };
 };
 
-export const getDummyStroke = function (
+export const getDummyDerivedComponent = function (): DerivedComponent {
+  return {
+    type: "derived_component",
+    source: "一",
+    strokes: [getDummyReferenceStroke()],
+  };
+};
+
+export const getDummyReferenceStroke = function (): ReferenceStroke {
+  return {
+    feature: "reference",
+    index: 0,
+  };
+};
+
+export const getDummySVGStroke = function (
   feature: Feature,
   start: Point = [0, 0],
   oldCurveList: Draw[] = [],
@@ -85,7 +101,7 @@ export const getDummyStroke = function (
   };
 };
 
-export const getDummyPartition = function (operator: Operator): Compound {
+export const getDummyCompound = function (operator: Operator): Compound {
   return { type: "compound", operator, operandList: ["一", "一"] };
 };
 
@@ -107,6 +123,12 @@ export const reverse = (alphabet: string, mapping: Mapping) => {
   return data;
 };
 
+export const isComponent = function (
+  glyph: BasicComponent | DerivedComponent | Compound,
+): glyph is BasicComponent | DerivedComponent {
+  return glyph.type === "basic_component" || glyph.type === "derived_component";
+};
+
 export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
   const set = new Set(list);
   const reverseForm: Record<string, string[]> = Object.fromEntries(
@@ -122,7 +144,7 @@ export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
     }
   }
   const componentsNotChar = Object.entries(repertoire)
-    .filter(([, v]) => v.glyph?.type === "component")
+    .filter(([, v]) => v.glyph?.type === "basic_component")
     .map(([x]) => x)
     .filter((x) => !set.has(x));
   const suppList: string[] = [];

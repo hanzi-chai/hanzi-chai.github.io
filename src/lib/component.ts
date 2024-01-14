@@ -1,10 +1,12 @@
 import type { KeyboardConfig, SieveName } from "./config";
 import type {
-  Component,
+  DerivedComponent,
   Compound,
   Repertoire,
   PrimitiveRepertoire,
   SVGGlyph,
+  Component,
+  BasicComponent,
 } from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import select from "./selector";
@@ -16,83 +18,7 @@ import { isValidCJKChar, isValidChar } from "./utils";
 import defaultClassifier from "./classifier";
 import { affineMerge } from "./affine";
 
-class UnknownCharError extends Error {}
 class InvalidGlyphError extends Error {}
-
-export const recursiveGetSequence = function (
-  repertoire: Repertoire,
-  name: string,
-  cache: Map<string, string> = new Map(),
-  depth: number = 0,
-): number[] | UnknownCharError | InvalidGlyphError {
-  if (depth >= 10) {
-    return new InvalidGlyphError();
-  }
-  const cached = cache.get(name);
-  if (cached) {
-    return Array.from(cached).map(Number);
-  }
-  const glyph = repertoire[name]?.glyph;
-  if (glyph === undefined)
-    return new UnknownCharError(
-      `Unknown char: ${name}, ${name
-        .codePointAt(0)!
-        .toString(16)}, ${name.codePointAt(0)!}`,
-    );
-  if (glyph.type === "component") {
-    return glyph.strokes.map((x) => defaultClassifier[x.feature]);
-  } else {
-    const { operandList, order } = glyph;
-    const sequences: { sequence: number[]; taken: number }[] = [];
-    for (const operand of operandList) {
-      const opearndSequence = recursiveGetSequence(
-        repertoire,
-        operand,
-        cache,
-        depth + 1,
-      );
-      if (opearndSequence instanceof Error) return new InvalidGlyphError();
-      sequences.push({ sequence: opearndSequence, taken: 0 });
-    }
-    if (order === undefined) return sequences.map((x) => x.sequence).flat();
-    const finalSequence: number[] = [];
-    for (const { index, strokes } of order) {
-      const sequenceData = sequences[index];
-      if (sequenceData === undefined) return new InvalidGlyphError();
-      if (strokes === 0) finalSequence.push(...sequenceData.sequence);
-      else {
-        finalSequence.push(
-          ...sequenceData.sequence.slice(sequenceData.taken, strokes),
-        );
-        sequenceData.taken += strokes;
-      }
-    }
-    return finalSequence;
-  }
-};
-
-export const getSequence = (
-  repertoire: Repertoire,
-  char: string,
-  cache?: Map<string, string>,
-) => {
-  if (char.match(/\d+/)) return char;
-  try {
-    const recurseResult = recursiveGetSequence(repertoire, char, cache);
-    if (recurseResult instanceof Error) {
-      console.error(
-        `无法获取笔画（${recurseResult.message}）`,
-        char,
-        char.codePointAt(0)!.toString(16),
-      );
-      return "";
-    }
-    return recurseResult.join("");
-  } catch {
-    console.error("无法获取笔画", char, char.codePointAt(0)!.toString(16));
-    return "";
-  }
-};
 
 export const generateSchemes = (n: number, roots: number[]) => {
   const schemeList: number[][] = [];
@@ -202,11 +128,11 @@ export const recursiveRenderComponent = function (
   repertoire: PrimitiveRepertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
 ): SVGGlyph | InvalidGlyphError {
-  if (component.source === undefined) return component.strokes;
+  if (component.type === "basic_component") return component.strokes;
   const sourceComponent = repertoire[component.source]?.glyphs.find(
-    (x) => x.type === "component",
-  );
-  if (sourceComponent?.type !== "component") return new InvalidGlyphError();
+    (x) => x.type === "basic_component" || x.type === "derived_component",
+  ) as BasicComponent | DerivedComponent | undefined;
+  if (sourceComponent === undefined) return new InvalidGlyphError();
   const sourceGlyph = recursiveRenderComponent(
     sourceComponent,
     repertoire,
@@ -215,9 +141,10 @@ export const recursiveRenderComponent = function (
   if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
   const glyph: SVGGlyph = [];
   component.strokes.forEach((x) => {
-    if (typeof x === "number") {
-      const sourceStroke = sourceGlyph[x];
-      if (sourceStroke === undefined) return new InvalidGlyphError();
+    if (x.feature === "reference") {
+      const sourceStroke = sourceGlyph[x.index];
+      // 允许指标越界
+      if (sourceStroke === undefined) return;
       glyph.push(sourceStroke);
     } else {
       glyph.push(x);
@@ -229,17 +156,24 @@ export const recursiveRenderComponent = function (
 export const recursiveRenderCompound = function (
   compound: Compound,
   repertoire: Repertoire,
+  glyphCache: Map<string, SVGGlyph> = new Map(),
 ): SVGGlyph | InvalidGlyphError {
   const glyphs: SVGGlyph[] = [];
   for (const char of compound.operandList) {
     const glyph = repertoire[char]?.glyph;
     if (glyph === undefined) return new InvalidGlyphError();
-    if (glyph.type === "component") {
+    if (glyph.type === "basic_component") {
       glyphs.push(glyph.strokes);
     } else {
-      const rendered = recursiveRenderCompound(glyph, repertoire);
+      const cache = glyphCache.get(char);
+      if (cache !== undefined) {
+        glyphs.push(cache);
+        continue;
+      }
+      const rendered = recursiveRenderCompound(glyph, repertoire, glyphCache);
       if (rendered instanceof Error) return rendered;
       glyphs.push(rendered);
+      glyphCache.set(char, rendered);
     }
   }
   return affineMerge(compound.operator, glyphs);
@@ -265,7 +199,7 @@ export const renderRootList = (data: Repertoire, config: KeyboardConfig) => {
   const rootList: ComputedComponent[] = [];
   for (const root of roots) {
     const glyph = data[root]?.glyph;
-    if (glyph?.type === "component") {
+    if (glyph?.type === "basic_component") {
       rootList.push(computeComponent(root, glyph.strokes));
     }
   }
@@ -286,7 +220,7 @@ export const disassembleComponents = function (
   const result: ComponentCache = new Map();
   const error: string[] = [];
   Object.entries(data).forEach(([name, character]) => {
-    if (character.glyph?.type !== "component") return;
+    if (character.glyph?.type !== "basic_component") return;
     const cache = computeComponent(name, character.glyph.strokes);
     if (!isValidCJKChar(name) && !composables.has(name)) {
       return;

@@ -10,8 +10,8 @@ import {
 } from "~/atoms";
 import { Button, Flex, Popover } from "antd";
 import { DeleteButton, MinusButton, PlusButton } from "./Utils";
-import Char from "./Char";
-import Root from "./Root";
+import Char from "./Character";
+import Root from "./Element";
 import ElementSelect, { ElementSelectProps } from "./ElementSelect";
 import { GlyphSelect } from "./CharacterSelect";
 
@@ -104,7 +104,7 @@ const AnalysisCustomizer = () => {
           value={newCustomization}
           onChange={setNew}
           customFilter={([_, glyph]) => {
-            return glyph.glyph?.type === "component";
+            return glyph.glyph?.type === "basic_component";
           }}
         />
         <Button
