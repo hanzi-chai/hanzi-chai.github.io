@@ -1,4 +1,3 @@
-import StrokeSearch, { makeFilter } from "~/components/CharacterSearch";
 import {
   Alert,
   Button,
@@ -13,8 +12,9 @@ import {
   useAtomValue,
   sequenceAtom,
   displayAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   configAtom,
+  useAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import Char from "~/components/Character";
@@ -24,7 +24,7 @@ import { useState } from "react";
 
 import type { ComponentCache, ComponentResult } from "~/lib/component";
 import type { CompoundCache, CompoundResult } from "~/lib/compound";
-import { getAnalysisCore } from "~/lib/repertoire";
+import { analysis } from "~/lib/repertoire";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
@@ -34,6 +34,7 @@ import CharacterQuery, {
   CharacterFilter,
   makeCharacterFilter,
 } from "~/components/CharacterQuery";
+import { analysisResultAtom } from "~/atoms/cache";
 
 const ResultSummary = ({
   char,
@@ -69,18 +70,17 @@ const Analysis = () => {
   useChaifenTitle("拆分");
   const [filter, setFilter] = useState<CharacterFilter>({});
   const [step, setStep] = useState(0 as 0 | 1);
-  const [componentCache, setComponentCache] = useState<ComponentCache>(
-    new Map(),
-  );
-  const [componentCustomizations, setComponentCustomizations] =
-    useState<ComponentCache>(new Map());
-  const [compoundCache, setCompoundCache] = useState<CompoundCache>(new Map());
-  const [error, setError] = useState({
-    componentError: [] as string[],
-    compoundError: [] as string[],
-  });
-  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const determinedRepertoire = useAtomValue(repertoireAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
+  const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
+  const componentCache: ComponentCache =
+    analysisResult?.componentCache ?? new Map();
+  const compoundCache: CompoundCache =
+    analysisResult?.compoundCache ?? new Map();
+  const componentCustomizations: ComponentCache =
+    analysisResult?.customizations ?? new Map();
+  const componentError = analysisResult?.componentError ?? [];
+  const compoundError = analysisResult?.compoundError ?? [];
 
   const config = useAtomValue(configAtom);
   const [page, setPage] = useState(1);
@@ -140,14 +140,12 @@ const Analysis = () => {
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={2}>拆分结果</Typography.Title>
-        {error.componentError.length + error.compoundError.length > 0 ? (
+        {componentError.length + compoundError.length > 0 ? (
           <Alert
             message="有些部件或复合体拆分时出错，请检查"
-            description={`部件：${error.componentError
+            description={`部件：${componentError
               .map(display)
-              .join("、")}\n复合体：${error.compoundError
-              .map(display)
-              .join("、")}`}
+              .join("、")}\n复合体：${compoundError.map(display).join("、")}`}
             type="warning"
             showIcon
             closable
@@ -164,32 +162,11 @@ const Analysis = () => {
           </Radio.Group>
           <Button
             type="primary"
-            onClick={() => {
-              const {
-                componentCache,
-                componentError,
-                customizations,
-                compoundCache,
-                compoundError,
-              } = getAnalysisCore(determinedRepertoire, config);
-              setComponentCache(componentCache);
-              setComponentCustomizations(customizations);
-              setCompoundCache(compoundCache);
-              setError({
-                componentError,
-                compoundError,
-              });
-            }}
+            onClick={() =>
+              setAnalysisResult(analysis(determinedRepertoire, config))
+            }
           >
             计算
-          </Button>
-          <Button
-            onClick={() => {
-              setComponentCache(new Map());
-              setCompoundCache(new Map());
-            }}
-          >
-            清空
           </Button>
         </Flex>
         <CharacterQuery setFilter={setFilter} />

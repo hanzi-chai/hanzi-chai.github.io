@@ -12,7 +12,7 @@ import {
 } from "@ant-design/pro-components";
 import { InlineRender, StaticList } from "./ComponentForm";
 import { useAtomValue } from "jotai";
-import { determinedRepertoireAtom, tagsAtom } from "~/atoms";
+import { repertoireAtom, tagsAtom } from "~/atoms";
 import Root from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
@@ -71,7 +71,7 @@ const CompoundForm = ({
   noButton?: boolean;
   primary?: boolean;
 }) => {
-  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   const [form] = Form.useForm<Compound>();
   const list: string[] = useWatch("operandList", form);
   const trigger = noButton ? (

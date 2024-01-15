@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import {
   keyboardAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   displayAtom,
   sequenceAtom,
 } from "~/atoms";
@@ -24,7 +24,7 @@ export default function ElementSelect({
 }: ElementSelectProps) {
   const { mapping, grouping } = useAtomValue(keyboardAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
-  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   let keys = Object.keys(mapping).concat(Object.keys(grouping));
   if (excludeGrouped) {
     keys = keys.filter((x) => grouping[x] === undefined);

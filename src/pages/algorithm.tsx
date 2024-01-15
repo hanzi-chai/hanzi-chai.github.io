@@ -2,7 +2,7 @@ import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Element";
-import { determinedRepertoireAtom, displayAtom } from "~/atoms";
+import { repertoireAtom, displayAtom } from "~/atoms";
 import { list } from "~/lib/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
 import { type ComputedComponent } from "~/lib/component";
@@ -12,7 +12,7 @@ import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
 
 const DegeneratorTable = () => {
-  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   const formLoading = isEmpty(repertoire);
   const dataSource = Object.values(repertoire)
     .filter((value) => value.glyph?.type === "component")

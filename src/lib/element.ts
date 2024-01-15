@@ -1,5 +1,5 @@
 import type { Config, Rule } from "./config";
-import type { TotalResult } from "./encoder";
+import type { TotalResult } from "./assembly";
 
 export interface Extra {
   rootSequence: Map<string, number[]>;

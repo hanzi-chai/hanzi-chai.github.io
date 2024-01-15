@@ -1,4 +1,4 @@
-version: 0.0.6-alpha.1
+version: 0.1.0-alpha.1
 source: mswb
 info:
   name: 米十五笔
@@ -22,7 +22,7 @@ analysis:
     横斜钩: 6
   degenerator:
     feature: {捺: 点, 提: 横}
-    nocross: false
+    no_cross: false
   selector:
     - 结构完整
     - 连续笔顺

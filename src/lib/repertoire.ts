@@ -4,12 +4,10 @@ import {
   ComponentResult,
   disassembleComponents,
   recursiveRenderComponent,
-  recursiveRenderCompound,
 } from "./component";
-import { disassembleCompounds } from "./compound";
-import { Config, CustomGlyph, KeyboardConfig } from "./config";
+import { CompoundCache, disassembleCompounds } from "./compound";
+import { Config, CustomGlyph } from "./config";
 import {
-  DerivedComponent,
   Compound,
   Character,
   Repertoire,
@@ -17,7 +15,6 @@ import {
   SVGGlyph,
   Component,
 } from "./data";
-import type { Extra } from "./element";
 
 export const findGlyph = (glyphs: (Component | Compound)[], tags: string[]) => {
   for (const tag of tags) {
@@ -61,11 +58,21 @@ export const determine = (
   return determined;
 };
 
-export const getAnalysisCore = (data: Repertoire, config: Config) => {
+export interface AnalysisResult {
+  componentCache: ComponentCache;
+  componentError: string[];
+  customizations: ComponentCache;
+  customized: ComponentCache;
+  compoundCache: CompoundCache;
+  compoundError: string[];
+}
+
+export const analysis = (repertoire: Repertoire, config: Config) => {
+  const classifier = mergeClassifier(config.analysis?.classifier);
   const [componentCache, componentError] = disassembleComponents(
-    data,
+    repertoire,
     config,
-    mergeClassifier(config.analysis?.classifier),
+    classifier,
   );
   const customizations: ComponentCache = new Map(
     Object.entries(config.analysis?.customize ?? {}).map(
@@ -77,11 +84,11 @@ export const getAnalysisCore = (data: Repertoire, config: Config) => {
   );
   const customized = new Map([...componentCache, ...customizations]);
   const [compoundCache, compoundError] = disassembleCompounds(
-    data,
+    repertoire,
     config,
     customized,
   );
-  return {
+  const analysisResult: AnalysisResult = {
     componentCache,
     componentError,
     customizations,
@@ -89,50 +96,5 @@ export const getAnalysisCore = (data: Repertoire, config: Config) => {
     compoundCache,
     compoundError,
   };
-};
-
-const getExtra = function (repertoire: Repertoire, config: Config): Extra {
-  const { mapping, grouping } = config.form;
-  const classifier = mergeClassifier(config.analysis?.classifier);
-  const findSequence = (x: string) => {
-    if (x.match(/[0-9]+/)) {
-      return [...x].map(Number);
-    }
-    const glyph = repertoire[x]?.glyph;
-    if (glyph === undefined) {
-      return [];
-    }
-    if (glyph.type === "basic_component") {
-      return glyph.strokes.map((s) => classifier[s.feature]);
-    } else {
-      const sequence = recursiveRenderCompound(glyph, repertoire);
-      if (sequence instanceof Error) return [];
-      return sequence.map((s) => classifier[s.feature]);
-    }
-  };
-  const rootSequence = new Map<string, number[]>();
-  const roots = Object.keys(mapping).concat(Object.keys(grouping));
-  for (const root of roots) {
-    rootSequence.set(root, findSequence(root));
-  }
-  return {
-    rootSequence,
-  };
-};
-
-export const getAnalysis = (
-  list: string[],
-  data: Repertoire,
-  config: Config,
-) => {
-  const extra = getExtra(data, config);
-  const { customized, compoundCache } = getAnalysisCore(data, config);
-  const value = new Map(
-    list.map((char) => {
-      const result = customized.get(char) || compoundCache.get(char);
-      // 这里只处理一种情况，未来可以返回多个拆分
-      return result === undefined ? [char, []] : [char, [result]];
-    }),
-  );
-  return [value, extra] as const;
+  return analysisResult;
 };

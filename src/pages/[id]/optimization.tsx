@@ -24,7 +24,7 @@ import {
 import { constraintsAtom, objectiveAtom } from "~/atoms/optimization";
 import CustomSpin from "~/components/CustomSpin";
 import ElementSelect from "~/components/ElementSelect";
-import Evaluator from "~/components/Evaluator";
+import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
 import {
   DeleteButton,
@@ -42,6 +42,7 @@ import {
   Solver,
   TierWeights,
 } from "~/lib/config";
+import { LoadAssets } from "~/lib/utils";
 
 const AtomicObjective = ({
   title,
@@ -436,18 +437,6 @@ const ConstraintList = ({
   );
 };
 
-function LoadAssets() {
-  const setCF = useSetAtom(characterFrequencyAtom);
-  const setWF = useSetAtom(wordFrequencyAtom);
-  const setKE = useSetAtom(keyEquivalenceAtom);
-  const setPE = useSetAtom(pairEquivalenceAtom);
-  fetchJson("character_frequency").then(setCF);
-  fetchJson("word_frequency").then(setWF);
-  fetchJson("key_equivalence").then(setKE);
-  fetchJson("pair_equivalence").then(setPE);
-  return null;
-}
-
 const Optimization = () => {
   return (
     <EditorRow>
@@ -468,7 +457,7 @@ const Optimization = () => {
         <Typography.Title level={2}>优化</Typography.Title>
         <Suspense fallback={<CustomSpin tip="加载数据" />}>
           <LoadAssets />
-          <Evaluator />
+          <Optimizer />
         </Suspense>
       </EditorColumn>
     </EditorRow>

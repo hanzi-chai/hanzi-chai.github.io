@@ -14,11 +14,12 @@ import {
   useAtomValue,
   configAtom,
   displayAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   sequenceAtom,
+  useAtom,
 } from "~/atoms";
-import type { EncoderResult, IndexedElement } from "~/lib/encoder";
-import encode, { autoSplit, collect, uniquify } from "~/lib/encoder";
+import type { AssemblyResult, IndexedElement } from "~/lib/assembly";
+import { getTSV, assemble } from "~/lib/assembly";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
@@ -38,11 +39,13 @@ import CharacterQuery, {
   CharacterFilter,
   makeCharacterFilter,
 } from "~/components/CharacterQuery";
+import { uniquify } from "~/lib/utils";
+import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
+import { analysis } from "~/lib/repertoire";
 
 interface EncodeResultTable {
   char: string;
   sequence: IndexedElement[][];
-  code: string[];
 }
 
 type ElementFilter = {
@@ -52,20 +55,19 @@ type ElementFilter = {
 
 const Encoder = () => {
   useChaifenTitle("编码");
-  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   const sequence = useAtomValue(sequenceAtom);
   const config = useAtomValue(configAtom);
   const display = useAtomValue(displayAtom);
-  const [result, setResult] = useState<EncoderResult>(new Map());
   const [filter, setFilter] = useState<CharacterFilter>({});
   const filterFn = makeCharacterFilter(filter, repertoire, sequence);
-  const list = Object.entries(repertoire)
+  const characters = Object.entries(repertoire)
     .filter(([, v]) => v.gb2312 && v.tygf > 0)
     .map(([x]) => x);
-
-  const lost = [...result]
-    .filter(([, v]) => v.code.length === 0)
-    .map(([x]) => x);
+  const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
+  const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
+  const result: AssemblyResult = assemblyResult ?? new Map();
+  const lost = [...result].filter(([, v]) => v.length === 0).map(([x]) => x);
 
   const renderIndexed = (element: IndexedElement) => {
     if (typeof element === "string") {
@@ -77,7 +79,7 @@ const Encoder = () => {
 
   const duplicationMap = new Map<string, number>();
   for (const [_, data] of result.entries()) {
-    for (const sequence of data.sequence.slice(0, 1)) {
+    for (const sequence of data.slice(0, 1)) {
       const hash = sequence.map(renderIndexed).join(", ");
       duplicationMap.set(hash, (duplicationMap.get(hash) || 0) + 1);
     }
@@ -86,14 +88,13 @@ const Encoder = () => {
   const selections = groups.reduce((p, c) => p + c, 0) - groups.length;
 
   let dataSource = [...result]
-    .filter(([, v]) => v.code.length > 0)
+    .filter(([, v]) => v.length > 0)
     .filter(([x]) => filterFn(x))
     .map(([char, code]) => {
       return {
         key: char,
         char: char,
-        sequence: code.sequence,
-        code: code.code,
+        sequence: code,
       };
     });
 
@@ -197,22 +198,6 @@ const Encoder = () => {
       },
       sortDirections: ["ascend", "descend"],
     },
-    {
-      title: "编码",
-      dataIndex: "code",
-      key: "code",
-      render: (_, record) => {
-        return <span>{record.code.join(", ")}</span>;
-      },
-      sorter: (a, b) => a.code.join(", ").localeCompare(b.code.join(", ")),
-      sortDirections: ["ascend", "descend"],
-      filters: [...config.form.alphabet]
-        .sort()
-        .map((x) => ({ text: x, value: x })),
-      onFilter: (value, record) => {
-        return record.code.some((s) => s.includes(value as string));
-      },
-    },
   ];
   const items: TabsProps["items"] = [
     {
@@ -278,26 +263,21 @@ const Encoder = () => {
           <Button
             type="primary"
             onClick={() => {
-              const rawresult = encode(config, list, repertoire);
-              setResult(rawresult);
+              let result = analysisResult;
+              if (result === null) {
+                result = analysis(repertoire, config);
+                setAnalysisResult(result);
+              }
+              setAssemblyResult(
+                assemble(repertoire, config, characters, result),
+              );
             }}
           >
             计算
           </Button>
           <Button
             onClick={() => {
-              const tsv = [...result]
-                .filter(([, code]) => code.code.length >= 1)
-                .map(([char, code]) => [char, code.code[0]!]);
-              exportTSV(tsv, "codes.txt");
-            }}
-          >
-            导出码表
-          </Button>
-          <Button
-            onClick={() => {
-              const collection = collect(config, list, repertoire);
-              const tsv = autoSplit(collection);
+              const tsv = getTSV(result);
               exportTSV(tsv, "elements.txt");
             }}
           >

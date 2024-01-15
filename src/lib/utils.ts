@@ -1,3 +1,4 @@
+import { useSetAtom } from "jotai";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type { Key, Mapping } from "./config";
@@ -12,8 +13,14 @@ import type {
   BasicComponent,
   ReferenceStroke,
 } from "./data";
-import { operators } from "./data";
 import { cloneDeep, range } from "lodash-es";
+import {
+  characterFrequencyAtom,
+  fetchJson,
+  keyEquivalenceAtom,
+  pairEquivalenceAtom,
+  wordFrequencyAtom,
+} from "~/atoms";
 
 export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -165,3 +172,17 @@ export const listToObject = function <T extends { unicode: number }>(
     list.map((x) => [String.fromCodePoint(x.unicode), x]),
   );
 };
+
+export const uniquify = (l: string[]) => [...new Set(l)].sort();
+
+export function LoadAssets() {
+  const setCF = useSetAtom(characterFrequencyAtom);
+  const setWF = useSetAtom(wordFrequencyAtom);
+  const setKE = useSetAtom(keyEquivalenceAtom);
+  const setPE = useSetAtom(pairEquivalenceAtom);
+  fetchJson("character_frequency").then(setCF);
+  fetchJson("word_frequency").then(setWF);
+  fetchJson("key_equivalence").then(setKE);
+  fetchJson("pair_equivalence").then(setPE);
+  return null;
+}

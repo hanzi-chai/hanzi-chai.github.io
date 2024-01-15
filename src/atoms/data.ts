@@ -1,5 +1,5 @@
 import { atom, useAtomValue } from "jotai";
-import { repertoireAtom } from "./constants";
+import { primitiveRepertoireAtom } from "./constants";
 import { isPUA } from "~/lib/utils";
 import { recursiveRenderCompound } from "~/lib/component";
 import { dataAtom } from ".";
@@ -26,7 +26,7 @@ export const userTagsAtom = focusAtom(dataAtom, (o) =>
 );
 
 export const allRepertoireAtom = atom((get) => {
-  const repertoire = get(repertoireAtom);
+  const repertoire = get(primitiveRepertoireAtom);
   const userRepertoire = get(userRepertoireAtom);
   return { ...repertoire, ...userRepertoire };
 });
@@ -41,7 +41,7 @@ export const displayAtom = atom((get) => {
   };
 });
 
-export const determinedRepertoireAtom = atom((get) => {
+export const repertoireAtom = atom((get) => {
   const repertoire = get(allRepertoireAtom);
   const customization = get(customGlyphAtom);
   const tags = get(userTagsAtom);
@@ -49,7 +49,7 @@ export const determinedRepertoireAtom = atom((get) => {
 });
 
 export const glyphAtom = atom((get) => {
-  const determinedRepertoire = get(determinedRepertoireAtom);
+  const determinedRepertoire = get(repertoireAtom);
   const result = new Map<string, SVGGlyph>();
   for (const [char, { glyph }] of Object.entries(determinedRepertoire)) {
     if (glyph === undefined) continue;
@@ -65,7 +65,7 @@ export const glyphAtom = atom((get) => {
 });
 
 export const sortedRepertoireAtom = atom((get) => {
-  const determinedRepertoire = get(determinedRepertoireAtom);
+  const determinedRepertoire = get(repertoireAtom);
   const sequence = get(sequenceAtom);
   return Object.entries(determinedRepertoire).sort((a, b) => {
     return (

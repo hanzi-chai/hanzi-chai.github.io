@@ -36,12 +36,12 @@ import {
   useSetAtom,
   mutateRepertoireAtom,
   useAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   nextUnicodeAtom,
   useAddAtom,
   useRemoveAtom,
   userRepertoireAtom,
-  repertoireAtom,
+  primitiveRepertoireAtom,
   customGlyphAtom,
 } from "~/atoms";
 import {
@@ -70,10 +70,10 @@ export const Create = ({ onCreate }: { onCreate: (s: string) => void }) => (
 
 function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
   const addUser = useAddAtom(userRepertoireAtom);
-  const add = useAddAtom(repertoireAtom);
+  const add = useAddAtom(primitiveRepertoireAtom);
   const remote = useContext(RemoteContext);
   const nextUnicode = useAtomValue(nextUnicodeAtom);
-  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const determinedRepertoire = useAtomValue(repertoireAtom);
   const options = [
     { label: "部件", value: "component" },
     { label: "复合体", value: "compound" },
@@ -186,7 +186,9 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
         const valid = verifyNewName(newName);
         if (!valid || newName.length > 1) return;
         const newUnicode = newName.codePointAt(0)!;
-        const res = await remoteMutate({ old: unicode, new: newUnicode });
+        const payload = { old: unicode, new: newUnicode };
+        console.log(payload);
+        const res = await remoteMutate(payload);
         if (!errorFeedback(res)) {
           mutate([unicode, newUnicode]);
         }
@@ -206,7 +208,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
   const remote = useContext(RemoteContext);
   const userRepertoire = useAtomValue(userRepertoireAtom);
   const customization = useAtomValue(customGlyphAtom);
-  const remove = useRemoveAtom(repertoireAtom);
+  const remove = useRemoveAtom(primitiveRepertoireAtom);
   const removeUser = useRemoveAtom(userRepertoireAtom);
   const removeCustom = useRemoveAtom(customGlyphAtom);
   const char = String.fromCodePoint(unicode);
@@ -234,8 +236,8 @@ export const Delete = ({ unicode }: { unicode: number }) => {
 
 export const Add = ({ character }: { character: PrimitveCharacter }) => {
   const remote = useContext(RemoteContext);
-  const repertoire = useAtomValue(repertoireAtom);
-  const add = useAddAtom(repertoireAtom);
+  const repertoire = useAtomValue(primitiveRepertoireAtom);
+  const add = useAddAtom(primitiveRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
   const addUser = useAddAtom(userRepertoireAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
@@ -319,7 +321,7 @@ export const QuickPatchAmbiguous = ({
   record: PrimitveCharacter;
 }) => {
   const remote = useContext(RemoteContext);
-  const add = useAddAtom(repertoireAtom);
+  const add = useAddAtom(primitiveRepertoireAtom);
   return (
     <Checkbox
       checked={checked}

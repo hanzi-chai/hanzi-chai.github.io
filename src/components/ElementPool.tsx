@@ -4,7 +4,7 @@ import Char from "./Character";
 import { Flex, Pagination, Popover } from "antd";
 import {
   useAtomValue,
-  determinedRepertoireAtom,
+  repertoireAtom,
   sequenceAtom,
   displayAtom,
   keyboardAtom,
@@ -38,7 +38,7 @@ const Element = ({
 }) => {
   const keyboard = useAtomValue(keyboardAtom);
   const { mapping, grouping } = keyboard;
-  const determiedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const determiedRepertoire = useAtomValue(repertoireAtom);
   const glyphMap = useAtomValue(glyphAtom);
   const type =
     x === currentElement
@@ -81,7 +81,7 @@ const ElementPool = ({
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(sequenceAtom);
-  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const determinedRepertoire = useAtomValue(repertoireAtom);
   const filtered = strokeFilter
     ? content.filter(
         (x) =>

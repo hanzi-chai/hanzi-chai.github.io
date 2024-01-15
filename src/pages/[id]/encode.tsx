@@ -1,130 +1,227 @@
-import { Flex, Select, Switch, Typography } from "antd";
-import { useEffect, useState } from "react";
+import {
+  Button,
+  Flex,
+  Form,
+  Radio,
+  Table,
+  Typography,
+  notification,
+} from "antd";
 import EncoderRules from "~/components/EncoderRules";
-import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
-import { configAtom, determinedRepertoireAtom, useAtomValue } from "~/atoms";
-import { CharsetFilter, EncoderResult, filtermap } from "~/lib/encoder";
-import { getSupplemental } from "~/lib/utils";
+import { EditorColumn, EditorRow, exportTSV } from "~/components/Utils";
+import {
+  assetsAtom,
+  configAtom,
+  encoderAtom,
+  repertoireAtom,
+  useAtom,
+  useAtomValue,
+  wordsAtom,
+} from "~/atoms";
+import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
+import { Suspense, useState } from "react";
+import { ColumnsType } from "antd/es/table";
+import { LibchaiOutputEvent } from "~/worker";
+import { analysis } from "~/lib/repertoire";
+import { assemble, getTSV } from "~/lib/assembly";
+import CustomSpin from "~/components/CustomSpin";
+import { LoadAssets } from "~/lib/utils";
 
 const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as const;
 type FilterOption = (typeof filterOptions)[number];
 
-const Encode = () => {
-  const config = useAtomValue(configAtom);
-  const data = useAtomValue(determinedRepertoireAtom);
-  const [dev, setDev] = useState(false);
-  const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
-  const [reference, setReference] = useState<Map<string, string[]>>(() => {
-    const content = localStorage.getItem("." + config.info?.name);
-    if (content === null) return new Map();
-    return new Map(Object.entries(JSON.parse(content)));
-  });
-  const filterMap: Record<FilterOption, (p: [string, string[]]) => boolean> = {
-    成字部件: ([char]) => data[char]?.glyph?.type === "component",
-    非成字部件: ([char]) => supplemental.includes(char),
-    所有汉字: () => true,
-  };
-  const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
-  const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
-  const list = Object.entries(data)
-    .filter(filtermap[gb2312]("gb2312"))
-    .filter(filtermap[tygf]("tygf"))
-    .map(([x]) => x);
-  const supplemental = getSupplemental(data, list);
-  const [result, setResult] = useState<EncoderResult>(new Map());
+interface CharacterCodeTable {
+  key: string;
+  full: string;
+  short: string;
+}
 
-  useEffect(() => {
-    localStorage.setItem(
-      "." + config.info?.name,
-      JSON.stringify(Object.fromEntries([...reference])),
-    );
-  }, [reference]);
+interface WordCodeTable {
+  key: string;
+  full: string;
+}
 
-  let correct = 0;
-  let incorrect = 0;
-  let unknown = 0;
-  let dataSource = [...result]
-    .filter(
-      ([x, v]) => v.code.length > 0 && filterMap[filterOption]([x, v.code]),
-    )
-    .map(([char, code]) => {
-      const refcode = reference.get(char) || [];
-      if (refcode.length) {
-        if (code.code.filter((v) => refcode.includes(v)).length) {
-          correct += 1;
-        } else {
-          incorrect += 1;
-        }
-      } else {
-        unknown += 1;
-      }
-      return {
-        key: char,
-        char: char,
-        sequence: code.sequence,
-        code: code.code,
-        refcode: refcode,
-      };
-    });
+interface EncodeOutput {
+  characters: string[];
+  characters_full: string[];
+  characters_short?: string[];
+  words?: string[];
+  words_full?: string[];
+}
 
-  if (dev) {
-    dataSource = dataSource.filter(({ code, refcode }) => {
-      return code.filter((v) => refcode.includes(v)).length === 0;
+const getCharacterDataSource = (code: EncodeOutput) => {
+  const { characters, characters_full, characters_short } = code;
+  const data: CharacterCodeTable[] = [];
+  for (const [i, char] of characters.entries()) {
+    data.push({
+      key: char,
+      full: characters_full[i] ?? "",
+      short: characters_short?.[i] ?? "",
     });
   }
+  return data;
+};
 
-  // if (dev) {
-  //   columns.push({
-  //     title: "参考编码",
-  //     dataIndex: "refcode",
-  //     key: "refcode",
-  //     render: (_, record) => {
-  //       return <span>{record.refcode.join(", ")}</span>;
-  //     },
-  //   });
-  // }
+const getWordDataSource = (code: EncodeOutput) => {
+  const { words, words_full } = code;
+  const data: WordCodeTable[] = [];
+  for (const [i, word] of (words ?? []).entries()) {
+    data.push({
+      key: word,
+      full: words_full?.[i] ?? "",
+    });
+  }
+  return data;
+};
+
+const Encode = () => {
+  const assets = useAtomValue(assetsAtom);
+  const words = useAtomValue(wordsAtom);
+  const encoder = useAtomValue(encoderAtom);
+  const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
+  const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
+  const repertoire = useAtomValue(repertoireAtom);
+  const config = useAtomValue(configAtom);
+  const [mode, setMode] = useState<"character" | "word">("character");
+  const [code, setCode] = useState<EncodeOutput | undefined>(undefined);
+  const list = Object.entries(repertoire)
+    .filter(([_, v]) => v.gb2312 && v.tygf > 0)
+    .map(([x]) => x);
+  const dataSource =
+    code === undefined
+      ? []
+      : mode === "character"
+        ? getCharacterDataSource(code)
+        : getWordDataSource(code);
+  const characterColumns: ColumnsType<CharacterCodeTable> = [
+    {
+      title: "汉字",
+      dataIndex: "key",
+    },
+    {
+      title: "全码",
+      dataIndex: "full",
+    },
+    {
+      title: "简码",
+      dataIndex: "short",
+    },
+  ];
+
+  const wordColumns: ColumnsType<WordCodeTable> = [
+    {
+      title: "词语",
+      dataIndex: "key",
+    },
+    {
+      title: "全码",
+      dataIndex: "full",
+    },
+  ];
+  const columns = mode === "character" ? characterColumns : wordColumns;
+  const prepareInput = () => {
+    let v1 = analysisResult;
+    if (v1 === null) {
+      v1 = analysis(repertoire, config);
+      setAnalysisResult(v1);
+    }
+    let v2 = assemblyResult;
+    if (v2 === null) {
+      v2 = assemble(repertoire, config, list, v1);
+      setAssemblyResult(v2);
+    }
+    const characters = getTSV(v2);
+    return {
+      config,
+      characters,
+      words,
+      assets,
+    };
+  };
 
   return (
     <EditorRow>
       <EditorColumn span={12}>
         <Typography.Title level={2}>编码规则</Typography.Title>
         <EncoderRules />
-        <Flex justify="center" align="center" gap="large">
-          校对模式
-          <Switch checked={dev} onChange={setDev} />
-          <Uploader
-            type="txt"
-            text="导入 TSV 码表"
-            action={(content) => {
-              const ref: Map<string, string[]> = new Map();
-              const tsv = content
-                .trim()
-                .split("\n")
-                .map((x) => x.split("\t"));
-              for (const line of tsv) {
-                const [key, value] = line;
-                if (key !== undefined && value !== undefined) {
-                  ref.set(key, [value]);
-                }
-              }
-              setReference(ref);
-            }}
-          />
-          {reference !== undefined && `已加载码表，条数：${reference.size}`}
-        </Flex>
-        {dev && (
-          <Flex justify="center" align="center" gap="large">
-            校对范围
-            <Select
-              value={filterOption}
-              options={filterOptions.map((x) => ({ label: x, value: x }))}
-              onChange={setFilterOption}
-            />
-            {`正确：${correct}, 错误：${incorrect}, 未知：${unknown}，正确率：${Math.round(
-              (correct / (correct + incorrect + unknown)) * 100,
-            )}%`}
+      </EditorColumn>
+      <EditorColumn span={12}>
+        <Typography.Title level={2}>生成编码</Typography.Title>
+        <Suspense fallback={<CustomSpin tip="加载数据" />}>
+          <LoadAssets />
+          <Flex justify="center" gap="middle" style={{ marginBottom: "2rem" }}>
+            <Radio.Group
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              style={{ minWidth: "200px" }}
+            >
+              <Radio.Button value="character">单字</Radio.Button>
+              <Radio.Button value="word" disabled={encoder.rules === undefined}>
+                词语
+              </Radio.Button>
+            </Radio.Group>
+            <Button
+              type="primary"
+              onClick={async () => {
+                const worker = new Worker(
+                  new URL("../../worker.ts", import.meta.url),
+                  { type: "module" },
+                );
+                worker.onmessage = (
+                  event: MessageEvent<LibchaiOutputEvent>,
+                ) => {
+                  const { data } = event;
+                  switch (data.type) {
+                    case "code":
+                      setCode(data.code);
+                      notification.success({
+                        message: "生成成功!",
+                      });
+                      break;
+                    case "error":
+                      notification.error({
+                        message: "生成过程中 libchai 出现错误",
+                      });
+                      break;
+                  }
+                };
+                worker.postMessage({ type: "encode", data: prepareInput() });
+              }}
+            >
+              生成
+            </Button>
+            <Button
+              disabled={code === undefined}
+              onClick={() => {
+                const { characters, characters_full, characters_short } = code!;
+                const charactersTSV = characters.map((c, i) => {
+                  return characters_short
+                    ? [c, characters_full[i]!, characters_short[i]!]
+                    : [c, characters_full[i]!];
+                });
+                exportTSV(charactersTSV, "单字编码.txt");
+              }}
+            >
+              导出单字码表
+            </Button>
+            <Button
+              disabled={code?.words === undefined}
+              onClick={() => {
+                const { words, words_full } = code!;
+                const wordsTSV = words!.map((c, i) => [c, words_full![i]!]);
+                exportTSV(wordsTSV, "词语编码.txt");
+              }}
+            >
+              导出词语码表
+            </Button>
           </Flex>
-        )}
+          <Table
+            columns={columns as any}
+            dataSource={dataSource as any}
+            size="small"
+            pagination={{ pageSize: 50, hideOnSinglePage: true }}
+          />
+        </Suspense>
       </EditorColumn>
     </EditorRow>
   );

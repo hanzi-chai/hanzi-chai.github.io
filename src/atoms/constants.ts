@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import type { PrimitiveRepertoire } from "~/lib/data";
 import { produce } from "immer";
-import { Equivalence, Frequency } from "~/components/Evaluator";
+import { Equivalence, Frequency } from "~/components/Optimizer";
 
 const _cache: Record<string, any> = {};
 export async function fetchJson(filename: string) {
@@ -14,8 +14,8 @@ export async function fetchJson(filename: string) {
   return json;
 }
 
-export const repertoireAtom = atom<PrimitiveRepertoire>({});
-repertoireAtom.debugLabel = "repertoire";
+export const primitiveRepertoireAtom = atom<PrimitiveRepertoire>({});
+primitiveRepertoireAtom.debugLabel = "repertoire";
 
 export const mutateRepertoireAtom = atom(
   null,
@@ -24,7 +24,7 @@ export const mutateRepertoireAtom = atom(
     const after = String.fromCodePoint(twoUnicode[1]);
     const replaceIf = (s: string) => (s === before ? after : s);
 
-    set(repertoireAtom, (previous) =>
+    set(primitiveRepertoireAtom, (previous) =>
       produce(previous, (state) => {
         // update itself
         const value = state[before]!;
@@ -33,9 +33,9 @@ export const mutateRepertoireAtom = atom(
         // update references
         for (const [_, value] of Object.entries(state)) {
           value.glyphs.forEach((x) => {
-            if (x.type === "component") {
+            if (x.type === "derived_component") {
               x.source = x.source && replaceIf(x.source);
-            } else {
+            } else if (x.type === "compound") {
               x.operandList = x.operandList.map(replaceIf);
             }
           });
@@ -49,3 +49,29 @@ export const characterFrequencyAtom = atom<Frequency>({});
 export const wordFrequencyAtom = atom<Frequency>({});
 export const keyEquivalenceAtom = atom<Equivalence>({});
 export const pairEquivalenceAtom = atom<Equivalence>({});
+
+export interface Assets {
+  character_frequency: Frequency;
+  word_frequency: Frequency;
+  key_equivalence: Equivalence;
+  pair_equivalence: Equivalence;
+}
+
+export const assetsAtom = atom((get) => {
+  const character_frequency = get(characterFrequencyAtom);
+  const word_frequency = get(wordFrequencyAtom);
+  const key_equivalence = get(keyEquivalenceAtom);
+  const pair_equivalence = get(pairEquivalenceAtom);
+  const assets: Assets = {
+    character_frequency,
+    word_frequency,
+    key_equivalence,
+    pair_equivalence,
+  };
+  return assets;
+});
+
+export const wordsAtom = atom((get) => {
+  const { word_frequency } = get(assetsAtom);
+  return Object.keys(word_frequency);
+});

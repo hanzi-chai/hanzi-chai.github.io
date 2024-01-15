@@ -6,7 +6,7 @@ import styled from "styled-components";
 import {
   algebraAtom,
   customClassifierAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   sortedRepertoireAtom,
   useAtomValue,
   useRemoveAtom,
@@ -111,7 +111,7 @@ export const FormElementPicker = function () {
 };
 
 export const PronElementPicker = function () {
-  const characters = useAtomValue(determinedRepertoireAtom);
+  const characters = useAtomValue(repertoireAtom);
   const algebra = useAtomValue(algebraAtom);
   const [element, setElement] = useState<string | undefined>(undefined);
   const [type, setType] = useState<PronunciationElementTypes>("声母");

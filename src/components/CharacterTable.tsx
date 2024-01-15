@@ -6,8 +6,9 @@ import Table from "antd/es/table";
 import {
   allRepertoireAtom,
   customGlyphAtom,
+  customReadingsAtom,
   displayAtom,
-  repertoireAtom,
+  primitiveRepertoireAtom,
   sequenceAtom,
   useAddAtom,
   useAtomValue,
@@ -23,7 +24,6 @@ import {
   QuickPatchAmbiguous,
   RemoteContext,
 } from "~/components/Action";
-import StrokeSearch, { makeFilter } from "~/components/CharacterSearch";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/lib/api";
@@ -44,13 +44,14 @@ const CharacterTable = () => {
   const addUser = useAddAtom(userRepertoireAtom);
   const userTags = useAtomValue(userTagsAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
+  const customReadings = useAtomValue(customReadingsAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [page, setPage] = useState(1);
   const [filterProps, setFilterProps] = useState<CharacterFilter>({});
   const display = useAtomValue(displayAtom);
   const getLength = (a: string) => sequenceMap.get(a)?.length ?? Infinity;
   const remote = useContext(RemoteContext);
-  const add = useAddAtom(repertoireAtom);
+  const add = useAddAtom(primitiveRepertoireAtom);
   const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
   const isUserPUA = (a: string) =>
     -Number(a.codePointAt(0)! >= 0xf000 && a.codePointAt(0)! <= 0x10000);
@@ -165,9 +166,14 @@ const CharacterTable = () => {
                       .map(display)
                       .join(" ")}`}
                     initialValues={x}
-                    onFinish={(values) =>
-                      inlineUpdate(O.set(lens, values, character))
-                    }
+                    onFinish={(values) => {
+                      const newGlyphs = O.set(
+                        O.compose("glyphs", O.appendTo),
+                        values,
+                        O.remove(lens, character),
+                      );
+                      return inlineUpdate(newGlyphs);
+                    }}
                     primary={primary}
                   />
                 ) : (
@@ -176,15 +182,22 @@ const CharacterTable = () => {
                     title={`部件`}
                     initialValues={x}
                     current={String.fromCodePoint(unicode)}
-                    onFinish={(values) =>
-                      inlineUpdate(O.set(lens, values, character))
-                    }
+                    onFinish={(values) => {
+                      const newGlyphs = O.set(
+                        O.compose("glyphs", O.appendTo),
+                        values,
+                        O.remove(lens, character),
+                      );
+                      return inlineUpdate(newGlyphs);
+                    }}
                     primary={primary}
                   />
                 )}
-                <DeleteButton
-                  onClick={() => inlineUpdate(O.remove(lens, character))}
-                />
+                {remote ? (
+                  <DeleteButton
+                    onClick={() => inlineUpdate(O.remove(lens, character))}
+                  />
+                ) : null}
               </Space>
             );
           })}
@@ -266,7 +279,10 @@ const CharacterTable = () => {
     ],
     onFilter: (value, record) => {
       const char = String.fromCodePoint(record.unicode);
-      const customized = userRepertoire[char] !== undefined;
+      const customized =
+        userRepertoire[char] !== undefined ||
+        customGlyph[char] !== undefined ||
+        customReadings[char] !== undefined;
       return value === 1 ? customized : !customized;
     },
   };

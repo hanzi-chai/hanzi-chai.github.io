@@ -7,12 +7,13 @@ import type {
   Op,
   Source,
 } from "./config";
-import type { ComponentResult } from "./component";
+import { recursiveRenderCompound, type ComponentResult } from "./component";
 import type { CompoundResult } from "./compound";
-import { getAnalysis } from "./repertoire";
 import type { Extra } from "./element";
 import { findElement } from "./element";
 import { PrimitveCharacter, Character, Repertoire } from "./data";
+import { AnalysisResult, analysis } from "./repertoire";
+import { mergeClassifier } from "./classifier";
 
 export const filtervalues = ["是", "否", "未定义"] as const;
 export type CharsetFilter = (typeof filtervalues)[number];
@@ -61,13 +62,7 @@ export type TotalCache = Record<
   ComponentTotalResult[] | CompoundTotalResult[]
 >;
 
-export type EncoderResult = Map<
-  string,
-  {
-    code: string[];
-    sequence: IndexedElement[][];
-  }
->;
+export type AssemblyResult = Map<string, IndexedElement[][]>;
 
 const satisfy = (
   condition: Condition,
@@ -103,7 +98,7 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 export type IndexedElement = string | { element: string; index: number };
 
 const compile = (config: Config) => {
-  const { mapping, grouping } = config.form;
+  const { mapping, grouping, alphabet } = config.form;
   const totalMapping = merge(mapping, grouping);
   return (result: TotalResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
@@ -118,18 +113,17 @@ const compile = (config: Config) => {
             node = next;
             continue;
           }
+          if (element.length === 1 && alphabet.includes(element)) {
+            codes.push(element);
+            continue;
+          }
           const groupedElement = grouping[element] || element;
           const mappedElement = mapping[groupedElement];
           if (mappedElement === undefined) {
             node = next;
             continue;
           }
-          if (mappedElement.length === 1) {
-            // 对于单码根，单独判断一下，可以省略 ".0"
-            if (index === undefined || index === 0) {
-              codes.push(groupedElement);
-            }
-          } else if (index === undefined) {
+          if (index === undefined) {
             // 如果没有定义指标，就是全取
             for (const [index, key] of Array.from(mappedElement).entries()) {
               codes.push(
@@ -164,48 +158,63 @@ const compile = (config: Config) => {
   };
 };
 
-export const getCache = (list: string[], config: Config, data: Repertoire) => {
-  const [formResult, extra] = getAnalysis(list, data, config);
-  const result = Object.fromEntries(
-    list.map((char) => {
-      const formData = formResult.get(char)!;
-      const pronunciationData = data[char]!.readings;
-      return [
-        char,
-        formData
-          .map((x) =>
-            pronunciationData.map((pinyin) => ({
-              char,
-              pinyin,
-              ...x,
-            })),
-          )
-          .flat() as TotalResult[],
-      ];
-    }),
-  );
-  return [result, extra] as const;
+const extraAnalysis = function (repertoire: Repertoire, config: Config): Extra {
+  const { mapping, grouping } = config.form;
+  const classifier = mergeClassifier(config.analysis?.classifier);
+  const findSequence = (x: string) => {
+    if (x.match(/[0-9]+/)) {
+      return [...x].map(Number);
+    }
+    const glyph = repertoire[x]?.glyph;
+    if (glyph === undefined) {
+      return [];
+    }
+    if (glyph.type === "basic_component") {
+      return glyph.strokes.map((s) => classifier[s.feature]);
+    } else {
+      const sequence = recursiveRenderCompound(glyph, repertoire);
+      if (sequence instanceof Error) return [];
+      return sequence.map((s) => classifier[s.feature]);
+    }
+  };
+  const rootSequence = new Map<string, number[]>();
+  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  for (const root of roots) {
+    rootSequence.set(root, findSequence(root));
+  }
+  return {
+    rootSequence,
+  };
 };
 
-export const uniquify = (l: string[]) => [...new Set(l)].sort();
-
-export const collect = (
+export const assemble = (
+  repertoire: Repertoire,
   config: Config,
   characters: string[],
-  data: Repertoire,
+  analysisResult: AnalysisResult,
 ) => {
-  const [cache, extra] = getCache(characters, config, data);
+  const { customized, compoundCache } = analysisResult;
+  const extra = extraAnalysis(repertoire, config);
   const func = compile(config);
-  const result = new Map(
-    characters.map((char) => [
-      char,
-      cache[char]!.map((x) => func(x, data, extra)),
-    ]),
+  const result: AssemblyResult = new Map(
+    characters.map((char) => {
+      // TODO: 支持多个拆分结果
+      const shapeInfo = customized.get(char) || compoundCache.get(char);
+      if (shapeInfo === undefined) return [char, []];
+      const readings = repertoire[char]!.readings;
+      const total: TotalResult[] = readings.map((pinyin) => ({
+        char,
+        pinyin,
+        ...shapeInfo,
+      }));
+      const final = total.map((x) => func(x, repertoire, extra));
+      return [char, final];
+    }),
   );
   return result;
 };
 
-export const autoSplit = (collection: Map<string, IndexedElement[][]>) => {
+export const getTSV = (collection: AssemblyResult) => {
   const tsv = [...collection]
     .filter(([, code]) => code.length >= 1)
     .map(([char, elements_list]) => {
@@ -214,7 +223,9 @@ export const autoSplit = (collection: Map<string, IndexedElement[][]>) => {
       const summary = elements
         .map((x) => {
           if (typeof x === "string") return x;
-          else {
+          else if (x.index === 0) {
+            return x.element;
+          } else {
             return `${x.element}.${x.index}`;
           }
         })
@@ -223,30 +234,3 @@ export const autoSplit = (collection: Map<string, IndexedElement[][]>) => {
     });
   return tsv;
 };
-
-const encode = (config: Config, characters: string[], data: Repertoire) => {
-  const characterElements = collect(config, characters, data);
-  const { encoder } = config;
-  const process = (elements: IndexedElement[]) => {
-    const code = elements
-      .map((e) =>
-        typeof e === "string"
-          ? config.form.mapping[e]!
-          : config.form.mapping[e.element]![e.index]!,
-      )
-      .join("");
-    return encoder.max_length ? code.slice(0, encoder.max_length) : code;
-  };
-  const result = new Map(
-    [...characterElements].map(([char, elements_list]) => [
-      char,
-      {
-        sequence: elements_list,
-        code: uniquify(elements_list.map((elements) => process(elements))),
-      },
-    ]),
-  );
-  return result;
-};
-
-export default encode;

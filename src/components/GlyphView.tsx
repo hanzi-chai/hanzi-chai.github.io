@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import type { Compound, SVGStroke } from "~/lib/data";
 import { Empty, Result } from "antd";
-import { determinedRepertoireAtom, useAtomValue } from "~/atoms";
+import { repertoireAtom, useAtomValue } from "~/atoms";
 import { recursiveRenderCompound } from "~/lib/component";
 
 const FontView = ({ reference }: { reference: string }) => (

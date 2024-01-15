@@ -10,6 +10,20 @@ import { visualizer } from "rollup-plugin-visualizer";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
 
+// vite.config.js
+
+const wasmContentTypePlugin = {
+  name: "wasm-content-type-plugin",
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      if (req.url.endsWith(".wasm")) {
+        res.setHeader("Content-Type", "application/wasm");
+      }
+      next();
+    });
+  },
+};
+
 export default defineConfig(({ mode }) => {
   // https://vitejs.dev/config/
   const sharedConfig: UserConfig = {
@@ -27,7 +41,11 @@ export default defineConfig(({ mode }) => {
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
     },
+    optimizeDeps: {
+      exclude: ["libchai"],
+    },
     plugins: [
+      wasmContentTypePlugin,
       react({
         // plugins: [["@swc-jotai/react-refresh", {}]],
       }),

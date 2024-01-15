@@ -6,7 +6,7 @@ import {
   useSetAtom,
   keyboardAtom,
   groupingAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   displayAtom,
   alphabetAtom,
   mappingTypeAtom,
@@ -260,7 +260,7 @@ const ImportResultAlert = ({
 
 const Mapping = () => {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
-  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?" + "qwertyuiopasdfghjkl;zxcvbnm,./",

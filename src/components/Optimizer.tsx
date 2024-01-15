@@ -8,59 +8,77 @@ import {
   Typography,
   notification,
 } from "antd";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
-import {
-  characterFrequencyAtom,
-  configAtom,
-  determinedRepertoireAtom,
-  keyEquivalenceAtom,
-  pairEquivalenceAtom,
-  wordFrequencyAtom,
-} from "~/atoms";
-import { autoSplit, collect } from "~/lib/encoder";
+import { configAtom, repertoireAtom, assetsAtom, wordsAtom } from "~/atoms";
+import { getTSV, assemble } from "~/lib/assembly";
 import MyWorker from "../worker?worker";
 import { LibchaiOutputEvent } from "~/worker";
 import { exportYAML } from "./Utils";
 import { load } from "js-yaml";
 import { Solver } from "~/lib/config";
+import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
+import { analysis } from "~/lib/repertoire";
 
 export type Frequency = Record<string, number>;
 export type Equivalence = Record<string, number>;
 
-interface Assets {
-  character_frequency: Frequency;
-  word_frequency: Frequency;
-  key_equivalence: Equivalence;
-  pair_equivalence: Equivalence;
-}
-
-const Evaluator = () => {
-  const character_frequency = useAtomValue(characterFrequencyAtom);
-  const word_frequency = useAtomValue(wordFrequencyAtom);
-  const key_equivalence = useAtomValue(keyEquivalenceAtom);
-  const pair_equivalence = useAtomValue(pairEquivalenceAtom);
-  const assets: Assets = {
-    character_frequency,
-    word_frequency,
-    key_equivalence,
-    pair_equivalence,
-  };
-  const words = Object.keys(word_frequency);
-  const config = useAtomValue(configAtom);
-  const [characters, setCharacters] = useState<Map<string, string> | undefined>(
-    undefined,
+const Schedule = ({
+  params,
+  progress,
+}: {
+  params: Partial<Solver["parameters"]>;
+  progress?: { temperature: number; steps: number };
+}) => {
+  return (
+    <>
+      <Typography.Title level={4}>参数</Typography.Title>
+      <Row style={{ width: "100%" }}>
+        <Col span={5}>
+          <Statistic
+            title="最高温"
+            value={params?.t_max?.toExponential(2) ?? "寻找中"}
+          />
+        </Col>
+        <Col span={5}>
+          <Statistic
+            title="最低温"
+            value={params?.t_min?.toExponential(2) ?? "寻找中"}
+          />
+        </Col>
+        <Col span={5}>
+          <Statistic
+            title="当前温"
+            value={progress?.temperature.toExponential(2) ?? "N/A"}
+          />
+        </Col>
+        <Col span={4}>
+          <Statistic title="总步数" value={params?.steps ?? "寻找中"} />
+        </Col>
+        <Col span={4}>
+          <Statistic title="当前步数" value={progress?.steps ?? "N/A"} />
+        </Col>
+      </Row>
+      {progress ? (
+        <Progress
+          percent={Math.round(
+            (progress.steps / (params?.steps ?? Infinity)) * 100,
+          )}
+        />
+      ) : null}
+    </>
   );
-  const input = {
-    config,
-    characters,
-    words,
-    assets,
-  };
-  const data = useAtomValue(determinedRepertoireAtom);
-  const list = Object.entries(data)
-    .filter(([_, v]) => v.gb2312)
-    .filter(([_, v]) => v.tygf > 0)
+};
+
+const Optimizer = () => {
+  const assets = useAtomValue(assetsAtom);
+  const words = useAtomValue(wordsAtom);
+  const config = useAtomValue(configAtom);
+  const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
+  const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
+  const repertoire = useAtomValue(repertoireAtom);
+  const list = Object.entries(repertoire)
+    .filter(([_, v]) => v.gb2312 && v.tygf > 0)
     .map(([x]) => x);
   const [out1, setOut1] = useState("");
   const [result, setResult] = useState<[Date, string][]>([]);
@@ -73,23 +91,30 @@ const Evaluator = () => {
   const [autoParams, setAutoParams] =
     useState<Partial<Solver["parameters"]>>(undefined);
   const params = config.optimization?.metaheuristic.parameters ?? autoParams;
+  const prepareInput = () => {
+    let v1 = analysisResult;
+    if (v1 === null) {
+      v1 = analysis(repertoire, config);
+      setAnalysisResult(v1);
+    }
+    let v2 = assemblyResult;
+    if (v2 === null) {
+      v2 = assemble(repertoire, config, list, v1);
+      setAssemblyResult(v2);
+    }
+    const characters = getTSV(v2);
+    return {
+      config,
+      characters,
+      words,
+      assets,
+    };
+  };
   return (
     <>
-      <Button
-        onClick={() => {
-          const characters = new Map(autoSplit(collect(config, list, data)));
-          setCharacters(characters);
-          notification.success({
-            message: "拆分表初始化成功!",
-          });
-        }}
-      >
-        初始化拆分表
-      </Button>
       <Typography.Title level={3}>方案评测</Typography.Title>
       <Button
         type="primary"
-        disabled={characters === undefined}
         onClick={async () => {
           const worker = new MyWorker();
           worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
@@ -108,7 +133,7 @@ const Evaluator = () => {
                 break;
             }
           };
-          worker.postMessage({ type: "evaluate", data: input });
+          worker.postMessage({ type: "evaluate", data: prepareInput() });
         }}
       >
         开始评测
@@ -121,7 +146,6 @@ const Evaluator = () => {
       <Typography.Title level={3}>方案优化</Typography.Title>
       <Button
         type="primary"
-        disabled={characters === undefined}
         onClick={() => {
           setResult([]);
           setBestResult(undefined);
@@ -166,49 +190,12 @@ const Evaluator = () => {
                 break;
             }
           };
-          worker.postMessage({ type: "optimize", data: input });
+          worker.postMessage({ type: "optimize", data: prepareInput() });
         }}
       >
         开始优化
       </Button>
-      {optimizing ? (
-        <>
-          <Typography.Title level={4}>参数</Typography.Title>
-          <Row style={{ width: "100%" }}>
-            <Col span={5}>
-              <Statistic
-                title="最高温"
-                value={params?.t_max?.toExponential(2) ?? "寻找中"}
-              />
-            </Col>
-            <Col span={5}>
-              <Statistic
-                title="最低温"
-                value={params?.t_min?.toExponential(2) ?? "寻找中"}
-              />
-            </Col>
-            <Col span={5}>
-              <Statistic
-                title="当前温"
-                value={progress?.temperature.toExponential(2) ?? "N/A"}
-              />
-            </Col>
-            <Col span={4}>
-              <Statistic title="总步数" value={params?.steps ?? "寻找中"} />
-            </Col>
-            <Col span={4}>
-              <Statistic title="当前步数" value={progress?.steps ?? "N/A"} />
-            </Col>
-          </Row>
-          {progress ? (
-            <Progress
-              percent={Math.round(
-                (progress.steps / (params?.steps ?? Infinity)) * 100,
-              )}
-            />
-          ) : null}
-        </>
-      ) : null}
+      {optimizing ? <Schedule params={params} progress={progress} /> : null}
       <Typography.Title level={4}>当前最佳方案指标</Typography.Title>
       {bestMetric ? (
         <Typography.Text>
@@ -254,4 +241,4 @@ const Evaluator = () => {
   );
 };
 
-export default Evaluator;
+export default Optimizer;

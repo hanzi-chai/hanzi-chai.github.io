@@ -2,7 +2,7 @@ import { useAtom, useAtomValue } from "jotai";
 import {
   alphabetAtom,
   keyboardAtom,
-  determinedRepertoireAtom,
+  repertoireAtom,
   displayAtom,
   mappingAtom,
   sequenceAtom,
@@ -42,7 +42,7 @@ export default function KeySelect({
     })
     .flat();
   const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(determinedRepertoireAtom);
+  const form = useAtomValue(repertoireAtom);
   return (
     <Select
       style={{ width: 64 }}
