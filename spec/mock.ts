@@ -8,13 +8,17 @@ import type {
 import { determine } from "~/lib/repertoire";
 import { computeComponent } from "~/lib/component";
 
-export const repertoire: PrimitiveRepertoire = listToObject(rawrepertoire);
-export const rendered = determine(repertoire);
+export const repertoire = determine(listToObject(rawrepertoire));
 export const computedGlyphs = Object.fromEntries(
-  Object.entries(rendered)
-    .filter(([k, v]) => v.glyph?.type === "component")
+  Object.entries(repertoire)
+    .filter(([k, v]) => v.glyph?.type === "basic_component")
     .map(([k, v]) => {
       const glyph = (v.glyph as BasicComponent).strokes;
-      return [k, computeComponent(k, glyph).glyph];
+      return [k, computeComponent(k, glyph)];
     }),
+);
+export const computedGlyphs2 = Object.fromEntries(
+  Object.entries(computedGlyphs).map(([k, v]) => {
+    return [k, v.glyph];
+  }),
 );

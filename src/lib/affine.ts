@@ -1,5 +1,5 @@
 import { add } from "mathjs";
-import { Draw, Operator, Point, SVGGlyph, SVGStroke } from "./data";
+import { Compound, Draw, Operator, Point, SVGGlyph, SVGStroke } from "./data";
 import { deepcopy } from "./utils";
 
 class Affine {
@@ -79,10 +79,24 @@ const affineMap: Record<Operator, Affine[]> = {
   "⿻": [id, id],
 };
 
-export function affineMerge(operator: Operator, glyphList: SVGGlyph[]) {
-  const result: SVGGlyph[] = [];
+export function affineMerge(compound: Compound, glyphList: SVGGlyph[]) {
+  const { operator, order } = compound;
+  const transformedGlyphs: SVGGlyph[] = [];
   for (const [index, affine] of affineMap[operator].entries()) {
-    result.push(affine.transformSVGGlyph(glyphList[index]!));
+    const transformed = affine.transformSVGGlyph(glyphList[index]!);
+    transformedGlyphs.push(transformed);
   }
-  return result.flat();
+  if (order === undefined) return transformedGlyphs.flat();
+  const result: SVGGlyph = [];
+  for (const { index, strokes } of order) {
+    const glyph = transformedGlyphs[index];
+    if (glyph === undefined) continue;
+    if (strokes === 0) {
+      result.push(...glyph);
+    } else {
+      result.push(...glyph.slice(0, strokes));
+      transformedGlyphs[index] = glyph.slice(strokes);
+    }
+  }
+  return result;
 }

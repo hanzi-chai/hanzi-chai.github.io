@@ -4,6 +4,7 @@ import {
   ComponentResult,
   disassembleComponents,
   recursiveRenderComponent,
+  recursiveRenderCompound,
 } from "./component";
 import { disassembleCompounds } from "./compound";
 import { Config, CustomGlyph, KeyboardConfig } from "./config";
@@ -63,7 +64,7 @@ export const determine = (
 export const getAnalysisCore = (data: Repertoire, config: Config) => {
   const [componentCache, componentError] = disassembleComponents(
     data,
-    config.form,
+    config,
     mergeClassifier(config.analysis?.classifier),
   );
   const customizations: ComponentCache = new Map(
@@ -90,27 +91,30 @@ export const getAnalysisCore = (data: Repertoire, config: Config) => {
   };
 };
 
-const getExtra = function (data: Repertoire, config: Config): Extra {
+const getExtra = function (repertoire: Repertoire, config: Config): Extra {
   const { mapping, grouping } = config.form;
-  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  const classifier = mergeClassifier(config.analysis?.classifier);
   const findSequence = (x: string) => {
-    if (data[x] === undefined) {
-      // 单笔画
-      return [Number(x)];
+    if (x.match(/[0-9]+/)) {
+      return [...x].map(Number);
     }
-    try {
-      const sequence = [1];
-      if (sequence instanceof Error) {
-        return [];
-      }
-      return sequence;
-    } catch {
+    const glyph = repertoire[x]?.glyph;
+    if (glyph === undefined) {
       return [];
     }
+    if (glyph.type === "basic_component") {
+      return glyph.strokes.map((s) => classifier[s.feature]);
+    } else {
+      const sequence = recursiveRenderCompound(glyph, repertoire);
+      if (sequence instanceof Error) return [];
+      return sequence.map((s) => classifier[s.feature]);
+    }
   };
-  const rootSequence = Object.fromEntries(
-    roots.map((x) => [x, findSequence(x)]),
-  );
+  const rootSequence = new Map<string, number[]>();
+  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  for (const root of roots) {
+    rootSequence.set(root, findSequence(root));
+  }
   return {
     rootSequence,
   };

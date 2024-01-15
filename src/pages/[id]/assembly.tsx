@@ -15,20 +15,10 @@ import {
   configAtom,
   displayAtom,
   determinedRepertoireAtom,
+  sequenceAtom,
 } from "~/atoms";
-
-import type {
-  CharsetFilter,
-  EncoderResult,
-  IndexedElement,
-} from "~/lib/encoder";
-import encode, {
-  autoSplit,
-  collect,
-  filtermap,
-  filtervalues,
-  uniquify,
-} from "~/lib/encoder";
+import type { EncoderResult, IndexedElement } from "~/lib/encoder";
+import encode, { autoSplit, collect, uniquify } from "~/lib/encoder";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
@@ -44,6 +34,10 @@ import { ReactFlowProvider } from "reactflow";
 import { useChaifenTitle } from "~/lib/hooks";
 import type { ColumnType } from "antd/es/table/interface";
 import ElementSelect from "~/components/ElementSelect";
+import CharacterQuery, {
+  CharacterFilter,
+  makeCharacterFilter,
+} from "~/components/CharacterQuery";
 
 interface EncodeResultTable {
   char: string;
@@ -58,13 +52,14 @@ type ElementFilter = {
 
 const Encoder = () => {
   useChaifenTitle("编码");
-  const data = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(determinedRepertoireAtom);
+  const sequence = useAtomValue(sequenceAtom);
   const config = useAtomValue(configAtom);
   const display = useAtomValue(displayAtom);
-  const [gb2312, setGB2312] = useState<CharsetFilter>("未定义");
-  const [tygf, setTYGF] = useState<CharsetFilter>("未定义");
   const [result, setResult] = useState<EncoderResult>(new Map());
-  const list = Object.entries(data)
+  const [filter, setFilter] = useState<CharacterFilter>({});
+  const filterFn = makeCharacterFilter(filter, repertoire, sequence);
+  const list = Object.entries(repertoire)
     .filter(([, v]) => v.gb2312 && v.tygf > 0)
     .map(([x]) => x);
 
@@ -92,6 +87,7 @@ const Encoder = () => {
 
   let dataSource = [...result]
     .filter(([, v]) => v.code.length > 0)
+    .filter(([x]) => filterFn(x))
     .map(([char, code]) => {
       return {
         key: char,
@@ -252,6 +248,7 @@ const Encoder = () => {
             closable
           />
         ) : null}
+        <CharacterQuery setFilter={setFilter} />
         {/* <Flex justify="center" align="center" gap="large">
           字集过滤
           <Space>
@@ -281,7 +278,7 @@ const Encoder = () => {
           <Button
             type="primary"
             onClick={() => {
-              const rawresult = encode(config, list, data);
+              const rawresult = encode(config, list, repertoire);
               setResult(rawresult);
             }}
           >
@@ -299,7 +296,7 @@ const Encoder = () => {
           </Button>
           <Button
             onClick={() => {
-              const collection = collect(config, list, data);
+              const collection = collect(config, list, repertoire);
               const tsv = autoSplit(collection);
               exportTSV(tsv, "elements.txt");
             }}
