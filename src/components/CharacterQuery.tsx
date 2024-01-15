@@ -80,7 +80,7 @@ export default function ({ setFilter }: StrokeSearchProps) {
   const tags = useAtomValue(tagsAtom);
   return (
     <QueryFilter<CharacterFilter>
-      onValuesChange={async (values) => setFilter(values)}
+      onValuesChange={async (_, values) => setFilter(values)}
       labelWidth="auto"
       submitter={false}
       style={{ maxWidth: 1080 }}

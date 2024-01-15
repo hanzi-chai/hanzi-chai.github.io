@@ -8,12 +8,20 @@ import {
   Scheme,
 } from "~/lib/selector";
 import select from "~/lib/selector";
-import { rendered } from "./mock";
+import { computedGlyphs, repertoire } from "./mock";
 import { defaultKeyboard } from "~/lib/templates";
+import { Config } from "~/lib/config";
 
-const config = defaultKeyboard;
+const config: Config = {
+  source: null,
+  form: defaultKeyboard,
+  encoder: {
+    sources: {},
+    conditions: {},
+  },
+};
 
-const { 天 } = rendered;
+const { 天 } = computedGlyphs;
 
 const rootMap = new Map<number, string>();
 

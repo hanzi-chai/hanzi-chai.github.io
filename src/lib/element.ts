@@ -2,7 +2,7 @@ import type { Config, Rule } from "./config";
 import type { TotalResult } from "./encoder";
 
 export interface Extra {
-  rootSequence: Record<string, number[]>;
+  rootSequence: Map<string, number[]>;
 }
 
 interface Base {
@@ -214,7 +214,7 @@ export const findElement = (
     case "二笔": {
       root = getindex(sequence, object.rootIndex);
       if (root === undefined) return undefined;
-      strokes = extra.rootSequence[root];
+      strokes = extra.rootSequence.get(root);
       if (strokes === undefined) {
         if (Math.abs(object.strokeIndex) === 1) return root;
         return undefined;

@@ -3,7 +3,7 @@ import type { StrokeRelation } from "~/lib/topology";
 import findTopology, { curveRelation, renderSVGGlyph } from "~/lib/topology";
 import { CubicCurve, LinearCurve, area, render } from "~/lib/bezier";
 import type { Draw, Point } from "~/lib/data";
-import { computedGlyphs } from "./mock";
+import { computedGlyphs2 as computedGlyphs } from "./mock";
 import { getIntervalPosition, makeCurve } from "~/lib/bezier";
 
 describe("interval position", () => {

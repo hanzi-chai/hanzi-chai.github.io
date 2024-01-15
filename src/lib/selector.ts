@@ -3,13 +3,14 @@ import {
   type ComputedComponent,
   NoSchemeError,
 } from "./component";
-import type { FormConfig, SieveName } from "./config";
+import type { Config, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import { type CurveRelation } from "./topology";
 import { isEqual } from "lodash-es";
 import { sortTwoNumbers } from "./bezier";
 
 export const defaultSelector: SieveName[] = [
+  "结构完整",
   "根少优先",
   "能连不交",
   "能散不连",
@@ -26,7 +27,7 @@ interface Sieve<T extends Comparable> {
   key: (
     scheme: Scheme,
     component: ComputedComponent,
-    config: FormConfig,
+    config: Config,
     rootMap: Map<number, string>,
   ) => T;
   display?: (data: T) => string;
@@ -121,7 +122,7 @@ export const similar: Sieve<number> = {
   title: "非形近根",
   key: (scheme, _, config, rootMap) => {
     const roots = scheme.map((x) => rootMap.get(x)!);
-    return roots.filter((x) => config.grouping[x] !== undefined).length;
+    return roots.filter((x) => config.form.grouping[x] !== undefined).length;
   },
 };
 
@@ -267,10 +268,8 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   ].map((x) => [x.title, x]),
 );
 
-type Evaluation = Map<SieveName, number | number[]>;
-
 const select = (
-  config: FormConfig,
+  config: Config,
   component: ComputedComponent,
   schemeList: Scheme[],
   rootMap: Map<number, string>,

@@ -7,7 +7,7 @@ import {
   isCollinear,
   sortTwoNumbers,
 } from "./bezier";
-import { Degenerator, FormConfig } from "./config";
+import { Config, Degenerator, KeyboardConfig } from "./config";
 import { Feature } from "./classifier";
 import { ComputedComponent } from "./component";
 
@@ -26,6 +26,7 @@ export const binaryToIndices = (n: number) => (binary: number) => {
 
 export const defaultDegenerator: Degenerator = {
   feature: {
+    提: "横",
     捺: "点",
   } as Record<Feature, Feature>,
   no_cross: false,
@@ -89,7 +90,7 @@ const verifySpecialRoots = (
 };
 
 export const generateSliceBinaries = (
-  config: FormConfig,
+  config: Config,
   component: ComputedComponent,
   root: ComputedComponent,
 ) => {

@@ -1,9 +1,5 @@
-import type {
-  Analysis,
-  Config,
-  KeyboardConfig,
-  PartialClassifier,
-} from "./config";
+import { Classifier } from "./classifier";
+import type { Analysis, Config, KeyboardConfig } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { examples } from "./example";
 import { defaultSelector } from "./selector";
@@ -23,8 +19,8 @@ export const classifierTypes = [
   "郑码七分类",
 ] as const;
 export type ClassifierType = (typeof classifierTypes)[number];
-const classifierMap: Record<ClassifierType, PartialClassifier> = {
-  国标五分类: {},
+const classifierMap: Record<ClassifierType, Classifier> = {
+  国标五分类: {} as Classifier,
   表形码六分类: examples.mswb.analysis!.classifier!,
   郑码七分类: examples.zhengma.analysis!.classifier!,
 };
@@ -72,6 +68,10 @@ export const createConfig = function (starter: StarterType): Config {
     version: APP_VERSION,
     source: null,
     info: getInfo(starter.name),
+    analysis: {
+      ...defaultAnalysis,
+      classifier: classifierMap[starter.data]!,
+    },
     form: keyboardMap[starter.keyboard],
     encoder: encoderMap[starter.encoder],
   };

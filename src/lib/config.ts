@@ -24,8 +24,6 @@ export type SieveName =
 
 export type Selector = SieveName[];
 
-export type PartialClassifier = Partial<Classifier>;
-
 export type Element = string;
 
 export type Key = string | { element: string; index: number };

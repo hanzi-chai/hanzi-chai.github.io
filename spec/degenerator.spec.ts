@@ -6,11 +6,8 @@ import _degenerate, {
 } from "~/lib/degenerator";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
-import type { SVGGlyph } from "~/lib/data";
-import { computedGlyphs, rendered } from "./mock";
+import { computedGlyphs2 as computedGlyphs } from "./mock";
 import { RenderedGlyph } from "~/lib/topology";
-import { defaultKeyboard } from "~/lib/templates";
-import { computeComponent } from "~/lib/component";
 
 const { randomInt } = create(all, {
   randomSeed: "a",
