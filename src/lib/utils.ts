@@ -17,7 +17,7 @@ import { cloneDeep, range } from "lodash-es";
 import {
   characterFrequencyAtom,
   fetchJson,
-  keyEquivalenceAtom,
+  keyDistributionAtom,
   pairEquivalenceAtom,
   wordFrequencyAtom,
 } from "~/atoms";
@@ -178,11 +178,26 @@ export const uniquify = (l: string[]) => [...new Set(l)].sort();
 export function LoadAssets() {
   const setCF = useSetAtom(characterFrequencyAtom);
   const setWF = useSetAtom(wordFrequencyAtom);
-  const setKE = useSetAtom(keyEquivalenceAtom);
+  const setKE = useSetAtom(keyDistributionAtom);
   const setPE = useSetAtom(pairEquivalenceAtom);
   fetchJson("character_frequency").then(setCF);
   fetchJson("word_frequency").then(setWF);
-  fetchJson("key_equivalence").then(setKE);
+  fetchJson("key_distribution").then(setKE);
   fetchJson("pair_equivalence").then(setPE);
   return null;
+}
+
+export function parseTSV(text: string): Record<string, number> {
+  const tsv = text
+    .trim()
+    .split("\n")
+    .map((x) => x.trim().split("\t"));
+  const data: Record<string, number> = {};
+  tsv.forEach(([char, freq]) => {
+    if (char === undefined || freq === undefined) return;
+    const maybeNumber = Number(freq);
+    if (isNaN(maybeNumber)) return;
+    data[char] = maybeNumber;
+  });
+  return data;
 }

@@ -2,7 +2,7 @@ import Mapping from "~/components/Mapping";
 import { Typography } from "antd";
 import { EditorColumn, EditorRow } from "~/components/Utils";
 import {
-  FormElementPicker,
+  ShapeElementPicker,
   PronElementPicker,
 } from "~/components/ElementPicker";
 import { useChaifenTitle } from "~/lib/hooks";
@@ -13,7 +13,7 @@ export default function () {
     <EditorRow>
       <EditorColumn span={8}>
         <Typography.Title level={3}>字形元素</Typography.Title>
-        <FormElementPicker />
+        <ShapeElementPicker />
         <Typography.Title level={3}>字音元素</Typography.Title>
         <ul>
           <li>

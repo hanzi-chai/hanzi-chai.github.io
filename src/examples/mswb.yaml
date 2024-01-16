@@ -438,7 +438,7 @@ optimization:
   objective:
     characters_full:
       # duplication: 10.0 # 减少单字全码动态选重率
-      # key_equivalence: 0.1 # 减少单字全码用指
+      # key_distribution: 0.1 # 减少单字全码用指
       # pair_equivalence: 0.1 # 减少单字全码当量
       tiers:
         # - { top: 1500, duplication: 7.0 } # 减少单字全码前 1500 静态选重率
@@ -446,7 +446,7 @@ optimization:
         - { duplication: 10.0 } # 减少单字全码静态选重率
     characters_short:
       duplication: 20.0 # 减少单字简码动态选重率
-      key_equivalence: 0.5 # 减少单字简码用指
+      key_distribution: 0.5 # 减少单字简码用指
       pair_equivalence: 0.8 # 减少单字简码当量
       levels:
         - { length: 4, frequency: 10.0 } # 减少四键字频率，也就是说增加二键字（一级简码）和三键字（二级简码）频率
@@ -456,7 +456,7 @@ optimization:
         - { duplication: 20.0 } # 减少单字简码静态选重率以及二简的数量
     words_full:
       duplication: 5.0 # 减少词语全码动态选重率
-      key_equivalence: 0.1 # 减少词组全码用指
+      key_distribution: 0.1 # 减少词组全码用指
       pair_equivalence: 0.1 # 减少词组全码当量
       tiers:
         # - { top: 2000, duplication: 1.0 } # 减少词语全码前 2000 静态选重率

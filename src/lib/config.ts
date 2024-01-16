@@ -120,7 +120,7 @@ export interface FingeringWeights {
 export interface PartialWeights {
   tiers?: TierWeights[];
   duplication?: number;
-  key_equivalence?: number;
+  key_distribution?: number;
   pair_equivalence?: number;
   fingering?: FingeringWeights;
   levels?: LevelWeights[];
@@ -136,7 +136,6 @@ export interface Objective {
   characters_full?: PartialWeights;
   characters_short?: PartialWeights;
   words_full?: PartialWeights;
-  words_short?: PartialWeights;
 }
 
 export interface Constraints {
@@ -170,6 +169,7 @@ export interface Solver {
   search_method?: {
     random_move: number;
     random_swap: number;
+    random_full_key_swap: number;
   };
 }
 
@@ -203,7 +203,7 @@ export interface Info {
 export type Algebra = Record<string, Rule[]>;
 
 export interface EncoderConfig {
-  max_length?: number;
+  max_length: number;
   auto_select_length?: number;
   auto_select_pattern?: string;
   select_keys?: string[];

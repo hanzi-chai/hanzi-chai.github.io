@@ -215,7 +215,7 @@ export const KeyList = ({
 
 export const renderSuperScript = (element: string, index: number) => {
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
-  return element + superscripts[index + 1];
+  return index ? element + superscripts[index + 1] : element;
 };
 
 export const joinKeys = (keys: Key[]) => {
@@ -228,5 +228,11 @@ export const renderMapped = (mapped: string | Key[]) => {
   }
   return mapped.map((x) => {
     return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
+  });
+};
+
+export const makeWorker = () => {
+  return new Worker(new URL("../worker.ts", import.meta.url), {
+    type: "module",
   });
 };

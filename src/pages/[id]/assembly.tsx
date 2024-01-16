@@ -1,15 +1,5 @@
-import { useContext, useEffect, useState } from "react";
-import {
-  Alert,
-  Button,
-  Checkbox,
-  Flex,
-  Form,
-  Space,
-  Tabs,
-  TabsProps,
-  Typography,
-} from "antd";
+import { Suspense, useState } from "react";
+import { Alert, Button, Flex, Form, Tabs, TabsProps, Typography } from "antd";
 import {
   useAtomValue,
   configAtom,
@@ -17,6 +7,7 @@ import {
   repertoireAtom,
   sequenceAtom,
   useAtom,
+  assetsAtom,
 } from "~/atoms";
 import type { AssemblyResult, IndexedElement } from "~/lib/assembly";
 import { getTSV, assemble } from "~/lib/assembly";
@@ -25,35 +16,40 @@ import Table from "antd/es/table";
 import {
   EditorColumn,
   EditorRow,
-  Select,
-  Uploader,
   exportTSV,
   renderSuperScript,
 } from "~/components/Utils";
 import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
 import { useChaifenTitle } from "~/lib/hooks";
-import type { ColumnType } from "antd/es/table/interface";
-import ElementSelect from "~/components/ElementSelect";
 import CharacterQuery, {
   CharacterFilter,
   makeCharacterFilter,
 } from "~/components/CharacterQuery";
-import { uniquify } from "~/lib/utils";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { analysis } from "~/lib/repertoire";
+import PrimitiveDuplicationAnalyzer, {
+  analyzePrimitiveDuplication,
+  defaultAnalyzer,
+} from "~/components/PrimitiveDuplicationAnalyzer";
 
-interface EncodeResultTable {
-  char: string;
-  sequence: IndexedElement[][];
+interface EncodeResultEntry {
+  name: string;
+  [n: number]: IndexedElement;
 }
 
-type ElementFilter = {
-  element: string;
-  duplication: boolean;
+export const renderIndexed = (
+  element: IndexedElement,
+  display: (s: string) => string,
+) => {
+  if (typeof element === "string") {
+    return display(element);
+  } else {
+    return renderSuperScript(display(element.element), element.index);
+  }
 };
 
-const Encoder = () => {
+export default function () {
   useChaifenTitle("编码");
   const repertoire = useAtomValue(repertoireAtom);
   const sequence = useAtomValue(sequenceAtom);
@@ -68,137 +64,81 @@ const Encoder = () => {
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
   const result: AssemblyResult = assemblyResult ?? new Map();
   const lost = [...result].filter(([, v]) => v.length === 0).map(([x]) => x);
+  const max_length = config.encoder.max_length;
+  const characterFrequency = useAtomValue(assetsAtom).character_frequency;
 
-  const renderIndexed = (element: IndexedElement) => {
-    if (typeof element === "string") {
-      return display(element);
-    } else {
-      return renderSuperScript(display(element.element), element.index);
-    }
-  };
+  const [analyzer, setAnalyzer] = useState(defaultAnalyzer);
+  const [selections, involved] = analyzePrimitiveDuplication(
+    analyzer,
+    characterFrequency,
+    result,
+  );
 
-  const duplicationMap = new Map<string, number>();
-  for (const [_, data] of result.entries()) {
-    for (const sequence of data.slice(0, 1)) {
-      const hash = sequence.map(renderIndexed).join(", ");
-      duplicationMap.set(hash, (duplicationMap.get(hash) || 0) + 1);
-    }
-  }
-  const groups = [...duplicationMap.values()];
-  const selections = groups.reduce((p, c) => p + c, 0) - groups.length;
-
-  let dataSource = [...result]
+  const dataSource = [...result]
     .filter(([, v]) => v.length > 0)
     .filter(([x]) => filterFn(x))
-    .map(([char, code]) => {
-      return {
-        key: char,
-        char: char,
-        sequence: code,
-      };
+    .filter(([x]) => analyzer.filter === false || involved.has(x))
+    .map(([name, sequence]) => {
+      const object = { key: name, name } as EncodeResultEntry;
+      for (const [i, element] of sequence[0]!.entries()) {
+        object[i] = element;
+      }
+      return object;
     });
 
-  const sequenceFilter: ColumnType<EncodeResultTable> = {
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => {
-      const f = JSON.parse(
-        (selectedKeys[0] || "{}") as string,
-      ) as ElementFilter;
-      const { element, duplication } = f;
-      const update = (field: keyof ElementFilter, value: string | boolean) =>
-        setSelectedKeys([JSON.stringify({ ...f, [field]: value })]);
-      return (
-        <Flex vertical style={{ padding: 16 }}>
-          <Form.Item label="查看原始重码">
-            <Checkbox
-              checked={duplication}
-              onChange={(value) => update("duplication", value.target.checked)}
-            />
-          </Form.Item>
-          <Form.Item label="包含元素">
-            <ElementSelect
-              excludeGrouped
-              char={element}
-              onChange={(value) => update("element", value)}
-            />
-          </Form.Item>
-          <Flex justify="space-between">
-            <Button
-              type="link"
-              onClick={() => clearFilters && clearFilters()}
-              size="small"
-            >
-              Reset
-            </Button>
-            <Button type="primary" onClick={() => confirm()} size="small">
-              OK
-            </Button>
-          </Flex>
-        </Flex>
-      );
-    },
-    onFilter: (value, record) => {
-      const { duplication, element } = JSON.parse(
-        (value || "{}") as string,
-      ) as ElementFilter;
-      if (
-        duplication === true &&
-        record.sequence.every((seq) => {
-          let hash = seq.map(renderIndexed).join(", ");
-          return (duplicationMap.get(hash) ?? 0) <= 1;
-        })
-      )
-        return false;
-      if (
-        element &&
-        record.sequence.every((x) =>
-          x.every((y) => y !== element && (y as any).element !== element),
-        )
-      )
-        return false;
-      return true;
-    },
+  const hash = (record: EncodeResultEntry) => {
+    const list: IndexedElement[] = [];
+    for (const i of Array(max_length).keys()) {
+      const element = record[i];
+      if (element === undefined) {
+        break;
+      }
+      list.push(element);
+    }
+    return list.map((x) => renderIndexed(x, display)).join(" ");
   };
 
-  const columns: ColumnsType<EncodeResultTable> = [
+  const columns: ColumnsType<EncodeResultEntry> = [
     {
       title: "汉字",
-      dataIndex: "char",
-      key: "char",
-      sorter: (a, b) => a.char.codePointAt(0)! - b.char.codePointAt(0)!,
+      dataIndex: "name",
+      sorter: (a, b) => a.name.codePointAt(0)! - b.name.codePointAt(0)!,
       sortDirections: ["ascend", "descend"],
+      width: 64,
     },
     {
-      title: "拆分",
-      dataIndex: "sequence",
-      ...sequenceFilter,
-      key: "sequence",
+      title: "全拆",
+      key: "full",
+      render: (_, record) => hash(record),
+      sorter: (a, b) => {
+        const ahash = hash(a);
+        const bhash = hash(b);
+        return ahash.localeCompare(bhash);
+      },
+      width: 128,
+    },
+  ];
+
+  for (const i of Array(max_length).keys()) {
+    columns.push({
+      title: `${i + 1} 码`,
+      key: i,
       render: (_, record) => {
-        return (
-          <span>
-            {uniquify(
-              record.sequence.map((x) => {
-                return x.map(renderIndexed).join(" ");
-              }),
-            ).join(", ")}
-          </span>
-        );
+        const element = record[i];
+        if (element === undefined) {
+          return null;
+        }
+        return renderIndexed(element, display);
       },
       sorter: (a, b) => {
-        const ahash = a.sequence[0]?.map(renderIndexed).join(", ");
-        const bhash = b.sequence[0]?.map(renderIndexed).join(", ");
-        if (ahash === undefined || bhash === undefined) {
-          return 0;
-        }
+        const ahash = renderIndexed(a[i] ?? "", display);
+        const bhash = renderIndexed(b[i] ?? "", display);
         return ahash.localeCompare(bhash);
       },
       sortDirections: ["ascend", "descend"],
-    },
-  ];
+      width: 96,
+    });
+  }
   const items: TabsProps["items"] = [
     {
       key: "1",
@@ -234,31 +174,6 @@ const Encoder = () => {
           />
         ) : null}
         <CharacterQuery setFilter={setFilter} />
-        {/* <Flex justify="center" align="center" gap="large">
-          字集过滤
-          <Space>
-            GB/T 2312
-            <Select
-              value={gb2312}
-              options={filtervalues.map((x) => ({
-                value: x,
-                label: x,
-              }))}
-              onChange={(value) => setGB2312(value)}
-            />
-          </Space>
-          <Space>
-            通用规范
-            <Select
-              value={tygf}
-              options={filtervalues.map((x) => ({
-                value: x,
-                label: x,
-              }))}
-              onChange={(value) => setTYGF(value)}
-            />
-          </Space>
-        </Flex> */}
         <Flex justify="center" gap="small">
           <Button
             type="primary"
@@ -284,7 +199,12 @@ const Encoder = () => {
             导出拆分表
           </Button>
         </Flex>
-        {result.size > 0 && <p>原始重码：{selections}</p>}
+        {result.size > 0 && (
+          <PrimitiveDuplicationAnalyzer
+            selections={selections}
+            setAnalyzer={setAnalyzer}
+          />
+        )}
         <Table
           columns={columns}
           dataSource={dataSource}
@@ -294,6 +214,4 @@ const Encoder = () => {
       </EditorColumn>
     </EditorRow>
   );
-};
-
-export default Encoder;
+}

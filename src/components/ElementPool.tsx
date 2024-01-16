@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Character";
-import { Flex, Pagination, Popover } from "antd";
+import { Button, Flex, Modal, Pagination, Popover, Typography } from "antd";
 import {
   useAtomValue,
   repertoireAtom,
@@ -13,6 +13,9 @@ import {
 import { isPUA } from "~/lib/utils";
 import { StrokesView } from "./GlyphView";
 import StrokeSearch, { makeFilter } from "./CharacterSearch";
+import { ShapeElementTypes } from "./ElementPicker";
+import { PronunciationElementTypes } from "~/lib/element";
+import Classifier from "./Classifier";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -24,7 +27,7 @@ interface PoolProps {
   element?: string;
   setElement: (s: string | undefined) => void;
   content: string[];
-  strokeFilter?: boolean;
+  name: ShapeElementTypes | PronunciationElementTypes;
 }
 
 const Element = ({
@@ -71,28 +74,41 @@ const Element = ({
 
 const MyPagination = styled(Pagination)``;
 
-const ElementPool = ({
-  element,
-  setElement,
-  content,
-  strokeFilter,
-}: PoolProps) => {
+const ElementPool = ({ element, setElement, content, name }: PoolProps) => {
   const [page, setPage] = useState(1);
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(sequenceAtom);
   const determinedRepertoire = useAtomValue(repertoireAtom);
-  const filtered = strokeFilter
-    ? content.filter(
-        (x) =>
-          makeFilter(sequence, determinedRepertoire, sequenceMap)(x) &&
-          (sequenceMap.get(x)?.length ?? 0) > 1,
-      )
-    : content;
+  const filtered =
+    name === "字根"
+      ? content.filter(
+          (x) =>
+            makeFilter(sequence, determinedRepertoire, sequenceMap)(x) &&
+            (sequenceMap.get(x)?.length ?? 0) > 1,
+        )
+      : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const [isOpen, setOpen] = useState(false);
   return (
     <Flex vertical gap="middle" align="center">
-      {strokeFilter && <StrokeSearch setSequence={setSequence} />}
+      {name === "字根" && <StrokeSearch setSequence={setSequence} />}
+      {name === "笔画" && (
+        <>
+          <Typography.Text>
+            您需要首先将笔画分为若干个类别，然后将代表类别的数字放到键盘上。
+          </Typography.Text>
+          <Button onClick={() => setOpen(true)}>配置笔画分类</Button>
+          <Modal
+            open={isOpen}
+            title="笔画分类"
+            footer={false}
+            onCancel={() => setOpen(false)}
+          >
+            <Classifier />
+          </Modal>
+        </>
+      )}
       <Content wrap="wrap">
         {range.map((x) => (
           <Element

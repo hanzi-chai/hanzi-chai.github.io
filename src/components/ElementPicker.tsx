@@ -63,9 +63,9 @@ const AlgebraEditor = function ({
 };
 
 const shapeElementTypes = ["字根", "笔画", "二笔", "结构"] as const;
-type ShapeElementTypes = (typeof shapeElementTypes)[number];
+export type ShapeElementTypes = (typeof shapeElementTypes)[number];
 
-export const FormElementPicker = function () {
+export const ShapeElementPicker = function () {
   const customizedClassifier = useAtomValue(customClassifierAtom);
   const sortedForm = useAtomValue(sortedRepertoireAtom);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
@@ -96,7 +96,7 @@ export const FormElementPicker = function () {
                 element={element}
                 setElement={setElement}
                 content={elements}
-                strokeFilter={name === "字根"}
+                name={name}
               />
             ),
           };
@@ -148,6 +148,7 @@ export const PronElementPicker = function () {
                 element={element}
                 setElement={setElement}
                 content={elements}
+                name={name}
               />
             ),
           };

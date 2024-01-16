@@ -1,6 +1,5 @@
 import { Button, Checkbox, Flex, Typography } from "antd";
 import {
-  analysisAtom,
   useAtomValue,
   useSetAtom,
   useAddAtom,
@@ -12,7 +11,6 @@ import {
 import { DeleteButton, Select } from "./Utils";
 import classifier, { Feature } from "~/lib/classifier";
 import { useState } from "react";
-import { defaultDegenerator } from "~/lib/degenerator";
 
 const Degenerator = () => {
   const degenerator = useAtomValue(degeneratorAtom);

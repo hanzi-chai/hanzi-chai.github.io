@@ -1,28 +1,17 @@
 import {
   Button,
-  Checkbox,
   Dropdown,
   Flex,
   Form,
   InputNumber,
-  Space,
   Switch,
   Typography,
 } from "antd";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useState } from "react";
-import {
-  characterFrequencyAtom,
-  keyboardAtom,
-  fetchJson,
-  keyEquivalenceAtom,
-  pairEquivalenceAtom,
-  useListAtom,
-  wordFrequencyAtom,
-} from "~/atoms";
+import { keyboardAtom, useListAtom } from "~/atoms";
 import { constraintsAtom, objectiveAtom } from "~/atoms/optimization";
-import CustomSpin from "~/components/CustomSpin";
 import ElementSelect from "~/components/ElementSelect";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
@@ -42,7 +31,6 @@ import {
   Solver,
   TierWeights,
 } from "~/lib/config";
-import { LoadAssets } from "~/lib/utils";
 
 const AtomicObjective = ({
   title,
@@ -242,7 +230,7 @@ const PartialObjective = ({
   const [tiers, setTiers] = useAtom(tiersAtom);
   const [levels, setLevels] = useAtom(levelsAtom);
   const currentPart = partialObjective ?? {};
-  const { duplication, key_equivalence, pair_equivalence } = currentPart;
+  const { duplication, key_distribution, pair_equivalence } = currentPart;
   const update = (type: keyof PartialWeights, value: number | undefined) => {
     setPartialObjective({ ...currentPart, [type]: value });
   };
@@ -277,9 +265,9 @@ const PartialObjective = ({
               onChange={(value) => update("duplication", value)}
             />
             <AtomicObjective
-              title="用指当量权重"
-              value={key_equivalence}
-              onChange={(value) => update("key_equivalence", value)}
+              title="用指分布偏差权重"
+              value={key_distribution}
+              onChange={(value) => update("key_distribution", value)}
             />
             <AtomicObjective
               title="速度当量权重"
@@ -445,7 +433,6 @@ const Optimization = () => {
         <PartialObjective title="单字全码" type="characters_full" />
         <PartialObjective title="单字简码" type="characters_short" />
         <PartialObjective title="词语全码" type="words_full" />
-        <PartialObjective title="词语简码" type="words_short" />
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>
@@ -455,10 +442,7 @@ const Optimization = () => {
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>优化</Typography.Title>
-        <Suspense fallback={<CustomSpin tip="加载数据" />}>
-          <LoadAssets />
-          <Optimizer />
-        </Suspense>
+        <Optimizer />
       </EditorColumn>
     </EditorRow>
   );

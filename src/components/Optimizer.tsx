@@ -12,13 +12,13 @@ import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { configAtom, repertoireAtom, assetsAtom, wordsAtom } from "~/atoms";
 import { getTSV, assemble } from "~/lib/assembly";
-import MyWorker from "../worker?worker";
 import { LibchaiOutputEvent } from "~/worker";
-import { exportYAML } from "./Utils";
+import { exportTSV, exportYAML, makeWorker } from "./Utils";
 import { load } from "js-yaml";
 import { Solver } from "~/lib/config";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { analysis } from "~/lib/repertoire";
+import { makeEncodeCallback } from "~/pages/[id]/encode";
 
 export type Frequency = Record<string, number>;
 export type Equivalence = Record<string, number>;
@@ -116,7 +116,7 @@ const Optimizer = () => {
       <Button
         type="primary"
         onClick={async () => {
-          const worker = new MyWorker();
+          const worker = makeWorker();
           worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
             const { data } = event;
             switch (data.type) {
@@ -127,8 +127,10 @@ const Optimizer = () => {
                 });
                 break;
               case "error":
+                console.log("错误信息", data.error);
                 notification.error({
                   message: "评测过程中 libchai 出现错误",
+                  description: data.error.toString(),
                 });
                 break;
             }
@@ -153,7 +155,7 @@ const Optimizer = () => {
           setAutoParams(undefined);
           setProgress(undefined);
           setOptimizing(true);
-          const worker = new MyWorker();
+          const worker = makeWorker();
           worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
             const { data } = event;
             switch (data.type) {
@@ -184,8 +186,10 @@ const Optimizer = () => {
                 });
                 break;
               case "error":
+                console.log("错误信息", data.error);
                 notification.error({
                   message: "优化过程中 libchai 出现错误",
+                  description: data.error.toString(),
                 });
                 break;
             }
@@ -196,21 +200,64 @@ const Optimizer = () => {
         开始优化
       </Button>
       {optimizing ? <Schedule params={params} progress={progress} /> : null}
-      <Typography.Title level={4}>当前最佳方案指标</Typography.Title>
-      {bestMetric ? (
-        <Typography.Text>
-          <pre>{bestMetric}</pre>
-        </Typography.Text>
+      <Typography.Title level={4}>当前最佳方案</Typography.Title>
+      {bestMetric && bestResult ? (
+        <>
+          <Typography.Text>
+            <pre>{bestMetric}</pre>
+          </Typography.Text>
+          <Flex justify="center" gap="middle">
+            <Button
+              onClick={() =>
+                exportYAML(load(bestResult) as object, "optimized")
+              }
+            >
+              下载方案
+            </Button>
+            <Button
+              onClick={() => {
+                const worker = makeWorker();
+                worker.onmessage = makeEncodeCallback((encodeOutput) => {
+                  const charactersTSV = encodeOutput.characters.map(
+                    ({ item, full, short }, i) => {
+                      return short ? [item, full, short] : [item, full];
+                    },
+                  );
+                  exportTSV(charactersTSV, "单字编码.txt");
+                });
+                worker.postMessage({
+                  type: "encode",
+                  data: { ...prepareInput(), config: load(bestResult) },
+                });
+              }}
+            >
+              下载单字码表
+            </Button>
+            <Button
+              onClick={() => {
+                const worker = makeWorker();
+                worker.onmessage = makeEncodeCallback((encodeOutput) => {
+                  if (encodeOutput.words !== undefined) {
+                    const wordsTSV = encodeOutput.words.map(
+                      ({ item, full, short }, i) => {
+                        return short ? [item, full, short] : [item, full];
+                      },
+                    );
+                    exportTSV(wordsTSV, "词语编码.txt");
+                  }
+                });
+                worker.postMessage({
+                  type: "encode",
+                  data: { ...prepareInput(), config: load(bestResult) },
+                });
+              }}
+            >
+              下载词语码表
+            </Button>
+          </Flex>
+        </>
       ) : null}
-      <Typography.Title level={4}>当前最佳结果下载</Typography.Title>
-      {bestResult ? (
-        <Button
-          onClick={() => exportYAML(load(bestResult) as object, "optimized")}
-        >
-          下载
-        </Button>
-      ) : null}
-      <Typography.Title level={4}>全部结果下载</Typography.Title>
+      <Typography.Title level={4}>全部方案</Typography.Title>
       <div>
         <Flex
           vertical

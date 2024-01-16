@@ -9,7 +9,7 @@ export default function ExportButtons() {
   const [config, setConfig] = useAtom(configAtom);
   const { source } = config;
   return (
-    <Flex wrap="wrap" gap="small">
+    <Flex wrap="wrap" gap="small" justify="center">
       <Uploader
         type="yaml"
         action={(s: string) => {

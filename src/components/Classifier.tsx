@@ -12,8 +12,6 @@ import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
-import { useChaifenTitle } from "~/lib/hooks";
-import * as O from "optics-ts/standalone";
 import { Feature } from "~/lib/classifier";
 
 function Draggable({ name }: { name: string }) {
@@ -57,7 +55,6 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 };
 
 const Classifier = () => {
-  useChaifenTitle("笔画分类数据");
   const classifier = useAtomValue(customClassifierAtom);
   const add = useAddAtom(classifierCustomizationAtom);
   const [categories, setCategories] = useState(

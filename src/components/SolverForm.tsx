@@ -1,57 +1,39 @@
 import {
-  ModalForm,
-  ProDescriptions,
   ProForm,
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
+  ProFormInstance,
   ProFormSelect,
 } from "@ant-design/pro-components";
-import { Button, Form, Space, Switch, notification } from "antd";
+import { Form, Switch } from "antd";
+import { useRef } from "react";
 import { metaheuristicAtom, useAtom } from "~/atoms";
-import { Rule, Solver } from "~/lib/config";
+import { Solver } from "~/lib/config";
 
 export default function () {
   const [metaheuristic, setMetaheuristic] = useAtom(metaheuristicAtom);
-  const parameters = metaheuristic.parameters;
-  const [form] = Form.useForm<Solver>();
+  const formRef = useRef<ProFormInstance>();
   const defaultParams = {
     t_max: 1.0,
     t_min: 1.0e-6,
     steps: 10000,
   };
+  const defaultSerachMethod: NonNullable<Solver["search_method"]> = {
+    random_move: 0.9,
+    random_swap: 0.09,
+    random_full_key_swap: 0.01,
+  };
   return (
     <>
-      <ProDescriptions column={4}>
-        <ProDescriptions.Item label="算法">退火算法</ProDescriptions.Item>
-        {parameters ? (
-          <>
-            <ProDescriptions.Item label="最高温">
-              {parameters.t_max ?? defaultParams.t_max}
-            </ProDescriptions.Item>
-            <ProDescriptions.Item label="最低温">
-              {parameters.t_min ?? defaultParams.t_min}
-            </ProDescriptions.Item>
-            <ProDescriptions.Item label="步数">
-              {parameters.steps ?? defaultParams.steps}
-            </ProDescriptions.Item>
-          </>
-        ) : (
-          <ProDescriptions.Item label="运行时间（分钟）">
-            {metaheuristic.runtime ?? 10}
-          </ProDescriptions.Item>
-        )}
-      </ProDescriptions>
-      <ModalForm<Solver>
+      <ProForm<Solver>
         title="求解算法"
-        form={form}
-        trigger={<Button>编辑细节</Button>}
+        formRef={formRef}
         initialValues={metaheuristic}
-        onFinish={async (values) => {
-          setMetaheuristic(values);
-          return true;
-        }}
+        onFinish={async (values) => setMetaheuristic(values)}
+        layout="horizontal"
         onValuesChange={(_, values) => setMetaheuristic(values)}
+        submitter={false}
       >
         <ProFormGroup>
           <ProFormSelect
@@ -59,49 +41,103 @@ export default function () {
             label="算法"
             options={[{ label: "退火算法", value: "SimulatedAnnealing" }]}
             rules={[{ required: true }]}
+            allowClear={false}
           />
-          <ProFormDigit label="保存进度" name="report_after" />
+          <ProFormDigit label="保存进度" name="report_after" width="xs" />
           <ProFormDependency name={["parameters"]}>
             {({ parameters }) => (
               <Form.Item label="自动调参">
                 <Switch
                   checked={parameters === undefined}
                   onChange={(value) => {
-                    form.setFieldValue(
+                    formRef?.current?.setFieldValue(
                       "parameters",
                       value ? undefined : defaultParams,
                     );
-                    form.setFieldValue("runtime", value ? 10 : undefined);
+                    formRef?.current?.setFieldValue(
+                      "runtime",
+                      value ? 10 : undefined,
+                    );
+                    formRef?.current?.submit();
                   }}
                 />
               </Form.Item>
             )}
           </ProFormDependency>
         </ProFormGroup>
-        <ProFormGroup title="移动方式">
-          <ProFormDigit
-            label="随机移动"
-            name={["search_method", "random_move"]}
-          />
-          <ProFormDigit
-            label="随机交换"
-            name={["search_method", "random_swap"]}
-          />
-        </ProFormGroup>
         <ProFormDependency name={["parameters"]}>
           {({ parameters }) =>
             parameters === undefined ? (
-              <ProFormDigit label="运行时间" name="runtime" />
+              <ProFormDigit
+                label="运行时间（分钟）"
+                name="runtime"
+                width="xs"
+              />
             ) : (
               <ProFormGroup title="参数">
-                <ProFormDigit label="最高温" name={["parameters", "t_max"]} />
-                <ProFormDigit label="最低温" name={["parameters", "t_min"]} />
-                <ProFormDigit label="步数" name={["parameters", "steps"]} />
+                <ProFormDigit
+                  label="最高温"
+                  name={["parameters", "t_max"]}
+                  width="xs"
+                  rules={[{ required: true }]}
+                />
+                <ProFormDigit
+                  label="最低温"
+                  name={["parameters", "t_min"]}
+                  width="xs"
+                  rules={[{ required: true }]}
+                />
+                <ProFormDigit
+                  label="步数"
+                  name={["parameters", "steps"]}
+                  width="xs"
+                  rules={[{ required: true }]}
+                />
               </ProFormGroup>
             )
           }
         </ProFormDependency>
-      </ModalForm>
+        <ProFormDependency name={["search_method"]}>
+          {({ search_method }) => (
+            <>
+              <Form.Item label="自动移动">
+                <Switch
+                  checked={search_method === undefined}
+                  onChange={(value) => {
+                    formRef?.current?.setFieldValue(
+                      "search_method",
+                      value ? undefined : defaultSerachMethod,
+                    );
+                    formRef?.current?.submit();
+                  }}
+                />
+              </Form.Item>
+              {search_method !== undefined ? (
+                <ProFormGroup title="移动方式">
+                  <ProFormDigit
+                    label="随机移动"
+                    name={["search_method", "random_move"]}
+                    width="xs"
+                    rules={[{ required: true }]}
+                  />
+                  <ProFormDigit
+                    label="随机交换"
+                    name={["search_method", "random_swap"]}
+                    width="xs"
+                    rules={[{ required: true }]}
+                  />
+                  <ProFormDigit
+                    label="随机整键交换"
+                    name={["search_method", "random_full_key_swap"]}
+                    width="xs"
+                    rules={[{ required: true }]}
+                  />
+                </ProFormGroup>
+              ) : null}
+            </>
+          )}
+        </ProFormDependency>
+      </ProForm>
     </>
   );
 }

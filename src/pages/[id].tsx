@@ -21,13 +21,18 @@ import {
   fetchJson,
   primitiveRepertoireAtom,
 } from "~/atoms";
-import { listToObject } from "~/lib/utils";
+import { LoadAssets, listToObject } from "~/lib/utils";
 
 const items: MenuProps["items"] = [
   {
     label: "基本",
     key: "",
     icon: <MailOutlined />,
+  },
+  {
+    label: "数据",
+    key: "repertoire",
+    icon: <DatabaseOutlined />,
   },
   {
     label: "元素",
@@ -53,16 +58,6 @@ const items: MenuProps["items"] = [
     label: "优化",
     key: "optimization",
     icon: <RiseOutlined />,
-  },
-  {
-    label: "数据",
-    key: "repertoire",
-    icon: <DatabaseOutlined />,
-  },
-  {
-    label: "笔画分类",
-    key: "classifier",
-    icon: <DatabaseOutlined />,
   },
 ];
 
@@ -183,6 +178,7 @@ export default function Contextualized() {
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
       <LoadRepertoire />
+      <LoadAssets />
       <EditorLayout />
       <DevTools />
     </Suspense>

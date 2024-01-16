@@ -25,6 +25,7 @@ export type LibchaiOutputEvent =
     }
   | {
       type: "error";
+      error: Error;
     }
   | {
       type: "progress";
@@ -62,8 +63,8 @@ self.onmessage = async (event: MessageEvent<LibchaiInputEvent>) => {
         self.postMessage({ type: "finish" } as LibchaiOutputEvent);
         break;
     }
-  } catch {
-    self.postMessage({ type: "error" } as LibchaiOutputEvent);
+  } catch (error) {
+    self.postMessage({ type: "error", error } as LibchaiOutputEvent);
   }
 };
 

@@ -24,7 +24,7 @@ const processFile = async (filename) => {
 for (const name of [
   "character_frequency",
   "word_frequency",
-  "key_equivalence",
+  "key_distribution",
   "pair_equivalence",
 ]) {
   await processFile(name);
