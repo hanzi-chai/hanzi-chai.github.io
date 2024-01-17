@@ -127,10 +127,9 @@ const Optimizer = () => {
                 });
                 break;
               case "error":
-                console.log("错误信息", data.error);
                 notification.error({
                   message: "评测过程中 libchai 出现错误",
-                  description: data.error.toString(),
+                  description: data.error.message,
                 });
                 break;
             }
@@ -186,10 +185,9 @@ const Optimizer = () => {
                 });
                 break;
               case "error":
-                console.log("错误信息", data.error);
                 notification.error({
                   message: "优化过程中 libchai 出现错误",
-                  description: data.error.toString(),
+                  description: data.error.message,
                 });
                 break;
             }

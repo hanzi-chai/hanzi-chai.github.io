@@ -194,7 +194,6 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
         if (!valid || newName.length > 1) return;
         const newUnicode = newName.codePointAt(0)!;
         const payload = { old: unicode, new: newUnicode };
-        console.log(payload);
         const res = await remoteMutate(payload);
         if (!errorFeedback(res)) {
           mutate([unicode, newUnicode]);

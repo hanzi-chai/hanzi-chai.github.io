@@ -157,7 +157,6 @@ const CharacterTable = () => {
           addUser(char, newCharacter);
           return true;
         }
-        console.log(newCharacter);
         const res = await remoteUpdate(newCharacter);
         if (!errorFeedback(res)) {
           add(char, newCharacter);
@@ -363,13 +362,8 @@ const CharacterTable = () => {
       align="center"
     >
       <CharacterQuery setFilter={setFilterProps} />
-      <Flex
-        gap="large"
-        style={{ alignSelf: "stretch", paddingInline: "32px" }}
-        ref={ref2}
-      >
+      <Flex gap="large" ref={ref2}>
         <TagPicker />
-        <div style={{ flex: 1 }} />
         <Create onCreate={(char) => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>

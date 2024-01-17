@@ -141,13 +141,9 @@ export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
   const reverseForm: Record<string, string[]> = Object.fromEntries(
     Object.entries(repertoire).map(([x]) => [x, []]),
   );
-  for (const [char, glyph] of Object.entries(repertoire)) {
-    if (glyph.glyph?.type === "compound") {
-      try {
-        glyph.glyph!.operandList.forEach((x) => reverseForm[x]!.push(char));
-      } catch {
-        console.error(char, glyph);
-      }
+  for (const [char, { glyph }] of Object.entries(repertoire)) {
+    if (glyph?.type === "compound") {
+      glyph.operandList.forEach((x) => reverseForm[x]?.push(char));
     }
   }
   const componentsNotChar = Object.entries(repertoire)
@@ -156,9 +152,9 @@ export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
     .filter((x) => !set.has(x));
   const suppList: string[] = [];
   componentsNotChar.forEach((char) => {
-    let trial = char;
+    let trial: string | undefined = char;
     while (trial && !set.has(trial)) {
-      trial = reverseForm[trial]![0]!;
+      trial = reverseForm[trial]?.[0];
     }
     if (trial) suppList.push(trial);
   });
