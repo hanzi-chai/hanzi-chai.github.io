@@ -8,7 +8,13 @@ import {
   Popover,
   Space,
 } from "antd";
-import { createContext, useContext, useState } from "react";
+import {
+  ForwardedRef,
+  createContext,
+  forwardRef,
+  useContext,
+  useState,
+} from "react";
 import {
   remoteCreate,
   remoteCreateWithoutUnicode,
@@ -18,7 +24,6 @@ import {
 } from "~/lib/api";
 import {
   DeleteButton,
-  PlusButton,
   Select,
   errorFeedback,
   verifyNewName,
@@ -44,12 +49,7 @@ import {
   primitiveRepertoireAtom,
   customGlyphAtom,
 } from "~/atoms";
-import {
-  PrimitveCharacter,
-  DerivedComponent,
-  Compound,
-  Component,
-} from "~/lib/data";
+import { PrimitveCharacter, Compound, Component } from "~/lib/data";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { MenuProps } from "antd/lib";
@@ -62,10 +62,17 @@ interface CreateProps {
 
 export const RemoteContext = createContext(true);
 
-export const Create = ({ onCreate }: { onCreate: (s: string) => void }) => (
-  <Popover content={<CreatePopoverContent onCreate={onCreate} />}>
-    <Button type="primary">新建</Button>
-  </Popover>
+export const Create = forwardRef(
+  (
+    { onCreate }: { onCreate: (s: string) => void },
+    ref: ForwardedRef<HTMLElement>,
+  ) => (
+    <Popover content={<CreatePopoverContent onCreate={onCreate} />}>
+      <Button type="primary" ref={ref}>
+        新建
+      </Button>
+    </Popover>
+  ),
 );
 
 function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
@@ -136,7 +143,7 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
       }}
     >
       <Form.Item<CreateProps>
-        label="名称"
+        label="字或别名"
         name="charOrName"
         rules={[
           {

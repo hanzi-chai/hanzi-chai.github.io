@@ -6,6 +6,7 @@ import {
   userCharacterFrequencyAtom,
   userKeyDistributionAtom,
   userPairEquivalenceAtom,
+  userWordAtom,
   userWordFrequencyAtom,
 } from "./assets";
 
@@ -56,6 +57,11 @@ export const wordFrequencyAtom = atom<Frequency>({});
 export const keyDistributionAtom = atom<Frequency>({});
 export const pairEquivalenceAtom = atom<Equivalence>({});
 
+export const wordAtom = atom((get) => {
+  const wordFrequency = get(wordFrequencyAtom);
+  return Object.keys(wordFrequency);
+});
+
 export interface Assets {
   character_frequency: Frequency;
   word_frequency: Frequency;
@@ -81,6 +87,7 @@ export const assetsAtom = atom((get) => {
 });
 
 export const wordsAtom = atom((get) => {
+  const userWord = get(userWordAtom);
   const { word_frequency } = get(assetsAtom);
-  return Object.keys(word_frequency);
+  return userWord ?? Object.keys(word_frequency);
 });

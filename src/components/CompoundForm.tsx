@@ -64,12 +64,14 @@ const CompoundForm = ({
   onFinish,
   noButton,
   primary,
+  readonly,
 }: {
   title: string;
   initialValues: Compound;
   onFinish: (c: Compound) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
+  readonly?: boolean;
 }) => {
   const repertoire = useAtomValue(repertoireAtom);
   const [form] = Form.useForm<Compound>();
@@ -77,7 +79,7 @@ const CompoundForm = ({
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Root type={primary ? "primary" : "default"}>{title}</Root>
+    <Root type={primary ? "default" : "text"}>{title}</Root>
   );
   return (
     <ModalForm<Compound>
@@ -90,6 +92,8 @@ const CompoundForm = ({
       modalProps={{
         width: 1080,
       }}
+      readonly={readonly}
+      submitter={readonly ? false : undefined}
     >
       <EditorRow>
         <EditorColumn span={8}>
@@ -128,7 +132,7 @@ const CompoundForm = ({
             <StaticList name={"operandList"} itemRender={InlineRender}>
               {(meta, i) => (
                 <Form.Item noStyle {...meta}>
-                  <GlyphSelect style={{ width: "96px" }} />
+                  <GlyphSelect style={{ width: "96px" }} disabled={readonly} />
                 </Form.Item>
               )}
             </StaticList>

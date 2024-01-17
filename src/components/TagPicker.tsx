@@ -1,8 +1,9 @@
 import { ProForm, ProFormSelect } from "@ant-design/pro-form";
 import { useAtom } from "jotai";
+import { forwardRef } from "react";
 import { tagsAtom, userTagsAtom } from "~/atoms";
 
-const TagPicker = () => {
+const TagPicker = forwardRef((_, ref) => {
   const [tags] = useAtom(tagsAtom);
   const [userTags, setUserTags] = useAtom(userTagsAtom);
 
@@ -19,12 +20,12 @@ const TagPicker = () => {
     >
       <ProFormSelect
         name="tags"
-        label="批量选择字形标签"
+        label="通过标签来批量选择字形"
         mode="multiple"
         options={tags.map((tag) => ({ label: tag, value: tag }))}
       />
     </ProForm>
   );
-};
+});
 
 export default TagPicker;

@@ -52,12 +52,10 @@ const EncoderRules = () => {
         <Form.Item label="顶屏码长">
           <Select
             value={autoSelectLength}
-            options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-              .map((x) => ({
-                label: x.toString(),
-                value: x as number | undefined,
-              }))
-              .concat([{ label: "不自动顶屏", value: undefined }])}
+            options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((x) => ({
+              label: x.toString(),
+              value: x,
+            }))}
             onChange={setAutoSelectLength}
           />
         </Form.Item>

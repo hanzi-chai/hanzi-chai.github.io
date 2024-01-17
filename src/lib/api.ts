@@ -8,7 +8,7 @@ export interface Err {
 }
 
 const getHeader = () => {
-  const token = localStorage.getItem(".token");
+  const token = localStorage.getItem("token");
   return token
     ? {
         Authorization: `Bearer ${token}`,

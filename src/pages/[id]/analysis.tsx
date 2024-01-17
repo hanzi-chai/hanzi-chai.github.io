@@ -70,7 +70,7 @@ const Analysis = () => {
   useChaifenTitle("拆分");
   const [filter, setFilter] = useState<CharacterFilter>({});
   const [step, setStep] = useState(0 as 0 | 1);
-  const determinedRepertoire = useAtomValue(repertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const componentCache: ComponentCache =
@@ -86,11 +86,7 @@ const Analysis = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
-  const filterFn = makeCharacterFilter(
-    filter,
-    determinedRepertoire,
-    sequenceMap,
-  );
+  const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
 
   const displays = [
     [...componentCache]
@@ -162,9 +158,7 @@ const Analysis = () => {
           </Radio.Group>
           <Button
             type="primary"
-            onClick={() =>
-              setAnalysisResult(analysis(determinedRepertoire, config))
-            }
+            onClick={() => setAnalysisResult(analysis(repertoire, config))}
           >
             计算
           </Button>

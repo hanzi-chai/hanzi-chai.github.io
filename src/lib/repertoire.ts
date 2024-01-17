@@ -16,12 +16,15 @@ import {
   Component,
 } from "./data";
 
-export const findGlyph = (glyphs: (Component | Compound)[], tags: string[]) => {
+export const findGlyphIndex = (
+  glyphs: (Component | Compound)[],
+  tags: string[],
+) => {
   for (const tag of tags) {
-    const withTag = glyphs.find((x) => (x.tags ?? []).includes(tag));
-    if (withTag !== undefined) return withTag;
+    const withTag = glyphs.findIndex((x) => (x.tags ?? []).includes(tag));
+    if (withTag !== -1) return withTag;
   }
-  return glyphs[0];
+  return 0;
 };
 
 export const determine = (
@@ -33,7 +36,8 @@ export const determine = (
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
     const { ambiguous, glyphs, ...rest } = character;
-    const rawglyph = customization[name] ?? findGlyph(glyphs, tags);
+    const selectedIndex = findGlyphIndex(glyphs, tags);
+    const rawglyph = customization[name] ?? glyphs[selectedIndex];
     let glyph: Character["glyph"];
     if (rawglyph?.type === "derived_component") {
       const svgglyph = recursiveRenderComponent(

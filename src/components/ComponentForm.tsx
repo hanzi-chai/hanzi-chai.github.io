@@ -11,6 +11,7 @@ import { GlyphSelect } from "./CharacterSelect";
 import {
   ModalForm,
   ProFormDependency,
+  ProFormDigit,
   ProFormGroup,
   ProFormList,
   ProFormListProps,
@@ -95,13 +96,10 @@ const StrokeForm = ({ maxIndex }: { maxIndex?: number }) => {
                 />
               </Flex>
             ) : (
-              <StaticList name="start" itemRender={InlineRender}>
-                {(meta) => (
-                  <Form.Item noStyle {...meta}>
-                    <NumberInput />
-                  </Form.Item>
-                )}
-              </StaticList>
+              <ProFormGroup>
+                <ProFormDigit name={["start", 0]} />
+                <ProFormDigit name={["start", 1]} />
+              </ProFormGroup>
             )
           }
         </ProFormDependency>
@@ -112,13 +110,24 @@ const StrokeForm = ({ maxIndex }: { maxIndex?: number }) => {
             <StaticList name="curveList">
               <ProFormGroup key="group">
                 <ProFormSelect name="command" disabled />
-                <StaticList name="parameterList" itemRender={InlineRender}>
-                  {(meta) => (
-                    <Form.Item noStyle {...meta}>
-                      <NumberInput />
-                    </Form.Item>
-                  )}
-                </StaticList>
+                <ProFormDependency name={["command"]}>
+                  {({ command }) =>
+                    command === "c" || command === "z" ? (
+                      <ProFormGroup>
+                        <ProFormDigit name={["parameterList", 0]} />
+                        <ProFormDigit name={["parameterList", 1]} />
+                        <ProFormDigit name={["parameterList", 2]} />
+                        <ProFormDigit name={["parameterList", 3]} />
+                        <ProFormDigit name={["parameterList", 4]} />
+                        <ProFormDigit name={["parameterList", 5]} />
+                      </ProFormGroup>
+                    ) : (
+                      <ProFormGroup>
+                        <ProFormDigit name={["parameterList", 0]} />
+                      </ProFormGroup>
+                    )
+                  }
+                </ProFormDependency>
               </ProFormGroup>
             </StaticList>
           ) : null
@@ -135,6 +144,7 @@ const ComponentForm = ({
   onFinish,
   noButton,
   primary,
+  readonly,
 }: {
   title: string;
   initialValues: Component;
@@ -142,12 +152,13 @@ const ComponentForm = ({
   onFinish: (c: Component) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
+  readonly?: boolean;
 }) => {
   const repertoire = useAtomValue(allRepertoireAtom);
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Root type={primary ? "primary" : "default"}>{title}</Root>
+    <Root type={primary ? "default" : "text"}>{title}</Root>
   );
   const isValidSource = ([name, _]: [string, Character]) => {
     let component: Component | undefined =
@@ -168,6 +179,8 @@ const ComponentForm = ({
       trigger={trigger}
       initialValues={initialValues}
       onFinish={onFinish}
+      readonly={readonly}
+      submitter={readonly ? false : undefined}
       modalProps={{
         width: 1080,
       }}

@@ -129,9 +129,9 @@ export const renderName = (object: CodableObject) => {
     case "笔画":
       return `根 ${object.rootIndex} 笔 ${object.strokeIndex}`;
     case "二笔":
-      return `根 ${object.rootIndex} 笔 (${object.strokeIndex * 2 - 1}, ${
-        object.strokeIndex * 2
-      })`;
+      return `根 ${object.rootIndex} 笔 (${
+        object.strokeIndex * 2 - Math.sign(object.strokeIndex)
+      }, ${object.strokeIndex * 2})`;
   }
 };
 

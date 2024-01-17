@@ -49,14 +49,14 @@ export const repertoireAtom = atom((get) => {
 });
 
 export const glyphAtom = atom((get) => {
-  const determinedRepertoire = get(repertoireAtom);
+  const repertoire = get(repertoireAtom);
   const result = new Map<string, SVGGlyph>();
-  for (const [char, { glyph }] of Object.entries(determinedRepertoire)) {
+  for (const [char, { glyph }] of Object.entries(repertoire)) {
     if (glyph === undefined) continue;
     if (glyph.type === "basic_component") {
       result.set(char, glyph.strokes);
     } else {
-      const svgglyph = recursiveRenderCompound(glyph, determinedRepertoire);
+      const svgglyph = recursiveRenderCompound(glyph, repertoire);
       if (svgglyph instanceof Error) continue;
       result.set(char, svgglyph);
     }

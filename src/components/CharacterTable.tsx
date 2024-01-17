@@ -1,6 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { isPUA, unicodeBlock } from "~/lib/utils";
-import { Checkbox, Flex, Layout, Space } from "antd";
+import {
+  Checkbox,
+  Flex,
+  FloatButton,
+  Layout,
+  Space,
+  Tour,
+  Typography,
+} from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
@@ -35,6 +43,9 @@ import CharacterQuery, {
   makeCharacterFilter,
 } from "./CharacterQuery";
 import TagPicker from "./TagPicker";
+import { findGlyphIndex } from "~/lib/repertoire";
+import { TourProps } from "antd/lib";
+import { QuestionCircleOutlined } from "@ant-design/icons";
 
 type Column = ColumnType<PrimitveCharacter>;
 
@@ -44,6 +55,7 @@ const CharacterTable = () => {
   const addUser = useAddAtom(userRepertoireAtom);
   const userTags = useAtomValue(userTagsAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
+  const addCustomGlyph = useAddAtom(customGlyphAtom);
   const customReadings = useAtomValue(customReadingsAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [page, setPage] = useState(1);
@@ -53,12 +65,12 @@ const CharacterTable = () => {
   const remote = useContext(RemoteContext);
   const add = useAddAtom(primitiveRepertoireAtom);
   const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
-  const isUserPUA = (a: string) =>
-    -Number(a.codePointAt(0)! >= 0xf000 && a.codePointAt(0)! <= 0x10000);
+  const isUserCharacter = (a: string) =>
+    -Number(userRepertoire[a] !== undefined);
 
   const dataSource = Object.entries(allRepertoire)
     .sort(([a], [b]) => getLength(a) - getLength(b))
-    .sort(([a], [b]) => isUserPUA(a) - isUserPUA(b))
+    .sort(([a], [b]) => isUserCharacter(a) - isUserCharacter(b))
     .filter(([x]) => filter(x))
     .map(([, glyph]) => glyph);
 
@@ -152,11 +164,12 @@ const CharacterTable = () => {
         }
         return true;
       };
+      const selectedIndex = findGlyphIndex(glyphs, userTags);
       return (
         <Flex gap="small">
           {glyphs.map((x, i) => {
             const lens = O.compose("glyphs", O.at(i));
-            const primary = userTags.some((tag) => x.tags?.includes(tag));
+            const primary = i === selectedIndex;
             return (
               <Space key={i}>
                 {x.type === "compound" ? (
@@ -175,6 +188,7 @@ const CharacterTable = () => {
                       return inlineUpdate(newGlyphs);
                     }}
                     primary={primary}
+                    readonly={!remote && userRepertoire[char] === undefined}
                   />
                 ) : (
                   <ComponentForm
@@ -191,9 +205,10 @@ const CharacterTable = () => {
                       return inlineUpdate(newGlyphs);
                     }}
                     primary={primary}
+                    readonly={!remote && userRepertoire[char] === undefined}
                   />
                 )}
-                {remote ? (
+                {remote || userRepertoire[char] !== undefined ? (
                   <DeleteButton
                     onClick={() => inlineUpdate(O.remove(lens, character))}
                   />
@@ -215,7 +230,7 @@ const CharacterTable = () => {
   const customGlyphColumn: Column = {
     title: "自定义字形",
     render: (_, character) => {
-      const { glyphs, unicode } = character;
+      const { unicode } = character;
       const char = String.fromCodePoint(unicode);
       const customized = customGlyph[char];
       if (customized === undefined) return null;
@@ -228,14 +243,22 @@ const CharacterTable = () => {
                 customized.operandList.map(display).join(" ")
               }
               initialValues={customized}
-              onFinish={async (values) => true}
+              onFinish={async (values) => {
+                addCustomGlyph(char, values);
+                return true;
+              }}
+              primary
             />
           ) : (
             <ComponentForm
               title={`部件`}
               initialValues={customized}
               current={String.fromCodePoint(unicode)}
-              onFinish={async (values) => true}
+              onFinish={async (values) => {
+                addCustomGlyph(char, values);
+                return true;
+              }}
+              primary
             />
           )}
         </Flex>
@@ -287,6 +310,33 @@ const CharacterTable = () => {
     },
   };
 
+  const ref1 = useRef(null);
+  const ref2 = useRef(null);
+  const ref3 = useRef(null);
+
+  const [open, setOpen] = useState<boolean>(false);
+
+  const steps: TourProps["steps"] = [
+    {
+      title: "自定义",
+      description:
+        "这里存放了汉字编码所需要的字音和字形数据。一个字可能会有零个、一个或多个字音和字形表示，默认情况下所有的字音表示都会用于生成编码，但是字形表示中只有第一个会参与编码。对于字形，如果系统中的第一个不是您想要的，您可以通过点击「自定义」来选择系统中的其他字形用于编码，或者自己创建一个部件或者复合体表示。",
+      target: () => ref1.current,
+    },
+    {
+      title: "批量自定义",
+      description:
+        "除此之外，您还可以在下方的「通过标签来批量选择字形」中选择一系列标签，被标签选中的系统字形会优先参与编码（例如，若您选择标签「行框」，则所有如街、衔、衡等的汉字都会选择［⿻ 行 ？］的分部方式，而不是原本排在第一位的左中右分部方式）。被选中的字形会以框选的方式突出显示。",
+      target: () => ref2.current,
+    },
+    {
+      title: "新建",
+      description:
+        "最后，您还可以通过点击「新建」来添加系统中没有的字或者您需要的特殊字根。新加的条目位于表格的最上方。若这个字或字根不属于 CJK 基本集或者 CJK 扩展 A，则您需要输入它的别名，系统会给它安排一个 0xF000 开头的 PUA 码位存放。",
+      target: () => ref3.current,
+    },
+  ];
+
   const adminColumns = [
     unicodeColumn,
     readings,
@@ -308,31 +358,46 @@ const CharacterTable = () => {
   return (
     <Flex
       component={Layout.Content}
-      style={{ padding: "32px", overflowY: "scroll" }}
+      style={{ overflowY: "scroll" }}
       vertical
-      gap="large"
       align="center"
     >
       <CharacterQuery setFilter={setFilterProps} />
-      <TagPicker />
-      <Create onCreate={(char) => {}} />
-      <Table<PrimitveCharacter>
-        dataSource={dataSource}
-        columns={columns}
-        size="small"
-        rowKey="unicode"
-        pagination={{
-          pageSize: 50,
-          current: page,
-        }}
-        onChange={(pagination) => {
-          const current = pagination.current;
-          current && setPage(current);
-        }}
-        style={{
-          maxWidth: "1920px",
-        }}
-      />
+      <Flex
+        gap="large"
+        style={{ alignSelf: "stretch", paddingInline: "32px" }}
+        ref={ref2}
+      >
+        <TagPicker />
+        <div style={{ flex: 1 }} />
+        <Create onCreate={(char) => {}} ref={ref3} />
+      </Flex>
+      <div ref={ref1}>
+        <Table<PrimitveCharacter>
+          dataSource={dataSource}
+          columns={columns}
+          size="small"
+          rowKey="unicode"
+          pagination={{
+            pageSize: 50,
+            current: page,
+          }}
+          onChange={(pagination) => {
+            const current = pagination.current;
+            current && setPage(current);
+          }}
+          style={{
+            maxWidth: "1920px",
+          }}
+        />
+        <Tour open={open} onClose={() => setOpen(false)} steps={steps} />
+        <FloatButton
+          icon={<QuestionCircleOutlined />}
+          type="primary"
+          style={{ right: 64 }}
+          onClick={() => setOpen(true)}
+        />
+      </div>
     </Flex>
   );
 };

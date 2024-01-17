@@ -54,8 +54,8 @@ const SigninForm = ({ setStatus }: Controls) => {
           });
           return;
         }
-        localStorage.setItem(".user", JSON.stringify(response.user));
-        localStorage.setItem(".token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        localStorage.setItem("token", response.token);
         notification.success({
           message: "登录成功",
           description: "",
@@ -131,7 +131,7 @@ const SignupForm = ({ setStatus }: Controls) => {
 };
 
 const UserInfo = () => {
-  const user = JSON.parse(localStorage.getItem(".user")!) as User;
+  const user = JSON.parse(localStorage.getItem("user")!) as User;
   return <Typography.Text>欢迎回来，{user.name}</Typography.Text>;
 };
 
@@ -140,7 +140,7 @@ const HomeLayout = () => {
   const [configs, setConfigs] = useImmer(() =>
     Object.fromEntries(
       Object.entries(localStorage)
-        .filter(([key]) => key[0] !== "." && key.length === 9)
+        .filter(([key]) => key.length === 9)
         .map(([key, value]) => {
           const data = JSON.parse(value) as Config;
           return [key, data];
@@ -149,7 +149,7 @@ const HomeLayout = () => {
   );
 
   const [status, setStatus] = useState<Status>(() => {
-    return localStorage.getItem(".user") ? "login" : "signin";
+    return localStorage.getItem("user") ? "login" : "signin";
   });
 
   useEffect(() => {
@@ -157,7 +157,7 @@ const HomeLayout = () => {
       localStorage.setItem(id, JSON.stringify(config));
     });
     Object.keys(localStorage)
-      .filter((x) => !configs[x] && x[0] !== "." && x.length === 9)
+      .filter((x) => !configs[x] && x.length === 9)
       .forEach((id) => localStorage.removeItem(id));
   }, [configs]);
 
@@ -267,8 +267,8 @@ const HomeLayout = () => {
               disabled={status !== "login"}
               onClick={() => {
                 setStatus("signin");
-                localStorage.removeItem(".user");
-                localStorage.removeItem(".token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
               }}
             >
               退出

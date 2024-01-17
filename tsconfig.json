@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["src/*"],
     },
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -23,8 +23,8 @@
     // "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["@modyfi/vite-plugin-yaml/modules", "./vite-env.d.ts"]
+    "types": ["@modyfi/vite-plugin-yaml/modules", "./vite-env.d.ts"],
   },
   "include": ["src", "scripts", "spec"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [{ "path": "./tsconfig.node.json" }],
 }

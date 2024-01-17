@@ -12,8 +12,8 @@ export const userWordFrequencyAtom = atomWithStorage<Frequency | null>(
   null,
 );
 
-export const userWordAtom = atomWithStorage<Frequency | null>(
-  "user_word",
+export const userWordAtom = atomWithStorage<string[] | null>(
+  "user_word_list",
   null,
 );
 
