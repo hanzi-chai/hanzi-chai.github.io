@@ -1,5 +1,5 @@
 import { isEqual } from "lodash-es";
-import { findTopology, RenderedGlyph, renderSVGGlyph } from "./topology";
+import { findTopology, RenderedGlyph } from "./topology";
 import type { Interval } from "./bezier";
 import {
   curveLength,
@@ -7,7 +7,7 @@ import {
   isCollinear,
   sortTwoNumbers,
 } from "./bezier";
-import { Config, Degenerator, KeyboardConfig } from "./config";
+import { Config, Degenerator } from "./config";
 import { Feature } from "./classifier";
 import { ComputedComponent } from "./component";
 
@@ -43,6 +43,14 @@ const strokeFeatureEqual = (
   return d1 === d2;
 };
 
+/**
+ * 对于一些特殊的字根，一般性的字根认同规则可能不足以区分它们，需要特殊处理
+ * 这里判断了待拆分部件中的某些笔画究竟是不是这个字根
+ *
+ * @param component 待拆分部件
+ * @param root 字根
+ * @param indices 笔画索引列表
+ */
 const verifySpecialRoots = (
   component: ComputedComponent,
   root: ComputedComponent,
@@ -54,6 +62,13 @@ const verifySpecialRoots = (
     const lowerHeng = component.glyph[i3]!.curveList[0]!;
     const lowerIsLonger = curveLength(upperHeng) < curveLength(lowerHeng);
     return root.name === "土" ? lowerIsLonger : !lowerIsLonger;
+  }
+  if (["未", "末"].includes(root.name)) {
+    const [i1, i2] = indices as [number, number];
+    const upperHeng = component.glyph[i1]!.curveList[0]!;
+    const lowerHeng = component.glyph[i2]!.curveList[0]!;
+    const lowerIsLonger = curveLength(upperHeng) < curveLength(lowerHeng);
+    return root.name === "未" ? lowerIsLonger : !lowerIsLonger;
   }
   if (["口", "囗"].includes(root.name)) {
     if (["囗", "\ue02d"].includes(component.name)) {
@@ -72,7 +87,7 @@ const verifySpecialRoots = (
     );
     return root.name === "囗" ? containsStroke : !containsStroke;
   }
-  if (["\ue087" /* 木末二 */, "\ue43d" /* 全字头 */].includes(root.name)) {
+  if (["\ue087" /* 木无十 */, "\ue43d" /* 全字头 */].includes(root.name)) {
     const [i1] = indices as [number];
     const attachPoint = component.glyph[i1]!.curveList[0]!.controls[0];
     const otherStrokes = component.glyph.filter(
@@ -89,6 +104,14 @@ const verifySpecialRoots = (
   return true;
 };
 
+/**
+ * 给定一个部件和一个字根，找出这个部件所有包含这个字根的方式
+ * 如果部件不包含这个字根，就返回空列表
+ *
+ * @param config 配置
+ * @param component 待拆分部件
+ * @param root 字根
+ */
 export const generateSliceBinaries = (
   config: Config,
   component: ComputedComponent,
@@ -136,6 +159,11 @@ export const generateSliceBinaries = (
     .map(indicesToBinary(cglyph.length));
 };
 
+/**
+ * 字根认同的另一种算法，和上面的算法等价且更简单，但是效率比较差
+ * 这个算法是直接计算出一个部件在某个退化映射下的结果，然后和字根的结果比较
+ * 这种方式要求穷举一个部件中所有的笔画取幂集，复杂度为 O(2^n)，所以目前只用于测试
+ */
 export const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
   let featureMap = degenerator.feature ?? ({} as Record<Feature, Feature>);
   return [

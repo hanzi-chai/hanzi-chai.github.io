@@ -17,15 +17,6 @@ export const examples: Record<Example, ExampleConfig> = {
   zhengma: zhengma as ExampleConfig,
 };
 
-const getInfo = function (name: string): Config["info"] {
-  return {
-    name,
-    author: "无名氏",
-    version: "0.1.0",
-    description: "从模板创建",
-  };
-};
-
 export const classifierTypes = [
   "国标五分类",
   "表形码六分类",
@@ -38,23 +29,16 @@ const classifierMap: Record<ClassifierType, Classifier> = {
   郑码七分类: examples.zhengma.analysis!.classifier!,
 };
 
-export const defaultAnalysis: Analysis = {
-  degenerator: defaultDegenerator,
-  selector: defaultSelector,
-};
-
-export const defaultKeyboard: KeyboardConfig = {
-  alphabet: "qwertyuiopasdfghjklzxcvbnm",
-  grouping: {},
-  mapping: {},
-};
-
 export const keyboardTypes = ["郑码字根", "米十五笔字根", "无"] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   郑码字根: examples.zhengma.form,
   米十五笔字根: examples.mswb.form,
-  无: defaultKeyboard,
+  无: {
+    alphabet: "qwertyuiopasdfghjklzxcvbnm",
+    grouping: {},
+    mapping: {},
+  },
 };
 
 export const encoderTypes = [
@@ -80,12 +64,25 @@ export const createConfig = function (starter: StarterType): Config {
   return {
     version: APP_VERSION,
     source: null,
-    info: getInfo(starter.name),
+    info: {
+      name: starter.name,
+      author: "无名氏",
+      version: "0.1.0",
+      description: "从模板创建",
+    },
     analysis: {
-      ...defaultAnalysis,
       classifier: classifierMap[starter.data]!,
+      degenerator: defaultDegenerator,
+      selector: defaultSelector,
     },
     form: keyboardMap[starter.keyboard],
     encoder: encoderMap[starter.encoder],
   };
 };
+
+export const defaultConfig = createConfig({
+  name: "",
+  data: "国标五分类",
+  keyboard: "无",
+  encoder: "形音码",
+});

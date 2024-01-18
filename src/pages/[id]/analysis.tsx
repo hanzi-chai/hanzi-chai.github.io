@@ -22,8 +22,8 @@ import Root from "~/components/Element";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 
-import type { ComponentCache, ComponentResult } from "~/lib";
-import type { CompoundCache, CompoundResult } from "~/lib";
+import type { ComponentResults, ComponentAnalysis } from "~/lib";
+import type { CompoundResults, CompoundAnalysis } from "~/lib";
 import { analysis } from "~/lib";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
@@ -73,11 +73,11 @@ const Analysis = () => {
   const repertoire = useAtomValue(repertoireAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
-  const componentCache: ComponentCache =
-    analysisResult?.componentCache ?? new Map();
-  const compoundCache: CompoundCache =
-    analysisResult?.compoundCache ?? new Map();
-  const componentCustomizations: ComponentCache =
+  const componentResults: ComponentResults =
+    analysisResult?.componentResults ?? new Map();
+  const compoundResults: CompoundResults =
+    analysisResult?.compoundResults ?? new Map();
+  const componentCustomizations: ComponentResults =
     analysisResult?.customizations ?? new Map();
   const componentError = analysisResult?.componentError ?? [];
   const compoundError = analysisResult?.compoundError ?? [];
@@ -89,7 +89,7 @@ const Analysis = () => {
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
 
   const displays = [
-    [...componentCache]
+    [...componentResults]
       .filter(([x]) => filterFn(x))
       .filter(([, v]) => v.sequence.length > 1)
       .map(([key, res]) => {
@@ -112,7 +112,7 @@ const Analysis = () => {
             ) : null,
         };
       }),
-    [...compoundCache]
+    [...compoundResults]
       .filter(([x]) => filterFn(x))
       .map(([key, res]) => {
         return {

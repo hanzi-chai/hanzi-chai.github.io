@@ -17,8 +17,7 @@ import {
 
 import Root from "./Element";
 import Char from "./Character";
-import type { MappedInfo } from "~/lib";
-import { isPUA, reverse } from "~/lib";
+import { isPUA } from "~/lib";
 import {
   DeleteButton,
   Select,
@@ -31,6 +30,11 @@ import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 import { Key } from "~/lib";
+
+interface MappedInfo {
+  name: string;
+  code: string | Key[];
+}
 
 const useAffiliates = (name: string) => {
   const mapping = useAtomValue(mappingAtom);
@@ -261,7 +265,6 @@ const ImportResultAlert = ({
 const Mapping = () => {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  const reversed = reverse(alphabet, mapping!);
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?" + "qwertyuiopasdfghjkl;zxcvbnm,./",
   );
@@ -272,6 +275,16 @@ const Mapping = () => {
   const setMappingType = useSetAtom(mappingTypeAtom);
   const setAlphabet = useSetAtom(alphabetAtom);
   const setMapping = useSetAtom(mappingAtom);
+
+  const reversedMapping = new Map<string, MappedInfo[]>(
+    Array.from(alphabet).map((key) => [key, []]),
+  );
+  for (const [name, code] of Object.entries(mapping)) {
+    const main = code[0];
+    if (typeof main === "string") {
+      reversedMapping.get(main)?.push({ name, code });
+    }
+  }
   return (
     <>
       <Form.Item label="编码类型">
@@ -347,7 +360,7 @@ const Mapping = () => {
         />
       </Flex>
       <List
-        dataSource={Object.entries(reversed)}
+        dataSource={[...reversedMapping]}
         renderItem={(item: [string, MappedInfo[]]) => {
           const [key, roots] = item;
           return (

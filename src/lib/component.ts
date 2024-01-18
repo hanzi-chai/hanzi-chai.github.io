@@ -1,27 +1,34 @@
-import type { Config, KeyboardConfig, SieveName } from "./config";
+import type { Config, SieveName } from "./config";
 import type {
-  DerivedComponent,
-  Compound,
   Repertoire,
   PrimitiveRepertoire,
   SVGGlyph,
   Component,
-  BasicComponent,
 } from "./data";
 import { generateSliceBinaries } from "./degenerator";
 import { select } from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import type { RenderedGlyph, Topology } from "./topology";
 import { findTopology, renderSVGGlyph } from "./topology";
-import type { Classifier } from "./classifier";
-import { isValidCJKChar } from "./utils";
-import { affineMerge } from "./affine";
+import { mergeClassifier, type Classifier } from "./classifier";
+import { isComponent, isValidCJKChar } from "./utils";
+import { recursiveRenderCompound } from ".";
 
-class InvalidGlyphError extends Error {}
+export class InvalidGlyphError extends Error {}
 
-export const generateSchemes = (n: number, roots: number[]) => {
+/**
+ * 根据一个部件中包含的所有字根的情况，导出所有可能的拆分方案
+ *
+ * @param strokes 部件笔画数
+ * @param roots 部件包含的字根列表，其中每个字根用二进制表示
+ *
+ * 函数通过递归的方式，每次选取剩余部分的第一笔，然后在字根列表中找到包含这个笔画的所有字根
+ * 将这些可能性与此前已经拆分的部分组合，得到新的拆分方案
+ * 直到所有的笔画都使用完毕
+ */
+export const generateSchemes = (strokes: number, roots: number[]) => {
   const schemeList: number[][] = [];
-  const total = (1 << n) - 1;
+  const total = (1 << strokes) - 1;
   const combineNext = (partialSum: number, scheme: number[]) => {
     const restBin = total - partialSum;
     const restBin1st = 1 << (restBin.toString(2).length - 1);
@@ -41,6 +48,12 @@ export const generateSchemes = (n: number, roots: number[]) => {
   return schemeList;
 };
 
+/**
+ * 计算后的部件 ComputedComponent
+ *
+ * 在基本部件 BasicComponent 的基础上，将 SVG 命令转换为参数曲线
+ * 再基于参数曲线计算拓扑
+ */
 export interface ComputedComponent {
   name: string;
   glyph: RenderedGlyph;
@@ -50,12 +63,25 @@ export interface ComputedComponent {
 export class NoSchemeError extends Error {}
 export class MultipleSchemeError extends Error {}
 
-const getComponentScheme = function (
+/**
+ * 通过自动拆分算法，给定字根列表，对部件进行拆分
+ * @param component 部件
+ * @param rootData 字根列表
+ * @param config 配置
+ * @param classifier 笔画分类器
+ *
+ * 如果拆分唯一，则返回拆分结果；否则返回错误
+ *
+ * @returns 拆分结果
+ * @throws NoSchemeError 无拆分方案
+ * @throws MultipleSchemeError 多个拆分方案
+ */
+export const getComponentScheme = function (
   component: ComputedComponent,
   rootData: ComputedComponent[],
   config: Config,
   classifier: Classifier,
-): ComponentResult | NoSchemeError | MultipleSchemeError {
+): ComponentAnalysis | NoSchemeError | MultipleSchemeError {
   const { mapping } = config.form;
   if (mapping[component.name])
     return {
@@ -98,7 +124,12 @@ const getComponentScheme = function (
   };
 };
 
-export type ComponentResult = ComponentRootResult | ComponentRegularResult;
+/**
+ * 部件的拆分结果
+ */
+export type ComponentAnalysis =
+  | ComponentBasicAnalysis
+  | ComponentGenuineAnalysis;
 
 export interface SchemeWithData {
   sequence: string[];
@@ -106,8 +137,10 @@ export interface SchemeWithData {
   data: Map<SieveName, number | number[]>;
 }
 
-// 两个以上字根
-interface ComponentRegularResult {
+/**
+ * 部件通过自动拆分算法分析得到的拆分结果的全部细节
+ */
+interface ComponentGenuineAnalysis {
   sequence: string[];
   detail: { name: string; binary: number }[];
   strokes: number;
@@ -115,22 +148,34 @@ interface ComponentRegularResult {
   schemes: SchemeWithData[];
 }
 
-// 本身是字根字，无拆分细节
-interface ComponentRootResult {
+/**
+ * 部件本身是字根字，或者是由自定义部件拆分指定的无理拆分，无拆分细节
+ */
+interface ComponentBasicAnalysis {
   sequence: string[];
 }
 
-export type ComponentCache = Map<string, ComponentResult>;
+export type ComponentResults = Map<string, ComponentAnalysis>;
 
+/**
+ * 递归渲染一个部件（基本部件或者衍生部件）
+ * 如果是基本部件就直接返回，如果是衍生部件则先渲染源字的图形，然后解引用得到这个部件的图形
+ *
+ * @param component 部件
+ * @param repertoire 原始字符集
+ * @param glyphCache 部件缓存
+ *
+ * @returns 部件的 SVG 图形
+ * @throws InvalidGlyphError 无法渲染
+ */
 export const recursiveRenderComponent = function (
   component: Component,
   repertoire: PrimitiveRepertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
 ): SVGGlyph | InvalidGlyphError {
   if (component.type === "basic_component") return component.strokes;
-  const sourceComponent = repertoire[component.source]?.glyphs.find(
-    (x) => x.type === "basic_component" || x.type === "derived_component",
-  ) as BasicComponent | DerivedComponent | undefined;
+  const sourceComponent =
+    repertoire[component.source]?.glyphs.find(isComponent);
   if (sourceComponent === undefined) return new InvalidGlyphError();
   const sourceGlyph = recursiveRenderComponent(
     sourceComponent,
@@ -152,32 +197,11 @@ export const recursiveRenderComponent = function (
   return glyph;
 };
 
-export const recursiveRenderCompound = function (
-  compound: Compound,
-  repertoire: Repertoire,
-  glyphCache: Map<string, SVGGlyph> = new Map(),
-): SVGGlyph | InvalidGlyphError {
-  const glyphs: SVGGlyph[] = [];
-  for (const char of compound.operandList) {
-    const glyph = repertoire[char]?.glyph;
-    if (glyph === undefined) return new InvalidGlyphError();
-    if (glyph.type === "basic_component") {
-      glyphs.push(glyph.strokes);
-    } else {
-      const cache = glyphCache.get(char);
-      if (cache !== undefined) {
-        glyphs.push(cache);
-        continue;
-      }
-      const rendered = recursiveRenderCompound(glyph, repertoire, glyphCache);
-      if (rendered instanceof Error) return rendered;
-      glyphs.push(rendered);
-      glyphCache.set(char, rendered);
-    }
-  }
-  return affineMerge(compound, glyphs);
-};
-
+/**
+ * 把一个基本部件从 SVG 图形出发，先渲染成 Bezier 图形，然后计算拓扑
+ *
+ * 这样，便于后续的字根认同计算
+ */
 export const computeComponent = (name: string, glyph: SVGGlyph) => {
   const renderedGlyph = renderSVGGlyph(glyph);
   const topology = findTopology(renderedGlyph);
@@ -189,6 +213,14 @@ export const computeComponent = (name: string, glyph: SVGGlyph) => {
   return cache;
 };
 
+/**
+ * 将所有的字根都计算成 ComputedComponent
+ *
+ * @param repertoire 字符集
+ * @param config 配置
+ *
+ * @returns 所有计算后字根的列表
+ */
 export const renderRootList = (repertoire: Repertoire, config: Config) => {
   const { mapping, grouping } = config.form;
   const roots = [...Object.keys(mapping), ...Object.keys(grouping)].filter(
@@ -210,20 +242,28 @@ export const renderRootList = (repertoire: Repertoire, config: Config) => {
   return rootList;
 };
 
+/**
+ * 对所有部件进行拆分
+ *
+ * @param repertoire 字符集
+ * @param config 配置
+ *
+ * @returns 拆分结果和无法拆分的汉字列表
+ */
 export const disassembleComponents = function (
-  data: Repertoire,
+  repertoire: Repertoire,
   config: Config,
-  classifier: Classifier,
-): [ComponentCache, string[]] {
-  const rootList = renderRootList(data, config);
+): [ComponentResults, string[]] {
+  const rootList = renderRootList(repertoire, config);
+  const classifier = mergeClassifier(config.analysis?.classifier);
   const composables = new Set<string>();
-  for (const { glyph } of Object.values(data)) {
+  for (const { glyph } of Object.values(repertoire)) {
     if (glyph?.type !== "compound") continue;
     glyph!.operandList.forEach((x) => composables.add(x));
   }
-  const result: ComponentCache = new Map();
+  const result: ComponentResults = new Map();
   const error: string[] = [];
-  Object.entries(data).forEach(([name, character]) => {
+  Object.entries(repertoire).forEach(([name, character]) => {
     if (character.glyph?.type !== "basic_component") return;
     const cache = computeComponent(name, character.glyph.strokes);
     if (!isValidCJKChar(name) && !composables.has(name)) {

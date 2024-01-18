@@ -1,11 +1,10 @@
-import { mergeClassifier } from "./classifier";
 import {
-  ComponentCache,
-  ComponentResult,
+  ComponentResults,
+  ComponentAnalysis,
   disassembleComponents,
   recursiveRenderComponent,
 } from "./component";
-import { CompoundCache, disassembleCompounds } from "./compound";
+import { CompoundResults, disassembleCompounds } from "./compound";
 import { Config, CustomGlyph } from "./config";
 import {
   Compound,
@@ -27,6 +26,19 @@ export const findGlyphIndex = (
   return 0;
 };
 
+/**
+ * 将原始字符集转换为字符集
+ * 主要的工作是对每个字符，在数据库中的多个字形中选取一个
+ *
+ * @param repertoire 原始字符集
+ * @param customization 自定义字形
+ * @param tags 用户选择的标签
+ *
+ * 基本逻辑为，对于每个字符，
+ * - 如果用户指定了字形，则使用用户指定的字形
+ * - 如果用户指定的某个标签匹配上了这个字符的某个字形，则使用这个字形
+ * - 如果都没有，就使用默认字形
+ */
 export const determine = (
   repertoire: PrimitiveRepertoire,
   customization: CustomGlyph = {},
@@ -63,42 +75,48 @@ export const determine = (
 };
 
 export interface AnalysisResult {
-  componentCache: ComponentCache;
+  componentResults: ComponentResults;
   componentError: string[];
-  customizations: ComponentCache;
-  customized: ComponentCache;
-  compoundCache: CompoundCache;
+  customizations: ComponentResults;
+  customized: ComponentResults;
+  compoundResults: CompoundResults;
   compoundError: string[];
 }
 
-export const analysis = (repertoire: Repertoire, config: Config) => {
-  const classifier = mergeClassifier(config.analysis?.classifier);
-  const [componentCache, componentError] = disassembleComponents(
+/**
+ * 对整个字符集中的字符进行拆分
+ *
+ * @param repertoire 字符集
+ * @param config 配置
+ */
+export const analysis = function (
+  repertoire: Repertoire,
+  config: Config,
+): AnalysisResult {
+  const [componentResults, componentError] = disassembleComponents(
     repertoire,
     config,
-    classifier,
   );
-  const customizations: ComponentCache = new Map(
+  const customizations: ComponentResults = new Map(
     Object.entries(config.analysis?.customize ?? {}).map(
       ([component, sequence]) => {
-        const pseudoResult: ComponentResult = { sequence: sequence };
+        const pseudoResult: ComponentAnalysis = { sequence: sequence };
         return [component, pseudoResult] as const;
       },
     ),
   );
-  const customized = new Map([...componentCache, ...customizations]);
-  const [compoundCache, compoundError] = disassembleCompounds(
+  const customized = new Map([...componentResults, ...customizations]);
+  const [compoundResults, compoundError] = disassembleCompounds(
     repertoire,
     config,
     customized,
   );
-  const analysisResult: AnalysisResult = {
-    componentCache,
+  return {
+    componentResults,
     componentError,
     customizations,
     customized,
-    compoundCache,
+    compoundResults,
     compoundError,
   };
-  return analysisResult;
 };

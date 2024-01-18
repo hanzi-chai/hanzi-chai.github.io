@@ -1,6 +1,6 @@
 import { add } from "mathjs";
 import { Compound, Draw, Operator, Point, SVGGlyph, SVGStroke } from "./data";
-import { deepcopy } from "./utils";
+import { cloneDeep } from "lodash-es";
 
 class Affine {
   xscale: number;
@@ -14,7 +14,7 @@ class Affine {
   }
 
   transformDraw(draw: Draw): Draw {
-    const next = deepcopy(draw);
+    const next: Draw = cloneDeep(draw);
     switch (next.command) {
       case "h":
         next.parameterList[0] *= this.xscale;
@@ -79,6 +79,12 @@ const affineMap: Record<Operator, Affine[]> = {
   "⿻": [id, id],
 };
 
+/**
+ * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
+ * @param compound 复合体数据
+ * @param glyphList 各部分渲染后的 SVG 图形
+ * @returns 合并后的 SVG 图形
+ */
 export function affineMerge(compound: Compound, glyphList: SVGGlyph[]) {
   const { operator, order } = compound;
   const transformedGlyphs: SVGGlyph[] = [];

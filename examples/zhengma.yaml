@@ -1,4 +1,4 @@
-version: 0.0.6-alpha.1
+version: "0.1"
 source: zhengma
 info:
   name: 郑码
@@ -437,6 +437,8 @@ form:
     了: 'y'
     "\ue024": pd
 encoder:
+  max_length: 4
+  auto_select_length: 4
   sources:
     s0:
       object: null
@@ -533,5 +535,3 @@ encoder:
       operator: 存在
       positive: s9
       negative: s10
-  max_length: 4
-  auto_select_length: 4

@@ -6,17 +6,10 @@ import { repertoireAtom, displayAtom, primitiveRepertoireAtom } from "~/atoms";
 import { list } from "~/api";
 import { binaryToIndices, generateSliceBinaries } from "~/lib";
 import { computeComponent, type ComputedComponent } from "~/lib";
-import { createConfig, defaultKeyboard } from "~/lib";
+import { defaultConfig } from "~/lib";
 import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
-
-const defaultConfig = createConfig({
-  name: "",
-  data: "国标五分类",
-  keyboard: "米十五笔字根",
-  encoder: "形音码",
-});
 
 const DegeneratorTable = () => {
   const repertoire = useAtomValue(repertoireAtom);

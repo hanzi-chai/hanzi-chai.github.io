@@ -1,4 +1,9 @@
-import { ComponentCache, ComponentResult } from "./component";
+import { affineMerge } from ".";
+import {
+  ComponentResults,
+  ComponentAnalysis,
+  InvalidGlyphError,
+} from "./component";
 import { Config } from "./config";
 import {
   Block,
@@ -7,16 +12,19 @@ import {
   Repertoire,
   Operator,
   PrimitiveRepertoire,
+  SVGGlyph,
 } from "./data";
 
-export type CompoundCache = Map<string, CompoundResult>;
+export type CompoundResults = Map<string, CompoundAnalysis>;
 
-type PartitionResult = ComponentResult | CompoundResult;
+type PartitionResult = ComponentAnalysis | CompoundAnalysis;
 
-export type CompoundResult = CompoundRootResult | CompoundRegularResult;
+export type CompoundAnalysis = CompoundBasicAnalysis | CompoundGenuineAnalysis;
 
-// 两个以上字根
-interface CompoundRegularResult {
+/**
+ * 复合体通过自动拆分算法导出的拆分结果
+ */
+interface CompoundGenuineAnalysis {
   sequence: string[];
   detail: {
     operator: Operator;
@@ -24,23 +32,69 @@ interface CompoundRegularResult {
   };
 }
 
-// 本身是字根字，无拆分细节
-interface CompoundRootResult {
+/**
+ * 复合体本身是字根字，没有拆分细节
+ */
+interface CompoundBasicAnalysis {
   sequence: [string];
 }
 
-const topologicalSort = (form: Repertoire) => {
+/**
+ * 将复合体递归渲染为 SVG 图形
+ *
+ * @param compound 复合体
+ * @param repertoire 原始字符集
+ *
+ * @returns SVG 图形
+ * @throws InvalidGlyphError 无法渲染
+ */
+export const recursiveRenderCompound = function (
+  compound: Compound,
+  repertoire: Repertoire,
+  glyphCache: Map<string, SVGGlyph> = new Map(),
+): SVGGlyph | InvalidGlyphError {
+  const glyphs: SVGGlyph[] = [];
+  for (const char of compound.operandList) {
+    const glyph = repertoire[char]?.glyph;
+    if (glyph === undefined) return new InvalidGlyphError();
+    if (glyph.type === "basic_component") {
+      glyphs.push(glyph.strokes);
+    } else {
+      const cache = glyphCache.get(char);
+      if (cache !== undefined) {
+        glyphs.push(cache);
+        continue;
+      }
+      const rendered = recursiveRenderCompound(glyph, repertoire, glyphCache);
+      if (rendered instanceof Error) return rendered;
+      glyphs.push(rendered);
+      glyphCache.set(char, rendered);
+    }
+  }
+  return affineMerge(compound, glyphs);
+};
+
+/**
+ * 对字符集进行拓扑排序，得到复合体的拆分顺序
+ *
+ * @param repertoire 字符集
+ *
+ * @returns 拓扑排序后的复合体
+ *
+ * @remarks 这个实现目前比较低效，需要改进
+ */
+const topologicalSort = (repertoire: Repertoire) => {
   let compounds = new Map<string, Character>();
   for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, Character>();
-    for (const [name, character] of Object.entries(form)) {
+    for (const [name, character] of Object.entries(repertoire)) {
       const { glyph } = character;
       if (compounds.get(name)) continue;
       if (glyph === undefined || glyph.type !== "compound") continue;
       if (
         glyph.operandList.every(
           (x) =>
-            form[x]?.glyph?.type === "basic_component" ||
+            repertoire[x]?.glyph?.type === "basic_component" ||
             compounds.get(x) !== undefined,
         )
       ) {
@@ -89,22 +143,29 @@ const assembleSequence = (
   return sequence;
 };
 
+/**
+ * 对复合体进行拆分
+ *
+ * @param repertoire 字符集
+ * @param config 配置
+ * @param componentResults 部件拆分结果
+ */
 export const disassembleCompounds = (
-  data: Repertoire,
+  repertoire: Repertoire,
   config: Config,
-  componentCache: ComponentCache,
+  componentResults: ComponentResults,
 ) => {
   const { mapping, grouping } = config.form;
-  const compounds = topologicalSort(data);
-  const compoundCache: CompoundCache = new Map();
+  const compounds = topologicalSort(repertoire);
+  const compoundResults: CompoundResults = new Map();
   const compoundError: string[] = [];
   const getResult = function (s: string): PartitionResult | undefined {
-    return componentCache.get(s) || compoundCache.get(s);
+    return componentResults.get(s) || compoundResults.get(s);
   };
   for (const [char, glyph] of compounds.entries()) {
     if (mapping[char] || grouping[char]) {
       // 复合体本身是一个字根
-      compoundCache.set(char, { sequence: [char] });
+      compoundResults.set(char, { sequence: [char] });
       continue;
     }
     const { operator, operandList, order } = glyph.glyph as Compound;
@@ -116,7 +177,7 @@ export const disassembleCompounds = (
         order === undefined
           ? partitionResults.map((x) => x.sequence).flat()
           : assembleSequence(partitionResults, order);
-      compoundCache.set(char, {
+      compoundResults.set(char, {
         sequence,
         detail: {
           operator,
@@ -127,5 +188,5 @@ export const disassembleCompounds = (
       compoundError.push(char);
     }
   }
-  return [compoundCache, compoundError] as const;
+  return [compoundResults, compoundError] as const;
 };

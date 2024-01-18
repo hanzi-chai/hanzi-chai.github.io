@@ -29,7 +29,6 @@ import {
   verifyNewName,
 } from "~/components/Utils";
 import {
-  deepcopy,
   chars,
   isValidCJKChar,
   getDummyBasicComponent,

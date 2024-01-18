@@ -1,6 +1,5 @@
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
-import type { Key, Mapping } from "./config";
 import type {
   DerivedComponent,
   Compound,
@@ -12,7 +11,7 @@ import type {
   BasicComponent,
   ReferenceStroke,
 } from "./data";
-import { cloneDeep, range } from "lodash-es";
+import { range } from "lodash-es";
 
 export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -44,8 +43,6 @@ export const isPUA = (char: string) => {
 export const chars = (s: string) => {
   return Array.from(s).length;
 };
-
-export const deepcopy = structuredClone ?? cloneDeep;
 
 export const getDummyBasicComponent = function (): BasicComponent {
   return {
@@ -98,24 +95,6 @@ export const getDummyCompound = function (operator: Operator): Compound {
   return { type: "compound", operator, operandList: ["一", "一"] };
 };
 
-export interface MappedInfo {
-  name: string;
-  code: string | Key[];
-}
-
-export const reverse = (alphabet: string, mapping: Mapping) => {
-  const data: Record<string, MappedInfo[]> = Object.fromEntries(
-    Array.from(alphabet).map((key) => [key, []]),
-  );
-  for (const [name, code] of Object.entries(mapping)) {
-    const main = code[0]!;
-    if (typeof main === "string") {
-      data[main]!.push({ name, code });
-    }
-  }
-  return data;
-};
-
 export const isComponent = function (
   glyph: BasicComponent | DerivedComponent | Compound,
 ): glyph is BasicComponent | DerivedComponent {
@@ -154,8 +133,6 @@ export const listToObject = function <T extends { unicode: number }>(
     list.map((x) => [String.fromCodePoint(x.unicode), x]),
   );
 };
-
-export const uniquify = (l: string[]) => [...new Set(l)].sort();
 
 export function parseTSV(text: string): Record<string, number> {
   const tsv = text

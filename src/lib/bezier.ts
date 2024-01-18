@@ -9,22 +9,43 @@ import {
   dot,
 } from "mathjs";
 
+/**
+ * 一段 Bezier 曲线的主要朝向
+ * 例如，横笔画的朝向是水平的，竖笔画的朝向是垂直的
+ * 而撇和捺笔画的朝向可能是水平或垂直的，取决于它是平撇还是撇、平捺还是捺
+ */
 type Orientation = "horizontal" | "vertical";
 
-type LinearCurve = {
+/**
+ * 一次 Bezier 曲线
+ * 用于表示横、竖等笔画
+ */
+interface LinearCurve {
   type: "linear";
   orientation: Orientation;
   controls: [Point, Point];
-};
+}
 
+/**
+ * 三次 Bezier 曲线
+ * 用于表示撇、捺等笔画
+ */
 interface CubicCurve {
   type: "cubic";
   orientation: Orientation;
   controls: [Point, Point, Point, Point];
 }
 
+/**
+ * Bezier 曲线，可能为一次或者三次
+ */
 type Curve = LinearCurve | CubicCurve;
 
+/**
+ * 渲染后的笔画
+ * 这个类型和 SVGStroke 的区别是，这个类型包含了一系列 Bezier 曲线，而 SVGStroke 包含了一系列 SVG 命令
+ * Bezier 曲线里每一段的起点和终点都是显式写出的，所以比较适合于计算
+ */
 interface RenderedStroke {
   feature: string;
   curveList: Curve[];
@@ -211,7 +232,6 @@ export {
   getBoundingBox,
   getIntervalOnOrientation,
   getIntervalPosition,
-  evaluate,
   render,
   makeCurve,
   area,

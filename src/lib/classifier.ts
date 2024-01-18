@@ -1,5 +1,11 @@
-import type { SVGCommand } from "./data";
+import type { Draw } from "./data";
 
+/**
+ * GF2001-2001 给出的笔画分类规范，将 31 种笔画分为 5 类
+ * 类别用数字表示
+ * 在本系统中，出于字根认同的考虑，在撇中分出了平撇、捺中分出了平捺、点中分出了平点
+ * 所以比 GF2001-2001 中的分类多了 3 种，一共 34 种
+ */
 export const classifier = {
   横: 1,
   提: 1,
@@ -37,6 +43,10 @@ export const classifier = {
   斜钩: 5,
 };
 
+/**
+ * 给定方案配置文件中的不完整的分类器，将其与默认的分类器合并
+ * 得到一个完整的分类器
+ */
 export const mergeClassifier = (
   partialClassifier?: Record<Feature, number>,
 ) => {
@@ -47,7 +57,13 @@ export type Feature = keyof typeof classifier;
 
 export type Classifier = typeof classifier;
 
-export const schema: Record<Feature, SVGCommand[]> = {
+/**
+ * 特定类型的笔画在数据库中的表示所包含的 SVG 命令的类别和数量是固定的
+ * 比如，横折折折钩的表示一定是 h v h v，不会有其他可能性
+ * 另外，平撇、平点、平捺的命令是 z，这个不是规范的 SVG 命令，只是为了和撇、点、捺的 c 区分
+ * z 和 c 的实际效果是一样的
+ */
+export const schema: Record<Feature, Draw["command"][]> = {
   横: ["h"],
   提: ["h"],
   竖: ["v"],

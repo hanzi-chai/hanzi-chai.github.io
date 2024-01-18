@@ -7,32 +7,15 @@ import type {
   Op,
   Source,
 } from "./config";
-import { recursiveRenderCompound, type ComponentResult } from "./component";
-import type { CompoundResult } from "./compound";
+import type { ComponentAnalysis } from "./component";
+import { recursiveRenderCompound, type CompoundAnalysis } from "./compound";
 import type { Extra } from "./element";
 import { findElement } from "./element";
-import { PrimitiveCharacter, Character, Repertoire } from "./data";
+import { Repertoire } from "./data";
 import { AnalysisResult, analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
 
-export const filtervalues = ["是", "否", "未定义"] as const;
-export type CharsetFilter = (typeof filtervalues)[number];
-export const filtermap: Record<
-  CharsetFilter,
-  (s: "gb2312" | "tygf") => (t: [string, Character]) => boolean
-> = {
-  是:
-    (s) =>
-    ([, c]) =>
-      !!c[s],
-  否:
-    (s) =>
-    ([, c]) =>
-      !c[s],
-  未定义: () => () => true,
-};
-
-export const table: Record<
+const table: Record<
   Op,
   (
     target: string | undefined,
@@ -50,23 +33,27 @@ export const table: Record<
   不存在: (t) => t === undefined,
 };
 
-interface Metadata {
+/**
+ * 代表了一个有字音、有字形的汉字的中间结果
+ * 由拆分结果 [`ComponentResult`](#componentresult) 或 [`CompoundResult`](#compoundresult) 与字音组成
+ */
+export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
   char: string;
   pinyin: string;
-}
-type ComponentTotalResult = ComponentResult & Metadata;
-type CompoundTotalResult = CompoundResult & Metadata;
-export type TotalResult = ComponentTotalResult | CompoundTotalResult;
-export type TotalCache = Record<
-  string,
-  ComponentTotalResult[] | CompoundTotalResult[]
->;
+};
 
-export type AssemblyResult = Map<string, IndexedElement[][]>;
-
+/**
+ * 给定一个条件，判断是否满足
+ *
+ * @param condition 条件
+ * @param result 中间结果
+ * @param config 配置
+ * @param extra 额外信息
+ * @param totalMapping 映射
+ */
 const satisfy = (
   condition: Condition,
-  result: TotalResult,
+  result: CharacterResult,
   config: Config,
   extra: Extra,
   totalMapping: Record<string, string>,
@@ -74,7 +61,10 @@ const satisfy = (
   const { object, operator } = condition;
   const target = findElement(object, result, config, extra);
   const fn = table[operator];
-  return fn(target, (condition as BinaryCondition).value, totalMapping);
+  if ("value" in condition) {
+    return fn(target, condition.value, totalMapping);
+  }
+  return fn(target, null, totalMapping);
 };
 
 const merge = (mapping: Mapping, grouping: Grouping) => {
@@ -96,11 +86,12 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 };
 
 export type IndexedElement = string | { element: string; index: number };
+export type AssemblyResult = Map<string, IndexedElement[][]>;
 
 const compile = (config: Config) => {
   const { mapping, grouping, alphabet } = config.form;
   const totalMapping = merge(mapping, grouping);
-  return (result: TotalResult, data: Repertoire, extra: Extra) => {
+  return (result: CharacterResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
     while (node) {
@@ -187,22 +178,33 @@ const extraAnalysis = function (repertoire: Repertoire, config: Config): Extra {
   };
 };
 
+/**
+ * 给定一个拆分结果，返回所有可能的编码
+ *
+ * @param repertoire 字符集
+ * @param config 配置
+ * @param characters 需要编码的汉字列表
+ * @param analysisResult 分析结果
+ *
+ * @returns 组装结果
+ */
 export const assemble = (
   repertoire: Repertoire,
   config: Config,
   characters: string[],
   analysisResult: AnalysisResult,
 ) => {
-  const { customized, compoundCache } = analysisResult;
+  const { customized, compoundResults } = analysisResult;
   const extra = extraAnalysis(repertoire, config);
   const func = compile(config);
   const result: AssemblyResult = new Map(
     characters.map((char) => {
       // TODO: 支持多个拆分结果
-      const shapeInfo = customized.get(char) || compoundCache.get(char);
+      const shapeInfo: ComponentAnalysis | CompoundAnalysis | undefined =
+        customized.get(char) || compoundResults.get(char);
       if (shapeInfo === undefined) return [char, []];
       const readings = repertoire[char]!.readings;
-      const total: TotalResult[] = readings.map((pinyin) => ({
+      const total: CharacterResult[] = readings.map((pinyin) => ({
         char,
         pinyin,
         ...shapeInfo,

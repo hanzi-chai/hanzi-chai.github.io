@@ -1,5 +1,5 @@
 import type { Config, Rule } from "./config";
-import type { TotalResult } from "./assembly";
+import type { CharacterResult } from "./assembly";
 
 export interface Extra {
   rootSequence: Map<string, number[]>;
@@ -21,8 +21,6 @@ export const pronunciationElementTypes = [
 
 export type PronunciationElementTypes =
   (typeof pronunciationElementTypes)[number];
-
-const shengdiao = ["阴平", "阳平", "上声", "去声", "轻声"];
 
 const r = String.raw;
 
@@ -135,7 +133,9 @@ export const renderName = (object: CodableObject) => {
   }
 };
 
-export const renderList = (object: CodableObject) => {
+export const renderList = function (
+  object: CodableObject,
+): (string | number)[] {
   const list = [object.type];
   switch (object.type) {
     case "固定":
@@ -177,17 +177,13 @@ export const parseList = function (value: (string | number)[]): CodableObject {
   return { type };
 };
 
-function getindex<T>(a: T[], i: number): T | undefined {
+function signedIndex<T>(a: T[], i: number): T | undefined {
   return i >= 0 ? a[i - 1] : a[a.length + i];
-}
-
-function getslice<T>(a: T[], i: number, j: number) {
-  return i >= 0 ? a.slice(i - 1, j) : a.slice(a.length + j, a.length + i + 1);
 }
 
 export const findElement = (
   object: CodableObject,
-  result: TotalResult,
+  result: CharacterResult,
   config: Config,
   extra: Extra,
 ) => {
@@ -209,10 +205,10 @@ export const findElement = (
       const rules = defaultAlgebra[name] || config.algebra?.[name];
       return applyRules(name, rules, pinyin);
     case "字根":
-      return getindex(sequence, object.rootIndex);
+      return signedIndex(sequence, object.rootIndex);
     case "笔画":
     case "二笔": {
-      root = getindex(sequence, object.rootIndex);
+      root = signedIndex(sequence, object.rootIndex);
       if (root === undefined) return undefined;
       strokes = extra.rootSequence.get(root);
       if (strokes === undefined) {
@@ -220,16 +216,16 @@ export const findElement = (
         return undefined;
       }
       if (object.type === "笔画") {
-        const number = getindex(strokes, object.strokeIndex);
+        const number = signedIndex(strokes, object.strokeIndex);
         return number?.toString();
       }
       const [i1, i2] = [
         object.strokeIndex * 2 - Math.sign(object.strokeIndex),
         object.strokeIndex * 2,
       ];
-      const stroke1 = getindex(strokes, i1);
+      const stroke1 = signedIndex(strokes, i1);
       if (stroke1 === undefined) return undefined;
-      const stroke2 = getindex(strokes, i2);
+      const stroke2 = signedIndex(strokes, i2);
       return [stroke1, stroke2 ?? 0].join("");
     }
   }

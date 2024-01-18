@@ -194,7 +194,7 @@ interface Transliteration {
 }
 
 export interface Info {
-  name?: string;
+  name: string;
   author?: string;
   version?: string;
   description?: string;
@@ -227,7 +227,7 @@ export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: Example | null;
-  info?: Info;
+  info: Info;
   data?: UserData;
   analysis?: Analysis;
   algebra?: Algebra;

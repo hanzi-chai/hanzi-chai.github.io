@@ -18,7 +18,7 @@ export const defaultSelector: SieveName[] = [
   "取大优先",
 ];
 
-type Scheme = number[];
+export type Scheme = number[];
 
 type Comparable = number | number[];
 
@@ -58,6 +58,7 @@ const countStrokes: (n: number) => number = (n) =>
 
 /**
  * 规则：取大优先
+ *
  * 让顺序靠前的字根尽量取到更多的笔画
  */
 export const bias: Sieve<number[]> = {
@@ -68,6 +69,7 @@ export const bias: Sieve<number[]> = {
 
 /**
  * 规则：取小优先
+ *
  * 让顺序靠前的字根尽量取到更少的笔画
  */
 export const unbias: Sieve<number[]> = {
@@ -78,9 +80,11 @@ export const unbias: Sieve<number[]> = {
 
 /**
  * 规则：全符笔顺
+ *
  * 各个字根中笔画的顺序连在一起是否与整个部件的笔顺相同，相同者优先
  * 该规则采集自三码郑码的文档
- * 参考：https://www.yuque.com/smzm/zhengma/otb32d
+ *
+ * @see https://www.yuque.com/smzm/zhengma/otb32d
  */
 export const order: Sieve<number> = {
   title: "全符笔顺",
@@ -95,9 +99,10 @@ export const order: Sieve<number> = {
 
 /**
  * 规则：连续笔顺
- * 字根是否由部件中连续的几个笔画构成，不符合此特点的字根数量少者优先
- * 该规则采集自宇浩输入法的文档
- * 参考：https://zhuyuhao.com/yuhao/docs/learn.html#符合笔顺
+ *
+ * 字根是否由部件中连续的几个笔画构成，不符合此特点的字根数量少者优先。该规则采集自宇浩输入法的文档。
+ *
+ * @see https://zhuyuhao.com/yuhao/docs/learn.html#符合笔顺
  */
 export const order2: Sieve<number> = {
   title: "连续笔顺",
@@ -114,9 +119,10 @@ export const order2: Sieve<number> = {
 
 /**
  * 规则：非形近根
- * 尽量少使用被归并到其他字根的字根
- * 该规则采集自三码郑码的文档
- * 参考：https://www.yuque.com/smzm/zhengma/otb32d
+ *
+ * 尽量少使用被归并到其他字根的字根。该规则采集自三码郑码的文档
+ *
+ * @see https://www.yuque.com/smzm/zhengma/otb32d
  */
 export const similar: Sieve<number> = {
   title: "非形近根",
@@ -128,8 +134,8 @@ export const similar: Sieve<number> = {
 
 /**
  * 规则：强字根
- * 尽量多使用特定的一些字根
- * 该规则采集自郑码的文档
+ *
+ * 尽量多使用特定的一些字根。该规则采集自郑码的文档
  */
 export const strong: Sieve<number> = {
   title: "多强字根",
@@ -142,6 +148,7 @@ export const strong: Sieve<number> = {
 
 /**
  * 规则：弱字根
+ *
  * 尽量避免使用特定的一些字根
  */
 export const weak: Sieve<number> = {
@@ -184,10 +191,25 @@ const makeTopologySieve = function (
   return { key, title };
 };
 
+/**
+ * 规则：能连不交
+ *
+ * 尽量让字根不交叉。该规则采集自五笔
+ */
 export const crossing = makeTopologySieve("交", [], "能连不交");
 
+/**
+ * 规则：能散不连
+ *
+ * 尽量让字根不相连。该规则采集自五笔
+ */
 export const attaching = makeTopologySieve("连", ["交"], "能散不连");
 
+/**
+ * 规则：同向笔画
+ *
+ * 尽量让方向相同的笔画包含在同一个字根里。该规则采集自五笔
+ */
 export const orientation: Sieve<number> = {
   title: "同向笔画",
   key: (scheme, component) => {
@@ -223,9 +245,10 @@ const contains = (b1: number, b2: number) => (b1 | b2) === b1;
 
 /**
  * 规则：结构完整
- * 避免框类部件被拆散
- * 该规则采集自宇浩输入法的文档
- * 参考：https://zhuyuhao.com/yuhao/docs/learn.html#结构完整
+ *
+ * 避免框类部件被拆散。该规则采集自宇浩输入法的文档
+ *
+ * @see https://zhuyuhao.com/yuhao/docs/learn.html#结构完整
  */
 export const integrity: Sieve<number> = {
   title: "结构完整",
@@ -268,6 +291,14 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   ].map((x) => [x.title, x]),
 );
 
+/**
+ * 选择最优的拆分方案
+ *
+ * @param config 配置
+ * @param component 待拆分部件
+ * @param schemeList 拆分方案列表
+ * @param rootMap 字根映射，从切片的二进制表示到字根名称的映射
+ */
 export const select = (
   config: Config,
   component: ComputedComponent,
@@ -308,5 +339,3 @@ export const select = (
   // Correct result
   return [best.scheme, schemeData] as const;
 };
-
-export type { Scheme, Sieve };
