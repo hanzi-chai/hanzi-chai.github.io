@@ -1,12 +1,12 @@
-import { listToObject } from "~/lib/utils";
+import { listToObject } from "~/lib";
 import rawrepertoire from "../public/cache/repertoire.json";
 import type {
-  PrimitveCharacter,
+  PrimitiveCharacter,
   BasicComponent,
   PrimitiveRepertoire,
-} from "~/lib/data";
-import { determine } from "~/lib/repertoire";
-import { computeComponent } from "~/lib/component";
+} from "~/lib";
+import { determine } from "~/lib";
+import { computeComponent } from "~/lib";
 
 export const repertoire = determine(listToObject(rawrepertoire));
 export const computedGlyphs = Object.fromEntries(

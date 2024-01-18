@@ -11,7 +11,7 @@ import { recursiveRenderCompound, type ComponentResult } from "./component";
 import type { CompoundResult } from "./compound";
 import type { Extra } from "./element";
 import { findElement } from "./element";
-import { PrimitveCharacter, Character, Repertoire } from "./data";
+import { PrimitiveCharacter, Character, Repertoire } from "./data";
 import { AnalysisResult, analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
 

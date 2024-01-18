@@ -1,4 +1,4 @@
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 import { Button, Flex, Space, Typography, Upload } from "antd";
 import {
   Atom,
@@ -13,7 +13,7 @@ import {
   wordAtom,
   wordFrequencyAtom,
 } from "~/atoms";
-import { Info } from "~/lib/config";
+import { Info } from "~/lib";
 import ExportButtons from "~/components/ExportButtons";
 import {
   ProForm,
@@ -33,7 +33,7 @@ import {
   userWordAtom,
   userWordFrequencyAtom,
 } from "~/atoms/assets";
-import { parseTSV } from "~/lib/utils";
+import { parseTSV } from "~/lib";
 
 function AssetUploader<V extends Record<string, number> | string[]>({
   atom,

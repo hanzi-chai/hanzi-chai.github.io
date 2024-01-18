@@ -9,7 +9,7 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import { AssemblyResult } from "~/lib/assembly";
+import { AssemblyResult } from "~/lib";
 import { renderIndexed } from "~/pages/[id]/assembly";
 import { Select } from "./Utils";
 import { Frequency } from "./Optimizer";

@@ -8,7 +8,7 @@ import {
   sequenceAtom,
 } from "~/atoms";
 import { Select, renderSuperScript } from "./Utils";
-import { Key } from "~/lib/config";
+import { Key } from "~/lib";
 
 export interface KeySelectProps {
   value: Key;

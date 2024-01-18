@@ -1,8 +1,8 @@
 import { Button, Flex } from "antd";
 import { configAtom, useAtom } from "~/atoms";
 import { load } from "js-yaml";
-import type { Config } from "~/lib/config";
-import { examples } from "~/lib/example";
+import type { Config } from "~/lib";
+import { examples } from "~/lib";
 import { Uploader, exportYAML } from "~/components/Utils";
 
 export default function ExportButtons() {

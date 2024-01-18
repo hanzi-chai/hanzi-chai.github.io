@@ -12,7 +12,7 @@ import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
-import { Feature } from "~/lib/classifier";
+import { Feature } from "~/lib";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({

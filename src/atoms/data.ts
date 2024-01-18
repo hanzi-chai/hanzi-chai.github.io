@@ -1,13 +1,13 @@
 import { atom, useAtomValue } from "jotai";
 import { primitiveRepertoireAtom } from "./constants";
-import { isPUA } from "~/lib/utils";
-import { recursiveRenderCompound } from "~/lib/component";
+import { isPUA } from "~/lib";
+import { recursiveRenderCompound } from "~/lib";
 import { dataAtom } from ".";
 import { focusAtom } from "jotai-optics";
-import { PrimitiveRepertoire, SVGGlyph } from "~/lib/data";
-import { CustomGlyph } from "~/lib/config";
-import { determine } from "~/lib/repertoire";
-import classifier from "~/lib/classifier";
+import { PrimitiveRepertoire, SVGGlyph } from "~/lib";
+import { CustomGlyph } from "~/lib";
+import { determine } from "~/lib";
+import { classifier } from "~/lib";
 
 export const userRepertoireAtom = focusAtom(dataAtom, (o) =>
   o.prop("repertoire").valueOr({} as PrimitiveRepertoire),

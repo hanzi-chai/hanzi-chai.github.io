@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { listToObject } from "~/lib/utils";
+import { listToObject } from "~/lib";
 import { Layout } from "antd";
-import { list } from "~/lib/api";
+import { list } from "~/api";
 import CharacterTable from "~/components/CharacterTable";
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 import { primitiveRepertoireAtom, useSetAtom } from "~/atoms";
 import { DevTools } from "jotai-devtools";
 

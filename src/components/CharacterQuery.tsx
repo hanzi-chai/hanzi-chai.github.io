@@ -1,10 +1,5 @@
 import { Form, Input } from "antd";
-import {
-  Operator,
-  PrimitiveRepertoire,
-  Repertoire,
-  operators,
-} from "~/lib/data";
+import { Operator, PrimitiveRepertoire, Repertoire, operators } from "~/lib";
 import {
   ProFormDigit,
   ProFormSelect,

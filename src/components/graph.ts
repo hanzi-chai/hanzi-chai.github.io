@@ -1,10 +1,5 @@
 import type { Edge, Node } from "reactflow";
-import type {
-  BinaryCondition,
-  Condition,
-  Source,
-  UnaryCondition,
-} from "~/lib/config";
+import type { BinaryCondition, Condition, Source, UnaryCondition } from "~/lib";
 import { add, sum } from "mathjs";
 
 export type SourceData = Omit<Source, "next">;
@@ -71,7 +66,7 @@ export const getLayoutedElements = function (
       {
         self: node,
         width: 0,
-        position: [0, 0],
+        position: [0, 0] as [number, number],
         children: [] as [string, string | undefined][],
       },
     ]),
@@ -86,32 +81,32 @@ export const getLayoutedElements = function (
   });
 
   const postdfs = (id: string) => {
-    const childrefs = graph[id].children;
+    const childrefs = graph[id]!.children;
     if (!childrefs.length) {
-      graph[id].width = 64;
+      graph[id]!.width = 64;
     } else {
       for (const [cid] of childrefs) {
         postdfs(cid);
       }
-      graph[id].width =
-        sum(childrefs.map(([cid]) => graph[cid].width)) +
+      graph[id]!.width =
+        sum(childrefs.map(([cid]) => graph[cid]!.width)) +
         (childrefs.length - 1) * 64;
     }
   };
 
   const predfs = (id: string) => {
-    const position = graph[id].position;
-    const childrefs = graph[id].children;
+    const position = graph[id]!.position;
+    const childrefs = graph[id]!.children;
     if (!childrefs.length) return;
     if (childrefs.length === 1) {
-      const [[cid]] = childrefs;
-      graph[cid].position = add(position, [0, 64]);
+      const [cid] = childrefs[0]!;
+      graph[cid]!.position = add(position, [0, 64]);
       predfs(cid);
     } else {
-      const [[cid1], [cid2]] = childrefs;
-      const span = 64 + graph[cid1].width / 2 + graph[cid2].width / 2;
-      graph[cid1].position = add(position, [-span / 2, 64]);
-      graph[cid2].position = add(position, [span / 2, 64]);
+      const [[cid1], [cid2]] = [childrefs[0]!, childrefs[1]!];
+      const span = 64 + graph[cid1]!.width / 2 + graph[cid2]!.width / 2;
+      graph[cid1]!.position = add(position, [-span / 2, 64]);
+      graph[cid2]!.position = add(position, [span / 2, 64]);
       predfs(cid1);
       predfs(cid2);
     }
@@ -123,14 +118,14 @@ export const getLayoutedElements = function (
   // remove useless nodes
   return [
     nodes
-      .filter((node) => graph[node.id].width)
+      .filter((node) => graph[node.id]!.width)
       .map((node) => {
-        const [x, y] = graph[node.id].position;
+        const [x, y] = graph[node.id]!.position;
         return { ...node, position: { x, y } };
       }),
     edges.filter(
       ({ source, target }) =>
-        graph[source].width > 0 && graph[target].width > 0,
+        graph[source]!.width > 0 && graph[target]!.width > 0,
     ),
   ];
 };

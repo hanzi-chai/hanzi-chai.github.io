@@ -1,6 +1,6 @@
 import { atom } from "jotai";
-import { AssemblyResult } from "~/lib/assembly";
-import { AnalysisResult } from "~/lib/repertoire";
+import { AssemblyResult } from "~/lib";
+import { AnalysisResult } from "~/lib";
 
 export const analysisResultAtom = atom<AnalysisResult | null>(null);
 

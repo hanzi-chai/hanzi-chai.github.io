@@ -6,7 +6,7 @@ import type {
   Component,
 } from "./data";
 import type { CodableObject } from "./element";
-import type { Example } from "./example";
+import type { Example } from "./templates";
 
 export type SieveName =
   | "根少优先"

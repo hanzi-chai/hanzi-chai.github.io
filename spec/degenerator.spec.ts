@@ -1,15 +1,15 @@
-import _degenerate, {
+import {
+  degenerate as _degenerate,
   indicesToBinary,
   binaryToIndices,
-  generateSliceBinaries,
   defaultDegenerator,
-} from "~/lib/degenerator";
+} from "~/lib";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
 import { computedGlyphs2 as computedGlyphs } from "./mock";
-import { RenderedGlyph } from "~/lib/topology";
+import { RenderedGlyph } from "~/lib";
 
-const { randomInt } = create(all, {
+const { randomInt } = create(all!, {
   randomSeed: "a",
 });
 
@@ -58,7 +58,7 @@ const hasroot = (a: RenderedGlyph, indices: number[], root: RenderedGlyph) => {
 
 describe("degenerate cross tests", () => {
   const { 大, 天, 九, 丸, 山, 出, 冖, 农, 赤, 以, 人, 氺, 丆, 疌, 龰 } =
-    computedGlyphs;
+    computedGlyphs as any;
   it("says 天 has 大", () => {
     expect(degenerate(大)).toEqual(degenerate(slice(天, [1, 2, 3])));
   });
@@ -88,8 +88,8 @@ describe("degenerate cross tests", () => {
 });
 
 describe("degenerate cross tests 2", () => {
-  const { 豕, 彖, 豖, 㒸, 豙 } = computedGlyphs;
-  const 蒙下 = computedGlyphs["\ue0b3"];
+  const { 豕, 彖, 豖, 㒸, 豙 } = computedGlyphs as any;
+  const 蒙下 = computedGlyphs["\ue0b3"]!;
   const base = slice(豕, [1, 2, 3, 4, 5, 6]);
   it("says 彖 has 豕下", () => {
     hasroot(彖, [3, 4, 5, 6, 7, 8], base);
@@ -109,7 +109,7 @@ describe("degenerate cross tests 2", () => {
 });
 
 describe("degenerate cross tests 3", () => {
-  const { 永, 承, 氶 } = computedGlyphs;
+  const { 永, 承, 氶 } = computedGlyphs as any;
   const base = slice(承, [5, 6, 7]);
   it("says 承 has 水", () => {
     hasroot(承, [5, 6, 7], base);
@@ -123,7 +123,7 @@ describe("degenerate cross tests 3", () => {
 });
 
 describe("degenerate cross tests 4", () => {
-  const { 隶, 氺 } = computedGlyphs;
+  const { 隶, 氺 } = computedGlyphs as any;
   it("says 承 has 水", () => {
     hasroot(隶, [3, 4, 5, 6, 7], 氺);
   });

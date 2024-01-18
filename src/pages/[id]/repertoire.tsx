@@ -1,7 +1,7 @@
 import { Flex } from "antd";
 import { RemoteContext } from "~/components/Action";
 import CharacterTable from "~/components/CharacterTable";
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 
 export default () => {
   useChaifenTitle("字形数据");

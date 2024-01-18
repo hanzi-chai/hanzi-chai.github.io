@@ -9,12 +9,12 @@ import type {
   BasicComponent,
 } from "./data";
 import { generateSliceBinaries } from "./degenerator";
-import select from "./selector";
+import { select } from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import type { RenderedGlyph, Topology } from "./topology";
-import findTopology, { renderSVGGlyph } from "./topology";
+import { findTopology, renderSVGGlyph } from "./topology";
 import type { Classifier } from "./classifier";
-import { isValidCJKChar, isValidChar } from "./utils";
+import { isValidCJKChar } from "./utils";
 import { affineMerge } from "./affine";
 
 class InvalidGlyphError extends Error {}

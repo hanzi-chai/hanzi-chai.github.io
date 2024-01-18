@@ -1,6 +1,6 @@
 import { Button, Cascader, Flex, Form, Input, Space, Typography } from "antd";
 import { DeleteButton, KeyList, Select } from "./Utils";
-import { Config } from "~/lib/config";
+import { Config } from "~/lib";
 import { useAtom, useAtomValue, keyboardAtom, useListAtom } from "~/atoms";
 import {
   autoSelectLengthAtom,
@@ -10,7 +10,7 @@ import {
   shortCodeSchemesAtom,
   wordRulesAtom,
 } from "~/atoms/encoder";
-import { printableAscii } from "~/lib/utils";
+import { printableAscii } from "~/lib";
 
 const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
   { length_equal: 2, formula: "AaAbBaBb" },

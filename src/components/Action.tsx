@@ -21,7 +21,7 @@ import {
   remoteUpdate,
   remoteRemove,
   remoteMutate,
-} from "~/lib/api";
+} from "~/api";
 import {
   DeleteButton,
   Select,
@@ -30,12 +30,12 @@ import {
 } from "~/components/Utils";
 import {
   deepcopy,
-  length,
+  chars,
   isValidCJKChar,
   getDummyBasicComponent,
   getDummyCompound,
   getDummyDerivedComponent,
-} from "~/lib/utils";
+} from "~/lib";
 import {
   useAtomValue,
   useSetAtom,
@@ -49,7 +49,7 @@ import {
   primitiveRepertoireAtom,
   customGlyphAtom,
 } from "~/atoms";
-import { PrimitveCharacter, Compound, Component } from "~/lib/data";
+import { PrimitiveCharacter, Compound, Component } from "~/lib";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { MenuProps } from "antd/lib";
@@ -98,8 +98,8 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
       ],
       ambiguous: false,
     };
-    if (length(charOrName) > 1) {
-      const raw: Omit<PrimitveCharacter, "unicode"> = {
+    if (chars(charOrName) > 1) {
+      const raw: Omit<PrimitiveCharacter, "unicode"> = {
         ...base,
         name: charOrName,
       };
@@ -110,17 +110,17 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
           name: charOrName,
         });
         if (errorFeedback(unicode)) return;
-        const value: PrimitveCharacter = { unicode, ...raw };
+        const value: PrimitiveCharacter = { unicode, ...raw };
         char = String.fromCodePoint(unicode);
         add(char, value);
       } else {
-        const value: PrimitveCharacter = { unicode: nextUnicode, ...raw };
+        const value: PrimitiveCharacter = { unicode: nextUnicode, ...raw };
         char = String.fromCodePoint(nextUnicode);
         addUser(char, value);
       }
       return char;
     } else {
-      const character: PrimitveCharacter = {
+      const character: PrimitiveCharacter = {
         unicode: charOrName.codePointAt(0)!,
         name: null,
         ...base,
@@ -240,7 +240,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
   );
 };
 
-export const Add = ({ character }: { character: PrimitveCharacter }) => {
+export const Add = ({ character }: { character: PrimitiveCharacter }) => {
   const remote = useContext(RemoteContext);
   const repertoire = useAtomValue(primitiveRepertoireAtom);
   const add = useAddAtom(primitiveRepertoireAtom);
@@ -324,7 +324,7 @@ export const QuickPatchAmbiguous = ({
   record,
 }: {
   checked: boolean;
-  record: PrimitveCharacter;
+  record: PrimitiveCharacter;
 }) => {
   const remote = useContext(RemoteContext);
   const add = useAddAtom(primitiveRepertoireAtom);

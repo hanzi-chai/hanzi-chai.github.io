@@ -17,8 +17,8 @@ import {
 
 import Root from "./Element";
 import Char from "./Character";
-import type { MappedInfo } from "~/lib/utils";
-import { isPUA, reverse } from "~/lib/utils";
+import type { MappedInfo } from "~/lib";
+import { isPUA, reverse } from "~/lib";
 import {
   DeleteButton,
   Select,
@@ -30,7 +30,7 @@ import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { Key } from "~/lib/config";
+import { Key } from "~/lib";
 
 const useAffiliates = (name: string) => {
   const mapping = useAtomValue(mappingAtom);

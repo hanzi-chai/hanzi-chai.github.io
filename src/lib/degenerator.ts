@@ -1,5 +1,5 @@
 import { isEqual } from "lodash-es";
-import findTopology, { RenderedGlyph, renderSVGGlyph } from "./topology";
+import { findTopology, RenderedGlyph, renderSVGGlyph } from "./topology";
 import type { Interval } from "./bezier";
 import {
   curveLength,
@@ -136,12 +136,10 @@ export const generateSliceBinaries = (
     .map(indicesToBinary(cglyph.length));
 };
 
-const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
+export const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
   let featureMap = degenerator.feature ?? ({} as Record<Feature, Feature>);
   return [
     glyph.map((x) => x.feature).map((x) => featureMap[x] || x),
     findTopology(glyph),
   ] as const;
 };
-
-export default degenerate;

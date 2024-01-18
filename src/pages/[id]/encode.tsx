@@ -32,10 +32,10 @@ import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { useMemo, useState } from "react";
 import { ColumnsType } from "antd/es/table";
 import { LibchaiOutputEvent } from "~/worker";
-import { analysis } from "~/lib/repertoire";
-import { assemble, getTSV } from "~/lib/assembly";
+import { analysis } from "~/lib";
+import { assemble, getTSV } from "~/lib";
 import { atomWithStorage } from "jotai/utils";
-import { getSupplemental } from "~/lib/utils";
+import { getSupplemental } from "~/lib";
 
 interface DictEntry {
   item: string;

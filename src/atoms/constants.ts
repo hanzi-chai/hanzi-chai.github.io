@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { PrimitiveRepertoire } from "~/lib/data";
+import type { PrimitiveRepertoire } from "~/lib";
 import { produce } from "immer";
 import { Equivalence, Frequency } from "~/components/Optimizer";
 import {

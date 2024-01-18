@@ -10,11 +10,11 @@ import {
   keyboardAtom,
   glyphAtom,
 } from "~/atoms";
-import { isPUA } from "~/lib/utils";
+import { isPUA } from "~/lib";
 import { StrokesView } from "./GlyphView";
 import StrokeSearch, { makeFilter } from "./CharacterSearch";
 import { ShapeElementTypes } from "./ElementPicker";
-import { PronunciationElementTypes } from "~/lib/element";
+import { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
 
 const Content = styled(Flex)`

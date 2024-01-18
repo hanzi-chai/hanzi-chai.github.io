@@ -21,7 +21,8 @@ import {
   fetchJson,
   primitiveRepertoireAtom,
 } from "~/atoms";
-import { LoadAssets, listToObject } from "~/lib/utils";
+import { listToObject } from "~/lib";
+import { LoadAssets } from "~/components/Utils";
 
 const items: MenuProps["items"] = [
   {

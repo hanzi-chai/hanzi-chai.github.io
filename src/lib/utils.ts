@@ -1,4 +1,3 @@
-import { useSetAtom } from "jotai";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type { Key, Mapping } from "./config";
@@ -14,13 +13,6 @@ import type {
   ReferenceStroke,
 } from "./data";
 import { cloneDeep, range } from "lodash-es";
-import {
-  characterFrequencyAtom,
-  fetchJson,
-  keyDistributionAtom,
-  pairEquivalenceAtom,
-  wordFrequencyAtom,
-} from "~/atoms";
 
 export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -44,18 +36,12 @@ export const isValidCJKChar = (char: string) => {
   return block === "cjk" || block === "cjk-a";
 };
 
-export const isValidChar = (char: string) => {
-  if (isValidCJKChar(char)) return true;
-  const code = char.codePointAt(0)!;
-  return unicodeBlock(code) === "ascii";
-};
-
 export const isPUA = (char: string) => {
   const code = char.codePointAt(0)!;
   return unicodeBlock(code) === "pua";
 };
 
-export const length = (s: string) => {
+export const chars = (s: string) => {
   return Array.from(s).length;
 };
 
@@ -170,18 +156,6 @@ export const listToObject = function <T extends { unicode: number }>(
 };
 
 export const uniquify = (l: string[]) => [...new Set(l)].sort();
-
-export function LoadAssets() {
-  const setCF = useSetAtom(characterFrequencyAtom);
-  const setWF = useSetAtom(wordFrequencyAtom);
-  const setKE = useSetAtom(keyDistributionAtom);
-  const setPE = useSetAtom(pairEquivalenceAtom);
-  fetchJson("character_frequency").then(setCF);
-  fetchJson("word_frequency").then(setWF);
-  fetchJson("key_distribution").then(setKE);
-  fetchJson("pair_equivalence").then(setPE);
-  return null;
-}
 
 export function parseTSV(text: string): Record<string, number> {
   const tsv = text

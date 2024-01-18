@@ -9,7 +9,7 @@ import {
   degeneratorNoCrossAtom,
 } from "~/atoms";
 import { DeleteButton, Select } from "./Utils";
-import classifier, { Feature } from "~/lib/classifier";
+import { classifier, Feature } from "~/lib";
 import { useState } from "react";
 
 const Degenerator = () => {

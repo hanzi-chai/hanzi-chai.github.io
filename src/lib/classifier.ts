@@ -1,6 +1,6 @@
 import type { SVGCommand } from "./data";
 
-const classifier = {
+export const classifier = {
   横: 1,
   提: 1,
   竖: 2,
@@ -83,5 +83,3 @@ export const schema: Record<Feature, SVGCommand[]> = {
   弯钩: ["v"],
   斜钩: ["c"],
 };
-
-export default classifier;

@@ -1,11 +1,10 @@
 import { Button, Flex, Form, Dropdown, notification } from "antd";
 import { EditorColumn, EditorRow, NumberInput } from "./Utils";
 import { ReactNode } from "react";
-import type { PrimitveCharacter, Component, Character } from "~/lib/data";
-import type { Feature } from "~/lib/classifier";
-import classifier, { schema } from "~/lib/classifier";
-import { getDummyReferenceStroke, isComponent } from "~/lib/utils";
-import { useWatch } from "antd/es/form/Form";
+import type { PrimitiveCharacter, Component, Character } from "~/lib";
+import type { Feature } from "~/lib";
+import { schema } from "~/lib";
+import { getDummyReferenceStroke, isComponent } from "~/lib";
 import { allRepertoireAtom, useAtomValue } from "~/atoms";
 import { GlyphSelect } from "./CharacterSelect";
 import {
@@ -20,7 +19,7 @@ import {
 import styled from "styled-components";
 import { CommonForm } from "./CompoundForm";
 import Root from "./Element";
-import { recursiveRenderComponent } from "~/lib/component";
+import { recursiveRenderComponent } from "~/lib";
 import { Box, StrokesView } from "./GlyphView";
 import { BaseOptionType } from "antd/es/select";
 

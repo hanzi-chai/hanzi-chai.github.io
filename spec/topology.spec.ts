@@ -1,10 +1,10 @@
 import { expect, describe, it } from "vitest";
-import type { StrokeRelation } from "~/lib/topology";
-import findTopology, { curveRelation, renderSVGGlyph } from "~/lib/topology";
-import { CubicCurve, LinearCurve, area, render } from "~/lib/bezier";
-import type { Draw, Point } from "~/lib/data";
+import type { StrokeRelation } from "~/lib";
+import { findTopology, curveRelation, renderSVGGlyph } from "~/lib";
+import { CubicCurve, LinearCurve, area, render } from "~/lib";
+import type { Draw, Point } from "~/lib";
 import { computedGlyphs2 as computedGlyphs } from "./mock";
-import { getIntervalPosition, makeCurve } from "~/lib/bezier";
+import { getIntervalPosition, makeCurve } from "~/lib";
 
 describe("interval position", () => {
   it("works for easy cases", () => {
@@ -24,7 +24,14 @@ describe("interval position", () => {
 
 describe("linear relation", () => {
   const { 田 } = computedGlyphs;
-  const [l, t, r, h, v, b] = 田.map((x) => x.curveList).flat() as LinearCurve[];
+  const [l, t, r, h, v, b] = 田!.map((x) => x.curveList).flat() as [
+    LinearCurve,
+    LinearCurve,
+    LinearCurve,
+    LinearCurve,
+    LinearCurve,
+    LinearCurve,
+  ];
   it("figures out all relations in 田", () => {
     expect(curveRelation(l, t)).toEqual({
       type: "连",
@@ -62,7 +69,11 @@ describe("linear relation", () => {
 
 describe("linear relation 2", () => {
   const { 艹 } = computedGlyphs;
-  const [_, s1, s2] = 艹.map((x) => x.curveList).flat() as LinearCurve[];
+  const [_, s1, s2] = 艹!.map((x) => x.curveList).flat() as [
+    LinearCurve,
+    LinearCurve,
+    LinearCurve,
+  ];
   it("figures out all relations in 艹", () => {
     expect(curveRelation(s1, s2)).toEqual({
       type: "平行",
@@ -75,7 +86,12 @@ describe("linear relation 2", () => {
 describe("curve relation", () => {
   it("figures out all relations in 天", () => {
     const { 天 } = computedGlyphs;
-    const [c1, c2, c3, c4] = 天.map((x) => x.curveList).flat();
+    const [c1, c2, c3, c4] = 天!.map((x) => x.curveList).flat() as [
+      LinearCurve,
+      LinearCurve,
+      CubicCurve,
+      CubicCurve,
+    ];
     expect(curveRelation(c1, c3)).toEqual({
       type: "连",
       first: "中",
@@ -96,7 +112,11 @@ describe("curve relation", () => {
   });
   it("figures out all relations in 义", () => {
     const { 义 } = computedGlyphs;
-    const [c1, c2, c3] = 义.map((x) => x.curveList).flat();
+    const [c1, c2, c3] = 义!.map((x) => x.curveList).flat() as [
+      CubicCurve,
+      CubicCurve,
+      CubicCurve,
+    ];
     expect(curveRelation(c1, c2)).toEqual({
       type: "平行",
       crossAxis: 0,
@@ -111,7 +131,12 @@ describe("curve relation", () => {
   });
   it("figures out all relations in 升", () => {
     const { 升 } = computedGlyphs;
-    const [c1, c2, c3, c4] = 升.map((x) => x.curveList).flat();
+    const [c1, c2, c3, c4] = 升!.map((x) => x.curveList).flat() as [
+      CubicCurve,
+      LinearCurve,
+      CubicCurve,
+      LinearCurve,
+    ];
     expect(curveRelation(c1, c2)).toEqual({
       type: "平行",
       mainAxis: 0,
@@ -183,7 +208,7 @@ describe("find topology interface", () => {
         [],
       ],
     ];
-    expect(findTopology(土)).toEqual({
+    expect(findTopology(土!)).toEqual({
       matrix: array,
       orientedPairs: [[2, 0]],
     });

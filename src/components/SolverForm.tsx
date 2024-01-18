@@ -9,7 +9,7 @@ import {
 import { Form, Switch } from "antd";
 import { useRef } from "react";
 import { metaheuristicAtom, useAtom } from "~/atoms";
-import { Solver } from "~/lib/config";
+import { Solver } from "~/lib";
 
 export default function () {
   const [metaheuristic, setMetaheuristic] = useAtom(metaheuristicAtom);

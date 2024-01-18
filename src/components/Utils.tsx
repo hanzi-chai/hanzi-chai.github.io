@@ -11,15 +11,24 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import { isValidCJKChar } from "~/lib/utils";
-import type { Err } from "~/lib/api";
+import { isValidCJKChar } from "~/lib";
+import type { Err } from "~/api";
 import { useEffect, useState } from "react";
 import { dump } from "js-yaml";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
 import Root from "./Element";
-import { Key } from "~/lib/config";
+import { Key } from "~/lib";
+import useTitle from "ahooks/es/useTitle";
+import {
+  characterFrequencyAtom,
+  fetchJson,
+  keyDistributionAtom,
+  pairEquivalenceAtom,
+  wordFrequencyAtom,
+} from "~/atoms";
+import { useSetAtom } from "jotai";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -236,3 +245,21 @@ export const makeWorker = () => {
     type: "module",
   });
 };
+
+export function useChaifenTitle(title: string) {
+  useTitle(`${title} · 汉字自动拆分系统 ${APP_VERSION}`, {
+    restoreOnUnmount: true,
+  });
+}
+
+export function LoadAssets() {
+  const setCF = useSetAtom(characterFrequencyAtom);
+  const setWF = useSetAtom(wordFrequencyAtom);
+  const setKE = useSetAtom(keyDistributionAtom);
+  const setPE = useSetAtom(pairEquivalenceAtom);
+  fetchJson("character_frequency").then(setCF);
+  fetchJson("word_frequency").then(setWF);
+  fetchJson("key_distribution").then(setKE);
+  fetchJson("pair_equivalence").then(setPE);
+  return null;
+}

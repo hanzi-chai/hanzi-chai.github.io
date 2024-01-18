@@ -1,27 +1,18 @@
 import { describe, expect, it } from "vitest";
-import {
-  length,
-  bias,
-  order,
-  crossing,
-  attaching,
-  Scheme,
-} from "~/lib/selector";
-import select from "~/lib/selector";
+import { length, bias, order, crossing, attaching, Scheme } from "~/lib";
+import { select } from "~/lib";
 import { computedGlyphs, repertoire } from "./mock";
-import { defaultKeyboard } from "~/lib/templates";
-import { Config } from "~/lib/config";
+import { createConfig, defaultKeyboard } from "~/lib";
+import { Config } from "~/lib";
 
-const config: Config = {
-  source: null,
-  form: defaultKeyboard,
-  encoder: {
-    sources: {},
-    conditions: {},
-  },
-};
+const config: Config = createConfig({
+  name: "",
+  data: "国标五分类",
+  keyboard: "米十五笔字根",
+  encoder: "形音码",
+});
 
-const { 天 } = computedGlyphs;
+const { 天 } = computedGlyphs as any;
 
 const rootMap = new Map<number, string>();
 

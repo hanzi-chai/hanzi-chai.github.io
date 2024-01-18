@@ -2,10 +2,10 @@ import { Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Root from "./Element";
 import { analysisAtom, displayAtom, useAtomValue } from "~/atoms";
-import type { Selector } from "~/lib/config";
-import { sieveMap } from "~/lib/selector";
-import { binaryToIndices } from "~/lib/degenerator";
-import { SchemeWithData } from "~/lib/component";
+import type { Selector } from "~/lib";
+import { sieveMap } from "~/lib";
+import { binaryToIndices } from "~/lib";
+import { SchemeWithData } from "~/lib";
 
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {

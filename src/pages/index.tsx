@@ -11,18 +11,18 @@ import {
   Typography,
   notification,
 } from "antd";
-import { Config } from "~/lib/config";
+import { Config } from "~/lib";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { useImmer } from "use-immer";
-import { Example, examples } from "~/lib/example";
+import { Example, examples } from "~/lib";
 import { Select, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
-import { post } from "~/lib/api";
+import { post } from "~/api";
 import { md5 } from "js-md5";
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 
 type Status = "login" | "signup" | "signin";
 

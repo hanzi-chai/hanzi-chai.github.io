@@ -30,7 +30,7 @@ import {
   PartialWeights,
   Solver,
   TierWeights,
-} from "~/lib/config";
+} from "~/lib";
 
 const AtomicObjective = ({
   title,

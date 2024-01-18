@@ -11,13 +11,13 @@ import {
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { configAtom, repertoireAtom, assetsAtom, wordsAtom } from "~/atoms";
-import { getTSV, assemble } from "~/lib/assembly";
+import { getTSV, assemble } from "~/lib";
 import { LibchaiOutputEvent } from "~/worker";
 import { exportTSV, exportYAML, makeWorker } from "./Utils";
 import { load } from "js-yaml";
-import { Solver } from "~/lib/config";
+import { Solver } from "~/lib";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
-import { analysis } from "~/lib/repertoire";
+import { analysis } from "~/lib";
 import { makeEncodeCallback } from "~/pages/[id]/encode";
 
 export type Frequency = Record<string, number>;

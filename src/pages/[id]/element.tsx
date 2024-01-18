@@ -5,7 +5,7 @@ import {
   ShapeElementPicker,
   PronElementPicker,
 } from "~/components/ElementPicker";
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 
 export default function () {
   useChaifenTitle("元素");

@@ -246,6 +246,11 @@ const findTopology = function (renderedGlyph: RenderedGlyph) {
   return topology;
 };
 
-export default findTopology;
-export { curveRelation, strokeRelation, renderSVGStroke, renderSVGGlyph };
+export {
+  curveRelation,
+  strokeRelation,
+  renderSVGStroke,
+  renderSVGGlyph,
+  findTopology,
+};
 export type { CurveRelation, StrokeRelation, RenderedGlyph, Topology };

@@ -2,25 +2,35 @@ import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import Root from "~/components/Element";
-import { repertoireAtom, displayAtom } from "~/atoms";
-import { list } from "~/lib/api";
-import { binaryToIndices, generateSliceBinaries } from "~/lib/degenerator";
-import { type ComputedComponent } from "~/lib/component";
-import { defaultKeyboard } from "~/lib/templates";
-import { listToObject } from "~/lib/utils";
+import { repertoireAtom, displayAtom, primitiveRepertoireAtom } from "~/atoms";
+import { list } from "~/api";
+import { binaryToIndices, generateSliceBinaries } from "~/lib";
+import { computeComponent, type ComputedComponent } from "~/lib";
+import { createConfig, defaultKeyboard } from "~/lib";
+import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
 
+const defaultConfig = createConfig({
+  name: "",
+  data: "国标五分类",
+  keyboard: "米十五笔字根",
+  encoder: "形音码",
+});
+
 const DegeneratorTable = () => {
   const repertoire = useAtomValue(repertoireAtom);
-  const formLoading = isEmpty(repertoire);
-  const dataSource = Object.values(repertoire)
-    .filter((value) => value.glyph?.type === "component")
-    .filter((cache) => cache.glyph.length >= 5)
-    .sort((a, b) => a.glyph.length - b.glyph.length);
-  const toCompare = Object.values(componentForm).filter(
-    (cache) => cache.glyph.length >= 2,
-  );
+  const loading = isEmpty(repertoire);
+  const components: ComputedComponent[] = [];
+  for (const [name, character] of Object.entries(repertoire)) {
+    if (character.glyph?.type !== "basic_component") continue;
+    const glyph = character.glyph.strokes;
+    const cache = computeComponent(name, glyph);
+    components.push(cache);
+  }
+  components.sort((a, b) => a.glyph.length - b.glyph.length);
+  const dataSource = components.filter((cache) => cache.glyph.length >= 3);
+  const toCompare = components.filter((cache) => cache.glyph.length >= 2);
   const display = useAtomValue(displayAtom);
   const [page, setPage] = useState(1);
   const columns: ColumnsType<ComputedComponent> = [
@@ -39,11 +49,7 @@ const DegeneratorTable = () => {
         const rootMap = new Map<string, number[]>();
         for (const another of toCompare) {
           if (another.name === record.name) continue;
-          const slices = generateSliceBinaries(
-            defaultKeyboard,
-            record,
-            another,
-          );
+          const slices = generateSliceBinaries(defaultConfig, record, another);
           if (slices.length) {
             rootMap.set(another.name, slices);
           }
@@ -76,7 +82,7 @@ const DegeneratorTable = () => {
       columns={columns}
       size="small"
       rowKey="name"
-      loading={formLoading}
+      loading={loading}
       pagination={{
         pageSize: 50,
         current: page,
@@ -92,7 +98,7 @@ const DegeneratorTable = () => {
 };
 
 const Algorithm = () => {
-  const setForm = useSetAtom(formAtom);
+  const setForm = useSetAtom(primitiveRepertoireAtom);
 
   useEffect(() => {
     list().then((data) => {

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { displayAtom, sequenceAtom, sortedRepertoireAtom } from "~/atoms";
 import { Select } from "./Utils";
 import { SelectProps } from "antd";
-import { PrimitveCharacter, Character } from "~/lib/data";
+import { PrimitiveCharacter, Character } from "~/lib";
 import { ProFormSelect, ProFormSelectProps } from "@ant-design/pro-components";
 
 interface ItemSelectProps extends SelectProps {

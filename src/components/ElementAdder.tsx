@@ -10,7 +10,7 @@ import {
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { Key } from "~/lib/config";
+import { Key } from "~/lib";
 import { joinKeys } from "./Utils";
 
 const ElementAdder = ({ element }: { element?: string }) => {

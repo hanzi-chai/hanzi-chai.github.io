@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState } from "react";
-import { isPUA, unicodeBlock } from "~/lib/utils";
+import { isPUA, unicodeBlock } from "~/lib";
 import {
   Checkbox,
   Flex,
@@ -23,7 +23,7 @@ import {
   userRepertoireAtom,
   userTagsAtom,
 } from "~/atoms";
-import type { PrimitveCharacter } from "~/lib/data";
+import type { PrimitiveCharacter } from "~/lib";
 import {
   Add,
   Create,
@@ -34,7 +34,7 @@ import {
 } from "~/components/Action";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
-import { remoteUpdate } from "~/lib/api";
+import { remoteUpdate } from "~/api";
 import { DeleteButton, PlusButton, errorFeedback } from "./Utils";
 import Root from "./Element";
 import * as O from "optics-ts/standalone";
@@ -43,11 +43,11 @@ import CharacterQuery, {
   makeCharacterFilter,
 } from "./CharacterQuery";
 import TagPicker from "./TagPicker";
-import { findGlyphIndex } from "~/lib/repertoire";
+import { findGlyphIndex } from "~/lib";
 import { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 
-type Column = ColumnType<PrimitveCharacter>;
+type Column = ColumnType<PrimitiveCharacter>;
 
 const CharacterTable = () => {
   const allRepertoire = useAtomValue(allRepertoireAtom);
@@ -152,7 +152,7 @@ const CharacterTable = () => {
     render: (_, character) => {
       const { glyphs, unicode } = character;
       const char = String.fromCodePoint(unicode);
-      const inlineUpdate = async (newCharacter: PrimitveCharacter) => {
+      const inlineUpdate = async (newCharacter: PrimitiveCharacter) => {
         if (userRepertoire[char] !== undefined) {
           addUser(char, newCharacter);
           return true;
@@ -351,7 +351,7 @@ const CharacterTable = () => {
     customGlyphColumn,
     operations,
   ];
-  const columns: ColumnsType<PrimitveCharacter> = remote
+  const columns: ColumnsType<PrimitiveCharacter> = remote
     ? adminColumns
     : userColumns;
   return (
@@ -367,7 +367,7 @@ const CharacterTable = () => {
         <Create onCreate={(char) => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>
-        <Table<PrimitveCharacter>
+        <Table<PrimitiveCharacter>
           dataSource={dataSource}
           columns={columns}
           size="small"

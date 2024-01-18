@@ -1,14 +1,14 @@
 import { Button, Form, Input, Modal, Select } from "antd";
 import { useState } from "react";
-import type { StarterType } from "~/lib/templates";
+import type { StarterType } from "~/lib";
 import {
   classifierTypes,
   createConfig,
   encoderTypes,
   keyboardTypes,
-} from "~/lib/templates";
+} from "~/lib";
 import type { Updater } from "use-immer";
-import type { Config } from "~/lib/config";
+import type { Config } from "~/lib";
 import { nanoid } from "nanoid";
 
 const Starter = ({

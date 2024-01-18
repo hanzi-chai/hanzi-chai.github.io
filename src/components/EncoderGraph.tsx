@@ -14,7 +14,7 @@ import { useAtom, encoderAtom } from "~/atoms";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
-import type { Condition, Source } from "~/lib/config";
+import type { Condition, Source } from "~/lib";
 import type { SourceData, ConditionData } from "./graph";
 import {
   makeSourceNode,

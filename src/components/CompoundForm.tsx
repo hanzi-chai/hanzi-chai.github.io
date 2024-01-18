@@ -1,6 +1,6 @@
 import { AutoComplete, Button, Flex, Form, Typography } from "antd";
-import type { Compound } from "~/lib/data";
-import { operators } from "~/lib/data";
+import type { Compound } from "~/lib";
+import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
 import { GlyphSelect } from "./CharacterSelect";
 import {
@@ -16,7 +16,7 @@ import { repertoireAtom, tagsAtom } from "~/atoms";
 import Root from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
-import { recursiveRenderCompound } from "~/lib/component";
+import { recursiveRenderCompound } from "~/lib";
 
 export const CommonForm = () => {
   const tags = useAtomValue(tagsAtom);

@@ -12,12 +12,8 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 import Algebra from "./Algebra";
-import {
-  PronunciationElementTypes,
-  applyRules,
-  defaultAlgebra,
-} from "~/lib/element";
-import { operators } from "~/lib/data";
+import { PronunciationElementTypes, applyRules, defaultAlgebra } from "~/lib";
+import { operators } from "~/lib";
 
 interface ElementPickerProps<T extends string> {
   content: Map<T, string[]>;

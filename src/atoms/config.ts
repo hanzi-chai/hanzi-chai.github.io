@@ -7,7 +7,7 @@ import {
   type Info,
   Analysis,
   UserData,
-} from "~/lib/config";
+} from "~/lib";
 import { focusAtom } from "jotai-optics";
 
 /** 需要在根组件里提前修改它 */

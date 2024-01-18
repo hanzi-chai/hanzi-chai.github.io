@@ -268,7 +268,7 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   ].map((x) => [x.title, x]),
 );
 
-const select = (
+export const select = (
   config: Config,
   component: ComputedComponent,
   schemeList: Scheme[],
@@ -310,5 +310,3 @@ const select = (
 };
 
 export type { Scheme, Sieve };
-
-export default select;

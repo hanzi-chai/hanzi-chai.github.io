@@ -9,8 +9,8 @@ import {
   useAtom,
   assetsAtom,
 } from "~/atoms";
-import type { AssemblyResult, IndexedElement } from "~/lib/assembly";
-import { getTSV, assemble } from "~/lib/assembly";
+import type { AssemblyResult, IndexedElement } from "~/lib";
+import { getTSV, assemble } from "~/lib";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
@@ -21,13 +21,13 @@ import {
 } from "~/components/Utils";
 import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 import CharacterQuery, {
   CharacterFilter,
   makeCharacterFilter,
 } from "~/components/CharacterQuery";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
-import { analysis } from "~/lib/repertoire";
+import { analysis } from "~/lib";
 import PrimitiveDuplicationAnalyzer, {
   analyzePrimitiveDuplication,
   defaultAnalyzer,

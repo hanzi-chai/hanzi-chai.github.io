@@ -1,4 +1,4 @@
-import { sieveMap } from "~/lib/selector";
+import { sieveMap } from "~/lib";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   DndContext,
@@ -14,7 +14,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { SieveName } from "~/lib/config";
+import type { SieveName } from "~/lib";
 import { useAtom, selectorAtom, useAppendAtom, useExcludeAtom } from "~/atoms";
 
 import { Button, Dropdown, Flex, Space, Typography } from "antd";

@@ -2,11 +2,11 @@ import { Panel, useReactFlow } from "reactflow";
 import type { ConditionData, SourceData } from "./graph";
 import styled from "styled-components";
 import { Cascader, Flex, Form, Typography } from "antd";
-import type { CodableObject } from "~/lib/element";
-import { parseList, defaultAlgebra, renderList } from "~/lib/element";
+import type { CodableObject } from "~/lib";
+import { parseList, defaultAlgebra, renderList } from "~/lib";
 import { Select } from "./Utils";
-import type { Op, UnaryOp } from "~/lib/config";
-import { binaryOps, ops, unaryOps } from "~/lib/config";
+import type { Op, UnaryOp } from "~/lib";
+import { binaryOps, ops, unaryOps } from "~/lib";
 import TextArea from "antd/es/input/TextArea";
 import { useAtomValue, keyboardAtom, algebraAtom } from "~/atoms";
 

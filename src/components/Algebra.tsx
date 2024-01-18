@@ -9,10 +9,10 @@ import {
 } from "@ant-design/pro-components";
 import { Button, Form, Space, notification } from "antd";
 import { CloseCircleOutlined, CopyOutlined } from "@ant-design/icons";
-import { Rule } from "~/lib/config";
+import { Rule } from "~/lib";
 import { useAtom } from "jotai";
 import { algebraAtom, useAddAtom } from "~/atoms";
-import { defaultAlgebra } from "~/lib/element";
+import { defaultAlgebra } from "~/lib";
 
 interface AlgebraForm {
   name: string;

@@ -22,14 +22,14 @@ import Root from "~/components/Element";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 
-import type { ComponentCache, ComponentResult } from "~/lib/component";
-import type { CompoundCache, CompoundResult } from "~/lib/compound";
-import { analysis } from "~/lib/repertoire";
+import type { ComponentCache, ComponentResult } from "~/lib";
+import type { CompoundCache, CompoundResult } from "~/lib";
+import { analysis } from "~/lib";
 import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import Degenerator from "~/components/Degenerator";
-import { useChaifenTitle } from "~/lib/hooks";
+import { useChaifenTitle } from "~/components/Utils";
 import CharacterQuery, {
   CharacterFilter,
   makeCharacterFilter,

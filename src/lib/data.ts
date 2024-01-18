@@ -78,7 +78,7 @@ export interface Compound {
   order?: Block[];
 }
 
-export interface PrimitveCharacter {
+export interface PrimitiveCharacter {
   unicode: number;
   tygf: 0 | 1 | 2 | 3;
   gb2312: boolean;
@@ -90,10 +90,10 @@ export interface PrimitveCharacter {
 }
 
 export interface Character
-  extends Omit<PrimitveCharacter, "glyphs" | "ambiguous"> {
+  extends Omit<PrimitiveCharacter, "glyphs" | "ambiguous"> {
   glyph: BasicComponent | Compound | undefined;
 }
 
-export type PrimitiveRepertoire = Record<string, PrimitveCharacter>;
+export type PrimitiveRepertoire = Record<string, PrimitiveCharacter>;
 
 export type Repertoire = Record<string, Character>;
