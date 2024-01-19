@@ -1,12 +1,6 @@
-import { listToObject } from "~/lib";
 import rawrepertoire from "../public/cache/repertoire.json";
-import type {
-  PrimitiveCharacter,
-  BasicComponent,
-  PrimitiveRepertoire,
-} from "~/lib";
-import { determine } from "~/lib";
-import { computeComponent } from "~/lib";
+import type { BasicComponent } from "~/lib";
+import { listToObject, determine, computeComponent } from "~/lib";
 
 export const primitiveRepertoire = listToObject(rawrepertoire);
 export const repertoire = determine(primitiveRepertoire);

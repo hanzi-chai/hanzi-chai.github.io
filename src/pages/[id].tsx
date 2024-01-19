@@ -18,7 +18,7 @@ import {
   useSetAtom,
   useAtomValue,
   useAtom,
-  fetchJson,
+  fetchAsset,
   primitiveRepertoireAtom,
 } from "~/atoms";
 import { listToObject } from "~/lib";
@@ -161,7 +161,7 @@ function EditorLayout() {
 
 function LoadRepertoire() {
   const setRepertoire = useSetAtom(primitiveRepertoireAtom);
-  fetchJson("repertoire").then((value) => setRepertoire(listToObject(value)));
+  fetchAsset("repertoire").then((value) => setRepertoire(listToObject(value)));
   return null;
 }
 

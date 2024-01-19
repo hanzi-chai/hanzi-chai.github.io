@@ -1,31 +1,31 @@
-import { writeFileSync, mkdirSync, createWriteStream } from "node:fs";
+/**
+ * 从 api.chaifen.app 获取最新的数据 JSON 文件。
+ * 从 assets.chaifen.app 获取最新的数据 TXT 文件。
+ * 保存到 /pubilc/cache 目录里。
+ */
+
+import { writeFileSync, mkdirSync } from "node:fs";
 import axios from "axios";
 
-const endpoint = "https://assets.chaifen.app/";
-const outputFolder = "public/cache";
+const apiEndpoint = "https://api.chaifen.app/";
+const assetsEndpoint = "https://assets.chaifen.app/";
+const outputFolder = "public/cache/";
 mkdirSync(outputFolder, { recursive: true });
 
-const processFile = async (filename) => {
-  const url = `${endpoint}${filename}.txt`;
-  const jsonPath = `${outputFolder}/${filename}.json`;
-  const response = await axios.get(url);
-  const content = response.data;
-  const tsv = content
-    .trim()
-    .split("\n")
-    .map((x) => {
-      const [key, value] = x.split("\t");
-      return [key, Number(value)];
-    });
-  const object = Object.fromEntries(tsv);
-  writeFileSync(jsonPath, JSON.stringify(object));
-};
+const repertoire = JSON.stringify(
+  await fetch(apiEndpoint + "repertoire/all").then((res) => res.json()),
+);
+writeFileSync(outputFolder + "repertoire.json", repertoire);
 
-for (const name of [
+for (const filename of [
   "character_frequency",
   "word_frequency",
   "key_distribution",
   "pair_equivalence",
+  "tygf",
 ]) {
-  await processFile(name);
+  const url = `${assetsEndpoint}${filename}.txt`;
+  const path = `${outputFolder}${filename}.txt`;
+  const response = await axios.get(url);
+  writeFileSync(path, response.data);
 }

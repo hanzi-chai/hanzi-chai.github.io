@@ -5,9 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vite --mode CF",
-    "assets": "node scripts/fetchAssets.mjs",
-    "fetch": "node scripts/fetchCache.mjs && node scripts/fetchAssets.mjs",
-    "reference": "node scripts/fetchTable.mjs",
+    "fetch": "node scripts/fetchAssets.mjs",
     "publish": "bump --tag --commit --push",
     "build:BEX": "vite build --mode BEX && node scripts/makeBex.cjs",
     "build:PAGES": "vite build --mode PAGES",

@@ -11,14 +11,17 @@ import {
 } from "./assets";
 
 const _cache: Record<string, any> = {};
-export async function fetchJson(filename: string) {
+export async function fetchAsset(
+  filename: string,
+  type: "json" | "txt" = "json",
+) {
   if (filename in _cache) {
     return _cache[filename];
   }
-  const request = await fetch(`/cache/${filename}.json`);
-  const json = await request.json();
-  _cache[filename] = json;
-  return json;
+  const response = await fetch(`/cache/${filename}.${type}`);
+  const content = await (type === "json" ? response.json() : response.text());
+  _cache[filename] = content;
+  return content;
 }
 
 export const primitiveRepertoireAtom = atom<PrimitiveRepertoire>({});

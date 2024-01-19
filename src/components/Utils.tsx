@@ -11,7 +11,7 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import { isValidCJKChar } from "~/lib";
+import { isValidCJKChar, parseTSV } from "~/lib";
 import type { Err } from "~/api";
 import { useEffect, useState } from "react";
 import { dump } from "js-yaml";
@@ -23,7 +23,7 @@ import { Key } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import {
   characterFrequencyAtom,
-  fetchJson,
+  fetchAsset,
   keyDistributionAtom,
   pairEquivalenceAtom,
   wordFrequencyAtom,
@@ -257,9 +257,9 @@ export function LoadAssets() {
   const setWF = useSetAtom(wordFrequencyAtom);
   const setKE = useSetAtom(keyDistributionAtom);
   const setPE = useSetAtom(pairEquivalenceAtom);
-  fetchJson("character_frequency").then(setCF);
-  fetchJson("word_frequency").then(setWF);
-  fetchJson("key_distribution").then(setKE);
-  fetchJson("pair_equivalence").then(setPE);
+  fetchAsset("character_frequency", "txt").then((x) => setCF(parseTSV(x)));
+  fetchAsset("word_frequency", "txt").then((x) => setWF(parseTSV(x)));
+  fetchAsset("key_distribution", "txt").then((x) => setKE(parseTSV(x)));
+  fetchAsset("pair_equivalence", "txt").then((x) => setPE(parseTSV(x)));
   return null;
 }
