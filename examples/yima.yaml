@@ -1,4 +1,5 @@
 encoder:
+  max_length: 3
   sources:
     s0: { object: null, next: s1 }
     s1: { object: { type: 字根, rootIndex: 1 }, index: 0, next: c0 }

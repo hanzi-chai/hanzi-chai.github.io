@@ -60,7 +60,7 @@ const Starter = ({
           </Form.Item>
           <Form.Item<StarterType>
             name="keyboard"
-            label="形码布局预设"
+            label="键盘布局预设"
             rules={required}
           >
             <Select

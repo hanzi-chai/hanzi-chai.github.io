@@ -17,12 +17,13 @@ import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { useImmer } from "use-immer";
 import { Example, examples } from "~/lib";
-import { Select, Uploader } from "~/components/Utils";
+import { Select, Uploader, validateConfig } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
 import { post } from "~/api";
 import { md5 } from "js-md5";
 import { useChaifenTitle } from "~/components/Utils";
+import init, { validate } from "libchai";
 
 type Status = "login" | "signup" | "signin";
 
@@ -189,7 +190,7 @@ const HomeLayout = () => {
                   ]}
                 >
                   <List.Item.Meta
-                    title={info?.name ?? "未命名"}
+                    title={info.name}
                     description={info?.description ?? "无描述"}
                   />
                 </List.Item>
@@ -218,7 +219,10 @@ const HomeLayout = () => {
             </Dropdown>
             <Uploader
               type="yaml"
-              action={(s) => {
+              action={async (s) => {
+                const config = load(s) as Config;
+                const valid = await validateConfig(config);
+                if (!valid) return;
                 setConfigs((configs) => {
                   configs[nanoid(9)] = load(s) as Config;
                 });

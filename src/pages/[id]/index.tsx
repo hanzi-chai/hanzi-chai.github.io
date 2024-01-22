@@ -14,7 +14,7 @@ import {
   wordFrequencyAtom,
 } from "~/atoms";
 import { Info } from "~/lib";
-import ExportButtons from "~/components/ExportButtons";
+import ConfigManager from "~/components/ConfigManager";
 import {
   ProForm,
   ProFormText,
@@ -91,7 +91,7 @@ export default function () {
       <EditorColumn span={12}>
         <Typography.Title level={2}>方案</Typography.Title>
         <Typography.Title level={3}>管理配置</Typography.Title>
-        <ExportButtons />
+        <ConfigManager />
         <Typography.Title level={3}>基本信息</Typography.Title>
         <ProForm<Info>
           layout="horizontal"

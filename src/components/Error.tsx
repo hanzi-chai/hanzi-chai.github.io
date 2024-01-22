@@ -3,7 +3,7 @@
  */
 
 import { Result } from "antd";
-import ExportButtons from "./ExportButtons";
+import ConfigManager from "./ConfigManager";
 
 export default function ErrorResult() {
   return (
@@ -11,7 +11,7 @@ export default function ErrorResult() {
       status="500"
       title="数据异常"
       subTitle="点击下方的导出按钮，把您的配置反馈给我们。"
-      extra={<ExportButtons />}
+      extra={<ConfigManager />}
     />
   );
 }

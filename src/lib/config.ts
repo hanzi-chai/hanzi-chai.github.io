@@ -8,6 +8,42 @@ import type {
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
 
+// config.info begin
+export interface Info {
+  name: string;
+  author?: string;
+  version?: string;
+  description?: string;
+}
+// config.info end
+
+// config.data begin
+export type Data = {
+  repertoire?: PrimitiveRepertoire;
+  glyph_customization?: CustomGlyph;
+  reading_customization?: CustomReadings;
+  tags?: string[];
+};
+
+export type CustomGlyph = Record<string, Component | Compound>;
+export type CustomReadings = Record<string, string[]>;
+// config.data end
+
+// config.analysis begin
+export interface Analysis {
+  classifier?: Record<Feature, number>;
+  degenerator?: Degenerator;
+  selector?: Selector;
+  customize?: Record<string, string[]>;
+  strong?: string[];
+  weak?: string[];
+}
+
+export interface Degenerator {
+  feature?: Record<Feature, Feature>;
+  no_cross?: boolean;
+}
+
 export type SieveName =
   | "根少优先"
   | "连续笔顺"
@@ -23,6 +59,33 @@ export type SieveName =
   | "非形近根";
 
 export type Selector = SieveName[];
+// config.analysis end
+
+// config.algebra begin
+export type Algebra = Record<string, Rule[]>;
+
+export type Rule = Transformation | Transliteration;
+
+interface Transformation {
+  type: "xform";
+  from: string;
+  to: string;
+}
+
+interface Transliteration {
+  type: "xlit";
+  from: string;
+  to: string;
+}
+// config.algebra end
+
+// config.form begin
+export interface Keyboard {
+  alphabet: string;
+  mapping_type?: number;
+  mapping: Mapping;
+  grouping?: Grouping;
+}
 
 export type Element = string;
 
@@ -31,26 +94,18 @@ export type Key = string | { element: string; index: number };
 export type Mapping = Record<Element, string | Key[]>;
 
 export type Grouping = Record<Element, Element>;
+// config.form end
 
-export interface KeyboardConfig {
-  alphabet: string;
-  mapping_type?: number;
-  mapping: Mapping;
-  grouping: Grouping;
-}
-
-export interface Degenerator {
-  feature?: Record<Feature, Feature>;
-  no_cross?: boolean;
-}
-
-export interface Analysis {
-  classifier?: Record<Feature, number>;
-  degenerator?: Degenerator;
-  selector?: Selector;
-  customize?: Record<string, string[]>;
-  strong?: string[];
-  weak?: string[];
+// config.encoder begin
+export interface EncoderConfig {
+  max_length: number;
+  select_keys?: string[];
+  auto_select_length?: number;
+  auto_select_pattern?: string;
+  short_code_schemes?: ShortCodeScheme[];
+  rules?: WordRule[];
+  sources: Record<string, Source>;
+  conditions: Record<string, Condition>;
 }
 
 export interface Source {
@@ -98,6 +153,14 @@ export type WordRule = { formula: string } & (
   | { length_in_range: number[] }
 );
 
+export interface ShortCodeScheme {
+  prefix: number;
+  count?: number;
+  select_keys?: string[];
+}
+// config.encoder end
+
+// config.optimization begin
 export interface LevelWeights {
   length: number;
   frequency: number;
@@ -172,66 +235,17 @@ export interface Solver {
     random_full_key_swap: number;
   };
 }
-
-export interface ShortCodeScheme {
-  prefix: number;
-  count?: number;
-  select_keys?: string[];
-}
-
-export type Rule = Transformation | Transliteration;
-
-interface Transformation {
-  type: "xform";
-  from: string;
-  to: string;
-}
-
-interface Transliteration {
-  type: "xlit";
-  from: string;
-  to: string;
-}
-
-export interface Info {
-  name: string;
-  author?: string;
-  version?: string;
-  description?: string;
-}
-
-export type Algebra = Record<string, Rule[]>;
-
-export interface EncoderConfig {
-  max_length: number;
-  auto_select_length?: number;
-  auto_select_pattern?: string;
-  select_keys?: string[];
-  short_code_schemes?: ShortCodeScheme[];
-  rules?: WordRule[];
-  sources: Record<string, Source>;
-  conditions: Record<string, Condition>;
-}
-
-export type CustomGlyph = Record<string, Component | Compound>;
-export type CustomReadings = Record<string, string[]>;
-
-export type UserData = {
-  repertoire?: PrimitiveRepertoire;
-  glyph_customization?: CustomGlyph;
-  reading_customization?: CustomReadings;
-  tags?: string[];
-};
+// config.optimization end
 
 export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: Example | null;
   info: Info;
-  data?: UserData;
+  data?: Data;
   analysis?: Analysis;
   algebra?: Algebra;
-  form: KeyboardConfig;
+  form: Keyboard;
   encoder: EncoderConfig;
   optimization?: Optimization;
 }

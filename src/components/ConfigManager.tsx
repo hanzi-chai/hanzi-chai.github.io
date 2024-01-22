@@ -1,21 +1,14 @@
-import { Button, Flex } from "antd";
+import { Button, Flex, notification } from "antd";
 import { configAtom, useAtom } from "~/atoms";
-import { load } from "js-yaml";
-import type { Config } from "~/lib";
 import { examples } from "~/lib";
-import { Uploader, exportYAML } from "~/components/Utils";
+import { exportYAML, validateConfig } from "~/components/Utils";
 
-export default function ExportButtons() {
+export default function ConfigManager() {
   const [config, setConfig] = useAtom(configAtom);
   const { source } = config;
   return (
     <Flex wrap="wrap" gap="small" justify="center">
-      <Uploader
-        type="yaml"
-        action={(s: string) => {
-          setConfig(load(s) as Config);
-        }}
-      />
+      <Button onClick={() => validateConfig(config)}>校验</Button>
       <Button onClick={() => exportYAML(config, config.info?.name ?? "config")}>
         导出
       </Button>

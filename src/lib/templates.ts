@@ -1,5 +1,5 @@
 import { Classifier } from "./classifier";
-import type { Analysis, Config, KeyboardConfig } from "./config";
+import type { Analysis, Config, Keyboard } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
 import mswb from "../../examples/mswb.yaml";
@@ -25,15 +25,15 @@ export const classifierTypes = [
 export type ClassifierType = (typeof classifierTypes)[number];
 const classifierMap: Record<ClassifierType, Classifier> = {
   国标五分类: {} as Classifier,
-  表形码六分类: examples.mswb.analysis!.classifier!,
-  郑码七分类: examples.zhengma.analysis!.classifier!,
+  表形码六分类: examples.mswb.analysis.classifier!,
+  郑码七分类: examples.zhengma.analysis.classifier!,
 };
 
-export const keyboardTypes = ["郑码字根", "米十五笔字根", "无"] as const;
+export const keyboardTypes = ["郑码", "米十五笔", "无"] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
-  郑码字根: examples.zhengma.form,
-  米十五笔字根: examples.mswb.form,
+  郑码: examples.zhengma.form,
+  米十五笔: examples.mswb.form,
   无: {
     alphabet: "qwertyuiopasdfghjklzxcvbnm",
     grouping: {},

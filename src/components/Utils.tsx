@@ -11,7 +11,7 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import { isValidCJKChar, parseTSV } from "~/lib";
+import { Config, isValidCJKChar, parseTSV } from "~/lib";
 import type { Err } from "~/api";
 import { useEffect, useState } from "react";
 import { dump } from "js-yaml";
@@ -29,6 +29,7 @@ import {
   wordFrequencyAtom,
 } from "~/atoms";
 import { useSetAtom } from "jotai";
+import init, { validate } from "libchai";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -262,4 +263,22 @@ export function LoadAssets() {
   fetchAsset("key_distribution", "txt").then((x) => setKE(parseTSV(x)));
   fetchAsset("pair_equivalence", "txt").then((x) => setPE(parseTSV(x)));
   return null;
+}
+
+export async function validateConfig(config: Config) {
+  await init();
+  try {
+    validate(config);
+    notification.success({
+      message: "配置校验成功",
+      description: "该配置可以被正常使用。",
+    });
+    return true;
+  } catch (e) {
+    notification.error({
+      message: "配置校验失败，原因是：",
+      description: (e as Error).message,
+    });
+    return false;
+  }
 }

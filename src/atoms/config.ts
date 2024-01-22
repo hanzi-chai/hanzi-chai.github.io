@@ -6,7 +6,7 @@ import {
   type Config,
   type Info,
   Analysis,
-  UserData,
+  Data,
 } from "~/lib";
 import { focusAtom } from "jotai-optics";
 
@@ -30,7 +30,7 @@ export const infoAtom = focusAtom(configAtom, (o) =>
 );
 infoAtom.debugLabel = "config.info";
 export const dataAtom = focusAtom(configAtom, (o) =>
-  o.prop("data").valueOr({} as UserData),
+  o.prop("data").valueOr({} as Data),
 );
 dataAtom.debugLabel = "config.data";
 export const analysisAtom = focusAtom(configAtom, (o) =>
