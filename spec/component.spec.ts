@@ -24,7 +24,7 @@ describe("get component scheme", () => {
   const config = createConfig({
     name: "",
     data: "国标五分类",
-    keyboard: "米十五笔字根",
+    keyboard: "米十五笔",
     encoder: "形音码",
   });
 

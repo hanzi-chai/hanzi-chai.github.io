@@ -100,10 +100,12 @@ const CharacterTable = () => {
     dataIndex: "tygf",
     width: 96,
     render: (_, record) => {
-      return <Checkbox checked={record.tygf === 1} />;
+      return <Checkbox checked={record.tygf > 0} />;
     },
     filters: [
-      { text: "是", value: 1 },
+      { text: "一级", value: 1 },
+      { text: "二级", value: 2 },
+      { text: "三级", value: 3 },
       { text: "否", value: 0 },
     ],
     onFilter: (value, record) => value === record.tygf,
@@ -224,6 +226,8 @@ const CharacterTable = () => {
       return as.localeCompare(bs);
     },
     sortDirections: ["ascend", "descend"],
+    filters: [{ text: "无字形", value: 1 }],
+    onFilter: (_, record) => record.glyphs.length === 0,
   };
 
   const customGlyphColumn: Column = {
@@ -338,6 +342,8 @@ const CharacterTable = () => {
 
   const adminColumns = [
     unicodeColumn,
+    tygfColumn,
+    gb2312,
     readings,
     glyphs,
     gf0014,

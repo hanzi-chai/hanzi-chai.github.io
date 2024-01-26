@@ -79,7 +79,7 @@ const Encode = () => {
   const [mode, setMode] = useState<"character" | "word">("character");
   const [code, setCode] = useState<EncodeOutput | undefined>(undefined);
   const list = Object.entries(repertoire)
-    .filter(([_, v]) => v.gb2312 && v.tygf > 0)
+    .filter(([_, v]) => v.tygf > 0)
     .map(([x]) => x);
   let dataSource =
     code === undefined

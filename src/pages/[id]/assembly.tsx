@@ -58,7 +58,7 @@ export default function () {
   const [filter, setFilter] = useState<CharacterFilter>({});
   const filterFn = makeCharacterFilter(filter, repertoire, sequence);
   const characters = Object.entries(repertoire)
-    .filter(([, v]) => v.gb2312 && v.tygf > 0)
+    .filter(([, v]) => v.tygf > 0)
     .map(([x]) => x);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);

@@ -78,7 +78,7 @@ const Optimizer = () => {
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
   const repertoire = useAtomValue(repertoireAtom);
   const list = Object.entries(repertoire)
-    .filter(([_, v]) => v.gb2312 && v.tygf > 0)
+    .filter(([_, v]) => v.tygf > 0)
     .map(([x]) => x);
   const [out1, setOut1] = useState("");
   const [result, setResult] = useState<[Date, string][]>([]);

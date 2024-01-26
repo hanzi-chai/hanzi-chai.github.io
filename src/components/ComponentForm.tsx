@@ -1,9 +1,16 @@
-import { Button, Flex, Form, Dropdown, notification } from "antd";
+import {
+  Button,
+  Flex,
+  Form,
+  Dropdown,
+  notification,
+  FormListFieldData,
+} from "antd";
 import { EditorColumn, EditorRow, NumberInput } from "./Utils";
-import { ReactNode } from "react";
+import { MutableRefObject, ReactNode, useRef } from "react";
 import type { PrimitiveCharacter, Component, Character } from "~/lib";
 import type { Feature } from "~/lib";
-import { schema } from "~/lib";
+import { getDummySVGStroke, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
 import { allRepertoireAtom, useAtomValue } from "~/atoms";
 import { GlyphSelect } from "./CharacterSelect";
@@ -12,6 +19,7 @@ import {
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
+  ProFormInstance,
   ProFormList,
   ProFormListProps,
   ProFormSelect,
@@ -22,6 +30,10 @@ import Root from "./Element";
 import { recursiveRenderComponent } from "~/lib";
 import { Box, StrokesView } from "./GlyphView";
 import { BaseOptionType } from "antd/es/select";
+
+const Digit = ({ name }: { name: (string | number)[] }) => (
+  <ProFormDigit width={64} name={name} fieldProps={{ min: -100 }} />
+);
 
 const InlineFlex = styled.div`
   display: inline-flex;
@@ -70,16 +82,31 @@ const referenceOption: BaseOptionType = {
   value: "reference",
 };
 
-const StrokeForm = ({ maxIndex }: { maxIndex?: number }) => {
+const StrokeForm = ({
+  maxIndex,
+  formRef,
+  meta,
+}: {
+  maxIndex?: number;
+  formRef: MutableRefObject<ProFormInstance | undefined>;
+  meta: FormListFieldData;
+}) => {
   return (
     <>
       <Flex gap="middle">
-        <ProFormSelect<Feature>
+        <ProFormSelect<Feature | "reference">
           name="feature"
           style={{ width: "96px" }}
           options={[referenceOption].concat(classifiedStrokeOptions)}
           disabled
           allowClear={false}
+          onChange={(value) => {
+            const newStroke =
+              value === "reference"
+                ? getDummyReferenceStroke()
+                : getDummySVGStroke(value);
+            formRef.current?.setFieldValue(["strokes", meta.name], newStroke);
+          }}
         />
         <ProFormDependency name={["feature"]}>
           {({ feature }) =>
@@ -95,9 +122,9 @@ const StrokeForm = ({ maxIndex }: { maxIndex?: number }) => {
                 />
               </Flex>
             ) : (
-              <ProFormGroup>
-                <ProFormDigit name={["start", 0]} />
-                <ProFormDigit name={["start", 1]} />
+              <ProFormGroup size="small">
+                <Digit name={["start", 0]} />
+                <Digit name={["start", 1]} />
               </ProFormGroup>
             )
           }
@@ -112,17 +139,17 @@ const StrokeForm = ({ maxIndex }: { maxIndex?: number }) => {
                 <ProFormDependency name={["command"]}>
                   {({ command }) =>
                     command === "c" || command === "z" ? (
-                      <ProFormGroup>
-                        <ProFormDigit name={["parameterList", 0]} />
-                        <ProFormDigit name={["parameterList", 1]} />
-                        <ProFormDigit name={["parameterList", 2]} />
-                        <ProFormDigit name={["parameterList", 3]} />
-                        <ProFormDigit name={["parameterList", 4]} />
-                        <ProFormDigit name={["parameterList", 5]} />
+                      <ProFormGroup size="small">
+                        <Digit name={["parameterList", 0]} />
+                        <Digit name={["parameterList", 1]} />
+                        <Digit name={["parameterList", 2]} />
+                        <Digit name={["parameterList", 3]} />
+                        <Digit name={["parameterList", 4]} />
+                        <Digit name={["parameterList", 5]} />
                       </ProFormGroup>
                     ) : (
-                      <ProFormGroup>
-                        <ProFormDigit name={["parameterList", 0]} />
+                      <ProFormGroup size="small">
+                        <Digit name={["parameterList", 0]} />
                       </ProFormGroup>
                     )
                   }
@@ -170,6 +197,7 @@ const ComponentForm = ({
     }
     return true;
   };
+  const formRef = useRef<ProFormInstance>();
   return (
     <ModalForm<Component>
       title={title}
@@ -183,6 +211,7 @@ const ComponentForm = ({
       modalProps={{
         width: 1080,
       }}
+      formRef={formRef}
     >
       <EditorRow>
         <EditorColumn span={8}>
@@ -230,9 +259,21 @@ const ComponentForm = ({
                 <ProFormList
                   name="strokes"
                   creatorButtonProps={{ creatorButtonText: "添加笔画" }}
-                  creatorRecord={getDummyReferenceStroke()}
+                  creatorRecord={
+                    typeof source === "string"
+                      ? getDummyReferenceStroke()
+                      : getDummySVGStroke("横")
+                  }
                 >
-                  <StrokeForm maxIndex={maxIndex} />
+                  {(meta, index) => {
+                    return (
+                      <StrokeForm
+                        maxIndex={maxIndex}
+                        formRef={formRef}
+                        meta={meta}
+                      />
+                    );
+                  }}
                 </ProFormList>
               );
             }}
