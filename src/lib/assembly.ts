@@ -40,6 +40,7 @@ const table: Record<
 export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
   char: string;
   pinyin: string;
+  importance?: number;
 };
 
 /**
@@ -86,11 +87,12 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 };
 
 export type IndexedElement = string | { element: string; index: number };
-export type AssemblyResult = Map<string, IndexedElement[][]>;
+export type Assembly = { elements: IndexedElement[]; importance?: number };
+export type AssemblyResult = Map<string, Assembly[]>;
 
 const compile = (config: Config) => {
   const { mapping, grouping, alphabet } = config.form;
-  const totalMapping = merge(mapping, grouping);
+  const totalMapping = merge(mapping, grouping ?? {});
   return (result: CharacterResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
@@ -108,7 +110,7 @@ const compile = (config: Config) => {
             codes.push(element);
             continue;
           }
-          const groupedElement = grouping[element] || element;
+          const groupedElement = grouping?.[element] || element;
           const mappedElement = mapping[groupedElement];
           if (mappedElement === undefined) {
             node = next;
@@ -169,7 +171,7 @@ const extraAnalysis = function (repertoire: Repertoire, config: Config): Extra {
     }
   };
   const rootSequence = new Map<string, number[]>();
-  const roots = Object.keys(mapping).concat(Object.keys(grouping));
+  const roots = Object.keys(mapping).concat(Object.keys(grouping ?? {}));
   for (const root of roots) {
     rootSequence.set(root, findSequence(root));
   }
@@ -195,6 +197,7 @@ export const assemble = (
   analysisResult: AnalysisResult,
 ) => {
   const { customized, compoundResults } = analysisResult;
+  const heteronymHandling = config.encoder.heteronym_handling ?? true;
   const extra = extraAnalysis(repertoire, config);
   const func = compile(config);
   const result: AssemblyResult = new Map(
@@ -204,35 +207,68 @@ export const assemble = (
         customized.get(char) || compoundResults.get(char);
       if (shapeInfo === undefined) return [char, []];
       const readings = repertoire[char]!.readings;
-      const total: CharacterResult[] = readings.map((pinyin) => ({
-        char,
-        pinyin,
-        ...shapeInfo,
-      }));
-      const final = total.map((x) => func(x, repertoire, extra));
+      readings.sort((a, b) => (b.importance ?? 100) - (a.importance ?? 100));
+      const total: CharacterResult[] = readings.map(
+        ({ pinyin, importance }) => ({
+          char,
+          pinyin,
+          importance,
+          ...shapeInfo,
+        }),
+      );
+      const final: Assembly[] = [];
+      // 如果不处理多音字，就只取最重要的一个
+      if (!heteronymHandling && total.length >= 1) {
+        final.push({ elements: func(total[0]!, repertoire, extra) });
+        return [char, final];
+      }
+      // 如果处理多音字，就取全部
+      for (const x of total) {
+        const elements = func(x, repertoire, extra);
+        const summary = summarize(elements);
+        let isDuplicated = false;
+        for (const previous of final) {
+          if (summarize(previous.elements) === summary) {
+            previous.importance =
+              (previous.importance ?? 100) + (x.importance ?? 100);
+            isDuplicated = true;
+            break;
+          }
+        }
+        if (!isDuplicated) {
+          final.push({ elements, importance: x.importance });
+        }
+      }
       return [char, final];
     }),
   );
   return result;
 };
 
+export const summarize = (elements: IndexedElement[]) => {
+  return elements
+    .map((x) => {
+      if (typeof x === "string") return x;
+      else if (x.index === 0) {
+        return x.element;
+      } else {
+        return `${x.element}.${x.index}`;
+      }
+    })
+    .join(" ");
+};
+
 export const getTSV = (collection: AssemblyResult) => {
-  const tsv = [...collection]
-    .filter(([, code]) => code.length >= 1)
-    .map(([char, elements_list]) => {
-      // 目前只支持一种拆分
-      const elements = elements_list[0]!;
-      const summary = elements
-        .map((x) => {
-          if (typeof x === "string") return x;
-          else if (x.index === 0) {
-            return x.element;
-          } else {
-            return `${x.element}.${x.index}`;
-          }
-        })
-        .join(" ");
-      return [char, summary] as [string, string];
-    });
+  const tsv: string[][] = [];
+  for (const [char, elements_list] of collection) {
+    for (const { importance, elements } of elements_list) {
+      const summary = summarize(elements);
+      if (importance !== undefined && importance !== 100) {
+        tsv.push([char, summary, String(importance)]);
+      } else {
+        tsv.push([char, summary]);
+      }
+    }
+  }
   return tsv;
 };

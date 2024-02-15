@@ -114,7 +114,7 @@ export const PronElementPicker = function () {
   const syllables = [
     ...new Set(
       Object.values(characters)
-        .map((x) => x.readings)
+        .map((x) => x.readings.map((y) => y.pinyin))
         .flat(),
     ),
   ];

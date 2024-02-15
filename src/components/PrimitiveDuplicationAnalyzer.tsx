@@ -9,7 +9,7 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import { AssemblyResult } from "~/lib";
+import { AssemblyResult, summarize } from "~/lib";
 import { renderIndexed } from "~/pages/[id]/assembly";
 import { Select } from "./Utils";
 import { Frequency } from "./Optimizer";
@@ -35,20 +35,29 @@ export const analyzePrimitiveDuplication = (
   const topCharacters = Object.fromEntries(
     Object.entries(characterFrequency).slice(0, analyzer.top),
   );
-  for (const [name, data] of result.entries()) {
+  for (const [name, data] of result) {
     if (analyzer.top !== 0 && !topCharacters[name]) {
       continue;
     }
-    for (const sequence of data.slice(0, 1)) {
+    for (const { elements } of data) {
       const sliced =
-        analyzer.length === 0 ? sequence : sequence.slice(0, analyzer.length);
-      const hash = sliced.map((x) => renderIndexed(x, (s) => s)).join(", ");
-      duplicationMap.set(hash, (duplicationMap.get(hash) || []).concat([name]));
+        analyzer.length === 0 ? elements : elements.slice(0, analyzer.length);
+      const summary = summarize(sliced);
+      duplicationMap.set(
+        summary,
+        (duplicationMap.get(summary) || []).concat([name]),
+      );
     }
   }
-  const groups = [...duplicationMap.values()];
-  const selections = groups.reduce((p, c) => p + c.length, 0) - groups.length;
-  const involved = new Set(groups.filter((d) => d.length > 1).flat());
+
+  const involved = new Set<string>();
+  let selections = 0;
+  for (const [key, names] of duplicationMap) {
+    selections += names.length - 1;
+    if (names.length > 1) {
+      involved.add(key);
+    }
+  }
   return [selections, involved] as const;
 };
 

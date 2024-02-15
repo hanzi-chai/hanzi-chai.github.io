@@ -130,6 +130,11 @@ export interface Compound {
   order?: Block[];
 }
 
+export interface Reading {
+  pinyin: string;
+  importance?: number;
+}
+
 /**
  * 原始字符 PrimitiveCharacter
  * unicode: 字符的 Unicode 编码
@@ -147,7 +152,7 @@ export interface PrimitiveCharacter {
   gb2312: boolean;
   name: string | null;
   gf0014_id: number | null;
-  readings: string[];
+  readings: Reading[];
   glyphs: (BasicComponent | DerivedComponent | Compound)[];
   ambiguous: boolean;
 }

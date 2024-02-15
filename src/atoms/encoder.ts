@@ -25,3 +25,7 @@ export const shortCodeSchemesAtom = focusAtom(encoderAtom, (o) =>
 export const wordRulesAtom = focusAtom(encoderAtom, (o) =>
   o.prop("rules").valueOr([] as WordRule[]),
 );
+
+export const heteronymAtom = focusAtom(encoderAtom, (o) =>
+  o.prop("heteronym_handling").valueOr(true),
+);

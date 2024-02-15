@@ -1,5 +1,14 @@
 import { Suspense, useState } from "react";
-import { Alert, Button, Flex, Form, Tabs, TabsProps, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Flex,
+  Form,
+  Switch,
+  Tabs,
+  TabsProps,
+  Typography,
+} from "antd";
 import {
   useAtomValue,
   configAtom,
@@ -8,9 +17,10 @@ import {
   sequenceAtom,
   useAtom,
   assetsAtom,
+  heteronymAtom,
 } from "~/atoms";
 import type { AssemblyResult, IndexedElement } from "~/lib";
-import { getTSV, assemble } from "~/lib";
+import { getTSV, assemble, summarize } from "~/lib";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
@@ -74,17 +84,25 @@ export default function () {
     result,
   );
 
-  const dataSource = [...result]
-    .filter(([, v]) => v.length > 0)
-    .filter(([x]) => filterFn(x))
-    .filter(([x]) => analyzer.filter === false || involved.has(x))
-    .map(([name, sequence]) => {
+  const [heteronymHandling, setHeteronymHandling] = useAtom(heteronymAtom);
+
+  const dataSource = [] as EncodeResultEntry[];
+
+  for (const [name, elements_list] of result) {
+    if (!filterFn(name)) {
+      continue;
+    }
+    for (const { elements } of elements_list) {
+      if (analyzer.filter && !involved.has(summarize(elements))) {
+        continue;
+      }
       const object = { key: name, name } as EncodeResultEntry;
-      for (const [i, element] of sequence[0]!.entries()) {
+      for (const [i, element] of elements.entries()) {
         object[i] = element;
       }
-      return object;
-    });
+      dataSource.push(object);
+    }
+  }
 
   const hash = (record: EncodeResultEntry) => {
     const list: IndexedElement[] = [];
@@ -175,6 +193,13 @@ export default function () {
         ) : null}
         <CharacterQuery setFilter={setFilter} />
         <Flex justify="center" gap="small">
+          <Form.Item label="处理多音字">
+            <Switch
+              checked={heteronymHandling}
+              onChange={setHeteronymHandling}
+            />
+          </Form.Item>
+          <div style={{ flex: 1 }} />
           <Button
             type="primary"
             onClick={() => {

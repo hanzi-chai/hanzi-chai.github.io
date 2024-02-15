@@ -6,6 +6,7 @@ import {
   FloatButton,
   Layout,
   Space,
+  Tooltip,
   Tour,
   Typography,
 } from "antd";
@@ -131,9 +132,11 @@ const CharacterTable = () => {
     render: (_, record) => {
       return (
         <Space>
-          {record.readings.map((reading, index) => (
-            <Root key={index}>{reading}</Root>
-          ))}
+          {record.readings.map((reading, index) => {
+            const core = <Root key={index}>{reading.pinyin}</Root>;
+            if (record.readings.length === 1) return core;
+            return <Tooltip title={reading.importance + "%"}>{core}</Tooltip>;
+          })}
         </Space>
       );
     },
