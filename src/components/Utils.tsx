@@ -24,6 +24,7 @@ import useTitle from "ahooks/es/useTitle";
 import {
   characterFrequencyAtom,
   fetchAsset,
+  frequencyAtom,
   keyDistributionAtom,
   pairEquivalenceAtom,
   wordFrequencyAtom,
@@ -256,10 +257,12 @@ export function useChaifenTitle(title: string) {
 export function LoadAssets() {
   const setCF = useSetAtom(characterFrequencyAtom);
   const setWF = useSetAtom(wordFrequencyAtom);
+  const setF = useSetAtom(frequencyAtom);
   const setKE = useSetAtom(keyDistributionAtom);
   const setPE = useSetAtom(pairEquivalenceAtom);
   fetchAsset("character_frequency", "txt").then((x) => setCF(parseTSV(x)));
   fetchAsset("word_frequency", "txt").then((x) => setWF(parseTSV(x)));
+  fetchAsset("frequency", "txt").then((x) => setF(parseTSV(x)));
   fetchAsset("key_distribution", "txt").then((x) => setKE(parseTSV(x)));
   fetchAsset("pair_equivalence", "txt").then((x) => setPE(parseTSV(x)));
   return null;

@@ -258,6 +258,21 @@ export const summarize = (elements: IndexedElement[]) => {
     .join(" ");
 };
 
+export const getFlat = (collection: AssemblyResult) => {
+  const tsv: { char: string; sequence: string; importance?: number }[] = [];
+  for (const [char, elements_list] of collection) {
+    for (const { importance, elements } of elements_list) {
+      const sequence = summarize(elements);
+      if (importance !== undefined && importance !== 100) {
+        tsv.push({ char, sequence, importance });
+      } else {
+        tsv.push({ char, sequence });
+      }
+    }
+  }
+  return tsv;
+};
+
 export const getTSV = (collection: AssemblyResult) => {
   const tsv: string[][] = [];
   for (const [char, elements_list] of collection) {

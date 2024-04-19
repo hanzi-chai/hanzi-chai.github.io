@@ -32,8 +32,8 @@ import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { useMemo, useState } from "react";
 import { ColumnsType } from "antd/es/table";
 import { LibchaiOutputEvent } from "~/worker";
-import { analysis } from "~/lib";
-import { assemble, getTSV } from "~/lib";
+import { analysis, getFlat } from "~/lib";
+import { assemble } from "~/lib";
 import { atomWithStorage } from "jotai/utils";
 import { getSupplemental } from "~/lib";
 
@@ -99,7 +99,7 @@ const Encode = () => {
       v2 = assemble(repertoire, config, list, v1);
       setAssemblyResult(v2);
     }
-    const characters = getTSV(v2);
+    const characters = getFlat(v2);
     return {
       config,
       characters,

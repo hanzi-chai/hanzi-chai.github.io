@@ -11,7 +11,7 @@ import {
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { configAtom, repertoireAtom, assetsAtom, wordsAtom } from "~/atoms";
-import { getTSV, assemble } from "~/lib";
+import { assemble, getFlat } from "~/lib";
 import { LibchaiOutputEvent } from "~/worker";
 import { exportTSV, exportYAML, makeWorker } from "./Utils";
 import { load } from "js-yaml";
@@ -102,7 +102,7 @@ const Optimizer = () => {
       v2 = assemble(repertoire, config, list, v1);
       setAssemblyResult(v2);
     }
-    const characters = getTSV(v2);
+    const characters = getFlat(v2);
     return {
       config,
       characters,

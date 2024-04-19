@@ -57,6 +57,7 @@ export const mutateRepertoireAtom = atom(
 
 export const characterFrequencyAtom = atom<Frequency>({});
 export const wordFrequencyAtom = atom<Frequency>({});
+export const frequencyAtom = atom<Frequency>({});
 export const keyDistributionAtom = atom<Frequency>({});
 export const pairEquivalenceAtom = atom<Equivalence>({});
 
@@ -68,6 +69,7 @@ export const wordAtom = atom((get) => {
 export interface Assets {
   character_frequency: Frequency;
   word_frequency: Frequency;
+  frequency: Frequency;
   key_distribution: Frequency;
   pair_equivalence: Equivalence;
 }
@@ -76,6 +78,7 @@ export const assetsAtom = atom((get) => {
   const character_frequency =
     get(userCharacterFrequencyAtom) ?? get(characterFrequencyAtom);
   const word_frequency = get(userWordFrequencyAtom) ?? get(wordFrequencyAtom);
+  const frequency = get(frequencyAtom);
   const key_distribution =
     get(userKeyDistributionAtom) ?? get(keyDistributionAtom);
   const pair_equivalence =
@@ -83,6 +86,7 @@ export const assetsAtom = atom((get) => {
   const assets: Assets = {
     character_frequency,
     word_frequency,
+    frequency,
     key_distribution,
     pair_equivalence,
   };
