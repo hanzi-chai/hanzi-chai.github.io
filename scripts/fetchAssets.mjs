@@ -18,8 +18,8 @@ const repertoire = JSON.stringify(
 writeFileSync(outputFolder + "repertoire.json", repertoire);
 
 for (const filename of [
-  "character_frequency",
-  "word_frequency",
+  "frequency",
+  "dictionary",
   "key_distribution",
   "pair_equivalence",
   "tygf",

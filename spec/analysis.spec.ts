@@ -5,7 +5,6 @@ import {
   assemble,
   classifier,
   examples,
-  getTSV,
   isValidCJKChar,
   recursiveRenderCompound,
 } from "~/lib";
@@ -20,13 +19,15 @@ describe("e2e test", () => {
     expect(componentError).toHaveLength(0);
     expect(compoundError).toHaveLength(0);
     const characters = Object.keys(repertoire).filter(isValidCJKChar);
+
     const assemblyResult = assemble(
       repertoire,
       config,
       characters,
+      [],
       analysisResult,
     );
-    expect(getTSV(assemblyResult).length).toBeGreaterThan(6600);
+    expect(assemblyResult.length).toBeGreaterThan(6600);
   });
 
   it("checks stroke orders are correct", () => {

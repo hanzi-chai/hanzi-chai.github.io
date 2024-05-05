@@ -106,7 +106,6 @@ export interface EncoderConfig {
   rules?: WordRule[];
   sources: Record<string, Source>;
   conditions: Record<string, Condition>;
-  heteronym_handling?: boolean;
 }
 
 export interface Source {

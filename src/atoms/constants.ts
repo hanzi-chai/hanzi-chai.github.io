@@ -3,11 +3,10 @@ import type { PrimitiveRepertoire } from "~/lib";
 import { produce } from "immer";
 import { Equivalence, Frequency } from "~/components/Optimizer";
 import {
-  userCharacterFrequencyAtom,
+  userFrequencyAtom,
   userKeyDistributionAtom,
   userPairEquivalenceAtom,
-  userWordAtom,
-  userWordFrequencyAtom,
+  userDictionaryAtom,
 } from "./assets";
 
 const _cache: Record<string, any> = {};
@@ -55,37 +54,26 @@ export const mutateRepertoireAtom = atom(
   },
 );
 
-export const characterFrequencyAtom = atom<Frequency>({});
-export const wordFrequencyAtom = atom<Frequency>({});
+export type Dictionary = [string, string][];
+
+export const defaultDictionaryAtom = atom<Dictionary>([]);
 export const frequencyAtom = atom<Frequency>({});
 export const keyDistributionAtom = atom<Frequency>({});
 export const pairEquivalenceAtom = atom<Equivalence>({});
 
-export const wordAtom = atom((get) => {
-  const wordFrequency = get(wordFrequencyAtom);
-  return Object.keys(wordFrequency);
-});
-
 export interface Assets {
-  character_frequency: Frequency;
-  word_frequency: Frequency;
   frequency: Frequency;
   key_distribution: Frequency;
   pair_equivalence: Equivalence;
 }
 
 export const assetsAtom = atom((get) => {
-  const character_frequency =
-    get(userCharacterFrequencyAtom) ?? get(characterFrequencyAtom);
-  const word_frequency = get(userWordFrequencyAtom) ?? get(wordFrequencyAtom);
   const frequency = get(frequencyAtom);
   const key_distribution =
     get(userKeyDistributionAtom) ?? get(keyDistributionAtom);
   const pair_equivalence =
     get(userPairEquivalenceAtom) ?? get(pairEquivalenceAtom);
   const assets: Assets = {
-    character_frequency,
-    word_frequency,
     frequency,
     key_distribution,
     pair_equivalence,
@@ -93,8 +81,6 @@ export const assetsAtom = atom((get) => {
   return assets;
 });
 
-export const wordsAtom = atom((get) => {
-  const userWord = get(userWordAtom);
-  const { word_frequency } = get(assetsAtom);
-  return userWord ?? Object.keys(word_frequency);
+export const dictionaryAtom = atom((get) => {
+  return get(userDictionaryAtom) ?? get(defaultDictionaryAtom);
 });

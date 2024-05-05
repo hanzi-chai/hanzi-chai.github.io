@@ -2,22 +2,17 @@ import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { Equivalence, Frequency } from "~/components/Optimizer";
 
-export const userCharacterFrequencyAtom = atomWithStorage<Frequency | null>(
-  "user_character_frequency",
+export const userFrequencyAtom = atomWithStorage<Frequency | null>(
+  "user_frequency",
   null,
 );
 
-export const userWordFrequencyAtom = atomWithStorage<Frequency | null>(
-  "user_word_frequency",
+export const userDictionaryAtom = atomWithStorage<[string, string][] | null>(
+  "user_dictionary",
   null,
 );
 
-export const userWordAtom = atomWithStorage<string[] | null>(
-  "user_word_list",
-  null,
-);
-
-export const userKeyDistributionAtom = atomWithStorage<Frequency | null>(
+export const userKeyDistributionAtom = atomWithStorage<Equivalence | null>(
   "user_key_distribution",
   null,
 );

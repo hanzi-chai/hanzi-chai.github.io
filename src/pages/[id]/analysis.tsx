@@ -22,10 +22,20 @@ import Root from "~/components/Element";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
 
-import type { ComponentResults, ComponentAnalysis } from "~/lib";
+import type {
+  ComponentResults,
+  ComponentAnalysis,
+  AnalysisResult,
+  Repertoire,
+} from "~/lib";
 import type { CompoundResults, CompoundAnalysis } from "~/lib";
 import { analysis } from "~/lib";
-import { EditorColumn, EditorRow, exportJSON } from "~/components/Utils";
+import {
+  EditorColumn,
+  EditorRow,
+  exportJSON,
+  exportTSV,
+} from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import Degenerator from "~/components/Degenerator";
@@ -66,6 +76,23 @@ const ResultSummary = ({
   );
 };
 
+const dumpAnalysisResult = (
+  characters: string[],
+  a: AnalysisResult,
+  display: (s: string) => string,
+) => {
+  const { customized, compoundResults } = a;
+  const tsv = characters.map((char) => {
+    const analysis = customized.get(char) ?? compoundResults.get(char);
+    if (!analysis) {
+      return [char, ""];
+    } else {
+      return [char, analysis.sequence.map(display).join(" ")];
+    }
+  });
+  exportTSV(tsv, "拆分结果.txt");
+};
+
 const Analysis = () => {
   useChaifenTitle("拆分");
   const [filter, setFilter] = useState<CharacterFilter>({});
@@ -81,6 +108,9 @@ const Analysis = () => {
     analysisResult?.customizations ?? new Map();
   const componentError = analysisResult?.componentError ?? [];
   const compoundError = analysisResult?.compoundError ?? [];
+  const characters = Object.entries(repertoire)
+    .filter(([, v]) => v.tygf > 0)
+    .map(([x]) => x);
 
   const config = useAtomValue(configAtom);
   const [page, setPage] = useState(1);
@@ -161,6 +191,14 @@ const Analysis = () => {
             onClick={() => setAnalysisResult(analysis(repertoire, config))}
           >
             计算
+          </Button>
+          <Button
+            disabled={!analysisResult}
+            onClick={() =>
+              dumpAnalysisResult(characters, analysisResult!, display)
+            }
+          >
+            导出
           </Button>
         </Flex>
         <CharacterQuery setFilter={setFilter} />

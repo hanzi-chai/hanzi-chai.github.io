@@ -15,12 +15,14 @@ import { Select } from "./Utils";
 import { Frequency } from "./Optimizer";
 
 export interface AnalyzerForm {
+  type: "single" | "multi" | "all";
   filter: boolean;
   length: number;
   top: number;
 }
 
 export const defaultAnalyzer: AnalyzerForm = {
+  type: "all",
   filter: false,
   length: 0,
   top: 0,
@@ -31,34 +33,40 @@ export const analyzePrimitiveDuplication = (
   characterFrequency: Frequency,
   result: AssemblyResult,
 ) => {
-  const duplicationMap = new Map<string, string[]>();
+  const duplicationMap = new Map<string, AssemblyResult>();
   const topCharacters = Object.fromEntries(
     Object.entries(characterFrequency).slice(0, analyzer.top),
   );
-  for (const [name, data] of result) {
+  for (const assembly of result) {
+    const { name, sequence: elements, importance } = assembly;
+    if (
+      (analyzer.type === "single" && [...name].length > 1) ||
+      (analyzer.type === "multi" && [...name].length === 1)
+    ) {
+      continue;
+    }
+
     if (analyzer.top !== 0 && !topCharacters[name]) {
       continue;
     }
-    for (const { elements } of data) {
-      const sliced =
-        analyzer.length === 0 ? elements : elements.slice(0, analyzer.length);
-      const summary = summarize(sliced);
-      duplicationMap.set(
-        summary,
-        (duplicationMap.get(summary) || []).concat([name]),
-      );
-    }
+    const sliced =
+      analyzer.length === 0 ? elements : elements.slice(0, analyzer.length);
+    const summary = summarize(sliced);
+    duplicationMap.set(
+      summary,
+      (duplicationMap.get(summary) || []).concat(assembly),
+    );
   }
 
-  const involved = new Set<string>();
+  const filtered: AssemblyResult = [];
   let selections = 0;
-  for (const [key, names] of duplicationMap) {
+  for (const names of duplicationMap.values()) {
     selections += names.length - 1;
-    if (names.length > 1) {
-      involved.add(key);
+    if (analyzer.filter && names.length > 1) {
+      filtered.push(...names);
     }
   }
-  return [selections, involved] as const;
+  return [selections, filtered] as const;
 };
 
 export default function ({
@@ -86,6 +94,16 @@ export default function ({
           <ProFormSwitch label="只看有重码" name="filter" width="xs" />
         </ProFormGroup>
         <ProFormGroup>
+          <ProFormSelect
+            name="type"
+            label="类型"
+            width="xs"
+            options={[
+              { label: "全部", value: "all" },
+              { label: "一字词", value: "single" },
+              { label: "多字词", value: "multi" },
+            ]}
+          />
           <ProFormSelect
             name="length"
             label="取码"

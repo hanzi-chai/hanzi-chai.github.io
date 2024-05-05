@@ -4,14 +4,14 @@ import {
   Atom,
   SetStateAction,
   WritableAtom,
-  characterFrequencyAtom,
+  defaultDictionaryAtom,
+  frequencyAtom,
   infoAtom,
   keyDistributionAtom,
   pairEquivalenceAtom,
   useAtom,
   useAtomValue,
-  wordAtom,
-  wordFrequencyAtom,
+  dictionaryAtom,
 } from "~/atoms";
 import { Info } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
@@ -27,15 +27,14 @@ import {
   exportTSV,
 } from "~/components/Utils";
 import {
-  userCharacterFrequencyAtom,
+  userFrequencyAtom,
   userKeyDistributionAtom,
   userPairEquivalenceAtom,
-  userWordAtom,
-  userWordFrequencyAtom,
+  userDictionaryAtom,
 } from "~/atoms/assets";
 import { parseTSV } from "~/lib";
 
-function AssetUploader<V extends Record<string, number> | string[]>({
+function AssetUploader<V extends Record<string, number> | [string, string][]>({
   atom,
   defaultAtom,
   title,
@@ -49,7 +48,7 @@ function AssetUploader<V extends Record<string, number> | string[]>({
   const [value, setValue] = useAtom(atom);
   const defaultValue = useAtomValue(defaultAtom);
   const tsv = Array.isArray(defaultValue)
-    ? defaultValue.map((x) => [x])
+    ? defaultValue
     : Object.entries(defaultValue).map(([s, n]) => [s, n.toString()]);
   return (
     <>
@@ -117,22 +116,16 @@ export default function () {
           您也可以先下载系统内置的这些资料，在此基础上编辑后上传。
         </Typography.Paragraph>
         <AssetUploader
-          title="字频"
-          description="系统默认采用的字频来自形码测评系统。您可以在此处自定义字频。"
-          atom={userCharacterFrequencyAtom}
-          defaultAtom={characterFrequencyAtom}
-        />
-        <AssetUploader
           title="词频"
-          description="系统默认采用的词频来自形码测评系统。您可以在此处自定义词频。"
-          atom={userWordFrequencyAtom}
-          defaultAtom={wordFrequencyAtom}
+          description="系统默认采用的词频来自 10 亿社交媒体语料的统计结果，包含了一字词和多字词。您可以在此处自定义词频。"
+          atom={userFrequencyAtom}
+          defaultAtom={frequencyAtom}
         />
         <AssetUploader
           title="词库"
-          description="若不自定义词库，则系统在编码和测评时使用的词即是系统词频或自定义词频中的所有词。若自定义词库，则系统只编码词库中有的词。您可以上传一个只包含词（每行一个）的文件。"
-          atom={userWordAtom}
-          defaultAtom={wordAtom}
+          description="系统默认采用的词库包含了「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词语编码。您可以在此处自定义词库，词库需要包含带调拼音。"
+          atom={userDictionaryAtom}
+          defaultAtom={defaultDictionaryAtom}
         />
         <AssetUploader
           title="当量"

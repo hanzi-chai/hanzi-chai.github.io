@@ -6,6 +6,7 @@ import type {
   Mapping,
   Op,
   Source,
+  WordRule,
 } from "./config";
 import type { ComponentAnalysis } from "./component";
 import { recursiveRenderCompound, type CompoundAnalysis } from "./compound";
@@ -14,6 +15,7 @@ import { findElement } from "./element";
 import { Repertoire } from "./data";
 import { AnalysisResult, analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
+import { Dictionary } from "~/atoms";
 
 const table: Record<
   Op,
@@ -87,8 +89,12 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 };
 
 export type IndexedElement = string | { element: string; index: number };
-export type Assembly = { elements: IndexedElement[]; importance?: number };
-export type AssemblyResult = Map<string, Assembly[]>;
+export type Assembly = {
+  name: string;
+  sequence: IndexedElement[];
+  importance: number;
+};
+export type AssemblyResult = Assembly[];
 
 const compile = (config: Config) => {
   const { mapping, grouping, alphabet } = config.form;
@@ -98,7 +104,8 @@ const compile = (config: Config) => {
     const codes = [] as IndexedElement[];
     while (node) {
       if (node.startsWith("s")) {
-        const { object, next, index }: Source = config.encoder.sources[node]!;
+        const source: Source = config.encoder.sources[node]!;
+        const { object, next, index } = source;
         if (node !== "s0") {
           const element = findElement(object!, result, config, extra);
           // 检查元素或键位是否有效
@@ -180,6 +187,38 @@ const extraAnalysis = function (repertoire: Repertoire, config: Config): Extra {
   };
 };
 
+const signedIndex = <T>(elements: T[], index: string) => {
+  const order = index.codePointAt(0)! - "a".codePointAt(0)!;
+  const signedOrder = order < 13 ? order : order - 26;
+  return elements.at(signedOrder);
+};
+
+const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
+  const result: IndexedElement[] = [];
+  for (const rule of rules) {
+    let matched = false;
+    if ("length_equal" in rule) {
+      matched = totalElements.length === rule.length_equal;
+    } else if ("length_in_range" in rule) {
+      matched =
+        totalElements.length >= rule.length_in_range[0]! &&
+        totalElements.length <= rule.length_in_range[1]!;
+    }
+    if (!matched) continue;
+    const tokens = Array.from(rule.formula);
+    for (let i = 0; i < tokens.length; i = i + 2) {
+      const charIndex = tokens[i]!.toLowerCase();
+      const elementIndex = tokens[i + 1]!;
+      const elements = signedIndex(totalElements, charIndex);
+      if (elements === undefined) return undefined;
+      const element = signedIndex(elements, elementIndex);
+      if (element === undefined) return undefined;
+      result.push(element);
+    }
+  }
+  return result;
+};
+
 /**
  * 给定一个拆分结果，返回所有可能的编码
  *
@@ -194,55 +233,85 @@ export const assemble = (
   repertoire: Repertoire,
   config: Config,
   characters: string[],
+  dictionary: Dictionary,
   analysisResult: AnalysisResult,
 ) => {
   const { customized, compoundResults } = analysisResult;
-  const heteronymHandling = config.encoder.heteronym_handling ?? true;
   const extra = extraAnalysis(repertoire, config);
   const func = compile(config);
-  const result: AssemblyResult = new Map(
-    characters.map((char) => {
-      // TODO: 支持多个拆分结果
-      const shapeInfo: ComponentAnalysis | CompoundAnalysis | undefined =
-        customized.get(char) || compoundResults.get(char);
-      if (shapeInfo === undefined) return [char, []];
-      const readings = repertoire[char]!.readings;
-      readings.sort((a, b) => (b.importance ?? 100) - (a.importance ?? 100));
-      const total: CharacterResult[] = readings.map(
-        ({ pinyin, importance }) => ({
-          char,
-          pinyin,
-          importance,
-          ...shapeInfo,
-        }),
-      );
-      const final: Assembly[] = [];
-      // 如果不处理多音字，就只取最重要的一个
-      if (!heteronymHandling && total.length >= 1) {
-        final.push({ elements: func(total[0]!, repertoire, extra) });
-        return [char, final];
-      }
-      // 如果处理多音字，就取全部
-      for (const x of total) {
-        const elements = func(x, repertoire, extra);
-        const summary = summarize(elements);
-        let isDuplicated = false;
-        for (const previous of final) {
-          if (summarize(previous.elements) === summary) {
-            previous.importance =
-              (previous.importance ?? 100) + (x.importance ?? 100);
-            isDuplicated = true;
-            break;
-          }
-        }
-        if (!isDuplicated) {
-          final.push({ elements, importance: x.importance });
+  const result: AssemblyResult = [];
+  // 一字词
+  for (const character of characters) {
+    // TODO: 支持多个拆分结果
+    const shapeInfo =
+      customized.get(character) || compoundResults.get(character);
+    if (shapeInfo === undefined) continue;
+    const final: Assembly[] = [];
+    for (const reading of repertoire[character]!.readings) {
+      const result: CharacterResult = {
+        char: character,
+        ...reading,
+        ...shapeInfo,
+      };
+      const elements = func(result, repertoire, extra);
+      const summary = summarize(elements);
+      let isDuplicated = false;
+      for (const previous of final) {
+        if (summarize(previous.sequence) === summary) {
+          previous.importance =
+            (previous.importance ?? 100) + (result.importance ?? 100);
+          isDuplicated = true;
+          break;
         }
       }
-      return [char, final];
-    }),
-  );
+      if (!isDuplicated) {
+        final.push({
+          name: character,
+          sequence: elements,
+          importance: result.importance ?? 100,
+        });
+      }
+    }
+    result.push(...final);
+  }
+  const rules = config.encoder.rules;
+  if (!rules) return result;
+  // 多字词
+  const multiHash = new Set();
+  for (const [word, pinyin] of dictionary) {
+    const characters = Array.from(word);
+    const syllables = pinyin.split(" ");
+    let valid = true;
+    const totalElements: IndexedElement[][] = [];
+    for (const [i, character] of characters.entries()) {
+      const pinyin = syllables[i]!;
+      const shapeInfo =
+        customized.get(character) || compoundResults.get(character);
+      if (shapeInfo === undefined) {
+        valid = false;
+        break;
+      }
+      const result: CharacterResult = { char: character, pinyin, ...shapeInfo };
+      const elements = func(result, repertoire, extra);
+      totalElements.push(elements);
+    }
+    if (valid) {
+      const wordElements = gather(totalElements, rules);
+      if (wordElements !== undefined) {
+        const hash = `${summarize(wordElements)}-${word}`;
+        if (!multiHash.has(hash)) {
+          // TOOD: 支持多音词
+          result.push({ name: word, sequence: wordElements, importance: 100 });
+          multiHash.add(hash);
+        }
+      }
+    }
+  }
   return result;
+};
+
+export const stringifySequence = (result: AssemblyResult) => {
+  return result.map((x) => ({ ...x, sequence: summarize(x.sequence) }));
 };
 
 export const summarize = (elements: IndexedElement[]) => {
@@ -256,34 +325,4 @@ export const summarize = (elements: IndexedElement[]) => {
       }
     })
     .join(" ");
-};
-
-export const getFlat = (collection: AssemblyResult) => {
-  const tsv: { char: string; sequence: string; importance?: number }[] = [];
-  for (const [char, elements_list] of collection) {
-    for (const { importance, elements } of elements_list) {
-      const sequence = summarize(elements);
-      if (importance !== undefined && importance !== 100) {
-        tsv.push({ char, sequence, importance });
-      } else {
-        tsv.push({ char, sequence });
-      }
-    }
-  }
-  return tsv;
-};
-
-export const getTSV = (collection: AssemblyResult) => {
-  const tsv: string[][] = [];
-  for (const [char, elements_list] of collection) {
-    for (const { importance, elements } of elements_list) {
-      const summary = summarize(elements);
-      if (importance !== undefined && importance !== 100) {
-        tsv.push([char, summary, String(importance)]);
-      } else {
-        tsv.push([char, summary]);
-      }
-    }
-  }
-  return tsv;
 };

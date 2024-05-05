@@ -22,12 +22,11 @@ import Root from "./Element";
 import { Key } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import {
-  characterFrequencyAtom,
+  defaultDictionaryAtom,
   fetchAsset,
   frequencyAtom,
   keyDistributionAtom,
   pairEquivalenceAtom,
-  wordFrequencyAtom,
 } from "~/atoms";
 import { useSetAtom } from "jotai";
 import init, { validate } from "libchai";
@@ -255,14 +254,19 @@ export function useChaifenTitle(title: string) {
 }
 
 export function LoadAssets() {
-  const setCF = useSetAtom(characterFrequencyAtom);
-  const setWF = useSetAtom(wordFrequencyAtom);
   const setF = useSetAtom(frequencyAtom);
+  const setW = useSetAtom(defaultDictionaryAtom);
   const setKE = useSetAtom(keyDistributionAtom);
   const setPE = useSetAtom(pairEquivalenceAtom);
-  fetchAsset("character_frequency", "txt").then((x) => setCF(parseTSV(x)));
-  fetchAsset("word_frequency", "txt").then((x) => setWF(parseTSV(x)));
   fetchAsset("frequency", "txt").then((x) => setF(parseTSV(x)));
+  fetchAsset("dictionary", "txt").then((x: string) =>
+    setW(
+      x
+        .trim()
+        .split("\n")
+        .map((x) => x.trim().split("\t") as [string, string]),
+    ),
+  );
   fetchAsset("key_distribution", "txt").then((x) => setKE(parseTSV(x)));
   fetchAsset("pair_equivalence", "txt").then((x) => setPE(parseTSV(x)));
   return null;

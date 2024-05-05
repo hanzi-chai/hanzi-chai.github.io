@@ -26,13 +26,13 @@ import {
   repertoireAtom,
   useAtom,
   useAtomValue,
-  wordsAtom,
+  dictionaryAtom,
 } from "~/atoms";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { useMemo, useState } from "react";
 import { ColumnsType } from "antd/es/table";
 import { LibchaiOutputEvent } from "~/worker";
-import { analysis, getFlat } from "~/lib";
+import { analysis, stringifySequence } from "~/lib";
 import { assemble } from "~/lib";
 import { atomWithStorage } from "jotai/utils";
 import { getSupplemental } from "~/lib";
@@ -43,9 +43,24 @@ interface DictEntry {
   short?: string;
 }
 
+interface DictEntries {
+  item: string[];
+  full: string[];
+  short?: string[];
+}
+
+const convert: (d: DictEntries) => DictEntry[] = (raw) => {
+  const { item, full, short } = raw;
+  return item.map((_, i) => ({
+    item: item[i]!,
+    full: full[i]!,
+    short: short ? short[i]! : undefined,
+  }));
+};
+
 interface EncodeOutput {
-  characters: DictEntry[];
-  words?: DictEntry[];
+  characters: DictEntries;
+  words: DictEntries;
 }
 
 export const makeEncodeCallback = (setCode: (e: EncodeOutput) => void) => {
@@ -70,7 +85,7 @@ export const makeEncodeCallback = (setCode: (e: EncodeOutput) => void) => {
 
 const Encode = () => {
   const assets = useAtomValue(assetsAtom);
-  const words = useAtomValue(wordsAtom);
+  const dictionary = useAtomValue(dictionaryAtom);
   const encoder = useAtomValue(encoderAtom);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
@@ -85,8 +100,8 @@ const Encode = () => {
     code === undefined
       ? []
       : mode === "character"
-        ? code.characters
-        : code.words;
+        ? convert(code.characters)
+        : convert(code.words);
 
   const prepareInput = () => {
     let v1 = analysisResult;
@@ -96,14 +111,12 @@ const Encode = () => {
     }
     let v2 = assemblyResult;
     if (v2 === null) {
-      v2 = assemble(repertoire, config, list, v1);
+      v2 = assemble(repertoire, config, list, dictionary, v1);
       setAssemblyResult(v2);
     }
-    const characters = getFlat(v2);
     return {
       config,
-      characters,
-      words,
+      info: stringifySequence(v2),
       assets,
     };
   };
@@ -206,11 +219,10 @@ const Encode = () => {
           <Button
             disabled={code === undefined}
             onClick={() => {
-              const charactersTSV = code!.characters.map(
-                ({ item, full, short }, i) => {
-                  return short ? [item, full, short] : [item, full];
-                },
-              );
+              const { item, full, short } = code!.characters;
+              const charactersTSV = item.map((name, i) => {
+                return short ? [name, full[i]!, short[i]!] : [name, full[i]!];
+              });
               exportTSV(charactersTSV, "单字编码.txt");
             }}
           >
@@ -219,8 +231,9 @@ const Encode = () => {
           <Button
             disabled={code?.words === undefined}
             onClick={() => {
-              const wordsTSV = code!.words!.map(({ item, full, short }, i) => {
-                return short ? [item, full, short] : [item, full];
+              const { item, full, short } = code!.words;
+              const wordsTSV = item.map((name, i) => {
+                return short ? [name, full[i]!, short[i]!] : [name, full[i]!];
               });
               exportTSV(wordsTSV, "词语编码.txt");
             }}

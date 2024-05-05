@@ -223,9 +223,10 @@ export const computeComponent = (name: string, glyph: SVGGlyph) => {
  */
 export const renderRootList = (repertoire: Repertoire, config: Config) => {
   const { mapping, grouping } = config.form;
-  const roots = [...Object.keys(mapping), ...Object.keys(grouping)].filter(
-    (x) => repertoire[x] !== undefined,
-  );
+  const roots = [
+    ...Object.keys(mapping),
+    ...Object.keys(grouping ?? {}),
+  ].filter((x) => repertoire[x] !== undefined);
   const rootList: ComputedComponent[] = [];
   for (const root of roots) {
     const glyph = repertoire[root]?.glyph;

@@ -10,8 +10,13 @@ import {
 } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
-import { configAtom, repertoireAtom, assetsAtom, wordsAtom } from "~/atoms";
-import { assemble, getFlat } from "~/lib";
+import {
+  configAtom,
+  repertoireAtom,
+  assetsAtom,
+  dictionaryAtom,
+} from "~/atoms";
+import { assemble, stringifySequence } from "~/lib";
 import { LibchaiOutputEvent } from "~/worker";
 import { exportTSV, exportYAML, makeWorker } from "./Utils";
 import { load } from "js-yaml";
@@ -72,7 +77,7 @@ const Schedule = ({
 
 const Optimizer = () => {
   const assets = useAtomValue(assetsAtom);
-  const words = useAtomValue(wordsAtom);
+  const dictionary = useAtomValue(dictionaryAtom);
   const config = useAtomValue(configAtom);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
@@ -99,14 +104,12 @@ const Optimizer = () => {
     }
     let v2 = assemblyResult;
     if (v2 === null) {
-      v2 = assemble(repertoire, config, list, v1);
+      v2 = assemble(repertoire, config, list, dictionary, v1);
       setAssemblyResult(v2);
     }
-    const characters = getFlat(v2);
     return {
       config,
-      characters,
-      words,
+      info: stringifySequence(v2),
       assets,
     };
   };
@@ -216,11 +219,12 @@ const Optimizer = () => {
               onClick={() => {
                 const worker = makeWorker();
                 worker.onmessage = makeEncodeCallback((encodeOutput) => {
-                  const charactersTSV = encodeOutput.characters.map(
-                    ({ item, full, short }, i) => {
-                      return short ? [item, full, short] : [item, full];
-                    },
-                  );
+                  const { item, full, short } = encodeOutput.characters;
+                  const charactersTSV = item.map((name, i) => {
+                    return short
+                      ? [name, full[i]!, short[i]!]
+                      : [name, full[i]!];
+                  });
                   exportTSV(charactersTSV, "单字编码.txt");
                 });
                 worker.postMessage({
@@ -235,14 +239,13 @@ const Optimizer = () => {
               onClick={() => {
                 const worker = makeWorker();
                 worker.onmessage = makeEncodeCallback((encodeOutput) => {
-                  if (encodeOutput.words !== undefined) {
-                    const wordsTSV = encodeOutput.words.map(
-                      ({ item, full, short }, i) => {
-                        return short ? [item, full, short] : [item, full];
-                      },
-                    );
-                    exportTSV(wordsTSV, "词语编码.txt");
-                  }
+                  const { item, full, short } = encodeOutput.words;
+                  const wordsTSV = item.map((name, i) => {
+                    return short
+                      ? [name, full[i]!, short[i]!]
+                      : [name, full[i]!];
+                  });
+                  exportTSV(wordsTSV, "词语编码.txt");
                 });
                 worker.postMessage({
                   type: "encode",
