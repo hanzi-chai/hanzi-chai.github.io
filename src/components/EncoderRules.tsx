@@ -26,7 +26,7 @@ const EncoderRules = () => {
   return (
     <>
       <Typography.Title level={3}>编码特性</Typography.Title>
-      <Flex gap="middle" justify="center">
+      <Flex gap="middle">
         <Form.Item label="最大码长">
           <Select
             value={maxLength}
@@ -48,10 +48,16 @@ const EncoderRules = () => {
           />
         </Form.Item>
         <Form.Item label="顶屏模式">
-          <Input
-            value={autoSelectPattern}
-            onChange={(e) => setAutoSelectPattern(e.target.value)}
-          />
+          <Flex gap="small">
+            <Input
+              value={autoSelectPattern}
+              onChange={(e) => setAutoSelectPattern(e.target.value)}
+              style={{ width: 128 }}
+            />
+            <Button onChange={() => setAutoSelectPattern(undefined)}>
+              清空
+            </Button>
+          </Flex>
         </Form.Item>
       </Flex>
       <Form.Item label="选择键">
@@ -61,7 +67,7 @@ const EncoderRules = () => {
           allKeys={allowedSelectKeys}
         />
       </Form.Item>
-      <Typography.Title level={3}>简码</Typography.Title>
+      <Typography.Title level={3}>一字词简码</Typography.Title>
       <Flex vertical align="center">
         {shortCodeSchemes.map((scheme, index) => {
           return (
@@ -100,6 +106,10 @@ const EncoderRules = () => {
           </Button>
         </Space>
       </Flex>
+      <Typography.Title level={3}>多字词简码</Typography.Title>
+      <Typography.Paragraph>
+        多字词简码功能正在开发中，敬请期待。
+      </Typography.Paragraph>
     </>
   );
 };

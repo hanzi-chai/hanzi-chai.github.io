@@ -430,9 +430,9 @@ const Optimization = () => {
     <EditorRow>
       <EditorColumn span={12}>
         <Typography.Title level={2}>优化目标</Typography.Title>
-        <PartialObjective title="单字全码" type="characters_full" />
-        <PartialObjective title="单字简码" type="characters_short" />
-        <PartialObjective title="词语全码" type="words_full" />
+        <PartialObjective title="一字词全码" type="characters_full" />
+        <PartialObjective title="一字词简码" type="characters_short" />
+        <PartialObjective title="多字词全码" type="words_full" />
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>

@@ -13,7 +13,7 @@ import {
   isComponent,
   getSupplemental,
   listToObject,
-  parseTSV,
+  getRecordFromTSV,
 } from "~/lib/utils";
 import { repertoire } from "./mock";
 
@@ -56,6 +56,6 @@ describe("misc", () => {
 
   it("parseTSV should parse a TSV string and return a record with the values", () => {
     const text = "A\t1\nB\t2\nC\t3"; // Example TSV string
-    expect(parseTSV(text)).toEqual({ A: 1, B: 2, C: 3 });
+    expect(getRecordFromTSV(text)).toEqual({ A: 1, B: 2, C: 3 });
   });
 });

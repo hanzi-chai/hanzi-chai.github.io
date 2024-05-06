@@ -13,7 +13,7 @@ import {
   useAtomValue,
   dictionaryAtom,
 } from "~/atoms";
-import { Info } from "~/lib";
+import { Info, getDictFromTSV } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
   ProForm,
@@ -32,7 +32,7 @@ import {
   userPairEquivalenceAtom,
   userDictionaryAtom,
 } from "~/atoms/assets";
-import { parseTSV } from "~/lib";
+import { getRecordFromTSV } from "~/lib";
 
 function AssetUploader<V extends Record<string, number> | [string, string][]>({
   atom,
@@ -60,11 +60,8 @@ function AssetUploader<V extends Record<string, number> | [string, string][]>({
           type="txt"
           action={(text) => {
             const value = Array.isArray(defaultValue)
-              ? text
-                  .trim()
-                  .split("\n")
-                  .map((x) => x.trim())
-              : parseTSV(text);
+              ? getDictFromTSV(text)
+              : getRecordFromTSV(text);
             setValue(value as V);
           }}
         />
@@ -110,10 +107,8 @@ export default function () {
         <Typography.Title level={2}>资料</Typography.Title>
         <Typography.Paragraph>
           以下是系统在测评方案时使用的一些资料。您可以使用自己的资料来替换系统默认的资料，格式为以
-          Tab 分隔的值（TSV），一栏为字词或编码，一栏为数值。
-        </Typography.Paragraph>
-        <Typography.Paragraph>
-          您也可以先下载系统内置的这些资料，在此基础上编辑后上传。
+          Tab
+          分隔的值（TSV）。您也可以先下载系统内置的这些资料，在此基础上编辑后上传。
         </Typography.Paragraph>
         <AssetUploader
           title="词频"
@@ -123,7 +118,7 @@ export default function () {
         />
         <AssetUploader
           title="词库"
-          description="系统默认采用的词库包含了「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词语编码。您可以在此处自定义词库，词库需要包含带调拼音。"
+          description="系统默认采用的多字词为「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词编码。您可以在此处自定义词库，词库需要包含带调拼音。"
           atom={userDictionaryAtom}
           defaultAtom={defaultDictionaryAtom}
         />

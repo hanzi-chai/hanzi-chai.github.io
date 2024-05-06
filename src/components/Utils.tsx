@@ -11,7 +11,12 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import { Config, isValidCJKChar, parseTSV } from "~/lib";
+import {
+  Config,
+  isValidCJKChar,
+  getRecordFromTSV,
+  getDictFromTSV,
+} from "~/lib";
 import type { Err } from "~/api";
 import { useEffect, useState } from "react";
 import { dump } from "js-yaml";
@@ -258,17 +263,10 @@ export function LoadAssets() {
   const setW = useSetAtom(defaultDictionaryAtom);
   const setKE = useSetAtom(keyDistributionAtom);
   const setPE = useSetAtom(pairEquivalenceAtom);
-  fetchAsset("frequency", "txt").then((x) => setF(parseTSV(x)));
-  fetchAsset("dictionary", "txt").then((x: string) =>
-    setW(
-      x
-        .trim()
-        .split("\n")
-        .map((x) => x.trim().split("\t") as [string, string]),
-    ),
-  );
-  fetchAsset("key_distribution", "txt").then((x) => setKE(parseTSV(x)));
-  fetchAsset("pair_equivalence", "txt").then((x) => setPE(parseTSV(x)));
+  fetchAsset("frequency", "txt").then((x) => setF(getRecordFromTSV(x)));
+  fetchAsset("dictionary", "txt").then((x) => setW(getDictFromTSV(x)));
+  fetchAsset("key_distribution", "txt").then((x) => setKE(getRecordFromTSV(x)));
+  fetchAsset("pair_equivalence", "txt").then((x) => setPE(getRecordFromTSV(x)));
   return null;
 }
 

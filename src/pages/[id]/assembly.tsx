@@ -102,7 +102,7 @@ export default function () {
 
   const columns: ColumnsType<EncodeResultEntry> = [
     {
-      title: "汉字",
+      title: "名称",
       dataIndex: "name",
       sorter: (a, b) => a.name.codePointAt(0)! - b.name.codePointAt(0)!,
       sortDirections: ["ascend", "descend"],
@@ -141,28 +141,17 @@ export default function () {
       width: 96,
     });
   }
-  const items: TabsProps["items"] = [
-    {
-      key: "1",
-      label: "单字全码",
-    },
-    {
-      key: "2",
-      label: "构词码",
-      disabled: true,
-    },
-  ];
   const [modal, setModal] = useState(0);
 
   return (
     <Flex vertical gap="middle" style={{ height: "100%" }}>
       <Typography.Title level={2}>取码规则</Typography.Title>
       <Flex gap="middle">
-        <Button onClick={() => setModal(1)}>单字全码</Button>
-        <Button onClick={() => setModal(2)}>词语全码</Button>
+        <Button onClick={() => setModal(1)}>一字词全码</Button>
+        <Button onClick={() => setModal(2)}>多字词全码</Button>
       </Flex>
       <Modal
-        title="单字全码"
+        title="一字词全码"
         open={modal === 1}
         footer={null}
         onCancel={() => setModal(0)}
@@ -175,7 +164,7 @@ export default function () {
         </div>
       </Modal>
       <Modal
-        title="词语全码"
+        title="多字词全码"
         open={modal === 2}
         footer={null}
         onCancel={() => setModal(0)}

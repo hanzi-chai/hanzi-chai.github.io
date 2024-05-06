@@ -165,7 +165,7 @@ const Encode = () => {
 
   const columns: ColumnsType<DictEntry> = [
     {
-      title: "字词",
+      title: "名称",
       dataIndex: "item",
       width: 128,
     },
@@ -201,9 +201,9 @@ const Encode = () => {
         <Typography.Title level={2}>生成编码</Typography.Title>
         <Flex justify="center" gap="middle">
           <Radio.Group value={mode} onChange={(e) => setMode(e.target.value)}>
-            <Radio.Button value="character">单字</Radio.Button>
+            <Radio.Button value="character">一字词</Radio.Button>
             <Radio.Button value="word" disabled={encoder.rules === undefined}>
-              词语
+              多字词
             </Radio.Button>
           </Radio.Group>
           <Button
@@ -223,10 +223,10 @@ const Encode = () => {
               const charactersTSV = item.map((name, i) => {
                 return short ? [name, full[i]!, short[i]!] : [name, full[i]!];
               });
-              exportTSV(charactersTSV, "单字编码.txt");
+              exportTSV(charactersTSV, "一字词编码.txt");
             }}
           >
-            导出单字码表
+            导出一字词码表
           </Button>
           <Button
             disabled={code?.words === undefined}
@@ -235,10 +235,10 @@ const Encode = () => {
               const wordsTSV = item.map((name, i) => {
                 return short ? [name, full[i]!, short[i]!] : [name, full[i]!];
               });
-              exportTSV(wordsTSV, "词语编码.txt");
+              exportTSV(wordsTSV, "多字词编码.txt");
             }}
           >
-            导出词语码表
+            导出多字词码表
           </Button>
         </Flex>
         <Flex justify="center" align="center" gap="middle">

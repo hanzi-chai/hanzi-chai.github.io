@@ -225,7 +225,7 @@ const Optimizer = () => {
                       ? [name, full[i]!, short[i]!]
                       : [name, full[i]!];
                   });
-                  exportTSV(charactersTSV, "单字编码.txt");
+                  exportTSV(charactersTSV, "一字词编码.txt");
                 });
                 worker.postMessage({
                   type: "encode",
@@ -233,7 +233,7 @@ const Optimizer = () => {
                 });
               }}
             >
-              下载单字码表
+              下载一字词码表
             </Button>
             <Button
               onClick={() => {
@@ -245,7 +245,7 @@ const Optimizer = () => {
                       ? [name, full[i]!, short[i]!]
                       : [name, full[i]!];
                   });
-                  exportTSV(wordsTSV, "词语编码.txt");
+                  exportTSV(wordsTSV, "多字词编码.txt");
                 });
                 worker.postMessage({
                   type: "encode",
@@ -253,7 +253,7 @@ const Optimizer = () => {
                 });
               }}
             >
-              下载词语码表
+              下载多字词码表
             </Button>
           </Flex>
         </>

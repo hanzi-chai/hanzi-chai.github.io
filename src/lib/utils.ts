@@ -134,7 +134,7 @@ export const listToObject = function <T extends { unicode: number }>(
   );
 };
 
-export function parseTSV(text: string): Record<string, number> {
+export function getRecordFromTSV(text: string): Record<string, number> {
   const tsv = text
     .trim()
     .split("\n")
@@ -147,4 +147,14 @@ export function parseTSV(text: string): Record<string, number> {
     data[char] = maybeNumber;
   });
   return data;
+}
+
+export function getDictFromTSV(text: string): [string, string][] {
+  const result: [string, string][] = [];
+  for (const line of text.trim().split("\n")) {
+    const [key, value] = line.trim().split("\t");
+    if (key === undefined || value === undefined) continue;
+    result.push([key, value]);
+  }
+  return result;
 }
