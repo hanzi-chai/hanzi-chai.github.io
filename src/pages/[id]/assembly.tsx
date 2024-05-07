@@ -35,10 +35,12 @@ import PrimitiveDuplicationAnalyzer, {
   defaultAnalyzer,
 } from "~/components/PrimitiveDuplicationAnalyzer";
 import WordRules from "~/components/WordRules";
+import { ProColumns, ProTable } from "@ant-design/pro-components";
 
-interface EncodeResultEntry {
+interface AssembleResultEntry {
   key: string;
   name: string;
+  frequency: number;
   [n: number]: IndexedElement;
 }
 
@@ -77,18 +79,24 @@ export default function () {
   );
 
   const toShow = analyzer.filter ? filtered : result;
-  const dataSource = toShow.map(({ name, sequence: elements }) => {
-    const entry: EncodeResultEntry = {
-      key: `${name}-${summarize(elements)}`,
+  const dataSource = toShow.map(({ name, sequence, importance }) => {
+    const freq = Math.round(
+      ((frequency[name] ?? 0) * (importance ?? 100)) / 100,
+    );
+    const entry: AssembleResultEntry = {
+      key: `${name}-${summarize(sequence)}`,
+      frequency: freq,
       name,
     };
-    for (const [i, element] of elements.entries()) {
+    for (const [i, element] of sequence.entries()) {
       entry[i] = element;
     }
     return entry;
   });
 
-  const hash = (record: EncodeResultEntry) => {
+  dataSource.sort((a, b) => b.frequency - a.frequency);
+
+  const hash = (record: AssembleResultEntry) => {
     const list: IndexedElement[] = [];
     for (const i of Array(max_length).keys()) {
       const element = record[i];
@@ -100,11 +108,18 @@ export default function () {
     return list.map((x) => renderIndexed(x, display)).join(" ");
   };
 
-  const columns: ColumnsType<EncodeResultEntry> = [
+  const columns: ProColumns<AssembleResultEntry>[] = [
     {
       title: "名称",
       dataIndex: "name",
       sorter: (a, b) => a.name.codePointAt(0)! - b.name.codePointAt(0)!,
+      sortDirections: ["ascend", "descend"],
+      width: 64,
+    },
+    {
+      title: "频率",
+      dataIndex: "frequency",
+      sorter: (a, b) => a.frequency - b.frequency,
       sortDirections: ["ascend", "descend"],
       width: 64,
     },
@@ -122,9 +137,16 @@ export default function () {
   ];
 
   for (const i of Array(max_length).keys()) {
+    const allValues: Record<string, { text: string }> = {};
+    for (const { [i]: element } of dataSource) {
+      if (element !== undefined) {
+        const text = renderIndexed(element, display);
+        allValues[text] = { text };
+      }
+    }
     columns.push({
       title: `元素 ${i + 1}`,
-      key: i,
+      dataIndex: i,
       render: (_, record) => {
         const element = record[i];
         if (element === undefined) {
@@ -139,16 +161,60 @@ export default function () {
       },
       sortDirections: ["ascend", "descend"],
       width: 96,
+      filters: true,
+      onFilter: (value, record) => {
+        const element = record[i];
+        if (element === undefined) {
+          return false;
+        }
+        return renderIndexed(element, display) === value;
+      },
+      valueEnum: allValues,
     });
   }
   const [modal, setModal] = useState(0);
 
+  const toolbar = [
+    <Button
+      type="primary"
+      onClick={() => {
+        let result = analysisResult;
+        if (result === null) {
+          result = analysis(repertoire, config);
+          setAnalysisResult(result);
+        }
+        let assembled = assemble(
+          repertoire,
+          config,
+          characters,
+          dictionary,
+          result,
+        );
+        console.log("Finish");
+        setAssemblyResult(assembled);
+      }}
+    >
+      计算
+    </Button>,
+    <Button
+      onClick={() => {
+        const tsv: string[][] = [];
+        for (const { name: object, sequence: elements, importance } of result) {
+          const summary = summarize(elements);
+          tsv.push([object, summary, String(importance ?? 100)]);
+        }
+        exportTSV(tsv, "elements.txt");
+      }}
+    >
+      导出拆分表
+    </Button>,
+  ];
+
   return (
     <Flex vertical gap="middle" style={{ height: "100%" }}>
-      <Typography.Title level={2}>取码规则</Typography.Title>
-      <Flex gap="middle">
-        <Button onClick={() => setModal(1)}>一字词全码</Button>
-        <Button onClick={() => setModal(2)}>多字词全码</Button>
+      <Flex gap="middle" justify="center">
+        <Button onClick={() => setModal(1)}>配置一字词规则</Button>
+        <Button onClick={() => setModal(2)}>配置多字词规则</Button>
       </Flex>
       <Modal
         title="一字词全码"
@@ -171,7 +237,6 @@ export default function () {
       >
         <WordRules />
       </Modal>
-      <Typography.Title level={2}>取码结果</Typography.Title>
       {lost.length ? (
         <Alert
           message="警告"
@@ -183,50 +248,19 @@ export default function () {
           closable
         />
       ) : null}
-      <Flex justify="center" gap="small">
-        <Button
-          type="primary"
-          onClick={() => {
-            let result = analysisResult;
-            if (result === null) {
-              result = analysis(repertoire, config);
-              setAnalysisResult(result);
-            }
-            setAssemblyResult(
-              assemble(repertoire, config, characters, dictionary, result),
-            );
-          }}
-        >
-          计算
-        </Button>
-        <Button
-          onClick={() => {
-            const tsv: string[][] = [];
-            for (const {
-              name: object,
-              sequence: elements,
-              importance,
-            } of result) {
-              const summary = summarize(elements);
-              tsv.push([object, summary, String(importance ?? 100)]);
-            }
-            exportTSV(tsv, "elements.txt");
-          }}
-        >
-          导出拆分表
-        </Button>
-      </Flex>
       {result.length > 0 && (
         <PrimitiveDuplicationAnalyzer
           selections={selections}
           setAnalyzer={setAnalyzer}
         />
       )}
-      <Table
+      <ProTable<AssembleResultEntry>
         columns={columns}
         dataSource={dataSource}
         pagination={{ pageSize: 50, hideOnSinglePage: true }}
-        size="small"
+        search={false}
+        defaultSize="small"
+        toolBarRender={() => toolbar}
       />
     </Flex>
   );
