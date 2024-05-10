@@ -1,23 +1,23 @@
-import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { Equivalence, Frequency } from "~/components/Optimizer";
+import { Dictionary } from ".";
+import { MiniDb } from "jotai-minidb";
 
-export const userFrequencyAtom = atomWithStorage<Frequency | null>(
+const db = new MiniDb<Dictionary>();
+
+export const userFrequencyAtom = atomWithStorage<Frequency | undefined>(
   "user_frequency",
-  null,
+  undefined,
 );
 
-export const userDictionaryAtom = atomWithStorage<[string, string][] | null>(
-  "user_dictionary",
-  null,
-);
+export const userDictionaryAtom = db.item("user_dictionary");
 
-export const userKeyDistributionAtom = atomWithStorage<Equivalence | null>(
+export const userKeyDistributionAtom = atomWithStorage<Equivalence | undefined>(
   "user_key_distribution",
-  null,
+  undefined,
 );
 
-export const userPairEquivalenceAtom = atomWithStorage<Equivalence | null>(
+export const userPairEquivalenceAtom = atomWithStorage<Equivalence | undefined>(
   "user_pair_equivalence",
-  null,
+  undefined,
 );

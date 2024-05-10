@@ -195,8 +195,8 @@ const signedIndex = <T>(elements: T[], index: string) => {
 
 const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
   const result: IndexedElement[] = [];
+  let matched = false;
   for (const rule of rules) {
-    let matched = false;
     if ("length_equal" in rule) {
       matched = totalElements.length === rule.length_equal;
     } else if ("length_in_range" in rule) {
@@ -204,19 +204,21 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
         totalElements.length >= rule.length_in_range[0]! &&
         totalElements.length <= rule.length_in_range[1]!;
     }
-    if (!matched) continue;
-    const tokens = Array.from(rule.formula);
-    for (let i = 0; i < tokens.length; i = i + 2) {
-      const charIndex = tokens[i]!.toLowerCase();
-      const elementIndex = tokens[i + 1]!;
-      const elements = signedIndex(totalElements, charIndex);
-      if (elements === undefined) return undefined;
-      const element = signedIndex(elements, elementIndex);
-      if (element === undefined) return undefined;
-      result.push(element);
+    if (matched) {
+      const tokens = Array.from(rule.formula);
+      for (let i = 0; i < tokens.length; i = i + 2) {
+        const charIndex = tokens[i]!.toLowerCase();
+        const elementIndex = tokens[i + 1]!;
+        const elements = signedIndex(totalElements, charIndex);
+        if (elements === undefined) return undefined;
+        const element = signedIndex(elements, elementIndex);
+        if (element === undefined) return undefined;
+        result.push(element);
+      }
+      break;
     }
   }
-  return result;
+  if (matched) return result;
 };
 
 /**

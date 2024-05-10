@@ -34,7 +34,6 @@ export const allRepertoireAtom = atom((get) => {
 export const displayAtom = atom((get) => {
   const repertoire = get(allRepertoireAtom);
   return (char: string) => {
-    if (char.includes("-")) return char.split("-")[1]!;
     if (!isPUA(char)) return char;
     const name = repertoire[char]?.name;
     return name ?? "丢失的字根";

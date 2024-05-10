@@ -124,7 +124,7 @@ const Encode = () => {
   const referenceAtom = useMemo(
     () =>
       atomWithStorage<Record<string, string[]>>(
-        "referece_" + config.info?.name ?? "",
+        "reference_" + config.info.name,
         {},
       ),
     [config.info?.name],

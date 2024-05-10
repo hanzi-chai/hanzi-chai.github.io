@@ -190,7 +190,6 @@ export default function () {
           dictionary,
           result,
         );
-        console.log("Finish");
         setAssemblyResult(assembled);
       }}
     >

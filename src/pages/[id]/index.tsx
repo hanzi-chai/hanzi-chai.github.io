@@ -2,6 +2,7 @@ import { useChaifenTitle } from "~/components/Utils";
 import { Button, Flex, Space, Typography, Upload } from "antd";
 import {
   Atom,
+  Dictionary,
   SetStateAction,
   WritableAtom,
   defaultDictionaryAtom,
@@ -11,7 +12,6 @@ import {
   pairEquivalenceAtom,
   useAtom,
   useAtomValue,
-  dictionaryAtom,
 } from "~/atoms";
 import { Info, getDictFromTSV } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
@@ -34,13 +34,13 @@ import {
 } from "~/atoms/assets";
 import { getRecordFromTSV } from "~/lib";
 
-function AssetUploader<V extends Record<string, number> | [string, string][]>({
+function AssetUploader<V extends Record<string, number> | Dictionary>({
   atom,
   defaultAtom,
   title,
   description,
 }: {
-  atom: WritableAtom<V | null, [SetStateAction<V | null>], void>;
+  atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
   defaultAtom: Atom<V>;
   title: string;
   description: string;
@@ -65,12 +65,15 @@ function AssetUploader<V extends Record<string, number> | [string, string][]>({
             setValue(value as V);
           }}
         />
-        <Button disabled={value === null} onClick={() => setValue(null)}>
+        <Button
+          disabled={value === undefined}
+          onClick={() => setValue(undefined)}
+        >
           清空
         </Button>
       </Flex>
       <Typography.Paragraph>{description}</Typography.Paragraph>
-      {value !== null && (
+      {value !== undefined && (
         <Typography.Paragraph>
           已加载用户自定义文件，条目数量：{Object.entries(value).length}。
         </Typography.Paragraph>
@@ -119,7 +122,7 @@ export default function () {
         <AssetUploader
           title="词库"
           description="系统默认采用的多字词为「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词编码。您可以在此处自定义词库，词库需要包含带调拼音。"
-          atom={userDictionaryAtom}
+          atom={userDictionaryAtom as any}
           defaultAtom={defaultDictionaryAtom}
         />
         <AssetUploader
