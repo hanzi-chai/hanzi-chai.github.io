@@ -25,3 +25,13 @@ export const shortCodeSchemesAtom = focusAtom(encoderAtom, (o) =>
 export const wordRulesAtom = focusAtom(encoderAtom, (o) =>
   o.prop("rules").valueOr([] as WordRule[]),
 );
+
+export const priorityShortCodesAtom = focusAtom(encoderAtom, (o) =>
+  o.prop("priority_short_codes").valueOr([] as [string, string, number][]),
+);
+
+export const sourcesAtom = focusAtom(encoderAtom, (o) => o.prop("sources"));
+
+export const conditionsAtom = focusAtom(encoderAtom, (o) =>
+  o.prop("conditions"),
+);

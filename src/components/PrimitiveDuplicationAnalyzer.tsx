@@ -10,7 +10,6 @@ import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
 import { AssemblyResult, summarize } from "~/lib";
-import { renderIndexed } from "~/pages/[id]/assembly";
 import { Select } from "./Utils";
 import { Frequency } from "./Optimizer";
 
@@ -38,7 +37,7 @@ export const analyzePrimitiveDuplication = (
     Object.entries(characterFrequency).slice(0, analyzer.top),
   );
   for (const assembly of result) {
-    const { name, sequence: elements, importance } = assembly;
+    const { name, sequence: elements } = assembly;
     if (
       (analyzer.type === "single" && [...name].length > 1) ||
       (analyzer.type === "multi" && [...name].length === 1)

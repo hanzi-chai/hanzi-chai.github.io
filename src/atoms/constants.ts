@@ -68,7 +68,7 @@ export interface Assets {
 }
 
 export const assetsAtom = atom((get) => {
-  const frequency = get(frequencyAtom);
+  const frequency = get(userFrequencyAtom) ?? get(frequencyAtom);
   const key_distribution =
     get(userKeyDistributionAtom) ?? get(keyDistributionAtom);
   const pair_equivalence =

@@ -11,7 +11,7 @@ import type {
 import type { ComponentAnalysis } from "./component";
 import { recursiveRenderCompound, type CompoundAnalysis } from "./compound";
 import type { Extra } from "./element";
-import { findElement } from "./element";
+import { algebraCache, findElement } from "./element";
 import { Repertoire } from "./data";
 import { AnalysisResult, analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
@@ -91,6 +91,7 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 export type IndexedElement = string | { element: string; index: number };
 export type Assembly = {
   name: string;
+  pinyin_list: string[];
   sequence: IndexedElement[];
   importance: number;
 };
@@ -242,6 +243,8 @@ export const assemble = (
   const extra = extraAnalysis(repertoire, config);
   const func = compile(config);
   const result: AssemblyResult = [];
+  algebraCache.clear();
+  const characterCache = new Map<string, IndexedElement[]>();
   // 一字词
   for (const character of characters) {
     // TODO: 支持多个拆分结果
@@ -256,12 +259,14 @@ export const assemble = (
         ...shapeInfo,
       };
       const elements = func(result, repertoire, extra);
+      characterCache.set(character + ":" + reading.pinyin, elements);
       const summary = summarize(elements);
       let isDuplicated = false;
       for (const previous of final) {
         if (summarize(previous.sequence) === summary) {
           previous.importance =
             (previous.importance ?? 100) + (result.importance ?? 100);
+          previous.pinyin_list.push(reading.pinyin);
           isDuplicated = true;
           break;
         }
@@ -271,6 +276,7 @@ export const assemble = (
           name: character,
           sequence: elements,
           importance: result.importance ?? 100,
+          pinyin_list: [reading.pinyin],
         });
       }
     }
@@ -279,7 +285,6 @@ export const assemble = (
   const rules = config.encoder.rules;
   if (!rules) return result;
   // 多字词
-  const multiHash = new Set();
   for (const [word, pinyin] of dictionary) {
     const characters = Array.from(word);
     const syllables = pinyin.split(" ");
@@ -287,6 +292,13 @@ export const assemble = (
     const totalElements: IndexedElement[][] = [];
     for (const [i, character] of characters.entries()) {
       const pinyin = syllables[i]!;
+      // 复用已有的编码
+      const hash = character + ":" + pinyin;
+      let elements = characterCache.get(hash);
+      if (elements !== undefined) {
+        totalElements.push(elements);
+        continue;
+      }
       const shapeInfo =
         customized.get(character) || compoundResults.get(character);
       if (shapeInfo === undefined) {
@@ -294,20 +306,19 @@ export const assemble = (
         break;
       }
       const result: CharacterResult = { char: character, pinyin, ...shapeInfo };
-      const elements = func(result, repertoire, extra);
+      elements = func(result, repertoire, extra);
       totalElements.push(elements);
     }
-    if (valid) {
-      const wordElements = gather(totalElements, rules);
-      if (wordElements !== undefined) {
-        const hash = `${summarize(wordElements)}-${word}`;
-        if (!multiHash.has(hash)) {
-          // TOOD: 支持多音词
-          result.push({ name: word, sequence: wordElements, importance: 100 });
-          multiHash.add(hash);
-        }
-      }
-    }
+    if (!valid) continue;
+    const wordElements = gather(totalElements, rules);
+    if (wordElements === undefined) continue;
+    // TODO: 支持多音词
+    result.push({
+      name: word,
+      sequence: wordElements,
+      importance: 100,
+      pinyin_list: [pinyin],
+    });
   }
   return result;
 };

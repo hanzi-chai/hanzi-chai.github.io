@@ -16,6 +16,7 @@ import {
   isValidCJKChar,
   getRecordFromTSV,
   getDictFromTSV,
+  IndexedElement,
 } from "~/lib";
 import type { Err } from "~/api";
 import { useEffect, useState } from "react";
@@ -226,6 +227,17 @@ export const KeyList = ({
       </Space>
     </Flex>
   );
+};
+
+export const renderIndexed = (
+  element: IndexedElement,
+  display: (s: string) => string,
+) => {
+  if (typeof element === "string") {
+    return display(element);
+  } else {
+    return renderSuperScript(display(element.element), element.index);
+  }
 };
 
 export const renderSuperScript = (element: string, index: number) => {

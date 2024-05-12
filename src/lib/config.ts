@@ -106,6 +106,7 @@ export interface EncoderConfig {
   rules?: WordRule[];
   sources: Record<string, Source>;
   conditions: Record<string, Condition>;
+  priority_short_codes: [string, string, number][];
 }
 
 export interface Source {

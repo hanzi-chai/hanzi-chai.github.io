@@ -181,6 +181,8 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
   return i >= 0 ? a[i - 1] : a[a.length + i];
 }
 
+export const algebraCache = new Map<string, string>();
+
 export const findElement = (
   object: CodableObject,
   result: CharacterResult,
@@ -202,8 +204,12 @@ export const findElement = (
       return undefined;
     case "字音":
       const name = object.subtype;
+      const hash = name + ":" + pinyin;
+      if (algebraCache.has(hash)) return algebraCache.get(hash);
       const rules = defaultAlgebra[name] || config.algebra?.[name];
-      return applyRules(name, rules, pinyin);
+      const transformed = applyRules(name, rules, pinyin);
+      algebraCache.set(hash, transformed);
+      return transformed;
     case "字根":
       return signedIndex(sequence, object.rootIndex);
     case "笔画":

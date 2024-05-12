@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Connection, Node, Edge } from "reactflow";
 import ReactFlow, {
   useNodesState,
@@ -10,7 +10,7 @@ import ReactFlow, {
   addEdge,
 } from "reactflow";
 
-import { useAtom, encoderAtom } from "~/atoms";
+import { useAtom, sourcesAtom, conditionsAtom } from "~/atoms";
 
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
@@ -28,8 +28,8 @@ import DetailEditor from "./DetailEditor";
 
 const EncoderGraph = () => {
   const { fitView, getNode } = useReactFlow();
-  const [encoder, setEncoder] = useAtom(encoderAtom);
-  const { sources, conditions } = encoder;
+  const [sources, setSources] = useAtom(sourcesAtom);
+  const [conditions, setConditions] = useAtom(conditionsAtom);
   const n1 = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),
   );
@@ -67,8 +67,8 @@ const EncoderGraph = () => {
 
   useEffect(() => {
     const idmap = {} as Record<string, string>;
-    const sources: Record<string, Source> = {};
-    const conditions: Record<string, Condition> = {};
+    const newSources: Record<string, Source> = {};
+    const newConditions: Record<string, Condition> = {};
     let sourceCount = 0;
     let conditionCount = 0;
     let newid: string;
@@ -76,26 +76,31 @@ const EncoderGraph = () => {
       if ("operator" in data) {
         newid = `c${conditionCount}`;
         idmap[id] = newid;
-        conditions[newid] = { ...data, positive: null, negative: null };
+        newConditions[newid] = { ...data, positive: null, negative: null };
         conditionCount += 1;
       } else {
         newid = `s${sourceCount}`;
         idmap[id] = newid;
-        sources[newid] = { ...data, next: null };
+        newSources[newid] = { ...data, next: null };
         sourceCount += 1;
       }
     });
     edges.forEach(({ source, target, label }) => {
       const [from, to] = [idmap[source]!, idmap[target]!];
       if (label === undefined) {
-        sources[from]!.next = to;
+        newSources[from]!.next = to;
       } else if (label === "是") {
-        conditions[from]!.positive = to;
+        newConditions[from]!.positive = to;
       } else {
-        conditions[from]!.negative = to;
+        newConditions[from]!.negative = to;
       }
     });
-    setEncoder({ ...encoder, sources, conditions });
+    if (JSON.stringify(newSources) !== JSON.stringify(sources)) {
+      setSources(newSources);
+    }
+    if (JSON.stringify(newConditions) !== JSON.stringify(conditions)) {
+      setConditions(newConditions);
+    }
   }, [nodes, edges]);
   const onConnect = (connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
