@@ -1,21 +1,20 @@
 /// <reference types="vitest" />
 import path from "node:path";
-import type { UserConfig } from "vite";
-import { defineConfig } from "vite";
+import { defineConfig, type UserConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
 import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
 import { visualizer } from "rollup-plugin-visualizer";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
-import { importToCDN, autoComplete } from "vite-plugin-external-cdn";
+import cdn from "vite-plugin-cdn-import";
 
 // vite.config.js
 
 const wasmContentTypePlugin = {
   name: "wasm-content-type-plugin",
-  configureServer(server) {
-    server.middlewares.use((req, res, next) => {
+  configureServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
       if (req.url.endsWith(".wasm")) {
         res.setHeader("Content-Type", "application/wasm");
       }
@@ -77,52 +76,47 @@ export default defineConfig(({ mode }) => {
     },
   };
 
-  if (mode === "BEX") {
-    sharedConfig.plugins.push(
-      visualizer({
-        brotliSize: true,
-        title: "打包产物分析",
-        filename: "dist/visualizer.html",
-      }),
-    );
+  switch (mode) {
+    case "CF":
+      break;
+    case "BEX":
+      sharedConfig.plugins?.push(
+        visualizer({
+          brotliSize: true,
+          title: "打包产物分析",
+          filename: "dist/visualizer.html",
+        }) as PluginOption,
+      );
+      break;
+    case "PAGES":
+      sharedConfig.plugins?.push(
+        cdn({
+          prodUrl:
+            "https://registry.npmmirror.com/{name}/{version}/files/{path}",
+          modules: [
+            "react",
+            "react-dom",
+            "antd",
+            "dayjs",
+            {
+              name: "js-yaml",
+              var: "jsyaml",
+              path: "dist/js-yaml.min.js",
+            },
+            {
+              name: "decimal.js",
+              var: "Decimal",
+              path: "decimal.js",
+            },
+            {
+              name: "mathjs",
+              var: "math",
+              path: "lib/browser/math.js",
+            },
+          ],
+        }),
+      );
+      break;
   }
-
-  if (mode === "PAGES") {
-    sharedConfig.plugins?.push(
-      importToCDN({
-        prodUrl: "https://registry.npmmirror.com/{name}/{version}/files/{path}",
-        modules: [
-          autoComplete("react"),
-          autoComplete("react-dom"),
-          {
-            name: "js-yaml",
-            var: "jsyaml",
-            path: "dist/js-yaml.min.js",
-          },
-          {
-            name: "decimal.js",
-            var: "Decimal",
-            path: "decimal.js",
-          },
-          {
-            name: "mathjs",
-            var: "math",
-            path: "lib/browser/math.js",
-          },
-          {
-            name: "dayjs",
-            var: "dayjs",
-            path: "dayjs.min.js",
-          },
-          {
-            name: "antd",
-            var: "antd",
-            path: "dist/antd-with-locales.js",
-          },
-        ],
-      }),
-    );
-  }
-
   return sharedConfig;
 });
