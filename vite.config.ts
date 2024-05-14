@@ -96,7 +96,6 @@ export default defineConfig(({ mode }) => {
           modules: [
             "react",
             "react-dom",
-            "antd",
             "dayjs",
             {
               name: "js-yaml",
@@ -112,6 +111,11 @@ export default defineConfig(({ mode }) => {
               name: "mathjs",
               var: "math",
               path: "lib/browser/math.js",
+            },
+            {
+              name: "antd",
+              var: "antd",
+              path: "dist/antd-with-locales.js",
             },
           ],
         }),
