@@ -284,6 +284,7 @@ export const assemble = (
   }
   const rules = config.encoder.rules;
   if (!rules) return result;
+  const knownWords = new Set();
   // 多字词
   for (const [word, pinyin] of dictionary) {
     const characters = Array.from(word);
@@ -312,13 +313,16 @@ export const assemble = (
     if (!valid) continue;
     const wordElements = gather(totalElements, rules);
     if (wordElements === undefined) continue;
-    // TODO: 支持多音词
+    const hash = word + ":" + summarize(wordElements);
+    if (knownWords.has(hash)) continue;
+    // 多音的多字词数量很少，所以不再计算分频比例，直接设为 100
     result.push({
       name: word,
       sequence: wordElements,
       importance: 100,
       pinyin_list: [pinyin],
     });
+    knownWords.add(hash);
   }
   return result;
 };
