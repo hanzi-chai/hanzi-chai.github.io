@@ -1,7 +1,7 @@
 import { atom } from "jotai";
-import { EncodeResult } from "~/components/Utils";
 import { AssemblyResult } from "~/lib";
 import { AnalysisResult } from "~/lib";
+import { EncodeResult } from ".";
 
 export const analysisResultAtom = atom<AnalysisResult | null>(null);
 

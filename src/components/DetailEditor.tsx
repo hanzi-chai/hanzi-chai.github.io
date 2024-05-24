@@ -9,6 +9,7 @@ import type { Op, UnaryOp } from "~/lib";
 import { binaryOps, ops, unaryOps } from "~/lib";
 import TextArea from "antd/es/input/TextArea";
 import { useAtomValue, keyboardAtom, algebraAtom } from "~/atoms";
+import { customElementsAtom } from "~/atoms/assets";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -35,6 +36,7 @@ const DetailEditor = ({ selected }: { selected: string }) => {
   const { data } = getNode(selected)!;
   const { alphabet } = useAtomValue(keyboardAtom);
   const algebra = useAtomValue(algebraAtom);
+  const customElements = useAtomValue(customElementsAtom);
   const genericIndices = [...Array(10).keys()]
     .map((x) => [x + 1, -(x + 1)])
     .flat();
@@ -97,6 +99,20 @@ const DetailEditor = ({ selected }: { selected: string }) => {
       children: [...alphabet].map((v) => ({
         value: v,
         label: v,
+      })),
+    },
+    {
+      value: "自定义",
+      label: "自定义",
+      children: Object.keys(customElements).map((v) => ({
+        value: v,
+        label: v,
+        children: genericIndices.map((v) => {
+          return {
+            value: v,
+            label: `第 ${v.toString()} 元`,
+          };
+        }),
       })),
     },
   ];

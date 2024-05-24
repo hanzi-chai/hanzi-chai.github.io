@@ -1,4 +1,4 @@
-import { Button, Flex, Space, Typography, Upload } from "antd";
+import { Button, Flex, Input, Space, Typography, Upload } from "antd";
 import {
   Atom,
   Dictionary,
@@ -28,8 +28,20 @@ import {
   userKeyDistributionAtom,
   userPairEquivalenceAtom,
   userDictionaryAtom,
+  customElementsAtom,
 } from "~/atoms/assets";
 import { getRecordFromTSV } from "~/lib";
+import { useState } from "react";
+
+const getTSVFromRecord = (record: Equivalence) =>
+  Object.entries(record).map(([k, v]) => [k, v.toString()]);
+
+const getTSVFromDistribution = (distribution: Distribution) => {
+  return Object.entries(distribution).map(([k, v]) => {
+    const { ideal, lt_penalty, gt_penalty } = v;
+    return [k, ideal.toString(), lt_penalty.toString(), gt_penalty.toString()];
+  });
+};
 
 function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
   atom,
@@ -37,18 +49,18 @@ function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
   title,
   description,
   parser,
+  dumper,
 }: {
   atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
   defaultAtom: Atom<V>;
   title: string;
   description: string;
   parser: (text: string) => V;
+  dumper: (value: V) => string[][];
 }) {
   const [value, setValue] = useAtom(atom);
   const defaultValue = useAtomValue(defaultAtom);
-  const tsv = Array.isArray(defaultValue)
-    ? defaultValue
-    : Object.entries(defaultValue).map(([s, n]) => [s, n.toString()]);
+  const tsv = dumper(defaultValue);
   return (
     <>
       <Flex align="baseline" gap="middle">
@@ -72,6 +84,64 @@ function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
     </>
   );
 }
+
+const CustomElementUploader = () => {
+  const [customElements, setCustomElements] = useAtom(customElementsAtom);
+  const [name, setName] = useState("");
+  return (
+    <Flex vertical gap="middle">
+      {Object.entries(customElements).map(([name, map]) => {
+        return (
+          <Flex key={name} align="baseline" gap="middle">
+            <Typography.Text>
+              {name}（条目数量：{Object.entries(map).length}）
+            </Typography.Text>
+            <div style={{ flex: 1 }} />
+            <Button
+              onClick={() =>
+                exportTSV(
+                  Object.entries(map).map(([k, v]) => [k, v.join(" ")]),
+                  `${name}.txt`,
+                )
+              }
+            >
+              下载
+            </Button>
+            <Button
+              onClick={() => {
+                const { [name]: _, ...rest } = customElements;
+                setCustomElements(rest);
+              }}
+            >
+              清空
+            </Button>
+          </Flex>
+        );
+      })}
+      <Flex gap="large">
+        <Input
+          value={name}
+          placeholder="自定义元素名称"
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Uploader
+          type="txt"
+          disabled={name === ""}
+          action={(text) => {
+            const lines = text.trim().split("\n");
+            const map: Record<string, string[]> = {};
+            for (const line of lines) {
+              const [key, values] = line.trim().split("\t");
+              if (key === undefined || values === undefined) continue;
+              map[key] = values.trim().split(" ");
+            }
+            setCustomElements({ ...customElements, [name]: map });
+          }}
+        />
+      </Flex>
+    </Flex>
+  );
+};
 
 export default function Index() {
   useChaifenTitle("基本信息");
@@ -110,6 +180,7 @@ export default function Index() {
           atom={userFrequencyAtom}
           defaultAtom={frequencyAtom}
           parser={getRecordFromTSV}
+          dumper={getTSVFromRecord}
         />
         <AssetUploader
           title="词库"
@@ -117,6 +188,7 @@ export default function Index() {
           atom={userDictionaryAtom as any}
           defaultAtom={defaultDictionaryAtom}
           parser={getDictFromTSV}
+          dumper={(dict) => dict}
         />
         <AssetUploader
           title="当量"
@@ -124,6 +196,7 @@ export default function Index() {
           atom={userPairEquivalenceAtom}
           defaultAtom={pairEquivalenceAtom}
           parser={getRecordFromTSV}
+          dumper={getTSVFromRecord}
         />
         <AssetUploader
           title="用指分布"
@@ -131,7 +204,13 @@ export default function Index() {
           atom={userKeyDistributionAtom}
           defaultAtom={keyDistributionAtom}
           parser={getDistributionFromTSV}
+          dumper={getTSVFromDistribution}
         />
+        <Typography.Title level={2}>自定义元素</Typography.Title>
+        <Typography.Paragraph>
+          您可以自定义新的元素类型，例如字根、部首、结构等等，自行分析之后导入系统使用。自定义元素的格式为每行一条记录，第一个字段为字，第二个字段为空格分隔的元素列表（即使只有一个元素，也看成是列表）。上传时，您需要指定自定义元素的名称。
+        </Typography.Paragraph>
+        <CustomElementUploader />
       </EditorColumn>
     </EditorRow>
   );

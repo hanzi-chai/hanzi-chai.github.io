@@ -4,6 +4,7 @@ import { EditorColumn, EditorRow } from "~/components/Utils";
 import {
   ShapeElementPicker,
   PronElementPicker,
+  CustomElementPicker,
 } from "~/components/ElementPicker";
 import { useChaifenTitle } from "~/atoms";
 
@@ -28,6 +29,8 @@ export default function Element() {
           <li>您可利用拼写运算创造新的字音元素类型。</li>
         </ul>
         <PronElementPicker />
+        <Typography.Title level={3}>自定义元素</Typography.Title>
+        <CustomElementPicker />
       </EditorColumn>
       <EditorColumn span={16}>
         <Typography.Title level={3}>键盘映射</Typography.Title>

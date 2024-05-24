@@ -27,7 +27,7 @@ interface PoolProps {
   element?: string;
   setElement: (s: string | undefined) => void;
   content: string[];
-  name: ShapeElementTypes | PronunciationElementTypes;
+  name: ShapeElementTypes | PronunciationElementTypes | string;
 }
 
 const Element = ({
@@ -46,7 +46,7 @@ const Element = ({
   const type =
     x === currentElement
       ? "primary"
-      : mapping[x] || grouping[x]
+      : mapping[x] || grouping?.[x]
         ? "link"
         : "default";
   const display = useAtomValue(displayAtom);

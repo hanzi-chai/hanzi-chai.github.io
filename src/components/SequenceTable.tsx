@@ -34,6 +34,7 @@ import PrimitiveDuplicationAnalyzer, {
 } from "~/components/PrimitiveDuplicationAnalyzer";
 import { ProColumns, ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
+import { customElementsAtom } from "~/atoms/assets";
 
 interface MainEntry {
   key: string;
@@ -55,6 +56,7 @@ const RecomputeAssembly = () => {
     .map(([x]) => x);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
+  const customElements = useAtomValue(customElementsAtom);
   const dictionary = useAtomValue(dictionaryAtom);
   return (
     <Button
@@ -71,6 +73,7 @@ const RecomputeAssembly = () => {
           characters,
           dictionary,
           result,
+          customElements,
         );
         setAssemblyResult(assembled);
       }}

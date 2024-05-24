@@ -16,6 +16,7 @@ import { Repertoire } from "./data";
 import { AnalysisResult, analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
 import { Dictionary } from "~/atoms";
+import { CustomElementMap } from "~/atoms/assets";
 
 export const getPriorityMap = (
   priorityShortCodes: [string, string, number][],
@@ -54,6 +55,7 @@ export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
   char: string;
   pinyin: string;
   importance?: number;
+  custom: Record<string, string[]>;
 };
 
 /**
@@ -250,6 +252,7 @@ export const assemble = (
   characters: string[],
   dictionary: Dictionary,
   analysisResult: AnalysisResult,
+  customElements: Record<string, CustomElementMap>,
 ) => {
   const { customized, compoundResults } = analysisResult;
   const extra = extraAnalysis(repertoire, config);
@@ -257,6 +260,12 @@ export const assemble = (
   const result: AssemblyResult = [];
   algebraCache.clear();
   const characterCache = new Map<string, IndexedElement[]>();
+  const customLookup = (character: string) =>
+    Object.fromEntries(
+      Object.entries(customElements).map(([name, map]) => {
+        return [name, (map[character] ?? []).map((x) => `${name}-${x}`)];
+      }),
+    );
   // 一字词
   for (const character of characters) {
     // TODO: 支持多个拆分结果
@@ -269,7 +278,9 @@ export const assemble = (
         char: character,
         ...reading,
         ...shapeInfo,
+        custom: customLookup(character),
       };
+      console.log(result);
       const elements = func(result, repertoire, extra);
       characterCache.set(character + ":" + reading.pinyin, elements);
       const summary = summarize(elements);
@@ -318,7 +329,12 @@ export const assemble = (
         valid = false;
         break;
       }
-      const result: CharacterResult = { char: character, pinyin, ...shapeInfo };
+      const result: CharacterResult = {
+        char: character,
+        pinyin,
+        ...shapeInfo,
+        custom: customLookup(character),
+      };
       elements = func(result, repertoire, extra);
       totalElements.push(elements);
     }

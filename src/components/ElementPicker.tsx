@@ -14,6 +14,7 @@ import {
 import Algebra from "./Algebra";
 import { PronunciationElementTypes, applyRules, defaultAlgebra } from "~/lib";
 import { operators } from "~/lib";
+import { customElementsAtom } from "~/atoms/assets";
 
 interface ElementPickerProps<T extends string> {
   content: Map<T, string[]>;
@@ -152,6 +153,43 @@ export const PronElementPicker = function () {
         onChange={(e) => {
           setType(e as PronunciationElementTypes);
         }}
+      />
+      <ElementAdder element={element} />
+    </Flex>
+  );
+};
+
+export const CustomElementPicker = function () {
+  const customElements = useAtomValue(customElementsAtom);
+  const [element, setElement] = useState<string | undefined>(undefined);
+  const [type, setType] = useState<string>(
+    Object.keys(customElements)[0] ?? "",
+  );
+  const content = new Map<string, string[]>(
+    Object.entries(customElements).map(([name, map]) => {
+      const set = new Set(Object.values(map).flat());
+      return [name, [...set].sort().map((x) => `${name}-${x}`)];
+    }),
+  );
+  return (
+    <Flex vertical gap="small">
+      <Wrapper
+        activeKey={type}
+        items={[...content].map(([name, elements]) => {
+          return {
+            label: name,
+            key: name,
+            children: (
+              <ElementPool
+                element={element}
+                setElement={setElement}
+                content={elements}
+                name={name}
+              />
+            ),
+          };
+        })}
+        onChange={(e) => setType(e)}
       />
       <ElementAdder element={element} />
     </Flex>

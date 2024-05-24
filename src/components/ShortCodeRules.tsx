@@ -89,7 +89,9 @@ export default function ShortCodeRules() {
                           modifyRule(ruleIndex, {
                             ...rule,
                             schemes: schemes.map((x, index) =>
-                              index === index ? { ...x, prefix: value } : x,
+                              index === schemeIndex
+                                ? { ...x, prefix: value }
+                                : x,
                             ),
                           });
                         }}
@@ -106,7 +108,9 @@ export default function ShortCodeRules() {
                           modifyRule(ruleIndex, {
                             ...rule,
                             schemes: schemes.map((x, index) =>
-                              index === index ? { ...x, count: value } : x,
+                              index === schemeIndex
+                                ? { ...x, count: value }
+                                : x,
                             ),
                           });
                         }}

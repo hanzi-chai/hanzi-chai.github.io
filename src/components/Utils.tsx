@@ -63,10 +63,12 @@ export const Select = styled(_Select)`
 
 export const Uploader = ({
   action,
+  disabled,
   text,
   type,
 }: {
   action: (s: string) => void;
+  disabled?: boolean;
   text?: string;
   type?: "yaml" | "json" | "txt";
 }) => {
@@ -90,7 +92,7 @@ export const Uploader = ({
       maxCount={1}
       showUploadList={false}
     >
-      <Button>{text || "导入"}</Button>
+      <Button disabled={disabled}>{text || "导入"}</Button>
     </Upload>
   );
 };

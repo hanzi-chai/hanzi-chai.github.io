@@ -26,6 +26,7 @@ describe("e2e test", () => {
       characters,
       [],
       analysisResult,
+      {},
     );
     expect(assemblyResult.length).toBeGreaterThan(6600);
   });

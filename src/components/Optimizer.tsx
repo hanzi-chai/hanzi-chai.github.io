@@ -30,6 +30,7 @@ import { load } from "js-yaml";
 import { Solver } from "~/lib";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { analysis } from "~/lib";
+import { customElementsAtom } from "~/atoms/assets";
 
 const Schedule = ({
   params,
@@ -88,6 +89,7 @@ const Optimizer = () => {
   const list = Object.entries(repertoire)
     .filter(([_, v]) => v.tygf > 0)
     .map(([x]) => x);
+  const customElements = useAtomValue(customElementsAtom);
   const [out1, setOut1] = useState("");
   const [result, setResult] = useState<[Date, string][]>([]);
   const [bestResult, setBestResult] = useState<string | undefined>(undefined);
@@ -107,7 +109,7 @@ const Optimizer = () => {
     }
     let v2 = assemblyResult;
     if (v2 === null) {
-      v2 = assemble(repertoire, config, list, dictionary, v1);
+      v2 = assemble(repertoire, config, list, dictionary, v1, customElements);
       setAssemblyResult(v2);
     }
     return {

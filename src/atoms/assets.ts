@@ -19,3 +19,9 @@ export const userPairEquivalenceAtom = atomWithStorage<Equivalence | undefined>(
   "user_pair_equivalence",
   undefined,
 );
+
+export type CustomElementMap = Record<string, string[]>;
+
+export const customElementsAtom = atomWithStorage<
+  Record<string, CustomElementMap>
+>("custom_elements", {});
