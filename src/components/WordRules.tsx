@@ -1,7 +1,7 @@
 import { Flex, Select, Form, Cascader, Input, Space, Button } from "antd";
 import { useListAtom, wordRulesAtom } from "~/atoms";
 import { DeleteButton } from "./Utils";
-import { Config } from "~/lib";
+import { Config, wordLengthArray } from "~/lib";
 
 const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
   { length_equal: 2, formula: "AaAbBaBb" },
@@ -9,13 +9,9 @@ const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
   { length_in_range: [4, 10], formula: "AaBaCaZa" },
 ];
 
-export default function () {
+export default function WordRules() {
   const [wordRules, appendRule, excludeRule, modifyRule] =
     useListAtom(wordRulesAtom);
-  const wordLengthArray = [...Array(9).keys()].map((x) => ({
-    label: x + 2,
-    value: x + 2,
-  }));
   return (
     <Flex vertical align="center">
       {wordRules.map((rule, index) => {

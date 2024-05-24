@@ -7,6 +7,7 @@ import {
   type Info,
   Analysis,
   Data,
+  EncoderConfig,
 } from "~/lib";
 import { focusAtom } from "jotai-optics";
 
@@ -43,7 +44,9 @@ export const algebraAtom = focusAtom(configAtom, (o) =>
 algebraAtom.debugLabel = "config.algebra";
 export const keyboardAtom = focusAtom(configAtom, (o) => o.prop("form"));
 keyboardAtom.debugLabel = "config.keyboards";
-export const encoderAtom = focusAtom(configAtom, (o) => o.prop("encoder"));
+export const encoderAtom = focusAtom(configAtom, (o) =>
+  o.prop("encoder").valueOr({} as EncoderConfig),
+);
 encoderAtom.debugLabel = "config.encoder";
 export const optimAtom = focusAtom(configAtom, (o) =>
   o.prop("optimization").valueOr(defaultOptimization),

@@ -7,8 +7,8 @@ import {
   mappingAtom,
   sequenceAtom,
 } from "~/atoms";
-import { Select, renderSuperScript } from "./Utils";
-import { Key } from "~/lib";
+import { Select } from "./Utils";
+import { Key, renderSuperScript } from "~/lib";
 
 export interface KeySelectProps {
   value: Key;

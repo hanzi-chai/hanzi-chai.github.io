@@ -15,6 +15,7 @@ import {
   repertoireAtom,
   configAtom,
   useAtom,
+  useChaifenTitle,
 } from "~/atoms";
 import { Collapse } from "antd";
 import Char from "~/components/Character";
@@ -29,17 +30,11 @@ import type {
   Repertoire,
 } from "~/lib";
 import type { CompoundResults, CompoundAnalysis } from "~/lib";
-import { analysis } from "~/lib";
-import {
-  EditorColumn,
-  EditorRow,
-  exportJSON,
-  exportTSV,
-} from "~/components/Utils";
+import { analysis, exportTSV } from "~/lib";
+import { EditorColumn, EditorRow } from "~/components/Utils";
 import Selector from "~/components/Selector";
 import AnalysisCustomizer from "~/components/AnalysisCustomizer";
 import Degenerator from "~/components/Degenerator";
-import { useChaifenTitle } from "~/components/Utils";
 import CharacterQuery, {
   CharacterFilter,
   makeCharacterFilter,

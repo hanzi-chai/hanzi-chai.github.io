@@ -17,14 +17,8 @@ import {
 
 import Root from "./Element";
 import Char from "./Character";
-import { isPUA } from "~/lib";
-import {
-  DeleteButton,
-  Select,
-  Uploader,
-  joinKeys,
-  renderMapped,
-} from "./Utils";
+import { isPUA, joinKeys, renderMapped } from "~/lib";
+import { DeleteButton, Select, Uploader } from "./Utils";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";

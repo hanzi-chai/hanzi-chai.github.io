@@ -22,12 +22,7 @@ import {
   remoteRemove,
   remoteMutate,
 } from "~/api";
-import {
-  DeleteButton,
-  Select,
-  errorFeedback,
-  verifyNewName,
-} from "~/components/Utils";
+import { DeleteButton, Select } from "~/components/Utils";
 import {
   chars,
   isValidCJKChar,
@@ -47,6 +42,8 @@ import {
   userRepertoireAtom,
   primitiveRepertoireAtom,
   customGlyphAtom,
+  errorFeedback,
+  verifyNewName,
 } from "~/atoms";
 import { PrimitiveCharacter, Compound, Component } from "~/lib";
 import ComponentForm from "./ComponentForm";

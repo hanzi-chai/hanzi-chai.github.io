@@ -8,10 +8,10 @@ import {
 } from "@ant-design/pro-components";
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { maxLengthAtom } from "~/atoms";
+import { Frequency, maxLengthAtom } from "~/atoms";
 import { AssemblyResult, summarize } from "~/lib";
 import { Select } from "./Utils";
-import { Frequency } from "./Optimizer";
+import { Combined } from "./SequenceTable";
 
 export interface AnalyzerForm {
   type: "single" | "multi" | "all";
@@ -30,9 +30,9 @@ export const defaultAnalyzer: AnalyzerForm = {
 export const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
   characterFrequency: Frequency,
-  result: AssemblyResult,
+  result: Combined[],
 ) => {
-  const duplicationMap = new Map<string, AssemblyResult>();
+  const duplicationMap = new Map<string, Combined[]>();
   const topCharacters = Object.fromEntries(
     Object.entries(characterFrequency).slice(0, analyzer.top),
   );
@@ -57,7 +57,7 @@ export const analyzePrimitiveDuplication = (
     );
   }
 
-  const filtered: AssemblyResult = [];
+  const filtered: Combined[] = [];
   let selections = 0;
   for (const names of duplicationMap.values()) {
     selections += names.length - 1;

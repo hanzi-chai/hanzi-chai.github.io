@@ -346,10 +346,12 @@ form:
 encoder:
   max_length: 4
   auto_select_length: 4
-  short_code_schemes:
-    - { prefix: 1 }
-    - { prefix: 2 }
-    - { prefix: 3 }
+  short_code:
+    - length_equal: 1
+      schemes:
+        - { prefix: 1 }
+        - { prefix: 2 }
+        - { prefix: 3 }
   rules:
     - length_equal: 2
       formula: "AaAbBaBb"

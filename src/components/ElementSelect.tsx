@@ -25,9 +25,9 @@ export default function ElementSelect({
   const { mapping, grouping } = useAtomValue(keyboardAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  let keys = Object.keys(mapping).concat(Object.keys(grouping));
+  let keys = Object.keys(mapping).concat(Object.keys(grouping ?? {}));
   if (excludeGrouped) {
-    keys = keys.filter((x) => grouping[x] === undefined);
+    keys = keys.filter((x) => grouping?.[x] === undefined);
   }
   if (onlyRootsAndStrokes) {
     keys = keys.filter((x) => repertoire[x] || x.match(/\d/));

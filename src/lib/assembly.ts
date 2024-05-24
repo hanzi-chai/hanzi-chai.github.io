@@ -17,6 +17,17 @@ import { AnalysisResult, analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
 import { Dictionary } from "~/atoms";
 
+export const getPriorityMap = (
+  priorityShortCodes: [string, string, number][],
+) => {
+  return new Map<string, number>(
+    priorityShortCodes.map(([word, pinyin_list, level]) => {
+      const hash = `${word}-${pinyin_list}`;
+      return [hash, level] as [string, number];
+    }),
+  );
+};
+
 const table: Record<
   Op,
   (
@@ -94,6 +105,7 @@ export type Assembly = {
   pinyin_list: string[];
   sequence: IndexedElement[];
   importance: number;
+  level?: number;
 };
 export type AssemblyResult = Assembly[];
 
@@ -327,8 +339,16 @@ export const assemble = (
   return result;
 };
 
-export const stringifySequence = (result: AssemblyResult) => {
-  return result.map((x) => ({ ...x, sequence: summarize(x.sequence) }));
+export const stringifySequence = (result: AssemblyResult, config: Config) => {
+  const priorityMap = getPriorityMap(config.encoder.priority_short_codes ?? []);
+  return result.map((x) => {
+    const hash = `${x.name}-${x.pinyin_list.join(",")}`;
+    return {
+      ...x,
+      sequence: summarize(x.sequence),
+      level: priorityMap.get(hash) ?? -1,
+    };
+  });
 };
 
 export const summarize = (elements: IndexedElement[]) => {

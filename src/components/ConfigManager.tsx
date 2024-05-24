@@ -1,7 +1,6 @@
 import { Button, Flex, notification } from "antd";
-import { configAtom, useAtom } from "~/atoms";
-import { examples } from "~/lib";
-import { exportYAML, validateConfig } from "~/components/Utils";
+import { configAtom, useAtom, validateConfig } from "~/atoms";
+import { examples, exportYAML } from "~/lib";
 
 export default function ConfigManager() {
   const [config, setConfig] = useAtom(configAtom);

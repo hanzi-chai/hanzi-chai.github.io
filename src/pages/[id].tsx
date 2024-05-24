@@ -46,14 +46,9 @@ const items: MenuProps["items"] = [
     icon: <ProfileOutlined />,
   },
   {
-    label: "取码",
+    label: "编码",
     key: "assembly",
     icon: <OrderedListOutlined />,
-  },
-  {
-    label: "编码",
-    key: "encode",
-    icon: <BoldOutlined />,
   },
   {
     label: "优化",

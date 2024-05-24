@@ -102,11 +102,14 @@ export interface EncoderConfig {
   select_keys?: string[];
   auto_select_length?: number;
   auto_select_pattern?: string;
-  short_code_schemes?: ShortCodeScheme[];
-  rules?: WordRule[];
+  // 一字词全码
   sources: Record<string, Source>;
   conditions: Record<string, Condition>;
-  priority_short_codes: [string, string, number][];
+  // 多字词全码
+  rules?: WordRule[];
+  // 简码
+  short_code?: ShortCodeRule[];
+  priority_short_codes?: [string, string, number][];
 }
 
 export interface Source {
@@ -149,10 +152,18 @@ export interface BinaryCondition {
 
 export type Condition = UnaryCondition | BinaryCondition;
 
-export type WordRule = { formula: string } & (
+type LengthSpecifier =
   | { length_equal: number }
-  | { length_in_range: number[] }
-);
+  | { length_in_range: [number, number] };
+
+export const wordLengthArray = [...Array(9).keys()].map((x) => ({
+  label: x + 1,
+  value: x + 1,
+}));
+
+export type WordRule = { formula: string } & LengthSpecifier;
+
+export type ShortCodeRule = { schemes: ShortCodeScheme[] } & LengthSpecifier;
 
 export interface ShortCodeScheme {
   prefix: number;
@@ -200,6 +211,7 @@ export interface Objective {
   characters_full?: PartialWeights;
   characters_short?: PartialWeights;
   words_full?: PartialWeights;
+  words_short?: PartialWeights;
 }
 
 export interface Constraints {

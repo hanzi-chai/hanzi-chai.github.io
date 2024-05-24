@@ -5,9 +5,9 @@ import {
   ShapeElementPicker,
   PronElementPicker,
 } from "~/components/ElementPicker";
-import { useChaifenTitle } from "~/components/Utils";
+import { useChaifenTitle } from "~/atoms";
 
-export default function () {
+export default function Element() {
   useChaifenTitle("元素");
   return (
     <EditorRow>

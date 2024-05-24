@@ -15,18 +15,21 @@ import {
   repertoireAtom,
   assetsAtom,
   dictionaryAtom,
+  DictEntry,
+  makeEncodeCallback,
 } from "~/atoms";
-import { assemble, stringifySequence } from "~/lib";
+import {
+  assemble,
+  exportTSV,
+  exportYAML,
+  makeWorker,
+  stringifySequence,
+} from "~/lib";
 import { LibchaiOutputEvent } from "~/worker";
-import { exportTSV, exportYAML, makeWorker } from "./Utils";
 import { load } from "js-yaml";
 import { Solver } from "~/lib";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { analysis } from "~/lib";
-import { makeEncodeCallback } from "~/pages/[id]/encode";
-
-export type Frequency = Record<string, number>;
-export type Equivalence = Record<string, number>;
 
 const Schedule = ({
   params,
@@ -109,7 +112,7 @@ const Optimizer = () => {
     }
     return {
       config,
-      info: stringifySequence(v2),
+      info: stringifySequence(v2, config),
       assets,
     };
   };
@@ -218,14 +221,9 @@ const Optimizer = () => {
             <Button
               onClick={() => {
                 const worker = makeWorker();
-                worker.onmessage = makeEncodeCallback((encodeOutput) => {
-                  const { item, full, short } = encodeOutput.characters;
-                  const charactersTSV = item.map((name, i) => {
-                    return short
-                      ? [name, full[i]!, short[i]!]
-                      : [name, full[i]!];
-                  });
-                  exportTSV(charactersTSV, "一字词编码.txt");
+                const flatten = (x: DictEntry) => [x.name, x.full, x.short];
+                worker.onmessage = makeEncodeCallback((code) => {
+                  exportTSV(code.map(flatten), "code.txt");
                 });
                 worker.postMessage({
                   type: "encode",
@@ -233,27 +231,7 @@ const Optimizer = () => {
                 });
               }}
             >
-              下载一字词码表
-            </Button>
-            <Button
-              onClick={() => {
-                const worker = makeWorker();
-                worker.onmessage = makeEncodeCallback((encodeOutput) => {
-                  const { item, full, short } = encodeOutput.words;
-                  const wordsTSV = item.map((name, i) => {
-                    return short
-                      ? [name, full[i]!, short[i]!]
-                      : [name, full[i]!];
-                  });
-                  exportTSV(wordsTSV, "多字词编码.txt");
-                });
-                worker.postMessage({
-                  type: "encode",
-                  data: { ...prepareInput(), config: load(bestResult) },
-                });
-              }}
-            >
-              下载多字词码表
+              下载码表
             </Button>
           </Flex>
         </>

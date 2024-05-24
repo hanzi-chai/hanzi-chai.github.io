@@ -1,3 +1,4 @@
+import { Distribution } from "~/atoms";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type {
@@ -12,6 +13,8 @@ import type {
   ReferenceStroke,
 } from "./data";
 import { range } from "lodash-es";
+import { dump } from "js-yaml";
+import { IndexedElement, Key } from ".";
 
 export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -149,6 +152,31 @@ export function getRecordFromTSV(text: string): Record<string, number> {
   return data;
 }
 
+export function getDistributionFromTSV(text: string): Distribution {
+  const tsv = text
+    .trim()
+    .split("\n")
+    .map((x) => x.trim().split("\t"));
+  const data: Distribution = {};
+  tsv.forEach(([char, ideal_s, lt_penalty_s, gt_penalty_s]) => {
+    if (
+      char === undefined ||
+      ideal_s === undefined ||
+      lt_penalty_s === undefined ||
+      gt_penalty_s === undefined
+    )
+      return;
+    const [ideal, lt_penalty, gt_penalty] = [
+      ideal_s,
+      lt_penalty_s,
+      gt_penalty_s,
+    ].map(Number) as [number, number, number];
+    if (isNaN(ideal) || isNaN(lt_penalty) || isNaN(gt_penalty)) return;
+    data[char] = { ideal, lt_penalty, gt_penalty };
+  });
+  return data;
+}
+
 export function getDictFromTSV(text: string): [string, string][] {
   const result: [string, string][] = [];
   for (const line of text.trim().split("\n")) {
@@ -158,3 +186,71 @@ export function getDictFromTSV(text: string): [string, string][] {
   }
   return result;
 }
+
+const processExport = (content: string, filename: string) => {
+  const blob = new Blob([content], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.download = filename;
+  const url = window.URL.createObjectURL(blob);
+  a.href = url;
+  a.click();
+  window.URL.revokeObjectURL(url); // 避免内存泄漏
+};
+
+export const exportYAML = (config: object, filename: string) => {
+  const unsafeContent = dump(config, { flowLevel: 4 });
+  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
+    return `"\\u${c.codePointAt(0)!.toString(16)}"`;
+  });
+  processExport(fileContent, filename + ".yaml");
+};
+
+export const exportJSON = (data: object, filename: string) => {
+  const unsafeContent = JSON.stringify(data);
+  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
+    return `\\u${c.codePointAt(0)!.toString(16)}`;
+  });
+  processExport(fileContent, filename);
+};
+
+export const exportTSV = (data: string[][], filename: string) => {
+  const fileContent = data.map((x) => x.join("\t")).join("\n");
+  processExport(fileContent, filename);
+};
+
+export const renderIndexed = (
+  element: IndexedElement,
+  display: (s: string) => string,
+) => {
+  if (typeof element === "string") {
+    return display(element);
+  } else {
+    return renderSuperScript(display(element.element), element.index);
+  }
+};
+
+export const renderSuperScript = (element: string, index: number) => {
+  const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  return index
+    ? element + (superscripts[index + 1] ?? superscripts[0])
+    : element;
+};
+
+export const joinKeys = (keys: Key[]) => {
+  return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
+};
+
+export const renderMapped = (mapped: string | Key[]) => {
+  if (typeof mapped === "string") {
+    return mapped;
+  }
+  return mapped.map((x) => {
+    return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
+  });
+};
+
+export const makeWorker = () => {
+  return new Worker(new URL("../worker.ts", import.meta.url), {
+    type: "module",
+  });
+};

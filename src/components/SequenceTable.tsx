@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Button, Flex } from "antd";
+import { Alert, Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
   configAtom,
@@ -10,66 +10,44 @@ import {
   dictionaryAtom,
   priorityShortCodesAtom,
   maxLengthAtom,
+  useSetAtom,
+  makeEncodeCallback,
+  DictEntry,
 } from "~/atoms";
-import type { AssemblyResult, IndexedElement } from "~/lib";
-import { assemble, summarize } from "~/lib";
-import { Select, exportTSV, renderIndexed } from "~/components/Utils";
-import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
-import { analysis } from "~/lib";
+import type { Assembly, IndexedElement } from "~/lib";
+import {
+  assemble,
+  getPriorityMap,
+  stringifySequence,
+  summarize,
+  analysis,
+} from "~/lib";
+import { exportTSV, makeWorker, renderIndexed, renderSuperScript } from "~/lib";
+import {
+  analysisResultAtom,
+  assemblyResultAtom,
+  encodeResultAtom,
+} from "~/atoms/cache";
 import PrimitiveDuplicationAnalyzer, {
   analyzePrimitiveDuplication,
   defaultAnalyzer,
 } from "~/components/PrimitiveDuplicationAnalyzer";
 import { ProColumns, ProTable } from "@ant-design/pro-components";
+import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 
-interface AssembleResultEntry {
+interface MainEntry {
   key: string;
   name: string;
   pinyin_list: string[];
   frequency: number;
+  full: string;
+  full_rank: number;
+  short: string;
+  short_rank: number;
   [n: number]: IndexedElement;
 }
 
-const getPriorityMap = (priorityShortCodes: [string, string, number][]) => {
-  return new Map<string, number>(
-    priorityShortCodes.map(([word, pinyin_list, level]) => {
-      const hash = `${word}-${pinyin_list}`;
-      return [hash, level] as [string, number];
-    }),
-  );
-};
-
-const ProrityShortCodeSelector = ({ hash }: { hash: string }) => {
-  const max_length = useAtomValue(maxLengthAtom);
-  const [priorityShortCodes, setPriorityShortCodes] = useAtom(
-    priorityShortCodesAtom,
-  );
-  const priorityMap = getPriorityMap(priorityShortCodes);
-  const level = priorityMap.get(hash);
-  return (
-    <Select
-      value={level ?? -1}
-      options={[-1, ...Array(max_length + 1).keys()].map((x) => {
-        return { label: x === -1 ? "默认" : x.toString(), value: x };
-      })}
-      onChange={(value) => {
-        if (value === -1) {
-          priorityMap.delete(hash);
-        } else {
-          priorityMap.set(hash, value);
-        }
-        setPriorityShortCodes(
-          [...priorityMap.entries()].map(([hash, level]) => {
-            const [word, pinyin_list] = hash.split("-");
-            return [word, pinyin_list, level] as [string, string, number];
-          }),
-        );
-      }}
-    />
-  );
-};
-
-const RecomputeButton = () => {
+const RecomputeAssembly = () => {
   const repertoire = useAtomValue(repertoireAtom);
   const config = useAtomValue(configAtom);
   const characters = Object.entries(repertoire)
@@ -97,12 +75,12 @@ const RecomputeButton = () => {
         setAssemblyResult(assembled);
       }}
     >
-      计算
+      更新拆分表
     </Button>
   );
 };
 
-const ExportButton = () => {
+const ExportAssembly = () => {
   const assemblyResult = useAtomValue(assemblyResultAtom) ?? [];
   const priorityShortCodes = useAtomValue(priorityShortCodesAtom);
   const priorityMap = getPriorityMap(priorityShortCodes);
@@ -138,42 +116,114 @@ const ExportButton = () => {
   );
 };
 
-export default function () {
+const RecomputeCode = () => {
+  const config = useAtomValue(configAtom);
+  const assemblyResult = useAtomValue(assemblyResultAtom);
+  const assets = useAtomValue(assetsAtom);
+  const setCode = useSetAtom(encodeResultAtom);
+  return (
+    <Button
+      type="primary"
+      disabled={assemblyResult === null}
+      onClick={async () => {
+        const info = stringifySequence(assemblyResult!, config);
+        const data = { config, info, assets };
+        const worker = makeWorker();
+        worker.onmessage = makeEncodeCallback(setCode);
+        worker.postMessage({ type: "encode", data });
+      }}
+    >
+      更新码表
+    </Button>
+  );
+};
+
+const ExportCode = () => {
+  const code = useAtomValue(encodeResultAtom);
+  const flatten = (x: DictEntry) => [x.name, x.full, x.short];
+  return (
+    <Button
+      disabled={code === null}
+      onClick={() => {
+        exportTSV(code!.map(flatten), "code.txt");
+      }}
+    >
+      导出码表
+    </Button>
+  );
+};
+
+type DataIndex = "name" | "full" | "short";
+
+const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
+  filterDropdown: ({
+    setSelectedKeys,
+    selectedKeys,
+    confirm,
+    clearFilters,
+  }) => (
+    <Flex vertical align="flex-end" gap="middle" style={{ padding: "1rem" }}>
+      <Input
+        value={selectedKeys[0]}
+        onChange={(e) =>
+          setSelectedKeys(e.target.value ? [e.target.value] : [])
+        }
+      />
+      <Space>
+        <Button onClick={() => clearFilters && clearFilters()}>重置</Button>
+        <Button type="primary" onClick={() => confirm()}>
+          搜索
+        </Button>
+      </Space>
+    </Flex>
+  ),
+  onFilter: (value, record) =>
+    new RegExp(value as string).test(record[dataIndex]),
+});
+
+export interface Combined extends Assembly, DictEntry {}
+
+export default function SequenceTable() {
   const display = useAtomValue(displayAtom);
   const assemblyResult = useAtomValue(assemblyResultAtom) ?? [];
   const lost: string[] = [];
   const max_length = useAtomValue(maxLengthAtom);
-  const frequency = useAtomValue(assetsAtom).frequency;
+  const assets = useAtomValue(assetsAtom);
+  const frequencyMap = assets.frequency;
+  const encodeResult = useAtomValue(encodeResultAtom) ?? [];
+  const combinedResult: Combined[] = assemblyResult.map((x, i) => ({
+    ...x,
+    ...encodeResult[i]!,
+  }));
 
   const [analyzer, setAnalyzer] = useState(defaultAnalyzer);
   const [selections, filtered] = analyzePrimitiveDuplication(
     analyzer,
-    frequency,
-    assemblyResult,
+    frequencyMap,
+    combinedResult,
   );
 
-  const toShow = analyzer.filter ? filtered : assemblyResult;
-  const dataSource = toShow.map(
-    ({ name, sequence, importance, pinyin_list }) => {
-      const freq = Math.round(
-        ((frequency[name] ?? 0) * (importance ?? 100)) / 100,
-      );
-      const entry: AssembleResultEntry = {
-        key: `${name}-${summarize(sequence)}`,
-        frequency: freq,
-        pinyin_list,
-        name,
-      };
-      for (const [i, element] of sequence.entries()) {
-        entry[i] = element;
-      }
-      return entry;
-    },
-  );
+  const toShow = analyzer.filter ? filtered : combinedResult;
+  const dataSource = toShow.map(({ name, sequence, importance, ...rest }) => {
+    const frequency = Math.round(
+      ((frequencyMap[name] ?? 0) * (importance ?? 100)) / 100,
+    );
+    const key = `${name}-${summarize(sequence)}`;
+    const entry: MainEntry = {
+      key,
+      frequency,
+      name,
+      ...rest,
+    };
+    for (const [i, element] of sequence.entries()) {
+      entry[i] = element;
+    }
+    return entry;
+  });
 
   dataSource.sort((a, b) => b.frequency - a.frequency);
 
-  const hash = (record: AssembleResultEntry) => {
+  const hash = (record: MainEntry) => {
     const list: IndexedElement[] = [];
     for (const i of Array(max_length).keys()) {
       const element = record[i];
@@ -185,32 +235,21 @@ export default function () {
     return list.map((x) => renderIndexed(x, display)).join(" ");
   };
 
-  const columns: ProColumns<AssembleResultEntry>[] = [
+  const columns: ProColumns<MainEntry>[] = [
     {
       title: "名称",
       dataIndex: "name",
       sorter: (a, b) => a.name.codePointAt(0)! - b.name.codePointAt(0)!,
       sortDirections: ["ascend", "descend"],
-      width: 64,
-      filters: true,
-      valueEnum: new Map<number, { text: string }>([
-        [1, { text: "一字词" }],
-        [2, { text: "二字词" }],
-        [3, { text: "三字词" }],
-        [4, { text: "四字词" }],
-        [5, { text: "五字及以上词" }],
-      ]),
-      onFilter: (value, record) => {
-        const length = [...record.name].length;
-        return value === 5 ? length >= value : length === value;
-      },
+      width: 96,
+      ...getColumnSearchProps("name"),
     },
     {
       title: "频率",
       dataIndex: "frequency",
       sorter: (a, b) => a.frequency - b.frequency,
       sortDirections: ["ascend", "descend"],
-      width: 64,
+      width: 96,
     },
     {
       title: "拼音",
@@ -220,7 +259,7 @@ export default function () {
     },
     {
       title: "全部元素",
-      key: "full",
+      key: "all",
       render: (_, record) => hash(record),
       sorter: (a, b) => {
         const ahash = hash(a);
@@ -228,6 +267,7 @@ export default function () {
         return ahash.localeCompare(bhash);
       },
       width: 128,
+      ellipsis: true,
     },
   ];
 
@@ -265,20 +305,56 @@ export default function () {
         return renderIndexed(element, display) === value;
       },
       valueEnum: allValues,
+      ellipsis: true,
     });
   }
 
-  columns.push({
-    title: "简码级数",
-    key: "action",
-    width: 64,
-    render: (_, record) => {
-      const hash = `${record.name}-${record.pinyin_list.join(",")}`;
-      return <ProrityShortCodeSelector hash={hash} />;
+  columns.push(
+    {
+      title: "简码级数",
+      key: "action",
+      width: 128,
+      render: (_, record) => {
+        const hash = `${record.name}-${record.pinyin_list.join(",")}`;
+        return <ProrityShortCodeSelector hash={hash} />;
+      },
     },
-  });
+    {
+      title: "全码",
+      width: 96,
+      render: (_, record) => {
+        const { full, full_rank } = record;
+        const rank = Math.abs(full_rank);
+        return (
+          <span style={{ color: full_rank > 0 ? "red" : "inherit" }}>
+            {renderSuperScript(full, rank)}
+          </span>
+        );
+      },
+      ...getColumnSearchProps("full"),
+    },
+    {
+      title: "简码",
+      width: 96,
+      render: (_, record) => {
+        const { short, short_rank } = record;
+        const rank = Math.abs(short_rank);
+        return (
+          <span style={{ color: short_rank > 0 ? "red" : "inherit" }}>
+            {renderSuperScript(short, rank)}
+          </span>
+        );
+      },
+      ...getColumnSearchProps("short"),
+    },
+  );
 
-  const toolbar = [<RecomputeButton />, <ExportButton />];
+  const toolbar = [
+    <RecomputeAssembly />,
+    <ExportAssembly />,
+    <RecomputeCode />,
+    <ExportCode />,
+  ];
 
   return (
     <>
@@ -299,10 +375,12 @@ export default function () {
           setAnalyzer={setAnalyzer}
         />
       )}
-      <ProTable<AssembleResultEntry>
+      <ProTable<MainEntry>
+        virtual
+        scroll={{ y: 1080 }}
         columns={columns}
         dataSource={dataSource}
-        pagination={{ pageSize: 50, hideOnSinglePage: true }}
+        pagination={false}
         search={false}
         defaultSize="small"
         toolBarRender={() => toolbar}

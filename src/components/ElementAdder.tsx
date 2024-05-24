@@ -10,8 +10,7 @@ import {
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { Key } from "~/lib";
-import { joinKeys } from "./Utils";
+import { Key, joinKeys } from "~/lib";
 
 const ElementAdder = ({ element }: { element?: string }) => {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);

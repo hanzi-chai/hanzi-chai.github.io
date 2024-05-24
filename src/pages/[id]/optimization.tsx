@@ -433,6 +433,7 @@ const Optimization = () => {
         <PartialObjective title="一字词全码" type="characters_full" />
         <PartialObjective title="一字词简码" type="characters_short" />
         <PartialObjective title="多字词全码" type="words_full" />
+        <PartialObjective title="多字词简码" type="words_short" />
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>

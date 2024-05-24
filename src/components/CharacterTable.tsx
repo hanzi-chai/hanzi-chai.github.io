@@ -17,6 +17,7 @@ import {
   customGlyphAtom,
   customReadingsAtom,
   displayAtom,
+  errorFeedback,
   primitiveRepertoireAtom,
   sequenceAtom,
   useAddAtom,
@@ -36,7 +37,7 @@ import {
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/api";
-import { DeleteButton, PlusButton, errorFeedback } from "./Utils";
+import { DeleteButton, PlusButton } from "./Utils";
 import Root from "./Element";
 import * as O from "optics-ts/standalone";
 import CharacterQuery, {

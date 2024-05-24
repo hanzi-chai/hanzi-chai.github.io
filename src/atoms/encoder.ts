@@ -1,6 +1,6 @@
 import { focusAtom } from "jotai-optics";
 import { encoderAtom } from ".";
-import { ShortCodeScheme, WordRule } from "~/lib";
+import { ShortCodeRule, ShortCodeScheme, WordRule } from "~/lib";
 
 export const maxLengthAtom = focusAtom(encoderAtom, (o) =>
   o.prop("max_length"),
@@ -18,8 +18,8 @@ export const selectKeysAtom = focusAtom(encoderAtom, (o) =>
   o.prop("select_keys").valueOr([] as string[]),
 );
 
-export const shortCodeSchemesAtom = focusAtom(encoderAtom, (o) =>
-  o.prop("short_code_schemes").valueOr([] as ShortCodeScheme[]),
+export const shortCodeConfigAtom = focusAtom(encoderAtom, (o) =>
+  o.prop("short_code").valueOr([] as ShortCodeRule[]),
 );
 
 export const wordRulesAtom = focusAtom(encoderAtom, (o) =>

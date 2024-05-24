@@ -11,7 +11,7 @@ import { useRef } from "react";
 import { metaheuristicAtom, useAtom } from "~/atoms";
 import { Solver } from "~/lib";
 
-export default function () {
+export default function SolverForm() {
   const [metaheuristic, setMetaheuristic] = useAtom(metaheuristicAtom);
   const formRef = useRef<ProFormInstance>();
   const defaultParams = {

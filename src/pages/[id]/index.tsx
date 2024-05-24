@@ -1,8 +1,9 @@
-import { useChaifenTitle } from "~/components/Utils";
 import { Button, Flex, Space, Typography, Upload } from "antd";
 import {
   Atom,
   Dictionary,
+  Distribution,
+  Equivalence,
   SetStateAction,
   WritableAtom,
   defaultDictionaryAtom,
@@ -12,20 +13,16 @@ import {
   pairEquivalenceAtom,
   useAtom,
   useAtomValue,
+  useChaifenTitle,
 } from "~/atoms";
-import { Info, getDictFromTSV } from "~/lib";
+import { Info, exportTSV, getDictFromTSV, getDistributionFromTSV } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
   ProForm,
   ProFormText,
   ProFormTextArea,
 } from "@ant-design/pro-components";
-import {
-  EditorColumn,
-  EditorRow,
-  Uploader,
-  exportTSV,
-} from "~/components/Utils";
+import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
 import {
   userFrequencyAtom,
   userKeyDistributionAtom,
@@ -34,16 +31,18 @@ import {
 } from "~/atoms/assets";
 import { getRecordFromTSV } from "~/lib";
 
-function AssetUploader<V extends Record<string, number> | Dictionary>({
+function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
   atom,
   defaultAtom,
   title,
   description,
+  parser,
 }: {
   atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
   defaultAtom: Atom<V>;
   title: string;
   description: string;
+  parser: (text: string) => V;
 }) {
   const [value, setValue] = useAtom(atom);
   const defaultValue = useAtomValue(defaultAtom);
@@ -56,15 +55,7 @@ function AssetUploader<V extends Record<string, number> | Dictionary>({
         <Typography.Title level={3}>{title}</Typography.Title>
         <div style={{ flex: 1 }} />
         <Button onClick={() => exportTSV(tsv, `${title}.txt`)}>下载预置</Button>
-        <Uploader
-          type="txt"
-          action={(text) => {
-            const value = Array.isArray(defaultValue)
-              ? getDictFromTSV(text)
-              : getRecordFromTSV(text);
-            setValue(value as V);
-          }}
-        />
+        <Uploader type="txt" action={(text) => setValue(parser(text))} />
         <Button
           disabled={value === undefined}
           onClick={() => setValue(undefined)}
@@ -82,7 +73,7 @@ function AssetUploader<V extends Record<string, number> | Dictionary>({
   );
 }
 
-export default function () {
+export default function Index() {
   useChaifenTitle("基本信息");
   const [info, setInfo] = useAtom(infoAtom);
   return (
@@ -118,24 +109,28 @@ export default function () {
           description="系统默认采用的词频来自 10 亿社交媒体语料的统计结果，包含了一字词和多字词。您可以在此处自定义词频。"
           atom={userFrequencyAtom}
           defaultAtom={frequencyAtom}
+          parser={getRecordFromTSV}
         />
         <AssetUploader
           title="词库"
           description="系统默认采用的多字词为「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词编码。您可以在此处自定义词库，词库需要包含带调拼音。"
           atom={userDictionaryAtom as any}
           defaultAtom={defaultDictionaryAtom}
+          parser={getDictFromTSV}
         />
         <AssetUploader
           title="当量"
           description="系统默认采用的双键速度当量来自陈一凡的论文。您可以在此处自定义当量。"
           atom={userPairEquivalenceAtom}
           defaultAtom={pairEquivalenceAtom}
+          parser={getRecordFromTSV}
         />
         <AssetUploader
           title="用指分布"
           description="系统默认采用的理想用指分布是我拍脑袋想出来的。您可以在此处自定义用指分布。"
           atom={userKeyDistributionAtom}
           defaultAtom={keyDistributionAtom}
+          parser={getDistributionFromTSV}
         />
       </EditorColumn>
     </EditorRow>

@@ -17,13 +17,13 @@ import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { useImmer } from "use-immer";
 import { Example, examples } from "~/lib";
-import { Select, Uploader, validateConfig } from "~/components/Utils";
+import { Select, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
 import { post } from "~/api";
 import { md5 } from "js-md5";
-import { useChaifenTitle } from "~/components/Utils";
 import init, { validate } from "libchai";
+import { useChaifenTitle, validateConfig } from "~/atoms";
 
 type Status = "login" | "signup" | "signin";
 

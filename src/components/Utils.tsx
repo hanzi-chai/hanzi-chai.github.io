@@ -12,21 +12,15 @@ import {
 } from "antd";
 import styled from "styled-components";
 import {
-  Config,
-  isValidCJKChar,
   getRecordFromTSV,
   getDictFromTSV,
-  IndexedElement,
+  getDistributionFromTSV,
 } from "~/lib";
-import type { Err } from "~/api";
 import { useEffect, useState } from "react";
-import { dump } from "js-yaml";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
 import Root from "./Element";
-import { Key } from "~/lib";
-import useTitle from "ahooks/es/useTitle";
 import {
   defaultDictionaryAtom,
   fetchAsset,
@@ -35,7 +29,6 @@ import {
   pairEquivalenceAtom,
 } from "~/atoms";
 import { useSetAtom } from "jotai";
-import init, { validate } from "libchai";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -100,65 +93,6 @@ export const Uploader = ({
       <Button>{text || "导入"}</Button>
     </Upload>
   );
-};
-
-const processExport = (content: string, filename: string) => {
-  const blob = new Blob([content], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.download = filename;
-  const url = window.URL.createObjectURL(blob);
-  a.href = url;
-  a.click();
-  window.URL.revokeObjectURL(url); // 避免内存泄漏
-};
-
-export const exportYAML = (config: object, filename: string) => {
-  const unsafeContent = dump(config, { flowLevel: 4 });
-  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `"\\u${c.codePointAt(0)!.toString(16)}"`;
-  });
-  processExport(fileContent, filename + ".yaml");
-};
-
-export const exportJSON = (data: object, filename: string) => {
-  const unsafeContent = JSON.stringify(data);
-  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `\\u${c.codePointAt(0)!.toString(16)}`;
-  });
-  processExport(fileContent, filename);
-};
-
-export const exportTSV = (data: string[][], filename: string) => {
-  const fileContent = data.map((x) => x.join("\t")).join("\n");
-  processExport(fileContent, filename);
-};
-
-export const errorFeedback = function <T extends number | boolean>(
-  res: T | Err,
-): res is Err {
-  if (typeof res === "object") {
-    notification.error({
-      message: "无法完成该操作",
-      description: JSON.stringify(res),
-    });
-    return true;
-  } else {
-    notification.success({
-      message: "操作成功",
-    });
-    return false;
-  }
-};
-
-export const verifyNewName = (newName: string) => {
-  if (!Array.from(newName).every(isValidCJKChar)) {
-    notification.error({
-      message: "名称含有非法字符",
-      description: "只有 CJK 基本集或扩展集 A 中的才是合法字符",
-    });
-    return false;
-  }
-  return true;
 };
 
 type Click = { onClick: () => void; disabled?: boolean };
@@ -229,47 +163,6 @@ export const KeyList = ({
   );
 };
 
-export const renderIndexed = (
-  element: IndexedElement,
-  display: (s: string) => string,
-) => {
-  if (typeof element === "string") {
-    return display(element);
-  } else {
-    return renderSuperScript(display(element.element), element.index);
-  }
-};
-
-export const renderSuperScript = (element: string, index: number) => {
-  const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
-  return index ? element + superscripts[index + 1] : element;
-};
-
-export const joinKeys = (keys: Key[]) => {
-  return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
-};
-
-export const renderMapped = (mapped: string | Key[]) => {
-  if (typeof mapped === "string") {
-    return mapped;
-  }
-  return mapped.map((x) => {
-    return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
-  });
-};
-
-export const makeWorker = () => {
-  return new Worker(new URL("../worker.ts", import.meta.url), {
-    type: "module",
-  });
-};
-
-export function useChaifenTitle(title: string) {
-  useTitle(`${title} · 汉字自动拆分系统 ${APP_VERSION}`, {
-    restoreOnUnmount: true,
-  });
-}
-
 export function LoadAssets() {
   const setF = useSetAtom(frequencyAtom);
   const setW = useSetAtom(defaultDictionaryAtom);
@@ -277,25 +170,9 @@ export function LoadAssets() {
   const setPE = useSetAtom(pairEquivalenceAtom);
   fetchAsset("frequency", "txt").then((x) => setF(getRecordFromTSV(x)));
   fetchAsset("dictionary", "txt").then((x) => setW(getDictFromTSV(x)));
-  fetchAsset("key_distribution", "txt").then((x) => setKE(getRecordFromTSV(x)));
+  fetchAsset("key_distribution", "txt").then((x) =>
+    setKE(getDistributionFromTSV(x)),
+  );
   fetchAsset("pair_equivalence", "txt").then((x) => setPE(getRecordFromTSV(x)));
   return null;
-}
-
-export async function validateConfig(config: Config) {
-  await init();
-  try {
-    validate(config);
-    notification.success({
-      message: "配置校验成功",
-      description: "该配置可以被正常使用。",
-    });
-    return true;
-  } catch (e) {
-    notification.error({
-      message: "配置校验失败，原因是：",
-      description: (e as Error).message,
-    });
-    return false;
-  }
 }

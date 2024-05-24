@@ -1,7 +1,6 @@
 import { atom } from "jotai";
 import type { PrimitiveRepertoire } from "~/lib";
 import { produce } from "immer";
-import { Equivalence, Frequency } from "~/components/Optimizer";
 import {
   userFrequencyAtom,
   userKeyDistributionAtom,
@@ -54,16 +53,25 @@ export const mutateRepertoireAtom = atom(
   },
 );
 
+interface Loss {
+  ideal: number;
+  lt_penalty: number;
+  gt_penalty: number;
+}
+
 export type Dictionary = [string, string][];
+export type Frequency = Record<string, number>;
+export type Distribution = Record<string, Loss>;
+export type Equivalence = Record<string, number>;
 
 export const defaultDictionaryAtom = atom<Dictionary>([]);
 export const frequencyAtom = atom<Frequency>({});
-export const keyDistributionAtom = atom<Frequency>({});
+export const keyDistributionAtom = atom<Distribution>({});
 export const pairEquivalenceAtom = atom<Equivalence>({});
 
 export interface Assets {
   frequency: Frequency;
-  key_distribution: Frequency;
+  key_distribution: Distribution;
   pair_equivalence: Equivalence;
 }
 
