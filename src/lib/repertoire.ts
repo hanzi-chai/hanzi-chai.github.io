@@ -100,7 +100,10 @@ export const analysis = function (
   const customizations: ComponentResults = new Map(
     Object.entries(config.analysis?.customize ?? {}).map(
       ([component, sequence]) => {
-        const pseudoResult: ComponentAnalysis = { sequence: sequence };
+        const pseudoResult: ComponentAnalysis = {
+          strokes: 0,
+          sequence: sequence,
+        };
         return [component, pseudoResult] as const;
       },
     ),

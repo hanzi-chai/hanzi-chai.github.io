@@ -143,7 +143,13 @@ const RecomputeCode = () => {
 
 const ExportCode = () => {
   const code = useAtomValue(encodeResultAtom);
-  const flatten = (x: DictEntry) => [x.name, x.full, x.short];
+  const flatten = (x: DictEntry) => [
+    x.name,
+    x.full,
+    x.full_rank.toString(),
+    x.short,
+    x.short_rank.toString(),
+  ];
   return (
     <Button
       disabled={code === null}

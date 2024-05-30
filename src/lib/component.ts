@@ -16,6 +16,21 @@ import { recursiveRenderCompound } from ".";
 
 export class InvalidGlyphError extends Error {}
 
+export const makeIntervalSum = (strokes: number, rootsSet: Set<number>) => {
+  const array = [...Array(strokes).keys()].map((x) => 1 << x).reverse();
+  const intervalSums = new Set<number>();
+  for (let start = 0; start != strokes - 1; ++start) {
+    let sum = array[start]!;
+    for (let end = start + 1; end != strokes; ++end) {
+      sum += array[end]!;
+      if (rootsSet.has(sum)) {
+        intervalSums.add(sum);
+      }
+    }
+  }
+  return intervalSums;
+};
+
 /**
  * 根据一个部件中包含的所有字根的情况，导出所有可能的拆分方案
  *
@@ -27,24 +42,36 @@ export class InvalidGlyphError extends Error {}
  * 直到所有的笔画都使用完毕
  */
 export const generateSchemes = (strokes: number, roots: number[]) => {
+  const rootsSet = new Set(roots);
   const schemeList: number[][] = [];
   const total = (1 << strokes) - 1;
-  const combineNext = (partialSum: number, scheme: number[]) => {
+  const intervalSums = makeIntervalSum(strokes, rootsSet);
+  const combineNext = (
+    partialSum: number,
+    scheme: number[],
+    revcumsum: number[],
+  ) => {
     const restBin = total - partialSum;
     const restBin1st = 1 << (restBin.toString(2).length - 1);
     const start = bisectLeft(roots, restBin1st);
     const end = bisectRight(roots, restBin);
     for (const binary of roots.slice(start, end)) {
       if ((partialSum & binary) !== 0) continue;
-      const newBin = partialSum + binary;
-      if (newBin === total) {
-        schemeList.push(scheme.concat(binary));
+      const newPartialSum = partialSum + binary;
+      const newRevcumsum = revcumsum.map((x) => x + binary);
+      const newScheme = scheme.concat(binary);
+      if (newRevcumsum.some((x) => intervalSums.has(x))) {
+        continue;
+      }
+      newRevcumsum.push(binary);
+      if (newPartialSum === total) {
+        schemeList.push(newScheme);
       } else {
-        combineNext(newBin, scheme.concat(binary));
+        combineNext(newPartialSum, newScheme, newRevcumsum);
       }
     }
   };
-  combineNext(0, []);
+  combineNext(0, [], []);
   return schemeList;
 };
 
@@ -85,6 +112,7 @@ export const getComponentScheme = function (
   const { mapping } = config.form;
   if (mapping[component.name])
     return {
+      strokes: component.glyph.length,
       sequence: [component.name],
     };
   const rootMap = new Map<number, string>(
@@ -152,6 +180,7 @@ interface ComponentGenuineAnalysis {
  * 部件本身是字根字，或者是由自定义部件拆分指定的无理拆分，无拆分细节
  */
 interface ComponentBasicAnalysis {
+  strokes: number;
   sequence: string[];
 }
 
@@ -262,7 +291,7 @@ export const disassembleComponents = function (
     if (glyph?.type !== "compound") continue;
     glyph!.operandList.forEach((x) => composables.add(x));
   }
-  const result: ComponentResults = new Map();
+  const result: [string, ComponentAnalysis][] = [];
   const error: string[] = [];
   Object.entries(repertoire).forEach(([name, character]) => {
     if (character.glyph?.type !== "basic_component") return;
@@ -274,8 +303,11 @@ export const disassembleComponents = function (
     if (scheme instanceof Error) {
       error.push(name);
     } else {
-      result.set(name, scheme);
+      result.push([name, scheme]);
     }
   });
-  return [result, error];
+  result.sort((a, b) => {
+    return a[1].strokes - b[1].strokes;
+  });
+  return [new Map(result), error];
 };

@@ -1,9 +1,15 @@
-import { Flex, Space, Table } from "antd";
+import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Root from "./Element";
-import { analysisAtom, displayAtom, useAtomValue } from "~/atoms";
+import {
+  customizeAtom,
+  displayAtom,
+  selectorAtom,
+  useAddAtom,
+  useAtomValue,
+} from "~/atoms";
 import type { Selector } from "~/lib";
-import { sieveMap } from "~/lib";
+import { isLess, sieveMap } from "~/lib";
 import { binaryToIndices } from "~/lib";
 import { SchemeWithData } from "~/lib";
 
@@ -14,24 +20,27 @@ const makeSorter = (selector: Selector) => {
       if (af === undefined && bf === undefined) return 0;
       if (af === undefined) return -1;
       if (bf === undefined) return 1;
-      if (af < bf) return -1;
-      if (af > bf) return 1;
+      if (isLess(af, bf)) return -1;
+      if (isLess(bf, af)) return 1;
     }
     return 0; // never
   };
 };
 
 const ResultDetail = ({
+  char,
   data,
   map,
   strokes,
 }: {
+  char: string;
   data: SchemeWithData[];
   map: Map<number, string>;
   strokes: number;
 }) => {
-  const selector = useAtomValue(analysisAtom)?.selector ?? [];
+  const selector = useAtomValue(selectorAtom);
   const display = useAtomValue(displayAtom);
+  const addCustomization = useAddAtom(customizeAtom);
 
   const columns: ColumnsType<SchemeWithData> = [
     {
@@ -64,6 +73,19 @@ const ResultDetail = ({
     });
   }
 
+  columns.push({
+    title: "操作",
+    key: "operations",
+    render: (_, { sequence }, index) => (
+      <Button
+        disabled={index === 0}
+        onClick={() => addCustomization(char, sequence)}
+      >
+        采用
+      </Button>
+    ),
+  });
+
   const reversedRootMap = new Map<string, number[][]>();
   const convert = binaryToIndices(strokes);
   for (const [binary, name] of map) {
@@ -78,12 +100,13 @@ const ResultDetail = ({
   }
 
   return data.length ? (
-    <>
-      <Flex wrap="wrap" gap="middle">
+    <Flex vertical gap="middle">
+      <Flex wrap="wrap" gap="middle" align="center">
+        <span>包含字根</span>
         {[...reversedRootMap].map(([s, v]) => (
           <Space key={s}>
             <Root>{display(s)}</Root>
-            <span>{v.map((ar) => `(${ar.join(",")})`).join(" ")}</span>
+            <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>
         ))}
       </Flex>
@@ -91,10 +114,10 @@ const ResultDetail = ({
         columns={columns}
         rowKey="scheme"
         dataSource={data.sort(makeSorter(selector))}
-        pagination={{ hideOnSinglePage: true, defaultPageSize: 20 }}
+        pagination={{ hideOnSinglePage: true, defaultPageSize: 10 }}
         size="small"
       />
-    </>
+    </Flex>
   ) : (
     <div />
   );

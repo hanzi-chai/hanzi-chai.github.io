@@ -33,7 +33,7 @@ interface Sieve<T extends Comparable> {
   display?: (data: T) => string;
 }
 
-function isLess<T extends Comparable>(a: T, b: T) {
+export function isLess<T extends Comparable>(a: T, b: T) {
   if (typeof a === "number" && typeof b === "number") {
     return a < b;
   } else if (Array.isArray(a) && Array.isArray(b)) {
@@ -128,7 +128,7 @@ export const similar: Sieve<number> = {
   title: "非形近根",
   key: (scheme, _, config, rootMap) => {
     const roots = scheme.map((x) => rootMap.get(x)!);
-    return roots.filter((x) => config.form.grouping[x] !== undefined).length;
+    return roots.filter((x) => config.form.grouping?.[x] !== undefined).length;
   },
 };
 

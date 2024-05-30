@@ -280,7 +280,6 @@ export const assemble = (
         ...shapeInfo,
         custom: customLookup(character),
       };
-      console.log(result);
       const elements = func(result, repertoire, extra);
       characterCache.set(character + ":" + reading.pinyin, elements);
       const summary = summarize(elements);
