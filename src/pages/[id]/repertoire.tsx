@@ -1,6 +1,5 @@
 import { Flex } from "antd";
-import { useChaifenTitle } from "~/atoms";
-import { RemoteContext } from "~/components/Action";
+import { RemoteContext, useChaifenTitle } from "~/atoms";
 import CharacterTable from "~/components/CharacterTable";
 
 export default () => {

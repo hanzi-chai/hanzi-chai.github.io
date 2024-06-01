@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { isPUA, unicodeBlock } from "~/lib";
 import {
   Checkbox,
@@ -8,11 +8,11 @@ import {
   Space,
   Tooltip,
   Tour,
-  Typography,
 } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
+  RemoteContext,
   allRepertoireAtom,
   customGlyphAtom,
   customReadingsAtom,
@@ -25,14 +25,14 @@ import {
   userRepertoireAtom,
   userTagsAtom,
 } from "~/atoms";
-import type { PrimitiveCharacter } from "~/lib";
+import type { PrimitiveCharacter, Reading } from "~/lib";
 import {
-  Add,
+  EditGlyph,
   Create,
   Delete,
   Mutate,
   QuickPatchAmbiguous,
-  RemoteContext,
+  EditReading,
 } from "~/components/Action";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
@@ -51,7 +51,19 @@ import { QuestionCircleOutlined } from "@ant-design/icons";
 
 type Column = ColumnType<PrimitiveCharacter>;
 
-const CharacterTable = () => {
+function ReadingList({ readings }: { readings: Reading[] }) {
+  return (
+    <Space>
+      {readings.map((reading, index) => {
+        const core = <Root key={index}>{reading.pinyin}</Root>;
+        if (readings.length === 1) return core;
+        return <Tooltip title={reading.importance + "%"}>{core}</Tooltip>;
+      })}
+    </Space>
+  );
+}
+
+export default function CharacterTable() {
   const allRepertoire = useAtomValue(allRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
   const addUser = useAddAtom(userRepertoireAtom);
@@ -130,17 +142,7 @@ const CharacterTable = () => {
   const readings: Column = {
     title: "系统字音",
     dataIndex: "readings",
-    render: (_, record) => {
-      return (
-        <Space>
-          {record.readings.map((reading, index) => {
-            const core = <Root key={index}>{reading.pinyin}</Root>;
-            if (record.readings.length === 1) return core;
-            return <Tooltip title={reading.importance + "%"}>{core}</Tooltip>;
-          })}
-        </Space>
-      );
-    },
+    render: (_, record) => <ReadingList readings={record.readings} />,
     width: 128,
   };
 
@@ -230,8 +232,17 @@ const CharacterTable = () => {
       return as.localeCompare(bs);
     },
     sortDirections: ["ascend", "descend"],
-    filters: [{ text: "无字形", value: 1 }],
-    onFilter: (_, record) => record.glyphs.length === 0,
+  };
+
+  const customReadingsColumn: Column = {
+    title: "自定义字音",
+    render: (_, character) => {
+      const maybeReadings =
+        customReadings[String.fromCodePoint(character.unicode)];
+      if (maybeReadings === undefined) return null;
+      return <ReadingList readings={maybeReadings} />;
+    },
+    width: 128,
   };
 
   const customGlyphColumn: Column = {
@@ -271,12 +282,7 @@ const CharacterTable = () => {
         </Flex>
       );
     },
-    width: 192,
-    sorter: (a, b) => {
-      const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
-      return as.localeCompare(bs);
-    },
-    sortDirections: ["ascend", "descend"],
+    width: 128,
   };
 
   const ambiguous: Column = {
@@ -298,7 +304,8 @@ const CharacterTable = () => {
     key: "option",
     render: (_, record) => (
       <Space>
-        <Add character={record} />
+        <EditGlyph character={record} />
+        <EditReading character={record} />
         <Mutate unicode={record.unicode} />
         <Delete unicode={record.unicode} />
       </Space>
@@ -358,6 +365,7 @@ const CharacterTable = () => {
     unicodeColumn,
     readings,
     glyphs,
+    customReadingsColumn,
     customGlyphColumn,
     operations,
   ];
@@ -404,6 +412,4 @@ const CharacterTable = () => {
       </div>
     </Flex>
   );
-};
-
-export default CharacterTable;
+}

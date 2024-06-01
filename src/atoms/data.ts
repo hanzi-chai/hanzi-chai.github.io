@@ -1,6 +1,6 @@
 import { atom, useAtomValue } from "jotai";
 import { primitiveRepertoireAtom } from "./constants";
-import { isPUA } from "~/lib";
+import { CustomReadings, isPUA } from "~/lib";
 import { recursiveRenderCompound } from "~/lib";
 import { dataAtom } from ".";
 import { focusAtom } from "jotai-optics";
@@ -18,7 +18,7 @@ export const customGlyphAtom = focusAtom(dataAtom, (o) =>
 );
 customGlyphAtom.debugLabel = "config.data.customGlyph";
 export const customReadingsAtom = focusAtom(dataAtom, (o) =>
-  o.prop("reading_customization").valueOr({} as CustomGlyph),
+  o.prop("reading_customization").valueOr({} as CustomReadings),
 );
 customReadingsAtom.debugLabel = "config.data.customReadings";
 export const userTagsAtom = focusAtom(dataAtom, (o) =>
@@ -42,9 +42,10 @@ export const displayAtom = atom((get) => {
 
 export const repertoireAtom = atom((get) => {
   const repertoire = get(allRepertoireAtom);
-  const customization = get(customGlyphAtom);
+  const customGlyph = get(customGlyphAtom);
+  const customReadings = get(customReadingsAtom);
   const tags = get(userTagsAtom);
-  return determine(repertoire, customization, tags);
+  return determine(repertoire, customGlyph, customReadings, tags);
 });
 
 export const glyphAtom = atom((get) => {

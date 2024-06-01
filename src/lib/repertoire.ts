@@ -5,7 +5,7 @@ import {
   recursiveRenderComponent,
 } from "./component";
 import { CompoundResults, disassembleCompounds } from "./compound";
-import { Config, CustomGlyph } from "./config";
+import { Config, CustomGlyph, CustomReadings } from "./config";
 import {
   Compound,
   Character,
@@ -31,7 +31,8 @@ export const findGlyphIndex = (
  * 主要的工作是对每个字符，在数据库中的多个字形中选取一个
  *
  * @param repertoire 原始字符集
- * @param customization 自定义字形
+ * @param customGlyph 自定义字形
+ * @param customReadings 自定义读音
  * @param tags 用户选择的标签
  *
  * 基本逻辑为，对于每个字符，
@@ -41,16 +42,18 @@ export const findGlyphIndex = (
  */
 export const determine = (
   repertoire: PrimitiveRepertoire,
-  customization: CustomGlyph = {},
+  customGlyph: CustomGlyph = {},
+  customReadings: CustomReadings = {},
   tags: string[] = [],
 ) => {
   const determined: Repertoire = {};
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
-    const { ambiguous, glyphs, ...rest } = character;
+    const { ambiguous, glyphs, readings, ...rest } = character;
     const selectedIndex = findGlyphIndex(glyphs, tags);
-    const rawglyph = customization[name] ?? glyphs[selectedIndex];
-    let glyph: Character["glyph"];
+    const rawglyph = customGlyph[name] ?? glyphs[selectedIndex];
+    let finalGlyph: Character["glyph"];
+    const finalReadings = customReadings[name] ?? readings;
     if (rawglyph?.type === "derived_component") {
       const svgglyph = recursiveRenderComponent(
         rawglyph,
@@ -60,15 +63,19 @@ export const determine = (
       if (svgglyph instanceof Error) {
         continue;
       }
-      glyph = {
+      finalGlyph = {
         type: "basic_component",
         tags: rawglyph.tags,
         strokes: svgglyph,
       };
     } else {
-      glyph = rawglyph;
+      finalGlyph = rawglyph;
     }
-    const determined_character: Character = { ...rest, glyph };
+    const determined_character: Character = {
+      ...rest,
+      glyph: finalGlyph,
+      readings: finalReadings,
+    };
     determined[name] = determined_character;
   }
   return determined;

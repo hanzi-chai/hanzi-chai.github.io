@@ -4,6 +4,7 @@ import type {
   Compound,
   PrimitiveRepertoire,
   Component,
+  Reading,
 } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
@@ -26,7 +27,7 @@ export type Data = {
 };
 
 export type CustomGlyph = Record<string, Component | Compound>;
-export type CustomReadings = Record<string, string[]>;
+export type CustomReadings = Record<string, Reading[]>;
 // config.data end
 
 // config.analysis begin

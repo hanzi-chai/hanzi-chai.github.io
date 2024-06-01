@@ -29,6 +29,7 @@ import {
   getDummyBasicComponent,
   getDummyCompound,
   getDummyDerivedComponent,
+  Reading,
 } from "~/lib";
 import {
   useAtomValue,
@@ -44,19 +45,20 @@ import {
   customGlyphAtom,
   errorFeedback,
   verifyNewName,
+  RemoteContext,
+  customReadingsAtom,
 } from "~/atoms";
 import { PrimitiveCharacter, Compound, Component } from "~/lib";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { MenuProps } from "antd/lib";
 import * as O from "optics-ts/standalone";
+import ReadingForm from "./ReadingForm";
 
 interface CreateProps {
   charOrName: string;
   type: "component" | "compound";
 }
-
-export const RemoteContext = createContext(true);
 
 export const Create = forwardRef(
   (
@@ -209,18 +211,12 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
 export const Delete = ({ unicode }: { unicode: number }) => {
   const remote = useContext(RemoteContext);
   const userRepertoire = useAtomValue(userRepertoireAtom);
-  const customization = useAtomValue(customGlyphAtom);
   const remove = useRemoveAtom(primitiveRepertoireAtom);
   const removeUser = useRemoveAtom(userRepertoireAtom);
-  const removeCustom = useRemoveAtom(customGlyphAtom);
   const char = String.fromCodePoint(unicode);
   return (
     <DeleteButton
-      disabled={
-        !remote &&
-        userRepertoire[char] === undefined &&
-        customization[char] === undefined
-      }
+      disabled={!remote && userRepertoire[char] === undefined}
       onClick={async () => {
         if (remote) {
           const res = await remoteRemove(unicode);
@@ -229,21 +225,20 @@ export const Delete = ({ unicode }: { unicode: number }) => {
           }
         } else {
           removeUser(char);
-          removeCustom(char);
         }
       }}
     />
   );
 };
 
-export const Add = ({ character }: { character: PrimitiveCharacter }) => {
+export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
   const remote = useContext(RemoteContext);
   const repertoire = useAtomValue(primitiveRepertoireAtom);
   const add = useAddAtom(primitiveRepertoireAtom);
-  const userRepertoire = useAtomValue(userRepertoireAtom);
   const addUser = useAddAtom(userRepertoireAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
   const addCustomization = useAddAtom(customGlyphAtom);
+  const removeCustomization = useRemoveAtom(customGlyphAtom);
   const name = String.fromCodePoint(character.unicode);
   const isCustomization = !remote && repertoire[name] !== undefined;
   const onFinish = async (component: Component | Compound) => {
@@ -268,7 +263,7 @@ export const Add = ({ character }: { character: PrimitiveCharacter }) => {
       return true;
     }
   };
-  let items: MenuProps["items"] = [
+  const items: MenuProps["items"] = [
     {
       key: -1,
       label: (
@@ -298,19 +293,79 @@ export const Add = ({ character }: { character: PrimitiveCharacter }) => {
       ...character.glyphs.map((x, index) => ({
         key: index,
         label: `选择第 ${index + 1} 个系统字形`,
-        onClick: () => {
-          addCustomization(name, x);
-        },
+        onClick: () => addCustomization(name, x),
       })),
     );
+    if (customGlyph[name] !== undefined) {
+      items.push({
+        key: -3,
+        label: <span>取消自定义字形</span>,
+        onClick: () => removeCustomization(name),
+      });
+    }
   }
   return (
-    <Dropdown
-      menu={{
-        items,
-      }}
-    >
-      <Button>{isCustomization ? "自定义" : "添加"}</Button>
+    <Dropdown menu={{ items }}>
+      <Button>{(isCustomization ? "自定义" : "添加") + "字形"}</Button>
+    </Dropdown>
+  );
+};
+
+export const EditReading = ({
+  character,
+}: {
+  character: PrimitiveCharacter;
+}) => {
+  const remote = useContext(RemoteContext);
+  const add = useAddAtom(primitiveRepertoireAtom);
+  const addUser = useAddAtom(userRepertoireAtom);
+  const repertoire = useAtomValue(primitiveRepertoireAtom);
+  const customReadings = useAtomValue(customReadingsAtom);
+  const addCustomReading = useAddAtom(customReadingsAtom);
+  const removeCustomReading = useRemoveAtom(customReadingsAtom);
+  const name = String.fromCodePoint(character.unicode);
+  const readings = customReadings[name] ?? character.readings;
+  const isCustomization = !remote && repertoire[name] !== undefined;
+  const onFinish = async ({ readings }: { readings: Reading[] }) => {
+    if (isCustomization) {
+      addCustomReading(name, readings);
+      return true;
+    }
+    const newCharacter = { ...character, readings };
+    if (remote) {
+      const res = await remoteUpdate(newCharacter);
+      if (!errorFeedback(res)) {
+        add(name, newCharacter);
+        return true;
+      }
+      return false;
+    } else {
+      addUser(name, newCharacter);
+      return true;
+    }
+  };
+  const items: MenuProps["items"] = [
+    {
+      key: -1,
+      label: (
+        <ReadingForm
+          title={"编辑字音"}
+          initialValues={readings}
+          onFinish={onFinish}
+        />
+      ),
+    },
+  ];
+  if (isCustomization && customReadings[name] !== undefined) {
+    items.push({
+      key: -2,
+      label: <span>取消自定义字音</span>,
+      onClick: () => removeCustomReading(name),
+    });
+  }
+  return (
+    <Dropdown menu={{ items }}>
+      <Button>{(isCustomization ? "自定义" : "修改") + "字音"}</Button>
     </Dropdown>
   );
 };

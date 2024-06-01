@@ -4,6 +4,9 @@ import init, { validate } from "libchai";
 import { LibchaiOutputEvent } from "~/worker";
 import { notification } from "antd";
 import { Err } from "~/api";
+import { createContext } from "react";
+
+export const RemoteContext = createContext(true);
 
 export async function validateConfig(config: Config) {
   await init();

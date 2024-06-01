@@ -1,7 +1,5 @@
-import { PlusOutlined } from "@ant-design/icons";
 import {
   ModalForm,
-  ProForm,
   ProFormGroup,
   ProFormList,
   ProFormSelect,
@@ -10,7 +8,6 @@ import {
 import { Button, Form, Space, notification } from "antd";
 import { CloseCircleOutlined, CopyOutlined } from "@ant-design/icons";
 import { Rule } from "~/lib";
-import { useAtom } from "jotai";
 import { algebraAtom, useAddAtom } from "~/atoms";
 import { defaultAlgebra } from "~/lib";
 
@@ -29,7 +26,6 @@ export default function ({
   disabled?: boolean;
 }) {
   const [form] = Form.useForm<AlgebraForm>();
-  const [algebra, setAlgebra] = useAtom(algebraAtom);
   const addAlgebra = useAddAtom(algebraAtom);
   return (
     <ModalForm<AlgebraForm>
