@@ -22,7 +22,6 @@ import { load } from "js-yaml";
 import Starter from "~/components/Starter";
 import { post } from "~/api";
 import { md5 } from "js-md5";
-import init, { validate } from "libchai";
 import { useChaifenTitle, validateConfig } from "~/atoms";
 
 type Status = "login" | "signup" | "signin";

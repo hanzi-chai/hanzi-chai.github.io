@@ -59,6 +59,74 @@ const AtomicObjective = ({
   );
 };
 
+const defaultFingeringWeights = [
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+];
+
+const weightTitles = [
+  "同手",
+  "大跨",
+  "小跨",
+  "干扰",
+  "错手",
+  "三连",
+  "备用",
+  "备用",
+];
+
+const ListObjective = ({
+  title,
+  value,
+  onChange,
+}: {
+  title: string;
+  value?: (number | null)[];
+  onChange: (n?: (number | null)[]) => void;
+}) => {
+  return (
+    <>
+      <Flex justify="space-between">
+        <span>{title}</span>
+        <Switch
+          checked={value !== undefined}
+          onChange={(value) =>
+            onChange(value ? defaultFingeringWeights : undefined)
+          }
+        />
+      </Flex>
+      <Flex gap="small">
+        {value &&
+          value.map((num, index) => (
+            <Form.Item
+              label={weightTitles[index]}
+              style={{
+                marginBottom: 0,
+                display: weightTitles[index] === "备用" ? "none" : "initial",
+              }}
+            >
+              <InputNumber
+                style={{ width: "64px" }}
+                value={num}
+                onChange={(n) => {
+                  const newValue = [...value];
+                  newValue[index] = n;
+                  onChange(newValue);
+                }}
+              />
+            </Form.Item>
+          ))}
+      </Flex>
+    </>
+  );
+};
+
 const defaultTier: TierWeights = {
   duplication: 1,
 };
@@ -230,7 +298,12 @@ const PartialObjective = ({
   const [tiers, setTiers] = useAtom(tiersAtom);
   const [levels, setLevels] = useAtom(levelsAtom);
   const currentPart = partialObjective ?? {};
-  const { duplication, key_distribution, pair_equivalence } = currentPart;
+  const {
+    duplication,
+    key_distribution,
+    pair_equivalence,
+    extended_pair_equivalence,
+  } = currentPart;
   const update = (type: keyof PartialWeights, value: number | undefined) => {
     setPartialObjective({ ...currentPart, [type]: value });
   };
@@ -273,6 +346,18 @@ const PartialObjective = ({
               title="速度当量权重"
               value={pair_equivalence}
               onChange={(value) => update("pair_equivalence", value)}
+            />
+            <AtomicObjective
+              title="词间速度当量权重"
+              value={extended_pair_equivalence}
+              onChange={(value) => update("extended_pair_equivalence", value)}
+            />
+            <ListObjective
+              title="指法"
+              value={currentPart.fingering}
+              onChange={(value) =>
+                setPartialObjective({ ...currentPart, fingering: value })
+              }
             />
           </Flex>
           <Typography.Title level={4}>码长</Typography.Title>

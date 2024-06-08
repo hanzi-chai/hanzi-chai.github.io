@@ -1,10 +1,13 @@
-import { Config, Key, isValidCJKChar } from "~/lib";
+import { Config, Key, exportYAML, isValidCJKChar } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { LibchaiOutputEvent } from "~/worker";
 import { notification } from "antd";
 import { Err } from "~/api";
 import { createContext } from "react";
+import { isEqual } from "lodash-es";
+import { diff } from "deep-object-diff";
+import { load } from "js-yaml";
 
 export const RemoteContext = createContext(true);
 
@@ -17,6 +20,34 @@ export async function validateConfig(config: Config) {
       description: "该配置可以被正常使用。",
     });
     return true;
+  } catch (e) {
+    notification.error({
+      message: "配置校验失败，原因是：",
+      description: (e as Error).message,
+    });
+    return false;
+  }
+}
+
+export async function roundTestConfig(config: Config) {
+  await init();
+  try {
+    const rustConfig = load(validate(config)) as object;
+    if (isEqual(config, rustConfig)) {
+      notification.success({
+        message: "配置环行成功",
+        description: "该配置在 libchai 中具有同样语义。",
+      });
+      return true;
+    } else {
+      notification.warning({
+        message: "配置环行失败",
+        description:
+          "该配置在 libchai 中具有不同语义。请参考控制台的 diff 信息。",
+      });
+      console.log(diff(config, rustConfig));
+      return false;
+    }
   } catch (e) {
     notification.error({
       message: "配置校验失败，原因是：",

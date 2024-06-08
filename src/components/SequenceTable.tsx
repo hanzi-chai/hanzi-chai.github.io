@@ -101,14 +101,9 @@ const ExportAssembly = () => {
           const hash = `${object}-${pinyin_list.join(",")}`;
           const level = priorityMap.get(hash);
           if (level !== undefined) {
-            tsv.push([
-              object,
-              summary,
-              String(importance ?? 100),
-              String(level),
-            ]);
+            tsv.push([object, summary, String(importance), String(level)]);
           } else {
-            tsv.push([object, summary, String(importance ?? 100)]);
+            tsv.push([object, summary, String(importance)]);
           }
         }
         exportTSV(tsv, "elements.txt");
@@ -215,7 +210,7 @@ export default function SequenceTable() {
   const toShow = analyzer.filter ? filtered : combinedResult;
   const dataSource = toShow.map(({ name, sequence, importance, ...rest }) => {
     const frequency = Math.round(
-      ((frequencyMap[name] ?? 0) * (importance ?? 100)) / 100,
+      ((frequencyMap[name] ?? 0) * importance) / 100,
     );
     const key = `${name}-${summarize(sequence)}`;
     const entry: MainEntry = {

@@ -54,7 +54,7 @@ const table: Record<
 export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
   char: string;
   pinyin: string;
-  importance?: number;
+  importance: number;
   custom: Record<string, string[]>;
 };
 
@@ -286,8 +286,7 @@ export const assemble = (
       let isDuplicated = false;
       for (const previous of final) {
         if (summarize(previous.sequence) === summary) {
-          previous.importance =
-            (previous.importance ?? 100) + (result.importance ?? 100);
+          previous.importance += result.importance;
           previous.pinyin_list.push(reading.pinyin);
           isDuplicated = true;
           break;
@@ -297,7 +296,7 @@ export const assemble = (
         final.push({
           name: character,
           sequence: elements,
-          importance: result.importance ?? 100,
+          importance: result.importance,
           pinyin_list: [reading.pinyin],
         });
       }
@@ -331,6 +330,7 @@ export const assemble = (
       const result: CharacterResult = {
         char: character,
         pinyin,
+        importance: 100,
         ...shapeInfo,
         custom: customLookup(character),
       };

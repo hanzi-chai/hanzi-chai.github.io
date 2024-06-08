@@ -132,7 +132,7 @@ export interface Compound {
 
 export interface Reading {
   pinyin: string;
-  importance?: number;
+  importance: number;
 }
 
 /**

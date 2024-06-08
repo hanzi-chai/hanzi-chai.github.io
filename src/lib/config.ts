@@ -185,20 +185,14 @@ export interface TierWeights {
   levels?: LevelWeights[];
 }
 
-export interface FingeringWeights {
-  same_hand?: number;
-  same_finger_large_jump?: number;
-  same_finger_small_jump?: number;
-  little_finger_inteference?: number;
-  awkward_upside_down?: number;
-}
-
 export interface PartialWeights {
   tiers?: TierWeights[];
   duplication?: number;
   key_distribution?: number;
   pair_equivalence?: number;
-  fingering?: FingeringWeights;
+  extended_pair_equivalence?: number;
+  // let types = ["同手", "大跨", "小跨", "干扰", "错手", "三连", "备用", "备用"];
+  fingering?: (number | null)[];
   levels?: LevelWeights[];
 }
 
