@@ -111,19 +111,24 @@ const analyze = (
 const yima_map = (load(readFileSync("examples/easy.yaml", "utf-8")) as any).form
   .mapping;
 const yima_content = makeMap("public/cache/yima.txt");
-const c42_map = Object.fromEntries(
-  readFileSync("public/cache/keymap.dat", "utf-8")
-    .trim()
-    .split("\n")
-    .map((x) => x.split("\t").slice(0, 2) as [string, string]),
-);
+const grand_map = (
+  load(readFileSync("public/cache/grand.yaml", "utf-8")) as any
+).form.mapping;
+const grand_content = makeMap("public/cache/grand.txt");
+// const c42_map = Object.fromEntries(
+//   readFileSync("public/cache/keymap.dat", "utf-8")
+//     .trim()
+//     .split("\n")
+//     .map((x) => x.split("\t").slice(0, 2) as [string, string]),
+// );
 const c42_content = makeMap("public/cache/c42.txt");
-for (const char of "abcdefghijklmnopqrstuvwxyz") {
-  c42_map[char] = char;
-}
+// for (const char of "abcdefghijklmnopqrstuvwxyz") {
+//   c42_map[char] = char;
+// }
 for (const char of yima_content.keys()) {
   if (!c42_content.has(char)) {
     yima_content.delete(char);
+    grand_content.delete(char);
   }
 }
 for (const char of c42_content.keys()) {
@@ -133,13 +138,15 @@ for (const char of c42_content.keys()) {
 }
 console.log(yima_content.size, c42_content.size);
 analyze(yima_content, yima_map as Record<string, string>, 26);
-analyze(c42_content, c42_map, 27);
+analyze(grand_content, grand_map as Record<string, string>, 26);
+// analyze(c42_content, c42_map, 27);
 
 const descendants = new Map(
-  readFileSync("public/cache/descendants.txt", "utf-8")
+  readFileSync("public/cache/通用规范汉字一级分解.txt", "utf-8")
     .split("\n")
     .map((x) => x.split("\t") as [string, string]),
 );
 
 calculate(descendants, yima_content);
+calculate(descendants, grand_content);
 calculate(descendants, c42_content);
