@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from "react";
-import { isPUA, unicodeBlock } from "~/lib";
+import { isPUA, makeCharacterFilter, unicodeBlock } from "~/lib";
 import {
   Checkbox,
   Flex,
@@ -25,7 +25,7 @@ import {
   userRepertoireAtom,
   userTagsAtom,
 } from "~/atoms";
-import type { PrimitiveCharacter, Reading } from "~/lib";
+import type { CharacterFilter, PrimitiveCharacter, Reading } from "~/lib";
 import {
   EditGlyph,
   Create,
@@ -40,10 +40,7 @@ import { remoteUpdate } from "~/api";
 import { DeleteButton, PlusButton } from "./Utils";
 import Root from "./Element";
 import * as O from "optics-ts/standalone";
-import CharacterQuery, {
-  CharacterFilter,
-  makeCharacterFilter,
-} from "./CharacterQuery";
+import CharacterQuery from "./CharacterQuery";
 import TagPicker from "./TagPicker";
 import { findGlyphIndex } from "~/lib";
 import { TourProps } from "antd/lib";

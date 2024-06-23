@@ -5,16 +5,18 @@ import { defaultSelector } from "./selector";
 import mswb from "../../examples/mswb.yaml";
 import flypy from "../../examples/flypy.yaml";
 import easy from "../../examples/easy.yaml";
+import yustar from "../../examples/yustar.yaml";
 import zhengma from "../../examples/zhengma.yaml";
 import type { ExampleConfig } from "./config";
 
-export type Example = "mswb" | "flypy" | "easy" | "zhengma";
+export type Example = "mswb" | "flypy" | "easy" | "zhengma" | "yustar";
 
 export const examples: Record<Example, ExampleConfig> = {
   mswb: mswb as ExampleConfig,
   flypy: flypy as ExampleConfig,
   easy: easy as ExampleConfig,
   zhengma: zhengma as ExampleConfig,
+  yustar: yustar as ExampleConfig,
 };
 
 export const classifierTypes = [
@@ -29,11 +31,12 @@ const classifierMap: Record<ClassifierType, Classifier> = {
   郑码七分类: examples.zhengma.analysis.classifier!,
 };
 
-export const keyboardTypes = ["郑码", "米十五笔", "无"] as const;
+export const keyboardTypes = ["郑码", "米十五笔", "宇浩·星陈", "无"] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   郑码: examples.zhengma.form,
   米十五笔: examples.mswb.form,
+  宇浩·星陈: examples.yustar.form,
   无: {
     alphabet: "qwertyuiopasdfghjklzxcvbnm",
     grouping: {},
@@ -42,15 +45,17 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
 };
 
 export const encoderTypes = [
-  "形音码",
+  "形音码（米十五笔）",
   "双编形码（郑码）",
   "双编形码（易码）",
+  "双编形码（宇浩·星陈、虎码）",
 ] as const;
 export type EncoderTypes = (typeof encoderTypes)[number];
 const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
-  形音码: examples.mswb.encoder,
+  "形音码（米十五笔）": examples.mswb.encoder,
   "双编形码（郑码）": examples.zhengma.encoder,
   "双编形码（易码）": examples.easy.encoder,
+  "双编形码（宇浩·星陈、虎码）": examples.yustar.encoder,
 };
 
 export interface StarterType {
@@ -84,5 +89,5 @@ export const defaultConfig = createConfig({
   name: "",
   data: "国标五分类",
   keyboard: "无",
-  encoder: "形音码",
+  encoder: "形音码（米十五笔）",
 });

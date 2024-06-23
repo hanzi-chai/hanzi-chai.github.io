@@ -12,7 +12,6 @@ import {
   getDummyCompound,
   isComponent,
   getSupplemental,
-  listToObject,
   getRecordFromTSV,
 } from "~/lib/utils";
 import { repertoire } from "./mock";

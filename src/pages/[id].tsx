@@ -51,6 +51,11 @@ const items: MenuProps["items"] = [
     icon: <OrderedListOutlined />,
   },
   {
+    label: "校对",
+    key: "debug",
+    icon: <BoldOutlined />,
+  },
+  {
     label: "优化",
     key: "optimization",
     icon: <RiseOutlined />,

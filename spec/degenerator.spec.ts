@@ -90,8 +90,9 @@ const hasroot = (a: RenderedGlyph, indices: number[], root: RenderedGlyph) => {
 };
 
 describe("degenerate cross tests", () => {
-  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 赤, 以, 人, 氺, 丆, 疌, 龰 } =
+  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 赤, 以, 人, 氺, 丆, 疌, 龰, 夫 } =
     renderedGlyphs as any;
+  const han = renderedGlyphs["\ue104"]!;
   it("says 天 has 大", () => {
     expect(degenerate(大)).toEqual(degenerate(slice(天, [1, 2, 3])));
   });
@@ -117,6 +118,9 @@ describe("degenerate cross tests", () => {
   });
   it("says 疌 has 龰", () => {
     hasroot(疌, [4, 5, 6, 7], 龰);
+  });
+  it("says E104 has 夫", () => {
+    hasroot(han, [7, 8, 9, 10], 夫);
   });
 });
 

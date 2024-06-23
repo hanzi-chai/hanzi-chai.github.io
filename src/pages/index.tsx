@@ -203,7 +203,9 @@ export default function HomeLayout() {
               menu={{
                 items: Object.values(examples)
                   .filter((x) =>
-                    ["mswb", "zhengma", "easy"].includes(x.source as string),
+                    ["mswb", "zhengma", "easy", "yustar"].includes(
+                      x.source as string,
+                    ),
                   )
                   .map((x) => ({
                     key: x.source!,
