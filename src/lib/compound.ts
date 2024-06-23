@@ -83,7 +83,7 @@ export const recursiveRenderCompound = function (
  *
  * @remarks 这个实现目前比较低效，需要改进
  */
-const topologicalSort = (repertoire: Repertoire) => {
+const topologicalSort = (repertoire: Repertoire, characters: string[]) => {
   let compounds = new Map<string, Character>();
   for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, Character>();
@@ -154,16 +154,18 @@ export const disassembleCompounds = (
   repertoire: Repertoire,
   config: Config,
   componentResults: ComponentResults,
+  characters: string[],
 ) => {
   const { mapping, grouping } = config.form;
-  const compounds = topologicalSort(repertoire);
+  const knownCharacters = new Set(characters);
+  const compounds = topologicalSort(repertoire, characters);
   const compoundResults: CompoundResults = new Map();
   const compoundError: string[] = [];
   const getResult = function (s: string): PartitionResult | undefined {
     return componentResults.get(s) || compoundResults.get(s);
   };
   for (const [char, glyph] of compounds.entries()) {
-    if (mapping[char] || grouping[char]) {
+    if (mapping[char] || grouping?.[char]) {
       // 复合体本身是一个字根
       compoundResults.set(char, { sequence: [char] });
       continue;
@@ -185,7 +187,9 @@ export const disassembleCompounds = (
         },
       });
     } else {
-      compoundError.push(char);
+      if (knownCharacters.has(char)) {
+        compoundError.push(char);
+      }
     }
   }
   return [compoundResults, compoundError] as const;

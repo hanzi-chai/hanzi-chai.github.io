@@ -9,66 +9,16 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { Frequency, maxLengthAtom } from "~/atoms";
-import { AssemblyResult, summarize } from "~/lib";
+import {
+  AnalyzerForm,
+  AssemblyResult,
+  defaultAnalyzer,
+  summarize,
+} from "~/lib";
 import { Select } from "./Utils";
 import { Combined } from "./SequenceTable";
 
-export interface AnalyzerForm {
-  type: "single" | "multi" | "all";
-  filter: boolean;
-  length: number;
-  top: number;
-}
-
-export const defaultAnalyzer: AnalyzerForm = {
-  type: "all",
-  filter: false,
-  length: 0,
-  top: 0,
-};
-
-export const analyzePrimitiveDuplication = (
-  analyzer: AnalyzerForm,
-  characterFrequency: Frequency,
-  result: Combined[],
-) => {
-  const duplicationMap = new Map<string, Combined[]>();
-  const topCharacters = Object.fromEntries(
-    Object.entries(characterFrequency).slice(0, analyzer.top),
-  );
-  for (const assembly of result) {
-    const { name, sequence: elements } = assembly;
-    if (
-      (analyzer.type === "single" && [...name].length > 1) ||
-      (analyzer.type === "multi" && [...name].length === 1)
-    ) {
-      continue;
-    }
-
-    if (analyzer.top !== 0 && !topCharacters[name]) {
-      continue;
-    }
-    const sliced =
-      analyzer.length === 0 ? elements : elements.slice(0, analyzer.length);
-    const summary = summarize(sliced);
-    duplicationMap.set(
-      summary,
-      (duplicationMap.get(summary) || []).concat(assembly),
-    );
-  }
-
-  const filtered: Combined[] = [];
-  let selections = 0;
-  for (const names of duplicationMap.values()) {
-    selections += names.length - 1;
-    if (analyzer.filter && names.length > 1) {
-      filtered.push(...names);
-    }
-  }
-  return [selections, filtered] as const;
-};
-
-export default function ({
+export default function PrimitiveDuplicationAnalyzer({
   selections,
   setAnalyzer,
 }: {

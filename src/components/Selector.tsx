@@ -47,7 +47,7 @@ const SortableItem = ({
   );
 };
 
-const Selector = () => {
+export default function Selector() {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -96,6 +96,4 @@ const Selector = () => {
       {selector.includes("少弱字根") && <PrioritizedRoots variant="weak" />}
     </Flex>
   );
-};
-
-export default Selector;
+}

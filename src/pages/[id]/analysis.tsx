@@ -25,15 +25,12 @@ import {
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { useState } from "react";
-import type { ComponentResults, AnalysisResult } from "~/lib";
+import type { ComponentResults, AnalysisResult, CharacterFilter } from "~/lib";
 import type { CompoundResults } from "~/lib";
-import { analysis, exportTSV } from "~/lib";
+import { analysis, exportTSV, makeCharacterFilter } from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
-import CharacterQuery, {
-  CharacterFilter,
-  makeCharacterFilter,
-} from "~/components/CharacterQuery";
+import CharacterQuery from "~/components/CharacterQuery";
 import { analysisResultAtom } from "~/atoms/cache";
 import ResultSummary from "~/components/ResultSummary";
 
@@ -80,7 +77,7 @@ const ConfigureRules = () => {
   );
 };
 
-const Analysis = () => {
+export default function Analysis() {
   useChaifenTitle("拆分");
   const [filter, setFilter] = useState<CharacterFilter>({});
   const [step, setStep] = useState(0 as 0 | 1);
@@ -168,7 +165,9 @@ const Analysis = () => {
         </Radio.Group>
         <Button
           type="primary"
-          onClick={() => setAnalysisResult(analysis(repertoire, config))}
+          onClick={() =>
+            setAnalysisResult(analysis(repertoire, config, characters))
+          }
         >
           计算
         </Button>
@@ -242,6 +241,4 @@ const Analysis = () => {
       )}
     </Flex>
   );
-};
-
-export default Analysis;
+}

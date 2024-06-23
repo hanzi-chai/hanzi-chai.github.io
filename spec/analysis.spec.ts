@@ -14,7 +14,11 @@ import { readFileSync } from "fs";
 describe("e2e test", () => {
   it("checks database integrity", () => {
     const config = examples["mswb"];
-    const analysisResult = analysis(repertoire, config);
+    const analysisResult = analysis(
+      repertoire,
+      config,
+      Object.keys(repertoire),
+    );
     const { componentError, compoundError } = analysisResult;
     expect(componentError).toHaveLength(0);
     expect(compoundError).toHaveLength(0);

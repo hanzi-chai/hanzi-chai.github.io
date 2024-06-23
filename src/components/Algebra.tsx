@@ -16,7 +16,7 @@ interface AlgebraForm {
   rules: Rule[];
 }
 
-export default function ({
+export default function Algebra({
   title,
   initialValues,
   disabled,

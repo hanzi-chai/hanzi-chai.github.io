@@ -12,7 +12,7 @@ import { DeleteButton, Select } from "./Utils";
 import { classifier, Feature } from "~/lib";
 import { useState } from "react";
 
-const Degenerator = () => {
+export default function Degenerator() {
   const degenerator = useAtomValue(degeneratorAtom);
   const addFeature = useAddAtom(degeneratorFeatureAtom);
   const removeFeature = useRemoveAtom(degeneratorFeatureAtom);
@@ -55,6 +55,4 @@ const Degenerator = () => {
       </Flex>
     </>
   );
-};
-
-export default Degenerator;
+}

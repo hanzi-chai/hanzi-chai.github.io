@@ -28,7 +28,8 @@ interface Option {
   label: string;
   children?: Option[];
 }
-const DetailEditor = ({ selected }: { selected: string }) => {
+
+export default function DetailEditor({ selected }: { selected: string }) {
   const { setNodes, getNodes, getNode } = useReactFlow<
     SourceData | ConditionData
   >();
@@ -195,6 +196,4 @@ const DetailEditor = ({ selected }: { selected: string }) => {
       </Background>
     </Panel>
   );
-};
-
-export default DetailEditor;
+}

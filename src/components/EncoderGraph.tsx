@@ -26,7 +26,7 @@ import {
 import "reactflow/dist/style.css";
 import DetailEditor from "./DetailEditor";
 
-const EncoderGraph = () => {
+export default function EncoderGraph() {
   const { fitView, getNode } = useReactFlow();
   const [sources, setSources] = useAtom(sourcesAtom);
   const [conditions, setConditions] = useAtom(conditionsAtom);
@@ -133,6 +133,4 @@ const EncoderGraph = () => {
       {selected && getNode(selected) && <DetailEditor selected={selected} />}
     </ReactFlow>
   );
-};
-
-export default EncoderGraph;
+}

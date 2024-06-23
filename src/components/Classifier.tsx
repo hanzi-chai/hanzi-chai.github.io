@@ -54,7 +54,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
   );
 };
 
-const Classifier = () => {
+export default function Classifier() {
   const classifier = useAtomValue(customClassifierAtom);
   const add = useAddAtom(classifierCustomizationAtom);
   const [categories, setCategories] = useState(
@@ -112,6 +112,4 @@ const Classifier = () => {
       </Space>
     </DndContext>
   );
-};
-
-export default Classifier;
+}

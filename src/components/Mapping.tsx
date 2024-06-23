@@ -256,7 +256,7 @@ const ImportResultAlert = ({
   );
 };
 
-const Mapping = () => {
+export default function Mapping() {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
   const repertoire = useAtomValue(repertoireAtom);
   const keyboard = Array.from(
@@ -404,6 +404,4 @@ const Mapping = () => {
       </Flex>
     </>
   );
-};
-
-export default Mapping;
+}

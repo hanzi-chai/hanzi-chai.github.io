@@ -79,14 +79,14 @@ const Schedule = ({
   );
 };
 
-const Optimizer = () => {
+export default function Optimizer() {
   const assets = useAtomValue(assetsAtom);
   const dictionary = useAtomValue(dictionaryAtom);
   const config = useAtomValue(configAtom);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  const list = Object.entries(repertoire)
+  const characters = Object.entries(repertoire)
     .filter(([_, v]) => v.tygf > 0)
     .map(([x]) => x);
   const customElements = useAtomValue(customElementsAtom);
@@ -104,12 +104,19 @@ const Optimizer = () => {
   const prepareInput = () => {
     let v1 = analysisResult;
     if (v1 === null) {
-      v1 = analysis(repertoire, config);
+      v1 = analysis(repertoire, config, characters);
       setAnalysisResult(v1);
     }
     let v2 = assemblyResult;
     if (v2 === null) {
-      v2 = assemble(repertoire, config, list, dictionary, v1, customElements);
+      v2 = assemble(
+        repertoire,
+        config,
+        characters,
+        dictionary,
+        v1,
+        customElements,
+      );
       setAssemblyResult(v2);
     }
     return {
@@ -267,6 +274,4 @@ const Optimizer = () => {
       </div>
     </>
   );
-};
-
-export default Optimizer;
+}

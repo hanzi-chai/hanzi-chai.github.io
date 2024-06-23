@@ -12,7 +12,11 @@ import Root from "./Element";
 import { useState } from "react";
 import ElementSelect from "./ElementSelect";
 
-const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
+export default function PrioritizedRoots({
+  variant,
+}: {
+  variant: "strong" | "weak";
+}) {
   const analysis = useAtomValue(analysisAtom);
   const list = analysis ? analysis[variant] : [];
   const [current, setCurrent] = useState<string | undefined>(undefined);
@@ -49,6 +53,4 @@ const PrioritizedRoots = ({ variant }: { variant: "strong" | "weak" }) => {
       </Flex>
     </>
   );
-};
-
-export default PrioritizedRoots;
+}

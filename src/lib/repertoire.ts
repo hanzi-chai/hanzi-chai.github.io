@@ -99,10 +99,12 @@ export interface AnalysisResult {
 export const analysis = function (
   repertoire: Repertoire,
   config: Config,
+  characters: string[],
 ): AnalysisResult {
   const [componentResults, componentError] = disassembleComponents(
     repertoire,
     config,
+    characters,
   );
   const customizations: ComponentResults = new Map(
     Object.entries(config.analysis?.customize ?? {}).map(
@@ -120,6 +122,7 @@ export const analysis = function (
     repertoire,
     config,
     customized,
+    characters,
   );
   return {
     componentResults,

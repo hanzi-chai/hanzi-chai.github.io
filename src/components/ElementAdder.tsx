@@ -12,7 +12,7 @@ import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 import { Key, joinKeys } from "~/lib";
 
-const ElementAdder = ({ element }: { element?: string }) => {
+export default function ElementAdder({ element }: { element?: string }) {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
   const [main, setMain] = useState(Object.keys(mapping)[0]!);
   const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
@@ -76,6 +76,4 @@ const ElementAdder = ({ element }: { element?: string }) => {
       </Flex>
     </>
   );
-};
-
-export default ElementAdder;
+}

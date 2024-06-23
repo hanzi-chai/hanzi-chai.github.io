@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { Select, Uploader } from "~/components/Utils";
 
-export default function () {
+export default function Debugger() {
   const referenceAtom = useMemo(
     () =>
       atomWithStorage<Record<string, string[]>>(

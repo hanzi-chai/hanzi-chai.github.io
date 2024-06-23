@@ -1,4 +1,4 @@
-import { Distribution } from "~/atoms";
+import { Distribution, Frequency } from "~/atoms";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type {
@@ -11,10 +11,12 @@ import type {
   SVGStroke,
   BasicComponent,
   ReferenceStroke,
+  PrimitiveRepertoire,
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import { IndexedElement, Key } from ".";
+import { IndexedElement, Key, summarize } from ".";
+import { Combined } from "~/components/SequenceTable";
 
 export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -253,4 +255,126 @@ export const makeWorker = () => {
   return new Worker(new URL("../worker.ts", import.meta.url), {
     type: "module",
   });
+};
+
+export const makeCharacterFilter =
+  (
+    input: CharacterFilter,
+    repertoire: Repertoire | PrimitiveRepertoire,
+    sequence: Map<string, string>,
+  ) =>
+  (char: string) => {
+    const character = repertoire[char];
+    if (character === undefined) return false;
+    const name = character.name ?? "";
+    const seq = sequence.get(char) ?? "";
+    const isNameMatched = (name + char).includes(input.name ?? "");
+    const isSequenceMatched = seq.startsWith(input.sequence ?? "");
+    const isUnicodeMatched =
+      input.unicode === undefined || input.unicode === char.codePointAt(0);
+    const isTagMatched =
+      input.tag === undefined ||
+      ("glyphs" in character &&
+        character.glyphs.some((x) => x.tags?.includes(input.tag!))) ||
+      ("glyph" in character && character.glyph?.tags?.includes(input.tag));
+    const isOperatorMatched =
+      input.operator === undefined ||
+      ("glyphs" in character &&
+        character.glyphs.some(
+          (x) => "operator" in x && x.operator.includes(input.operator!),
+        )) ||
+      ("glyph" in character &&
+        character.glyph?.type === "compound" &&
+        character.glyph.operator.includes(input.operator));
+    const isPartMatched =
+      input.part === undefined ||
+      ("glyphs" in character &&
+        character.glyphs.some(
+          (x) => "operandList" in x && x.operandList.includes(input.part!),
+        )) ||
+      ("glyph" in character &&
+        character.glyph?.type === "compound" &&
+        character.glyph.operandList.includes(input.part));
+    return (
+      isNameMatched &&
+      isSequenceMatched &&
+      isUnicodeMatched &&
+      isTagMatched &&
+      isOperatorMatched &&
+      isPartMatched
+    );
+  };
+
+export interface CharacterFilter {
+  name?: string;
+  sequence?: string;
+  unicode?: number;
+  tag?: string;
+  part?: string;
+  operator?: Operator;
+}
+
+export const makeFilter =
+  (input: string, form: Repertoire, sequence: Map<string, string>) =>
+  (char: string) => {
+    let name = form[char]?.name ?? "";
+    let seq = sequence.get(char) ?? "";
+    return (
+      name.includes(input) || char.includes(input) || seq.startsWith(input)
+    );
+  };
+
+export interface AnalyzerForm {
+  type: "single" | "multi" | "all";
+  filter: boolean;
+  length: number;
+  top: number;
+}
+
+export const defaultAnalyzer: AnalyzerForm = {
+  type: "all",
+  filter: false,
+  length: 0,
+  top: 0,
+};
+
+export const analyzePrimitiveDuplication = (
+  analyzer: AnalyzerForm,
+  characterFrequency: Frequency,
+  result: Combined[],
+) => {
+  const duplicationMap = new Map<string, Combined[]>();
+  const topCharacters = Object.fromEntries(
+    Object.entries(characterFrequency).slice(0, analyzer.top),
+  );
+  for (const assembly of result) {
+    const { name, sequence: elements } = assembly;
+    if (
+      (analyzer.type === "single" && [...name].length > 1) ||
+      (analyzer.type === "multi" && [...name].length === 1)
+    ) {
+      continue;
+    }
+
+    if (analyzer.top !== 0 && !topCharacters[name]) {
+      continue;
+    }
+    const sliced =
+      analyzer.length === 0 ? elements : elements.slice(0, analyzer.length);
+    const summary = summarize(sliced);
+    duplicationMap.set(
+      summary,
+      (duplicationMap.get(summary) || []).concat(assembly),
+    );
+  }
+
+  const filtered: Combined[] = [];
+  let selections = 0;
+  for (const names of duplicationMap.values()) {
+    selections += names.length - 1;
+    if (analyzer.filter && names.length > 1) {
+      filtered.push(...names);
+    }
+  }
+  return [selections, filtered] as const;
 };

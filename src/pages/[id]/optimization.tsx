@@ -510,7 +510,7 @@ const ConstraintList = ({
   );
 };
 
-const Optimization = () => {
+export default function Optimization() {
   return (
     <EditorRow>
       <EditorColumn span={12}>
@@ -532,6 +532,4 @@ const Optimization = () => {
       </EditorColumn>
     </EditorRow>
   );
-};
-
-export default Optimization;
+}

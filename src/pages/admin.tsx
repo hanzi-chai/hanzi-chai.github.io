@@ -6,7 +6,7 @@ import CharacterTable from "~/components/CharacterTable";
 import { primitiveRepertoireAtom, useChaifenTitle, useSetAtom } from "~/atoms";
 import { DevTools } from "jotai-devtools";
 
-const AdminLayout = () => {
+export default function AdminLayout() {
   useChaifenTitle("管理");
   const load = useSetAtom(primitiveRepertoireAtom);
   useEffect(() => {
@@ -21,6 +21,4 @@ const AdminLayout = () => {
       <DevTools />
     </Layout>
   );
-};
-
-export default AdminLayout;
+}

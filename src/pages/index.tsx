@@ -135,7 +135,7 @@ const UserInfo = () => {
   return <Typography.Text>欢迎回来，{user.name}</Typography.Text>;
 };
 
-const HomeLayout = () => {
+export default function HomeLayout() {
   useChaifenTitle("首页");
   const [configs, setConfigs] = useImmer(() =>
     Object.fromEntries(
@@ -295,6 +295,4 @@ const HomeLayout = () => {
       </Layout.Sider>
     </Layout>
   );
-};
-
-export default HomeLayout;
+}

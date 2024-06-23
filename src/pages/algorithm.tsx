@@ -90,7 +90,7 @@ const DegeneratorTable = () => {
   );
 };
 
-const Algorithm = () => {
+export default function Algorithm() {
   const setForm = useSetAtom(primitiveRepertoireAtom);
 
   useEffect(() => {
@@ -112,6 +112,4 @@ const Algorithm = () => {
       </Flex>
     </Layout>
   );
-};
-
-export default Algorithm;
+}

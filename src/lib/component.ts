@@ -272,6 +272,33 @@ export const renderRootList = (repertoire: Repertoire, config: Config) => {
   return rootList;
 };
 
+const getLeafComponents = (
+  repertoire: Repertoire,
+  config: Config,
+  characters: string[],
+) => {
+  const { mapping, grouping } = config.form;
+  const queue = [...characters];
+  const leafSet = new Set<string>();
+  const knownSet = new Set<string>(characters);
+  while (queue.length) {
+    const char = queue.shift()!;
+    const glyph = repertoire[char]!.glyph!;
+    if (glyph.type === "compound") {
+      if (mapping[char] || grouping?.[char]) continue;
+      glyph.operandList.forEach((x) => {
+        if (!knownSet.has(x)) {
+          knownSet.add(x);
+          queue.push(x);
+        }
+      });
+    } else {
+      leafSet.add(char);
+    }
+  }
+  return leafSet;
+};
+
 /**
  * 对所有部件进行拆分
  *
@@ -283,7 +310,9 @@ export const renderRootList = (repertoire: Repertoire, config: Config) => {
 export const disassembleComponents = function (
   repertoire: Repertoire,
   config: Config,
+  characters: string[],
 ): [ComponentResults, string[]] {
+  const leafSet = getLeafComponents(repertoire, config, characters);
   const rootList = renderRootList(repertoire, config);
   const classifier = mergeClassifier(config.analysis?.classifier);
   const composables = new Set<string>();
@@ -294,7 +323,8 @@ export const disassembleComponents = function (
   const result: [string, ComponentAnalysis][] = [];
   const error: string[] = [];
   Object.entries(repertoire).forEach(([name, character]) => {
-    if (character.glyph?.type !== "basic_component") return;
+    if (character.glyph?.type !== "basic_component" || !leafSet.has(name))
+      return;
     const cache = computeComponent(name, character.glyph.strokes);
     if (!isValidCJKChar(name) && !composables.has(name)) {
       return;

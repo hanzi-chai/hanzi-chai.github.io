@@ -163,7 +163,7 @@ const StrokeForm = ({
   );
 };
 
-const ComponentForm = ({
+export default function ComponentForm({
   title,
   initialValues,
   current,
@@ -179,7 +179,7 @@ const ComponentForm = ({
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
-}) => {
+}) {
   const repertoire = useAtomValue(allRepertoireAtom);
   const trigger = noButton ? (
     <span>{title}</span>
@@ -282,6 +282,4 @@ const ComponentForm = ({
       </EditorRow>
     </ModalForm>
   );
-};
-
-export default ComponentForm;
+}

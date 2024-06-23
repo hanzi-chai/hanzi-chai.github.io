@@ -1245,12 +1245,28 @@ encoder:
   - '_'
   auto_select_length: 2
   sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object:
+        type: 字根
+        rootIndex: 1
+      index: 0
+      next: c0
     s2:
       object:
         type: 字根
         rootIndex: 2
       index: 0
       next: c1
+    s3:
+      object:
+        type: 二笔
+        rootIndex: 1
+        strokeIndex: 1
+      index: 0
+      next: s6
     s4:
       object:
         type: 二笔
@@ -1264,13 +1280,6 @@ encoder:
         rootIndex: -1
       index: 0
       next: null
-    s3:
-      object:
-        type: 二笔
-        rootIndex: 1
-        strokeIndex: 1
-      index: 0
-      next: s6
     s6:
       object:
         type: 笔画
@@ -1278,23 +1287,7 @@ encoder:
         strokeIndex: -1
       index: 1
       next: null
-    s0:
-      object: null
-      next: s1
-    s1:
-      object:
-        type: 字根
-        rootIndex: 1
-      index: 0
-      next: c0
   conditions:
-    c1:
-      object:
-        type: 字根
-        rootIndex: 3
-      operator: 存在
-      positive: s5
-      negative: s4
     c0:
       object:
         type: 字根
@@ -1302,6 +1295,13 @@ encoder:
       operator: 存在
       positive: s2
       negative: s3
+    c1:
+      object:
+        type: 字根
+        rootIndex: 3
+      operator: 存在
+      positive: s5
+      negative: s4
   short_code:
     - length_equal: 1
       schemes:

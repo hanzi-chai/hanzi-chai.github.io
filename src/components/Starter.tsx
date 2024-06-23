@@ -11,11 +11,11 @@ import type { Updater } from "use-immer";
 import type { Config } from "~/lib";
 import { nanoid } from "nanoid";
 
-const Starter = ({
+export default function Starter({
   setConfigs,
 }: {
   setConfigs: Updater<Record<string, Config>>;
-}) => {
+}) {
   const [modal, setModal] = useState(false);
   const required = [{ required: true }];
   return (
@@ -80,6 +80,4 @@ const Starter = ({
       </Modal>
     </>
   );
-};
-
-export default Starter;
+}

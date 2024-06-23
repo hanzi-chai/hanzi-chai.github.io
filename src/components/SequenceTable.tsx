@@ -21,6 +21,8 @@ import {
   stringifySequence,
   summarize,
   analysis,
+  defaultAnalyzer,
+  analyzePrimitiveDuplication,
 } from "~/lib";
 import { exportTSV, makeWorker, renderIndexed, renderSuperScript } from "~/lib";
 import {
@@ -28,10 +30,7 @@ import {
   assemblyResultAtom,
   encodeResultAtom,
 } from "~/atoms/cache";
-import PrimitiveDuplicationAnalyzer, {
-  analyzePrimitiveDuplication,
-  defaultAnalyzer,
-} from "~/components/PrimitiveDuplicationAnalyzer";
+import PrimitiveDuplicationAnalyzer from "~/components/PrimitiveDuplicationAnalyzer";
 import { ProColumns, ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { customElementsAtom } from "~/atoms/assets";
@@ -64,7 +63,7 @@ const RecomputeAssembly = () => {
       onClick={() => {
         let result = analysisResult;
         if (result === null) {
-          result = analysis(repertoire, config);
+          result = analysis(repertoire, config, characters);
           setAnalysisResult(result);
         }
         let assembled = assemble(

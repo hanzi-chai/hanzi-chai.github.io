@@ -27,7 +27,7 @@ const makeSorter = (selector: Selector) => {
   };
 };
 
-const ResultDetail = ({
+export default function ResultDetail({
   char,
   data,
   map,
@@ -37,7 +37,7 @@ const ResultDetail = ({
   data: SchemeWithData[];
   map: Map<number, string>;
   strokes: number;
-}) => {
+}) {
   const selector = useAtomValue(selectorAtom);
   const display = useAtomValue(displayAtom);
   const addCustomization = useAddAtom(customizeAtom);
@@ -121,6 +121,4 @@ const ResultDetail = ({
   ) : (
     <div />
   );
-};
-
-export default ResultDetail;
+}

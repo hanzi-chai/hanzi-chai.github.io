@@ -58,7 +58,7 @@ export const CommonForm = () => {
   );
 };
 
-const CompoundForm = ({
+export default function CompoundForm({
   title,
   initialValues,
   onFinish,
@@ -72,7 +72,7 @@ const CompoundForm = ({
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
-}) => {
+}) {
   const repertoire = useAtomValue(repertoireAtom);
   const [form] = Form.useForm<Compound>();
   const list: string[] = useWatch("operandList", form);
@@ -167,6 +167,4 @@ const CompoundForm = ({
       </EditorRow>
     </ModalForm>
   );
-};
-
-export default CompoundForm;
+}

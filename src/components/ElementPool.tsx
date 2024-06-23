@@ -10,9 +10,9 @@ import {
   keyboardAtom,
   glyphAtom,
 } from "~/atoms";
-import { isPUA } from "~/lib";
+import { isPUA, makeFilter } from "~/lib";
 import { StrokesView } from "./GlyphView";
-import StrokeSearch, { makeFilter } from "./CharacterSearch";
+import StrokeSearch from "./CharacterSearch";
 import { ShapeElementTypes } from "./ElementPicker";
 import { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
@@ -74,7 +74,12 @@ const Element = ({
 
 const MyPagination = styled(Pagination)``;
 
-const ElementPool = ({ element, setElement, content, name }: PoolProps) => {
+export default function ElementPool({
+  element,
+  setElement,
+  content,
+  name,
+}: PoolProps) {
   const [page, setPage] = useState(1);
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
@@ -132,6 +137,4 @@ const ElementPool = ({ element, setElement, content, name }: PoolProps) => {
       )}
     </Flex>
   );
-};
-
-export default ElementPool;
+}
