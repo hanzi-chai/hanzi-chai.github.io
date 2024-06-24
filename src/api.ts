@@ -30,6 +30,9 @@ const template =
 export const list = async () =>
   await template("GET")<PrimitiveCharacter[], undefined>("repertoire/all");
 
+export const get = async (unicode: number) =>
+  template("GET")<PrimitiveCharacter, undefined>(`repertoire/${unicode}`);
+
 export const post = template("POST");
 
 interface PUA {
