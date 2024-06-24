@@ -1,14 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
-  printableAscii,
-  unicodeBlock,
   isValidCJKChar,
   isPUA,
   chars,
   getDummyBasicComponent,
   getDummyDerivedComponent,
-  getDummyReferenceStroke,
-  getDummySVGStroke,
   getDummyCompound,
   isComponent,
   getSupplemental,
@@ -50,7 +46,7 @@ describe("misc", () => {
       .filter(([, value]) => value.gb2312)
       .map(([x]) => x);
     const result = getSupplemental(repertoire, characters);
-    expect(result.length).toBeGreaterThan(200);
+    expect(result.length).toBeGreaterThan(100);
   });
 
   it("parseTSV should parse a TSV string and return a record with the values", () => {

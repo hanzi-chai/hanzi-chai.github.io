@@ -155,7 +155,7 @@ export default function CompoundForm({
               />
               <ProFormSelect
                 name="strokes"
-                options={[...Array(10).keys()].map((x) => ({
+                options={[...Array(12).keys()].map((x) => ({
                   value: x,
                   label: x === 0 ? "取剩余全部" : `取 ${x} 笔`,
                 }))}

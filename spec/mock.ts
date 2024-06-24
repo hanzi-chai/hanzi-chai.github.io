@@ -1,8 +1,13 @@
 import rawrepertoire from "../public/cache/repertoire.json";
-import type { BasicComponent } from "~/lib";
+import type { BasicComponent, PrimitiveCharacter } from "~/lib";
 import { listToObject, determine, computeComponent } from "~/lib";
 
-export const primitiveRepertoire = listToObject(rawrepertoire);
+export const primitiveRepertoire = Object.fromEntries(
+  (rawrepertoire as PrimitiveCharacter[]).map((x) => [
+    String.fromCodePoint(x.unicode),
+    x,
+  ]),
+);
 export const repertoire = determine(primitiveRepertoire);
 export const computedComponents = Object.fromEntries(
   Object.entries(repertoire)

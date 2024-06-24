@@ -284,6 +284,10 @@ const getLeafComponents = (
   while (queue.length) {
     const char = queue.shift()!;
     const glyph = repertoire[char]!.glyph!;
+    if (!glyph) {
+      console.log(char, char.codePointAt(0)?.toString(16));
+      continue;
+    }
     if (glyph.type === "compound") {
       if (mapping[char] || grouping?.[char]) continue;
       glyph.operandList.forEach((x) => {
