@@ -1,10 +1,10 @@
-version: "0.1"
+version: '0.1'
 source: easy
 info:
   name: 易码
-  version: V1.0
+  version: '1.0'
   author: 小泥巴
-  description: 三码定长
+  description: 形码单字四二顶
 data:
   repertoire:
     :

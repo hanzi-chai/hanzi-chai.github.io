@@ -11,7 +11,7 @@ import {
   Typography,
   notification,
 } from "antd";
-import { Config } from "~/lib";
+import { Config, ExampleConfig } from "~/lib";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
@@ -23,6 +23,7 @@ import Starter from "~/components/Starter";
 import { post } from "~/api";
 import { md5 } from "js-md5";
 import { useChaifenTitle, validateConfig } from "~/atoms";
+import { MenuProps } from "antd/lib";
 
 type Status = "login" | "signup" | "signin";
 
@@ -152,6 +153,39 @@ export default function HomeLayout() {
     return localStorage.getItem("user") ? "login" : "signin";
   });
 
+  const { snow, mswb, flypy, easy, zhengma, yustar } = examples;
+  const prepare = (x: ExampleConfig) => ({
+    key: x.source!,
+    label: x.info.name,
+  });
+
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      type: "group",
+      label: "音码",
+      children: [prepare(snow)],
+    },
+    {
+      key: "2",
+      type: "group",
+      label: "音形",
+      children: [],
+    },
+    {
+      key: "3",
+      type: "group",
+      label: "形音",
+      children: [prepare(mswb)],
+    },
+    {
+      key: "4",
+      type: "group",
+      label: "形码",
+      children: [prepare(easy), prepare(yustar), prepare(zhengma)],
+    },
+  ];
+
   useEffect(() => {
     Object.entries(configs).forEach(([id, config]) => {
       localStorage.setItem(id, JSON.stringify(config));
@@ -201,16 +235,7 @@ export default function HomeLayout() {
             <Dropdown
               placement="bottom"
               menu={{
-                items: Object.values(examples)
-                  .filter((x) =>
-                    ["mswb", "zhengma", "easy", "yustar"].includes(
-                      x.source as string,
-                    ),
-                  )
-                  .map((x) => ({
-                    key: x.source!,
-                    label: x.info.name,
-                  })),
+                items,
                 onClick: (menu) => {
                   setConfigs((configs) => {
                     configs[nanoid(9)] = examples[menu.key as Example];

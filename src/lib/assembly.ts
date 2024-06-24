@@ -128,8 +128,10 @@ const compile = (config: Config) => {
             node = next;
             continue;
           }
+          // 如果是固定编码，直接加入
           if (element.length === 1 && alphabet.includes(element)) {
             codes.push(element);
+            node = next;
             continue;
           }
           const groupedElement = grouping?.[element] || element;

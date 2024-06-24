@@ -1,9 +1,9 @@
-version: 0.1.10
+version: '0.1'
 source: yustar
 info:
   name: 宇浩·星陈
   author: 朱宇浩
-  version: 3.5.0
+  version: '3.5.0'
   description: 全汉字字形输入・繁简通打・极低选重
 analysis:
   classifier:
@@ -600,11 +600,11 @@ encoder:
       schemes: [{prefix: 1}, {prefix: 2, count: 1}, {prefix: 3, count: 1}]
   rules:
     - length_equal: 2
-      formula: AaAbBa
+      formula: AaAbBaBb
     - length_equal: 3
-      formula: AaBaCa
-    - length_in_range: [4, 20]
-      formula: AaBaZa
+      formula: AaBaCaCb
+    - length_in_range: [4, 10]
+      formula: AaBaCaZa
 data:
   glyph_customization:
     重:

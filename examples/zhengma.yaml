@@ -1,10 +1,10 @@
-version: "0.1"
+version: '0.1'
 source: zhengma
 info:
   name: 郑码
   author: 郑易里
-  version: 0.1.0
-  description: 从模板创建
+  version: '1.0'
+  description: 形码四码定长
 analysis:
   classifier:
     斜钩: 6
@@ -28,8 +28,10 @@ analysis:
     竖折折钩: 8
     竖折折: 8
   degenerator:
-    feature: {提: 横, 捺: 点}
-    nocross: false
+    feature:
+      提: 横
+      捺: 点
+    no_cross: false
   selector:
     - 结构完整
     - 根少优先
@@ -38,15 +40,34 @@ analysis:
     - 非形近根
     - 取大优先
   customize:
-    我: [手, 戈]
-    曲: [日, "\ue001"]
-    五: [工, '5']
-    里: [日, 土]
-    兆: ["\ue997", 儿]
-    井: [二, "\ue0e3"]
-    夫: [二, 人]
-    孑: [了, '1']
-    及: ['6', '3', '4']
+    我:
+      - 手
+      - 戈
+    曲:
+      - 日
+      - "\ue001"
+    五:
+      - 工
+      - '5'
+    里:
+      - 日
+      - 土
+    兆:
+      - "\ue997"
+      - 儿
+    井:
+      - 二
+      - "\ue0e3"
+    夫:
+      - 二
+      - 人
+    孑:
+      - 了
+      - '1'
+    及:
+      - '6'
+      - '3'
+      - '4'
   strong:
     - '1'
     - 二
@@ -168,7 +189,6 @@ form:
     "\ue042": 羊
     "\ue00b": 羊
     灬: 火
-    "\ue997": 氵
     之: 辶
     定: 宀
     "\ue007": 马
@@ -194,7 +214,6 @@ form:
     "\ue0e2": 巛
     丩: 凵
     屮: 凵
-    "\ue065": 凵
     爿: 凵
     "\ue0e1": 凵
     "\ue0be": 母
@@ -238,6 +257,8 @@ form:
     "\ue02a": 冂
     "\ue442": 小
     "\ue411": 牛
+    䶹: 凵
+    "\ue42b": 氵
   mapping:
     '1': a
     '2': i

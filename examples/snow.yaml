@@ -1,0 +1,293 @@
+version: '0.1'
+source: snow
+info:
+  name: 冰雪四拼
+  author: 谭淞宸
+  version: '1.0'
+  description: 带调拼音词顶功
+analysis:
+  classifier: {}
+  selector:
+    - 全符笔顺
+    - 取大优先
+form:
+  alphabet: qwertyuiopasdfghjklzxcvbnm
+  grouping:
+    补码-补: 声调-5
+    韵头-零: 韵头-e
+  mapping:
+    '1': e
+    '2': i
+    '3': u
+    '4': o
+    '5': a
+    声调-1: i
+    声调-2: e
+    声调-3: u
+    声调-4: a
+    声调-5: o
+    声母四分-零撮: k
+    声母四分-零合: s
+    声母四分-零开: r
+    声母四分-零齐: f
+    声母四分-b: b
+    声母四分-c: c
+    声母四分-ch: 'y'
+    声母四分-d: d
+    声母四分-f: f
+    声母四分-g: g
+    声母四分-h: h
+    声母四分-j: j
+    声母四分-k: k
+    声母四分-l: l
+    声母四分-m: m
+    声母四分-n: 'n'
+    声母四分-p: p
+    声母四分-q: q
+    声母四分-r: r
+    声母四分-s: s
+    声母四分-sh: v
+    声母四分-t: t
+    声母四分-x: x
+    声母四分-z: z
+    声母四分-zh: w
+    韵头-a: a
+    韵头-e: e
+    韵头-er: i
+    韵头-i: i
+    韵头-ia: u
+    韵头-ie: e
+    韵头-io: o
+    韵头-o: o
+    韵头-ü: a
+    韵头-u: u
+    韵头-üa: o
+    韵头-ua: i
+    韵头-üe: o
+    韵头-ue: u
+    韵头-uo: o
+    韵尾-i: i
+    韵尾-m: a
+    韵尾-n: o
+    韵尾-ng: e
+    韵尾-u: u
+encoder:
+  max_length: 6
+  auto_select_pattern: ([aeiou]$|[a-z]{4,})
+  short_code:
+    - length_equal: 1
+      schemes: [{prefix: 1}, {prefix: 2}, {prefix: 3}]
+    - length_equal: 2
+      schemes: [{prefix: 2}, {prefix: 3}, {prefix: 4}, {prefix: 5}]
+    - length_equal: 3
+      schemes: [{prefix: 3}, {prefix: 4}, {prefix: 5}]
+    - length_equal: 4
+      schemes: [{prefix: 4}, {prefix: 5}]
+    - length_equal: 5
+      schemes: [{prefix: 5}]
+    - length_in_range: [6, 10]
+      schemes: [{prefix: 6}]
+  rules:
+    - length_equal: 2
+      formula: AaBaBbBcAbAc
+    - length_equal: 3
+      formula: AaBaCaCbCcAb
+    - length_equal: 4
+      formula: AaBaCaDaDbDc
+    - length_equal: 5
+      formula: AaBaCaDaEaEb
+    - length_in_range: [6, 10]
+      formula: AaBaCaDaEaFa
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字音, subtype: 声母四分}
+      next: s2
+    s2:
+      object: {type: 字音, subtype: 韵头}
+      next: s3
+    s3:
+      object: {type: 字音, subtype: 韵尾}
+      next: s4
+    s4:
+      object: {type: 字音, subtype: 声调}
+      next: c0
+    s5:
+      object: {type: 字音, subtype: 补码}
+      next: null
+  conditions:
+    c0:
+      object: {type: 字音, subtype: 韵尾}
+      operator: 是
+      value: 韵尾-零
+      positive: s5
+      negative: null
+algebra:
+  声母四分:
+    - type: xform
+      from: ^[nm]g\d$
+      to: 零开
+    - type: xform
+      from: ^([bpmfdtnlgkhjqxzcsr]h?|yu?|[aoew]).+$
+      to: $1
+    - type: xform
+      from: ^w$
+      to: 零合
+    - type: xform
+      from: ^y$
+      to: 零齐
+    - type: xform
+      from: ^yu$
+      to: 零撮
+    - type: xform
+      from: ^[aoe]$
+      to: 零开
+  韵头:
+    - type: xform
+      from: ((?<=[jqx])u|yu|v)
+      to: ü
+    - type: xform
+      from: yi?
+      to: i
+    - type: xform
+      from: wu?
+      to: u
+    - type: xform
+      from: iu
+      to: iou
+    - type: xform
+      from: u([in])
+      to: ue$1
+    - type: xform
+      from: ^.*?([aeiouü].*|m|ng?)\d$
+      to: $1
+    - type: xform
+      from: ao
+      to: au
+    - type: xform
+      from: ^(?=[mn])
+      to: 零
+    - type: xform
+      from: (.+)[iunm]g?$
+      to: $1
+  韵尾:
+    - type: xform
+      from: ^([jqxy])u
+      to: $1v
+    - type: xform
+      from: ao
+      to: au
+    - type: xform
+      from: yi?
+      to: i
+    - type: xform
+      from: wu?
+      to: u
+    - type: xform
+      from: iu
+      to: iou
+    - type: xform
+      from: u([in])
+      to: ue$1
+    - type: xform
+      from: ^.*?([aeiouv].*|m|ng?)\d$
+      to: $1
+    - type: xform
+      from: ^(?=[mn])
+      to: 零
+    - type: xform
+      to: $1
+      from: ^.+?([iunm]|ng)?$
+    - type: xform
+      from: ^$
+      to: 零
+  补码:
+    - type: xform
+      from: ^.+$
+      to: 补
+optimization:
+  objective:
+    characters_short:
+      duplication: 10
+      levels: [{length: 2, frequency: 0}, {length: 3, frequency: 0}]
+      tiers:
+        - top: 1000
+          levels: [{length: 2, frequency: -1}]
+        - top: 3000
+          levels: [{length: 4, frequency: 1}]
+          duplication: 10
+        - top: 5000
+          duplication: 10
+        - levels: [{length: 3, frequency: -3}]
+    words_short:
+      duplication: 10
+      levels: [{length: 3, frequency: 0}, {length: 4, frequency: 0}, {length: 5, frequency: 0}]
+      tiers:
+        - top: 1000
+          levels: [{length: 4, frequency: 1}]
+        - levels: [{length: 3, frequency: 0}, {length: 4, frequency: 0}, {length: 5, frequency: 0}]
+  metaheuristic:
+    algorithm: SimulatedAnnealing
+    parameters:
+      t_max: 1
+      t_min: 0.000001
+      steps: 100000
+  constraints:
+    elements:
+      - {element: '1'}
+      - {element: '2'}
+      - {element: '3'}
+      - {element: '4'}
+      - {element: '5'}
+      - {element: 声母四分-b}
+      - {element: 声母四分-p}
+      - {element: 声母四分-m}
+      - {element: 声母四分-f}
+      - {element: 声母四分-d}
+      - {element: 声母四分-t}
+      - {element: 声母四分-n}
+      - {element: 声母四分-l}
+      - {element: 声母四分-g}
+      - {element: 声母四分-k}
+      - {element: 声母四分-h}
+      - {element: 声母四分-j}
+      - {element: 声母四分-q}
+      - {element: 声母四分-x}
+      - {element: 声母四分-z}
+      - {element: 声母四分-c}
+      - {element: 声母四分-s}
+      - {element: 声母四分-r}
+      - {element: 声母四分-zh}
+      - {element: 声母四分-ch}
+      - {element: 声母四分-sh}
+      - {element: 韵头-a}
+      - {element: 韵头-e}
+      - {element: 韵头-i}
+      - {element: 韵头-o}
+      - {element: 韵头-u}
+      - {element: 韵头-er, keys: [a, e, i, o, u]}
+      - {element: 韵头-ia, keys: [a, e, i, o, u]}
+      - {element: 韵头-ie, keys: [a, e, i, o, u]}
+      - {element: 韵头-io, keys: [a, e, i, o, u]}
+      - {element: 韵头-ua, keys: [a, e, i, o, u]}
+      - {element: 韵头-ue}
+      - {element: 韵头-uo}
+      - {element: 韵头-ü, keys: [a, e, i, o, u]}
+      - {element: 韵头-üa, keys: [a, e, i, o, u]}
+      - {element: 韵头-üe, keys: [a, e, i, o, u]}
+      - {element: 韵尾-i}
+      - {element: 韵尾-u}
+      - {element: 韵尾-n}
+      - {element: 韵尾-ng}
+      - {element: 韵尾-m}
+      - {element: 声调-1, keys: [a, e, i, o, u]}
+      - {element: 声调-2, keys: [a, e, i, o, u]}
+      - {element: 声调-3, keys: [a, e, i, o, u]}
+      - {element: 声调-4, keys: [a, e, i, o, u]}
+      - {element: 声调-5, keys: [a, e, i, o, u]}
+      - {element: 声母四分-零合, keys: [b, p, m, t, 'n', g, k, h, q, x, z, s, r]}
+      - {element: 声母四分-零开, keys: [b, p, m, t, 'n', g, k, h, q, x, z, s, r]}
+      - {element: 声母四分-零齐}
+      - {element: 声母四分-零撮, keys: [b, p, m, t, 'n', g, k, h, q, x, z, s, r]}

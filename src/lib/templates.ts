@@ -2,6 +2,7 @@ import { Classifier } from "./classifier";
 import type { Analysis, Config, Keyboard } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
+import snow from "../../examples/snow.yaml";
 import mswb from "../../examples/mswb.yaml";
 import flypy from "../../examples/flypy.yaml";
 import easy from "../../examples/easy.yaml";
@@ -9,9 +10,10 @@ import yustar from "../../examples/yustar.yaml";
 import zhengma from "../../examples/zhengma.yaml";
 import type { ExampleConfig } from "./config";
 
-export type Example = "mswb" | "flypy" | "easy" | "zhengma" | "yustar";
+export type Example = "snow" | "flypy" | "mswb" | "easy" | "zhengma" | "yustar";
 
 export const examples: Record<Example, ExampleConfig> = {
+  snow: snow as ExampleConfig,
   mswb: mswb as ExampleConfig,
   flypy: flypy as ExampleConfig,
   easy: easy as ExampleConfig,
