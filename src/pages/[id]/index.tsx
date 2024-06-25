@@ -6,6 +6,7 @@ import {
   Equivalence,
   SetStateAction,
   WritableAtom,
+  characterSetAtom,
   defaultDictionaryAtom,
   frequencyAtom,
   infoAtom,
@@ -15,14 +16,21 @@ import {
   useAtomValue,
   useChaifenTitle,
 } from "~/atoms";
-import { Info, exportTSV, getDictFromTSV, getDistributionFromTSV } from "~/lib";
+import {
+  CharacterSetSpecifier,
+  Info,
+  characterSetSpecifiers,
+  exportTSV,
+  getDictFromTSV,
+  getDistributionFromTSV,
+} from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
   ProForm,
   ProFormText,
   ProFormTextArea,
 } from "@ant-design/pro-components";
-import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
+import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
 import {
   userFrequencyAtom,
   userKeyDistributionAtom,
@@ -146,6 +154,12 @@ const CustomElementUploader = () => {
 export default function Index() {
   useChaifenTitle("基本信息");
   const [info, setInfo] = useAtom(infoAtom);
+  const [characterSet, setCharacterSet] = useAtom(characterSetAtom);
+  const specifierNames: Record<CharacterSetSpecifier, string> = {
+    general: "通用",
+    basic: "基本",
+    extended: "扩展",
+  };
   return (
     <EditorRow>
       <EditorColumn span={12}>
@@ -166,6 +180,32 @@ export default function Index() {
           <ProFormText label="版本" name="version" />
           <ProFormTextArea label="描述" name="description" />
         </ProForm>
+        <Flex align="baseline" justify="space-between">
+          <Typography.Title level={3}>字集</Typography.Title>
+          <Select
+            options={characterSetSpecifiers.map((x) => ({
+              label: specifierNames[x],
+              value: x,
+            }))}
+            value={characterSet}
+            onChange={setCharacterSet}
+          />
+        </Flex>
+        <Typography.Paragraph>
+          字集是系统所处理的字符集合，您可以选择通用、基本或扩展三者之一。字集越大，您的方案能输入的字符就越多，但是在拆分时要考虑的字形种类也就更多。建议您从通用字集开始，根据实际需要逐步扩展。
+        </Typography.Paragraph>
+        <ul>
+          <li>通用字集（8105 个字符）即《通用规范汉字表》中的所有字符；</li>
+          <li>
+            基本字集（21265
+            个字符）是在通用字集的基础上增加了所有中日韩统一表意文字基本区的字符；
+          </li>
+          <li>
+            扩展字集（27780
+            个字符）是在基本字集的基础上增加了所有中日韩统一表意文字扩展区 A
+            的字符；
+          </li>
+        </ul>
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>资料</Typography.Title>

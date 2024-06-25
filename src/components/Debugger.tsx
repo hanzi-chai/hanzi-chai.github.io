@@ -3,7 +3,13 @@ import { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
-import { DictEntry, EncodeResult, configAtom, repertoireAtom } from "~/atoms";
+import {
+  DictEntry,
+  EncodeResult,
+  charactersAtom,
+  configAtom,
+  repertoireAtom,
+} from "~/atoms";
 import { encodeResultAtom } from "~/atoms/cache";
 import { Select, Uploader } from "~/components/Utils";
 import { getSupplemental } from "~/lib";
@@ -11,9 +17,7 @@ import { getSupplemental } from "~/lib";
 export default function Debugger() {
   const config = useAtomValue(configAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  const characters = Object.entries(repertoire)
-    .filter(([, v]) => v.tygf > 0)
-    .map(([x]) => x);
+  const characters = useAtomValue(charactersAtom);
   const code = useAtomValue(encodeResultAtom) ?? [];
   const referenceAtom = useMemo(
     () =>

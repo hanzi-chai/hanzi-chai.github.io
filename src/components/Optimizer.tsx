@@ -17,6 +17,7 @@ import {
   dictionaryAtom,
   DictEntry,
   makeEncodeCallback,
+  charactersAtom,
 } from "~/atoms";
 import {
   assemble,
@@ -86,9 +87,7 @@ export default function Optimizer() {
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  const characters = Object.entries(repertoire)
-    .filter(([_, v]) => v.tygf > 0)
-    .map(([x]) => x);
+  const characters = useAtomValue(charactersAtom);
   const customElements = useAtomValue(customElementsAtom);
   const [out1, setOut1] = useState("");
   const [result, setResult] = useState<[Date, string][]>([]);

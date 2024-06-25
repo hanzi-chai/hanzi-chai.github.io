@@ -1,6 +1,13 @@
 import { atom, useAtomValue } from "jotai";
 import { primitiveRepertoireAtom } from "./constants";
-import { CustomReadings, isPUA } from "~/lib";
+import {
+  CharacterSetSpecifier,
+  CustomReadings,
+  PrimitiveCharacter,
+  isPUA,
+  isValidCJKBasicChar,
+  isValidCJKChar,
+} from "~/lib";
 import { recursiveRenderCompound } from "~/lib";
 import { dataAtom } from ".";
 import { focusAtom } from "jotai-optics";
@@ -9,6 +16,9 @@ import { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
 
+export const characterSetAtom = focusAtom(dataAtom, (o) =>
+  o.prop("character_set").valueOr("general" as CharacterSetSpecifier),
+);
 export const userRepertoireAtom = focusAtom(dataAtom, (o) =>
   o.prop("repertoire").valueOr({} as PrimitiveRepertoire),
 );
@@ -24,6 +34,25 @@ customReadingsAtom.debugLabel = "config.data.customReadings";
 export const userTagsAtom = focusAtom(dataAtom, (o) =>
   o.prop("tags").valueOr([] as string[]),
 );
+
+export const charactersAtom = atom((get) => {
+  const primitiveRepertoire = get(primitiveRepertoireAtom);
+  const characterSet = get(characterSetAtom);
+  const filters: Record<
+    CharacterSetSpecifier,
+    (k: string, v: PrimitiveCharacter) => boolean
+  > = {
+    general: (_, v) => v.tygf > 0,
+    basic: (k, v) => v.tygf > 0 || isValidCJKBasicChar(k),
+    extended: (k, v) => v.tygf > 0 || isValidCJKChar(k),
+  };
+
+  const filter = filters[characterSet];
+  const characters = Object.entries(primitiveRepertoire)
+    .filter(([k, v]) => filter(k, v))
+    .map(([k]) => k);
+  return characters;
+});
 
 export const allRepertoireAtom = atom((get) => {
   const repertoire = get(primitiveRepertoireAtom);
@@ -53,10 +82,11 @@ export const glyphAtom = atom((get) => {
   const result = new Map<string, SVGGlyph>();
   for (const [char, { glyph }] of Object.entries(repertoire)) {
     if (glyph === undefined) continue;
+    if (result.has(char)) continue;
     if (glyph.type === "basic_component") {
       result.set(char, glyph.strokes);
     } else {
-      const svgglyph = recursiveRenderCompound(glyph, repertoire);
+      const svgglyph = recursiveRenderCompound(glyph, repertoire, result);
       if (svgglyph instanceof Error) continue;
       result.set(char, svgglyph);
     }

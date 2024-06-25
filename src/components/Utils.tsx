@@ -11,24 +11,11 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
-import {
-  getRecordFromTSV,
-  getDictFromTSV,
-  getDistributionFromTSV,
-} from "~/lib";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
 import Root from "./Element";
-import {
-  defaultDictionaryAtom,
-  fetchAsset,
-  frequencyAtom,
-  keyDistributionAtom,
-  pairEquivalenceAtom,
-} from "~/atoms";
-import { useSetAtom } from "jotai";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -164,17 +151,3 @@ export const KeyList = ({
     </Flex>
   );
 };
-
-export function LoadAssets() {
-  const setF = useSetAtom(frequencyAtom);
-  const setW = useSetAtom(defaultDictionaryAtom);
-  const setKE = useSetAtom(keyDistributionAtom);
-  const setPE = useSetAtom(pairEquivalenceAtom);
-  fetchAsset("frequency", "txt").then((x) => setF(getRecordFromTSV(x)));
-  fetchAsset("dictionary", "txt").then((x) => setW(getDictFromTSV(x)));
-  fetchAsset("key_distribution", "txt").then((x) =>
-    setKE(getDistributionFromTSV(x)),
-  );
-  fetchAsset("pair_equivalence", "txt").then((x) => setPE(getRecordFromTSV(x)));
-  return null;
-}

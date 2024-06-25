@@ -252,21 +252,17 @@ export const computeComponent = (name: string, glyph: SVGGlyph) => {
  */
 export const renderRootList = (repertoire: Repertoire, config: Config) => {
   const { mapping, grouping } = config.form;
-  const roots = [
-    ...Object.keys(mapping),
-    ...Object.keys(grouping ?? {}),
-  ].filter((x) => repertoire[x] !== undefined);
-  const rootList: ComputedComponent[] = [];
-  for (const root of roots) {
+  const elements = [...Object.keys(mapping), ...Object.keys(grouping ?? {})];
+  const rootList: Map<string, ComputedComponent> = new Map();
+  for (const root of elements) {
     const glyph = repertoire[root]?.glyph;
     if (glyph === undefined) continue;
     if (glyph.type === "basic_component") {
-      rootList.push(computeComponent(root, glyph.strokes));
+      rootList.set(root, computeComponent(root, glyph.strokes));
     } else {
       const rendered = recursiveRenderCompound(glyph, repertoire);
       if (rendered instanceof Error) continue;
-      const cache = computeComponent(root, rendered);
-      rootList.push(cache);
+      rootList.set(root, computeComponent(root, rendered));
     }
   }
   return rootList;
@@ -317,22 +313,17 @@ export const disassembleComponents = function (
   characters: string[],
 ): [ComponentResults, string[]] {
   const leafSet = getLeafComponents(repertoire, config, characters);
-  const rootList = renderRootList(repertoire, config);
+  const rootMap = renderRootList(repertoire, config);
+  const rootList = [...rootMap.values()];
   const classifier = mergeClassifier(config.analysis?.classifier);
-  const composables = new Set<string>();
-  for (const { glyph } of Object.values(repertoire)) {
-    if (glyph?.type !== "compound") continue;
-    glyph!.operandList.forEach((x) => composables.add(x));
-  }
   const result: [string, ComponentAnalysis][] = [];
   const error: string[] = [];
   Object.entries(repertoire).forEach(([name, character]) => {
     if (character.glyph?.type !== "basic_component" || !leafSet.has(name))
       return;
-    const cache = computeComponent(name, character.glyph.strokes);
-    if (!isValidCJKChar(name) && !composables.has(name)) {
-      return;
-    }
+    const cache = rootMap.has(name)
+      ? rootMap.get(name)!
+      : computeComponent(name, character.glyph.strokes);
     const scheme = getComponentScheme(cache, rootList, config, classifier);
     if (scheme instanceof Error) {
       error.push(name);

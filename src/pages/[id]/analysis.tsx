@@ -21,6 +21,7 @@ import {
   useAtom,
   useChaifenTitle,
   customizeAtom,
+  charactersAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
@@ -90,9 +91,7 @@ export default function Analysis() {
     analysisResult?.compoundResults ?? new Map();
   const componentError = analysisResult?.componentError ?? [];
   const compoundError = analysisResult?.compoundError ?? [];
-  const characters = Object.entries(repertoire)
-    .filter(([, v]) => v.tygf > 0)
-    .map(([x]) => x);
+  const characters = useAtomValue(charactersAtom);
 
   const config = useAtomValue(configAtom);
   const [page, setPage] = useState(1);

@@ -368,9 +368,10 @@ export const stringifySequence = (result: AssemblyResult, config: Config) => {
   });
 };
 
-export const summarize = (elements: IndexedElement[]) => {
+export const summarize = (elements: (IndexedElement | undefined)[]) => {
   return elements
     .map((x) => {
+      if (x === undefined) return "ε";
       if (typeof x === "string") return x;
       else if (x.index === 0) {
         return x.element;

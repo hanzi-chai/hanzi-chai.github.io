@@ -19,7 +19,12 @@ export interface Info {
 // config.info end
 
 // config.data begin
+
+export const characterSetSpecifiers = ["general", "basic", "extended"] as const;
+export type CharacterSetSpecifier = (typeof characterSetSpecifiers)[number];
+
 export type Data = {
+  character_set?: CharacterSetSpecifier;
   repertoire?: PrimitiveRepertoire;
   glyph_customization?: CustomGlyph;
   reading_customization?: CustomReadings;

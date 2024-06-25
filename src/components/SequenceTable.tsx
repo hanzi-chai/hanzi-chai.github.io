@@ -13,6 +13,7 @@ import {
   useSetAtom,
   makeEncodeCallback,
   DictEntry,
+  charactersAtom,
 } from "~/atoms";
 import type { Assembly, IndexedElement } from "~/lib";
 import {
@@ -21,8 +22,6 @@ import {
   stringifySequence,
   summarize,
   analysis,
-  defaultAnalyzer,
-  analyzePrimitiveDuplication,
 } from "~/lib";
 import { exportTSV, makeWorker, renderIndexed, renderSuperScript } from "~/lib";
 import {
@@ -30,7 +29,6 @@ import {
   assemblyResultAtom,
   encodeResultAtom,
 } from "~/atoms/cache";
-import PrimitiveDuplicationAnalyzer from "~/components/PrimitiveDuplicationAnalyzer";
 import { ProColumns, ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { customElementsAtom } from "~/atoms/assets";
@@ -50,9 +48,7 @@ interface MainEntry {
 const RecomputeAssembly = () => {
   const repertoire = useAtomValue(repertoireAtom);
   const config = useAtomValue(configAtom);
-  const characters = Object.entries(repertoire)
-    .filter(([, v]) => v.tygf > 0)
-    .map(([x]) => x);
+  const characters = useAtomValue(charactersAtom);
   const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
   const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
   const customElements = useAtomValue(customElementsAtom);
@@ -199,30 +195,24 @@ export default function SequenceTable() {
     ...encodeResult[i]!,
   }));
 
-  const [analyzer, setAnalyzer] = useState(defaultAnalyzer);
-  const [selections, filtered] = analyzePrimitiveDuplication(
-    analyzer,
-    frequencyMap,
-    combinedResult,
+  const dataSource = combinedResult.map(
+    ({ name, sequence, importance, ...rest }) => {
+      const frequency = Math.round(
+        ((frequencyMap[name] ?? 0) * importance) / 100,
+      );
+      const key = `${name}-${summarize(sequence)}`;
+      const entry: MainEntry = {
+        key,
+        frequency,
+        name,
+        ...rest,
+      };
+      for (const [i, element] of sequence.entries()) {
+        entry[i] = element;
+      }
+      return entry;
+    },
   );
-
-  const toShow = analyzer.filter ? filtered : combinedResult;
-  const dataSource = toShow.map(({ name, sequence, importance, ...rest }) => {
-    const frequency = Math.round(
-      ((frequencyMap[name] ?? 0) * importance) / 100,
-    );
-    const key = `${name}-${summarize(sequence)}`;
-    const entry: MainEntry = {
-      key,
-      frequency,
-      name,
-      ...rest,
-    };
-    for (const [i, element] of sequence.entries()) {
-      entry[i] = element;
-    }
-    return entry;
-  });
 
   dataSource.sort((a, b) => b.frequency - a.frequency);
 
@@ -372,12 +362,6 @@ export default function SequenceTable() {
           closable
         />
       ) : null}
-      {assemblyResult.length > 0 && (
-        <PrimitiveDuplicationAnalyzer
-          selections={selections}
-          setAnalyzer={setAnalyzer}
-        />
-      )}
       <ProTable<MainEntry>
         virtual
         scroll={{ y: 1080 }}

@@ -34,6 +34,12 @@ export const unicodeBlock = (code: number) => {
   return "unknown";
 };
 
+export const isValidCJKBasicChar = (char: string) => {
+  const code = char.codePointAt(0)!;
+  const block = unicodeBlock(code);
+  return block === "cjk";
+};
+
 export const isValidCJKChar = (char: string) => {
   const code = char.codePointAt(0)!;
   const block = unicodeBlock(code);
@@ -221,10 +227,12 @@ export const exportTSV = (data: string[][], filename: string) => {
 };
 
 export const renderIndexed = (
-  element: IndexedElement,
+  element: IndexedElement | undefined,
   display: (s: string) => string,
 ) => {
-  if (typeof element === "string") {
+  if (element === undefined) {
+    return "ε";
+  } else if (typeof element === "string") {
     return display(element);
   } else {
     return renderSuperScript(display(element.element), element.index);
@@ -326,55 +334,15 @@ export const makeFilter =
 
 export interface AnalyzerForm {
   type: "single" | "multi" | "all";
-  filter: boolean;
-  length: number;
+  position: number[];
   top: number;
 }
 
-export const defaultAnalyzer: AnalyzerForm = {
-  type: "all",
-  filter: false,
-  length: 0,
-  top: 0,
-};
-
-export const analyzePrimitiveDuplication = (
-  analyzer: AnalyzerForm,
-  characterFrequency: Frequency,
-  result: Combined[],
-) => {
-  const duplicationMap = new Map<string, Combined[]>();
-  const topCharacters = Object.fromEntries(
-    Object.entries(characterFrequency).slice(0, analyzer.top),
-  );
-  for (const assembly of result) {
-    const { name, sequence: elements } = assembly;
-    if (
-      (analyzer.type === "single" && [...name].length > 1) ||
-      (analyzer.type === "multi" && [...name].length === 1)
-    ) {
-      continue;
-    }
-
-    if (analyzer.top !== 0 && !topCharacters[name]) {
-      continue;
-    }
-    const sliced =
-      analyzer.length === 0 ? elements : elements.slice(0, analyzer.length);
-    const summary = summarize(sliced);
-    duplicationMap.set(
-      summary,
-      (duplicationMap.get(summary) || []).concat(assembly),
-    );
-  }
-
-  const filtered: Combined[] = [];
-  let selections = 0;
-  for (const names of duplicationMap.values()) {
-    selections += names.length - 1;
-    if (analyzer.filter && names.length > 1) {
-      filtered.push(...names);
-    }
-  }
-  return [selections, filtered] as const;
+export const makeDefaultAnalyzer = (maxLength: number) => {
+  const form: AnalyzerForm = {
+    type: "all",
+    position: range(0, maxLength),
+    top: 0,
+  };
+  return form;
 };

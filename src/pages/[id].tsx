@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button, Flex, Layout, Menu, Avatar, Tooltip, Empty } from "antd";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
@@ -7,6 +7,7 @@ import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
 import BoldOutlined from "@ant-design/icons/BoldOutlined";
 import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
 import RiseOutlined from "@ant-design/icons/RiseOutlined";
+import NumberOutlined from "@ant-design/icons/NumberOutlined";
 
 import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -22,7 +23,17 @@ import {
   primitiveRepertoireAtom,
 } from "~/atoms";
 import { listToObject } from "~/lib";
-import { LoadAssets } from "~/components/Utils";
+import {
+  getRecordFromTSV,
+  getDictFromTSV,
+  getDistributionFromTSV,
+} from "~/lib";
+import {
+  defaultDictionaryAtom,
+  frequencyAtom,
+  keyDistributionAtom,
+  pairEquivalenceAtom,
+} from "~/atoms";
 
 const items: MenuProps["items"] = [
   {
@@ -54,6 +65,11 @@ const items: MenuProps["items"] = [
     label: "校对",
     key: "debug",
     icon: <BoldOutlined />,
+  },
+  {
+    label: "统计",
+    key: "statistics",
+    icon: <NumberOutlined />,
   },
   {
     label: "优化",
@@ -159,27 +175,37 @@ function EditorLayout() {
   );
 }
 
-function LoadRepertoire() {
-  const setRepertoire = useSetAtom(primitiveRepertoireAtom);
-  fetchAsset("repertoire").then((value) => setRepertoire(listToObject(value)));
-  return null;
-}
-
 export default function Contextualized() {
   const { pathname } = useLocation();
   const id = pathname.split("/")[1]!;
+  const [configId, setConfigId] = useAtom(configIdAtom);
+  const setRepertoire = useSetAtom(primitiveRepertoireAtom);
+  const setF = useSetAtom(frequencyAtom);
+  const setW = useSetAtom(defaultDictionaryAtom);
+  const setKE = useSetAtom(keyDistributionAtom);
+  const setPE = useSetAtom(pairEquivalenceAtom);
 
-  if (!(id in localStorage)) {
+  useEffect(() => {
+    setConfigId(id);
+    fetchAsset("repertoire").then((value) =>
+      setRepertoire(listToObject(value)),
+    );
+    fetchAsset("frequency", "txt").then((x) => setF(getRecordFromTSV(x)));
+    fetchAsset("dictionary", "txt").then((x) => setW(getDictFromTSV(x)));
+    fetchAsset("key_distribution", "txt").then((x) =>
+      setKE(getDistributionFromTSV(x)),
+    );
+    fetchAsset("pair_equivalence", "txt").then((x) =>
+      setPE(getRecordFromTSV(x)),
+    );
+  }, [id]);
+
+  if (!(id in localStorage) || !configId) {
     return <Empty description="无方案数据" />;
   }
-  const [Id2, setId2] = useAtom(configIdAtom);
-  setId2(id);
-  if (!Id2) return null;
 
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
-      <LoadRepertoire />
-      <LoadAssets />
       <EditorLayout />
       <DevTools />
     </Suspense>
