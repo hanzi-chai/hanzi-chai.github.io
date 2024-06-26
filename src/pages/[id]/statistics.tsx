@@ -14,12 +14,14 @@ import {
 } from "@ant-design/pro-components";
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { Frequency, maxLengthAtom } from "~/atoms";
-import { AnalyzerForm, AssemblyResult, renderIndexed } from "~/lib";
+import type { Frequency } from "~/atoms";
+import { maxLengthAtom } from "~/atoms";
+import type { AnalyzerForm, AssemblyResult } from "~/lib";
+import { renderIndexed } from "~/lib";
 import { Select } from "~/components/Utils";
 import { useState } from "react";
 import { assemblyResultAtom } from "~/atoms/cache";
-import { ColumnsType } from "antd/es/table";
+import type { ColumnsType } from "antd/es/table";
 import { range, sum, sumBy } from "lodash-es";
 
 const numbers = [
@@ -131,6 +133,7 @@ const SubStatistics = ({ init }: { init: AnalyzerForm }) => {
         submitter={false}
         initialValues={analyzer}
         onValuesChange={(_, values) => setAnalyzer(values)}
+        autoFocusFirstInput={false}
       >
         <ProFormGroup>
           <ProFormSelect

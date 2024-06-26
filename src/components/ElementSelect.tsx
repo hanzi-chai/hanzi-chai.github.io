@@ -6,22 +6,19 @@ import {
   sequenceAtom,
 } from "~/atoms";
 import { Select } from "./Utils";
+import type { SelectProps } from "antd";
+import type { ProFormSelectProps } from "@ant-design/pro-components";
 
-export interface ElementSelectProps {
-  char?: string;
-  onChange: (s: string) => void;
+interface ElementSelectProps extends SelectProps<string> {
   customFilter?: (s: string) => boolean;
   excludeGrouped?: boolean;
   onlyRootsAndStrokes?: boolean;
 }
 
-export default function ElementSelect({
-  char,
-  onChange,
-  customFilter,
-  excludeGrouped,
-  onlyRootsAndStrokes,
-}: ElementSelectProps) {
+export default function ElementSelect(
+  props: ElementSelectProps & ProFormSelectProps,
+) {
+  const { customFilter, excludeGrouped, onlyRootsAndStrokes, ...rest } = props;
   const { mapping, grouping } = useAtomValue(keyboardAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const repertoire = useAtomValue(repertoireAtom);
@@ -38,14 +35,13 @@ export default function ElementSelect({
   const display = useAtomValue(displayAtom);
   return (
     <Select
+      {...rest}
       showSearch
       placeholder="输入笔画搜索"
       options={keys.map((x) => ({
         value: x,
         label: display(x),
       }))}
-      value={char}
-      onChange={onChange}
       filterOption={(input, option) => {
         if (option === undefined) return false;
         const value = option.value;

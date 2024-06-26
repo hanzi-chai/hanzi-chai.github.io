@@ -1,4 +1,5 @@
-import { WritableAtom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import type { WritableAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 export * from "jotai";
 export * from "./constants";
@@ -10,7 +11,7 @@ export * from "./encoder";
 export * from "./analysis";
 export * from "./optimization";
 import * as O from "optics-ts/standalone";
-import { SetStateAction } from "react";
+import type { SetStateAction } from "react";
 
 export function useAddAtom<K extends string, V>(
   atom: WritableAtom<Record<K, V>, [SetStateAction<Record<K, V>>], void>,

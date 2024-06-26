@@ -26,7 +26,6 @@ analysis:
     no_cross: false
   selector:
     - 根少优先
-    - 全符笔顺
     - 连续笔顺
     - 结构完整
     - 能连不交

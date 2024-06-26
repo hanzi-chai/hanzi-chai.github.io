@@ -1,13 +1,33 @@
-import { Config, Key, exportYAML, isValidCJKChar } from "~/lib";
+import type { Config } from "~/lib";
+import { isValidCJKChar, makeWorker } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
-import { LibchaiOutputEvent } from "~/worker";
+import type { LibchaiOutputEvent } from "~/worker";
 import { notification } from "antd";
-import { Err } from "~/api";
+import type { Err } from "~/api";
 import { createContext } from "react";
 import { isEqual } from "lodash-es";
 import { diff } from "deep-object-diff";
 import { load } from "js-yaml";
+
+export class Thread {
+  private worker: Worker;
+  constructor(type: "js" | "wasm") {
+    const url = type === "js" ? "../jsworker.ts" : undefined;
+    this.worker = makeWorker(url);
+  }
+
+  async spawn<R>(func: string, args: any[]): Promise<R> {
+    return await new Promise((resolve) => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = ({ data }) => {
+        channel.port1.close();
+        resolve(data);
+      };
+      this.worker.postMessage({ func, args }, [channel.port2]);
+    });
+  }
+}
 
 export const RemoteContext = createContext(true);
 

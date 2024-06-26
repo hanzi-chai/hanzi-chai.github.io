@@ -9,7 +9,8 @@ import {
   degeneratorNoCrossAtom,
 } from "~/atoms";
 import { DeleteButton, Select } from "./Utils";
-import { classifier, Feature } from "~/lib";
+import type { Feature } from "~/lib";
+import { classifier } from "~/lib";
 import { useState } from "react";
 
 export default function Degenerator() {

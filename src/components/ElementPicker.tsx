@@ -12,9 +12,11 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 import Algebra from "./Algebra";
-import { PronunciationElementTypes, applyRules, defaultAlgebra } from "~/lib";
+import type { PronunciationElementTypes } from "~/lib";
+import { applyRules, defaultAlgebra } from "~/lib";
 import { operators } from "~/lib";
 import { customElementsAtom } from "~/atoms/assets";
+import { phonemeEnumerationAtom } from "~/atoms/cache";
 
 interface ElementPickerProps<T extends string> {
   content: Map<T, string[]>;
@@ -108,35 +110,15 @@ export const ShapeElementPicker = function () {
 };
 
 export const PronElementPicker = function () {
-  const characters = useAtomValue(repertoireAtom);
-  const algebra = useAtomValue(algebraAtom);
+  const phonemeEnumeration = useAtomValue(phonemeEnumerationAtom);
   const [element, setElement] = useState<string | undefined>(undefined);
   const [type, setType] = useState<PronunciationElementTypes>("声母");
-  const syllables = [
-    ...new Set(
-      Object.values(characters)
-        .map((x) => x.readings.map((y) => y.pinyin))
-        .flat(),
-    ),
-  ];
-  const mergedAlgebras = [
-    ...Object.entries(defaultAlgebra),
-    ...Object.entries(algebra),
-  ];
-  const content: Map<PronunciationElementTypes, string[]> = new Map(
-    mergedAlgebras.map(([name, rules]) => {
-      const list = [
-        ...new Set(syllables.map((s) => applyRules(name, rules, s))),
-      ].sort();
-      return [name as PronunciationElementTypes, list];
-    }),
-  );
   return (
     <Flex vertical gap="small">
       <AlgebraEditor type={type} defaultType="声母" setType={setType} />
       <Wrapper
         activeKey={type}
-        items={[...content].map(([name, elements]) => {
+        items={[...phonemeEnumeration].map(([name, elements]) => {
           return {
             label: name,
             key: name,

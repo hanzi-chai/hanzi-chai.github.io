@@ -7,7 +7,7 @@ import {
 } from "@ant-design/pro-components";
 import { Button, Form, Space, notification } from "antd";
 import { CloseCircleOutlined, CopyOutlined } from "@ant-design/icons";
-import { Rule } from "~/lib";
+import type { Rule } from "~/lib";
 import { algebraAtom, useAddAtom } from "~/atoms";
 import { defaultAlgebra } from "~/lib";
 

@@ -8,7 +8,7 @@ import {
   useAppendAtom,
   weakAtom,
 } from "~/atoms";
-import Root from "./Element";
+import Element from "./Element";
 import { useState } from "react";
 import ElementSelect from "./ElementSelect";
 
@@ -32,14 +32,14 @@ export default function PrioritizedRoots({
       <Flex wrap="wrap" gap="small">
         {(list ?? []).map((x, i) => (
           <Space key={x}>
-            <Root>{display(x)}</Root>
+            <Element>{display(x)}</Element>
             <a onClick={() => exclude(i)}>删除</a>
           </Space>
         ))}
       </Flex>
       <Flex justify="center" gap="large">
         <ElementSelect
-          char={current}
+          value={current}
           onChange={setCurrent}
           onlyRootsAndStrokes
         />

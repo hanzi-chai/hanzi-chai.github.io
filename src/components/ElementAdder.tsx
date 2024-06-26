@@ -10,7 +10,8 @@ import {
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { Key, joinKeys } from "~/lib";
+import type { Key } from "~/lib";
+import { joinKeys } from "~/lib";
 
 export default function ElementAdder({ element }: { element?: string }) {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
@@ -56,7 +57,7 @@ export default function ElementAdder({ element }: { element?: string }) {
         <span>归并至</span>
         <ElementSelect
           excludeGrouped
-          char={undefined}
+          value={undefined}
           onChange={(event) => setMain(event)}
         />
         {/* <Select style={{width: "128px"}} options={allStyles.map(x => ({

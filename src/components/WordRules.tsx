@@ -1,7 +1,8 @@
 import { Flex, Select, Form, Cascader, Input, Space, Button } from "antd";
 import { useListAtom, wordRulesAtom } from "~/atoms";
 import { DeleteButton } from "./Utils";
-import { Config, wordLengthArray } from "~/lib";
+import type { Config } from "~/lib";
+import { wordLengthArray } from "~/lib";
 
 const defaultRules: NonNullable<Config["encoder"]["rules"]> = [
   { length_equal: 2, formula: "AaAbBaBb" },

@@ -22,15 +22,15 @@ import {
   KeyList,
   Select,
 } from "~/components/Utils";
-import {
+import type {
   AtomicConstraint,
   Constraints,
   LevelWeights,
   Objective,
   PartialWeights,
-  Solver,
   TierWeights,
 } from "~/lib";
+import { Solver } from "~/lib";
 
 const AtomicObjective = ({
   title,

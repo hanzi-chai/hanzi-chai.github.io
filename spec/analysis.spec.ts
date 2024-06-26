@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import type { SVGGlyph } from "~/lib";
 import {
-  SVGGlyph,
   analysis,
   assemble,
   classifier,
@@ -9,7 +9,7 @@ import {
   recursiveRenderComponent,
   recursiveRenderCompound,
 } from "~/lib";
-import { primitiveRepertoire, repertoire } from "./mock";
+import { focusAnalysis, primitiveRepertoire, repertoire } from "./mock";
 import { readFileSync } from "fs";
 
 describe("e2e test", () => {
@@ -17,7 +17,7 @@ describe("e2e test", () => {
     const config = examples["mswb"];
     const analysisResult = analysis(
       repertoire,
-      config,
+      focusAnalysis(config, repertoire),
       Object.keys(repertoire).filter(isValidCJKChar),
     );
     const { componentError, compoundError } = analysisResult;
@@ -27,7 +27,11 @@ describe("e2e test", () => {
 
     const assemblyResult = assemble(
       repertoire,
-      config,
+      {
+        algebra: config.algebra,
+        encoder: config.encoder,
+        keyboard: config.form,
+      },
       characters,
       [],
       analysisResult,

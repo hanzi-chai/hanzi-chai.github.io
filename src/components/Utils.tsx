@@ -15,7 +15,7 @@ import { useState } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import Root from "./Element";
+import Element from "./Element";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -84,7 +84,10 @@ export const Uploader = ({
   );
 };
 
-type Click = { onClick: () => void; disabled?: boolean };
+interface Click {
+  onClick: () => void;
+  disabled?: boolean;
+}
 
 export const PlusButton = ({ onClick }: Click) => {
   return (
@@ -135,7 +138,7 @@ export const KeyList = ({
     <Flex justify="space-between">
       <Space>
         {keys.map((x, index) => (
-          <Root key={index}>{x}</Root>
+          <Element key={index}>{x}</Element>
         ))}
       </Space>
       <Space>

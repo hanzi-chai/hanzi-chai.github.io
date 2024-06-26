@@ -1,6 +1,6 @@
 import { focusAtom } from "jotai-optics";
 import { keyboardAtom } from "./config";
-import { Grouping } from "~/lib";
+import type { Grouping } from "~/lib";
 
 export const alphabetAtom = focusAtom(keyboardAtom, (o) => o.prop("alphabet"));
 

@@ -1,7 +1,13 @@
-import type { Analysis, Degenerator, Selector, SieveName } from "~/lib";
+import type {
+  Analysis,
+  Degenerator,
+  Selector,
+  SieveName,
+  Feature,
+} from "~/lib";
 import { focusAtom } from "jotai-optics";
 import { analysisAtom } from "./config";
-import { Feature, mergeClassifier } from "~/lib";
+import { mergeClassifier } from "~/lib";
 import { atom } from "jotai";
 
 export const degeneratorAtom = focusAtom(analysisAtom, (o) =>

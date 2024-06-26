@@ -8,13 +8,8 @@ import {
   Popover,
   Space,
 } from "antd";
-import {
-  ForwardedRef,
-  createContext,
-  forwardRef,
-  useContext,
-  useState,
-} from "react";
+import type { ForwardedRef } from "react";
+import { createContext, forwardRef, useContext, useState } from "react";
 import {
   remoteCreate,
   remoteCreateWithoutUnicode,
@@ -23,13 +18,13 @@ import {
   remoteMutate,
 } from "~/api";
 import { DeleteButton, Select } from "~/components/Utils";
+import type { Reading } from "~/lib";
 import {
   chars,
   isValidCJKChar,
   getDummyBasicComponent,
   getDummyCompound,
   getDummyDerivedComponent,
-  Reading,
 } from "~/lib";
 import {
   useAtomValue,
@@ -48,10 +43,10 @@ import {
   RemoteContext,
   customReadingsAtom,
 } from "~/atoms";
-import { PrimitiveCharacter, Compound, Component } from "~/lib";
+import type { PrimitiveCharacter, Compound, Component } from "~/lib";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
-import { MenuProps } from "antd/lib";
+import type { MenuProps } from "antd/lib";
 import * as O from "optics-ts/standalone";
 import ReadingForm from "./ReadingForm";
 
@@ -349,7 +344,7 @@ export const EditReading = ({
       key: -1,
       label: (
         <ReadingForm
-          title={"编辑字音"}
+          title="编辑字音"
           initialValues={readings}
           onFinish={onFinish}
         />

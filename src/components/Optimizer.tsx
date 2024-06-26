@@ -10,12 +10,12 @@ import {
 } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
+import type { DictEntry } from "~/atoms";
 import {
   configAtom,
   repertoireAtom,
   assetsAtom,
   dictionaryAtom,
-  DictEntry,
   makeEncodeCallback,
   charactersAtom,
 } from "~/atoms";
@@ -26,9 +26,9 @@ import {
   makeWorker,
   stringifySequence,
 } from "~/lib";
-import { LibchaiOutputEvent } from "~/worker";
+import type { LibchaiOutputEvent } from "~/worker";
 import { load } from "js-yaml";
-import { Solver } from "~/lib";
+import type { Solver } from "~/lib";
 import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
 import { analysis } from "~/lib";
 import { customElementsAtom } from "~/atoms/assets";
@@ -82,13 +82,8 @@ const Schedule = ({
 
 export default function Optimizer() {
   const assets = useAtomValue(assetsAtom);
-  const dictionary = useAtomValue(dictionaryAtom);
   const config = useAtomValue(configAtom);
-  const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
-  const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const characters = useAtomValue(charactersAtom);
-  const customElements = useAtomValue(customElementsAtom);
+  const assemblyResult = useAtomValue(assemblyResultAtom);
   const [out1, setOut1] = useState("");
   const [result, setResult] = useState<[Date, string][]>([]);
   const [bestResult, setBestResult] = useState<string | undefined>(undefined);
@@ -101,26 +96,9 @@ export default function Optimizer() {
     useState<Partial<Solver["parameters"]>>(undefined);
   const params = config.optimization?.metaheuristic.parameters ?? autoParams;
   const prepareInput = () => {
-    let v1 = analysisResult;
-    if (v1 === null) {
-      v1 = analysis(repertoire, config, characters);
-      setAnalysisResult(v1);
-    }
-    let v2 = assemblyResult;
-    if (v2 === null) {
-      v2 = assemble(
-        repertoire,
-        config,
-        characters,
-        dictionary,
-        v1,
-        customElements,
-      );
-      setAssemblyResult(v2);
-    }
     return {
       config,
-      info: stringifySequence(v2, config),
+      info: stringifySequence(assemblyResult, config),
       assets,
     };
   };

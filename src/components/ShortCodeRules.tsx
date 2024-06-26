@@ -1,6 +1,7 @@
 import { Button, Cascader, Flex, Form } from "antd";
 import { DeleteButton, Select } from "./Utils";
-import { Config, ShortCodeRule, wordLengthArray } from "~/lib";
+import type { ShortCodeRule } from "~/lib";
+import { Config, wordLengthArray } from "~/lib";
 import { useListAtom } from "~/atoms";
 import { shortCodeConfigAtom } from "~/atoms/encoder";
 

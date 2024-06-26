@@ -1,4 +1,5 @@
-import { affineMerge, Compound, SVGGlyph } from "~/lib";
+import type { Compound, SVGGlyph } from "~/lib";
+import { affineMerge } from "~/lib";
 import { describe, expect, it } from "vitest";
 
 describe("affine transformations", () => {

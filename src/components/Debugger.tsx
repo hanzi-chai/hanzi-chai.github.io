@@ -1,10 +1,10 @@
 import { Flex, Form, Statistic, Switch, Table } from "antd";
-import { ColumnsType } from "antd/es/table";
+import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
+import type { DictEntry } from "~/atoms";
 import {
-  DictEntry,
   EncodeResult,
   charactersAtom,
   configAtom,

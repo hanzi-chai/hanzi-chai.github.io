@@ -1,4 +1,5 @@
-import { Distribution, Frequency } from "~/atoms";
+import type { Distribution } from "~/atoms";
+import { Frequency } from "~/atoms";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type {
@@ -15,7 +16,8 @@ import type {
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import { IndexedElement, Key, summarize } from ".";
+import type { IndexedElement, Key } from ".";
+import { summarize } from ".";
 import { Combined } from "~/components/SequenceTable";
 
 export const printableAscii = range(33, 127).map((x) =>
@@ -259,8 +261,8 @@ export const renderMapped = (mapped: string | Key[]) => {
   });
 };
 
-export const makeWorker = () => {
-  return new Worker(new URL("../worker.ts", import.meta.url), {
+export const makeWorker = (url = "../worker.ts") => {
+  return new Worker(new URL(url, import.meta.url), {
     type: "module",
   });
 };
@@ -325,6 +327,7 @@ export interface CharacterFilter {
 export const makeFilter =
   (input: string, form: Repertoire, sequence: Map<string, string>) =>
   (char: string) => {
+    if ((sequence.get(char)?.length ?? 0) <= 1) return false;
     let name = form[char]?.name ?? "";
     let seq = sequence.get(char) ?? "";
     return (

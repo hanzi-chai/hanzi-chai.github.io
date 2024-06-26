@@ -1,5 +1,12 @@
 import { add } from "mathjs";
-import { Compound, Draw, Operator, Point, SVGGlyph, SVGStroke } from "./data";
+import type {
+  Compound,
+  Draw,
+  Operator,
+  Point,
+  SVGGlyph,
+  SVGStroke,
+} from "./data";
 import { cloneDeep } from "lodash-es";
 
 class Affine {

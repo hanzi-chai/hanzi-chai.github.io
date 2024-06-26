@@ -4,12 +4,11 @@ import {
   binaryToIndices,
   defaultDegenerator,
   generateSliceBinaries,
-  defaultConfig,
 } from "~/lib";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
 import { computedGlyphs2 as renderedGlyphs, computedComponents } from "./mock";
-import { RenderedGlyph } from "~/lib";
+import type { RenderedGlyph } from "~/lib";
 
 const { randomInt } = create(all!, {
   randomSeed: "a",
@@ -46,39 +45,43 @@ describe("bi-directional conversion", () => {
 describe("generate slice binaries", () => {
   it("should find multiple occurence of a root", () => {
     const { 丰, 十 } = computedComponents;
-    expect(generateSliceBinaries(defaultConfig, 丰!, 十!)).toEqual([9, 5, 3]);
+    expect(generateSliceBinaries(defaultDegenerator, 丰!, 十!)).toEqual([
+      9, 5, 3,
+    ]);
   });
 
   it("should be able to distinguish 土 and 士", () => {
     const { 土, 士, 王, 壬 } = computedComponents;
-    expect(generateSliceBinaries(defaultConfig, 王!, 土!)).toEqual([7]);
-    expect(generateSliceBinaries(defaultConfig, 王!, 士!)).toEqual([]);
-    expect(generateSliceBinaries(defaultConfig, 壬!, 土!)).toEqual([]);
-    expect(generateSliceBinaries(defaultConfig, 壬!, 士!)).toEqual([7]);
+    expect(generateSliceBinaries(defaultDegenerator, 王!, 土!)).toEqual([7]);
+    expect(generateSliceBinaries(defaultDegenerator, 王!, 士!)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 壬!, 土!)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 壬!, 士!)).toEqual([7]);
   });
 
   it("should be able to distinguish 未 and 末", () => {
     const { 未, 末, 朱, 耒 } = computedComponents;
-    expect(generateSliceBinaries(defaultConfig, 朱!, 未!)).toEqual([31]);
-    expect(generateSliceBinaries(defaultConfig, 耒!, 未!)).toEqual([47, 31]);
-    expect(generateSliceBinaries(defaultConfig, 朱!, 末!)).toEqual([]);
-    expect(generateSliceBinaries(defaultConfig, 耒!, 末!)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 朱!, 未!)).toEqual([31]);
+    expect(generateSliceBinaries(defaultDegenerator, 耒!, 未!)).toEqual([
+      47, 31,
+    ]);
+    expect(generateSliceBinaries(defaultDegenerator, 朱!, 末!)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 耒!, 末!)).toEqual([]);
   });
 
   it("should be able to distinguish 口 and 囗", () => {
     const { 口, 囗, 中, 日 } = computedComponents;
-    expect(generateSliceBinaries(defaultConfig, 中!, 口!)).toEqual([14]);
-    expect(generateSliceBinaries(defaultConfig, 中!, 囗!)).toEqual([]);
-    expect(generateSliceBinaries(defaultConfig, 日!, 口!)).toEqual([]);
-    expect(generateSliceBinaries(defaultConfig, 日!, 囗!)).toEqual([13]);
+    expect(generateSliceBinaries(defaultDegenerator, 中!, 口!)).toEqual([14]);
+    expect(generateSliceBinaries(defaultDegenerator, 中!, 囗!)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 日!, 口!)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 日!, 囗!)).toEqual([13]);
   });
 
   it("should be able to distinguish 木无十 and 全字头", () => {
     const 木无十 = computedComponents["\ue087"]!;
     const 全字头 = computedComponents["\ue43d"]!;
     const { 朱 } = computedComponents;
-    expect(generateSliceBinaries(defaultConfig, 朱!, 木无十)).toEqual([3]);
-    expect(generateSliceBinaries(defaultConfig, 朱!, 全字头)).toEqual([]);
+    expect(generateSliceBinaries(defaultDegenerator, 朱!, 木无十)).toEqual([3]);
+    expect(generateSliceBinaries(defaultDegenerator, 朱!, 全字头)).toEqual([]);
   });
 });
 

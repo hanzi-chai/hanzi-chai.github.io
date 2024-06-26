@@ -1,28 +1,29 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { atomFamily, atomWithStorage } from "jotai/utils";
+import type { Analysis, Data, EncoderConfig } from "~/lib";
 import {
   defaultOptimization,
   type Algebra,
   type Config,
   type Info,
-  Analysis,
-  Data,
-  EncoderConfig,
+  defaultConfig,
 } from "~/lib";
 import { focusAtom } from "jotai-optics";
+import { atomWithLocation } from "jotai-location";
 
-/** 需要在根组件里提前修改它 */
-export const configIdAtom = atom("");
-configIdAtom.debugLabel = "id";
+const locationAtom = atomWithLocation();
 
-const configStorageAtomAtom = atom((get) => {
-  const id = get(configIdAtom);
-  return atomWithStorage(id, {} as Config);
-});
+export const idAtom = atom(
+  (get) => get(locationAtom).pathname?.split("/")[1] ?? "",
+);
+
+const configStorage = atomFamily((id: string) =>
+  atomWithStorage(id, defaultConfig),
+);
 
 export const configAtom = atom(
-  (get) => get(get(configStorageAtomAtom)),
-  (get, set, value: Config) => set(get(configStorageAtomAtom), value),
+  (get) => get(configStorage(get(idAtom))),
+  (get, set, value: Config) => set(configStorage(get(idAtom)), value),
 );
 configAtom.debugLabel = "config";
 

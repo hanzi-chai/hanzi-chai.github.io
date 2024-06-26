@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button, Flex, Modal } from "antd";
+import { Suspense, useState } from "react";
+import { Button, Flex, Modal, Skeleton } from "antd";
 import EncoderGraph from "~/components/EncoderGraph";
 import { ReactFlowProvider } from "reactflow";
 import WordRules from "~/components/WordRules";
@@ -62,7 +62,9 @@ export default function Assembly() {
   return (
     <Flex vertical gap="middle">
       <ConfigureRules />
-      <SequenceTable />
+      <Suspense fallback={<Skeleton active />}>
+        <SequenceTable />
+      </Suspense>
     </Flex>
   );
 }

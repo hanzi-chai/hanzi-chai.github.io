@@ -1,19 +1,17 @@
+import type { AnalysisConfig } from ".";
 import { affineMerge } from ".";
-import {
-  ComponentResults,
-  ComponentAnalysis,
-  InvalidGlyphError,
-} from "./component";
+import type { ComponentResults, ComponentAnalysis } from "./component";
+import { InvalidGlyphError } from "./component";
 import { Config } from "./config";
-import {
+import type {
   Block,
   Compound,
   Character,
   Repertoire,
   Operator,
-  PrimitiveRepertoire,
   SVGGlyph,
 } from "./data";
+import { PrimitiveRepertoire } from "./data";
 
 export type CompoundResults = Map<string, CompoundAnalysis>;
 
@@ -152,11 +150,10 @@ const assembleSequence = (
  */
 export const disassembleCompounds = (
   repertoire: Repertoire,
-  config: Config,
+  config: AnalysisConfig,
   componentResults: ComponentResults,
   characters: string[],
 ) => {
-  const { mapping, grouping } = config.form;
   const knownCharacters = new Set(characters);
   const compounds = topologicalSort(repertoire, characters);
   const compoundResults: CompoundResults = new Map();
@@ -165,7 +162,7 @@ export const disassembleCompounds = (
     return componentResults.get(s) || compoundResults.get(s);
   };
   for (const [char, glyph] of compounds.entries()) {
-    if (mapping[char] || grouping?.[char]) {
+    if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根
       compoundResults.set(char, { sequence: [char] });
       continue;

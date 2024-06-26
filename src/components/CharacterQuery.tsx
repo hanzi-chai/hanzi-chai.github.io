@@ -1,11 +1,6 @@
 import { Form, Input } from "antd";
-import {
-  CharacterFilter,
-  Operator,
-  PrimitiveRepertoire,
-  Repertoire,
-  operators,
-} from "~/lib";
+import type { CharacterFilter } from "~/lib";
+import { Operator, PrimitiveRepertoire, Repertoire, operators } from "~/lib";
 import {
   ProFormDigit,
   ProFormSelect,
@@ -28,6 +23,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
       labelWidth="auto"
       submitter={false}
       style={{ maxWidth: 1080 }}
+      autoFocusFirstInput={false}
     >
       <ProFormDigit label="Unicode" name="unicode" />
       <ProFormText label="名称" name="name" />

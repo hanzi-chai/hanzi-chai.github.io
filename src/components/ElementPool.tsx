@@ -13,8 +13,8 @@ import {
 import { isPUA, makeFilter } from "~/lib";
 import { StrokesView } from "./GlyphView";
 import StrokeSearch from "./CharacterSearch";
-import { ShapeElementTypes } from "./ElementPicker";
-import { PronunciationElementTypes } from "~/lib";
+import type { ShapeElementTypes } from "./ElementPicker";
+import type { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
 
 const Content = styled(Flex)`
@@ -64,7 +64,9 @@ const Element = ({
   return (
     <Popover
       content={
-        <div style={{ width: "200px" }}>{<StrokesView glyph={glyph} />}</div>
+        <div style={{ width: "200px" }}>
+          <StrokesView glyph={glyph} />
+        </div>
       }
     >
       {core}
@@ -85,14 +87,8 @@ export default function ElementPool({
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(sequenceAtom);
   const determinedRepertoire = useAtomValue(repertoireAtom);
-  const filtered =
-    name === "字根"
-      ? content.filter(
-          (x) =>
-            makeFilter(sequence, determinedRepertoire, sequenceMap)(x) &&
-            (sequenceMap.get(x)?.length ?? 0) > 1,
-        )
-      : content;
+  const filter = makeFilter(sequence, determinedRepertoire, sequenceMap);
+  const filtered = name === "字根" ? content.filter(filter) : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
   const [isOpen, setOpen] = useState(false);
   return (

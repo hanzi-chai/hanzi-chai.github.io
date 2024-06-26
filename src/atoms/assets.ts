@@ -1,5 +1,5 @@
 import { atomWithStorage } from "jotai/utils";
-import { Dictionary, Distribution, Equivalence, Frequency } from ".";
+import type { Dictionary, Distribution, Equivalence, Frequency } from ".";
 import { MiniDb } from "jotai-minidb";
 
 const db = new MiniDb<Dictionary>();

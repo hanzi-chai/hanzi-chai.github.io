@@ -2,9 +2,11 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { displayAtom, sequenceAtom, sortedRepertoireAtom } from "~/atoms";
 import { Select } from "./Utils";
-import { SelectProps } from "antd";
-import { PrimitiveCharacter, Character } from "~/lib";
-import { ProFormSelect, ProFormSelectProps } from "@ant-design/pro-components";
+import type { SelectProps } from "antd";
+import type { Character } from "~/lib";
+import { PrimitiveCharacter } from "~/lib";
+import type { ProFormSelectProps } from "@ant-design/pro-components";
+import { ProFormSelect } from "@ant-design/pro-components";
 
 interface ItemSelectProps extends SelectProps {
   customFilter?: (e: [string, Character]) => boolean;

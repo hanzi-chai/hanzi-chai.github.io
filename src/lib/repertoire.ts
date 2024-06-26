@@ -1,12 +1,11 @@
-import {
-  ComponentResults,
-  ComponentAnalysis,
-  disassembleComponents,
-  recursiveRenderComponent,
-} from "./component";
-import { CompoundResults, disassembleCompounds } from "./compound";
-import { Config, CustomGlyph, CustomReadings } from "./config";
-import {
+import { mergeClassifier } from ".";
+import type { ComponentResults, ComponentAnalysis } from "./component";
+import { disassembleComponents, recursiveRenderComponent } from "./component";
+import type { CompoundResults } from "./compound";
+import { disassembleCompounds, recursiveRenderCompound } from "./compound";
+import type { Analysis, CustomGlyph, CustomReadings } from "./config";
+import { Config } from "./config";
+import type {
   Compound,
   Character,
   Repertoire,
@@ -88,7 +87,46 @@ export interface AnalysisResult {
   customized: ComponentResults;
   compoundResults: CompoundResults;
   compoundError: string[];
+  rootSequence: Map<string, number[]>;
 }
+
+export interface AnalysisConfig {
+  analysis: Analysis;
+  primaryRoots: Set<string>;
+  secondaryRoots: Set<string>;
+}
+
+const getRootSequence = function (
+  repertoire: Repertoire,
+  config: AnalysisConfig,
+) {
+  const classifier = mergeClassifier(config.analysis?.classifier);
+  const findSequence = (x: string) => {
+    if (x.match(/[0-9]+/)) {
+      return [...x].map(Number);
+    }
+    const glyph = repertoire[x]?.glyph;
+    if (glyph === undefined) {
+      return [];
+    }
+    if (glyph.type === "basic_component") {
+      return glyph.strokes.map((s) => classifier[s.feature]);
+    } else {
+      const sequence = recursiveRenderCompound(glyph, repertoire);
+      if (sequence instanceof Error) return [];
+      return sequence.map((s) => classifier[s.feature]);
+    }
+  };
+  const rootSequence = new Map<string, number[]>();
+  const roots = new Set([...config.primaryRoots, ...config.secondaryRoots]);
+  for (const root of roots) {
+    rootSequence.set(root, findSequence(root));
+  }
+  for (const num of Object.values(classifier)) {
+    rootSequence.set(num.toString(), [num]);
+  }
+  return rootSequence;
+};
 
 /**
  * 对整个字符集中的字符进行拆分
@@ -98,7 +136,7 @@ export interface AnalysisResult {
  */
 export const analysis = function (
   repertoire: Repertoire,
-  config: Config,
+  config: AnalysisConfig,
   characters: string[],
 ): AnalysisResult {
   const [componentResults, componentError] = disassembleComponents(
@@ -124,6 +162,7 @@ export const analysis = function (
     customized,
     characters,
   );
+  const rootSequence = getRootSequence(repertoire, config);
   return {
     componentResults,
     componentError,
@@ -131,5 +170,6 @@ export const analysis = function (
     customized,
     compoundResults,
     compoundError,
+    rootSequence,
   };
 };

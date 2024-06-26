@@ -1,5 +1,6 @@
 import { isEqual } from "lodash-es";
-import { findTopology, RenderedGlyph } from "./topology";
+import type { RenderedGlyph } from "./topology";
+import { findTopology } from "./topology";
 import type { Interval } from "./bezier";
 import {
   curveLength,
@@ -7,9 +8,10 @@ import {
   isCollinear,
   sortTwoNumbers,
 } from "./bezier";
-import { Config, Degenerator } from "./config";
-import { Feature } from "./classifier";
-import { ComputedComponent } from "./component";
+import type { Degenerator } from "./config";
+import { Config } from "./config";
+import type { Feature } from "./classifier";
+import type { ComputedComponent } from "./component";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;
@@ -113,11 +115,10 @@ const verifySpecialRoots = (
  * @param root 字根
  */
 export const generateSliceBinaries = (
-  config: Config,
+  degenerator: Degenerator,
   component: ComputedComponent,
   root: ComputedComponent,
 ) => {
-  const degenerator = config.analysis?.degenerator ?? defaultDegenerator;
   const { glyph: cglyph, topology: ctopology } = component;
   const { glyph: rglyph, topology: rtopology } = root;
   if (cglyph.length < rglyph.length) return [];

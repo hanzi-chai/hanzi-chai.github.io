@@ -1,6 +1,6 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import Root from "./Element";
+import Element from "./Element";
 import {
   customizeAtom,
   displayAtom,
@@ -11,7 +11,7 @@ import {
 import type { Selector } from "~/lib";
 import { isLess, sieveMap } from "~/lib";
 import { binaryToIndices } from "~/lib";
-import { SchemeWithData } from "~/lib";
+import type { SchemeWithData } from "~/lib";
 
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {
@@ -50,7 +50,7 @@ export default function ResultDetail({
       render: (_, { sequence }) => (
         <Space>
           {sequence.map((root, index) => (
-            <Root key={index}>{display(root)}</Root>
+            <Element key={index}>{display(root)}</Element>
           ))}
         </Space>
       ),
@@ -105,7 +105,7 @@ export default function ResultDetail({
         <span>包含字根</span>
         {[...reversedRootMap].map(([s, v]) => (
           <Space key={s}>
-            <Root>{display(s)}</Root>
+            <Element>{display(s)}</Element>
             <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>
         ))}

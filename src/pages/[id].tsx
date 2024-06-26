@@ -14,13 +14,13 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import CusSpin from "~/components/CustomSpin";
 import { DevTools } from "jotai-devtools";
 import {
-  configIdAtom,
   infoAtom,
   useSetAtom,
   useAtomValue,
   useAtom,
   fetchAsset,
   primitiveRepertoireAtom,
+  configAtom,
 } from "~/atoms";
 import { listToObject } from "~/lib";
 import {
@@ -176,31 +176,18 @@ function EditorLayout() {
 }
 
 export default function Contextualized() {
-  const { pathname } = useLocation();
-  const id = pathname.split("/")[1]!;
-  const [configId, setConfigId] = useAtom(configIdAtom);
+  const id = location.pathname.split("/")[1] ?? "";
   const setRepertoire = useSetAtom(primitiveRepertoireAtom);
-  const setF = useSetAtom(frequencyAtom);
-  const setW = useSetAtom(defaultDictionaryAtom);
-  const setKE = useSetAtom(keyDistributionAtom);
-  const setPE = useSetAtom(pairEquivalenceAtom);
+
+  console.log("root mounted");
 
   useEffect(() => {
-    setConfigId(id);
     fetchAsset("repertoire").then((value) =>
       setRepertoire(listToObject(value)),
     );
-    fetchAsset("frequency", "txt").then((x) => setF(getRecordFromTSV(x)));
-    fetchAsset("dictionary", "txt").then((x) => setW(getDictFromTSV(x)));
-    fetchAsset("key_distribution", "txt").then((x) =>
-      setKE(getDistributionFromTSV(x)),
-    );
-    fetchAsset("pair_equivalence", "txt").then((x) =>
-      setPE(getRecordFromTSV(x)),
-    );
-  }, [id]);
+  }, []);
 
-  if (!(id in localStorage) || !configId) {
+  if (!(id in localStorage)) {
     return <Empty description="无方案数据" />;
   }
 

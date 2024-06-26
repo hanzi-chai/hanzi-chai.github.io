@@ -11,7 +11,12 @@ import {
   renderRootList,
 } from "~/lib";
 import type { DerivedComponent, PrimitiveRepertoire } from "~/lib";
-import { primitiveRepertoire, repertoire, computedComponents } from "./mock";
+import {
+  primitiveRepertoire,
+  repertoire,
+  computedComponents,
+  focusAnalysis,
+} from "./mock";
 
 describe("pruning", () => {
   const strokes = 4;
@@ -44,13 +49,21 @@ describe("get component scheme", () => {
     name: "",
     data: "国标五分类",
     keyboard: "米十五笔",
-    encoder: "形音码",
+    encoder: "形音码（米十五笔）",
   });
-
-  const rootList = renderRootList(repertoire, config);
+  const analysisConfig = focusAnalysis(config, repertoire);
+  const rootList = renderRootList(repertoire, [
+    ...analysisConfig.primaryRoots,
+    ...analysisConfig.secondaryRoots,
+  ]);
   it("can get component scheme", () => {
     const 天 = computedComponents.天!;
-    const scheme = getComponentScheme(天, rootList, config, classifier);
+    const scheme = getComponentScheme(
+      天,
+      [...rootList.values()],
+      analysisConfig,
+      classifier,
+    );
     expect(scheme).toHaveProperty("sequence");
   });
 });

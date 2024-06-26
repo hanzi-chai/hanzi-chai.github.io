@@ -1,5 +1,11 @@
 import rawrepertoire from "../public/cache/repertoire.json";
-import type { BasicComponent, PrimitiveCharacter } from "~/lib";
+import type {
+  AnalysisConfig,
+  BasicComponent,
+  Config,
+  PrimitiveCharacter,
+  Repertoire,
+} from "~/lib";
 import { listToObject, determine, computeComponent } from "~/lib";
 
 export const primitiveRepertoire = Object.fromEntries(
@@ -22,3 +28,16 @@ export const computedGlyphs2 = Object.fromEntries(
     return [k, v.glyph];
   }),
 );
+
+export const focusAnalysis = (config: Config, repertoire: Repertoire) => {
+  const result: AnalysisConfig = {
+    analysis: config.analysis ?? {},
+    primaryRoots: new Set(
+      Object.keys(config.form.mapping).filter((x) => repertoire[x]),
+    ),
+    secondaryRoots: new Set(
+      Object.keys(config.form.grouping ?? []).filter((x) => repertoire[x]),
+    ),
+  };
+  return result;
+};

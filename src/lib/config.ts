@@ -23,13 +23,13 @@ export interface Info {
 export const characterSetSpecifiers = ["general", "basic", "extended"] as const;
 export type CharacterSetSpecifier = (typeof characterSetSpecifiers)[number];
 
-export type Data = {
+export interface Data {
   character_set?: CharacterSetSpecifier;
   repertoire?: PrimitiveRepertoire;
   glyph_customization?: CustomGlyph;
   reading_customization?: CustomReadings;
   tags?: string[];
-};
+}
 
 export type CustomGlyph = Record<string, Component | Compound>;
 export type CustomReadings = Record<string, Reading[]>;

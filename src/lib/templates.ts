@@ -1,4 +1,4 @@
-import { Classifier } from "./classifier";
+import type { Classifier } from "./classifier";
 import type { Analysis, Config, Keyboard } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
@@ -68,8 +68,19 @@ export interface StarterType {
 }
 
 export const createConfig = function (starter: StarterType): Config {
+  const form = keyboardMap[starter.keyboard];
+  const classifier = classifierMap[starter.data];
+
+  // 确保笔画都在 mapping 里
+  for (const value of Object.values(classifier)) {
+    const element = value.toString();
+    if (!form.mapping[element]) {
+      form.mapping[element] = form.alphabet[0]!;
+    }
+  }
+
   return {
-    version: APP_VERSION,
+    version: "0.1",
     source: null,
     info: {
       name: starter.name,
@@ -78,11 +89,11 @@ export const createConfig = function (starter: StarterType): Config {
       description: "从模板创建",
     },
     analysis: {
-      classifier: classifierMap[starter.data]!,
+      classifier,
       degenerator: defaultDegenerator,
       selector: defaultSelector,
     },
-    form: keyboardMap[starter.keyboard],
+    form,
     encoder: encoderMap[starter.encoder],
   };
 };

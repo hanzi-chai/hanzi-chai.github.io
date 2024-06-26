@@ -100,7 +100,6 @@ const analyze = (
   const estdup1 = [...map1.values()]
     .filter((x) => x.length > 1)
     .reduce((a, b) => a + estimate(b.length, alphabet), 0);
-  // console.log([...map2].sort((a, b) => b[1].length - a[1].length).slice(0, 10))
   const estdup2 = [...map2.values()]
     .filter((x) => x.length > 1)
     .reduce((a, b) => a + estimate(b.length, alphabet * alphabet), 0);

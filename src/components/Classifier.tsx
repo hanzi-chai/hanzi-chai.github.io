@@ -7,12 +7,12 @@ import {
   useSetAtom,
 } from "~/atoms";
 import { Button, Flex, Space, notification } from "antd";
-import Root from "~/components/Element";
+import Element from "~/components/Element";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
-import { Feature } from "~/lib";
+import type { Feature } from "~/lib";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -25,9 +25,9 @@ function Draggable({ name }: { name: string }) {
     : undefined;
 
   return (
-    <Root ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <Element ref={setNodeRef} style={style} {...listeners} {...attributes}>
       {name}
-    </Root>
+    </Element>
   );
 }
 
@@ -82,7 +82,7 @@ export default function Classifier() {
       <Space direction="vertical">
         {items.map(([x, v]) => (
           <Flex gap="small" align="center" key={x}>
-            <Root>{x}</Root>
+            <Element>{x}</Element>
             <Droppable id={x}>
               {v.map((s) => (
                 <Draggable key={s} name={s} />

@@ -1,9 +1,9 @@
 import { Button, Flex, Form, Input } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import {
+  alphabetAtom,
   autoSelectLengthAtom,
   autoSelectPatternAtom,
-  keyboardAtom,
   maxLengthAtom,
   selectKeysAtom,
 } from "~/atoms";
@@ -17,7 +17,7 @@ export default function SelectRules() {
     autoSelectPatternAtom,
   );
   const [selectKeys, setSelectKeys] = useAtom(selectKeysAtom);
-  const { alphabet } = useAtomValue(keyboardAtom);
+  const alphabet = useAtomValue(alphabetAtom);
   const allowedSelectKeys = printableAscii.filter((x) => !alphabet.includes(x));
   return (
     <Flex vertical gap="middle">

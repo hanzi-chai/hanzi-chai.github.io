@@ -38,12 +38,12 @@ import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/api";
 import { DeleteButton, PlusButton } from "./Utils";
-import Root from "./Element";
+import Element from "./Element";
 import * as O from "optics-ts/standalone";
 import CharacterQuery from "./CharacterQuery";
 import TagPicker from "./TagPicker";
 import { findGlyphIndex } from "~/lib";
-import { TourProps } from "antd/lib";
+import type { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 
 type Column = ColumnType<PrimitiveCharacter>;
@@ -52,7 +52,7 @@ function ReadingList({ readings }: { readings: Reading[] }) {
   return (
     <Space>
       {readings.map((reading, index) => {
-        const core = <Root key={index}>{reading.pinyin}</Root>;
+        const core = <Element key={index}>{reading.pinyin}</Element>;
         if (readings.length === 1) return core;
         return <Tooltip title={reading.importance + "%"}>{core}</Tooltip>;
       })}
@@ -197,7 +197,7 @@ export default function CharacterTable() {
                 ) : (
                   <ComponentForm
                     key={i}
-                    title={`部件`}
+                    title="部件"
                     initialValues={x}
                     current={String.fromCodePoint(unicode)}
                     onFinish={(values) => {
@@ -266,7 +266,7 @@ export default function CharacterTable() {
             />
           ) : (
             <ComponentForm
-              title={`部件`}
+              title="部件"
               initialValues={customized}
               current={String.fromCodePoint(unicode)}
               onFinish={async (values) => {

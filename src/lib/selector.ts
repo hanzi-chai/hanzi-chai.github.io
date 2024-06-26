@@ -3,11 +3,12 @@ import {
   type ComputedComponent,
   NoSchemeError,
 } from "./component";
-import type { Config, SieveName } from "./config";
+import type { Analysis, Config, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
-import { type CurveRelation } from "./topology";
+import type { CurveRelation } from "./topology";
 import { isEqual } from "lodash-es";
 import { sortTwoNumbers } from "./bezier";
+import type { AnalysisConfig } from ".";
 
 export const defaultSelector: SieveName[] = [
   "结构完整",
@@ -22,14 +23,17 @@ export type Scheme = number[];
 
 type Comparable = number | number[];
 
+export interface Environment {
+  component: ComputedComponent;
+  rootMap: Map<number, string>;
+  analysis: Analysis;
+  primaryRoots: Set<string>;
+  secondaryRoots: Set<string>;
+}
+
 interface Sieve<T extends Comparable> {
   title: SieveName;
-  key: (
-    scheme: Scheme,
-    component: ComputedComponent,
-    config: Config,
-    rootMap: Map<number, string>,
-  ) => T;
+  key: (scheme: Scheme, environment: Environment) => T;
   display?: (data: T) => string;
 }
 
@@ -88,7 +92,7 @@ export const unbias: Sieve<number[]> = {
  */
 export const order: Sieve<number> = {
   title: "全符笔顺",
-  key: (scheme, component) => {
+  key: (scheme, { component }) => {
     const indices = scheme
       .map((x) => binaryToIndices(component.glyph.length)(x))
       .flat();
@@ -106,7 +110,7 @@ export const order: Sieve<number> = {
  */
 export const order2: Sieve<number> = {
   title: "连续笔顺",
-  key: (scheme, component) => {
+  key: (scheme, { component }) => {
     const indices = scheme.map((x) =>
       binaryToIndices(component.glyph.length)(x),
     );
@@ -126,9 +130,9 @@ export const order2: Sieve<number> = {
  */
 export const similar: Sieve<number> = {
   title: "非形近根",
-  key: (scheme, _, config, rootMap) => {
+  key: (scheme, { rootMap, secondaryRoots }) => {
     const roots = scheme.map((x) => rootMap.get(x)!);
-    return roots.filter((x) => config.form.grouping?.[x] !== undefined).length;
+    return roots.filter((x) => secondaryRoots.has(x)).length;
   },
 };
 
@@ -139,8 +143,8 @@ export const similar: Sieve<number> = {
  */
 export const strong: Sieve<number> = {
   title: "多强字根",
-  key: (scheme, _, config, rootMap) => {
-    const strong = config.analysis?.strong || [];
+  key: (scheme, { rootMap, analysis }) => {
+    const strong = analysis?.strong || [];
     const roots = scheme.map((x) => rootMap.get(x)!);
     return -roots.filter((x) => strong.includes(x)).length;
   },
@@ -153,8 +157,8 @@ export const strong: Sieve<number> = {
  */
 export const weak: Sieve<number> = {
   title: "少弱字根",
-  key: (scheme, _, config, rootMap) => {
-    const weak = config.analysis?.weak || [];
+  key: (scheme, { rootMap, analysis }) => {
+    const weak = analysis?.weak || [];
     const roots = scheme.map((x) => rootMap.get(x)!);
     return roots.filter((x) => weak.includes(x)).length;
   },
@@ -165,7 +169,7 @@ const makeTopologySieve = function (
   avoidRelationType: CurveRelation["type"][],
   title: SieveName,
 ): Sieve<number> {
-  const key: Sieve<number>["key"] = (scheme, component) => {
+  const key: Sieve<number>["key"] = (scheme, { component }) => {
     const parsedScheme = scheme.map((x) =>
       binaryToIndices(component.glyph.length)(x),
     );
@@ -212,7 +216,7 @@ export const attaching = makeTopologySieve("连", ["交"], "能散不连");
  */
 export const orientation: Sieve<number> = {
   title: "同向笔画",
-  key: (scheme, component) => {
+  key: (scheme, { component }) => {
     const n = component.glyph.length;
     const parsedScheme = scheme.map(binaryToIndices(n));
     let totalCrosses = 0;
@@ -229,7 +233,7 @@ export const orientation: Sieve<number> = {
             r ||= oriented;
           }
         }
-        totalCrosses += +r;
+        totalCrosses += Number(r);
       }
     }
     return totalCrosses;
@@ -252,7 +256,7 @@ const contains = (b1: number, b2: number) => (b1 | b2) === b1;
  */
 export const integrity: Sieve<number> = {
   title: "结构完整",
-  key: (scheme, _, __, rootMap) => {
+  key: (scheme, { rootMap }) => {
     const priorities = [
       "口",
       "囗",
@@ -300,7 +304,7 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
  * @param rootMap 字根映射，从切片的二进制表示到字根名称的映射
  */
 export const select = (
-  config: Config,
+  config: AnalysisConfig,
   component: ComputedComponent,
   schemeList: Scheme[],
   rootMap: Map<number, string>,
@@ -310,12 +314,17 @@ export const select = (
     evaluation: new Map<SieveName, number | number[]>(),
     excluded: false,
   }));
-  for (const sieveName of config.analysis?.selector ?? defaultSelector) {
+  const environment: Environment = {
+    component,
+    rootMap,
+    ...config,
+  };
+  for (const sieveName of config.analysis.selector ?? defaultSelector) {
     const sieve = sieveMap.get(sieveName)!;
     let min: number | number[] | undefined;
     for (const data of schemeData) {
       if (data.excluded) continue;
-      const value = sieve.key(data.scheme, component, config, rootMap);
+      const value = sieve.key(data.scheme, environment);
       data.evaluation.set(sieve.title, value);
       if (min === undefined) {
         min = value;

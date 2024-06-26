@@ -1,8 +1,10 @@
 import type {
-  BinaryCondition,
+  Algebra,
   Condition,
   Config,
+  EncoderConfig,
   Grouping,
+  Keyboard,
   Mapping,
   Op,
   Source,
@@ -12,11 +14,12 @@ import type { ComponentAnalysis } from "./component";
 import { recursiveRenderCompound, type CompoundAnalysis } from "./compound";
 import type { Extra } from "./element";
 import { algebraCache, findElement } from "./element";
-import { Repertoire } from "./data";
-import { AnalysisResult, analysis } from "./repertoire";
+import type { Repertoire } from "./data";
+import type { AnalysisResult } from "./repertoire";
+import { analysis } from "./repertoire";
 import { mergeClassifier } from "./classifier";
-import { Dictionary } from "~/atoms";
-import { CustomElementMap } from "~/atoms/assets";
+import type { Dictionary } from "~/atoms";
+import type { CustomElementMap } from "~/atoms/assets";
 
 export const getPriorityMap = (
   priorityShortCodes: [string, string, number][],
@@ -70,7 +73,7 @@ export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
 const satisfy = (
   condition: Condition,
   result: CharacterResult,
-  config: Config,
+  config: Algebra,
   extra: Extra,
   totalMapping: Record<string, string>,
 ) => {
@@ -102,27 +105,31 @@ const merge = (mapping: Mapping, grouping: Grouping) => {
 };
 
 export type IndexedElement = string | { element: string; index: number };
-export type Assembly = {
+export interface Assembly {
   name: string;
   pinyin_list: string[];
   sequence: IndexedElement[];
   importance: number;
   level?: number;
-};
+}
 export type AssemblyResult = Assembly[];
 
-const compile = (config: Config) => {
-  const { mapping, grouping, alphabet } = config.form;
+const compile = (
+  keyboard: Keyboard,
+  encoder: EncoderConfig,
+  algebra: Algebra,
+) => {
+  const { mapping, grouping, alphabet } = keyboard;
   const totalMapping = merge(mapping, grouping ?? {});
   return (result: CharacterResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
     while (node) {
       if (node.startsWith("s")) {
-        const source: Source = config.encoder.sources[node]!;
+        const source: Source = encoder.sources[node]!;
         const { object, next, index } = source;
         if (node !== "s0") {
-          const element = findElement(object!, result, config, extra);
+          const element = findElement(object!, result, algebra, extra);
           // 检查元素或键位是否有效
           if (element === undefined) {
             node = next;
@@ -163,44 +170,15 @@ const compile = (config: Config) => {
         }
         node = next;
       } else {
-        const condition: Condition = config.encoder.conditions[node]!;
-        if (satisfy(condition, result, config, extra, totalMapping)) {
+        const condition: Condition = encoder.conditions[node]!;
+        if (satisfy(condition, result, algebra, extra, totalMapping)) {
           node = condition.positive;
         } else {
           node = condition.negative;
         }
       }
     }
-    return codes.slice(0, config.encoder.max_length ?? codes.length);
-  };
-};
-
-const extraAnalysis = function (repertoire: Repertoire, config: Config): Extra {
-  const { mapping, grouping } = config.form;
-  const classifier = mergeClassifier(config.analysis?.classifier);
-  const findSequence = (x: string) => {
-    if (x.match(/[0-9]+/)) {
-      return [...x].map(Number);
-    }
-    const glyph = repertoire[x]?.glyph;
-    if (glyph === undefined) {
-      return [];
-    }
-    if (glyph.type === "basic_component") {
-      return glyph.strokes.map((s) => classifier[s.feature]);
-    } else {
-      const sequence = recursiveRenderCompound(glyph, repertoire);
-      if (sequence instanceof Error) return [];
-      return sequence.map((s) => classifier[s.feature]);
-    }
-  };
-  const rootSequence = new Map<string, number[]>();
-  const roots = Object.keys(mapping).concat(Object.keys(grouping ?? {}));
-  for (const root of roots) {
-    rootSequence.set(root, findSequence(root));
-  }
-  return {
-    rootSequence,
+    return codes.slice(0, encoder.max_length ?? codes.length);
   };
 };
 
@@ -238,6 +216,12 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
   if (matched) return result;
 };
 
+interface AssembleConfig {
+  encoder: EncoderConfig;
+  keyboard: Keyboard;
+  algebra: Algebra;
+}
+
 /**
  * 给定一个拆分结果，返回所有可能的编码
  *
@@ -250,15 +234,15 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
  */
 export const assemble = (
   repertoire: Repertoire,
-  config: Config,
+  config: AssembleConfig,
   characters: string[],
   dictionary: Dictionary,
   analysisResult: AnalysisResult,
   customElements: Record<string, CustomElementMap>,
 ) => {
   const { customized, compoundResults } = analysisResult;
-  const extra = extraAnalysis(repertoire, config);
-  const func = compile(config);
+  const extra = { rootSequence: analysisResult.rootSequence };
+  const func = compile(config.keyboard, config.encoder, config.algebra);
   const result: AssemblyResult = [];
   algebraCache.clear();
   const characterCache = new Map<string, IndexedElement[]>();

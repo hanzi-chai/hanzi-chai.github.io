@@ -1,35 +1,32 @@
-import {
-  Button,
-  Flex,
-  Form,
-  Dropdown,
-  notification,
-  FormListFieldData,
-} from "antd";
+import type { FormListFieldData } from "antd";
+import { Button, Flex, Form, Dropdown, notification } from "antd";
 import { EditorColumn, EditorRow, NumberInput } from "./Utils";
-import { MutableRefObject, ReactNode, useRef } from "react";
+import type { MutableRefObject, ReactNode } from "react";
+import { useRef } from "react";
 import type { PrimitiveCharacter, Component, Character } from "~/lib";
 import type { Feature } from "~/lib";
 import { getDummySVGStroke, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
 import { allRepertoireAtom, useAtomValue } from "~/atoms";
 import { GlyphSelect } from "./CharacterSelect";
+import type {
+  ProFormInstance,
+  ProFormListProps,
+} from "@ant-design/pro-components";
 import {
   ModalForm,
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
-  ProFormInstance,
   ProFormList,
-  ProFormListProps,
   ProFormSelect,
 } from "@ant-design/pro-components";
 import styled from "styled-components";
 import { CommonForm } from "./CompoundForm";
-import Root from "./Element";
+import Element from "./Element";
 import { recursiveRenderComponent } from "~/lib";
 import { Box, StrokesView } from "./GlyphView";
-import { BaseOptionType } from "antd/es/select";
+import type { BaseOptionType } from "antd/es/select";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={64} name={name} fieldProps={{ min: -100 }} />
@@ -184,7 +181,7 @@ export default function ComponentForm({
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Root type={primary ? "default" : "text"}>{title}</Root>
+    <Element type={primary ? "default" : "text"}>{title}</Element>
   );
   const isValidSource = ([name, _]: [string, Character]) => {
     let component: Component | undefined =

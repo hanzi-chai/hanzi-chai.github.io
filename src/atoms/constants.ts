@@ -1,5 +1,10 @@
 import { atom } from "jotai";
-import type { PrimitiveRepertoire } from "~/lib";
+import {
+  getDictFromTSV,
+  getDistributionFromTSV,
+  getRecordFromTSV,
+  type PrimitiveRepertoire,
+} from "~/lib";
 import { produce } from "immer";
 import {
   userFrequencyAtom,
@@ -64,10 +69,18 @@ export type Frequency = Record<string, number>;
 export type Distribution = Record<string, Loss>;
 export type Equivalence = Record<string, number>;
 
-export const defaultDictionaryAtom = atom<Dictionary>([]);
-export const frequencyAtom = atom<Frequency>({});
-export const keyDistributionAtom = atom<Distribution>({});
-export const pairEquivalenceAtom = atom<Equivalence>({});
+export const defaultDictionaryAtom = atom<Promise<Dictionary>>(async () =>
+  getDictFromTSV(await fetchAsset("dictionary", "txt")),
+);
+export const frequencyAtom = atom<Promise<Frequency>>(async () =>
+  getRecordFromTSV(await fetchAsset("frequency", "txt")),
+);
+export const keyDistributionAtom = atom<Promise<Distribution>>(async () =>
+  getDistributionFromTSV(await fetchAsset("key_distribution", "txt")),
+);
+export const pairEquivalenceAtom = atom<Promise<Equivalence>>(async () =>
+  getRecordFromTSV(await fetchAsset("pair_equivalence", "txt")),
+);
 
 export interface Assets {
   frequency: Frequency;
@@ -75,12 +88,12 @@ export interface Assets {
   pair_equivalence: Equivalence;
 }
 
-export const assetsAtom = atom((get) => {
-  const frequency = get(userFrequencyAtom) ?? get(frequencyAtom);
+export const assetsAtom = atom(async (get) => {
+  const frequency = get(userFrequencyAtom) ?? (await get(frequencyAtom));
   const key_distribution =
-    get(userKeyDistributionAtom) ?? get(keyDistributionAtom);
+    get(userKeyDistributionAtom) ?? (await get(keyDistributionAtom));
   const pair_equivalence =
-    get(userPairEquivalenceAtom) ?? get(pairEquivalenceAtom);
+    get(userPairEquivalenceAtom) ?? (await get(pairEquivalenceAtom));
   const assets: Assets = {
     frequency,
     key_distribution,
@@ -89,6 +102,6 @@ export const assetsAtom = atom((get) => {
   return assets;
 });
 
-export const dictionaryAtom = atom((get) => {
-  return get(userDictionaryAtom) ?? get(defaultDictionaryAtom);
+export const dictionaryAtom = atom(async (get) => {
+  return get(userDictionaryAtom) ?? (await get(defaultDictionaryAtom));
 });

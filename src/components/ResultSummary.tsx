@@ -6,69 +6,58 @@ import {
   customizeAtom,
   useRemoveAtom,
 } from "~/atoms";
-import { Button, Flex, Modal, Popover, Space } from "antd";
+import { Button, Flex, Form, Modal, Popover, Space } from "antd";
 import { DeleteButton, MinusButton, PlusButton } from "./Utils";
-import Root from "./Element";
-import ElementSelect, { ElementSelectProps } from "./ElementSelect";
+import Element from "./Element";
+import ElementSelect from "./ElementSelect";
 import Char from "./Character";
+import {
+  ModalForm,
+  ProForm,
+  ProFormGroup,
+  ProFormList,
+  ProFormSelect,
+} from "@ant-design/pro-components";
+import { InlineRender } from "./ComponentForm";
 
-function RootSelectPopover(props: ElementSelectProps) {
-  const display = useAtomValue(displayAtom);
-  const [open, setOpen] = useState(false);
+const Customize = ({
+  component,
+  initialValues,
+}: {
+  component: string;
+  initialValues: string[];
+}) => {
+  const add = useAddAtom(customizeAtom);
   return (
-    <Popover
-      open={open}
-      onOpenChange={(v) => setOpen(v)}
-      trigger="hover"
-      content={
-        <ElementSelect
-          {...props}
-          onChange={(v) => {
-            props.onChange(v);
-            setOpen(false);
-          }}
-        />
-      }
+    <ProForm<{ content: string[] }>
+      title={component}
+      layout="horizontal"
+      initialValues={{ content: initialValues }}
+      onFinish={async ({ content }) => {
+        add(component, content);
+        return true;
+      }}
     >
-      <Root>{display(props.char!)}</Root>
-    </Popover>
+      <ProFormList
+        name="content"
+        creatorButtonProps={{
+          creatorButtonText: "添加",
+          icon: false,
+          style: { width: "unset" },
+        }}
+        itemRender={InlineRender}
+        creatorRecord={() => "1"}
+        copyIconProps={false}
+      >
+        {(meta) => (
+          <Form.Item noStyle {...meta}>
+            <ElementSelect style={{ width: 96 }} onlyRootsAndStrokes />
+          </Form.Item>
+        )}
+      </ProFormList>
+    </ProForm>
   );
-}
-
-function AnalysisCustomizer({ component }: { component: string }) {
-  const customize = useAtomValue(customizeAtom);
-  const sequence = customize[component] ?? [];
-  const addCustomization = useAddAtom(customizeAtom);
-
-  return (
-    <>
-      <Flex gap="small" align="center">
-        <span>（自定义：）</span>
-        {sequence.map((x, i) => (
-          <RootSelectPopover
-            key={i}
-            char={x}
-            onlyRootsAndStrokes
-            onChange={(s) =>
-              addCustomization(
-                component,
-                sequence.map((y, j) => (i === j ? s : y)),
-              )
-            }
-          />
-        ))}
-        <PlusButton
-          onClick={() => addCustomization(component, sequence.concat("1"))}
-        />
-        <MinusButton
-          onClick={() =>
-            addCustomization(component, sequence.slice(0, sequence.length - 1))
-          }
-        />
-      </Flex>
-    </>
-  );
-}
+};
 
 export default function ResultSummary({
   char,
@@ -81,7 +70,6 @@ export default function ResultSummary({
 }) {
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
-  const add = useAddAtom(customizeAtom);
   const remove = useRemoveAtom(customizeAtom);
   const overrideRootSeries = customize[char];
   return (
@@ -89,18 +77,34 @@ export default function ResultSummary({
       <Space onClick={(e) => e.stopPropagation()}>
         <Char>{display(char)}</Char>
         {rootSeries.map((x, index) => (
-          <Root key={index}>{display(x)}</Root>
+          <Element key={index}>{display(x)}</Element>
         ))}
-        {overrideRootSeries && <AnalysisCustomizer component={char} />}
+        {overrideRootSeries && (
+          <Flex gap="small" align="center">
+            <span>（自定义：）</span>
+            {overrideRootSeries.map((x, i) => (
+              <Element>{display(x)}</Element>
+            ))}
+          </Flex>
+        )}
       </Space>
       {!disableCustomize && (
-        <span onClick={(e) => e.stopPropagation()}>
-          {overrideRootSeries ? (
+        <Flex onClick={(e) => e.stopPropagation()} gap="middle">
+          {overrideRootSeries && (
             <Button onClick={() => remove(char)}>取消自定义</Button>
-          ) : (
-            <Button onClick={() => add(char, ["1"])}>自定义</Button>
           )}
-        </span>
+          <Popover
+            title=""
+            content={
+              <Customize
+                component={char}
+                initialValues={overrideRootSeries ?? rootSeries}
+              />
+            }
+          >
+            <Button>自定义</Button>
+          </Popover>
+        </Flex>
       )}
     </Flex>
   );

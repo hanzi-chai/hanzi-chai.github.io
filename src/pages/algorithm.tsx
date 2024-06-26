@@ -1,10 +1,14 @@
 import { Flex, Layout, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
-import Root from "~/components/Element";
+import Element from "~/components/Element";
 import { repertoireAtom, displayAtom, primitiveRepertoireAtom } from "~/atoms";
 import { list } from "~/api";
-import { binaryToIndices, generateSliceBinaries } from "~/lib";
+import {
+  binaryToIndices,
+  defaultDegenerator,
+  generateSliceBinaries,
+} from "~/lib";
 import { computeComponent, type ComputedComponent } from "~/lib";
 import { defaultConfig } from "~/lib";
 import { listToObject } from "~/lib";
@@ -42,7 +46,11 @@ const DegeneratorTable = () => {
         const rootMap = new Map<string, number[]>();
         for (const another of toCompare) {
           if (another.name === record.name) continue;
-          const slices = generateSliceBinaries(defaultConfig, record, another);
+          const slices = generateSliceBinaries(
+            defaultDegenerator,
+            record,
+            another,
+          );
           if (slices.length) {
             rootMap.set(another.name, slices);
           }
@@ -58,7 +66,7 @@ const DegeneratorTable = () => {
             {rootList.map(([name, slices]) => {
               return (
                 <Space key={name}>
-                  <Root>{display(name)}</Root>
+                  <Element>{display(name)}</Element>
                   {slices.map((x) => `(${convert(x).join(", ")})`).join(", ")}
                 </Space>
               );

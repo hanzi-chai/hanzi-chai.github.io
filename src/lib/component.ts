@@ -5,13 +5,14 @@ import type {
   SVGGlyph,
   Component,
 } from "./data";
-import { generateSliceBinaries } from "./degenerator";
+import { defaultDegenerator, generateSliceBinaries } from "./degenerator";
 import { select } from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
 import type { RenderedGlyph, Topology } from "./topology";
 import { findTopology, renderSVGGlyph } from "./topology";
 import { mergeClassifier, type Classifier } from "./classifier";
 import { isComponent, isValidCJKChar } from "./utils";
+import type { AnalysisConfig } from ".";
 import { recursiveRenderCompound } from ".";
 
 export class InvalidGlyphError extends Error {}
@@ -106,11 +107,13 @@ export class MultipleSchemeError extends Error {}
 export const getComponentScheme = function (
   component: ComputedComponent,
   rootData: ComputedComponent[],
-  config: Config,
+  config: AnalysisConfig,
   classifier: Classifier,
 ): ComponentAnalysis | NoSchemeError | MultipleSchemeError {
-  const { mapping } = config.form;
-  if (mapping[component.name])
+  if (
+    config.primaryRoots.has(component.name) ||
+    config.secondaryRoots.has(component.name)
+  )
     return {
       strokes: component.glyph.length,
       sequence: [component.name],
@@ -122,7 +125,11 @@ export const getComponentScheme = function (
     }),
   );
   for (const root of rootData) {
-    const binaries = generateSliceBinaries(config, component, root);
+    const binaries = generateSliceBinaries(
+      config.analysis?.degenerator ?? defaultDegenerator,
+      component,
+      root,
+    );
     binaries.forEach((binary) => rootMap.set(binary, root.name));
   }
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
@@ -250,9 +257,7 @@ export const computeComponent = (name: string, glyph: SVGGlyph) => {
  *
  * @returns 所有计算后字根的列表
  */
-export const renderRootList = (repertoire: Repertoire, config: Config) => {
-  const { mapping, grouping } = config.form;
-  const elements = [...Object.keys(mapping), ...Object.keys(grouping ?? {})];
+export const renderRootList = (repertoire: Repertoire, elements: string[]) => {
   const rootList: Map<string, ComputedComponent> = new Map();
   for (const root of elements) {
     const glyph = repertoire[root]?.glyph;
@@ -270,10 +275,9 @@ export const renderRootList = (repertoire: Repertoire, config: Config) => {
 
 const getLeafComponents = (
   repertoire: Repertoire,
-  config: Config,
+  config: AnalysisConfig,
   characters: string[],
 ) => {
-  const { mapping, grouping } = config.form;
   const queue = [...characters];
   const leafSet = new Set<string>();
   const knownSet = new Set<string>(characters);
@@ -281,11 +285,11 @@ const getLeafComponents = (
     const char = queue.shift()!;
     const glyph = repertoire[char]!.glyph!;
     if (!glyph) {
-      console.log(char, char.codePointAt(0)?.toString(16));
       continue;
     }
     if (glyph.type === "compound") {
-      if (mapping[char] || grouping?.[char]) continue;
+      if (config.primaryRoots.has(char) || config.secondaryRoots.has(char))
+        continue;
       glyph.operandList.forEach((x) => {
         if (!knownSet.has(x)) {
           knownSet.add(x);
@@ -309,11 +313,14 @@ const getLeafComponents = (
  */
 export const disassembleComponents = function (
   repertoire: Repertoire,
-  config: Config,
+  config: AnalysisConfig,
   characters: string[],
 ): [ComponentResults, string[]] {
   const leafSet = getLeafComponents(repertoire, config, characters);
-  const rootMap = renderRootList(repertoire, config);
+  const rootMap = renderRootList(repertoire, [
+    ...config.primaryRoots,
+    ...config.secondaryRoots,
+  ]);
   const rootList = [...rootMap.values()];
   const classifier = mergeClassifier(config.analysis?.classifier);
   const result: [string, ComponentAnalysis][] = [];

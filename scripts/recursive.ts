@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
-import { Character, Compound, PrimitiveCharacter } from "~/lib";
+import type { Compound, PrimitiveCharacter } from "~/lib";
+import { Character } from "~/lib";
 
 const repertoire = JSON.parse(
   readFileSync("public/cache/repertoire.json", "utf-8"),

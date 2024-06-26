@@ -1,4 +1,4 @@
-import type { Config, Rule } from "./config";
+import type { Algebra, Config, Rule } from "./config";
 import type { CharacterResult } from "./assembly";
 
 export interface Extra {
@@ -203,7 +203,7 @@ export const algebraCache = new Map<string, string>();
 export const findElement = (
   object: CodableObject,
   result: CharacterResult,
-  config: Config,
+  algebra: Algebra,
   extra: Extra,
 ) => {
   const { pinyin, sequence } = result;
@@ -223,7 +223,7 @@ export const findElement = (
       const name = object.subtype;
       const hash = name + ":" + pinyin;
       if (algebraCache.has(hash)) return algebraCache.get(hash);
-      const rules = defaultAlgebra[name] || config.algebra?.[name];
+      const rules = defaultAlgebra[name] || algebra?.[name];
       const transformed = applyRules(name, rules, pinyin);
       algebraCache.set(hash, transformed);
       return transformed;

@@ -60,7 +60,7 @@ function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
   dumper,
 }: {
   atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
-  defaultAtom: Atom<V>;
+  defaultAtom: Atom<Promise<V>>;
   title: string;
   description: string;
   parser: (text: string) => V;

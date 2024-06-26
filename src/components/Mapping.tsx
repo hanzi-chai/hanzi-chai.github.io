@@ -15,7 +15,7 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 
-import Root from "./Element";
+import Element from "./Element";
 import Char from "./Character";
 import { isPUA, joinKeys, renderMapped } from "~/lib";
 import { DeleteButton, Select, Uploader } from "./Utils";
@@ -23,7 +23,7 @@ import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { Key } from "~/lib";
+import type { Key } from "~/lib";
 
 interface MappedInfo {
   name: string;
@@ -69,7 +69,7 @@ const KeysEditor = ({
   const display = useAtomValue(displayAtom);
   return (
     <Flex justify="space-between" gap="large">
-      <Root>{display(name)}</Root>
+      <Element>{display(name)}</Element>
       <Space>
         {keys.map((key, index) => {
           return (
@@ -127,7 +127,7 @@ const AdjustableRootPopoverContent = ({
           <span>归并元素</span>
           {affiliates.map((x) => (
             <Flex key={x} justify="space-between">
-              <Root>{display(x)}</Root>
+              <Element>{display(x)}</Element>
               <Button
                 onClick={() => {
                   addMapping(x, joinKeys(keys));
@@ -153,7 +153,7 @@ const AdjustableRootPopoverContent = ({
           或归并至
           <ElementSelect
             excludeGrouped
-            char={undefined}
+            value={undefined}
             onChange={(event) => setMain(event)}
             customFilter={(s) => s !== name}
           />
@@ -192,7 +192,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
         />
       }
     >
-      <Root
+      <Element
         style={{ color: display(name) === "丢失的元素" ? "red" : "initial" }}
       >
         <Space size={4}>
@@ -216,7 +216,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
               </span>
             ))}
         </Space>
-      </Root>
+      </Element>
     </Popover>
   );
 };

@@ -13,7 +13,7 @@ import {
 import { InlineRender, StaticList } from "./ComponentForm";
 import { useAtomValue } from "jotai";
 import { repertoireAtom, tagsAtom } from "~/atoms";
-import Root from "./Element";
+import Element from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
 import { recursiveRenderCompound } from "~/lib";
@@ -79,7 +79,7 @@ export default function CompoundForm({
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Root type={primary ? "default" : "text"}>{title}</Root>
+    <Element type={primary ? "default" : "text"}>{title}</Element>
   );
   return (
     <ModalForm<Compound>
@@ -119,7 +119,7 @@ export default function CompoundForm({
           <Flex gap="0px 8px" wrap="wrap">
             <ProFormSelect
               label="结构"
-              name={"operator"}
+              name="operator"
               onChange={(value) => {
                 const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
                 const newList = list.concat("一").slice(0, newLength);
@@ -128,8 +128,8 @@ export default function CompoundForm({
               options={operators.map((x) => ({ value: x, label: x }))}
               style={{ width: "96px" }}
               allowClear={false}
-            ></ProFormSelect>
-            <StaticList name={"operandList"} itemRender={InlineRender}>
+            />
+            <StaticList name="operandList" itemRender={InlineRender}>
               {(meta, i) => (
                 <Form.Item noStyle {...meta}>
                   <GlyphSelect style={{ width: "96px" }} disabled={readonly} />
@@ -139,7 +139,7 @@ export default function CompoundForm({
           </Flex>
           <ProFormList
             label="笔顺"
-            name={"order"}
+            name="order"
             copyIconProps={false}
             creatorRecord={{ index: 0, strokes: 0 }}
             creatorButtonProps={{ creatorButtonText: "添加一组笔画" }}

@@ -1,18 +1,16 @@
 import { atom, useAtomValue } from "jotai";
 import { primitiveRepertoireAtom } from "./constants";
-import {
+import type {
   CharacterSetSpecifier,
   CustomReadings,
   PrimitiveCharacter,
-  isPUA,
-  isValidCJKBasicChar,
-  isValidCJKChar,
 } from "~/lib";
+import { isPUA, isValidCJKBasicChar, isValidCJKChar } from "~/lib";
 import { recursiveRenderCompound } from "~/lib";
 import { dataAtom } from ".";
 import { focusAtom } from "jotai-optics";
-import { PrimitiveRepertoire, SVGGlyph } from "~/lib";
-import { CustomGlyph } from "~/lib";
+import type { PrimitiveRepertoire, SVGGlyph } from "~/lib";
+import type { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
 

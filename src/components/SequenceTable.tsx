@@ -1,37 +1,22 @@
-import { useState } from "react";
 import { Alert, Button, Flex, Input, Space } from "antd";
+import type { DictEntry } from "~/atoms";
 import {
   useAtomValue,
   configAtom,
   displayAtom,
-  repertoireAtom,
-  useAtom,
   assetsAtom,
-  dictionaryAtom,
   priorityShortCodesAtom,
   maxLengthAtom,
   useSetAtom,
   makeEncodeCallback,
-  DictEntry,
-  charactersAtom,
 } from "~/atoms";
 import type { Assembly, IndexedElement } from "~/lib";
-import {
-  assemble,
-  getPriorityMap,
-  stringifySequence,
-  summarize,
-  analysis,
-} from "~/lib";
+import { assemble, getPriorityMap, stringifySequence, summarize } from "~/lib";
 import { exportTSV, makeWorker, renderIndexed, renderSuperScript } from "~/lib";
-import {
-  analysisResultAtom,
-  assemblyResultAtom,
-  encodeResultAtom,
-} from "~/atoms/cache";
-import { ProColumns, ProTable } from "@ant-design/pro-components";
+import { assemblyResultAtom, encodeResultAtom } from "~/atoms/cache";
+import type { ProColumns } from "@ant-design/pro-components";
+import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
-import { customElementsAtom } from "~/atoms/assets";
 
 interface MainEntry {
   key: string;
@@ -44,39 +29,6 @@ interface MainEntry {
   short_rank: number;
   [n: number]: IndexedElement;
 }
-
-const RecomputeAssembly = () => {
-  const repertoire = useAtomValue(repertoireAtom);
-  const config = useAtomValue(configAtom);
-  const characters = useAtomValue(charactersAtom);
-  const [analysisResult, setAnalysisResult] = useAtom(analysisResultAtom);
-  const [assemblyResult, setAssemblyResult] = useAtom(assemblyResultAtom);
-  const customElements = useAtomValue(customElementsAtom);
-  const dictionary = useAtomValue(dictionaryAtom);
-  return (
-    <Button
-      type="primary"
-      onClick={() => {
-        let result = analysisResult;
-        if (result === null) {
-          result = analysis(repertoire, config, characters);
-          setAnalysisResult(result);
-        }
-        let assembled = assemble(
-          repertoire,
-          config,
-          characters,
-          dictionary,
-          result,
-          customElements,
-        );
-        setAssemblyResult(assembled);
-      }}
-    >
-      更新拆分表
-    </Button>
-  );
-};
 
 const ExportAssembly = () => {
   const assemblyResult = useAtomValue(assemblyResultAtom) ?? [];
@@ -104,7 +56,7 @@ const ExportAssembly = () => {
         exportTSV(tsv, "elements.txt");
       }}
     >
-      导出拆分表
+      导出元素序列表
     </Button>
   );
 };
@@ -342,12 +294,7 @@ export default function SequenceTable() {
     },
   );
 
-  const toolbar = [
-    <RecomputeAssembly />,
-    <ExportAssembly />,
-    <RecomputeCode />,
-    <ExportCode />,
-  ];
+  const toolbar = [<ExportAssembly />, <RecomputeCode />, <ExportCode />];
 
   return (
     <>
