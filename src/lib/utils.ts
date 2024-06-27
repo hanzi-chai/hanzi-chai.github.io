@@ -1,5 +1,3 @@
-import type { Distribution } from "~/atoms";
-import { Frequency } from "~/atoms";
 import type { Feature } from "./classifier";
 import { schema } from "./classifier";
 import type {
@@ -16,9 +14,21 @@ import type {
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import type { IndexedElement, Key } from ".";
-import { summarize } from ".";
-import { Combined } from "~/components/SequenceTable";
+import type { Key } from "./config";
+import type { IndexedElement } from "./assembly";
+
+interface Loss {
+  ideal: number;
+  lt_penalty: number;
+  gt_penalty: number;
+}
+
+export type Dictionary = [string, string][];
+export type Frequency = Record<string, number>;
+export type Distribution = Record<string, Loss>;
+export type Equivalence = Record<string, number>;
+
+export type CustomElementMap = Record<string, string[]>;
 
 export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -98,6 +108,7 @@ export const getDummySVGStroke = function (
           return { command, parameterList: [20] };
         case "c":
         case "z":
+        default:
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
       }
     }),
@@ -261,8 +272,14 @@ export const renderMapped = (mapped: string | Key[]) => {
   });
 };
 
-export const makeWorker = (url = "../worker.ts") => {
-  return new Worker(new URL(url, import.meta.url), {
+export const makeJsWorker = () => {
+  return new Worker(new URL("../jsworker.ts", import.meta.url), {
+    type: "module",
+  });
+};
+
+export const makeWasmWorker = () => {
+  return new Worker(new URL("../worker.ts", import.meta.url), {
     type: "module",
   });
 };

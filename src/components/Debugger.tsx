@@ -4,12 +4,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
 import type { DictEntry } from "~/atoms";
-import {
-  EncodeResult,
-  charactersAtom,
-  configAtom,
-  repertoireAtom,
-} from "~/atoms";
+import { charactersAtom, configAtom, repertoireAtom } from "~/atoms";
 import { encodeResultAtom } from "~/atoms/cache";
 import { Select, Uploader } from "~/components/Utils";
 import { getSupplemental } from "~/lib";

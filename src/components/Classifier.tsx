@@ -4,7 +4,6 @@ import {
   customClassifierAtom,
   useAddAtom,
   useAtomValue,
-  useSetAtom,
 } from "~/atoms";
 import { Button, Flex, Space, notification } from "antd";
 import Element from "~/components/Element";

@@ -1,4 +1,4 @@
-import type { Config, SieveName } from "./config";
+import type { SieveName } from "./config";
 import type {
   Repertoire,
   PrimitiveRepertoire,
@@ -11,18 +11,18 @@ import { bisectLeft, bisectRight } from "d3-array";
 import type { RenderedGlyph, Topology } from "./topology";
 import { findTopology, renderSVGGlyph } from "./topology";
 import { mergeClassifier, type Classifier } from "./classifier";
-import { isComponent, isValidCJKChar } from "./utils";
-import type { AnalysisConfig } from ".";
-import { recursiveRenderCompound } from ".";
+import { isComponent } from "./utils";
+import type { AnalysisConfig } from "./repertoire";
+import { recursiveRenderCompound } from "./compound";
 
 export class InvalidGlyphError extends Error {}
 
 export const makeIntervalSum = (strokes: number, rootsSet: Set<number>) => {
   const array = [...Array(strokes).keys()].map((x) => 1 << x).reverse();
   const intervalSums = new Set<number>();
-  for (let start = 0; start != strokes - 1; ++start) {
+  for (let start = 0; start !== strokes - 1; ++start) {
     let sum = array[start]!;
-    for (let end = start + 1; end != strokes; ++end) {
+    for (let end = start + 1; end !== strokes; ++end) {
       sum += array[end]!;
       if (rootsSet.has(sum)) {
         intervalSums.add(sum);
@@ -35,8 +35,8 @@ export const makeIntervalSum = (strokes: number, rootsSet: Set<number>) => {
 /**
  * 根据一个部件中包含的所有字根的情况，导出所有可能的拆分方案
  *
- * @param strokes 部件笔画数
- * @param roots 部件包含的字根列表，其中每个字根用二进制表示
+ * @param strokes - 部件笔画数
+ * @param roots - 部件包含的字根列表，其中每个字根用二进制表示
  *
  * 函数通过递归的方式，每次选取剩余部分的第一笔，然后在字根列表中找到包含这个笔画的所有字根
  * 将这些可能性与此前已经拆分的部分组合，得到新的拆分方案
@@ -93,10 +93,10 @@ export class MultipleSchemeError extends Error {}
 
 /**
  * 通过自动拆分算法，给定字根列表，对部件进行拆分
- * @param component 部件
- * @param rootData 字根列表
- * @param config 配置
- * @param classifier 笔画分类器
+ * @param component - 部件
+ * @param rootData - 字根列表
+ * @param config - 配置
+ * @param classifier - 笔画分类器
  *
  * 如果拆分唯一，则返回拆分结果；否则返回错误
  *
@@ -197,9 +197,9 @@ export type ComponentResults = Map<string, ComponentAnalysis>;
  * 递归渲染一个部件（基本部件或者衍生部件）
  * 如果是基本部件就直接返回，如果是衍生部件则先渲染源字的图形，然后解引用得到这个部件的图形
  *
- * @param component 部件
- * @param repertoire 原始字符集
- * @param glyphCache 部件缓存
+ * @param component - 部件
+ * @param repertoire - 原始字符集
+ * @param glyphCache - 部件缓存
  *
  * @returns 部件的 SVG 图形
  * @throws InvalidGlyphError 无法渲染
@@ -252,8 +252,8 @@ export const computeComponent = (name: string, glyph: SVGGlyph) => {
 /**
  * 将所有的字根都计算成 ComputedComponent
  *
- * @param repertoire 字符集
- * @param config 配置
+ * @param repertoire - 字符集
+ * @param config - 配置
  *
  * @returns 所有计算后字根的列表
  */
@@ -306,8 +306,8 @@ const getLeafComponents = (
 /**
  * 对所有部件进行拆分
  *
- * @param repertoire 字符集
- * @param config 配置
+ * @param repertoire - 字符集
+ * @param config - 配置
  *
  * @returns 拆分结果和无法拆分的汉字列表
  */

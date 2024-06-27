@@ -11,8 +11,13 @@ import {
   makeEncodeCallback,
 } from "~/atoms";
 import type { Assembly, IndexedElement } from "~/lib";
-import { assemble, getPriorityMap, stringifySequence, summarize } from "~/lib";
-import { exportTSV, makeWorker, renderIndexed, renderSuperScript } from "~/lib";
+import { getPriorityMap, stringifySequence, summarize } from "~/lib";
+import {
+  exportTSV,
+  makeWasmWorker,
+  renderIndexed,
+  renderSuperScript,
+} from "~/lib";
 import { assemblyResultAtom, encodeResultAtom } from "~/atoms/cache";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
@@ -73,7 +78,7 @@ const RecomputeCode = () => {
       onClick={async () => {
         const info = stringifySequence(assemblyResult!, config);
         const data = { config, info, assets };
-        const worker = makeWorker();
+        const worker = makeWasmWorker();
         worker.onmessage = makeEncodeCallback(setCode);
         worker.postMessage({ type: "encode", data });
       }}
@@ -294,7 +299,11 @@ export default function SequenceTable() {
     },
   );
 
-  const toolbar = [<ExportAssembly />, <RecomputeCode />, <ExportCode />];
+  const toolbar = [
+    <ExportAssembly key={1} />,
+    <RecomputeCode key={2} />,
+    <ExportCode key={3} />,
+  ];
 
   return (
     <>

@@ -7,9 +7,9 @@ import {
   Switch,
   Typography,
 } from "antd";
-import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { focusAtom } from "jotai-optics";
-import { Suspense, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { keyboardAtom, useListAtom } from "~/atoms";
 import { constraintsAtom, objectiveAtom } from "~/atoms/optimization";
 import ElementSelect from "~/components/ElementSelect";
@@ -30,7 +30,6 @@ import type {
   PartialWeights,
   TierWeights,
 } from "~/lib";
-import { Solver } from "~/lib";
 
 const AtomicObjective = ({
   title,
@@ -105,6 +104,7 @@ const ListObjective = ({
         {value &&
           value.map((num, index) => (
             <Form.Item
+              key={index}
               label={weightTitles[index]}
               style={{
                 marginBottom: 0,
@@ -453,7 +453,7 @@ const ConstraintList = ({
                 {type !== "indices" ? (
                   <ElementSelect
                     excludeGrouped
-                    char={element}
+                    value={element}
                     onChange={(char) =>
                       modify(index, { ...constraint, element: char })
                     }

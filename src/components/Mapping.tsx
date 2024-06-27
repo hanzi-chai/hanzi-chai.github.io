@@ -1,7 +1,6 @@
 import { Alert, Button, Flex, Form, List, Popover, Space } from "antd";
 import { useState, useMemo } from "react";
 import {
-  atom,
   useAtomValue,
   useSetAtom,
   keyboardAtom,
@@ -38,7 +37,7 @@ const useAffiliates = (name: string) => {
       Object.entries(grouping)
         .filter(([, to]) => to === name)
         .map(([x]) => x),
-    [grouping],
+    [grouping, name],
   );
   const partialAffiliates = useMemo(
     () =>
@@ -63,9 +62,7 @@ const KeysEditor = ({
   onDelete?: () => void;
 }) => {
   const addMapping = useAddAtom(mappingAtom);
-  const addGrouping = useAddAtom(groupingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
-  const removeGrouping = useRemoveAtom(groupingAtom);
   const display = useAtomValue(displayAtom);
   return (
     <Flex justify="space-between" gap="large">
@@ -144,7 +141,7 @@ const AdjustableRootPopoverContent = ({
         <Flex vertical gap="small">
           <span>部分归并元素</span>
           {partialAffiliates.map(([x, keys]) => (
-            <KeysEditor name={x} keys={keys} />
+            <KeysEditor key={x} name={x} keys={keys} />
           ))}
         </Flex>
       )}
@@ -260,7 +257,7 @@ export default function Mapping() {
   const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
   const repertoire = useAtomValue(repertoireAtom);
   const keyboard = Array.from(
-    "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?" + "qwertyuiopasdfghjkl;zxcvbnm,./",
+    "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?qwertyuiopasdfghjkl;zxcvbnm,./",
   );
   const printable_ascii = range(32, 127).map((x) => String.fromCodePoint(x));
   const [char, setChar] = useState<string | undefined>(undefined);
@@ -332,7 +329,7 @@ export default function Mapping() {
                 unknownKeys.push(key);
                 continue;
               }
-              if ("strokes" in glyph && glyph.strokes.length == 1) {
+              if ("strokes" in glyph && glyph.strokes.length === 1) {
                 unknownKeys.push(key);
                 continue;
               }

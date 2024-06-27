@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import type { Dictionary, Distribution, Equivalence, Frequency } from "~/lib";
 import {
   getDictFromTSV,
   getDistributionFromTSV,
@@ -57,17 +58,6 @@ export const mutateRepertoireAtom = atom(
     );
   },
 );
-
-interface Loss {
-  ideal: number;
-  lt_penalty: number;
-  gt_penalty: number;
-}
-
-export type Dictionary = [string, string][];
-export type Frequency = Record<string, number>;
-export type Distribution = Record<string, Loss>;
-export type Equivalence = Record<string, number>;
 
 export const defaultDictionaryAtom = atom<Promise<Dictionary>>(async () =>
   getDictFromTSV(await fetchAsset("dictionary", "txt")),

@@ -1,4 +1,3 @@
-import { Button } from "antd";
 import type { Reading } from "~/lib";
 import {
   ModalForm,
@@ -7,8 +6,6 @@ import {
   ProFormList,
   ProFormText,
 } from "@ant-design/pro-components";
-import { useAtomValue } from "jotai";
-import { repertoireAtom, tagsAtom } from "~/atoms";
 
 export default function ReadingForm({
   title,
@@ -19,7 +16,6 @@ export default function ReadingForm({
   initialValues: Reading[];
   onFinish: (values: { readings: Reading[] }) => Promise<boolean>;
 }) {
-  const repertoire = useAtomValue(repertoireAtom);
   return (
     <ModalForm<{ readings: Reading[] }>
       title={title}

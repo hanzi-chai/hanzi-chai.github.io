@@ -1,4 +1,4 @@
-import { atom, useAtomValue } from "jotai";
+import { atom } from "jotai";
 import { primitiveRepertoireAtom } from "./constants";
 import type {
   CharacterSetSpecifier,

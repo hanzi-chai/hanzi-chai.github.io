@@ -1,8 +1,7 @@
-import type { AnalysisConfig } from ".";
-import { affineMerge } from ".";
+import type { AnalysisConfig } from "./repertoire";
+import { affineMerge } from "./affine";
 import type { ComponentResults, ComponentAnalysis } from "./component";
 import { InvalidGlyphError } from "./component";
-import { Config } from "./config";
 import type {
   Block,
   Compound,
@@ -11,7 +10,6 @@ import type {
   Operator,
   SVGGlyph,
 } from "./data";
-import { PrimitiveRepertoire } from "./data";
 
 export type CompoundResults = Map<string, CompoundAnalysis>;
 
@@ -40,8 +38,8 @@ interface CompoundBasicAnalysis {
 /**
  * 将复合体递归渲染为 SVG 图形
  *
- * @param compound 复合体
- * @param repertoire 原始字符集
+ * @param compound - 复合体
+ * @param repertoire - 原始字符集
  *
  * @returns SVG 图形
  * @throws InvalidGlyphError 无法渲染
@@ -75,13 +73,13 @@ export const recursiveRenderCompound = function (
 /**
  * 对字符集进行拓扑排序，得到复合体的拆分顺序
  *
- * @param repertoire 字符集
+ * @param repertoire - 字符集
  *
  * @returns 拓扑排序后的复合体
  *
  * @remarks 这个实现目前比较低效，需要改进
  */
-const topologicalSort = (repertoire: Repertoire, characters: string[]) => {
+const topologicalSort = (repertoire: Repertoire) => {
   let compounds = new Map<string, Character>();
   for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, Character>();
@@ -144,9 +142,9 @@ const assembleSequence = (
 /**
  * 对复合体进行拆分
  *
- * @param repertoire 字符集
- * @param config 配置
- * @param componentResults 部件拆分结果
+ * @param repertoire - 字符集
+ * @param config - 配置
+ * @param componentResults - 部件拆分结果
  */
 export const disassembleCompounds = (
   repertoire: Repertoire,
@@ -155,7 +153,7 @@ export const disassembleCompounds = (
   characters: string[],
 ) => {
   const knownCharacters = new Set(characters);
-  const compounds = topologicalSort(repertoire, characters);
+  const compounds = topologicalSort(repertoire);
   const compoundResults: CompoundResults = new Map();
   const compoundError: string[] = [];
   const getResult = function (s: string): PartitionResult | undefined {

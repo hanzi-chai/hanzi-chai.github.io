@@ -10,7 +10,6 @@ import {
   generateSliceBinaries,
 } from "~/lib";
 import { computeComponent, type ComputedComponent } from "~/lib";
-import { defaultConfig } from "~/lib";
 import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";

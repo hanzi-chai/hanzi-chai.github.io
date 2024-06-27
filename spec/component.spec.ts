@@ -2,15 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   classifier,
   createConfig,
-  defaultConfig,
   generateSchemes,
   getComponentScheme,
-  listToObject,
   makeIntervalSum,
   recursiveRenderComponent,
   renderRootList,
 } from "~/lib";
-import type { DerivedComponent, PrimitiveRepertoire } from "~/lib";
+import type { DerivedComponent } from "~/lib";
 import {
   primitiveRepertoire,
   repertoire,

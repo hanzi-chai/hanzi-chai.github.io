@@ -4,9 +4,7 @@ import { displayAtom, sequenceAtom, sortedRepertoireAtom } from "~/atoms";
 import { Select } from "./Utils";
 import type { SelectProps } from "antd";
 import type { Character } from "~/lib";
-import { PrimitiveCharacter } from "~/lib";
 import type { ProFormSelectProps } from "@ant-design/pro-components";
-import { ProFormSelect } from "@ant-design/pro-components";
 
 interface ItemSelectProps extends SelectProps {
   customFilter?: (e: [string, Character]) => boolean;
@@ -22,14 +20,14 @@ export const GlyphSelect = (props: ItemSelectProps & ProFormSelectProps) => {
   useEffect(() => {
     const initial = char ? [{ value: char, label: display(char) }] : [];
     setData(initial);
-  }, [props.value]);
+  }, [props.value, char, display]);
   const onSearch = (input: string) => {
     if (input.length === 0) {
       setData([]);
       return;
     }
     const allResults = sortedRepertoire
-      .filter(props.customFilter ?? ((_) => true))
+      .filter(customFilter ?? (() => true))
       .map(([x]) => ({
         value: x,
         label: display(x),

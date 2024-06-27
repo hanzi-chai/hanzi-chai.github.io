@@ -17,23 +17,10 @@ import {
   infoAtom,
   useSetAtom,
   useAtomValue,
-  useAtom,
   fetchAsset,
   primitiveRepertoireAtom,
-  configAtom,
 } from "~/atoms";
 import { listToObject } from "~/lib";
-import {
-  getRecordFromTSV,
-  getDictFromTSV,
-  getDistributionFromTSV,
-} from "~/lib";
-import {
-  defaultDictionaryAtom,
-  frequencyAtom,
-  keyDistributionAtom,
-  pairEquivalenceAtom,
-} from "~/atoms";
 
 const items: MenuProps["items"] = [
   {
@@ -178,8 +165,6 @@ function EditorLayout() {
 export default function Contextualized() {
   const id = location.pathname.split("/")[1] ?? "";
   const setRepertoire = useSetAtom(primitiveRepertoireAtom);
-
-  console.log("root mounted");
 
   useEffect(() => {
     fetchAsset("repertoire").then((value) =>

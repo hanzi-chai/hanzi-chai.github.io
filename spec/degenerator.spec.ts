@@ -93,7 +93,7 @@ const hasroot = (a: RenderedGlyph, indices: number[], root: RenderedGlyph) => {
 };
 
 describe("degenerate cross tests", () => {
-  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 赤, 以, 人, 氺, 丆, 疌, 龰, 夫 } =
+  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 以, 人, 氺, 丆, 疌, 龰, 夫 } =
     renderedGlyphs as any;
   const han = renderedGlyphs["\ue104"]!;
   it("says 天 has 大", () => {

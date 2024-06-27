@@ -22,7 +22,7 @@ import { Select } from "~/components/Utils";
 import { useState } from "react";
 import { assemblyResultAtom } from "~/atoms/cache";
 import type { ColumnsType } from "antd/es/table";
-import { range, sum, sumBy } from "lodash-es";
+import { range, sumBy } from "lodash-es";
 
 const numbers = [
   "零",
@@ -198,7 +198,12 @@ export default function Statistics() {
       <Typography.Title level={2}>离散性</Typography.Title>
       {range(maxLength, 0).map((x) => {
         const type = "single";
-        return <SubStatistics init={{ type, position: range(0, x), top: 0 }} />;
+        return (
+          <SubStatistics
+            key={x}
+            init={{ type, position: range(0, x), top: 0 }}
+          />
+        );
       })}
     </Flex>
   );

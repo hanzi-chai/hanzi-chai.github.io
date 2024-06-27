@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   useAtomValue,
   displayAtom,
@@ -6,18 +5,11 @@ import {
   customizeAtom,
   useRemoveAtom,
 } from "~/atoms";
-import { Button, Flex, Form, Modal, Popover, Space } from "antd";
-import { DeleteButton, MinusButton, PlusButton } from "./Utils";
+import { Button, Flex, Form, Popover, Space } from "antd";
 import Element from "./Element";
 import ElementSelect from "./ElementSelect";
 import Char from "./Character";
-import {
-  ModalForm,
-  ProForm,
-  ProFormGroup,
-  ProFormList,
-  ProFormSelect,
-} from "@ant-design/pro-components";
+import { ProForm, ProFormList } from "@ant-design/pro-components";
 import { InlineRender } from "./ComponentForm";
 
 const Customize = ({
@@ -83,7 +75,7 @@ export default function ResultSummary({
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
             {overrideRootSeries.map((x, i) => (
-              <Element>{display(x)}</Element>
+              <Element key={i}>{display(x)}</Element>
             ))}
           </Flex>
         )}

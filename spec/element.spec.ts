@@ -5,8 +5,6 @@ import {
   renderName,
   renderList,
   parseList,
-  findElement,
-  CodableObject,
 } from "../src/lib/element";
 
 describe("element", () => {

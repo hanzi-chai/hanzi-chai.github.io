@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { forwardRef } from "react";
 import { tagsAtom, userTagsAtom } from "~/atoms";
 
-const TagPicker = forwardRef((_, ref) => {
+const TagPicker = forwardRef(() => {
   const [tags] = useAtom(tagsAtom);
   const [userTags, setUserTags] = useAtom(userTagsAtom);
 

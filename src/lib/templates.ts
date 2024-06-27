@@ -1,5 +1,5 @@
 import type { Classifier } from "./classifier";
-import type { Analysis, Config, Keyboard } from "./config";
+import type { Config } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
 import snow from "../../examples/snow.yaml";

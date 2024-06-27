@@ -24,9 +24,8 @@ import {
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
-import type { ComponentResults, AnalysisResult, CharacterFilter } from "~/lib";
-import type { CompoundResults } from "~/lib";
-import { analysis, exportTSV, makeCharacterFilter } from "~/lib";
+import type { AnalysisResult, CharacterFilter } from "~/lib";
+import { exportTSV, makeCharacterFilter } from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
@@ -76,7 +75,7 @@ const ConfigureRules = () => {
   );
 };
 
-const AnalysisResult = ({ filter }: { filter: CharacterFilter }) => {
+const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const [step, setStep] = useState(0 as 0 | 1);
   const repertoire = useAtomValue(repertoireAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
@@ -223,7 +222,7 @@ export default function Analysis() {
       </Flex>
       <CharacterQuery setFilter={setFilter} />
       <Suspense fallback={<Skeleton active />}>
-        <AnalysisResult filter={filter} />
+        <AnalysisResults filter={filter} />
       </Suspense>
     </Flex>
   );

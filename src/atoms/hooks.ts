@@ -1,5 +1,5 @@
 import type { Config } from "~/lib";
-import { isValidCJKChar, makeWorker } from "~/lib";
+import { isValidCJKChar, makeJsWorker, makeWasmWorker } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import type { LibchaiOutputEvent } from "~/worker";
@@ -12,12 +12,11 @@ import { load } from "js-yaml";
 
 export class Thread {
   private worker: Worker;
-  constructor(type: "js" | "wasm") {
-    const url = type === "js" ? "../jsworker.ts" : undefined;
-    this.worker = makeWorker(url);
+  public constructor(type: "js" | "wasm") {
+    this.worker = type === "js" ? makeJsWorker() : makeWasmWorker();
   }
 
-  async spawn<R>(func: string, args: any[]): Promise<R> {
+  public async spawn<R>(func: string, args: any[]): Promise<R> {
     return await new Promise((resolve) => {
       const channel = new MessageChannel();
       channel.port1.onmessage = ({ data }) => {

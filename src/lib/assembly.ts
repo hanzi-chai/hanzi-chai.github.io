@@ -11,15 +11,12 @@ import type {
   WordRule,
 } from "./config";
 import type { ComponentAnalysis } from "./component";
-import { recursiveRenderCompound, type CompoundAnalysis } from "./compound";
+import type { CompoundAnalysis } from "./compound";
 import type { Extra } from "./element";
 import { algebraCache, findElement } from "./element";
 import type { Repertoire } from "./data";
 import type { AnalysisResult } from "./repertoire";
-import { analysis } from "./repertoire";
-import { mergeClassifier } from "./classifier";
-import type { Dictionary } from "~/atoms";
-import type { CustomElementMap } from "~/atoms/assets";
+import type { Dictionary, CustomElementMap } from "./utils";
 
 export const getPriorityMap = (
   priorityShortCodes: [string, string, number][],
@@ -64,11 +61,11 @@ export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
 /**
  * 给定一个条件，判断是否满足
  *
- * @param condition 条件
- * @param result 中间结果
- * @param config 配置
- * @param extra 额外信息
- * @param totalMapping 映射
+ * @param condition - 条件
+ * @param result - 中间结果
+ * @param config - 配置
+ * @param extra - 额外信息
+ * @param totalMapping - 映射
  */
 const satisfy = (
   condition: Condition,
@@ -225,10 +222,10 @@ interface AssembleConfig {
 /**
  * 给定一个拆分结果，返回所有可能的编码
  *
- * @param repertoire 字符集
- * @param config 配置
- * @param characters 需要编码的汉字列表
- * @param analysisResult 分析结果
+ * @param repertoire - 字符集
+ * @param config - 配置
+ * @param characters - 需要编码的汉字列表
+ * @param analysisResult - 分析结果
  *
  * @returns 组装结果
  */

@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import type { Compound, SVGStroke } from "~/lib";
+import type { SVGStroke } from "~/lib";
 
-const FontView = ({ reference }: { reference: string }) => (
+export const FontView = ({ reference }: { reference: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"

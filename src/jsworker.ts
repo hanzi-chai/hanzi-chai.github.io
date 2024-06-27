@@ -1,5 +1,6 @@
 import type { AnalysisResult, AssemblyResult } from "./lib";
-import { analysis, assemble } from "./lib";
+import { analysis } from "./lib/repertoire";
+import { assemble } from "./lib/assembly";
 
 export interface JsInputEvent {
   func: "analysis" | "assembly";
@@ -10,15 +11,16 @@ export type JsOutputEvent = AnalysisResult | AssemblyResult;
 
 self.onmessage = async (event: MessageEvent<JsInputEvent>) => {
   const channel = event.ports[0]!;
+  const args = event.data.args;
   try {
     switch (event.data.func) {
       case "analysis":
-        const [repertoire, config, characters] = event.data.args;
-        channel.postMessage(analysis(repertoire, config, characters));
+        channel.postMessage(analysis(args[0], args[1], args[2]));
         break;
       case "assembly":
-        const [arg1, arg2, arg3, arg4, arg5, arg6] = event.data.args;
-        channel.postMessage(assemble(arg1, arg2, arg3, arg4, arg5, arg6));
+        channel.postMessage(
+          assemble(args[0], args[1], args[2], args[3], args[4], args[5]),
+        );
         break;
     }
   } catch (error) {

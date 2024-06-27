@@ -9,7 +9,6 @@ import {
   sortTwoNumbers,
 } from "./bezier";
 import type { Degenerator } from "./config";
-import { Config } from "./config";
 import type { Feature } from "./classifier";
 import type { ComputedComponent } from "./component";
 
@@ -49,9 +48,9 @@ const strokeFeatureEqual = (
  * 对于一些特殊的字根，一般性的字根认同规则可能不足以区分它们，需要特殊处理
  * 这里判断了待拆分部件中的某些笔画究竟是不是这个字根
  *
- * @param component 待拆分部件
- * @param root 字根
- * @param indices 笔画索引列表
+ * @param component - 待拆分部件
+ * @param root - 字根
+ * @param indices - 笔画索引列表
  */
 const verifySpecialRoots = (
   component: ComputedComponent,
@@ -110,9 +109,9 @@ const verifySpecialRoots = (
  * 给定一个部件和一个字根，找出这个部件所有包含这个字根的方式
  * 如果部件不包含这个字根，就返回空列表
  *
- * @param config 配置
- * @param component 待拆分部件
- * @param root 字根
+ * @param config - 配置
+ * @param component - 待拆分部件
+ * @param root - 字根
  */
 export const generateSliceBinaries = (
   degenerator: Degenerator,

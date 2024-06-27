@@ -1,9 +1,9 @@
 import type { FormListFieldData } from "antd";
-import { Button, Flex, Form, Dropdown, notification } from "antd";
-import { EditorColumn, EditorRow, NumberInput } from "./Utils";
+import { Flex, Form } from "antd";
+import { EditorColumn, EditorRow } from "./Utils";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef } from "react";
-import type { PrimitiveCharacter, Component, Character } from "~/lib";
+import type { Character, Component } from "~/lib";
 import type { Feature } from "~/lib";
 import { getDummySVGStroke, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
@@ -183,7 +183,7 @@ export default function ComponentForm({
   ) : (
     <Element type={primary ? "default" : "text"}>{title}</Element>
   );
-  const isValidSource = ([name, _]: [string, Character]) => {
+  const isValidSource = ([name]: [string, Character]) => {
     let component: Component | undefined =
       repertoire[name]?.glyphs.find(isComponent);
     if (component === undefined) return false;
@@ -262,7 +262,7 @@ export default function ComponentForm({
                       : getDummySVGStroke("横")
                   }
                 >
-                  {(meta, index) => {
+                  {(meta) => {
                     return (
                       <StrokeForm
                         maxIndex={maxIndex}

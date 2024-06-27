@@ -37,7 +37,7 @@ import {
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/api";
-import { DeleteButton, PlusButton } from "./Utils";
+import { DeleteButton } from "./Utils";
 import Element from "./Element";
 import * as O from "optics-ts/standalone";
 import CharacterQuery from "./CharacterQuery";
@@ -52,9 +52,13 @@ function ReadingList({ readings }: { readings: Reading[] }) {
   return (
     <Space>
       {readings.map((reading, index) => {
-        const core = <Element key={index}>{reading.pinyin}</Element>;
+        const core = <Element>{reading.pinyin}</Element>;
         if (readings.length === 1) return core;
-        return <Tooltip title={reading.importance + "%"}>{core}</Tooltip>;
+        return (
+          <Tooltip key={index} title={reading.importance + "%"}>
+            {core}
+          </Tooltip>
+        );
       })}
     </Space>
   );
@@ -379,7 +383,7 @@ export default function CharacterTable() {
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
         <TagPicker />
-        <Create onCreate={(char) => {}} ref={ref3} />
+        <Create onCreate={() => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>
         <Table<PrimitiveCharacter>

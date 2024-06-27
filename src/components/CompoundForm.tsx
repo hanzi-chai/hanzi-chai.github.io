@@ -1,4 +1,4 @@
-import { AutoComplete, Button, Flex, Form, Typography } from "antd";
+import { AutoComplete, Flex, Form } from "antd";
 import type { Compound } from "~/lib";
 import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
@@ -130,7 +130,7 @@ export default function CompoundForm({
               allowClear={false}
             />
             <StaticList name="operandList" itemRender={InlineRender}>
-              {(meta, i) => (
+              {(meta) => (
                 <Form.Item noStyle {...meta}>
                   <GlyphSelect style={{ width: "96px" }} disabled={readonly} />
                 </Form.Item>

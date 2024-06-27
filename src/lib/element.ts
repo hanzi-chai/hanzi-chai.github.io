@@ -1,4 +1,4 @@
-import type { Algebra, Config, Rule } from "./config";
+import type { Algebra, Rule } from "./config";
 import type { CharacterResult } from "./assembly";
 
 export interface Extra {

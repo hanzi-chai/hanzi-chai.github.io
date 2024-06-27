@@ -45,17 +45,15 @@ self.onmessage = async (event: MessageEvent<LibchaiInputEvent>) => {
   try {
     switch (event.data.type) {
       case "encode":
-        const code = libchai.encode(event.data.data);
         self.postMessage({
           type: "code",
-          code: code,
+          code: libchai.encode(event.data.data),
         });
         break;
       case "evaluate":
-        const result = libchai.evaluate(event.data.data);
         self.postMessage({
           type: "metric",
-          metric: result,
+          metric: libchai.evaluate(event.data.data),
         } as LibchaiOutputEvent);
         break;
       case "optimize":

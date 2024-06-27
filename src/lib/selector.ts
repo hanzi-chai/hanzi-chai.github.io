@@ -3,12 +3,12 @@ import {
   type ComputedComponent,
   NoSchemeError,
 } from "./component";
-import type { Analysis, Config, SieveName } from "./config";
+import type { Analysis, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import type { CurveRelation } from "./topology";
 import { isEqual } from "lodash-es";
 import { sortTwoNumbers } from "./bezier";
-import type { AnalysisConfig } from ".";
+import type { AnalysisConfig } from "./repertoire";
 
 export const defaultSelector: SieveName[] = [
   "结构完整",
@@ -241,8 +241,8 @@ export const orientation: Sieve<number> = {
 };
 
 /**
- * @param b1 以二进制数表示的切片
- * @param b2 同上
+ * @param b1 - 以二进制数表示的切片
+ * @param b2 - 同上
  * @returns 第一个切片是否包含第二个切片
  */
 const contains = (b1: number, b2: number) => (b1 | b2) === b1;
@@ -298,10 +298,10 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
 /**
  * 选择最优的拆分方案
  *
- * @param config 配置
- * @param component 待拆分部件
- * @param schemeList 拆分方案列表
- * @param rootMap 字根映射，从切片的二进制表示到字根名称的映射
+ * @param config - 配置
+ * @param component - 待拆分部件
+ * @param schemeList - 拆分方案列表
+ * @param rootMap - 字根映射，从切片的二进制表示到字根名称的映射
  */
 export const select = (
   config: AnalysisConfig,

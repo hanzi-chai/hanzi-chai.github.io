@@ -41,7 +41,6 @@ const Element = ({
 }) => {
   const keyboard = useAtomValue(keyboardAtom);
   const { mapping, grouping } = keyboard;
-  const determiedRepertoire = useAtomValue(repertoireAtom);
   const glyphMap = useAtomValue(glyphAtom);
   const type =
     x === currentElement

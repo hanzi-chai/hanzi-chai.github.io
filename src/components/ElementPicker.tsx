@@ -6,22 +6,15 @@ import styled from "styled-components";
 import {
   algebraAtom,
   customClassifierAtom,
-  repertoireAtom,
   sortedRepertoireAtom,
   useAtomValue,
   useRemoveAtom,
 } from "~/atoms";
 import Algebra from "./Algebra";
 import type { PronunciationElementTypes } from "~/lib";
-import { applyRules, defaultAlgebra } from "~/lib";
 import { operators } from "~/lib";
 import { customElementsAtom } from "~/atoms/assets";
 import { phonemeEnumerationAtom } from "~/atoms/cache";
-
-interface ElementPickerProps<T extends string> {
-  content: Map<T, string[]>;
-  editable?: boolean;
-}
 
 const Wrapper = styled(Tabs)`
   & .ant-tabs-nav-wrap {

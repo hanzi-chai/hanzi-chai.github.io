@@ -1,5 +1,11 @@
 import { atomWithStorage } from "jotai/utils";
-import type { Dictionary, Distribution, Equivalence, Frequency } from ".";
+import type {
+  CustomElementMap,
+  Dictionary,
+  Distribution,
+  Equivalence,
+  Frequency,
+} from "~/lib";
 import { MiniDb } from "jotai-minidb";
 
 const db = new MiniDb<Dictionary>();
@@ -19,8 +25,6 @@ export const userPairEquivalenceAtom = atomWithStorage<Equivalence | undefined>(
   "user_pair_equivalence",
   undefined,
 );
-
-export type CustomElementMap = Record<string, string[]>;
 
 export const customElementsAtom = atomWithStorage<
   Record<string, CustomElementMap>

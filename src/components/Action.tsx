@@ -6,10 +6,9 @@ import {
   Input,
   Popconfirm,
   Popover,
-  Space,
 } from "antd";
 import type { ForwardedRef } from "react";
-import { createContext, forwardRef, useContext, useState } from "react";
+import { forwardRef, useContext, useState } from "react";
 import {
   remoteCreate,
   remoteCreateWithoutUnicode,
@@ -22,7 +21,6 @@ import type { Reading } from "~/lib";
 import {
   chars,
   isValidCJKChar,
-  getDummyBasicComponent,
   getDummyCompound,
   getDummyDerivedComponent,
 } from "~/lib";
@@ -30,7 +28,6 @@ import {
   useAtomValue,
   useSetAtom,
   mutateRepertoireAtom,
-  useAtom,
   repertoireAtom,
   nextUnicodeAtom,
   useAddAtom,

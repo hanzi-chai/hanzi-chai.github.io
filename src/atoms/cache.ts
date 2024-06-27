@@ -11,7 +11,6 @@ import {
   Thread,
   algebraAtom,
   analysisAtom,
-  assetsAtom,
   charactersAtom,
   dictionaryAtom,
   encoderAtom,

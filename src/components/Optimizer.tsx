@@ -8,30 +8,20 @@ import {
   Typography,
   notification,
 } from "antd";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { useState } from "react";
 import type { DictEntry } from "~/atoms";
+import { configAtom, assetsAtom, makeEncodeCallback } from "~/atoms";
 import {
-  configAtom,
-  repertoireAtom,
-  assetsAtom,
-  dictionaryAtom,
-  makeEncodeCallback,
-  charactersAtom,
-} from "~/atoms";
-import {
-  assemble,
   exportTSV,
   exportYAML,
-  makeWorker,
+  makeWasmWorker,
   stringifySequence,
 } from "~/lib";
 import type { LibchaiOutputEvent } from "~/worker";
 import { load } from "js-yaml";
 import type { Solver } from "~/lib";
-import { analysisResultAtom, assemblyResultAtom } from "~/atoms/cache";
-import { analysis } from "~/lib";
-import { customElementsAtom } from "~/atoms/assets";
+import { assemblyResultAtom } from "~/atoms/cache";
 
 const Schedule = ({
   params,
@@ -108,7 +98,7 @@ export default function Optimizer() {
       <Button
         type="primary"
         onClick={async () => {
-          const worker = makeWorker();
+          const worker = makeWasmWorker();
           worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
             const { data } = event;
             switch (data.type) {
@@ -146,7 +136,7 @@ export default function Optimizer() {
           setAutoParams(undefined);
           setProgress(undefined);
           setOptimizing(true);
-          const worker = makeWorker();
+          const worker = makeWasmWorker();
           worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
             const { data } = event;
             switch (data.type) {
@@ -206,7 +196,7 @@ export default function Optimizer() {
             </Button>
             <Button
               onClick={() => {
-                const worker = makeWorker();
+                const worker = makeWasmWorker();
                 const flatten = (x: DictEntry) => [x.name, x.full, x.short];
                 worker.onmessage = makeEncodeCallback((code) => {
                   exportTSV(code.map(flatten), "code.txt");

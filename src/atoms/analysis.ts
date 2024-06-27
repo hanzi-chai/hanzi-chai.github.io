@@ -1,10 +1,4 @@
-import type {
-  Analysis,
-  Degenerator,
-  Selector,
-  SieveName,
-  Feature,
-} from "~/lib";
+import type { Analysis, Degenerator, Selector, Feature } from "~/lib";
 import { focusAtom } from "jotai-optics";
 import { analysisAtom } from "./config";
 import { mergeClassifier } from "~/lib";

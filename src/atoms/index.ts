@@ -1,5 +1,5 @@
 import type { WritableAtom } from "jotai";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 
 export * from "jotai";
 export * from "./constants";

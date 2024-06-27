@@ -131,7 +131,7 @@
       ],
       "tsdoc/syntax": "warn",
       "no-undef": "error",
-      "no-undefined": "error"
+      "no-undefined": "off"
     }
   },
   "hintConfig": {

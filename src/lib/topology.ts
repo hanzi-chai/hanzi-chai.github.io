@@ -247,6 +247,7 @@ const findTopology = function (renderedGlyph: RenderedGlyph) {
 };
 
 export {
+  isConforming,
   curveRelation,
   strokeRelation,
   renderSVGStroke,

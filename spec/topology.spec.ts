@@ -1,7 +1,7 @@
 import { expect, describe, it } from "vitest";
 import type { StrokeRelation, CubicCurve, LinearCurve } from "~/lib";
-import { findTopology, curveRelation, renderSVGGlyph } from "~/lib";
-import { area, render } from "~/lib";
+import { findTopology, curveRelation } from "~/lib";
+import { area } from "~/lib";
 import type { Draw, Point } from "~/lib";
 import { computedGlyphs2 as computedGlyphs } from "./mock";
 import { getIntervalPosition, makeCurve } from "~/lib";

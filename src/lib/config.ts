@@ -1,11 +1,5 @@
-import type { Classifier, Feature } from "./classifier";
-import type {
-  DerivedComponent,
-  Compound,
-  PrimitiveRepertoire,
-  Component,
-  Reading,
-} from "./data";
+import type { Feature } from "./classifier";
+import type { Compound, PrimitiveRepertoire, Component, Reading } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
 

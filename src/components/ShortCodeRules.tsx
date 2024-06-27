@@ -1,7 +1,7 @@
 import { Button, Cascader, Flex, Form } from "antd";
 import { DeleteButton, Select } from "./Utils";
 import type { ShortCodeRule } from "~/lib";
-import { Config, wordLengthArray } from "~/lib";
+import { wordLengthArray } from "~/lib";
 import { useListAtom } from "~/atoms";
 import { shortCodeConfigAtom } from "~/atoms/encoder";
 
@@ -78,7 +78,7 @@ export default function ShortCodeRules() {
               </Flex>
               {schemes.map((scheme, schemeIndex) => {
                 return (
-                  <Flex gap="small">
+                  <Flex key={schemeIndex} gap="small">
                     <Form.Item label="前缀">
                       <Select
                         value={scheme.prefix}

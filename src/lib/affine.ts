@@ -10,17 +10,21 @@ import type {
 import { cloneDeep } from "lodash-es";
 
 class Affine {
-  xscale: number;
-  yscale: number;
-  translate: Point;
+  private xscale: number;
+  private yscale: number;
+  private translate: Point;
 
-  constructor(xscale: number, yscale: number, translate: Point = [0, 0]) {
+  public constructor(
+    xscale: number,
+    yscale: number,
+    translate: Point = [0, 0],
+  ) {
     this.xscale = xscale;
     this.yscale = yscale;
     this.translate = translate;
   }
 
-  transformDraw(draw: Draw): Draw {
+  public transformDraw(draw: Draw): Draw {
     const next: Draw = cloneDeep(draw);
     switch (next.command) {
       case "h":
@@ -40,7 +44,7 @@ class Affine {
     return next;
   }
 
-  transformSVGStroke(stroke: SVGStroke): SVGStroke {
+  public transformSVGStroke(stroke: SVGStroke): SVGStroke {
     const [x, y] = stroke.start;
     const start = add(
       [x * this.xscale, y * this.yscale] as Point,
@@ -54,7 +58,7 @@ class Affine {
     return next;
   }
 
-  transformSVGGlyph(glyph: SVGGlyph): SVGGlyph {
+  public transformSVGGlyph(glyph: SVGGlyph): SVGGlyph {
     return glyph.map((x) => this.transformSVGStroke(x));
   }
 }
@@ -88,8 +92,8 @@ const affineMap: Record<Operator, Affine[]> = {
 
 /**
  * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
- * @param compound 复合体数据
- * @param glyphList 各部分渲染后的 SVG 图形
+ * @param compound - 复合体数据
+ * @param glyphList - 各部分渲染后的 SVG 图形
  * @returns 合并后的 SVG 图形
  */
 export function affineMerge(compound: Compound, glyphList: SVGGlyph[]) {

@@ -17,7 +17,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { SieveName } from "~/lib";
 import { useAtom, selectorAtom, useAppendAtom, useExcludeAtom } from "~/atoms";
 
-import { Button, Dropdown, Flex, Space, Typography } from "antd";
+import { Button, Dropdown, Flex, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import PrioritizedRoots from "./PrioritizedRoots";
 

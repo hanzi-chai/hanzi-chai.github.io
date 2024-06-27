@@ -1,10 +1,9 @@
-import { mergeClassifier } from ".";
+import { mergeClassifier } from "./classifier";
 import type { ComponentResults, ComponentAnalysis } from "./component";
 import { disassembleComponents, recursiveRenderComponent } from "./component";
 import type { CompoundResults } from "./compound";
 import { disassembleCompounds, recursiveRenderCompound } from "./compound";
 import type { Analysis, CustomGlyph, CustomReadings } from "./config";
-import { Config } from "./config";
 import type {
   Compound,
   Character,
@@ -29,10 +28,10 @@ export const findGlyphIndex = (
  * 将原始字符集转换为字符集
  * 主要的工作是对每个字符，在数据库中的多个字形中选取一个
  *
- * @param repertoire 原始字符集
- * @param customGlyph 自定义字形
- * @param customReadings 自定义读音
- * @param tags 用户选择的标签
+ * @param repertoire - 原始字符集
+ * @param customGlyph - 自定义字形
+ * @param customReadings - 自定义读音
+ * @param tags - 用户选择的标签
  *
  * 基本逻辑为，对于每个字符，
  * - 如果用户指定了字形，则使用用户指定的字形
@@ -48,7 +47,7 @@ export const determine = (
   const determined: Repertoire = {};
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
-    const { ambiguous, glyphs, readings, ...rest } = character;
+    const { ambiguous: _, glyphs, readings, ...rest } = character;
     const selectedIndex = findGlyphIndex(glyphs, tags);
     const rawglyph = customGlyph[name] ?? glyphs[selectedIndex];
     let finalGlyph: Character["glyph"];
@@ -131,8 +130,8 @@ const getRootSequence = function (
 /**
  * 对整个字符集中的字符进行拆分
  *
- * @param repertoire 字符集
- * @param config 配置
+ * @param repertoire - 字符集
+ * @param config - 配置
  */
 export const analysis = function (
   repertoire: Repertoire,

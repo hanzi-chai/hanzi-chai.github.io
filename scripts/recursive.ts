@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
 import type { Compound, PrimitiveCharacter } from "~/lib";
-import { Character } from "~/lib";
 
 const repertoire = JSON.parse(
   readFileSync("public/cache/repertoire.json", "utf-8"),
@@ -16,7 +15,7 @@ for (const character of repertoire) {
     | undefined;
   if (!compound) continue;
   const children = compound.operandList;
-  for (const [index, child] of children.entries()) {
+  for (const child of children.values()) {
     descendants.set(child, (descendants.get(child) ?? []).concat(name));
   }
 }

@@ -1,5 +1,5 @@
 import { focusAtom } from "jotai-optics";
-import { atom, optimAtom } from ".";
+import { optimAtom } from ".";
 
 export const objectiveAtom = focusAtom(optimAtom, (o) => o.prop("objective"));
 objectiveAtom.debugLabel = "optimization.objective";

@@ -1,6 +1,6 @@
-import { Form, Input } from "antd";
+import { Form } from "antd";
 import type { CharacterFilter } from "~/lib";
-import { Operator, PrimitiveRepertoire, Repertoire, operators } from "~/lib";
+import { operators } from "~/lib";
 import {
   ProFormDigit,
   ProFormSelect,
