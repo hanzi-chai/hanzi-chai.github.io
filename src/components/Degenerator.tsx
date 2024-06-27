@@ -1,59 +1,60 @@
-import { Button, Checkbox, Flex, Typography } from "antd";
-import {
-  useAtomValue,
-  useSetAtom,
-  useAddAtom,
-  degeneratorAtom,
-  useRemoveAtom,
-  degeneratorFeatureAtom,
-  degeneratorNoCrossAtom,
-} from "~/atoms";
-import { DeleteButton, Select } from "./Utils";
+import { Button } from "antd";
+import { degeneratorAtom, useAtom } from "~/atoms";
 import type { Feature } from "~/lib";
 import { classifier } from "~/lib";
-import { useState } from "react";
+import {
+  ModalForm,
+  ProFormGroup,
+  ProFormList,
+  ProFormSelect,
+  ProFormSwitch,
+} from "@ant-design/pro-components";
 
 export default function Degenerator() {
-  const degenerator = useAtomValue(degeneratorAtom);
-  const addFeature = useAddAtom(degeneratorFeatureAtom);
-  const removeFeature = useRemoveAtom(degeneratorFeatureAtom);
-  const switchNoCross = useSetAtom(degeneratorNoCrossAtom);
-  const [feature, setFeature] = useState<Feature>("横");
+  const [degenerator, setDegenerator] = useAtom(degeneratorAtom);
+  const initialValue = {
+    no_cross: degenerator.no_cross,
+    feature: Object.entries(degenerator.feature ?? {}).map(([from, to]) => ({
+      from,
+      to,
+    })),
+  };
   const options = Object.keys(classifier).map((feature) => ({
     label: feature,
     value: feature,
   }));
   return (
-    <>
-      <Typography.Title level={3}>字根认同</Typography.Title>
-      <Flex vertical gap="small" align="center">
-        {Object.entries(degenerator.feature ?? {}).map(([from, to]) => (
-          <Flex justify="center" align="center" gap="small" key={from}>
-            认为
-            <span>{from as Feature}</span>
-            与
-            <Select<Feature>
-              value={to}
-              options={options}
-              onChange={(value) => addFeature(from as Feature, value)}
-            />
-            相同
-            <DeleteButton onClick={() => removeFeature(from as Feature)} />
-          </Flex>
-        ))}
-        <Flex gap="middle">
-          <Select value={feature} options={options} onChange={setFeature} />
-          <Button type="primary" onClick={() => addFeature(feature, "横")}>
-            添加
-          </Button>
-        </Flex>
-        <Checkbox
-          checked={degenerator.no_cross}
-          onChange={(e) => switchNoCross(e.target.checked)}
-        >
-          相交不拆
-        </Checkbox>
-      </Flex>
-    </>
+    <ModalForm<{ no_cross: boolean; feature: { from: Feature; to: Feature }[] }>
+      trigger={<Button>配置字根认同规则</Button>}
+      title="字根认同"
+      initialValues={initialValue}
+      layout="horizontal"
+      onFinish={async (values) => {
+        const acc = {} as Record<Feature, Feature>;
+        values.feature.forEach(({ from, to }) => {
+          acc[from] = to;
+        });
+        setDegenerator({ no_cross: values.no_cross, feature: acc });
+        return true;
+      }}
+    >
+      <ProFormList name="feature" alwaysShowItemLabel>
+        <ProFormGroup>
+          <ProFormSelect
+            name="from"
+            label="认为"
+            options={options}
+            fieldProps={{ style: { width: 100 } }}
+          />
+          <ProFormSelect
+            name="to"
+            label="等同于"
+            options={options}
+            fieldProps={{ style: { width: 100 } }}
+          />
+        </ProFormGroup>
+      </ProFormList>
+      <ProFormSwitch name="no_cross" label="相交不拆" />
+    </ModalForm>
   );
 }

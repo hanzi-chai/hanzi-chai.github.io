@@ -16,7 +16,7 @@ import {
 
 import Element from "./Element";
 import Char from "./Character";
-import { isPUA, joinKeys, renderMapped } from "~/lib";
+import { isPUA, joinKeys, printableAscii, renderMapped } from "~/lib";
 import { DeleteButton, Select, Uploader } from "./Utils";
 import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
@@ -259,7 +259,6 @@ export default function Mapping() {
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?qwertyuiopasdfghjkl;zxcvbnm,./",
   );
-  const printable_ascii = range(32, 127).map((x) => String.fromCodePoint(x));
   const [char, setChar] = useState<string | undefined>(undefined);
   const mapping_type_default = mapping_type ?? 1;
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -384,10 +383,10 @@ export default function Mapping() {
         <Select
           value={char}
           onChange={setChar}
-          options={printable_ascii
+          options={printableAscii
             .filter((x) => !alphabet.includes(x))
             .map((v) => ({
-              label: v === " " ? "空格" : v,
+              label: v,
               value: v,
             }))}
         />

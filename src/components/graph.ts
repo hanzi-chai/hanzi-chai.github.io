@@ -131,12 +131,7 @@ export const getLayoutedElements = function (
 };
 
 export const sortNodes = (a: Node, b: Node) => {
-  const [typea, typeb] = [a.id[0], b.id[0]];
-  if (typea === "s" && typeb === "c") return -1;
-  if (typea === "c" && typeb === "s") return 1;
-  const [indexa, indexb] = [
-    parseInt(a.id.slice(1), 10),
-    parseInt(b.id.slice(1), 10),
-  ];
+  const indexa = parseInt(a.id.slice(1), 10);
+  const indexb = parseInt(b.id.slice(1), 10);
   return indexa - indexb;
 };

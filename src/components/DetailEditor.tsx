@@ -29,12 +29,15 @@ interface Option {
   children?: Option[];
 }
 
-export default function DetailEditor({ selected }: { selected: string }) {
-  const { setNodes, getNodes, getNode } = useReactFlow<
-    SourceData | ConditionData
-  >();
-  const nodes = getNodes();
-  const { data } = getNode(selected)!;
+export default function DetailEditor({
+  selected,
+  data,
+  setData,
+}: {
+  selected: string;
+  data: SourceData | ConditionData;
+  setData: (data: SourceData | ConditionData) => void;
+}) {
   const { alphabet } = useAtomValue(keyboardAtom);
   const algebra = useAtomValue(algebraAtom);
   const customElements = useAtomValue(customElementsAtom);
@@ -117,11 +120,6 @@ export default function DetailEditor({ selected }: { selected: string }) {
       })),
     },
   ];
-  const update = (data: SourceData | ConditionData) => {
-    setNodes(
-      nodes.map((node) => (node.id === selected ? { ...node, data } : node)),
-    );
-  };
   return (
     <Panel position="top-right">
       <Background vertical gap="small">
@@ -135,7 +133,7 @@ export default function DetailEditor({ selected }: { selected: string }) {
             options={options}
             onChange={(event) => {
               const object = parseList(event) as CodableObject;
-              update({ ...data, object });
+              setData({ ...data, object });
             }}
           />
         </Item>
@@ -150,8 +148,8 @@ export default function DetailEditor({ selected }: { selected: string }) {
               }))}
               onChange={(event) => {
                 event === -1
-                  ? update({ ...data, index: undefined })
-                  : update({ ...data, index: event });
+                  ? setData({ ...data, index: undefined })
+                  : setData({ ...data, index: event });
               }}
             />
           </Item>
@@ -168,9 +166,9 @@ export default function DetailEditor({ selected }: { selected: string }) {
                 }))}
                 onChange={(event) => {
                   if ((unaryOps as readonly Op[]).includes(event)) {
-                    update({ ...data, operator: event });
+                    setData({ ...data, operator: event });
                   } else {
-                    update({
+                    setData({
                       ...data,
                       operator: event,
                       value: "",
@@ -186,7 +184,7 @@ export default function DetailEditor({ selected }: { selected: string }) {
                   style={{ width: "128px" }}
                   value={data.value}
                   onChange={(event) =>
-                    update({ ...data, value: event.target.value })
+                    setData({ ...data, value: event.target.value })
                   }
                 />
               </Item>

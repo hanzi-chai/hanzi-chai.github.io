@@ -43,6 +43,10 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     SourceData | ConditionData
   >();
   const nodes = getNodes();
+  const sourceNodes = nodes.filter((n) => n.id.startsWith("s")).sort(sortNodes);
+  const conditionNodes = nodes
+    .filter((n) => n.id.startsWith("c"))
+    .sort(sortNodes);
   const edges = getEdges();
   const setLayout = (newnodes: Node[], newedges: Edge[]) => {
     const [lnodes, ledges] = getLayoutedElements(newnodes, newedges);
@@ -58,13 +62,13 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       (etype ? `（${renderType[etype as keyof typeof renderType]}）` : ""),
     onClick: () => {
       let newid = 0;
-      for (const node of nodes.filter((x) => x.id[0] === "s")) {
+      for (const node of sourceNodes) {
         if (node.id !== `s${newid}`) break;
         newid += 1;
       }
-      const newnodes = nodes
-        .concat(makeSourceNode({ object: { type: "汉字" } }, `s${newid}`))
-        .sort(sortNodes);
+      const newnodes = nodes.concat(
+        makeSourceNode({ object: { type: "汉字" } }, `s${newid}`),
+      );
       const newedges = edges.concat(makeEdge(id, `s${newid}`, etype));
       setLayout(newnodes, newedges);
     },
@@ -78,18 +82,16 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       (etype ? `（${renderType[etype as keyof typeof renderType]}）` : ""),
     onClick: () => {
       let newid = 0;
-      for (const node of nodes.filter((x) => x.id[0] === "c")) {
+      for (const node of conditionNodes) {
         if (node.id !== `c${newid}`) break;
         newid += 1;
       }
-      const newnodes = nodes
-        .concat(
-          makeConditionNode(
-            { object: { type: "汉字" }, operator: "存在" },
-            `c${newid}`,
-          ),
-        )
-        .sort(sortNodes);
+      const newnodes = nodes.concat(
+        makeConditionNode(
+          { object: { type: "汉字" }, operator: "存在" },
+          `c${newid}`,
+        ),
+      );
       const newedges = edges.concat(makeEdge(id, `c${newid}`, etype));
       setLayout(newnodes, newedges);
     },

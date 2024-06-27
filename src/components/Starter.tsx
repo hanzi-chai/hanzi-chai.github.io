@@ -1,5 +1,4 @@
-import { Button, Form, Input, Modal, Select } from "antd";
-import { useState } from "react";
+import { Button } from "antd";
 import type { StarterType } from "~/lib";
 import {
   classifierTypes,
@@ -10,74 +9,53 @@ import {
 import type { Updater } from "use-immer";
 import type { Config } from "~/lib";
 import { nanoid } from "nanoid";
+import {
+  ModalForm,
+  ProFormSelect,
+  ProFormText,
+} from "@ant-design/pro-components";
 
 export default function Starter({
   setConfigs,
 }: {
   setConfigs: Updater<Record<string, Config>>;
 }) {
-  const [modal, setModal] = useState(false);
   const required = [{ required: true }];
+  const makeOptions = (types: readonly string[]) =>
+    types.map((x) => ({ value: x, label: x }));
   return (
-    <>
-      <Button type="primary" onClick={() => setModal(true)}>
-        新建
-      </Button>
-      <Modal
-        title="方案模板"
-        open={modal}
-        footer={
-          <Button form="starter" key="submit" type="primary" htmlType="submit">
-            确定
-          </Button>
-        }
-        onCancel={() => setModal(false)}
-      >
-        <Form
-          id="starter"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
-          onFinish={(values) => {
-            const config = createConfig(values);
-            setModal(false);
-            setConfigs((configs) => {
-              configs[nanoid(9)] = config;
-              return undefined;
-            });
-          }}
-        >
-          <Form.Item<StarterType> name="name" label="方案名称" rules={required}>
-            <Input />
-          </Form.Item>
-          <Form.Item<StarterType>
-            name="data"
-            label="笔画分类预设"
-            rules={required}
-          >
-            <Select
-              options={classifierTypes.map((x) => ({ value: x, label: x }))}
-            />
-          </Form.Item>
-          <Form.Item<StarterType>
-            name="keyboard"
-            label="键盘布局预设"
-            rules={required}
-          >
-            <Select
-              options={keyboardTypes.map((x) => ({ value: x, label: x }))}
-            />
-          </Form.Item>
-          <Form.Item<StarterType>
-            name="encoder"
-            label="编码规则预设"
-            rules={required}
-          >
-            <Select
-              options={encoderTypes.map((x) => ({ value: x, label: x }))}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </>
+    <ModalForm<StarterType>
+      layout="horizontal"
+      trigger={<Button type="primary">新建</Button>}
+      title="方案模板"
+      onFinish={async (values) => {
+        const config = createConfig(values);
+        setConfigs((configs) => {
+          configs[nanoid(9)] = config;
+          return undefined;
+        });
+        return true;
+      }}
+    >
+      <ProFormText name="name" label="方案名称" rules={required} />
+      <ProFormSelect
+        name="data"
+        label="笔画分类预设"
+        rules={required}
+        options={makeOptions(classifierTypes)}
+      />
+      <ProFormSelect
+        name="keyboard"
+        label="键盘布局预设"
+        rules={required}
+        options={makeOptions(keyboardTypes)}
+      />
+      <ProFormSelect
+        name="encoder"
+        label="编码规则预设"
+        rules={required}
+        options={makeOptions(encoderTypes)}
+      />
+    </ModalForm>
   );
 }

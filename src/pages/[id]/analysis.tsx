@@ -53,16 +53,8 @@ const ConfigureRules = () => {
   const [modal, setModal] = useState(0);
   return (
     <Flex gap="middle" justify="center">
-      <Button onClick={() => setModal(1)}>配置字根认同规则</Button>
+      <Degenerator />
       <Button onClick={() => setModal(2)}>配置拆分方式筛选规则</Button>
-      <Modal
-        title=""
-        open={modal === 1}
-        footer={null}
-        onCancel={() => setModal(0)}
-      >
-        <Degenerator />
-      </Modal>
       <Modal
         title=""
         open={modal === 2}
