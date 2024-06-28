@@ -34,6 +34,10 @@ export const printableAscii = range(33, 127).map((x) =>
   String.fromCodePoint(x),
 );
 
+export const formatDate = (date: Date) => {
+  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+};
+
 export const unicodeBlock = (code: number) => {
   // ASCII
   if (code >= 0 && code <= 0x7f) return "ascii";

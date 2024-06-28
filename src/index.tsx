@@ -13,9 +13,7 @@ import AutoRoute from "~react-pages";
 
 const idpath = AutoRoute.find((v) => v.path === ":id");
 idpath?.children?.forEach((v) => {
-  if (v.path === "analysis" || v.path === "element") {
-    v.errorElement = <Error />;
-  }
+  v.errorElement = <Error />;
 });
 
 const GlobalStyle = createGlobalStyle`

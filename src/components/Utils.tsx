@@ -11,6 +11,7 @@ import {
   notification,
 } from "antd";
 import styled from "styled-components";
+import type { MouseEventHandler } from "react";
 import { useState } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
@@ -85,7 +86,7 @@ export const Uploader = ({
 };
 
 interface Click {
-  onClick: () => void;
+  onClick: MouseEventHandler<HTMLElement>;
   disabled?: boolean;
 }
 

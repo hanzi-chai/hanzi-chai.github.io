@@ -4,7 +4,7 @@ info:
   name: 宇浩·星陈
   author: 朱宇浩
   version: '3.5.0'
-  description: 全汉字字形输入・繁简通打・极低选重
+  description: 全汉字字形输入・繁简通打
 analysis:
   classifier:
     竖提: 6

@@ -2,6 +2,7 @@ import {
   Button,
   Col,
   Flex,
+  List,
   Progress,
   Row,
   Statistic,
@@ -10,18 +11,19 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import type { DictEntry } from "~/atoms";
-import { configAtom, assetsAtom, makeEncodeCallback } from "~/atoms";
+import { configAtom, assetsAtom } from "~/atoms";
 import {
-  exportTSV,
   exportYAML,
+  formatDate,
   makeWasmWorker,
   stringifySequence,
 } from "~/lib";
 import type { LibchaiOutputEvent } from "~/worker";
 import { load } from "js-yaml";
-import type { Solver } from "~/lib";
+import type { Config, Solver } from "~/lib";
 import { assemblyResultAtom } from "~/atoms/cache";
+import { nanoid } from "nanoid";
+import { useNavigate } from "react-router-dom";
 
 const Schedule = ({
   params,
@@ -71,12 +73,13 @@ const Schedule = ({
 };
 
 export default function Optimizer() {
+  const navigate = useNavigate();
   const assets = useAtomValue(assetsAtom);
   const config = useAtomValue(configAtom);
   const assemblyResult = useAtomValue(assemblyResultAtom);
   const [out1, setOut1] = useState("");
-  const [result, setResult] = useState<[Date, string][]>([]);
-  const [bestResult, setBestResult] = useState<string | undefined>(undefined);
+  const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
+  const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
   const [bestMetric, setBestMetric] = useState("");
   const [optimizing, setOptimizing] = useState(false);
   const [progress, setProgress] = useState<
@@ -139,16 +142,16 @@ export default function Optimizer() {
           const worker = makeWasmWorker();
           worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
             const { data } = event;
+            const date = new Date();
+            let config: Config;
             switch (data.type) {
               case "better_solution":
-                setBestResult(data.config);
+                config = load(data.config) as Config;
+                config.info.version = formatDate(date);
+                setBestResult(config);
                 setBestMetric(data.metric);
                 if (data.save) {
-                  setResult((result) =>
-                    [[new Date(), data.config] as [Date, string]].concat(
-                      result,
-                    ),
-                  );
+                  setResult((result) => [{ date, config }].concat(result));
                 }
                 break;
               case "progress":
@@ -163,7 +166,7 @@ export default function Optimizer() {
                 break;
               case "finish":
                 notification.success({
-                  message: "优化已完成，请下载结果!",
+                  message: "优化已完成，请查看结果!",
                 });
                 break;
               case "error":
@@ -188,57 +191,42 @@ export default function Optimizer() {
           </Typography.Text>
           <Flex justify="center" gap="middle">
             <Button
-              onClick={() =>
-                exportYAML(load(bestResult) as object, "optimized")
-              }
-            >
-              下载方案
-            </Button>
-            <Button
               onClick={() => {
-                const worker = makeWasmWorker();
-                const flatten = (x: DictEntry) => [x.name, x.full, x.short];
-                worker.onmessage = makeEncodeCallback((code) => {
-                  exportTSV(code.map(flatten), "code.txt");
-                });
-                worker.postMessage({
-                  type: "encode",
-                  data: { ...prepareInput(), config: load(bestResult) },
-                });
+                const id = nanoid(9);
+                localStorage.setItem(id, JSON.stringify(bestResult));
+                window.open(`/${id}`, "_blank");
               }}
             >
-              下载码表
+              在新标签页中打开方案
             </Button>
           </Flex>
         </>
       ) : null}
       <Typography.Title level={4}>全部方案</Typography.Title>
-      <div>
-        <Flex
-          vertical
-          gap="small"
-          style={{
-            maxHeight: "200px",
-            overflowY: "scroll",
-            padding: "8px",
-            border: "1px solid black",
-            borderRadius: "8px",
-          }}
-        >
-          {result.map(([time, content], index) => (
-            <Flex align="center" justify="space-between" key={index}>
-              <span>{time.toISOString()}</span>
+      <List
+        size="small"
+        dataSource={result}
+        bordered
+        style={{
+          maxHeight: "300px",
+          overflowY: "scroll",
+        }}
+        renderItem={({ date, config }, index) => (
+          <List.Item
+            key={index}
+            actions={[
               <Button
-                onClick={() =>
-                  exportYAML(load(content) as object, time.toISOString())
-                }
+                key={index}
+                onClick={() => exportYAML(config, date.toISOString())}
               >
                 下载
-              </Button>
-            </Flex>
-          ))}
-        </Flex>
-      </div>
+              </Button>,
+            ]}
+          >
+            {date.toISOString()}
+          </List.Item>
+        )}
+      />
     </>
   );
 }

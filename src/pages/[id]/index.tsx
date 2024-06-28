@@ -1,9 +1,6 @@
 import { Button, Flex, Input, Space, Typography, Upload } from "antd";
 import {
   Atom,
-  Dictionary,
-  Distribution,
-  Equivalence,
   SetStateAction,
   WritableAtom,
   characterSetAtom,
@@ -18,6 +15,9 @@ import {
 } from "~/atoms";
 import {
   CharacterSetSpecifier,
+  Dictionary,
+  Distribution,
+  Equivalence,
   Info,
   characterSetSpecifiers,
   exportTSV,
@@ -39,7 +39,7 @@ import {
   customElementsAtom,
 } from "~/atoms/assets";
 import { getRecordFromTSV } from "~/lib";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const getTSVFromRecord = (record: Equivalence) =>
   Object.entries(record).map(([k, v]) => [k, v.toString()]);
@@ -160,6 +160,10 @@ export default function Index() {
     basic: "基本",
     extended: "扩展",
   };
+  const [form] = ProForm.useForm<Info>();
+  useEffect(() => {
+    form.setFieldsValue(info);
+  }, [info]);
   return (
     <EditorRow>
       <EditorColumn span={12}>
@@ -168,12 +172,14 @@ export default function Index() {
         <ConfigManager />
         <Typography.Title level={3}>基本信息</Typography.Title>
         <ProForm<Info>
+          form={form}
           layout="horizontal"
           labelCol={{ span: 6 }}
           wrapperCol={{ span: 16 }}
           initialValues={info}
           onValuesChange={(_, values) => setInfo(values)}
           submitter={false}
+          autoFocusFirstInput={false}
         >
           <ProFormText label="方案名称" name="name" />
           <ProFormText label="作者" name="author" />

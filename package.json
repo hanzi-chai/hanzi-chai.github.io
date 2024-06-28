@@ -1,7 +1,7 @@
 {
   "name": "chai",
   "private": true,
-  "version": "0.1.10",
+  "version": "0.1.11",
   "type": "module",
   "scripts": {
     "start": "vite --mode CF",
@@ -39,7 +39,7 @@
     "jotai-optics": "^0.3.2",
     "js-md5": "^0.8.3",
     "js-yaml": "4.1.0",
-    "libchai": "^0.1.10",
+    "libchai": "^0.1.11",
     "lodash-es": "^4.17.21",
     "lz-string": "^1.5.0",
     "mathjs": "12.1.0",

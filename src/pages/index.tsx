@@ -11,19 +11,20 @@ import {
   Typography,
   notification,
 } from "antd";
-import { Config, ExampleConfig } from "~/lib";
+import { Config, ExampleConfig, Info } from "~/lib";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { nanoid } from "nanoid";
-import { useImmer } from "use-immer";
+import { Updater, useImmer } from "use-immer";
 import { Example, examples } from "~/lib";
-import { Select, Uploader } from "~/components/Utils";
+import { DeleteButton, Select, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
-import { post } from "~/api";
+import { list, post } from "~/api";
 import { md5 } from "js-md5";
 import { useChaifenTitle, validateConfig } from "~/atoms";
 import { MenuProps } from "antd/lib";
+import styled from "styled-components";
 
 type Status = "login" | "signup" | "signin";
 
@@ -136,6 +137,48 @@ const UserInfo = () => {
   return <Typography.Text>欢迎回来，{user.name}</Typography.Text>;
 };
 
+const ListItem = ({
+  id,
+  info,
+  setConfigs,
+}: {
+  id: string;
+  info: Info;
+  setConfigs: Updater<Record<string, Config>>;
+}) => {
+  return (
+    <Flex align="center" justify="space-between">
+      <StyledListItem to={`/${id}`}>
+        <Typography.Title level={5} style={{ margin: 0 }}>
+          {info.name + (info.version ? ` (${info.version})` : "")}
+        </Typography.Title>
+        <Typography.Text ellipsis>{info.description}</Typography.Text>
+      </StyledListItem>
+      <DeleteButton
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfigs((configs) => {
+            delete configs[id];
+            return configs;
+          });
+        }}
+      />
+    </Flex>
+  );
+};
+
+const StyledListItem = styled(Link)`
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  flex: 1;
+
+  &:hover {
+    background-color: #f5f5f5;
+    transition: background-color 0.3s;
+  }
+`;
+
 export default function HomeLayout() {
   useChaifenTitle("首页");
   const [configs, setConfigs] = useImmer(() =>
@@ -195,68 +238,53 @@ export default function HomeLayout() {
       .forEach((id) => localStorage.removeItem(id));
   }, [configs]);
 
+  const listData = Object.entries(configs).map(([id, { info }]) => ({
+    id,
+    setConfigs,
+    info,
+  }));
+
   return (
     <Layout style={{ height: "100%" }}>
       <Layout.Sider width={320} theme="light">
         <Flex
           vertical
           justify="space-evenly"
-          style={{ height: "100%", padding: "0 32px" }}
+          style={{ height: "100%", padding: "0 1.5rem" }}
         >
           <List
-            itemLayout="horizontal"
-            dataSource={Object.entries(configs)}
-            renderItem={([id, { info }]) => {
-              return (
-                <List.Item
-                  actions={[
-                    <Link to={id}>编辑</Link>,
-                    <a
-                      onClick={() =>
-                        setConfigs((configs) => {
-                          delete configs[id];
-                        })
-                      }
-                    >
-                      删除
-                    </a>,
-                  ]}
+            dataSource={listData}
+            renderItem={ListItem}
+            footer={
+              <Flex justify="center" gap="middle">
+                <Starter setConfigs={setConfigs} />
+                <Dropdown
+                  placement="bottom"
+                  menu={{
+                    items,
+                    onClick: (menu) => {
+                      setConfigs((configs) => {
+                        configs[nanoid(9)] = examples[menu.key as Example];
+                      });
+                    },
+                  }}
                 >
-                  <List.Item.Meta
-                    title={info.name}
-                    description={info?.description ?? "无描述"}
-                  />
-                </List.Item>
-              );
-            }}
+                  <Button>示例</Button>
+                </Dropdown>
+                <Uploader
+                  type="yaml"
+                  action={async (s) => {
+                    const config = load(s) as Config;
+                    const valid = await validateConfig(config);
+                    if (!valid) return;
+                    setConfigs((configs) => {
+                      configs[nanoid(9)] = load(s) as Config;
+                    });
+                  }}
+                />
+              </Flex>
+            }
           />
-          <Flex justify="center" gap="middle">
-            <Starter setConfigs={setConfigs} />
-            <Dropdown
-              placement="bottom"
-              menu={{
-                items,
-                onClick: (menu) => {
-                  setConfigs((configs) => {
-                    configs[nanoid(9)] = examples[menu.key as Example];
-                  });
-                },
-              }}
-            >
-              <Button>示例</Button>
-            </Dropdown>
-            <Uploader
-              type="yaml"
-              action={async (s) => {
-                const config = load(s) as Config;
-                const valid = await validateConfig(config);
-                if (!valid) return;
-                setConfigs((configs) => {
-                  configs[nanoid(9)] = load(s) as Config;
-                });
-              }}
-            />
-          </Flex>
         </Flex>
       </Layout.Sider>
       <Flex
