@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import type {
   AnalysisConfig,
   AssemblyResult,
+  Config,
   EncodeResult,
   PronunciationElementTypes,
 } from "~/lib";
@@ -88,10 +89,17 @@ export const assemblyResultAtom = atom(async (get) => {
 });
 
 export const encodeResultAtom = atom(async (get) => {
-  const config = get(configAtom);
+  const _config = get(configAtom);
   const assemblyResult = await get(assemblyResultAtom);
   const assets = await get(assetsAtom);
-  const info = stringifySequence(assemblyResult, config);
+  const info = stringifySequence(assemblyResult, _config);
+  const config: Config = {
+    ..._config,
+    optimization: _config.optimization ?? {
+      objective: {},
+      metaheuristic: { algorithm: "SimulatedAnnealing" },
+    },
+  };
   const data = { config, info, assets };
   return await thread.spawn<[string, EncodeResult]>("encode", [data]);
 });

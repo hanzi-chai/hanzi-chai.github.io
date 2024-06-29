@@ -20,7 +20,6 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
   return (
     <QueryFilter<CharacterFilter>
       onValuesChange={async (_, values) => setFilter(values)}
-      labelWidth="auto"
       submitter={false}
       style={{ maxWidth: 1080 }}
       autoFocusFirstInput={false}

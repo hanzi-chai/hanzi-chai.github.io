@@ -39,7 +39,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <GlobalStyle />
     <ConfigProvider
-      autoInsertSpaceInButton={false}
+      button={{ autoInsertSpace: false }}
       theme={{
         components: {
           Layout: {

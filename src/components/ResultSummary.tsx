@@ -5,7 +5,7 @@ import {
   customizeAtom,
   useRemoveAtom,
 } from "~/atoms";
-import { Button, Flex, Form, Popover, Space } from "antd";
+import { Button, Flex, Form, Popover } from "antd";
 import Element from "./Element";
 import ElementSelect from "./ElementSelect";
 import Char from "./Character";
@@ -66,7 +66,7 @@ export default function ResultSummary({
   const overrideRootSeries = customize[char];
   return (
     <Flex gap="middle" justify="space-between">
-      <Space onClick={(e) => e.stopPropagation()}>
+      <Flex onClick={(e) => e.stopPropagation()} gap="small">
         <Char>{display(char)}</Char>
         {rootSeries.map((x, index) => (
           <Element key={index}>{display(x)}</Element>
@@ -79,7 +79,7 @@ export default function ResultSummary({
             ))}
           </Flex>
         )}
-      </Space>
+      </Flex>
       {!disableCustomize && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {overrideRootSeries && (

@@ -106,16 +106,20 @@ function EditorLayout() {
           >
             <Link to="/">
               <Button
-                block
                 type="text"
                 style={{
                   height: isCollapsed ? "48px" : "64px",
                   margin: "8px 0",
                   color: "#999",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                <Avatar shape="square" src="/icon.webp" />
-                <br />
+                <Avatar
+                  shape="square"
+                  src="/icon.webp"
+                  style={{ flexShrink: 0 }}
+                />
                 {isCollapsed ? null : (
                   <div
                     style={{
