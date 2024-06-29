@@ -11,6 +11,8 @@ import type {
   BasicComponent,
   ReferenceStroke,
   PrimitiveRepertoire,
+  PrimitiveCharacter,
+  Character,
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
@@ -276,64 +278,57 @@ export const renderMapped = (mapped: string | Key[]) => {
   });
 };
 
-export const makeJsWorker = () => {
-  return new Worker(new URL("../jsworker.ts", import.meta.url), {
-    type: "module",
-  });
-};
-
-export const makeWasmWorker = () => {
-  return new Worker(new URL("../worker.ts", import.meta.url), {
-    type: "module",
-  });
-};
-
-export const makeCharacterFilter =
-  (
-    input: CharacterFilter,
-    repertoire: Repertoire | PrimitiveRepertoire,
-    sequence: Map<string, string>,
-  ) =>
-  (char: string) => {
-    const character = repertoire[char];
-    if (character === undefined) return false;
-    const name = character.name ?? "";
-    const seq = sequence.get(char) ?? "";
-    const isNameMatched = (name + char).includes(input.name ?? "");
-    const isSequenceMatched = seq.startsWith(input.sequence ?? "");
-    const isUnicodeMatched =
-      input.unicode === undefined || input.unicode === char.codePointAt(0);
+const match = (
+  character: PrimitiveCharacter | Character,
+  input: CharacterFilter,
+) => {
+  const { tag, operator, part } = input;
+  if ("glyphs" in character) {
     const isTagMatched =
-      input.tag === undefined ||
-      ("glyphs" in character &&
-        character.glyphs.some((x) => x.tags?.includes(input.tag!))) ||
-      ("glyph" in character && character.glyph?.tags?.includes(input.tag));
+      tag === undefined || character.glyphs.some((x) => x.tags?.includes(tag));
     const isOperatorMatched =
-      input.operator === undefined ||
-      ("glyphs" in character &&
-        character.glyphs.some(
-          (x) => "operator" in x && x.operator.includes(input.operator!),
-        )) ||
-      ("glyph" in character &&
-        character.glyph?.type === "compound" &&
-        character.glyph.operator.includes(input.operator));
+      operator === undefined ||
+      character.glyphs.some(
+        (x) => "operator" in x && x.operator.includes(operator),
+      );
     const isPartMatched =
-      input.part === undefined ||
-      ("glyphs" in character &&
-        character.glyphs.some(
-          (x) => "operandList" in x && x.operandList.includes(input.part!),
-        )) ||
-      ("glyph" in character &&
-        character.glyph?.type === "compound" &&
-        character.glyph.operandList.includes(input.part));
-    return (
-      isNameMatched &&
-      isSequenceMatched &&
-      isUnicodeMatched &&
-      isTagMatched &&
-      isOperatorMatched &&
-      isPartMatched
+      part === undefined ||
+      character.glyphs.some(
+        (x) => "operandList" in x && x.operandList.includes(part),
+      );
+    return isTagMatched && isOperatorMatched && isPartMatched;
+  } else {
+    const isTagMatched =
+      tag === undefined || character.glyph?.tags?.includes(tag);
+    const isOperatorMatched =
+      operator === undefined ||
+      (character.glyph?.type === "compound" &&
+        character.glyph.operator.includes(operator));
+    const isPartMatched =
+      part === undefined ||
+      (character.glyph?.type === "compound" &&
+        character.glyph.operandList.includes(part));
+    return isTagMatched && isOperatorMatched && isPartMatched;
+  }
+};
+
+export const makeCharacterFilter = (
+  input: CharacterFilter,
+  repertoire: Repertoire | PrimitiveRepertoire,
+  sequenceMap: Map<string, string>,
+) =>
+  function (name: string) {
+    const character = repertoire[name];
+    if (character === undefined) return false;
+    const sequence = sequenceMap.get(name) ?? "";
+    const isNameMatched = ((character.name ?? "") + name).includes(
+      input.name ?? "",
     );
+    const isSequenceMatched = sequence.startsWith(input.sequence ?? "");
+    const isUnicodeMatched =
+      input.unicode === undefined || input.unicode === name.codePointAt(0);
+    const isMatched = match(character, input);
+    return isNameMatched && isSequenceMatched && isUnicodeMatched && isMatched;
   };
 
 export interface CharacterFilter {

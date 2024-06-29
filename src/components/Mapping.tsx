@@ -18,7 +18,6 @@ import Element from "./Element";
 import Char from "./Character";
 import { isPUA, joinKeys, printableAscii, renderMapped } from "~/lib";
 import { DeleteButton, Select, Uploader } from "./Utils";
-import { range } from "lodash-es";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
@@ -47,7 +46,7 @@ const useAffiliates = (name: string) => {
         if (typeof key !== "object") return false;
         return key.element === name;
       }) as [string, Key[]][],
-    [mapping],
+    [mapping, name],
   );
   return [fullAffiliates, partialAffiliates] as const;
 };

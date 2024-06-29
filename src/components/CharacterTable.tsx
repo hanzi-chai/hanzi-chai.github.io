@@ -52,7 +52,7 @@ function ReadingList({ readings }: { readings: Reading[] }) {
   return (
     <Space>
       {readings.map((reading, index) => {
-        const core = <Element>{reading.pinyin}</Element>;
+        const core = <Element key={index}>{reading.pinyin}</Element>;
         if (readings.length === 1) return core;
         return (
           <Tooltip key={index} title={reading.importance + "%"}>

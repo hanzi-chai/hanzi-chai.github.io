@@ -1,24 +1,15 @@
-import { Alert, Button, Flex, Input, Space } from "antd";
-import type { DictEntry } from "~/atoms";
+import { Button, Flex, Input, Space, Typography } from "antd";
 import {
   useAtomValue,
-  configAtom,
   displayAtom,
   assetsAtom,
   priorityShortCodesAtom,
   maxLengthAtom,
-  useSetAtom,
-  makeEncodeCallback,
 } from "~/atoms";
-import type { Assembly, IndexedElement } from "~/lib";
-import { getPriorityMap, stringifySequence, summarize } from "~/lib";
-import {
-  exportTSV,
-  makeWasmWorker,
-  renderIndexed,
-  renderSuperScript,
-} from "~/lib";
-import { assemblyResultAtom, encodeResultAtom } from "~/atoms/cache";
+import type { Assembly, DictEntry, IndexedElement } from "~/lib";
+import { getPriorityMap, summarize } from "~/lib";
+import { exportTSV, renderIndexed, renderSuperScript } from "~/lib";
+import { assemblyResultAtom, encodeResultAtom } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
@@ -36,7 +27,7 @@ interface MainEntry {
 }
 
 const ExportAssembly = () => {
-  const assemblyResult = useAtomValue(assemblyResultAtom) ?? [];
+  const assemblyResult = useAtomValue(assemblyResultAtom);
   const priorityShortCodes = useAtomValue(priorityShortCodesAtom);
   const priorityMap = getPriorityMap(priorityShortCodes);
   return (
@@ -66,30 +57,8 @@ const ExportAssembly = () => {
   );
 };
 
-const RecomputeCode = () => {
-  const config = useAtomValue(configAtom);
-  const assemblyResult = useAtomValue(assemblyResultAtom);
-  const assets = useAtomValue(assetsAtom);
-  const setCode = useSetAtom(encodeResultAtom);
-  return (
-    <Button
-      type="primary"
-      disabled={assemblyResult === null}
-      onClick={async () => {
-        const info = stringifySequence(assemblyResult!, config);
-        const data = { config, info, assets };
-        const worker = makeWasmWorker();
-        worker.onmessage = makeEncodeCallback(setCode);
-        worker.postMessage({ type: "encode", data });
-      }}
-    >
-      更新码表
-    </Button>
-  );
-};
-
 const ExportCode = () => {
-  const code = useAtomValue(encodeResultAtom);
+  const [_, code] = useAtomValue(encodeResultAtom);
   const flatten = (x: DictEntry) => [
     x.name,
     x.full,
@@ -141,12 +110,11 @@ export interface Combined extends Assembly, DictEntry {}
 
 export default function SequenceTable() {
   const display = useAtomValue(displayAtom);
-  const assemblyResult = useAtomValue(assemblyResultAtom) ?? [];
-  const lost: string[] = [];
+  const assemblyResult = useAtomValue(assemblyResultAtom);
   const max_length = useAtomValue(maxLengthAtom);
   const assets = useAtomValue(assetsAtom);
   const frequencyMap = assets.frequency;
-  const encodeResult = useAtomValue(encodeResultAtom) ?? [];
+  const [evaluateResult, encodeResult] = useAtomValue(encodeResultAtom);
   const combinedResult: Combined[] = assemblyResult.map((x, i) => ({
     ...x,
     ...encodeResult[i]!,
@@ -299,25 +267,13 @@ export default function SequenceTable() {
     },
   );
 
-  const toolbar = [
-    <ExportAssembly key={1} />,
-    <RecomputeCode key={2} />,
-    <ExportCode key={3} />,
-  ];
+  const toolbar = [<ExportAssembly key={1} />, <ExportCode key={3} />];
 
   return (
     <>
-      {lost.length ? (
-        <Alert
-          message="警告"
-          description={`${lost.slice(0, 5).join("、")} 等 ${
-            lost.length
-          } 个字缺少取码所需的原始数据`}
-          type="warning"
-          showIcon
-          closable
-        />
-      ) : null}
+      <Typography.Paragraph>
+        <pre>{evaluateResult}</pre>
+      </Typography.Paragraph>
       <ProTable<MainEntry>
         virtual
         scroll={{ y: 1080 }}

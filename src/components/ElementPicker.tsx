@@ -13,8 +13,7 @@ import {
 import Algebra from "./Algebra";
 import type { PronunciationElementTypes } from "~/lib";
 import { operators } from "~/lib";
-import { customElementsAtom } from "~/atoms/assets";
-import { phonemeEnumerationAtom } from "~/atoms/cache";
+import { customElementsAtom, phonemeEnumerationAtom } from "~/atoms";
 
 const Wrapper = styled(Tabs)`
   & .ant-tabs-nav-wrap {

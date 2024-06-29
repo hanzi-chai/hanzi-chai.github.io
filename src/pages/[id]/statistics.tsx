@@ -20,7 +20,7 @@ import { maxLengthAtom } from "~/atoms";
 import type { AnalyzerForm, AssemblyResult, Frequency } from "~/lib";
 import { renderIndexed } from "~/lib";
 import { useState } from "react";
-import { assemblyResultAtom } from "~/atoms/cache";
+import { assemblyResultAtom } from "~/atoms";
 import type { ColumnsType } from "antd/es/table";
 import { range, sumBy } from "lodash-es";
 

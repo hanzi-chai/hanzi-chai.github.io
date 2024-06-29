@@ -11,19 +11,12 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { configAtom, assetsAtom } from "~/atoms";
-import {
-  exportYAML,
-  formatDate,
-  makeWasmWorker,
-  stringifySequence,
-} from "~/lib";
-import type { LibchaiOutputEvent } from "~/worker";
+import { configAtom, assetsAtom, thread, assemblyResultAtom } from "~/atoms";
+import { exportYAML, formatDate, stringifySequence } from "~/lib";
+import type { WorkerOutput } from "~/worker";
 import { load } from "js-yaml";
 import type { Config, Solver } from "~/lib";
-import { assemblyResultAtom } from "~/atoms/cache";
 import { nanoid } from "nanoid";
-import { useNavigate } from "react-router-dom";
 
 const Schedule = ({
   params,
@@ -73,11 +66,9 @@ const Schedule = ({
 };
 
 export default function Optimizer() {
-  const navigate = useNavigate();
   const assets = useAtomValue(assetsAtom);
   const config = useAtomValue(configAtom);
   const assemblyResult = useAtomValue(assemblyResultAtom);
-  const [out1, setOut1] = useState("");
   const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
   const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
   const [bestMetric, setBestMetric] = useState("");
@@ -97,41 +88,9 @@ export default function Optimizer() {
   };
   return (
     <>
-      <Typography.Title level={3}>方案评测</Typography.Title>
       <Button
         type="primary"
-        onClick={async () => {
-          const worker = makeWasmWorker();
-          worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
-            const { data } = event;
-            switch (data.type) {
-              case "metric":
-                setOut1(data.metric);
-                notification.success({
-                  message: "评测成功!",
-                });
-                break;
-              case "error":
-                notification.error({
-                  message: "评测过程中 libchai 出现错误",
-                  description: data.error.message,
-                });
-                break;
-            }
-          };
-          worker.postMessage({ type: "evaluate", data: prepareInput() });
-        }}
-      >
-        开始评测
-      </Button>
-      {out1 ? (
-        <Typography.Text>
-          <pre>{out1}</pre>
-        </Typography.Text>
-      ) : null}
-      <Typography.Title level={3}>方案优化</Typography.Title>
-      <Button
-        type="primary"
+        disabled={optimizing}
         onClick={() => {
           setResult([]);
           setBestResult(undefined);
@@ -139,8 +98,8 @@ export default function Optimizer() {
           setAutoParams(undefined);
           setProgress(undefined);
           setOptimizing(true);
-          const worker = makeWasmWorker();
-          worker.onmessage = (event: MessageEvent<LibchaiOutputEvent>) => {
+          const worker = thread.worker;
+          worker.onmessage = (event: MessageEvent<WorkerOutput>) => {
             const { data } = event;
             const date = new Date();
             let config: Config;
@@ -164,10 +123,11 @@ export default function Optimizer() {
                   steps: data.steps ?? params?.steps,
                 }));
                 break;
-              case "finish":
+              case "success":
                 notification.success({
                   message: "优化已完成，请查看结果!",
                 });
+                setOptimizing(false);
                 break;
               case "error":
                 notification.error({

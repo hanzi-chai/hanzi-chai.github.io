@@ -1,31 +1,26 @@
 import * as libchai from "libchai";
+import { analysis } from "./lib/repertoire";
+import { assemble } from "./lib/assembly";
 
-export interface LibchaiInputEvent {
-  type: "encode" | "evaluate" | "optimize";
+export interface WorkerInput {
+  type: "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
   data: any;
 }
 
-export type LibchaiOutputEvent =
+export type WorkerOutput =
   | {
-      type: "code";
-      code: any;
+      type: "success";
+      result: any;
+    }
+  | {
+      type: "error";
+      error: Error;
     }
   | {
       type: "better_solution";
       config: string;
       metric: string;
       save: boolean;
-    }
-  | {
-      type: "metric";
-      metric: string;
-    }
-  | {
-      type: "finish";
-    }
-  | {
-      type: "error";
-      error: Error;
     }
   | {
       type: "progress";
@@ -40,29 +35,33 @@ export type LibchaiOutputEvent =
       steps?: number;
     };
 
-self.onmessage = async (event: MessageEvent<LibchaiInputEvent>) => {
+self.onmessage = async (event: MessageEvent<WorkerInput>) => {
+  const channel = event.ports[0]!;
+  const data = event.data.data;
   await libchai.default();
+  let result: any;
   try {
     switch (event.data.type) {
-      case "encode":
-        self.postMessage({
-          type: "code",
-          code: libchai.encode(event.data.data),
-        });
+      case "analysis":
+        result = analysis(data[0], data[1], data[2]);
+        channel.postMessage({ type: "success", result });
         break;
-      case "evaluate":
-        self.postMessage({
-          type: "metric",
-          metric: libchai.evaluate(event.data.data),
-        } as LibchaiOutputEvent);
+      case "assembly":
+        result = assemble(data[0], data[1], data[2], data[3], data[4], data[5]);
+        channel.postMessage({ type: "success", result });
+        break;
+      case "encode":
+        result = [libchai.evaluate(data[0]), libchai.encode(data[0])];
+        channel.postMessage({ type: "success", result });
         break;
       case "optimize":
         libchai.optimize(event.data.data, self.postMessage);
-        self.postMessage({ type: "finish" } as LibchaiOutputEvent);
+        self.postMessage({ type: "success" } as WorkerOutput);
         break;
     }
   } catch (error) {
-    self.postMessage({ type: "error", error } as LibchaiOutputEvent);
+    channel.postMessage({ type: "error", error } as WorkerOutput);
+    self.postMessage({ type: "error", error } as WorkerOutput);
   }
 };
 

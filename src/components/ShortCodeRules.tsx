@@ -2,7 +2,7 @@ import { Button, Flex, Form } from "antd";
 import type { ShortCodeRule } from "~/lib";
 import { wordLengthArray } from "~/lib";
 import { useAtom } from "~/atoms";
-import { shortCodeConfigAtom } from "~/atoms/encoder";
+import { shortCodeConfigAtom } from "~/atoms";
 import {
   ModalForm,
   ProFormCascader,

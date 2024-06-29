@@ -1,4 +1,4 @@
-import type { Classifier } from "./classifier";
+import { mergeClassifier, type Classifier } from "./classifier";
 import type { Config } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
@@ -81,7 +81,7 @@ export const createConfig = function (starter: StarterType): Config {
   const classifier = classifierMap[starter.data];
 
   // 确保笔画都在 mapping 里
-  for (const value of Object.values(classifier)) {
+  for (const value of Object.values(mergeClassifier(classifier))) {
     const element = value.toString();
     if (!form.mapping[element]) {
       form.mapping[element] = form.alphabet[0]!;

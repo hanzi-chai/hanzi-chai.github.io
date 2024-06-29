@@ -104,7 +104,7 @@ export default function Algorithm() {
     list().then((data) => {
       setForm(listToObject(data));
     });
-  }, []);
+  }, [setForm]);
 
   return (
     <Layout style={{ height: "100%" }}>

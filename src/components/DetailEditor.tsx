@@ -1,4 +1,4 @@
-import { Panel, useReactFlow } from "reactflow";
+import { Panel } from "reactflow";
 import type { ConditionData, SourceData } from "./graph";
 import styled from "styled-components";
 import { Cascader, Flex, Form, Typography } from "antd";
@@ -9,7 +9,7 @@ import type { Op } from "~/lib";
 import { ops, unaryOps } from "~/lib";
 import TextArea from "antd/es/input/TextArea";
 import { useAtomValue, keyboardAtom, algebraAtom } from "~/atoms";
-import { customElementsAtom } from "~/atoms/assets";
+import { customElementsAtom } from "~/atoms";
 
 const Background = styled(Flex)`
   width: 240px;

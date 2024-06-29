@@ -13,7 +13,7 @@ export default function AdminLayout() {
     list().then((data) => {
       load(listToObject(data));
     });
-  }, []);
+  }, [load]);
 
   return (
     <Layout style={{ height: "100%" }}>

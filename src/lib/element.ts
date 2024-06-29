@@ -209,6 +209,12 @@ export const findElement = (
   const { pinyin, sequence } = result;
   let root: string | undefined;
   let strokes: number[] | undefined;
+  let name: PronunciationElementTypes;
+  let hash: string;
+  let rules: Rule[];
+  let transformed: string;
+  let stroke1: number | undefined;
+  let stroke2: number | undefined;
   switch (object.type) {
     case "汉字":
       return result.char;
@@ -220,11 +226,11 @@ export const findElement = (
       }
       return undefined;
     case "字音":
-      const name = object.subtype;
-      const hash = name + ":" + pinyin;
+      name = object.subtype;
+      hash = name + ":" + pinyin;
       if (algebraCache.has(hash)) return algebraCache.get(hash);
-      const rules = defaultAlgebra[name] || algebra?.[name];
-      const transformed = applyRules(name, rules, pinyin);
+      rules = defaultAlgebra[name] || algebra?.[name];
+      transformed = applyRules(name, rules, pinyin);
       algebraCache.set(hash, transformed);
       return transformed;
     case "字根":
@@ -242,13 +248,12 @@ export const findElement = (
         const number = signedIndex(strokes, object.strokeIndex);
         return number?.toString();
       }
-      const [i1, i2] = [
+      stroke1 = signedIndex(
+        strokes,
         object.strokeIndex * 2 - Math.sign(object.strokeIndex),
-        object.strokeIndex * 2,
-      ];
-      const stroke1 = signedIndex(strokes, i1);
+      );
       if (stroke1 === undefined) return undefined;
-      const stroke2 = signedIndex(strokes, i2);
+      stroke2 = signedIndex(strokes, object.strokeIndex * 2);
       return [stroke1, stroke2 ?? 0].join("");
     case "自定义":
       return signedIndex(result.custom[object.subtype] ?? [], object.rootIndex);

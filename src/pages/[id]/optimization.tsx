@@ -10,8 +10,12 @@ import {
 import { useAtom, useAtomValue } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { useMemo } from "react";
-import { keyboardAtom, useListAtom } from "~/atoms";
-import { constraintsAtom, objectiveAtom } from "~/atoms/optimization";
+import {
+  keyboardAtom,
+  useListAtom,
+  constraintsAtom,
+  objectiveAtom,
+} from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
@@ -281,7 +285,7 @@ const PartialObjective = ({
           .prop("tiers")
           .valueOr([] as TierWeights[]),
       ),
-    [type],
+    [partialObjectiveAtom],
   );
   const levelsAtom = useMemo(
     () =>
@@ -291,7 +295,7 @@ const PartialObjective = ({
           .prop("levels")
           .valueOr([] as LevelWeights[]),
       ),
-    [type],
+    [partialObjectiveAtom],
   );
 
   const [partialObjective, setPartialObjective] = useAtom(partialObjectiveAtom);

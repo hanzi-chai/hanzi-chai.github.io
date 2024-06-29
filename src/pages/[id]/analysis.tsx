@@ -29,7 +29,7 @@ import { exportTSV, makeCharacterFilter } from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
-import { analysisResultAtom } from "~/atoms/cache";
+import { analysisResultAtom } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
 
 const dumpAnalysisResult = (

@@ -362,3 +362,13 @@ export const summarize = (elements: (IndexedElement | undefined)[]) => {
     })
     .join(" ");
 };
+
+export interface DictEntry {
+  name: string;
+  full: string;
+  full_rank: number;
+  short: string;
+  short_rank: number;
+}
+
+export type EncodeResult = DictEntry[];

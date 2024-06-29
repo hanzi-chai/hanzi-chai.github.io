@@ -37,7 +37,7 @@ import {
   userPairEquivalenceAtom,
   userDictionaryAtom,
   customElementsAtom,
-} from "~/atoms/assets";
+} from "~/atoms";
 import { getRecordFromTSV } from "~/lib";
 import { useEffect, useState } from "react";
 

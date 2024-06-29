@@ -1,32 +1,14 @@
 import type { Config } from "~/lib";
-import { isValidCJKChar, makeJsWorker, makeWasmWorker } from "~/lib";
+import { isValidCJKChar } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
-import type { LibchaiOutputEvent } from "~/worker";
 import { notification } from "antd";
 import type { Err } from "~/api";
 import { createContext } from "react";
 import { isEqual } from "lodash-es";
 import { diff } from "deep-object-diff";
 import { load } from "js-yaml";
-
-export class Thread {
-  private worker: Worker;
-  public constructor(type: "js" | "wasm") {
-    this.worker = type === "js" ? makeJsWorker() : makeWasmWorker();
-  }
-
-  public async spawn<R>(func: string, args: any[]): Promise<R> {
-    return await new Promise((resolve) => {
-      const channel = new MessageChannel();
-      channel.port1.onmessage = ({ data }) => {
-        channel.port1.close();
-        resolve(data);
-      };
-      this.worker.postMessage({ func, args }, [channel.port2]);
-    });
-  }
-}
+import type { WorkerOutput } from "~/worker";
 
 export const RemoteContext = createContext(true);
 
@@ -76,14 +58,6 @@ export async function roundTestConfig(config: Config) {
   }
 }
 
-export interface DictEntry {
-  name: string;
-  full: string;
-  full_rank: number;
-  short: string;
-  short_rank: number;
-}
-
 export const errorFeedback = function <T extends number | boolean>(
   res: T | Err,
 ): res is Err {
@@ -112,30 +86,37 @@ export const verifyNewName = (newName: string) => {
   return true;
 };
 
-export type EncodeResult = DictEntry[];
-
-export const makeEncodeCallback = (setCode: (e: EncodeResult) => void) => {
-  return (event: MessageEvent<LibchaiOutputEvent>) => {
-    const { data } = event;
-    switch (data.type) {
-      case "code":
-        setCode(data.code);
-        notification.success({
-          message: "生成成功!",
-        });
-        break;
-      case "error":
-        notification.error({
-          message: "生成过程中 libchai 出现错误",
-          description: data.error.message,
-        });
-        break;
-    }
-  };
-};
-
 export function useChaifenTitle(title: string) {
+  // eslint-disable-next-line
   useTitle(`${title} · 汉字自动拆分系统 ${APP_VERSION}`, {
     restoreOnUnmount: true,
   });
 }
+
+export class Thread {
+  public worker: Worker;
+  public constructor() {
+    this.worker = new Worker(new URL("../worker.ts", import.meta.url), {
+      type: "module",
+    });
+  }
+
+  public async spawn<R>(type: string, data: any[]): Promise<R> {
+    return await new Promise((resolve, reject) => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = ({ data }: { data: WorkerOutput }) => {
+        channel.port1.close();
+        if (data.type === "success") {
+          resolve(data.result);
+        } else if (data.type === "error") {
+          reject(data.error);
+        } else {
+          throw new Error(`Unexpected message: ${data}`);
+        }
+      };
+      this.worker.postMessage({ type, data }, [channel.port2]);
+    });
+  }
+}
+
+export const thread = new Thread();

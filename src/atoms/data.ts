@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { primitiveRepertoireAtom } from "./constants";
+import { primitiveRepertoireAtom } from "./assets";
 import type {
   CharacterSetSpecifier,
   CustomReadings,

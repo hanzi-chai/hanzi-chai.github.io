@@ -2,16 +2,16 @@ import { atom } from "jotai";
 import type {
   AnalysisConfig,
   AssemblyResult,
+  EncodeResult,
   PronunciationElementTypes,
 } from "~/lib";
-import { applyRules, defaultAlgebra } from "~/lib";
+import { applyRules, defaultAlgebra, stringifySequence } from "~/lib";
 import type { AnalysisResult } from "~/lib";
-import type { EncodeResult } from ".";
 import {
-  Thread,
   algebraAtom,
   analysisAtom,
   charactersAtom,
+  configAtom,
   dictionaryAtom,
   encoderAtom,
   groupingAtom,
@@ -19,7 +19,8 @@ import {
   mappingAtom,
   repertoireAtom,
 } from ".";
-import { customElementsAtom } from "./assets";
+import { assetsAtom, customElementsAtom } from "./assets";
+import { thread } from "./utils";
 
 const mergedAlgebraAtom = atom((get) => {
   const algebra = get(algebraAtom);
@@ -47,8 +48,6 @@ export const phonemeEnumerationAtom = atom((get) => {
   return content;
 });
 
-const jsThread = new Thread("js");
-
 export const analysisResultAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
   const analysisConfig: AnalysisConfig = {
@@ -61,7 +60,7 @@ export const analysisResultAtom = atom(async (get) => {
     ),
   };
   const characters = get(charactersAtom);
-  return await jsThread.spawn<AnalysisResult>("analysis", [
+  return await thread.spawn<AnalysisResult>("analysis", [
     repertoire,
     analysisConfig,
     characters,
@@ -78,7 +77,7 @@ export const assemblyResultAtom = atom(async (get) => {
   const analysisResult = await get(analysisResultAtom);
   const customElements = get(customElementsAtom);
   const config = { algebra, encoder, keyboard };
-  return await jsThread.spawn<AssemblyResult>("assembly", [
+  return await thread.spawn<AssemblyResult>("assembly", [
     repertoire,
     config,
     characters,
@@ -88,4 +87,11 @@ export const assemblyResultAtom = atom(async (get) => {
   ]);
 });
 
-export const encodeResultAtom = atom<EncodeResult | null>(null);
+export const encodeResultAtom = atom(async (get) => {
+  const config = get(configAtom);
+  const assemblyResult = await get(assemblyResultAtom);
+  const assets = await get(assetsAtom);
+  const info = stringifySequence(assemblyResult, config);
+  const data = { config, info, assets };
+  return await thread.spawn<[string, EncodeResult]>("encode", [data]);
+});
