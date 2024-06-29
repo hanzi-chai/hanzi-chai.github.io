@@ -65,11 +65,19 @@ const items: MenuProps["items"] = [
   },
 ];
 
+const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
+  const info = useAtomValue(infoAtom);
+  return (
+    <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
+      <div>{info?.name ?? "未命名"}</div>
+    </Layout.Header>
+  );
+};
+
 function EditorLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
-  const configInfo = useAtomValue(infoAtom);
 
   const [isCollapsed, setCollapsed] = useState(false);
   return (
@@ -133,9 +141,7 @@ function EditorLayout() {
         </Flex>
       </Layout.Sider>
       <Layout style={{ height: "100vh" }}>
-        <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
-          <div>{configInfo?.name ?? "未命名"}</div>
-        </Layout.Header>
+        <Header isCollapsed={isCollapsed} />
         <Layout.Content
           style={{
             marginLeft: isCollapsed ? "58px" : "160px",
@@ -170,7 +176,7 @@ export default function Contextualized() {
     fetchAsset("repertoire").then((value) =>
       setRepertoire(listToObject(value)),
     );
-  }, []);
+  }, [setRepertoire]);
 
   if (!(id in localStorage)) {
     return <Empty description="无方案数据" />;

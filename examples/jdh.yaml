@@ -1,0 +1,663 @@
+version: '0.1'
+source: jdh
+info:
+  name: 简单鹤
+  author: 简单男孩
+  version: '5.0'
+  description: 方案不简单做给谁看呢
+data:
+  repertoire:
+    "\uf000":
+      unicode: 61440
+      tygf: 0
+      gb2312: false
+      name: 禺字底
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 禺, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
+      ambiguous: false
+    "\uf001":
+      unicode: 61441
+      tygf: 0
+      gb2312: false
+      name: 草头
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿱, operandList: [艹, 日]}]
+      ambiguous: false
+  glyph_customization:
+    黄:
+      type: compound
+      operator: ⿱
+      operandList: [龷, 更]
+    高:
+      type: compound
+      operator: ⿰
+      operandList: ["\ue804", 口]
+    尚:
+      type: compound
+      operator: ⿱
+      operandList: [龸, 口]
+    "\ue9f0":
+      type: compound
+      operator: ⿰
+      operandList: [鱼, 大]
+    兵:
+      type: compound
+      operator: ⿰
+      operandList: ["\ue400", "\ue450"]
+    "\ue824":
+      type: compound
+      operator: ⿰
+      operandList: [彳, "\ue849"]
+    命:
+      type: compound
+      operator: ⿰
+      operandList: [合, 卩]
+    夌:
+      type: compound
+      operator: ⿱
+      operandList: [土, "\ue989"]
+    丝:
+      type: compound
+      operator: ⿰
+      operandList: [纟, 纟]
+    隺:
+      type: compound
+      tags: [笔画搭挂]
+      operator: ⿻
+      operandList: [冖, 隹]
+    "\ue068":
+      type: basic_component
+      strokes: [{feature: 横, start: [8, 18], curveList: [{command: h, parameterList: [85]}]}, {feature: 撇, start: [45, 4], curveList: [{command: c, parameterList: [-8, 26, -22, 42, -39, 56]}]}]
+    莫:
+      type: compound
+      operator: ⿱
+      operandList: ["\uf001", 大]
+    㝵:
+      type: compound
+      operator: ⿱
+      operandList: [旦, 寸]
+    章:
+      type: compound
+      operator: ⿱
+      operandList: [音, 十]
+    "\ue9ab":
+      type: compound
+      operator: ⿲
+      operandList: ["\ue057", 白, "\ue009"]
+      order: [{index: 0, strokes: 0}, {index: 1, strokes: 0}, {index: 2, strokes: 0}]
+    "\ue00f":
+      type: compound
+      tags: [中竖截断]
+      operator: ⿱
+      operandList: [牛, 巾]
+    重:
+      type: compound
+      tags: [中竖截断]
+      operator: ⿱
+      operandList: [千, 里]
+    熏:
+      type: compound
+      tags: [中竖截断]
+      operator: ⿱
+      operandList: [千, 黑]
+  tags:
+    - 赢字框
+    - 辩字框
+    - 玨框
+analysis:
+  degenerator:
+    feature:
+      提: 横
+      捺: 点
+    no_cross: false
+  selector:
+    - 结构完整
+    - 连续笔顺
+    - 根少优先
+    - 能连不交
+    - 能散不连
+    - 取大优先
+  customize:
+    击:
+      - 土
+      - 山
+    出:
+      - 山
+      - 山
+    必:
+      - 心
+      - '3'
+    疌:
+      - '1'
+      - '5'
+      - '1'
+      - '1'
+      - '2'
+      - '1'
+      - 人
+    耂:
+      - 土
+      - '3'
+    "\ue0d3":
+      - '2'
+      - '5'
+      - '2'
+      - '2'
+      - 二
+      - '1'
+    兆:
+      - 儿
+      - '4'
+      - '1'
+      - '3'
+      - '4'
+    非:
+      - '2'
+      - 三
+      - '2'
+      - 三
+    兰:
+      - 丷
+      - 三
+    "\ue03a":
+      - '1'
+      - '2'
+      - '1'
+      - 人
+    聿:
+      - '5'
+      - '1'
+      - '1'
+      - '1'
+      - '1'
+      - '2'
+    丘:
+      - '3'
+      - '2'
+      - '1'
+      - '2'
+      - '1'
+    垂:
+      - 千
+      - 艹
+      - 士
+    疋:
+      - '5'
+      - '2'
+      - '1'
+      - 人
+    "\ue043":
+      - 大
+    开:
+      - 二
+      - '3'
+      - '2'
+    曲:
+      - '2'
+      - '5'
+      - 艹
+      - '1'
+    "\ue419":
+      - '2'
+      - '5'
+      - '1'
+      - 三
+    "\ue0fb":
+      - 勿
+      - '4'
+    头:
+      - '4'
+      - '4'
+      - 大
+    亍:
+      - 二
+      - '2'
+    "\ue44b":
+      - 千
+      - 八
+    赤:
+      - 十
+      - 丁
+      - '3'
+      - 八
+    生:
+      - "\ue078"
+      - 土
+    束:
+      - '1'
+      - 口
+      - '2'
+      - 八
+    天:
+      - 二
+      - 人
+    "\ue42e":
+      - '3'
+      - '2'
+      - 八
+    上:
+      - '2'
+      - '1'
+      - '1'
+    "\ue070":
+      - '2'
+      - '5'
+      - '2'
+      - '1'
+    羌:
+      - 丷
+      - 三
+      - 儿
+    秉:
+      - 千
+      - '5'
+      - '1'
+      - '1'
+      - 八
+    龰:
+      - '2'
+      - '1'
+      - 人
+    "\ue446":
+      - 八
+    "\ue085":
+      - 千
+      - 囗
+      - 丷
+      - 二
+    禾:
+      - 千
+      - 八
+    "\ue103":
+      - 戈
+      - '3'
+      - '3'
+algebra:
+  鹤韵:
+    - type: xform
+      from: ^[aeo](.)\d$
+      to: $1
+    - type: xform
+      from: ^.*?([aeiouv].*|m|ng?)\d$
+      to: $1
+  鹤声:
+    - type: xform
+      from: ^([mn]g?\d)$
+      to: o$1
+    - type: xform
+      from: ^([bpmfdtnlgkhjqxzcsrywaoe]h?|^).+$
+      to: $1
+form:
+  alphabet: abcdefghijklmnopqrstuvwxyz
+  mapping_type: 1
+  mapping:
+    鹤声-a: a
+    鹤声-b: b
+    鹤声-c: c
+    鹤声-ch: i
+    鹤声-d: d
+    鹤声-e: e
+    鹤声-f: f
+    鹤声-g: g
+    鹤声-h: h
+    鹤声-j: j
+    鹤声-k: k
+    鹤声-l: l
+    鹤声-m: m
+    鹤声-n: 'n'
+    鹤声-o: o
+    鹤声-p: p
+    鹤声-q: q
+    鹤声-r: r
+    鹤声-s: s
+    鹤声-sh: u
+    鹤声-t: t
+    鹤声-w: w
+    鹤声-x: x
+    鹤声-y: 'y'
+    鹤声-z: z
+    鹤声-zh: v
+    鹤韵-a: a
+    鹤韵-ai: d
+    鹤韵-an: j
+    鹤韵-ang: h
+    鹤韵-ao: c
+    鹤韵-e: e
+    鹤韵-ei: w
+    鹤韵-en: f
+    鹤韵-eng: g
+    鹤韵-i: i
+    鹤韵-ia: x
+    鹤韵-ian: m
+    鹤韵-iang: l
+    鹤韵-iao: 'n'
+    鹤韵-ie: p
+    鹤韵-in: b
+    鹤韵-ing: k
+    鹤韵-iong: s
+    鹤韵-iu: q
+    鹤韵-m: m
+    鹤韵-n: 'n'
+    鹤韵-ng: g
+    鹤韵-o: o
+    鹤韵-ong: s
+    鹤韵-ou: z
+    鹤韵-r: r
+    鹤韵-u: u
+    鹤韵-ua: x
+    鹤韵-uai: k
+    鹤韵-uan: r
+    鹤韵-uang: l
+    鹤韵-ue: t
+    鹤韵-ui: v
+    鹤韵-un: 'y'
+    鹤韵-uo: o
+    鹤韵-v: v
+    鹤韵-ve: t
+    '1': d
+    '2': p
+    '3': u
+    '4': h
+    '5': r
+    "\ue09e": 'n'
+    "\ue0bc": g
+    "\ue42d": h
+    八: f
+    巴: t
+    贝: m
+    匕: a
+    灬: 'n'
+    冫: f
+    艹: z
+    册: j
+    车: t
+    彳: h
+    虫: f
+    辶: q
+    寸: k
+    大: x
+    刀: i
+    电: e
+    丁: j
+    儿: k
+    而: b
+    二: u
+    方: f
+    付: w
+    干: s
+    戈: a
+    工: p
+    骨: c
+    广: r
+    鬼: s
+    火: t
+    几: i
+    彐: s
+    卩: b
+    巾: 'y'
+    钅: d
+    冂: o
+    臼: s
+    口: o
+    力: u
+    厉: e
+    立: b
+    麻: d
+    马: z
+    米: l
+    宀: i
+    皿: a
+    木: w
+    目: s
+    疒: m
+    廿: v
+    鸟: c
+    牛: b
+    女: 'y'
+    气: s
+    丬: l
+    犭: b
+    人: e
+    亻: x
+    日: v
+    山: p
+    尸: q
+    十: s
+    石: t
+    手: o
+    扌: j
+    水: o
+    氵: k
+    厶: p
+    纟: e
+    田: w
+    土: g
+    王: a
+    囗: 'n'
+    未: e
+    文: j
+    五: g
+    勿: i
+    夕: f
+    西: p
+    习: d
+    小: i
+    忄: 'n'
+    讠: c
+    衤: h
+    衣: k
+    又: l
+    鱼: q
+    雨: 'y'
+    月: l
+    止: r
+    舟: t
+    子: a
+    足: g
+    㐅: 'y'
+  grouping:
+    "\ue03e": "\ue42d"
+    自: 目
+    "\ue43f": 匕
+    走: 辶
+    "\ue0c8": 车
+    牜: 牛
+    三: 二
+    "\ue0d0": 雨
+    巳: 巴
+    音: 讠
+    言: 讠
+    末: 未
+    "\ue012": 丬
+    厂: 广
+    "\ue029": 牛
+    礻: 衤
+    心: 忄
+    冖: 宀
+    龴: 厶
+    氺: 水
+    犬: 犭
+    "\ue437": 止
+    阝: 卩
+    㔾: 巴
+    死: 夕
+    "\ue0ed": 鬼
+    朩: 木
+    乂: 㐅
+    门: 冂
+    攵: 文
+    曰: 日
+    歹: 夕
+    爫: "\ue42d"
+    "\ue432": 彐
+    "\ue011": 匕
+    甘: 廿
+    可: 丁
+    夂: 文
+    少: 小
+    "\ue078": 人
+    "\ue0d6": 几
+    "\ue020": "\ue0bc"
+    "\ue055": 册
+    "\ue0c6": 足
+    戋: 戈
+    丷: 八
+    "\ue0b2": 卩
+    白: 臼
+    "\ue050": 艹
+    "\ue0d2": 月
+    "\ue43a": 土
+    龵: 手
+    已: 巴
+    己: 巴
+    "\ue43d": 人
+    千: 干
+    刂: 刀
+    廴: 辶
+    亠: 宀
+    士: 土
+    弋: 戈
+    竹: "\ue09e"
+    "\ue00c": 日
+    "\ue043": 大
+    "\ue05a": 王
+    龶: 王
+    丰: 王
+    "\ue079": 匕
+    "\ue02a": 冂
+    句: 勿
+    "\ue068": 十
+    七: 匕
+    "\ue416": 匕
+    "\ue03f": 戈
+    朱: 未
+    失: 未
+    夫: 未
+    丝: 纟
+    "\ue051": 小
+    釆: "\ue42d"
+    "\ue414": 廿
+    罒: 皿
+    "\ue06c": 小
+    覀: 西
+encoder:
+  max_length: 4
+  select_keys:
+    - _
+    - ;
+  short_code:
+    - length_equal: 1
+      schemes:
+        - { prefix: 3 }
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字音, subtype: 鹤声}
+      next: s2
+    s2:
+      object: {type: 字音, subtype: 鹤韵}
+      next: s3
+    s3:
+      object: {type: 字根, rootIndex: 1}
+      next: s4
+    s4:
+      object: {type: 字根, rootIndex: -1}
+      next: null
+  conditions: {}
+  rules:
+    - length_equal: 2
+      formula: AaAbBaBb
+    - length_equal: 3
+      formula: AaBaCaCb
+    - length_in_range: [4, 10]
+      formula: AaBaCaDa
+optimization:
+  objective:
+    characters_full:
+      tiers: [{top: 5458, duplication: 100}]
+      duplication: 200
+      pair_equivalence: 11.4514
+      levels: []
+    characters_short:
+      tiers: [{top: 1500, levels: [{length: 3, frequency: -35.89}]}, {top: 5458, duplication: 1}]
+      duplication: 200
+      pair_equivalence: 11.4514
+      levels: []
+  constraints:
+    elements:
+      - {element: 鹤声-a}
+      - {element: 鹤韵-a}
+      - {element: 鹤韵-ai}
+      - {element: 鹤韵-an}
+      - {element: 鹤韵-ang}
+      - {element: 鹤韵-ao}
+      - {element: 鹤声-b}
+      - {element: 鹤声-c}
+      - {element: 鹤声-ch}
+      - {element: 鹤声-d}
+      - {element: 鹤声-e}
+      - {element: 鹤韵-e}
+      - {element: 鹤韵-ei}
+      - {element: 鹤韵-en}
+      - {element: 鹤韵-eng}
+      - {element: 鹤声-f}
+      - {element: 鹤声-g}
+      - {element: 鹤声-h}
+      - {element: 鹤韵-i}
+      - {element: 鹤韵-ia}
+      - {element: 鹤韵-ian}
+      - {element: 鹤韵-iang}
+      - {element: 鹤韵-iao}
+      - {element: 鹤韵-ie}
+      - {element: 鹤韵-in}
+      - {element: 鹤韵-ing}
+      - {element: 鹤韵-iong}
+      - {element: 鹤韵-iu}
+      - {element: 鹤声-j}
+      - {element: 鹤声-k}
+      - {element: 鹤声-l}
+      - {element: 鹤声-m}
+      - {element: 鹤韵-m}
+      - {element: 鹤声-n}
+      - {element: 鹤韵-n}
+      - {element: 鹤韵-ng}
+      - {element: 鹤声-o}
+      - {element: 鹤韵-o}
+      - {element: 鹤韵-ong}
+      - {element: 鹤韵-ou}
+      - {element: 鹤声-p}
+      - {element: 鹤声-q}
+      - {element: 鹤声-r}
+      - {element: 鹤韵-r}
+      - {element: 鹤声-s}
+      - {element: 鹤声-sh}
+      - {element: 鹤声-t}
+      - {element: 鹤韵-u}
+      - {element: 鹤韵-ua}
+      - {element: 鹤韵-uai}
+      - {element: 鹤韵-uan}
+      - {element: 鹤韵-uang}
+      - {element: 鹤韵-ue}
+      - {element: 鹤韵-ui}
+      - {element: 鹤韵-un}
+      - {element: 鹤韵-uo}
+      - {element: 鹤韵-v}
+      - {element: 鹤韵-ve}
+      - {element: 鹤声-w}
+      - {element: 鹤声-x}
+      - {element: 鹤声-y}
+      - {element: 鹤声-z}
+      - {element: 鹤声-zh}
+    indices: []
+    element_indices: []
+  metaheuristic:
+    algorithm: SimulatedAnnealing
+    parameters:
+      t_max: 0.003
+      t_min: 0.000001
+      steps: 99999
+    report_after: 0.1

@@ -151,41 +151,49 @@ const CustomElementUploader = () => {
   );
 };
 
+const ConfigInfo = () => {
+  const [info, setInfo] = useAtom(infoAtom);
+  const [form] = ProForm.useForm<Info>();
+  useEffect(() => {
+    form.setFieldsValue(info);
+  }, [info]);
+  return (
+    <>
+      <Typography.Title level={3}>基本信息</Typography.Title>
+      <ProForm<Info>
+        form={form}
+        layout="horizontal"
+        labelCol={{ span: 6 }}
+        wrapperCol={{ span: 16 }}
+        initialValues={info}
+        onValuesChange={(_, values) => setInfo(values)}
+        submitter={false}
+        autoFocusFirstInput={false}
+      >
+        <ProFormText label="方案名称" name="name" />
+        <ProFormText label="作者" name="author" />
+        <ProFormText label="版本" name="version" />
+        <ProFormTextArea label="描述" name="description" />
+      </ProForm>
+    </>
+  );
+};
+
 export default function Index() {
   useChaifenTitle("基本信息");
-  const [info, setInfo] = useAtom(infoAtom);
   const [characterSet, setCharacterSet] = useAtom(characterSetAtom);
   const specifierNames: Record<CharacterSetSpecifier, string> = {
     general: "通用",
     basic: "基本",
     extended: "扩展",
   };
-  const [form] = ProForm.useForm<Info>();
-  useEffect(() => {
-    form.setFieldsValue(info);
-  }, [info]);
   return (
     <EditorRow>
       <EditorColumn span={12}>
         <Typography.Title level={2}>方案</Typography.Title>
         <Typography.Title level={3}>管理配置</Typography.Title>
         <ConfigManager />
-        <Typography.Title level={3}>基本信息</Typography.Title>
-        <ProForm<Info>
-          form={form}
-          layout="horizontal"
-          labelCol={{ span: 6 }}
-          wrapperCol={{ span: 16 }}
-          initialValues={info}
-          onValuesChange={(_, values) => setInfo(values)}
-          submitter={false}
-          autoFocusFirstInput={false}
-        >
-          <ProFormText label="方案名称" name="name" />
-          <ProFormText label="作者" name="author" />
-          <ProFormText label="版本" name="version" />
-          <ProFormTextArea label="描述" name="description" />
-        </ProForm>
+        <ConfigInfo />
         <Flex align="baseline" justify="space-between">
           <Typography.Title level={3}>字集</Typography.Title>
           <Select

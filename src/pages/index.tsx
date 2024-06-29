@@ -147,12 +147,19 @@ const ListItem = ({
   setConfigs: Updater<Record<string, Config>>;
 }) => {
   return (
-    <Flex align="center" justify="space-between">
-      <StyledListItem to={`/${id}`}>
+    <Flex align="center" justify="space-between" style={{ width: "100%" }}>
+      <StyledListItem
+        to={`/${id}`}
+        style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
         <Typography.Title level={5} style={{ margin: 0 }}>
           {info.name + (info.version ? ` (${info.version})` : "")}
         </Typography.Title>
-        <Typography.Text ellipsis>{info.description}</Typography.Text>
+        <Typography.Text>{info.description}</Typography.Text>
       </StyledListItem>
       <DeleteButton
         onClick={(e) => {
@@ -196,7 +203,7 @@ export default function HomeLayout() {
     return localStorage.getItem("user") ? "login" : "signin";
   });
 
-  const { snow, mswb, flypy, easy, zhengma, yustar } = examples;
+  const { snow, mswb, jdh, easy, zhengma, yustar } = examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
     label: x.info.name,
@@ -213,7 +220,7 @@ export default function HomeLayout() {
       key: "2",
       type: "group",
       label: "音形",
-      children: [],
+      children: [prepare(jdh)],
     },
     {
       key: "3",
