@@ -6,6 +6,7 @@ import {
   InputNumber,
   Switch,
   Typography,
+  Select as AntdSelect,
 } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import { focusAtom } from "jotai-optics";
@@ -23,7 +24,6 @@ import {
   DeleteButton,
   EditorColumn,
   EditorRow,
-  KeyList,
   Select,
 } from "~/components/Utils";
 import type {
@@ -494,15 +494,18 @@ const ConstraintList = ({
                     })
                   }
                 />
+                {keys && (
+                  <AntdSelect
+                    mode="multiple"
+                    value={keys}
+                    onChange={(ks) =>
+                      modify(index, { ...constraint, keys: ks })
+                    }
+                    options={[...alphabet].map((x) => ({ label: x, value: x }))}
+                  />
+                )}
                 <DeleteButton onClick={() => exclude(index)} />
               </Flex>
-              {keys && (
-                <KeyList
-                  keys={keys}
-                  setKeys={(ks) => modify(index, { ...constraint, keys: ks })}
-                  allKeys={[...alphabet]}
-                />
-              )}
             </Flex>
           );
         })}

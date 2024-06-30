@@ -19,6 +19,10 @@ import {
   useAtomValue,
   fetchAsset,
   primitiveRepertoireAtom,
+  useAtom,
+  syncConfig,
+  syncAssets,
+  syncInfo,
 } from "~/atoms";
 import { listToObject } from "~/lib";
 
@@ -75,6 +79,9 @@ const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
 };
 
 function EditorLayout() {
+  useAtom(syncConfig);
+  useAtom(syncAssets);
+  useAtom(syncInfo);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");

@@ -365,3 +365,31 @@ export const makeDefaultAnalyzer = (maxLength: number) => {
   };
   return form;
 };
+
+interface LevelMetric {
+  length: number;
+  frequency: number;
+}
+
+interface TierMetric {
+  top?: number;
+  duplication?: number;
+  levels?: LevelMetric[];
+}
+
+export interface PartialMetric {
+  tiers?: TierMetric[];
+  duplication?: number;
+  key_distribution?: number;
+  pair_equivalence?: number;
+  extended_pair_equivalence?: number;
+  fingering?: (number | null)[];
+  levels?: LevelMetric[];
+}
+
+export interface Metric {
+  characters_full?: PartialMetric;
+  characters_short?: PartialMetric;
+  words_full?: PartialMetric;
+  words_short?: PartialMetric;
+}

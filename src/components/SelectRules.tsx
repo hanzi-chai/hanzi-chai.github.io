@@ -6,11 +6,9 @@ import { printableAscii, wordLengthArray } from "~/lib";
 import {
   ModalForm,
   ProFormGroup,
-  ProFormList,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { InlineRender } from "./ComponentForm";
 
 export default function SelectRules() {
   const [encoder, setEncoder] = useAtom(encoderAtom);
@@ -37,27 +35,13 @@ export default function SelectRules() {
           options={wordLengthArray}
         />
         <ProFormText name="auto_select_pattern" label="顶屏模式" />
+        <ProFormSelect
+          label="选择键"
+          name="select_keys"
+          mode="multiple"
+          options={allowedSelectKeys.map((x) => ({ label: x, value: x }))}
+        />
       </ProFormGroup>
-      <ProFormList
-        label="选择键"
-        name="select_keys"
-        creatorButtonProps={{
-          creatorButtonText: "添加",
-          icon: false,
-          style: { width: "unset" },
-        }}
-        itemRender={InlineRender}
-        creatorRecord={() => "_"}
-        copyIconProps={false}
-      >
-        {(meta, key) => (
-          <ProFormSelect
-            {...meta}
-            name={key}
-            options={allowedSelectKeys.map((x) => ({ label: x, value: x }))}
-          />
-        )}
-      </ProFormList>
     </ModalForm>
   );
 }

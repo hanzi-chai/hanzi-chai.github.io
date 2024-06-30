@@ -1,4 +1,4 @@
-import { AutoComplete, Flex, Form } from "antd";
+import { Flex, Form } from "antd";
 import type { Compound } from "~/lib";
 import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
@@ -32,28 +32,12 @@ export const CommonForm = () => {
         ]}
         disabled
       />
-      <ProFormList
+      <ProFormSelect
         label="标签"
         name="tags"
-        itemRender={InlineRender}
-        copyIconProps={false}
-        creatorButtonProps={{
-          creatorButtonText: "新建",
-          icon: false,
-          type: "link",
-          style: { width: "unset" },
-        }}
-        creatorRecord={() => "标签"}
-      >
-        {(meta) => (
-          <Form.Item noStyle {...meta}>
-            <AutoComplete
-              style={{ width: "96px" }}
-              options={tags.map((x) => ({ label: x, value: x }))}
-            />
-          </Form.Item>
-        )}
-      </ProFormList>
+        mode="tags"
+        options={tags.map((x) => ({ label: x, value: x }))}
+      />
     </Flex>
   );
 };

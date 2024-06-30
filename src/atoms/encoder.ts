@@ -1,6 +1,13 @@
 import { focusAtom } from "jotai-optics";
-import { encoderAtom } from ".";
-import type { ShortCodeRule, WordRule } from "~/lib";
+import { atom, encoderAtom } from ".";
+import type {
+  LevelWeights,
+  Objective,
+  PartialWeights,
+  ShortCodeRule,
+  WordRule,
+} from "~/lib";
+import { range } from "lodash-es";
 
 export const maxLengthAtom = focusAtom(encoderAtom, (o) =>
   o.prop("max_length"),
@@ -35,3 +42,59 @@ export const sourcesAtom = focusAtom(encoderAtom, (o) => o.prop("sources"));
 export const conditionsAtom = focusAtom(encoderAtom, (o) =>
   o.prop("conditions"),
 );
+
+const isMulti = (s: ShortCodeRule) => {
+  if ("length_equal" in s) {
+    return s.length_equal > 1;
+  } else {
+    return s.length_in_range[1] > 1;
+  }
+};
+
+const makeTier = (top: number, levelWeights: LevelWeights[]) => ({
+  top: top === 0 ? undefined : top,
+  duplication: 1,
+  levels: levelWeights,
+});
+
+export const meaningfulObjectiveAtom = atom((get) => {
+  const wordRules = get(wordRulesAtom);
+  const shortCodeConfig = get(shortCodeConfigAtom);
+  const maxLength = get(maxLengthAtom);
+  const levelWeights: LevelWeights[] = range(1, maxLength + 1).map((i) => ({
+    length: i,
+    frequency: 1,
+  }));
+  const partialObjective: PartialWeights = {
+    duplication: 1,
+    key_distribution: 1,
+    pair_equivalence: 1,
+    fingering: [1, 1, 1, 1, 1, 1, null, null],
+    levels: levelWeights,
+  };
+  const p1 = {
+    ...partialObjective,
+    tiers: [300, 500, 1500, 3000, 4500, 6000, 0].map((x) =>
+      makeTier(x, levelWeights),
+    ),
+  };
+  const p2 = {
+    ...partialObjective,
+    tiers: [2000, 5000, 10000, 20000, 40000, 60000, 0].map((x) =>
+      makeTier(x, levelWeights),
+    ),
+  };
+  const objective: Objective = {
+    characters_full: p1,
+  };
+  if (wordRules.length > 0) {
+    objective.words_full = p2;
+  }
+  if (shortCodeConfig.length > 0) {
+    objective.characters_short = p1;
+    if (wordRules.length > 0 && shortCodeConfig.some(isMulti)) {
+      objective.words_short = p2;
+    }
+  }
+  return objective;
+});

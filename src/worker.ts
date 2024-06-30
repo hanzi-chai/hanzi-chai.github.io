@@ -1,9 +1,11 @@
-import * as libchai from "libchai";
+import init, { WebInterface } from "libchai";
 import { analysis } from "./lib/repertoire";
 import { assemble } from "./lib/assembly";
+import { defaultConfig } from "./lib";
+import type { Assets } from "./atoms";
 
 export interface WorkerInput {
-  type: "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
+  type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
   data: any;
 }
 
@@ -35,13 +37,28 @@ export type WorkerOutput =
       steps?: number;
     };
 
+await init();
+const webInterface = WebInterface.new(self.postMessage, defaultConfig, [], {
+  frequency: {},
+  key_distribution: {},
+  pair_equivalence: {},
+} satisfies Assets);
+
 self.onmessage = async (event: MessageEvent<WorkerInput>) => {
   const channel = event.ports[0]!;
   const data = event.data.data;
-  await libchai.default();
   let result: any;
   try {
     switch (event.data.type) {
+      case "sync":
+        if (data[0] === "config") {
+          webInterface.update_config(data[1]);
+        } else if (data[0] === "info") {
+          webInterface.update_info(data[1]);
+        } else if (data[0] === "assets") {
+          webInterface.update_assets(data[1]);
+        }
+        break;
       case "analysis":
         result = analysis(data[0], data[1], data[2]);
         channel.postMessage({ type: "success", result });
@@ -51,11 +68,11 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
         channel.postMessage({ type: "success", result });
         break;
       case "encode":
-        result = [libchai.evaluate(data[0]), libchai.encode(data[0])];
+        result = webInterface.encode_evaluate(data[0]);
         channel.postMessage({ type: "success", result });
         break;
       case "optimize":
-        libchai.optimize(event.data.data, self.postMessage);
+        webInterface.optimize();
         self.postMessage({ type: "success" } as WorkerOutput);
         break;
     }

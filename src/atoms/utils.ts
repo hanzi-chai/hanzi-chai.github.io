@@ -1,5 +1,5 @@
-import type { Config } from "~/lib";
-import { isValidCJKChar } from "~/lib";
+import type { Config, EncodeResult } from "~/lib";
+import { isValidCJKChar, stringifySequence } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -9,6 +9,38 @@ import { isEqual } from "lodash-es";
 import { diff } from "deep-object-diff";
 import { load } from "js-yaml";
 import type { WorkerOutput } from "~/worker";
+import { atomEffect } from "jotai-effect";
+import { configAtom } from "./config";
+import { assetsAtom } from "./assets";
+import { assemblyResultAtom, encodeResultAtom } from "./cache";
+import { atom } from "jotai";
+import { meaningfulObjectiveAtom } from "./encoder";
+
+export const syncConfig = atomEffect((get, set) => {
+  const value = get(configAtom);
+  thread
+    .spawn("sync", ["config", value])
+    .then(() => set(dummyAtom, (x) => x + 1));
+});
+
+export const syncAssets = atomEffect((get, set) => {
+  get(assetsAtom).then(async (value) => {
+    await thread.spawn("sync", ["assets", value]);
+    set(dummyAtom, (x) => x + 1);
+  });
+});
+
+export const syncInfo = atomEffect((get, set) => {
+  get(assemblyResultAtom).then(async (value) => {
+    await thread.spawn("sync", [
+      "info",
+      stringifySequence(value, get(configAtom)),
+    ]);
+    set(dummyAtom, (x) => x + 1);
+  });
+});
+
+const dummyAtom = atom(0);
 
 export const RemoteContext = createContext(true);
 
@@ -44,9 +76,9 @@ export async function roundTestConfig(config: Config) {
       notification.warning({
         message: "配置环行失败",
         description:
-          "该配置在 libchai 中具有不同语义。请参考控制台的 diff 信息。",
+          "该配置在 libchai 中具有不同语义。以下是两者的差异：\n" +
+          diff(config, rustConfig),
       });
-      console.log(diff(config, rustConfig));
       return false;
     }
   } catch (e) {

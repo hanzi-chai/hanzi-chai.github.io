@@ -13,7 +13,7 @@ export default function Debugger() {
   const config = useAtomValue(configAtom);
   const repertoire = useAtomValue(repertoireAtom);
   const characters = useAtomValue(charactersAtom);
-  const [_, code] = useAtomValue(encodeResultAtom) ?? [];
+  const [code] = useAtomValue(encodeResultAtom);
   const referenceAtom = useMemo(
     () =>
       atomWithStorage<Record<string, string[]>>(

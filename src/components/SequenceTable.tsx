@@ -1,4 +1,4 @@
-import { Button, Flex, Input, Space, Typography } from "antd";
+import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
   displayAtom,
@@ -58,7 +58,7 @@ const ExportAssembly = () => {
 };
 
 const ExportCode = () => {
-  const [_, code] = useAtomValue(encodeResultAtom);
+  const [code] = useAtomValue(encodeResultAtom);
   const flatten = (x: DictEntry) => [
     x.name,
     x.full,
@@ -114,7 +114,7 @@ export default function SequenceTable() {
   const max_length = useAtomValue(maxLengthAtom);
   const assets = useAtomValue(assetsAtom);
   const frequencyMap = assets.frequency;
-  const [evaluateResult, encodeResult] = useAtomValue(encodeResultAtom);
+  const [encodeResult] = useAtomValue(encodeResultAtom);
   const combinedResult: Combined[] = assemblyResult.map((x, i) => ({
     ...x,
     ...encodeResult[i]!,
@@ -270,20 +270,15 @@ export default function SequenceTable() {
   const toolbar = [<ExportAssembly key={1} />, <ExportCode key={3} />];
 
   return (
-    <>
-      <Typography.Paragraph>
-        <pre>{evaluateResult}</pre>
-      </Typography.Paragraph>
-      <ProTable<MainEntry>
-        virtual
-        scroll={{ y: 1080 }}
-        columns={columns}
-        dataSource={dataSource}
-        pagination={false}
-        search={false}
-        defaultSize="small"
-        toolBarRender={() => toolbar}
-      />
-    </>
+    <ProTable<MainEntry>
+      virtual
+      scroll={{ y: 1080 }}
+      columns={columns}
+      dataSource={dataSource}
+      pagination={false}
+      search={false}
+      defaultSize="small"
+      toolBarRender={() => toolbar}
+    />
   );
 }

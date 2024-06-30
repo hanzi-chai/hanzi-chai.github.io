@@ -11,8 +11,8 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { configAtom, assetsAtom, thread, assemblyResultAtom } from "~/atoms";
-import { exportYAML, formatDate, stringifySequence } from "~/lib";
+import { thread, metaheuristicAtom } from "~/atoms";
+import { exportYAML, formatDate } from "~/lib";
 import type { WorkerOutput } from "~/worker";
 import { load } from "js-yaml";
 import type { Config, Solver } from "~/lib";
@@ -66,9 +66,7 @@ const Schedule = ({
 };
 
 export default function Optimizer() {
-  const assets = useAtomValue(assetsAtom);
-  const config = useAtomValue(configAtom);
-  const assemblyResult = useAtomValue(assemblyResultAtom);
+  const metaheuristic = useAtomValue(metaheuristicAtom);
   const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
   const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
   const [bestMetric, setBestMetric] = useState("");
@@ -78,14 +76,7 @@ export default function Optimizer() {
   >(undefined);
   const [autoParams, setAutoParams] =
     useState<Partial<Solver["parameters"]>>(undefined);
-  const params = config.optimization?.metaheuristic.parameters ?? autoParams;
-  const prepareInput = () => {
-    return {
-      config,
-      info: stringifySequence(assemblyResult, config),
-      assets,
-    };
-  };
+  const params = metaheuristic.parameters ?? autoParams;
   return (
     <>
       <Button
@@ -137,7 +128,7 @@ export default function Optimizer() {
                 break;
             }
           };
-          worker.postMessage({ type: "optimize", data: prepareInput() });
+          worker.postMessage({ type: "optimize" });
         }}
       >
         开始优化

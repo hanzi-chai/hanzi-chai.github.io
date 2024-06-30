@@ -1,13 +1,13 @@
 import { atom } from "jotai";
 import type {
   AnalysisConfig,
+  AnalysisResult,
   AssemblyResult,
-  Config,
   EncodeResult,
+  Metric,
   PronunciationElementTypes,
 } from "~/lib";
-import { applyRules, defaultAlgebra, stringifySequence } from "~/lib";
-import type { AnalysisResult } from "~/lib";
+import { applyRules, defaultAlgebra } from "~/lib";
 import {
   algebraAtom,
   analysisAtom,
@@ -18,6 +18,7 @@ import {
   groupingAtom,
   keyboardAtom,
   mappingAtom,
+  meaningfulObjectiveAtom,
   repertoireAtom,
 } from ".";
 import { assetsAtom, customElementsAtom } from "./assets";
@@ -89,17 +90,14 @@ export const assemblyResultAtom = atom(async (get) => {
 });
 
 export const encodeResultAtom = atom(async (get) => {
-  const _config = get(configAtom);
+  const objective = get(meaningfulObjectiveAtom);
+  const config = get(configAtom);
   const assemblyResult = await get(assemblyResultAtom);
   const assets = await get(assetsAtom);
-  const info = stringifySequence(assemblyResult, _config);
-  const config: Config = {
-    ..._config,
-    optimization: _config.optimization ?? {
-      objective: {},
-      metaheuristic: { algorithm: "SimulatedAnnealing" },
-    },
-  };
-  const data = { config, info, assets };
-  return await thread.spawn<[string, EncodeResult]>("encode", [data]);
+  return await thread.spawn<[EncodeResult, Metric]>("encode", [
+    objective,
+    config.info.name,
+    assemblyResult[0],
+    assets.pair_equivalence,
+  ]);
 });

@@ -2,21 +2,17 @@ import type { ColProps, RowProps } from "antd";
 import {
   Button,
   Col,
-  Flex,
   InputNumber,
   Row,
-  Space,
   Upload,
   Select as _Select,
   notification,
 } from "antd";
 import styled from "styled-components";
 import type { MouseEventHandler } from "react";
-import { useState } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import Element from "./Element";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -122,36 +118,5 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
       disabled={disabled}
       icon={<DeleteOutlined />}
     />
-  );
-};
-
-export const KeyList = ({
-  keys,
-  setKeys,
-  allKeys,
-}: {
-  keys: string[];
-  setKeys: (s: string[]) => void;
-  allKeys: string[];
-}) => {
-  const [currentKey, setCurrentKey] = useState(allKeys[0]!);
-  return (
-    <Flex justify="space-between">
-      <Space>
-        {keys.map((x, index) => (
-          <Element key={index}>{x}</Element>
-        ))}
-      </Space>
-      <Space>
-        <PlusButton onClick={() => setKeys(keys.concat(currentKey))} />
-        <Select
-          value={currentKey}
-          options={allKeys.map((k) => ({ label: k, value: k }))}
-          style={{ width: 72 }}
-          onChange={setCurrentKey}
-        />
-        <MinusButton onClick={() => setKeys(keys.slice(0, keys.length - 1))} />
-      </Space>
-    </Flex>
   );
 };

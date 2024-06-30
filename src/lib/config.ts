@@ -184,13 +184,23 @@ export interface TierWeights {
   levels?: LevelWeights[];
 }
 
+export const fingeringLabels = [
+  "同手",
+  "大跨",
+  "小跨",
+  "干扰",
+  "错手",
+  "三连",
+  "备用",
+  "备用",
+];
+
 export interface PartialWeights {
   tiers?: TierWeights[];
   duplication?: number;
   key_distribution?: number;
   pair_equivalence?: number;
   extended_pair_equivalence?: number;
-  // let types = ["同手", "大跨", "小跨", "干扰", "错手", "三连", "备用", "备用"];
   fingering?: (number | null)[];
   levels?: LevelWeights[];
 }

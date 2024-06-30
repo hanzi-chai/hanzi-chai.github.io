@@ -6,6 +6,7 @@ import SequenceTable from "~/components/SequenceTable";
 import ShortCodeRules from "~/components/ShortCodeRules";
 import { useChaifenTitle } from "~/atoms";
 import SelectRules from "~/components/SelectRules";
+import MetricTable from "~/components/MetricTable";
 
 const ConfigureRules = () => {
   return (
@@ -24,6 +25,7 @@ export default function Assembly() {
     <Flex vertical gap="middle">
       <ConfigureRules />
       <Suspense fallback={<Skeleton active />}>
+        <MetricTable />
         <SequenceTable />
       </Suspense>
     </Flex>
