@@ -5,8 +5,9 @@ import {
   assetsAtom,
   priorityShortCodesAtom,
   maxLengthAtom,
+  combinedResultAtom,
 } from "~/atoms";
-import type { Assembly, DictEntry, IndexedElement } from "~/lib";
+import type { DictEntry, IndexedElement } from "~/lib";
 import { getPriorityMap, summarize } from "~/lib";
 import { exportTSV, renderIndexed, renderSuperScript } from "~/lib";
 import { assemblyResultAtom, encodeResultAtom } from "~/atoms";
@@ -106,19 +107,12 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
     new RegExp(value as string).test(record[dataIndex]),
 });
 
-export interface Combined extends Assembly, DictEntry {}
-
 export default function SequenceTable() {
   const display = useAtomValue(displayAtom);
-  const assemblyResult = useAtomValue(assemblyResultAtom);
   const max_length = useAtomValue(maxLengthAtom);
   const assets = useAtomValue(assetsAtom);
   const frequencyMap = assets.frequency;
-  const [encodeResult] = useAtomValue(encodeResultAtom);
-  const combinedResult: Combined[] = assemblyResult.map((x, i) => ({
-    ...x,
-    ...encodeResult[i]!,
-  }));
+  const combinedResult = useAtomValue(combinedResultAtom);
 
   const dataSource = combinedResult.map(
     ({ name, sequence, importance, ...rest }) => {

@@ -58,8 +58,13 @@ const items: MenuProps["items"] = [
     icon: <BoldOutlined />,
   },
   {
-    label: "统计",
+    label: "统计一",
     key: "statistics",
+    icon: <NumberOutlined />,
+  },
+  {
+    label: "统计二",
+    key: "statistics2",
     icon: <NumberOutlined />,
   },
   {

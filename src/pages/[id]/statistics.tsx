@@ -1,4 +1,4 @@
-import { Flex, Select, Table } from "antd";
+import { Flex, Popover, Select, Table } from "antd";
 import {
   alphabetAtom,
   displayAtom,
@@ -39,15 +39,11 @@ const numbers = [
 ];
 const render = (value: number) => numbers[value] || value.toString();
 
-const analyzePrimitiveDuplication = (
+const filterRelevant = (
+  result: AssemblyResult,
   analyzer: AnalyzerForm,
   frequency: Frequency,
-  result: AssemblyResult,
-  display: (d: string) => string,
-  maxLength: number,
-  replacer: (d: string) => string = (d) => d,
 ) => {
-  const reverseMap = new Map<string, string[]>();
   let relevant = result;
   if (analyzer.type === "single")
     relevant = relevant.filter((x) => [...x.name].length === 1);
@@ -59,6 +55,19 @@ const analyzePrimitiveDuplication = (
     });
     relevant = relevant.slice(0, analyzer.top);
   }
+  return relevant;
+};
+
+const analyzePrimitiveDuplication = (
+  analyzer: AnalyzerForm,
+  frequency: Frequency,
+  result: AssemblyResult,
+  display: (d: string) => string,
+  maxLength: number,
+  replacer: (d: string) => string = (d) => d,
+) => {
+  const reverseMap = new Map<string, string[]>();
+  const relevant = filterRelevant(result, analyzer, frequency);
   for (const assembly of relevant) {
     const { name, sequence } = assembly;
     const sliced = range(maxLength).map((i) =>
@@ -67,7 +76,6 @@ const analyzePrimitiveDuplication = (
     const summary = `(${sliced.map((x) => replacer(renderIndexed(x, display))).join(", ")})`;
     reverseMap.set(summary, (reverseMap.get(summary) || []).concat(name));
   }
-
   return reverseMap;
 };
 
@@ -142,7 +150,7 @@ const AnalyzerConfig = ({
   );
 };
 
-const SubStatistics = ({ init }: { init: AnalyzerForm }) => {
+const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(maxLengthAtom);
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(assemblyResultAtom);
@@ -182,7 +190,6 @@ const SubStatistics = ({ init }: { init: AnalyzerForm }) => {
     },
   ];
 
-  const order = render(analyzer.position.length);
   const coorder = render(maxLength - analyzer.position.length);
   const space = Math.pow(alphabet.length, maxLength - analyzer.position.length);
   const estimation = sumBy(lengths, (x) =>
@@ -191,7 +198,7 @@ const SubStatistics = ({ init }: { init: AnalyzerForm }) => {
   return (
     <>
       <Typography.Title level={3}>
-        {order}元分布（{coorder}阶重码估计：{Math.round(estimation)}）
+        多元分布（{coorder}阶重码估计：{Math.round(estimation)}）
       </Typography.Title>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
       <Table
@@ -199,6 +206,88 @@ const SubStatistics = ({ init }: { init: AnalyzerForm }) => {
         columns={columns}
         size="small"
         rowKey="name"
+      />
+    </>
+  );
+};
+
+interface UnaryDensity {
+  name: string;
+  items: Set<string>[];
+  total: number;
+}
+
+const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
+  const maxLength = useAtomValue(maxLengthAtom);
+  const [analyzer, setAnalyzer] = useState(init);
+  const assemblyResult = useAtomValue(assemblyResultAtom);
+  const frequency = useAtomValue(frequencyAtom);
+  const display = useAtomValue(displayAtom);
+  const reverseMap = new Map<string, Set<string>[]>();
+  const relevant = filterRelevant(assemblyResult, analyzer, frequency);
+  for (const assembly of relevant) {
+    const { name, sequence } = assembly;
+    sequence.forEach((x, i) => {
+      const key = renderIndexed(x, display);
+      if (!reverseMap.has(key))
+        reverseMap.set(
+          key,
+          range(maxLength).map(() => new Set()),
+        );
+      reverseMap.get(key)![i]!.add(name);
+    });
+  }
+  const dataSource = [...reverseMap]
+    .map(([name, items]) => ({
+      name,
+      items,
+      total: sumBy(items, (x) => x.size),
+    }))
+    .sort((a, b) => b.total - a.total);
+  const columns: ColumnsType<UnaryDensity> = [
+    {
+      title: "元素序列",
+      dataIndex: "name",
+      key: "name",
+      width: 192,
+    },
+    ...range(maxLength).map((i) => ({
+      title: `第 ${i + 1} 码`,
+      dataIndex: "items",
+      key: `density-${i}`,
+      render: (items: Set<string>[]) => (
+        <Popover
+          content={
+            <div style={{ maxWidth: "400px" }}>{[...items[i]!].join("、")}</div>
+          }
+        >
+          <span>{items[i]?.size ?? 0}</span>
+        </Popover>
+      ),
+      width: 64,
+      sortDirections: ["descend", "ascend"] as ("descend" | "ascend")[],
+      sorter: (a: UnaryDensity, b: UnaryDensity) =>
+        (a.items[i]?.size ?? 0) - (b.items[i]?.size ?? 0),
+    })),
+    {
+      title: "总数量",
+      dataIndex: "total",
+      key: "density",
+      width: 64,
+      sortDirections: ["descend", "ascend"],
+      sorter: (a, b) => a.total - b.total,
+    },
+  ];
+  return (
+    <>
+      <Typography.Title level={3}>一元分布</Typography.Title>
+      <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        size="small"
+        rowKey="name"
+        pagination={{ pageSize: 20 }}
       />
     </>
   );
@@ -296,15 +385,12 @@ export default function Statistics() {
     <Flex vertical gap="middle">
       <Typography.Title level={2}>离散性分析</Typography.Title>
       <MarginalFirstOrderDuplication />
-      {range(maxLength, 0).map((x) => {
-        const type = "single";
-        return (
-          <SubStatistics
-            key={x}
-            init={{ type, position: range(0, x), top: 0 }}
-          />
-        );
-      })}
+      <MultiDistribution
+        init={{ type: "single", position: range(0, maxLength), top: 0 }}
+      />
+      <UnaryDistribution
+        init={{ type: "single", position: range(0, maxLength), top: 0 }}
+      />
     </Flex>
   );
 }

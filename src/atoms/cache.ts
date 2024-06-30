@@ -2,7 +2,9 @@ import { atom } from "jotai";
 import type {
   AnalysisConfig,
   AnalysisResult,
+  Assembly,
   AssemblyResult,
+  DictEntry,
   EncodeResult,
   Metric,
   PronunciationElementTypes,
@@ -102,4 +104,16 @@ export const encodeResultAtom = atom(async (get) => {
     assemblyResult[0],
     assets.pair_equivalence,
   ]);
+});
+
+export interface Combined extends Assembly, DictEntry {}
+
+export const combinedResultAtom = atom(async (get) => {
+  const assemblyResult = await get(assemblyResultAtom);
+  const [encodeResult] = await get(encodeResultAtom);
+  const combined: Combined[] = assemblyResult.map((x, i) => ({
+    ...x,
+    ...encodeResult[i]!,
+  }));
+  return combined;
 });

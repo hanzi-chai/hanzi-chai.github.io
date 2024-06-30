@@ -98,3 +98,15 @@ export const meaningfulObjectiveAtom = atom((get) => {
   }
   return objective;
 });
+
+export const meaningfulTypesAtom = atom((get) => {
+  const objective = get(meaningfulObjectiveAtom);
+  return Object.keys(objective) as (keyof Objective)[];
+});
+
+export const typeLabels: Record<keyof Objective, string> = {
+  characters_full: "一字全码",
+  characters_short: "一字简码",
+  words_full: "多字全码",
+  words_short: "多字简码",
+};

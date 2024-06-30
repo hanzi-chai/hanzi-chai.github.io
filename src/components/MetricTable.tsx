@@ -1,11 +1,11 @@
 import { SheetComponent } from "@antv/s2-react";
 import "@antv/s2-react/dist/style.min.css";
 import { useAtomValue } from "jotai";
-import { encodeResultAtom, meaningfulObjectiveAtom } from "~/atoms";
+import { encodeResultAtom, meaningfulTypesAtom, typeLabels } from "~/atoms";
 import type { Objective } from "~/lib";
 import { fingeringLabels, type PartialMetric } from "~/lib";
 import { isInteger } from "mathjs";
-import { Flex, Form } from "antd";
+import { Flex } from "antd";
 import { Select } from "./Utils";
 import { useState } from "react";
 
@@ -58,29 +58,17 @@ const preprocess = (partialMetric: PartialMetric) => {
 
 export default function MetricTable() {
   const [_, evaluateResult] = useAtomValue(encodeResultAtom);
-  const meaningfulObjective = useAtomValue(meaningfulObjectiveAtom);
-  const types: (keyof Objective)[] = [];
-  for (const key of Object.keys(meaningfulObjective)) {
-    types.push(key as keyof Objective);
-  }
+  const types = useAtomValue(meaningfulTypesAtom);
   const [type, setType] = useState<keyof Objective>(types[0]!);
   const data = preprocess(evaluateResult[type]!);
-  const labels: Record<keyof Objective, string> = {
-    characters_full: "一字全码",
-    characters_short: "一字简码",
-    words_full: "多字全码",
-    words_short: "多字简码",
-  };
   return (
     <>
       <Flex>
-        <Form.Item label="指标表">
-          <Select
-            value={type}
-            onChange={setType}
-            options={types.map((x) => ({ label: labels[x], value: x }))}
-          />
-        </Form.Item>
+        <Select
+          value={type}
+          onChange={setType}
+          options={types.map((x) => ({ label: typeLabels[x], value: x }))}
+        />
       </Flex>
       <SheetComponent
         adaptive
