@@ -19,6 +19,7 @@ import {
   keyboardAtom,
   mappingAtom,
   meaningfulObjectiveAtom,
+  priorityShortCodesAtom,
   repertoireAtom,
 } from ".";
 import { assetsAtom, customElementsAtom } from "./assets";
@@ -78,7 +79,8 @@ export const assemblyResultAtom = atom(async (get) => {
   const dictionary = await get(dictionaryAtom);
   const analysisResult = await get(analysisResultAtom);
   const customElements = get(customElementsAtom);
-  const config = { algebra, encoder, keyboard };
+  const priority = get(priorityShortCodesAtom);
+  const config = { algebra, encoder, keyboard, priority };
   return await thread.spawn<AssemblyResult>("assembly", [
     repertoire,
     config,

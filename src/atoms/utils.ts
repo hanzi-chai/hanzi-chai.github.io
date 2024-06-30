@@ -1,4 +1,4 @@
-import type { Config, EncodeResult } from "~/lib";
+import type { Config } from "~/lib";
 import { isValidCJKChar, stringifySequence } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
@@ -12,35 +12,24 @@ import type { WorkerOutput } from "~/worker";
 import { atomEffect } from "jotai-effect";
 import { configAtom } from "./config";
 import { assetsAtom } from "./assets";
-import { assemblyResultAtom, encodeResultAtom } from "./cache";
-import { atom } from "jotai";
-import { meaningfulObjectiveAtom } from "./encoder";
+import { assemblyResultAtom } from "./cache";
 
-export const syncConfig = atomEffect((get, set) => {
+export const syncConfig = atomEffect((get) => {
   const value = get(configAtom);
-  thread
-    .spawn("sync", ["config", value])
-    .then(() => set(dummyAtom, (x) => x + 1));
+  thread.spawn("sync", ["config", value]);
 });
 
-export const syncAssets = atomEffect((get, set) => {
+export const syncAssets = atomEffect((get) => {
   get(assetsAtom).then(async (value) => {
     await thread.spawn("sync", ["assets", value]);
-    set(dummyAtom, (x) => x + 1);
   });
 });
 
-export const syncInfo = atomEffect((get, set) => {
+export const syncInfo = atomEffect((get) => {
   get(assemblyResultAtom).then(async (value) => {
-    await thread.spawn("sync", [
-      "info",
-      stringifySequence(value, get(configAtom)),
-    ]);
-    set(dummyAtom, (x) => x + 1);
+    await thread.spawn("sync", ["info", stringifySequence(value)]);
   });
 });
-
-const dummyAtom = atom(0);
 
 export const RemoteContext = createContext(true);
 

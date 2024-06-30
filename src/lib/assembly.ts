@@ -1,7 +1,6 @@
 import type {
   Algebra,
   Condition,
-  Config,
   EncoderConfig,
   Grouping,
   Keyboard,
@@ -217,6 +216,7 @@ interface AssembleConfig {
   encoder: EncoderConfig;
   keyboard: Keyboard;
   algebra: Algebra;
+  priority: [string, string, number][];
 }
 
 /**
@@ -334,17 +334,19 @@ export const assemble = (
     });
     knownWords.add(hash);
   }
-  return result;
-};
-
-export const stringifySequence = (result: AssemblyResult, config: Config) => {
-  const priorityMap = getPriorityMap(config.encoder.priority_short_codes ?? []);
+  const priorityMap = getPriorityMap(config.priority);
   return result.map((x) => {
     const hash = `${x.name}-${x.pinyin_list.join(",")}`;
+    const level = priorityMap.get(hash) ?? -1;
+    return { ...x, level };
+  });
+};
+
+export const stringifySequence = (result: AssemblyResult) => {
+  return result.map((x) => {
     return {
       ...x,
       sequence: summarize(x.sequence),
-      level: priorityMap.get(hash) ?? -1,
     };
   });
 };

@@ -1,9 +1,6 @@
 import init, { WebInterface } from "libchai";
 import { analysis } from "./lib/repertoire";
 import { assemble } from "./lib/assembly";
-import { defaultConfig } from "./lib";
-import type { Assets } from "./atoms";
-
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
   data: any;
@@ -38,11 +35,21 @@ export type WorkerOutput =
     };
 
 await init();
-const webInterface = WebInterface.new(self.postMessage, defaultConfig, [], {
-  frequency: {},
-  key_distribution: {},
-  pair_equivalence: {},
-} satisfies Assets);
+const webInterface = WebInterface.new(
+  self.postMessage,
+  {
+    info: { name: "" },
+    source: null,
+    form: { alphabet: "", mapping: {} },
+    encoder: { max_length: 0, sources: {}, conditions: {} },
+  },
+  [],
+  {
+    frequency: {},
+    key_distribution: {},
+    pair_equivalence: {},
+  },
+);
 
 self.onmessage = async (event: MessageEvent<WorkerInput>) => {
   const channel = event.ports[0]!;

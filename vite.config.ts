@@ -37,6 +37,11 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
       reportCompressedSize: false,
     },
+    esbuild: {
+      supported: {
+        "top-level-await": true,
+      },
+    },
     define: {
       APP_VERSION: JSON.stringify(process.env.npm_package_version),
     },
@@ -73,6 +78,9 @@ export default defineConfig(({ mode }) => {
         provider: "v8",
         reporter: ["text", "html"],
       },
+    },
+    worker: {
+      format: "es",
     },
   };
 
