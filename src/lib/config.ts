@@ -14,7 +14,12 @@ export interface Info {
 
 // config.data begin
 
-export const characterSetSpecifiers = ["general", "basic", "extended"] as const;
+export const characterSetSpecifiers = [
+  "gb2312",
+  "general",
+  "basic",
+  "extended",
+] as const;
 export type CharacterSetSpecifier = (typeof characterSetSpecifiers)[number];
 
 export interface Data {
@@ -37,6 +42,7 @@ export interface Analysis {
   customize?: Record<string, string[]>;
   strong?: string[];
   weak?: string[];
+  serializer?: "sequential" | "c3";
 }
 
 export interface Degenerator {

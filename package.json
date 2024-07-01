@@ -46,7 +46,6 @@
     "js-yaml": "4.1.0",
     "libchai": "^0.1.12",
     "lodash-es": "^4.17.21",
-    "lz-string": "^1.5.0",
     "mathjs": "^13.0.1",
     "nanoid": "^5.0.7",
     "optics-ts": "^2.4.1",

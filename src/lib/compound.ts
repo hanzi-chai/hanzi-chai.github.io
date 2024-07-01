@@ -3,12 +3,11 @@ import { affineMerge } from "./affine";
 import type { ComponentResults, ComponentAnalysis } from "./component";
 import { InvalidGlyphError } from "./component";
 import type {
-  Block,
   Compound,
-  Character,
   Repertoire,
   Operator,
   SVGGlyph,
+  CompoundCharacter,
 } from "./data";
 
 export type CompoundResults = Map<string, CompoundAnalysis>;
@@ -22,10 +21,8 @@ export type CompoundAnalysis = CompoundBasicAnalysis | CompoundGenuineAnalysis;
  */
 interface CompoundGenuineAnalysis {
   sequence: string[];
-  detail: {
-    operator: Operator;
-    partitionResults: PartitionResult[];
-  };
+  operator: Operator;
+  operandResults: PartitionResult[];
 }
 
 /**
@@ -80,9 +77,9 @@ export const recursiveRenderCompound = function (
  * @remarks 这个实现目前比较低效，需要改进
  */
 const topologicalSort = (repertoire: Repertoire) => {
-  let compounds = new Map<string, Character>();
+  let compounds = new Map<string, CompoundCharacter>();
   for (let i = 0; i !== 10; ++i) {
-    const thisLevelCompound = new Map<string, Character>();
+    const thisLevelCompound = new Map<string, CompoundCharacter>();
     for (const [name, character] of Object.entries(repertoire)) {
       const { glyph } = character;
       if (compounds.get(name)) continue;
@@ -94,7 +91,7 @@ const topologicalSort = (repertoire: Repertoire) => {
             compounds.get(x) !== undefined,
         )
       ) {
-        thisLevelCompound.set(name, character);
+        thisLevelCompound.set(name, character as CompoundCharacter);
       }
     }
     compounds = new Map([...compounds, ...thisLevelCompound]);
@@ -102,16 +99,21 @@ const topologicalSort = (repertoire: Repertoire) => {
   return compounds;
 };
 
-const assembleSequence = (
-  partitionResults: PartitionResult[],
-  order: Block[],
-) => {
+type Serializer = (
+  r: PartitionResult[],
+  g: Compound,
+  name?: string,
+) => string[];
+
+const sequentialSerializer: Serializer = (operandResults, glyph) => {
+  if (glyph.order === undefined)
+    return operandResults.map((x) => x.sequence).flat();
   const sequence: string[] = [];
-  const subsequences = partitionResults.map((x) => ({
+  const subsequences = operandResults.map((x) => ({
     rest: x.sequence,
     taken: 0,
   }));
-  for (const { index, strokes } of order) {
+  for (const { index, strokes } of glyph.order) {
     const data = subsequences[index];
     if (data === undefined) {
       continue;
@@ -120,7 +122,7 @@ const assembleSequence = (
       sequence.push(...data.rest);
       data.rest = [];
     } else {
-      const partitionResult = partitionResults[index]!;
+      const partitionResult = operandResults[index]!;
       if ("schemes" in partitionResult) {
         const { detail, strokes: totalStrokes } = partitionResult;
         const upperBound = 1 << (totalStrokes - data.taken);
@@ -137,6 +139,98 @@ const assembleSequence = (
     }
   }
   return sequence;
+};
+
+const recursiveExpand: (x: PartitionResult[]) => PartitionResult[] = (x) => {
+  const result: PartitionResult[] = [];
+  for (const part of x) {
+    if ("operandResults" in part && /[⿱⿳]/.test(part.operator)) {
+      result.push(...recursiveExpand(part.operandResults));
+    } else {
+      result.push(part);
+    }
+  }
+  return result;
+};
+
+const robustPartition = (p: {
+  operandResults: PartitionResult[];
+  operator: Operator;
+}) => {
+  const { operandResults, operator } = p;
+  const firstPartition: PartitionResult[] = [];
+  let start = 0;
+  let dieyanAfter;
+  // 叠和非叠
+  const die = /[⿱⿳]/;
+  const notDie = /[^⿱⿳]/;
+  // 叠眼
+  let dieyan: boolean[];
+  const postProcess: (x: PartitionResult[]) => PartitionResult = (x) => {
+    if (x.length === 2) {
+      return {
+        sequence: x.map((y) => y.sequence).flat(),
+        operator: "⿱",
+        operandResults: x,
+      };
+    } else if (x.length === 3) {
+      return {
+        sequence: x.map((y) => y.sequence[0]!),
+        operator: "⿳",
+        operandResults: x,
+      };
+    }
+    return x[0]!;
+  };
+  if (die.test(operator)) {
+    const expanded = recursiveExpand(operandResults);
+    dieyan = expanded.map((x) => "operator" in x && notDie.test(x.operator));
+    for (const [i, x] of dieyan.entries()) {
+      if (x) {
+        const dieyanBefore = expanded.slice(start, i);
+        if (dieyanBefore.length > 0) {
+          firstPartition.push(postProcess(dieyanBefore));
+        }
+        firstPartition.push(expanded[i]!);
+        start = i + 1;
+      }
+    }
+    dieyanAfter = expanded.slice(start);
+    if (dieyanAfter.length > 0) {
+      firstPartition.push(postProcess(dieyanAfter));
+    }
+  } else {
+    firstPartition.push(...operandResults);
+  }
+  return firstPartition;
+};
+
+const c3Serializer: Serializer = (operandResults, glyph) => {
+  const primaryPartition = robustPartition({
+    operandResults,
+    operator: glyph.operator,
+  });
+  if (primaryPartition.length === 1) {
+    return primaryPartition[0]!.sequence.slice(0, 3);
+  } else if (primaryPartition.length === 3) {
+    return primaryPartition.map((x) => x.sequence[0]!);
+  } else {
+    // 需要执行二次拆分
+    const sequence: string[] = [];
+    for (const part of primaryPartition) {
+      if ("operandResults" in part) {
+        const smallerParts = robustPartition(part).slice(0, 2);
+        if (smallerParts.length >= 2) {
+          sequence.push(...smallerParts.map((x) => x.sequence[0]!));
+        } else {
+          sequence.push(...smallerParts[0]!.sequence.slice(0, 2));
+        }
+      } else {
+        sequence.push(...part.sequence.slice(0, 2));
+      }
+    }
+    return sequence.slice(0, 3);
+  }
 };
 
 /**
@@ -159,27 +253,25 @@ export const disassembleCompounds = (
   const getResult = function (s: string): PartitionResult | undefined {
     return componentResults.get(s) || compoundResults.get(s);
   };
-  for (const [char, glyph] of compounds.entries()) {
+  const serializerName = config.analysis.serializer ?? "sequential";
+  const serializer =
+    serializerName === "c3" ? c3Serializer : sequentialSerializer;
+  for (const [char, { glyph }] of compounds.entries()) {
     if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根
       compoundResults.set(char, { sequence: [char] });
       continue;
     }
-    const { operator, operandList, order } = glyph.glyph as Compound;
-    const rawPartitionResults = operandList.map(getResult);
-    if (rawPartitionResults.every((x) => x !== undefined)) {
+    const { operator, operandList } = glyph;
+    const rawOperandResults = operandList.map(getResult);
+    if (rawOperandResults.every((x) => x !== undefined)) {
       // this is safe!
-      const partitionResults = rawPartitionResults as PartitionResult[];
-      const sequence =
-        order === undefined
-          ? partitionResults.map((x) => x.sequence).flat()
-          : assembleSequence(partitionResults, order);
+      const operandResults = rawOperandResults as PartitionResult[];
+      const sequence = serializer(operandResults, glyph, char);
       compoundResults.set(char, {
         sequence,
-        detail: {
-          operator,
-          partitionResults,
-        },
+        operator,
+        operandResults: operandResults,
       });
     } else {
       if (knownCharacters.has(char)) {

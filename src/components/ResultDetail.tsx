@@ -101,12 +101,7 @@ export default function ResultDetail({
 
   return data.length ? (
     <Flex vertical gap="middle">
-      <Flex
-        wrap="wrap"
-        gap="middle"
-        align="center"
-        style={{ fontSize: "1rem" }}
-      >
+      <Flex wrap="wrap" gap="middle" align="center">
         <span>包含字根</span>
         {[...reversedRootMap].map(([s, v]) => (
           <Space key={s}>

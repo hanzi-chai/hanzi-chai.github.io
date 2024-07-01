@@ -188,7 +188,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         items={displays[step].slice((page - 1) * pageSize, page * pageSize)}
         accordion={true}
         size="small"
-        style={{ alignSelf: "stretch", fontSize: "2em" }}
+        style={{ alignSelf: "stretch" }}
       />
       <Pagination
         current={page}

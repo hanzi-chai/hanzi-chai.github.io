@@ -221,8 +221,8 @@ export const findElement = (
     case "固定":
       return object.key;
     case "结构":
-      if ("detail" in result && "operator" in result.detail) {
-        return result.detail.operator;
+      if ("operator" in result) {
+        return result.operator;
       }
       return undefined;
     case "字音":

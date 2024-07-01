@@ -166,6 +166,14 @@ export interface Character
   glyph: BasicComponent | Compound | undefined;
 }
 
+export interface ComponentCharacter extends Character {
+  glyph: BasicComponent;
+}
+
+export interface CompoundCharacter extends Character {
+  glyph: Compound;
+}
+
 /** 原始字符集，为字符名称到原始字符的映射 */
 export type PrimitiveRepertoire = Record<string, PrimitiveCharacter>;
 
