@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Connection, Node, Edge } from "reactflow";
 import ReactFlow, {
   useNodesState,
@@ -20,20 +20,15 @@ import {
   makeConditionNode,
   getLayoutedElements,
   makeEdge,
+  CacheContext,
 } from "./graph";
 import DetailEditor from "./DetailEditor";
 import { Button, Modal } from "antd";
 
-function EncoderGraph({
-  open,
-  setOpen,
-}: {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) {
-  const { fitView } = useReactFlow<SourceData | ConditionData>();
-  const [sources, setSources] = useAtom(sourcesAtom);
-  const [conditions, setConditions] = useAtom(conditionsAtom);
+const initializeGraph = (
+  sources: Record<string, Source>,
+  conditions: Record<string, Condition>,
+) => {
   const sourceNodes = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),
   );
@@ -53,15 +48,34 @@ function EncoderGraph({
     initialNodes,
     initialEdges,
   );
+  return [layoutNodes, layoutEdges] as const;
+};
+
+function EncoderGraph({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const { fitView } = useReactFlow<SourceData | ConditionData>();
+  const [sources, setSources] = useAtom(sourcesAtom);
+  const [conditions, setConditions] = useAtom(conditionsAtom);
+  const [cachedSources, setCachedSources] = useState(sources);
+  const [cachedConditions, setCachedConditions] = useState(conditions);
+  const [initialNodes, initialEdges] = initializeGraph(
+    cachedSources,
+    cachedConditions,
+  );
   const [nodes, setNodes, onNodesChange] = useNodesState<
     SourceData | ConditionData
-  >(layoutNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges);
+  >(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const nodeTypes = useMemo(
     () => ({ source: SourceNode, condition: ConditionNode }),
     [],
   );
-  const [selected, setSelected] = useState<Node | undefined>(undefined);
+  const [selected, setSelected] = useState<string | undefined>(undefined);
 
   const onConnect = (connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
@@ -74,8 +88,36 @@ function EncoderGraph({
   };
 
   const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
-    nodes[0] && setSelected(nodes[0]);
+    nodes[0] && setSelected(nodes[0].id);
   }, []);
+
+  useEffect(() => {
+    const [reinitNodes, reinitEdges] = initializeGraph(
+      cachedSources,
+      cachedConditions,
+    );
+    setNodes(reinitNodes);
+    setEdges(reinitEdges);
+  }, [cachedSources, cachedConditions, setNodes, setEdges]);
+
+  const context = useMemo(
+    () => ({
+      sources: cachedSources,
+      setSources: setCachedSources,
+      conditions: cachedConditions,
+      setConditions: setCachedConditions,
+      selected,
+      setSelected,
+    }),
+    [
+      cachedSources,
+      setCachedSources,
+      cachedConditions,
+      setCachedConditions,
+      selected,
+      setSelected,
+    ],
+  );
 
   return (
     <Modal
@@ -83,60 +125,46 @@ function EncoderGraph({
       open={open}
       onCancel={() => setOpen(false)}
       onOk={() => {
-        const newSources: Record<string, Source> = {};
-        const newConditions: Record<string, Condition> = {};
-        nodes.forEach(({ id, data }) => {
-          if ("operator" in data) {
-            newConditions[id] = { ...data, positive: null, negative: null };
-          } else {
-            newSources[id] = { ...data, next: null };
-          }
-        });
-        edges.forEach(({ source, target, label }) => {
-          if (label === undefined) {
-            newSources[source]!.next = target;
-          } else if (label === "是") {
-            newConditions[source]!.positive = target;
-          } else {
-            newConditions[source]!.negative = target;
-          }
-        });
-        setSources(newSources);
-        setConditions(newConditions);
+        setSources(cachedSources);
+        setConditions(cachedConditions);
         setOpen(false);
       }}
       width={1080}
     >
       <div style={{ height: "70vh" }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onSelectionChange={onSelectionChange}
-          onNodesDelete={() => setSelected(undefined)}
-          onConnect={onConnect}
-          onPaneClick={() => setSelected(undefined)}
-          nodeDragThreshold={10000}
-          fitView
-        >
-          <Background variant={BackgroundVariant.Cross} gap={32} />
-          <Controls />
-          {selected && (
-            <DetailEditor
-              selected={selected.id}
-              data={selected.data}
-              setData={(data) => {
-                setNodes(
-                  nodes.map((node) =>
-                    node.id === selected.id ? { ...node, data } : node,
-                  ),
-                );
-              }}
-            />
-          )}
-        </ReactFlow>
+        <CacheContext.Provider value={context}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onSelectionChange={onSelectionChange}
+            onConnect={onConnect}
+            onPaneClick={() => setSelected(undefined)}
+            nodeDragThreshold={10000}
+            fitView
+          >
+            <Background variant={BackgroundVariant.Cross} gap={32} />
+            <Controls />
+            {selected && (
+              <DetailEditor
+                selected={selected}
+                data={cachedSources[selected] || cachedConditions[selected]}
+                setData={(data) => {
+                  if ("operator" in data) {
+                    setCachedConditions({
+                      ...cachedConditions,
+                      [selected]: data,
+                    });
+                  } else {
+                    setCachedSources({ ...cachedSources, [selected]: data });
+                  }
+                }}
+              />
+            )}
+          </ReactFlow>
+        </CacheContext.Provider>
       </div>
     </Modal>
   );

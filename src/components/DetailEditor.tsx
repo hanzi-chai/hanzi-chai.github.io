@@ -1,11 +1,9 @@
 import { Panel } from "reactflow";
-import type { ConditionData, SourceData } from "./graph";
 import styled from "styled-components";
 import { Cascader, Flex, Form, Typography } from "antd";
-import type { CodableObject } from "~/lib";
+import type { CodableObject, Condition, Source, UnaryOp } from "~/lib";
 import { parseList, defaultAlgebra, renderList } from "~/lib";
 import { Select } from "./Utils";
-import type { Op } from "~/lib";
 import { ops, unaryOps } from "~/lib";
 import TextArea from "antd/es/input/TextArea";
 import { useAtomValue, keyboardAtom, algebraAtom } from "~/atoms";
@@ -35,12 +33,13 @@ export default function DetailEditor({
   setData,
 }: {
   selected: string;
-  data: SourceData | ConditionData;
-  setData: (data: SourceData | ConditionData) => void;
+  data: Source | Condition | undefined;
+  setData: (data: Source | Condition) => void;
 }) {
   const { alphabet } = useAtomValue(keyboardAtom);
   const algebra = useAtomValue(algebraAtom);
   const customElements = useAtomValue(customElementsAtom);
+  if (data === undefined) return null;
   const genericIndices = [...Array(10).keys()]
     .map((x) => [x + 1, -(x + 1)])
     .flat();
@@ -165,8 +164,8 @@ export default function DetailEditor({
                   value: v,
                 }))}
                 onChange={(event) => {
-                  if ((unaryOps as readonly Op[]).includes(event)) {
-                    setData({ ...data, operator: event });
+                  if (unaryOps.includes(event as UnaryOp)) {
+                    setData({ ...data, operator: event as UnaryOp });
                   } else {
                     setData({
                       ...data,

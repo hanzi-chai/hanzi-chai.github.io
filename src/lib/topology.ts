@@ -1,5 +1,5 @@
-import { isEqual } from "lodash-es";
-import type { SVGGlyph, SVGStroke } from "./data";
+import { isEqual, minBy } from "lodash-es";
+import type { Point, SVGGlyph, SVGStroke } from "./data";
 import { subtract } from "mathjs";
 import type { Curve, LinearCurve, Position } from "./bezier";
 import {
@@ -200,6 +200,35 @@ const isConforming = (r1: CurveRelation, r2: CurveRelation) => {
   }
 };
 
+const hashPoint = (point: Point) => `${point[0]}-${point[1]}`;
+
+export type CornerSpecifier = [number, number, number, number];
+
+const findCorners = (renderedGlyph: RenderedGlyph) => {
+  const extremes: Point[] = [];
+  const pointToStroke = new Map<string, number>();
+  for (const [strokeIndex, { curveList }] of renderedGlyph.entries()) {
+    const subExtremes: Point[] = [];
+    for (const [curveIndex, curve] of curveList.entries()) {
+      const [start, end] = getBoundingBox(curve);
+      if (curveIndex === 0) subExtremes.push(start);
+      subExtremes.push(end);
+    }
+    for (const point of subExtremes) {
+      const hash = hashPoint(point);
+      if (!pointToStroke.has(hash)) pointToStroke.set(hash, strokeIndex);
+    }
+    extremes.push(...subExtremes);
+  }
+  const topLeft = minBy(extremes, (p) => distance(p, [0, 0]))!;
+  const topRight = minBy(extremes, (p) => distance(p, [100, 0]))!;
+  const bottomLeft = minBy(extremes, (p) => distance(p, [0, 100]))!;
+  const bottomRight = minBy(extremes, (p) => distance(p, [100, 100]))!;
+  return [topLeft, topRight, bottomLeft, bottomRight].map(
+    (point) => pointToStroke.get(hashPoint(point))!,
+  ) as CornerSpecifier;
+};
+
 const findTopology = function (renderedGlyph: RenderedGlyph) {
   const topology: Topology = { matrix: [], orientedPairs: [] };
   for (const [index1, stroke1] of renderedGlyph.entries()) {
@@ -253,5 +282,6 @@ export {
   renderSVGStroke,
   renderSVGGlyph,
   findTopology,
+  findCorners,
 };
 export type { CurveRelation, StrokeRelation, RenderedGlyph, Topology };

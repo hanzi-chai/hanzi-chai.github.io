@@ -2,6 +2,7 @@ import type { Feature } from "./classifier";
 import type { Compound, PrimitiveRepertoire, Component, Reading } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
+import type { CornerSpecifier } from "./topology";
 
 // config.info begin
 export interface Info {
@@ -40,6 +41,7 @@ export interface Analysis {
   degenerator?: Degenerator;
   selector?: Selector;
   customize?: Record<string, string[]>;
+  customizeCorners?: Record<string, CornerSpecifier>;
   strong?: string[];
   weak?: string[];
   serializer?: "sequential" | "c3";

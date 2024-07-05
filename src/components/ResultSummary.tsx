@@ -4,13 +4,23 @@ import {
   useAddAtom,
   customizeAtom,
   useRemoveAtom,
+  customizeCornersAtom,
+  serializerAtom,
 } from "~/atoms";
 import { Button, Flex, Form, Popover } from "antd";
 import Element from "./Element";
 import ElementSelect from "./ElementSelect";
 import Char from "./Character";
-import { ProForm, ProFormList } from "@ant-design/pro-components";
+import {
+  ProForm,
+  ProFormGroup,
+  ProFormList,
+  ProFormSelect,
+} from "@ant-design/pro-components";
 import { InlineRender } from "./ComponentForm";
+import type { CornerSpecifier } from "~/lib";
+import { wordLengthArray, type CompoundAnalysis } from "~/lib";
+import { range } from "lodash-es";
 
 const Customize = ({
   component,
@@ -20,13 +30,18 @@ const Customize = ({
   initialValues: string[];
 }) => {
   const add = useAddAtom(customizeAtom);
+  const addCorner = useAddAtom(customizeCornersAtom);
+  const serializer = useAtomValue(serializerAtom);
   return (
-    <ProForm<{ content: string[] }>
+    <ProForm<{ content: string[]; corners: CornerSpecifier }>
       title={component}
       layout="horizontal"
-      initialValues={{ content: initialValues }}
-      onFinish={async ({ content }) => {
+      initialValues={{ content: initialValues, corners: [0, 0, 0, 0] }}
+      onFinish={async ({ content, corners }) => {
         add(component, content);
+        if (corners) {
+          addCorner(component, corners);
+        }
         return true;
       }}
     >
@@ -47,30 +62,56 @@ const Customize = ({
           </Form.Item>
         )}
       </ProFormList>
+      <ProFormGroup>
+        {serializer === "c3" &&
+          range(4).map((i) => (
+            <ProFormSelect
+              key={i}
+              name={["corners", i]}
+              options={wordLengthArray}
+            />
+          ))}
+      </ProFormGroup>
     </ProForm>
   );
 };
 
 export default function ResultSummary({
   char,
-  rootSeries,
+  analysis,
   disableCustomize = false,
 }: {
   char: string;
-  rootSeries: string[];
+  analysis: CompoundAnalysis;
   disableCustomize?: boolean;
 }) {
+  const { sequence, corners } = analysis;
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
+  const customizeCorners = useAtomValue(customizeCornersAtom);
   const remove = useRemoveAtom(customizeAtom);
+  const removeCorner = useRemoveAtom(customizeCornersAtom);
   const overrideRootSeries = customize[char];
+  const overrideCorners = customizeCorners[char];
+  const arrows = ["↖", "↗", "↙", "↘"] as const;
+  const serializer = useAtomValue(serializerAtom);
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
         <Char>{display(char)}</Char>
-        {rootSeries.map((x, index) => (
-          <Element key={index}>{display(x)}</Element>
-        ))}
+        {sequence.map((x, index) => {
+          return (
+            <Flex key={index} align="center">
+              <Element>{display(x)}</Element>
+              {serializer === "c3" &&
+                corners.map((sIndex, cornerType) =>
+                  sIndex === index ? (
+                    <span key={cornerType + "a"}>{arrows[cornerType]}</span>
+                  ) : null,
+                )}
+            </Flex>
+          );
+        })}
         {overrideRootSeries && (
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
@@ -79,18 +120,32 @@ export default function ResultSummary({
             ))}
           </Flex>
         )}
+        {overrideCorners && (
+          <Flex gap="small" align="center">
+            {overrideCorners.map((x, i) => (
+              <span key={i}>{x}</span>
+            ))}
+          </Flex>
+        )}
       </Flex>
       {!disableCustomize && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {overrideRootSeries && (
-            <Button onClick={() => remove(char)}>取消自定义</Button>
+            <Button
+              onClick={() => {
+                remove(char);
+                removeCorner(char);
+              }}
+            >
+              取消自定义
+            </Button>
           )}
           <Popover
             title=""
             content={
               <Customize
                 component={char}
-                initialValues={overrideRootSeries ?? rootSeries}
+                initialValues={overrideRootSeries ?? sequence}
               />
             }
           >

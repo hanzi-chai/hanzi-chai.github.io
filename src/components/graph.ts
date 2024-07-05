@@ -1,6 +1,16 @@
 import type { Edge, Node } from "reactflow";
-import type { BinaryCondition, Source, UnaryCondition } from "~/lib";
+import type { BinaryCondition, Condition, Source, UnaryCondition } from "~/lib";
 import { add, sum } from "mathjs";
+import { createContext } from "react";
+
+export const CacheContext = createContext<{
+  sources: Record<string, Source>;
+  setSources: (sources: Record<string, Source>) => void;
+  conditions: Record<string, Condition>;
+  setConditions: (conditions: Record<string, Condition>) => void;
+  selected: string | undefined;
+  setSelected: (selected: string | undefined) => void;
+}>({} as any);
 
 export type SourceData = Omit<Source, "next">;
 

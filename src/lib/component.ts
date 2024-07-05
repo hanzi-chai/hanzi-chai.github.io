@@ -8,8 +8,8 @@ import type {
 import { defaultDegenerator, generateSliceBinaries } from "./degenerator";
 import { select } from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import type { RenderedGlyph, Topology } from "./topology";
-import { findTopology, renderSVGGlyph } from "./topology";
+import type { CornerSpecifier, RenderedGlyph, Topology } from "./topology";
+import { findCorners, findTopology, renderSVGGlyph } from "./topology";
 import { mergeClassifier, type Classifier } from "./classifier";
 import { isComponent } from "./utils";
 import type { AnalysisConfig } from "./repertoire";
@@ -86,6 +86,7 @@ export interface ComputedComponent {
   name: string;
   glyph: RenderedGlyph;
   topology: Topology;
+  corners: CornerSpecifier;
 }
 
 export class NoSchemeError extends Error {}
@@ -117,6 +118,7 @@ export const getComponentScheme = function (
     return {
       strokes: component.glyph.length,
       sequence: [component.name],
+      corners: [0, 0, 0, 0],
     };
   const rootMap = new Map<number, string>(
     component.glyph.map((stroke, index) => {
@@ -144,18 +146,25 @@ export const getComponentScheme = function (
   const [bestScheme, schemeData] = selectResult;
   const sequence = bestScheme.map((n) => rootMap.get(n)!);
   const detail = bestScheme.map((n) => ({ name: rootMap.get(n)!, binary: n }));
+  const schemes = schemeData.map((v) => {
+    return {
+      scheme: v.scheme,
+      sequence: v.scheme.map((x) => rootMap.get(x)!),
+      data: v.evaluation,
+    };
+  });
+  const corners = component.corners.map((corner) =>
+    bestScheme.findIndex(
+      (x) => x & (1 << (component.glyph.length - corner - 1)),
+    ),
+  ) as CornerSpecifier;
   return {
     sequence,
-    detail: detail,
+    detail,
     strokes: component.glyph.length,
     map: rootMap,
-    schemes: schemeData.map((v) => {
-      return {
-        scheme: v.scheme,
-        sequence: v.scheme.map((x) => rootMap.get(x)!),
-        data: v.evaluation,
-      };
-    }),
+    schemes,
+    corners,
   };
 };
 
@@ -173,22 +182,21 @@ export interface SchemeWithData {
 }
 
 /**
- * 部件通过自动拆分算法分析得到的拆分结果的全部细节
+ * 部件本身是字根字，或者是由自定义部件拆分指定的无理拆分，无拆分细节
  */
-interface ComponentGenuineAnalysis {
-  sequence: string[];
-  detail: { name: string; binary: number }[];
+export interface ComponentBasicAnalysis {
   strokes: number;
-  map: Map<number, string>;
-  schemes: SchemeWithData[];
+  sequence: string[];
+  corners: CornerSpecifier;
 }
 
 /**
- * 部件本身是字根字，或者是由自定义部件拆分指定的无理拆分，无拆分细节
+ * 部件通过自动拆分算法分析得到的拆分结果的全部细节
  */
-interface ComponentBasicAnalysis {
-  strokes: number;
-  sequence: string[];
+interface ComponentGenuineAnalysis extends ComponentBasicAnalysis {
+  detail: { name: string; binary: number }[];
+  map: Map<number, string>;
+  schemes: SchemeWithData[];
 }
 
 export type ComponentResults = Map<string, ComponentAnalysis>;
@@ -233,6 +241,17 @@ export const recursiveRenderComponent = function (
   return glyph;
 };
 
+const overrideCorners: Map<string, CornerSpecifier> = new Map([
+  ["良", [0, 0, 4, 6]],
+  ["\uE06A", [0, 0, 4, 5]],
+  ["世", [0, 0, 4, 4]],
+  ["中", [0, 1, 3, 3]],
+  ["争", [0, 1, 5, 5]],
+  ["卡", [0, 0, 3, 3]],
+  ["毌", [0, 0, 0, 0]],
+  ["自", [0, 0, 5, 5]],
+]);
+
 /**
  * 把一个基本部件从 SVG 图形出发，先渲染成 Bezier 图形，然后计算拓扑
  *
@@ -241,9 +260,11 @@ export const recursiveRenderComponent = function (
 export const computeComponent = (name: string, glyph: SVGGlyph) => {
   const renderedGlyph = renderSVGGlyph(glyph);
   const topology = findTopology(renderedGlyph);
+  const corners = overrideCorners.get(name) ?? findCorners(renderedGlyph);
   const cache: ComputedComponent = {
     glyph: renderedGlyph,
     topology,
+    corners,
     name,
   };
   return cache;

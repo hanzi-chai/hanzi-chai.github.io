@@ -451,7 +451,6 @@ const EquivalenceColumns = ({
     xField: "equivalence",
     yField: "count",
     label: {
-      position: "middle",
       style: {
         fill: "#f5f5f5",
       },

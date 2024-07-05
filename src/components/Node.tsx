@@ -1,26 +1,14 @@
 import { Button, Dropdown } from "antd";
-import type { PropsWithChildren } from "react";
-import type { Edge, Node, NodeProps } from "reactflow";
-import { Handle, Position, useReactFlow } from "reactflow";
+import { useContext, type PropsWithChildren } from "react";
+import type { NodeProps } from "reactflow";
+import { Handle, Position } from "reactflow";
 import styled from "styled-components";
-import type {
-  MenuItemGroupType,
-  MenuItemType,
-} from "antd/es/menu/hooks/useItems";
-// import {
-//   SubMenuType,
-// } from "antd/es/menu/hooks/useItems";
 import type { SourceData, ConditionData } from "./graph";
-import {
-  makeEdge,
-  getLayoutedElements,
-  makeSourceNode,
-  sortNodes,
-  makeConditionNode,
-  renderType,
-} from "./graph";
+import { CacheContext, renderType } from "./graph";
+import type { Condition, Source } from "~/lib";
 import { renderName } from "~/lib";
 import { blue } from "@ant-design/colors";
+import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
 
 const SourceButton = styled(Button)`
   width: 64px;
@@ -31,6 +19,7 @@ const SourceButton = styled(Button)`
   &:focus {
     color: ${blue[4]};
     border-color: ${blue[4]};
+    outline: 2px solid ${blue[4]};
   }
 `;
 
@@ -38,90 +27,118 @@ const ConditionButton = styled(SourceButton)`
   border-radius: 0;
 `;
 
+const defaultSource: Source = { object: { type: "汉字" as const }, next: null };
+const defaultCondition: Condition = {
+  object: { type: "汉字" as const },
+  operator: "存在",
+  positive: null,
+  negative: null,
+};
+
+const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
+  let newId = 0;
+  for (const currentId of Object.keys(sources)) {
+    if (currentId !== `${type}${newId}`) break;
+    newId += 1;
+  }
+  return `${type}${newId}`;
+};
+
+type Creator = (etype?: "positive" | "negative") => MenuItemType;
+
 const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
-  const { setNodes, setEdges, getNodes, getEdges } = useReactFlow<
-    SourceData | ConditionData
-  >();
-  const nodes = getNodes();
-  const sourceNodes = nodes.filter((n) => n.id.startsWith("s")).sort(sortNodes);
-  const conditionNodes = nodes
-    .filter((n) => n.id.startsWith("c"))
-    .sort(sortNodes);
-  const edges = getEdges();
-  const setLayout = (newnodes: Node[], newedges: Edge[]) => {
-    const [lnodes, ledges] = getLayoutedElements(newnodes, newedges);
-    setNodes(lnodes);
-    setEdges(ledges);
+  const { sources, setSources, conditions, setConditions, setSelected } =
+    useContext(CacheContext);
+  if (sources[id] === undefined && conditions[id] === undefined) return null;
+  const createSourceNode: Creator = (etype) => {
+    const label = "添加源节点" + (etype ? `（${renderType[etype]}）` : "");
+    return {
+      key: `create-source-${etype}`,
+      label,
+      onClick: () => {
+        const newId = getNewId(sources, "s");
+        const newSources = { ...sources, [newId]: defaultSource };
+        const newConditions = { ...conditions };
+        if (etype === undefined) {
+          newSources[id] = { ...newSources[id]!, next: newId };
+        } else {
+          newConditions[id] = {
+            ...newConditions[id]!,
+            [etype]: newId,
+          };
+        }
+        setSources(newSources);
+        setConditions(newConditions);
+        setSelected(newId);
+      },
+    };
   };
-  const createSourceNode: (etype: string | undefined) => MenuItemType = (
-    etype,
-  ) => ({
-    key: `create-source-${etype}`,
-    label:
-      "添加源节点" +
-      (etype ? `（${renderType[etype as keyof typeof renderType]}）` : ""),
-    onClick: () => {
-      let newid = 0;
-      for (const node of sourceNodes) {
-        if (node.id !== `s${newid}`) break;
-        newid += 1;
-      }
-      const newnodes = nodes.concat(
-        makeSourceNode({ object: { type: "汉字" } }, `s${newid}`),
-      );
-      const newedges = edges.concat(makeEdge(id, `s${newid}`, etype));
-      setLayout(newnodes, newedges);
-    },
-  });
-  const createConditionNode: (etype: string | undefined) => MenuItemType = (
-    etype,
-  ) => ({
-    key: `create-condition-${etype}`,
-    label:
-      "添加条件节点" +
-      (etype ? `（${renderType[etype as keyof typeof renderType]}）` : ""),
-    onClick: () => {
-      let newid = 0;
-      for (const node of conditionNodes) {
-        if (node.id !== `c${newid}`) break;
-        newid += 1;
-      }
-      const newnodes = nodes.concat(
-        makeConditionNode(
-          { object: { type: "汉字" }, operator: "存在" },
-          `c${newid}`,
-        ),
-      );
-      const newedges = edges.concat(makeEdge(id, `c${newid}`, etype));
-      setLayout(newnodes, newedges);
-    },
-  });
+  const createConditionNode: Creator = (etype) => {
+    const label = "添加条件节点" + (etype ? `（${renderType[etype]}）` : "");
+    return {
+      key: `create-condition-${etype}`,
+      label,
+      onClick: () => {
+        const newId = getNewId(conditions, "c");
+        const newSources = { ...sources };
+        const newConditions = { ...conditions, [newId]: defaultCondition };
+        if (etype === undefined) {
+          newSources[id] = { ...newSources[id]!, next: newId };
+        } else {
+          newConditions[id] = {
+            ...newConditions[id]!,
+            [etype]: newId,
+          };
+        }
+        setSources(newSources);
+        setConditions(newConditions);
+        setSelected(newId);
+      },
+    };
+  };
   const deleteNode: MenuItemType = {
     key: "delete",
     label: "删除节点",
     onClick: () => {
-      const newnodes = getNodes().filter((n) => n.id !== id);
-      const newedges = getEdges().filter(
-        ({ source, target }) => ![source, target].includes(id),
-      );
-      setLayout(newnodes, newedges);
+      const newSources = { ...sources };
+      const newConditions = { ...conditions };
+      // 递归删除
+      const stack = [id];
+      while (stack.length) {
+        const currentId = stack.pop()!;
+        if (currentId[0] === "s") {
+          const next = newSources[currentId]?.next;
+          if (next) stack.push(next);
+        } else {
+          const positive = newConditions[currentId]?.positive;
+          if (positive) stack.push(positive);
+          const negative = newConditions[currentId]?.negative;
+          if (negative) stack.push(negative);
+        }
+        delete newSources[currentId];
+        delete newConditions[currentId];
+      }
+      for (const value of Object.values(newSources)) {
+        if (value.next === id) value.next = null;
+      }
+      for (const value of Object.values(newConditions)) {
+        if (value.positive === id) value.positive = null;
+        if (value.negative === id) value.negative = null;
+      }
+      setSelected(undefined);
+      setSources(newSources);
+      setConditions(newConditions);
     },
   };
   const items: (MenuItemType | MenuItemGroupType)[] = [];
   if (id[0] === "s") {
     if (id !== "s0") items.push(deleteNode);
-    if (!edges.some((e) => e.source === id))
-      items.push(createSourceNode(undefined), createConditionNode(undefined));
+    if (sources[id]!.next === null)
+      items.push(createSourceNode(), createConditionNode());
   } else {
     items.push(deleteNode);
-    for (const label of ["positive", "negative"]) {
-      if (
-        !edges.some(
-          (e) =>
-            e.source === id &&
-            e.label === renderType[label as keyof typeof renderType],
-        )
-      )
+    for (const label of ["positive", "negative"] as const) {
+      if (conditions[id]![label] === null)
         items.push(createSourceNode(label), createConditionNode(label));
     }
   }

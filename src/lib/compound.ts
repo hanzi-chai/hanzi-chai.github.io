@@ -9,6 +9,7 @@ import type {
   SVGGlyph,
   CompoundCharacter,
 } from "./data";
+import type { CornerSpecifier } from "./topology";
 
 export type CompoundResults = Map<string, CompoundAnalysis>;
 
@@ -17,19 +18,19 @@ type PartitionResult = ComponentAnalysis | CompoundAnalysis;
 export type CompoundAnalysis = CompoundBasicAnalysis | CompoundGenuineAnalysis;
 
 /**
- * 复合体通过自动拆分算法导出的拆分结果
- */
-interface CompoundGenuineAnalysis {
-  sequence: string[];
-  operator: Operator;
-  operandResults: PartitionResult[];
-}
-
-/**
  * 复合体本身是字根字，没有拆分细节
  */
 interface CompoundBasicAnalysis {
-  sequence: [string];
+  sequence: string[];
+  corners: CornerSpecifier;
+}
+
+/**
+ * 复合体通过自动拆分算法导出的拆分结果
+ */
+interface CompoundGenuineAnalysis extends CompoundBasicAnalysis {
+  operator: Operator;
+  operandResults: PartitionResult[];
 }
 
 /**
@@ -103,11 +104,16 @@ type Serializer = (
   r: PartitionResult[],
   g: Compound,
   name?: string,
-) => string[];
+) => {
+  sequence: string[];
+  corners: CornerSpecifier;
+};
 
 const sequentialSerializer: Serializer = (operandResults, glyph) => {
-  if (glyph.order === undefined)
-    return operandResults.map((x) => x.sequence).flat();
+  if (glyph.order === undefined) {
+    const sequence = operandResults.map((x) => x.sequence).flat();
+    return { sequence, corners: [0, 0, 0, 0] };
+  }
   const sequence: string[] = [];
   const subsequences = operandResults.map((x) => ({
     rest: x.sequence,
@@ -138,7 +144,8 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
       }
     }
   }
-  return sequence;
+  // 不考虑四角
+  return { sequence, corners: [0, 0, 0, 0] };
 };
 
 const recursiveExpand: (x: PartitionResult[]) => PartitionResult[] = (x) => {
@@ -158,7 +165,6 @@ const robustPartition = (p: {
   operator: Operator;
 }) => {
   const { operandResults, operator } = p;
-  const firstPartition: PartitionResult[] = [];
   let start = 0;
   let dieyanAfter;
   // 叠和非叠
@@ -167,22 +173,57 @@ const robustPartition = (p: {
   // 叠眼
   let dieyan: boolean[];
   const postProcess: (x: PartitionResult[]) => PartitionResult = (x) => {
-    if (x.length === 2) {
-      return {
-        sequence: x.map((y) => y.sequence).flat(),
-        operator: "⿱",
-        operandResults: x,
-      };
-    } else if (x.length === 3) {
-      return {
-        sequence: x.map((y) => y.sequence[0]!),
-        operator: "⿳",
-        operandResults: x,
-      };
+    if (x.length === 1) return x[0]!;
+    const simplified = x.length > 3 ? x.slice(0, 2).concat(x.slice(-1)) : x;
+    let operator: Operator;
+    let sequence: string[] = [getTL(simplified[0]!)];
+    let corners: CornerSpecifier = [0, 0, 0, 0];
+    if (simplified.length === 2) {
+      const [first, second] = simplified as [PartitionResult, PartitionResult];
+      if (first.sequence.length > 1) {
+        const candidates = first.sequence.filter(
+          (_, i) => i !== first.corners[0],
+        );
+        sequence.push(candidates[0]!);
+        sequence.push(getBR(second));
+        corners[3] = 2;
+      } else {
+        sequence.push(getTL(second));
+        if (second.sequence.length > 1) {
+          sequence.push(getBR(second, true));
+          corners[3] = second.corners[0] === second.corners[3] ? 1 : 2;
+        } else {
+          corners[3] = 1;
+        }
+      }
+      operator = "⿱";
+    } else {
+      operator = "⿳";
+      const [first, second, third] = simplified as [
+        PartitionResult,
+        PartitionResult,
+        PartitionResult,
+      ];
+      if (first.sequence.length > 1) {
+        const candidates = first.sequence.filter(
+          (_, i) => i !== first.corners[0],
+        );
+        sequence.push(candidates[0]!);
+      } else {
+        sequence.push(getTL(second));
+      }
+      sequence.push(getBR(third));
+      corners[3] = 2;
     }
-    return x[0]!;
+    return {
+      sequence,
+      corners,
+      operator,
+      operandResults: x,
+    };
   };
   if (die.test(operator)) {
+    const firstPartition: PartitionResult[] = [];
     const expanded = recursiveExpand(operandResults);
     dieyan = expanded.map((x) => "operator" in x && notDie.test(x.operator));
     for (const [i, x] of dieyan.entries()) {
@@ -199,24 +240,24 @@ const robustPartition = (p: {
     if (dieyanAfter.length > 0) {
       firstPartition.push(postProcess(dieyanAfter));
     }
+    return firstPartition;
   } else {
-    firstPartition.push(...operandResults);
+    return operandResults;
   }
-  return firstPartition;
 };
 
-const c3Serializer: Serializer = (operandResults, glyph) => {
+const _c3Serializer: Serializer = (operandResults, glyph) => {
   const primaryPartition = robustPartition({
     operandResults,
     operator: glyph.operator,
   });
+  let sequence: string[] = [];
   if (primaryPartition.length === 1) {
-    return primaryPartition[0]!.sequence.slice(0, 3);
+    sequence = primaryPartition[0]!.sequence.slice(0, 3);
   } else if (primaryPartition.length === 3) {
-    return primaryPartition.map((x) => x.sequence[0]!);
+    sequence = primaryPartition.map((x) => x.sequence[0]!);
   } else {
     // 需要执行二次拆分
-    const sequence: string[] = [];
     for (const part of primaryPartition) {
       if ("operandResults" in part) {
         const smallerParts = robustPartition(part).slice(0, 2);
@@ -229,8 +270,79 @@ const c3Serializer: Serializer = (operandResults, glyph) => {
         sequence.push(...part.sequence.slice(0, 2));
       }
     }
-    return sequence.slice(0, 3);
   }
+  return { sequence: sequence.slice(0, 3), corners: [0, 0, 0, 0] };
+};
+
+const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
+const getBR = (x: PartitionResult, already?: boolean) => {
+  if (!already) return x.sequence[x.corners[3]]!;
+  if (x.corners[3] !== x.corners[0]) {
+    return x.sequence[x.corners[3]]!;
+  } else {
+    return x.sequence.at(-1)!;
+  }
+};
+
+const combine = (primaryPartition: PartitionResult[], operator: Operator) => {
+  const sequence: string[] = [];
+  const corners: CornerSpecifier = [0, 0, 0, 0];
+  if (primaryPartition.length === 3) {
+    primaryPartition.forEach((x, i) => {
+      if (i === 0 || i === 1) {
+        sequence.push(x.sequence[0]!);
+      } else {
+        sequence.push(getBR(x));
+      }
+    });
+    corners[3] = sequence.length - 1;
+  } else {
+    const [first, second] = primaryPartition as [
+      PartitionResult,
+      PartitionResult,
+    ];
+    sequence.push(getTL(first));
+    if (first.sequence.length > 1) {
+      sequence.push(getBR(first, true));
+      sequence.push(getBR(second));
+      if (/[⿰⿱⿸]/.test(operator)) {
+        corners[3] = sequence.length - 1;
+      } else {
+        corners[3] = sequence.length - 2;
+      }
+    } else {
+      sequence.push(getTL(second));
+      if (second.sequence.length > 1) {
+        sequence.push(getBR(second, true));
+        if (/[⿰⿱⿸]/.test(operator)) {
+          corners[3] =
+            second.corners[0] === second.corners[3]
+              ? sequence.length - 2
+              : sequence.length - 1;
+        }
+      } else {
+        if (/[⿰⿱⿸]/.test(operator)) {
+          corners[3] = sequence.length - 1;
+        }
+      }
+    }
+  }
+  return { sequence, corners };
+};
+
+const c3Serializer: Serializer = (operandResults, glyph) => {
+  const operator = glyph.operator;
+  const primaryPartition = robustPartition({ operandResults, operator });
+  if (primaryPartition.length === 1) {
+    return primaryPartition[0]!;
+  } else {
+    return combine(primaryPartition, operator);
+  }
+};
+
+const serializerMap: Record<string, Serializer> = {
+  sequential: sequentialSerializer,
+  c3: c3Serializer,
 };
 
 /**
@@ -254,12 +366,11 @@ export const disassembleCompounds = (
     return componentResults.get(s) || compoundResults.get(s);
   };
   const serializerName = config.analysis.serializer ?? "sequential";
-  const serializer =
-    serializerName === "c3" ? c3Serializer : sequentialSerializer;
+  const serializer = serializerMap[serializerName] ?? sequentialSerializer;
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根
-      compoundResults.set(char, { sequence: [char] });
+      compoundResults.set(char, { sequence: [char], corners: [0, 0, 0, 0] });
       continue;
     }
     const { operator, operandList } = glyph;
@@ -267,9 +378,9 @@ export const disassembleCompounds = (
     if (rawOperandResults.every((x) => x !== undefined)) {
       // this is safe!
       const operandResults = rawOperandResults as PartitionResult[];
-      const sequence = serializer(operandResults, glyph, char);
+      const serialization = serializer(operandResults, glyph, char);
       compoundResults.set(char, {
-        sequence,
+        ...serialization,
         operator,
         operandResults: operandResults,
       });

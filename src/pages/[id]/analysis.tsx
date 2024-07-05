@@ -91,7 +91,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
     .map(([key, res]) => {
       return {
         key,
-        label: <ResultSummary char={key} rootSeries={res.sequence} />,
+        label: <ResultSummary char={key} analysis={res} />,
         children:
           "schemes" in res ? (
             <ResultDetail
@@ -108,13 +108,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
     .map(([key, res]) => {
       return {
         key,
-        label: (
-          <ResultSummary
-            char={key}
-            rootSeries={res.sequence}
-            disableCustomize
-          />
-        ),
+        label: <ResultSummary char={key} analysis={res} disableCustomize />,
       };
     });
 

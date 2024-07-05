@@ -32,6 +32,12 @@ export const customizeAtom = focusAtom(analysisAtom, (o) =>
   o.prop("customize").valueOr({} as NonNullable<Analysis["customize"]>),
 );
 
+export const customizeCornersAtom = focusAtom(analysisAtom, (o) =>
+  o
+    .prop("customizeCorners")
+    .valueOr({} as NonNullable<Analysis["customizeCorners"]>),
+);
+
 export const classifierCustomizationAtom = focusAtom(analysisAtom, (o) =>
   o.prop("classifier").valueOr({} as Record<Feature, number>),
 );
@@ -40,3 +46,7 @@ export const customClassifierAtom = atom((get) => {
   const customization = get(classifierCustomizationAtom);
   return mergeClassifier(customization);
 });
+
+export const serializerAtom = focusAtom(analysisAtom, (o) =>
+  o.prop("serializer").valueOr("sequential" as "sequential" | "c3"),
+);

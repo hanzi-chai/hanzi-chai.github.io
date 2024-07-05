@@ -149,6 +149,7 @@ export const analysis = function (
         const pseudoResult: ComponentAnalysis = {
           strokes: 0,
           sequence: sequence,
+          corners: [0, 0, 0, sequence.length - 1],
         };
         return [component, pseudoResult] as const;
       },
