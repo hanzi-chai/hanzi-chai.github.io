@@ -186,10 +186,13 @@ export interface LevelWeights {
   frequency: number;
 }
 
+export type FingeringWeights = (number | null)[];
+
 export interface TierWeights {
   top?: number;
   duplication?: number;
   levels?: LevelWeights[];
+  fingering?: FingeringWeights;
 }
 
 export const fingeringLabels = [
@@ -209,7 +212,7 @@ export interface PartialWeights {
   key_distribution?: number;
   pair_equivalence?: number;
   extended_pair_equivalence?: number;
-  fingering?: (number | null)[];
+  fingering?: FingeringWeights;
   levels?: LevelWeights[];
 }
 

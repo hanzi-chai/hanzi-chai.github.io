@@ -10,9 +10,10 @@ import { Select } from "./Utils";
 import { useState } from "react";
 
 const preprocess = (partialMetric: PartialMetric) => {
+  console.log(partialMetric);
   const result = [];
-  for (const { top, duplication, levels } of partialMetric.tiers!) {
-    const tier = top === undefined ? "静态全部" : `前 ${top}`;
+  for (const { top, duplication, levels, fingering } of partialMetric.tiers!) {
+    const tier = top === undefined ? "全部" : `前 ${top}`;
     for (const { length, frequency: value } of levels!) {
       result.push({
         tier,
@@ -27,19 +28,35 @@ const preprocess = (partialMetric: PartialMetric) => {
       subtype: "重码",
       value: duplication,
     });
+    // TODO
+    result.push({
+      tier,
+      type: "手感",
+      subtype: "当量",
+      value: undefined,
+    });
+    for (const [index, value] of fingering!.entries()) {
+      if (value === undefined) continue;
+      result.push({
+        tier,
+        type: "手感",
+        subtype: fingeringLabels[index],
+        value,
+      });
+    }
   }
   for (const { length, frequency: value } of partialMetric.levels!) {
-    result.push({ tier: "全部", type: "效率", subtype: `${length} 键`, value });
+    result.push({ tier: "加权", type: "效率", subtype: `${length} 键`, value });
   }
   const { duplication, pair_equivalence } = partialMetric;
   result.push({
-    tier: "全部",
+    tier: "加权",
     type: "离散",
     subtype: "重码",
     value: duplication,
   });
   result.push({
-    tier: "全部",
+    tier: "加权",
     type: "手感",
     subtype: "当量",
     value: pair_equivalence,
@@ -47,7 +64,7 @@ const preprocess = (partialMetric: PartialMetric) => {
   for (const [index, value] of partialMetric.fingering!.entries()) {
     if (value === undefined) continue;
     result.push({
-      tier: "全部",
+      tier: "加权",
       type: "手感",
       subtype: fingeringLabels[index],
       value,

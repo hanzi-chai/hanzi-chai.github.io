@@ -237,7 +237,7 @@ const TierObjective = ({
       </Flex>
       <Flex vertical style={{ marginLeft: "4rem" }} gap="small">
         <AtomicObjective
-          title="静态选重权重"
+          title="选重权重"
           value={tier.duplication}
           onChange={(value) => {
             update({ ...tier, duplication: value });
@@ -337,7 +337,7 @@ const PartialObjective = ({
           <Typography.Title level={4}>整体</Typography.Title>
           <Flex vertical gap="small">
             <AtomicObjective
-              title="动态选重权重"
+              title="加权选重权重"
               value={duplication}
               onChange={(value) => update("duplication", value)}
             />

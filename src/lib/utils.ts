@@ -27,6 +27,7 @@ interface Loss {
 
 export type Dictionary = [string, string][];
 export type Frequency = Record<string, number>;
+export type AdaptedFrequency = Map<string, number>;
 export type Distribution = Record<string, Loss>;
 export type Equivalence = Record<string, number>;
 
@@ -375,6 +376,7 @@ interface TierMetric {
   top?: number;
   duplication?: number;
   levels?: LevelMetric[];
+  fingering?: (number | undefined)[];
 }
 
 export interface PartialMetric {
@@ -383,7 +385,7 @@ export interface PartialMetric {
   key_distribution?: number;
   pair_equivalence?: number;
   extended_pair_equivalence?: number;
-  fingering?: (number | null)[];
+  fingering?: (number | undefined)[];
   levels?: LevelMetric[];
 }
 
@@ -393,3 +395,31 @@ export interface Metric {
   words_full?: PartialMetric;
   words_short?: PartialMetric;
 }
+
+// 使用使用逆向最大匹配算法来分词
+export const adapt = (frequency: Frequency, words: Set<string>) => {
+  const result: Map<string, number> = new Map();
+  for (const [word, value] of Object.entries(frequency)) {
+    if (words.has(word)) {
+      result.set(word, (result.get(word) ?? 0) + value);
+    } else {
+      let chars = [...word];
+      let end = chars.length;
+      let start: number;
+      while (end > 0) {
+        start = end - 1;
+        if (!words.has(chars[start]!)) {
+          end -= 1;
+          continue;
+        }
+        while (start > 0 && words.has(chars.slice(start - 1, end).join(""))) {
+          start -= 1;
+        }
+        const subword = chars.slice(start, end).join("");
+        result.set(subword, (result.get(subword) ?? 0) + value);
+        end = start;
+      }
+    }
+  }
+  return result;
+};

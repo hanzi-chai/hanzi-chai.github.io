@@ -2,7 +2,7 @@ import { Flex, Popover, Select, Table } from "antd";
 import {
   alphabetAtom,
   displayAtom,
-  frequencyAtom,
+  adaptedFrequencyAtom,
   repertoireAtom,
   sequenceAtom,
   useChaifenTitle,
@@ -17,7 +17,7 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import type { AnalyzerForm, AssemblyResult, Frequency } from "~/lib";
+import type { AdaptedFrequency, AnalyzerForm, AssemblyResult } from "~/lib";
 import { renderIndexed } from "~/lib";
 import { useState } from "react";
 import { assemblyResultAtom } from "~/atoms";
@@ -42,7 +42,7 @@ const render = (value: number) => numbers[value] || value.toString();
 const filterRelevant = (
   result: AssemblyResult,
   analyzer: AnalyzerForm,
-  frequency: Frequency,
+  frequency: AdaptedFrequency,
 ) => {
   let relevant = result;
   if (analyzer.type === "single")
@@ -51,7 +51,7 @@ const filterRelevant = (
     relevant = relevant.filter((x) => [...x.name].length > 1);
   if (analyzer.top > 0) {
     relevant.sort((a, b) => {
-      return (frequency[b.name] ?? 0) - (frequency[a.name] ?? 0);
+      return (frequency.get(b.name) ?? 0) - (frequency.get(a.name) ?? 0);
     });
     relevant = relevant.slice(0, analyzer.top);
   }
@@ -60,7 +60,7 @@ const filterRelevant = (
 
 const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
-  frequency: Frequency,
+  frequency: AdaptedFrequency,
   result: AssemblyResult,
   display: (d: string) => string,
   maxLength: number,
@@ -154,7 +154,7 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(maxLengthAtom);
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(assemblyResultAtom);
-  const frequency = useAtomValue(frequencyAtom);
+  const frequency = useAtomValue(adaptedFrequencyAtom);
   const display = useAtomValue(displayAtom);
   const reverseMap = analyzePrimitiveDuplication(
     analyzer,
@@ -221,7 +221,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(maxLengthAtom);
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(assemblyResultAtom);
-  const frequency = useAtomValue(frequencyAtom);
+  const frequency = useAtomValue(adaptedFrequencyAtom);
   const display = useAtomValue(displayAtom);
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer, frequency);
@@ -295,7 +295,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 
 const MarginalFirstOrderDuplication = () => {
   const assemblyResult = useAtomValue(assemblyResultAtom);
-  const frequency = useAtomValue(frequencyAtom);
+  const frequency = useAtomValue(adaptedFrequencyAtom);
   const maxLength = useAtomValue(maxLengthAtom);
   const display = useAtomValue(displayAtom);
   const sequenceMap = useAtomValue(sequenceAtom);

@@ -3,7 +3,7 @@ import type { Combined } from "~/atoms";
 import {
   alphabetAtom,
   combinedResultAtom,
-  frequencyAtom,
+  adaptedFrequencyAtom,
   meaningfulTypesAtom,
   pairEquivalenceAtom,
   typeLabels,
@@ -19,7 +19,7 @@ import {
 import { Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import type { Frequency, Objective } from "~/lib";
+import type { AdaptedFrequency, Objective } from "~/lib";
 import { useState } from "react";
 import { range, sum } from "lodash-es";
 import { blue } from "@ant-design/colors";
@@ -73,7 +73,7 @@ type DistributionResult = Map<string, { count: number; items: string[] }>;
 const count = (
   data: { name: string; code: string; importance: number }[],
   alphabet: string,
-  frequency: Frequency,
+  frequency: AdaptedFrequency,
   config: DistributionConfig,
   multiple?: boolean,
 ) => {
@@ -92,7 +92,7 @@ const count = (
   for (const item of data) {
     const keys = config.index.map((i) => item.code[i]);
     const value = config.dynamic
-      ? (frequency[item.name] ?? 0) * item.importance
+      ? (frequency.get(item.name) ?? 0) * item.importance
       : 1;
     if (multiple) {
       keys.forEach((k) => {
@@ -123,7 +123,7 @@ const count = (
 const countFingering = (
   data: { name: string; code: string; importance: number }[],
   alphabet: string,
-  frequency: Frequency,
+  frequency: AdaptedFrequency,
   config: DistributionConfig,
 ) => {
   const result: DistributionResult = new Map();
@@ -137,7 +137,7 @@ const countFingering = (
       const string = item.code.slice(i, i + 2);
       if (string.length < 2) continue;
       const value = config.dynamic
-        ? (frequency[item.name] ?? 0) * item.importance
+        ? (frequency.get(item.name) ?? 0) * item.importance
         : 1;
       const previous = result.get(string) ?? { count: 0, items: [] };
       previous.count += value;
@@ -292,7 +292,7 @@ const DistributionForm = ({
             fieldProps={{ options: options2d }}
           />
         )}
-        <ProFormSwitch name="dynamic" label="动态" />
+        <ProFormSwitch name="dynamic" label="加权" />
       </ProFormGroup>
     </ProForm>
   );
@@ -310,7 +310,7 @@ const UnaryDistribution = () => {
   };
   const [config, setConfig] = useState(init);
   const data = filterType(config.type, combined);
-  const frequency = useAtomValue(frequencyAtom);
+  const frequency = useAtomValue(adaptedFrequencyAtom);
   const result = count(data, alphabet, frequency, config, true);
 
   return (
@@ -412,7 +412,7 @@ const BinaryDistribution = () => {
   };
   const [config, setConfig] = useState(init);
   const data = filterType(config.type, combined);
-  const frequency = useAtomValue(frequencyAtom);
+  const frequency = useAtomValue(adaptedFrequencyAtom);
   const result = count(data, alphabet, frequency, config);
 
   return (
@@ -498,7 +498,7 @@ const FingeringDistribution = () => {
   const [config, setConfig] = useState(init);
   const alphabet = useAtomValue(alphabetAtom);
   const data = filterType(config.type, combined);
-  const frequency = useAtomValue(frequencyAtom);
+  const frequency = useAtomValue(adaptedFrequencyAtom);
   const result = countFingering(data, alphabet, frequency, config);
   return (
     <>

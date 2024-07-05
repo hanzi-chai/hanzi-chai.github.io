@@ -55,6 +55,7 @@ const makeTier = (top: number, levelWeights: LevelWeights[]) => ({
   top: top === 0 ? undefined : top,
   duplication: 1,
   levels: levelWeights,
+  fingering: [1, 1, 1, 1, 1, 1, null, null],
 });
 
 export const meaningfulObjectiveAtom = atom((get) => {

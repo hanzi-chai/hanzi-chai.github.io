@@ -9,12 +9,14 @@ import type {
 import { MiniDb } from "jotai-minidb";
 import { atom } from "jotai";
 import {
+  adapt,
   getDictFromTSV,
   getDistributionFromTSV,
   getRecordFromTSV,
   type PrimitiveRepertoire,
 } from "~/lib";
 import { produce } from "immer";
+import { charactersAtom } from "./data";
 
 const _cache: Record<string, any> = {};
 export async function fetchAsset(
@@ -92,6 +94,15 @@ export const assetsAtom = atom(async (get) => {
     pair_equivalence,
   };
   return assets;
+});
+
+export const adaptedFrequencyAtom = atom(async (get) => {
+  const frequency = get(userFrequencyAtom) ?? (await get(frequencyAtom));
+  const characters = get(charactersAtom);
+  const dictionary = await get(dictionaryAtom);
+  const words = new Set(characters);
+  dictionary.forEach(([word]) => words.add(word));
+  return adapt(frequency, words);
 });
 
 export const dictionaryAtom = atom(async (get) => {
