@@ -27,14 +27,6 @@ const ConditionButton = styled(SourceButton)`
   border-radius: 0;
 `;
 
-const defaultSource: Source = { object: { type: "汉字" as const }, next: null };
-const defaultCondition: Condition = {
-  object: { type: "汉字" as const },
-  operator: "存在",
-  positive: null,
-  negative: null,
-};
-
 const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
   let newId = 0;
   for (const currentId of Object.keys(sources)) {
@@ -57,6 +49,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       label,
       onClick: () => {
         const newId = getNewId(sources, "s");
+        const defaultSource: Source = { object: { type: "汉字" }, next: null };
         const newSources = { ...sources, [newId]: defaultSource };
         const newConditions = { ...conditions };
         if (etype === undefined) {
@@ -81,6 +74,12 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       onClick: () => {
         const newId = getNewId(conditions, "c");
         const newSources = { ...sources };
+        const defaultCondition: Condition = {
+          object: { type: "汉字" },
+          operator: "存在",
+          positive: null,
+          negative: null,
+        };
         const newConditions = { ...conditions, [newId]: defaultCondition };
         if (etype === undefined) {
           newSources[id] = { ...newSources[id]!, next: newId };
