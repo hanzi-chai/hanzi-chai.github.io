@@ -2,13 +2,19 @@ import { BasicComponent, PrimitiveCharacter } from "~/lib";
 import { Flex, Layout, Typography } from "antd";
 import { get } from "~/api";
 import { useChaifenTitle } from "~/atoms";
-import { Box, StrokesView } from "~/components/GlyphView";
+import { Box, StrokesView, SVGStroke } from "~/components/GlyphView";
 import { dump } from "js-yaml";
 import { useEffect, useState } from "react";
 
 export default function BezierLayout() {
   useChaifenTitle("Bezier 曲线测试");
   const [data, setData] = useState([] as PrimitiveCharacter[]);
+  const [glyph, setGlyph] = useState<SVGStroke[]>([
+    {
+      start: [10, 10],
+      curveList: [{ command: "h", parameterList: [30] }],
+    },
+  ]);
   useEffect(() => {
     Promise.all([0x4e00, 0x4e01, 0x4e03, 0x4e07, 0x4e08].map(get)).then(
       setData,
@@ -44,7 +50,10 @@ export default function BezierLayout() {
                 {name} ({character.unicode.toString(16).toUpperCase()})
               </span>
               <Box>
-                <StrokesView glyph={basicComponent.strokes} />
+                <StrokesView
+                  glyph={basicComponent.strokes}
+                  setGlyph={setGlyph}
+                />
               </Box>
               <div
                 style={{
