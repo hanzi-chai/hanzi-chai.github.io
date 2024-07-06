@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import type { SVGStroke } from "~/lib";
+
+// Define the SVGStroke interface
+export interface SVGStroke {
+  start: number[];
+  curveList: {
+    command: string;
+    parameterList: number[];
+  }[];
+}
 
 const Box = styled.div`
   border: 1px solid black;
@@ -54,6 +62,7 @@ const StrokesView: React.FC<StrokesViewProps> = ({ glyph, setGlyph }) => {
       ];
 
       setGlyph(newGlyph);
+      console.log(`Updated glyph: ${JSON.stringify(newGlyph)}`);
     }
   };
 
@@ -102,12 +111,11 @@ const StrokesView: React.FC<StrokesViewProps> = ({ glyph, setGlyph }) => {
   );
 };
 
-interface AppProps {
+interface FontViewProps {
   reference: string;
-  glyph: SVGStroke[];
 }
 
-const FontView: React.FC<{ reference: string }> = ({ reference }) => (
+const FontView: React.FC<FontViewProps> = ({ reference }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
