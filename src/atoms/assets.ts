@@ -130,3 +130,14 @@ export const userPairEquivalenceAtom = atomWithStorage<Equivalence | undefined>(
 export const customElementsAtom = atomWithStorage<
   Record<string, CustomElementMap>
 >("custom_elements", {});
+
+export const processedCustomElementsAtom = atom((get) => {
+  const customElements = get(customElementsAtom);
+  const content = new Map<string, string[]>(
+    Object.entries(customElements).map(([name, map]) => {
+      const set = new Set(Object.values(map).flat());
+      return [name, [...set].sort().map((x) => `${name}-${x}`)];
+    }),
+  );
+  return content;
+});

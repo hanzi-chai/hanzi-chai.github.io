@@ -1,4 +1,4 @@
-import { Flex } from "antd";
+import { Flex, Skeleton } from "antd";
 import type { Combined } from "~/atoms";
 import {
   alphabetAtom,
@@ -20,7 +20,7 @@ import { Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
 import type { AdaptedFrequency, Objective } from "~/lib";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { range, sum } from "lodash-es";
 import { blue } from "@ant-design/colors";
 import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
@@ -320,7 +320,13 @@ const UnaryDistribution = () => {
         <Typography.Title level={3}>一元分布</Typography.Title>
         <DistributionForm config={config} setConfig={setConfig} multiple />
       </Flex>
-      <Keyboard result={result} dynamic={config.dynamic} alphabet={alphabet} />
+      <Suspense fallback={<Skeleton active />}>
+        <Keyboard
+          result={result}
+          dynamic={config.dynamic}
+          alphabet={alphabet}
+        />
+      </Suspense>
     </>
   );
 };
@@ -422,7 +428,9 @@ const BinaryDistribution = () => {
         <Typography.Title level={3}>二元分布</Typography.Title>
         <DistributionForm config={config} setConfig={setConfig} />
       </Flex>
-      <MatrixHeatMap result={result} dynamic={config.dynamic} />
+      <Suspense fallback={<Skeleton active />}>
+        <MatrixHeatMap result={result} dynamic={config.dynamic} />
+      </Suspense>
     </>
   );
 };
@@ -512,8 +520,10 @@ const FingeringDistribution = () => {
           combination
         />
       </Flex>
-      <MatrixHeatMap result={result} dynamic={config.dynamic} isFingering />
-      <EquivalenceColumns result={result} dynamic={config.dynamic} />
+      <Suspense fallback={<Skeleton active />}>
+        <MatrixHeatMap result={result} dynamic={config.dynamic} isFingering />
+        <EquivalenceColumns result={result} dynamic={config.dynamic} />
+      </Suspense>
     </>
   );
 };
@@ -522,9 +532,11 @@ export default function Statistics() {
   useChaifenTitle("统计");
   return (
     <Flex vertical gap="middle">
-      <UnaryDistribution />
-      <BinaryDistribution />
-      <FingeringDistribution />
+      <Suspense fallback={<Skeleton active />}>
+        <UnaryDistribution />
+        <BinaryDistribution />
+        <FingeringDistribution />
+      </Suspense>
     </Flex>
   );
 }

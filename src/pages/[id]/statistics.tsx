@@ -1,4 +1,4 @@
-import { Flex, Popover, Select, Table } from "antd";
+import { Flex, Popover, Select, Skeleton, Table } from "antd";
 import {
   alphabetAtom,
   displayAtom,
@@ -19,7 +19,7 @@ import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
 import type { AdaptedFrequency, AnalyzerForm, AssemblyResult } from "~/lib";
 import { renderIndexed } from "~/lib";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { assemblyResultAtom } from "~/atoms";
 import type { ColumnsType } from "antd/es/table";
 import { range, sumBy } from "lodash-es";
@@ -384,13 +384,15 @@ export default function Statistics() {
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={2}>离散性分析</Typography.Title>
-      <MarginalFirstOrderDuplication />
-      <MultiDistribution
-        init={{ type: "single", position: range(0, maxLength), top: 0 }}
-      />
-      <UnaryDistribution
-        init={{ type: "single", position: range(0, maxLength), top: 0 }}
-      />
+      <Suspense fallback={<Skeleton active />}>
+        <MarginalFirstOrderDuplication />
+        <MultiDistribution
+          init={{ type: "single", position: range(0, maxLength), top: 0 }}
+        />
+        <UnaryDistribution
+          init={{ type: "single", position: range(0, maxLength), top: 0 }}
+        />
+      </Suspense>
     </Flex>
   );
 }

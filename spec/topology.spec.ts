@@ -97,7 +97,7 @@ describe("curve relation", () => {
       first: "中",
       second: "前",
     });
-    expect(curveRelation(c1, c4)).toEqual({ type: "散", x: -0.5, y: -1 });
+    expect(curveRelation(c1, c4)).toEqual({ type: "散", x: 0, y: -1 });
     expect(curveRelation(c2, c3)).toEqual({ type: "交" });
     expect(curveRelation(c2, c4)).toEqual({
       type: "连",

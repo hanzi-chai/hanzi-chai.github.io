@@ -12,7 +12,6 @@ import NumberOutlined from "@ant-design/icons/NumberOutlined";
 import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import CusSpin from "~/components/CustomSpin";
-import { DevTools } from "jotai-devtools";
 import {
   infoAtom,
   useSetAtom,
@@ -208,7 +207,6 @@ export default function Contextualized() {
   return (
     <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
       <EditorLayout />
-      <DevTools />
     </Suspense>
   );
 }

@@ -1,11 +1,11 @@
-import { Button, Flex, Tabs } from "antd";
+import { Button, Cascader, Flex, Popover } from "antd";
 import { useState } from "react";
 import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";
-import styled from "styled-components";
 import {
   algebraAtom,
   customClassifierAtom,
+  processedCustomElementsAtom,
   sortedRepertoireAtom,
   useAtomValue,
   useRemoveAtom,
@@ -13,13 +13,8 @@ import {
 import Algebra from "./Algebra";
 import type { PronunciationElementTypes } from "~/lib";
 import { operators } from "~/lib";
-import { customElementsAtom, phonemeEnumerationAtom } from "~/atoms";
-
-const Wrapper = styled(Tabs)`
-  & .ant-tabs-nav-wrap {
-    transform: none !important;
-  }
-`;
+import { phonemeEnumerationAtom } from "~/atoms";
+import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 
 const AlgebraEditor = function ({
   type,
@@ -56,8 +51,34 @@ const AlgebraEditor = function ({
 const shapeElementTypes = ["字根", "笔画", "二笔", "结构"] as const;
 export type ShapeElementTypes = (typeof shapeElementTypes)[number];
 
-export const ShapeElementPicker = function () {
+interface Option {
+  value: string | number;
+  label: string;
+  children?: Option[];
+  disabled?: boolean;
+}
+
+const pronunciationElementsDescription = (
+  <ul style={{ width: 400 }}>
+    <li>
+      「声母」和「韵母」是按照《汉语拼音方案》中所规定的声母和韵母来切分一个音节，例如
+      yan 分析为零声母 + ian；
+    </li>
+    <li>
+      「双拼声母」和「双拼韵母」是按照自然码等双拼方案中的习惯来切分一个音节，例如
+      yan 分析为 y + an；
+    </li>
+    <li>「首字母」和「末字母」是二笔和形音码等方案中采取的元素类型；</li>
+    <li>您可利用拼写运算创造新的字音元素类型。</li>
+  </ul>
+);
+
+type PrimaryTypes = "shape" | "pronunciation" | "custom";
+
+const useAllElements = () => {
   const customizedClassifier = useAtomValue(customClassifierAtom);
+  const pronunciationElements = useAtomValue(phonemeEnumerationAtom);
+  const customElements = useAtomValue(processedCustomElementsAtom);
   const sortedForm = useAtomValue(sortedRepertoireAtom);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
@@ -66,106 +87,81 @@ export const ShapeElementPicker = function () {
     .map((x) => ["0"].concat(allStrokes).map((y) => x + y))
     .flat();
   const allGlyph = sortedForm.map(([x]) => x);
-  const content: Map<ShapeElementTypes, string[]> = new Map([
+  const shapeElements: Map<ShapeElementTypes, string[]> = new Map([
     ["字根", allGlyph],
     ["笔画", allStrokes],
     ["二笔", allErbi],
     ["结构", [...operators]],
   ]);
-  const [element, setElement] = useState<string | undefined>(undefined);
-  const [type, setType] = useState<ShapeElementTypes>("字根");
-  return (
-    <Flex vertical gap="small">
-      <Wrapper
-        activeKey={type}
-        items={[...content].map(([name, elements]) => {
-          return {
-            label: name,
-            key: name,
-            children: (
-              <ElementPool
-                element={element}
-                setElement={setElement}
-                content={elements}
-                name={name}
-              />
-            ),
-          };
-        })}
-        onChange={(e) => {
-          setType(e as ShapeElementTypes);
-        }}
-      />
-      <ElementAdder element={element} />
-    </Flex>
-  );
+  const elements: Record<PrimaryTypes, Map<string, string[]>> = {
+    shape: shapeElements,
+    pronunciation: pronunciationElements,
+    custom: customElements,
+  };
+  return elements;
 };
 
-export const PronElementPicker = function () {
-  const phonemeEnumeration = useAtomValue(phonemeEnumerationAtom);
+export default function ElementPicker() {
   const [element, setElement] = useState<string | undefined>(undefined);
-  const [type, setType] = useState<PronunciationElementTypes>("声母");
+  const [types, setTypes] = useState<[string, string]>(["shape", "字根"]);
+  const elements = useAllElements();
+  const { shape, pronunciation, custom } = elements;
+  const [primary, secondary] = types;
+  const currentElements = elements[primary as PrimaryTypes].get(secondary)!;
+  const options: Option[] = [
+    {
+      value: "shape",
+      label: "字形",
+      children: [...shape.keys()].map((v) => ({
+        value: v,
+        label: v,
+      })),
+    },
+    {
+      value: "pronunciation",
+      label: "字音",
+      children: [...pronunciation.keys()].map((v) => ({
+        value: v,
+        label: v,
+      })),
+    },
+    {
+      value: "custom",
+      label: "自定义",
+      children: [...custom.keys()].map((v) => ({
+        value: v,
+        label: v,
+      })),
+      disabled: custom.size === 0,
+    },
+  ];
   return (
     <Flex vertical gap="small">
-      <AlgebraEditor type={type} defaultType="声母" setType={setType} />
-      <Wrapper
-        activeKey={type}
-        items={[...phonemeEnumeration].map(([name, elements]) => {
-          return {
-            label: name,
-            key: name,
-            children: (
-              <ElementPool
-                element={element}
-                setElement={setElement}
-                content={elements}
-                name={name}
-              />
-            ),
-          };
-        })}
-        onChange={(e) => {
-          setType(e as PronunciationElementTypes);
-        }}
+      <Flex gap="middle" align="baseline">
+        <span>元素类型：</span>
+        <Cascader
+          value={types}
+          onChange={(x) => setTypes(x as [string, string])}
+          options={options}
+        />
+        <Popover content={pronunciationElementsDescription}>
+          <QuestionCircleOutlined />
+        </Popover>
+      </Flex>
+      {primary === "pronunciation" && (
+        <AlgebraEditor
+          type={secondary as PronunciationElementTypes}
+          defaultType="声母"
+          setType={(s) => setTypes(["pronunciation", s])}
+        />
+      )}
+      <ElementPool
+        element={element}
+        setElement={setElement}
+        content={currentElements}
+        name={secondary}
       />
       <ElementAdder element={element} />
     </Flex>
   );
-};
-
-export const CustomElementPicker = function () {
-  const customElements = useAtomValue(customElementsAtom);
-  const [element, setElement] = useState<string | undefined>(undefined);
-  const [type, setType] = useState<string>(
-    Object.keys(customElements)[0] ?? "",
-  );
-  const content = new Map<string, string[]>(
-    Object.entries(customElements).map(([name, map]) => {
-      const set = new Set(Object.values(map).flat());
-      return [name, [...set].sort().map((x) => `${name}-${x}`)];
-    }),
-  );
-  return (
-    <Flex vertical gap="small">
-      <Wrapper
-        activeKey={type}
-        items={[...content].map(([name, elements]) => {
-          return {
-            label: name,
-            key: name,
-            children: (
-              <ElementPool
-                element={element}
-                setElement={setElement}
-                content={elements}
-                name={name}
-              />
-            ),
-          };
-        })}
-        onChange={(e) => setType(e)}
-      />
-      <ElementAdder element={element} />
-    </Flex>
-  );
-};
+}

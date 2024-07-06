@@ -31,6 +31,7 @@ describe("e2e test", () => {
         algebra: config.algebra,
         encoder: config.encoder,
         keyboard: config.form,
+        priority: [],
       },
       characters,
       [],

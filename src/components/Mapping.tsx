@@ -1,4 +1,4 @@
-import { Alert, Button, Flex, Form, List, Popover, Space } from "antd";
+import { Alert, Button, Flex, Form, List, Popover, Select, Space } from "antd";
 import { useState, useMemo } from "react";
 import {
   useAtomValue,
@@ -12,12 +12,13 @@ import {
   mappingAtom,
   useAddAtom,
   useRemoveAtom,
+  useAtom,
 } from "~/atoms";
 
 import Element from "./Element";
 import Char from "./Character";
 import { isPUA, joinKeys, printableAscii, renderMapped } from "~/lib";
-import { DeleteButton, Select, Uploader } from "./Utils";
+import { DeleteButton, Uploader } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
@@ -189,6 +190,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
       }
     >
       <Element
+        type="text"
         style={{ color: display(name) === "丢失的元素" ? "red" : "initial" }}
       >
         <Space size={4}>
@@ -252,18 +254,67 @@ const ImportResultAlert = ({
   );
 };
 
-export default function Mapping() {
-  const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
+const MappingUploader = ({
+  setImportResult,
+}: {
+  setImportResult: (a: any) => void;
+}) => {
   const repertoire = useAtomValue(repertoireAtom);
+  const setMapping = useSetAtom(mappingAtom);
+  const mappingType = useAtomValue(mappingTypeAtom);
+  const alphabet = useAtomValue(alphabetAtom);
+  return (
+    <Uploader
+      action={(result) => {
+        const record: Record<string, string> = {};
+        const tsv = result
+          .trim()
+          .split("\n")
+          .map((x) => x.trim().split("\t"));
+        const unknownKeys: string[] = [];
+        const unknownValues: string[] = [];
+        for (const line of tsv) {
+          const [key, value] = line;
+          if (key === undefined || value === undefined) continue;
+          const glyph = repertoire[key]?.glyph;
+          if (glyph === undefined || isPUA(key)) {
+            unknownKeys.push(key);
+            continue;
+          }
+          if ("strokes" in glyph && glyph.strokes.length === 1) {
+            unknownKeys.push(key);
+            continue;
+          }
+          if (Array.from(value).some((x) => !alphabet.includes(x))) {
+            unknownValues.push(key);
+            continue;
+          }
+          record[key] = value.slice(0, mappingType);
+        }
+        setMapping((mapping) => ({ ...mapping, ...record }));
+        setImportResult({
+          success: Object.keys(record).length,
+          unknownKeys,
+          unknownValues,
+        });
+      }}
+      text="导入键盘映射"
+      type="txt"
+    />
+  );
+};
+
+export default function Mapping() {
+  const { mapping } = useAtomValue(keyboardAtom);
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?qwertyuiopasdfghjkl;zxcvbnm,./",
   );
+  const keyboardSort = (a: string, b: string) =>
+    keyboard.findIndex((x) => x === a) - keyboard.findIndex((x) => x === b);
   const [char, setChar] = useState<string | undefined>(undefined);
-  const mapping_type_default = mapping_type ?? 1;
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const setMappingType = useSetAtom(mappingTypeAtom);
-  const setAlphabet = useSetAtom(alphabetAtom);
-  const setMapping = useSetAtom(mappingAtom);
+  const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
+  const [alphabet, setAlphabet] = useAtom(alphabetAtom);
 
   const reversedMapping = new Map<string, MappedInfo[]>(
     Array.from(alphabet).map((key) => [key, []]),
@@ -276,84 +327,60 @@ export default function Mapping() {
   }
   return (
     <>
-      <Form.Item label="编码类型">
-        <Select
-          value={mapping_type_default}
-          onChange={(event) => setMappingType(event)}
-          options={[
-            { label: "单编码", value: 1 },
-            { label: "双编码", value: 2 },
-            { label: "三编码", value: 3 },
-            { label: "四编码", value: 4 },
-          ]}
-        />
-      </Form.Item>
-      {importResult && <ImportResultAlert {...importResult} />}
-      <Flex justify="center" gap="large">
+      <Flex justify="center" align="baseline" gap="small">
+        <Form.Item label="编码类型">
+          <Select
+            value={mappingType}
+            onChange={(event) => setMappingType(event)}
+            options={[
+              { label: "单编码", value: 1 },
+              { label: "双编码", value: 2 },
+              { label: "三编码", value: 3 },
+              { label: "四编码", value: 4 },
+            ]}
+          />
+        </Form.Item>
+        <Form.Item label="添加按键">
+          <Select
+            style={{ width: 64 }}
+            value={char}
+            onChange={setChar}
+            options={printableAscii
+              .filter((x) => !alphabet.includes(x))
+              .map((v) => ({
+                label: v,
+                value: v,
+              }))}
+          />
+        </Form.Item>
+        <Button
+          type="primary"
+          disabled={char === undefined}
+          onClick={() => setAlphabet(alphabet + char)}
+        >
+          添加
+        </Button>
         <Button
           onClick={() => setAlphabet(Array.from(alphabet).sort().join(""))}
         >
-          按字典序排序
+          排列为字典序
         </Button>
         <Button
           onClick={() =>
-            setAlphabet(
-              Array.from(alphabet)
-                .sort(
-                  (a, b) =>
-                    keyboard.findIndex((x) => x === a) -
-                    keyboard.findIndex((x) => x === b),
-                )
-                .join(""),
-            )
+            setAlphabet(Array.from(alphabet).sort(keyboardSort).join(""))
           }
         >
-          按键盘序排序
+          排列为键盘序
         </Button>
-        <Uploader
-          action={(result) => {
-            const record: Record<string, string> = {};
-            const tsv = result
-              .trim()
-              .split("\n")
-              .map((x) => x.trim().split("\t"));
-            const unknownKeys: string[] = [];
-            const unknownValues: string[] = [];
-            for (const line of tsv) {
-              const [key, value] = line;
-              if (key === undefined || value === undefined) continue;
-              const glyph = repertoire[key]?.glyph;
-              if (glyph === undefined || isPUA(key)) {
-                unknownKeys.push(key);
-                continue;
-              }
-              if ("strokes" in glyph && glyph.strokes.length === 1) {
-                unknownKeys.push(key);
-                continue;
-              }
-              if (Array.from(value).some((x) => !alphabet.includes(x))) {
-                unknownValues.push(key);
-                continue;
-              }
-              record[key] = value.slice(0, mapping_type_default);
-            }
-            setMapping((mapping) => ({ ...mapping, ...record }));
-            setImportResult({
-              success: Object.keys(record).length,
-              unknownKeys,
-              unknownValues,
-            });
-          }}
-          text="导入键盘映射"
-          type="txt"
-        />
+        <MappingUploader setImportResult={setImportResult} />
       </Flex>
+      {importResult && <ImportResultAlert {...importResult} />}
       <List
         dataSource={[...reversedMapping]}
         renderItem={(item: [string, MappedInfo[]]) => {
           const [key, roots] = item;
           return (
-            <Flex gap="small" style={{ margin: "8px 0" }}>
+            <Flex style={{ borderTop: "1px solid #aaa" }}>
               <Button
                 shape="circle"
                 type="text"
@@ -369,7 +396,7 @@ export default function Mapping() {
                 icon={<DeleteOutlined />}
               />
               <Char>{key}</Char>
-              <Flex gap="small" wrap="wrap">
+              <Flex wrap="wrap">
                 {roots.map(({ name, code }) => (
                   <AdjustableRoot key={name} name={name} code={code} />
                 ))}
@@ -378,25 +405,6 @@ export default function Mapping() {
           );
         }}
       />
-      <Flex justify="center" gap="large">
-        <Select
-          value={char}
-          onChange={setChar}
-          options={printableAscii
-            .filter((x) => !alphabet.includes(x))
-            .map((v) => ({
-              label: v,
-              value: v,
-            }))}
-        />
-        <Button
-          type="primary"
-          disabled={char === undefined}
-          onClick={() => setAlphabet(alphabet + char)}
-        >
-          添加
-        </Button>
-      </Flex>
     </>
   );
 }
