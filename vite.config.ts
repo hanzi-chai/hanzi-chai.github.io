@@ -7,7 +7,6 @@ import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
 import { visualizer } from "rollup-plugin-visualizer";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
-import cdn from "vite-plugin-cdn-import";
 
 // vite.config.js
 
@@ -36,6 +35,11 @@ export default defineConfig(({ mode }) => {
       outDir: `dist/${mode.toLowerCase()}`,
       emptyOutDir: true,
       reportCompressedSize: false,
+      rollupOptions: {
+        treeshake: {
+          moduleSideEffects: "no-external",
+        },
+      },
     },
     esbuild: {
       supported: {
@@ -60,6 +64,7 @@ export default defineConfig(({ mode }) => {
       }),
       chunkSplitPlugin({
         customSplitting: {
+          lodash: [/node_modules\/lodash/],
           antd: [/node_modules\/antd/],
           router: [/node_modules\/react-router/],
           react: [/node_modules\/react(-dom)?\//],
@@ -67,6 +72,8 @@ export default defineConfig(({ mode }) => {
           mathjs: [/node_modules\/mathjs/],
           yaml: [/node_modules\/js-yaml/],
           reactflow: [/node_modules\/@reactflow/],
+          chart: [/node_modules\/@ant-design/],
+          antv: [/node_modules\/@antv/],
           tools: [/node_modules\/styled-components/, /node_modules\/js-md5/],
         },
       }),
@@ -97,37 +104,6 @@ export default defineConfig(({ mode }) => {
       );
       break;
     case "PAGES":
-      sharedConfig.plugins?.push(
-        cdn({
-          prodUrl:
-            "https://registry.npmmirror.com/{name}/{version}/files/{path}",
-          modules: [
-            "react",
-            "react-dom",
-            "dayjs",
-            {
-              name: "js-yaml",
-              var: "jsyaml",
-              path: "dist/js-yaml.min.js",
-            },
-            {
-              name: "decimal.js",
-              var: "Decimal",
-              path: "decimal.js",
-            },
-            {
-              name: "mathjs",
-              var: "math",
-              path: "lib/browser/math.js",
-            },
-            {
-              name: "antd",
-              var: "antd",
-              path: "dist/antd-with-locales.js",
-            },
-          ],
-        }),
-      );
       break;
   }
   return sharedConfig;
