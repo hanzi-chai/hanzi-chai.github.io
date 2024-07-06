@@ -185,7 +185,14 @@ function EditorLayout() {
 }
 
 export default function Contextualized() {
-  const id = location.pathname.split("/")[1] ?? "";
+  let id = "";
+  // cloudflare 平台是 history 模式的 router,但 PAGES 是 hash 模式的 router
+  // 要区别对待
+  if (import.meta.env.MODE === "CF") {
+    id = location.pathname.split("/")[1] ?? "";
+  } else {
+    id = location.hash.split("/")[1] ?? "";
+  }
   const setRepertoire = useSetAtom(primitiveRepertoireAtom);
 
   useEffect(() => {

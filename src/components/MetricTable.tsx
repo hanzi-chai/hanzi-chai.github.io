@@ -1,4 +1,3 @@
-import { SheetComponent } from "@antv/s2-react";
 import "@antv/s2-react/dist/style.min.css";
 import { useAtomValue } from "jotai";
 import { encodeResultAtom, meaningfulTypesAtom, typeLabels } from "~/atoms";
@@ -8,6 +7,8 @@ import { isInteger } from "mathjs";
 import { Flex } from "antd";
 import { Select } from "./Utils";
 import { useState } from "react";
+
+const { SheetComponent } = await import("~/components/export/s2react");
 
 const preprocess = (partialMetric: PartialMetric) => {
   console.log(partialMetric);

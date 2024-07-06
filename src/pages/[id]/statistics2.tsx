@@ -25,7 +25,8 @@ import { range, sum } from "lodash-es";
 import { blue } from "@ant-design/colors";
 import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
 import "~/components/charts.css";
-import { Column, Heatmap } from "@ant-design/charts";
+
+const { Column, Heatmap } = await import("~/components/export/charts");
 
 function interpolate(color1: string, color2: string, percent: number) {
   // Convert the hex colors to RGB values
