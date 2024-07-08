@@ -7,6 +7,7 @@ import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
 import { visualizer } from "rollup-plugin-visualizer";
 import { chunkSplitPlugin } from "vite-plugin-chunk-split";
+import mdx from "@mdx-js/rollup";
 
 // vite.config.js
 
@@ -54,6 +55,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       wasmContentTypePlugin,
+      { enforce: "pre", ...mdx() },
       react({
         // plugins: [["@swc-jotai/react-refresh", {}]],
       }),

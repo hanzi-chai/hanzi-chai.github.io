@@ -11,6 +11,8 @@ import CusSpin from "~/components/CustomSpin";
 import Error from "./components/Error";
 import AutoRoute from "~react-pages";
 
+import "./index.css";
+
 const idpath = AutoRoute.find((v) => v.path === ":id");
 idpath?.children?.forEach((v) => {
   v.errorElement = <Error />;
