@@ -1,6 +1,6 @@
 import type { Edge, Node } from "reactflow";
 import type { BinaryCondition, Condition, Source, UnaryCondition } from "~/lib";
-import { add, sum } from "mathjs";
+import { add, sum } from "../lib/mathjs";
 import { createContext } from "react";
 
 export const CacheContext = createContext<{

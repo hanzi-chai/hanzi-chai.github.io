@@ -1,6 +1,6 @@
 import { isEqual, minBy } from "lodash-es";
 import type { Point, SVGGlyph, SVGStroke } from "./data";
-import { subtract } from "mathjs";
+import { subtract } from "./mathjs";
 import type { Curve, LinearCurve, Position } from "./bezier";
 import {
   area,

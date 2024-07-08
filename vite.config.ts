@@ -69,7 +69,7 @@ export default defineConfig(({ mode }) => {
           router: [/node_modules\/react-router/],
           react: [/node_modules\/react(-dom)?\//],
           immer: [/node_modules\/immer/],
-          mathjs: [/node_modules\/mathjs/],
+          //mathjs: [/node_modules\/mathjs/],
           yaml: [/node_modules\/js-yaml/],
           reactflow: [/node_modules\/@reactflow/],
           //chart: [/node_modules\/@ant-design/],

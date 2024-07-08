@@ -1,4 +1,4 @@
-import { add } from "mathjs";
+import { add } from "./mathjs";
 import type {
   Compound,
   Draw,

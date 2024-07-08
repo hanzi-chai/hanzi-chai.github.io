@@ -3,7 +3,6 @@ import { useAtomValue } from "jotai";
 import { encodeResultAtom, meaningfulTypesAtom, typeLabels } from "~/atoms";
 import type { Objective } from "~/lib";
 import { fingeringLabels, type PartialMetric } from "~/lib";
-import { isInteger } from "mathjs";
 import { Flex } from "antd";
 import { Select } from "./Utils";
 import { useState } from "react";
@@ -108,7 +107,7 @@ export default function MetricTable() {
                   } else if (value < 1) {
                     return `${(value * 100).toFixed(2)}%`;
                   } else {
-                    return isInteger(value)
+                    return Number.isInteger(value)
                       ? value.toString()
                       : value.toFixed(3);
                   }

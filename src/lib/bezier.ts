@@ -1,13 +1,5 @@
 import type { Draw, Point, SVGStroke } from "./data";
-import {
-  add,
-  subtract,
-  mean,
-  multiply,
-  divide,
-  distance as _distance,
-  dot,
-} from "mathjs";
+import { add, subtract, mean, multiply, divide, distance, dot } from "./mathjs";
 
 /**
  * 一段 Bezier 曲线的主要朝向
@@ -131,7 +123,6 @@ const render = ({ feature, start, curveList }: SVGStroke) => {
 };
 
 const area = (p: Point, q: Point) => p[0] * q[1] - p[1] * q[0];
-const distance = (p: Point, q: Point) => _distance(p, q) as number;
 
 type Interval = [number, number];
 
