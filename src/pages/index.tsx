@@ -25,6 +25,7 @@ import { md5 } from "js-md5";
 import { useChaifenTitle, validateConfig } from "~/atoms";
 import { MenuProps } from "antd/lib";
 import styled from "styled-components";
+import Changelog from "~/components/changelog/ChangelogDrawer";
 
 type Status = "login" | "signup" | "signin";
 
@@ -310,6 +311,7 @@ export default function HomeLayout() {
         <Typography.Title level={3} style={{ marginTop: "-2rem" }}>
           v{APP_VERSION}
         </Typography.Title>
+        <Changelog />
         <Typography.Text>
           © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
         </Typography.Text>
