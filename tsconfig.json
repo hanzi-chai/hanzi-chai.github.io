@@ -24,7 +24,11 @@
     // "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["@modyfi/vite-plugin-yaml/modules", "./vite-env.d.ts"]
+    "types": [
+      "@modyfi/vite-plugin-yaml/modules",
+      "./vite-env.d.ts",
+      "@types/mdx"
+    ]
   },
   "include": ["src", "scripts", "spec"],
   "references": [{ "path": "./tsconfig.node.json" }]
