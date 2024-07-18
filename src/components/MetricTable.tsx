@@ -10,7 +10,6 @@ import { useState } from "react";
 const { SheetComponent } = await import("~/components/export/s2react");
 
 const preprocess = (partialMetric: PartialMetric) => {
-  console.log(partialMetric);
   const result = [];
   for (const { top, duplication, levels, fingering } of partialMetric.tiers!) {
     const tier = top === undefined ? "全部" : `前 ${top}`;

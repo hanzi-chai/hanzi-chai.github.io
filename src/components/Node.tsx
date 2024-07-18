@@ -36,6 +36,18 @@ const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
   return `${type}${newId}`;
 };
 
+const sortObject = function <T>(unordered: Record<string, T>) {
+  return Object.keys(unordered)
+    .sort()
+    .reduce(
+      (obj, key) => {
+        obj[key] = unordered[key]!;
+        return obj;
+      },
+      {} as Record<string, T>,
+    );
+};
+
 type Creator = (etype?: "positive" | "negative") => MenuItemType;
 
 const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
@@ -50,7 +62,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       onClick: () => {
         const newId = getNewId(sources, "s");
         const defaultSource: Source = { object: { type: "汉字" }, next: null };
-        const newSources = { ...sources, [newId]: defaultSource };
+        const newSources = sortObject({ ...sources, [newId]: defaultSource });
         const newConditions = { ...conditions };
         if (etype === undefined) {
           newSources[id] = { ...newSources[id]!, next: newId };
@@ -80,7 +92,10 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
           positive: null,
           negative: null,
         };
-        const newConditions = { ...conditions, [newId]: defaultCondition };
+        const newConditions = sortObject({
+          ...conditions,
+          [newId]: defaultCondition,
+        });
         if (etype === undefined) {
           newSources[id] = { ...newSources[id]!, next: newId };
         } else {

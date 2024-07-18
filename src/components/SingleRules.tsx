@@ -77,16 +77,6 @@ function EncoderGraph({
   );
   const [selected, setSelected] = useState<string | undefined>(undefined);
 
-  const onConnect = (connection: Connection) => {
-    setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
-    const [lnodes, ledges] = getLayoutedElements(nodes, edges);
-    setNodes([...lnodes]);
-    setEdges([...ledges]);
-    window.requestAnimationFrame(() => {
-      fitView();
-    });
-  };
-
   const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
     nodes[0] && setSelected(nodes[0].id);
   }, []);
@@ -140,7 +130,6 @@ function EncoderGraph({
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onSelectionChange={onSelectionChange}
-            onConnect={onConnect}
             onPaneClick={() => setSelected(undefined)}
             nodeDragThreshold={10000}
             fitView
