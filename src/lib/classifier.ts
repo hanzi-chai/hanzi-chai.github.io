@@ -21,6 +21,7 @@ export const classifier = {
   横撇: 5,
   横折: 5,
   横折钩: 5,
+  横捺: 5,
   横斜钩: 5,
   横折提: 5,
   横折折: 5,
@@ -41,6 +42,9 @@ export const classifier = {
   撇折: 5,
   弯钩: 5,
   斜钩: 5,
+  撇钩: 5,
+  挑捺: 5,
+  圈: 5,
 };
 
 /**
@@ -78,6 +82,7 @@ export const schema: Record<Feature, Draw["command"][]> = {
   横撇: ["h", "c"],
   横折: ["h", "v"],
   横折钩: ["h", "v"],
+  横捺: ["h", "c"],
   横斜钩: ["h", "c"],
   横折提: ["h", "v", "h"],
   横折折: ["h", "v", "h"],
@@ -98,4 +103,7 @@ export const schema: Record<Feature, Draw["command"][]> = {
   撇折: ["c", "h"],
   弯钩: ["v"],
   斜钩: ["c"],
+  撇钩: ["c"],
+  挑捺: ["c", "c"],
+  圈: ["c"],
 };

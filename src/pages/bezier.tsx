@@ -1,20 +1,52 @@
-import { BasicComponent, PrimitiveCharacter } from "~/lib";
+import type { BasicComponent, PrimitiveCharacter, SVGStroke } from "~/lib";
 import { Flex, Layout, Typography } from "antd";
 import { get } from "~/api";
 import { useChaifenTitle } from "~/atoms";
-import { Box, StrokesView, SVGStroke } from "~/components/GlyphView";
+import { Box, StrokesView } from "~/components/GlyphView";
 import { dump } from "js-yaml";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+
+const TestComponent: React.FC<{
+  character: PrimitiveCharacter;
+  setCharacter: (c: PrimitiveCharacter) => void;
+}> = ({ character, setCharacter }) => {
+  const name = String.fromCharCode(character.unicode);
+  const basicComponent = character.glyphs[0] as BasicComponent;
+  return (
+    <Flex key={character.unicode} gap="middle" justify="center" align="center">
+      <span style={{ fontSize: "2rem" }}>
+        {name} ({character.unicode.toString(16).toUpperCase()})
+      </span>
+      <Box>
+        <StrokesView
+          glyph={basicComponent.strokes}
+          setGlyph={(g: SVGStroke[]) => {
+            setCharacter({
+              ...character,
+              glyphs: [{ ...basicComponent, strokes: g }],
+            });
+          }}
+        />
+      </Box>
+      <div
+        style={{
+          width: "400px",
+          padding: "16px",
+          backgroundColor: "#DDD",
+          borderRadius: "8px",
+        }}
+      >
+        <pre style={{ textWrap: "wrap" }}>
+          {dump(basicComponent.strokes, { flowLevel: 3 })}
+        </pre>
+      </div>
+    </Flex>
+  );
+};
 
 export default function BezierLayout() {
   useChaifenTitle("Bezier 曲线测试");
   const [data, setData] = useState([] as PrimitiveCharacter[]);
-  const [glyph, setGlyph] = useState<SVGStroke[]>([
-    {
-      start: [10, 10],
-      curveList: [{ command: "h", parameterList: [30] }],
-    },
-  ]);
   useEffect(() => {
     Promise.all([0x4e00, 0x4e01, 0x4e03, 0x4e07, 0x4e08].map(get)).then(
       setData,
@@ -36,38 +68,15 @@ export default function BezierLayout() {
         标签来表示路径的数据。
       </Typography.Paragraph>
       <Flex vertical gap="middle">
-        {data.map((character) => {
-          const name = String.fromCharCode(character.unicode);
-          const basicComponent = character.glyphs[0] as BasicComponent;
+        {data.map((character, index) => {
           return (
-            <Flex
-              key={character.unicode}
-              gap="middle"
-              justify="center"
-              align="center"
-            >
-              <span style={{ fontSize: "2rem" }}>
-                {name} ({character.unicode.toString(16).toUpperCase()})
-              </span>
-              <Box>
-                <StrokesView
-                  glyph={basicComponent.strokes}
-                  setGlyph={setGlyph}
-                />
-              </Box>
-              <div
-                style={{
-                  width: "400px",
-                  padding: "16px",
-                  backgroundColor: "#DDD",
-                  borderRadius: "8px",
-                }}
-              >
-                <pre style={{ textWrap: "wrap" }}>
-                  {dump(basicComponent.strokes, { flowLevel: 3 })}
-                </pre>
-              </div>
-            </Flex>
+            <TestComponent
+              key={index}
+              character={character}
+              setCharacter={(c: PrimitiveCharacter) =>
+                setData(data.map((char, i) => (i === index ? c : char)))
+              }
+            />
           );
         })}
       </Flex>

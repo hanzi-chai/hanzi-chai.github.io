@@ -23,6 +23,7 @@ import {
   isValidCJKChar,
   getDummyCompound,
   getDummyDerivedComponent,
+  getDummyBasicComponent,
 } from "~/lib";
 import {
   useAtomValue,
@@ -170,6 +171,9 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
   const [newName, setNewName] = useState("");
   const remote = useContext(RemoteContext);
   const mutate = useSetAtom(mutateRepertoireAtom);
+  const repertoire = useAtomValue(primitiveRepertoireAtom);
+  const update = useAddAtom(primitiveRepertoireAtom);
+  const name = String.fromCodePoint(unicode);
   return (
     <Popconfirm
       title="新字形名称"
@@ -181,12 +185,27 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
       }
       onConfirm={async () => {
         const valid = verifyNewName(newName);
-        if (!valid || newName.length > 1) return;
-        const newUnicode = newName.codePointAt(0)!;
-        const payload = { old: unicode, new: newUnicode };
-        const res = await remoteMutate(payload);
-        if (!errorFeedback(res)) {
-          mutate([unicode, newUnicode]);
+        if (!valid) return;
+        if (Array.from(newName).length === 1) {
+          // 改变 Unicode，需要联动更新
+          const newUnicode = newName.codePointAt(0)!;
+          const payload = { old: unicode, new: newUnicode };
+          const res = await remoteMutate(payload);
+          if (!errorFeedback(res)) {
+            mutate([unicode, newUnicode]);
+          }
+        } else {
+          // 改变别名，不需要联动更新
+          const character = repertoire[name];
+          if (!character) return;
+          const newCharacter: PrimitiveCharacter = {
+            ...character,
+            name: newName,
+          };
+          const res = await remoteUpdate(newCharacter);
+          if (!errorFeedback(res)) {
+            update(name, newCharacter);
+          }
         }
       }}
     >
@@ -269,7 +288,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       ),
     },
     {
-      key: -2,
+      key: -3,
       label: (
         <CompoundForm
           title="添加自定义复合体"
@@ -280,6 +299,20 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       ),
     },
   ];
+  if (remote) {
+    items.unshift({
+      key: -2,
+      label: (
+        <ComponentForm
+          title="添加自定义基本部件"
+          initialValues={getDummyBasicComponent()}
+          current={name}
+          onFinish={onFinish}
+          noButton
+        />
+      ),
+    });
+  }
   if (isCustomization) {
     items.unshift(
       ...character.glyphs.map((x, index) => ({
