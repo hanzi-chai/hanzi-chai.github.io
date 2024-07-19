@@ -1,4 +1,4 @@
-import { Flex, Form } from "antd";
+import { Button, Flex, Form } from "antd";
 import type { Compound } from "~/lib";
 import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
@@ -147,6 +147,15 @@ export default function CompoundForm({
               />
             </ProFormGroup>
           </ProFormList>
+          <ProFormGroup>
+            <Button
+              onClick={() => {
+                form.setFieldValue("order", undefined);
+              }}
+            >
+              清空笔顺
+            </Button>
+          </ProFormGroup>
         </EditorColumn>
       </EditorRow>
     </ModalForm>

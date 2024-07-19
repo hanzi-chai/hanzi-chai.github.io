@@ -42,11 +42,18 @@ describe("e2e test", () => {
   });
 
   it("checks stroke orders are correct", () => {
-    const tygf = readFileSync("public/cache/tygf.txt", "utf-8")
-      .trim()
-      .split("\n")
-      .map((x) => x.trim().split("\t"));
-    const reference = new Map(tygf.map((x) => [x[1]!, x[3]!]));
+    const tygf = new Map(
+      readFileSync("public/cache/tygf.txt", "utf-8")
+        .trim()
+        .split("\n")
+        .map((x) => x.trim().split("\t") as [string, string]),
+    );
+    const cjk = new Map(
+      readFileSync("public/cache/cjk_strokes.txt", "utf-8")
+        .trim()
+        .split("\n")
+        .map((x) => x.trim().split("\t") as [string, string]),
+    );
     const result = new Map<string, string[]>();
     const summarize = (glyph: SVGGlyph) =>
       glyph.map((x) => classifier[x.feature]).join("");
@@ -67,7 +74,7 @@ describe("e2e test", () => {
     }
     let differences = 0;
     for (const [char, orders] of result) {
-      const referenceOrder = reference.get(char);
+      const referenceOrder = tygf.get(char) ?? cjk.get(char);
       if (referenceOrder === undefined) continue;
       for (const order of orders) {
         if (order !== referenceOrder) {

@@ -1,9 +1,9 @@
-import type { FormListFieldData } from "antd";
-import { Flex, Form } from "antd";
+import type { FormListFieldData, MenuProps } from "antd";
+import { Button, Dropdown, Flex, Form } from "antd";
 import { EditorColumn, EditorRow } from "./Utils";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef } from "react";
-import type { Character, Component } from "~/lib";
+import type { Character, Component, SVGStroke } from "~/lib";
 import type { Feature } from "~/lib";
 import { getDummySVGStroke, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
@@ -14,7 +14,7 @@ import type {
   ProFormListProps,
 } from "@ant-design/pro-components";
 import {
-  ModalForm,
+  ModalForm as _ModalForm,
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
@@ -27,14 +27,34 @@ import Element from "./Element";
 import { recursiveRenderComponent } from "~/lib";
 import { Box, StrokesView } from "./GlyphView";
 import type { BaseOptionType } from "antd/es/select";
+import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
-  <ProFormDigit width={64} name={name} fieldProps={{ min: -100 }} />
+  <ProFormDigit width={56} name={name} fieldProps={{ min: -100 }} />
 );
 
 const InlineFlex = styled.div`
   display: inline-flex;
   margin-right: 8px;
+`;
+
+const ModalForm = styled(_ModalForm)`
+  & .ant-pro-form-list-action {
+    margin: 0;
+  }
+
+  & .ant-pro-form-list-item {
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  & .ant-form-item {
+    margin-bottom: 8px;
+  }
+
+  & .ant-pro-form-list > .ant-form-item {
+    margin-bottom: 0;
+  }
 `;
 
 export const InlineRender = ({
@@ -69,10 +89,11 @@ const strokeOptions = Object.keys(schema).map((x) => ({
   label: x,
 }));
 const classifiedStrokeOptions: BaseOptionType[] = [
-  { key: 0, label: "基本", children: strokeOptions.slice(0, 10) },
-  { key: 1, label: "折类 I", children: strokeOptions.slice(10, 23) },
-  { key: 2, label: "折类 II", children: strokeOptions.slice(23, 30) },
-  { key: 4, label: "折类 III", children: strokeOptions.slice(30) },
+  { key: 0, label: "横竖", children: strokeOptions.slice(0, 4) },
+  { key: 1, label: "撇点", children: strokeOptions.slice(4, 11) },
+  { key: 2, label: "折类 I", children: strokeOptions.slice(11, 24) },
+  { key: 3, label: "折类 II", children: strokeOptions.slice(24, 31) },
+  { key: 4, label: "折类 III", children: strokeOptions.slice(31) },
 ];
 const referenceOption: BaseOptionType = {
   label: "引用笔画",
@@ -90,10 +111,9 @@ const StrokeForm = ({
 }) => {
   return (
     <>
-      <Flex gap="middle">
+      <ProFormGroup size="small">
         <ProFormSelect<Feature | "reference">
           name="feature"
-          style={{ width: "96px" }}
           options={[referenceOption].concat(classifiedStrokeOptions)}
           disabled
           allowClear={false}
@@ -126,13 +146,21 @@ const StrokeForm = ({
             )
           }
         </ProFormDependency>
-      </Flex>
+      </ProFormGroup>
       <ProFormDependency name={["feature"]}>
         {({ feature }) =>
           feature !== "reference" ? (
             <StaticList name="curveList">
-              <ProFormGroup key="group">
-                <ProFormSelect name="command" disabled />
+              <ProFormGroup
+                key="group"
+                size="small"
+                style={{ paddingLeft: 36 }}
+              >
+                <ProFormSelect
+                  name="command"
+                  disabled
+                  style={{ minWidth: 64 }}
+                />
                 <ProFormDependency name={["command"]}>
                   {({ command }) =>
                     command === "c" || command === "z" ? (
@@ -211,8 +239,8 @@ export default function ComponentForm({
       formRef={formRef}
     >
       <EditorRow>
-        <EditorColumn span={8}>
-          <Box>
+        <EditorColumn span={10}>
+          <Box style={{ width: 400, height: 400 }}>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
                 const component = props as Component;
@@ -223,13 +251,21 @@ export default function ComponentForm({
                 return (
                   <StrokesView
                     glyph={rendered instanceof Error ? [] : rendered}
+                    setGlyph={(g: SVGStroke[]) => {
+                      const projection = component.strokes.map((x, index) =>
+                        x.feature === "reference" ? x : g[index]!,
+                      );
+                      formRef.current?.setFieldsValue({
+                        strokes: projection,
+                      });
+                    }}
                   />
                 );
               }}
             </ProFormDependency>
           </Box>
         </EditorColumn>
-        <EditorColumn span={16}>
+        <EditorColumn span={14}>
           <CommonForm />
           <ProFormDependency name={["type"]}>
             {({ type }) =>
@@ -253,25 +289,80 @@ export default function ComponentForm({
                       .length ?? 0
                   : 0;
               return (
-                <ProFormList
-                  name="strokes"
-                  creatorButtonProps={{ creatorButtonText: "添加笔画" }}
-                  creatorRecord={
-                    typeof source === "string"
-                      ? getDummyReferenceStroke()
-                      : getDummySVGStroke("横")
-                  }
-                >
-                  {(meta) => {
-                    return (
+                <>
+                  <ProFormList
+                    name="strokes"
+                    creatorButtonProps={false}
+                    actionRender={(field, action, defaultActionDom, count) => {
+                      return [
+                        ...defaultActionDom,
+                        <ArrowUpOutlined
+                          key="up_arrow"
+                          style={{ marginLeft: "5px" }}
+                          onClick={() => {
+                            if (field.name === 0) {
+                              action.move(field.name, count - 1);
+                            } else {
+                              action.move(field.name, field.name - 1);
+                            }
+                          }}
+                        />,
+                        <ArrowDownOutlined
+                          key="down_arrow"
+                          style={{ marginLeft: "5px" }}
+                          onClick={() => {
+                            if (field.name === count - 1) {
+                              action.move(field.name, 0);
+                            } else {
+                              action.move(field.name, field.name + 1);
+                            }
+                          }}
+                        />,
+                      ];
+                    }}
+                  >
+                    {(meta) => (
                       <StrokeForm
                         maxIndex={maxIndex}
                         formRef={formRef}
                         meta={meta}
                       />
-                    );
-                  }}
-                </ProFormList>
+                    )}
+                  </ProFormList>
+                  <Flex justify="center" gap="middle">
+                    <Dropdown
+                      menu={{
+                        items: classifiedStrokeOptions as MenuProps["items"],
+                        onClick: (item) => {
+                          const newStroke = getDummySVGStroke(
+                            item.key as Feature,
+                          );
+                          formRef.current?.setFieldValue(
+                            "strokes",
+                            formRef.current
+                              ?.getFieldValue("strokes")
+                              ?.concat(newStroke),
+                          );
+                        },
+                      }}
+                    >
+                      <Button>添加笔画</Button>
+                    </Dropdown>
+                    <Button
+                      disabled={typeof source !== "string"}
+                      onClick={() =>
+                        formRef.current?.setFieldValue(
+                          "strokes",
+                          formRef.current
+                            ?.getFieldValue("strokes")
+                            ?.concat(getDummyReferenceStroke()),
+                        )
+                      }
+                    >
+                      添加笔画引用
+                    </Button>
+                  </Flex>
+                </>
               );
             }}
           </ProFormDependency>
