@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vite --mode CF",
-    "fetch": "node scripts/fetchAssets.mjs",
+    "fetch": "tsx scripts/fetch.ts",
     "publish": "bump --tag --commit --push",
     "build:BEX": "vite build --mode BEX",
     "build:PAGES": "vite build --mode PAGES",
@@ -92,6 +92,7 @@
     "prettier": "^3.3.2",
     "rollup-plugin-visualizer": "^5.12.0",
     "tailwindcss": "^3.4.4",
+    "tsx": "^4.16.2",
     "typescript": "^5.5.2",
     "vite": "^5.3.2",
     "vite-plugin-chunk-split": "^0.5.0",

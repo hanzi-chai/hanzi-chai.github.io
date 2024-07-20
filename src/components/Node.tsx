@@ -9,6 +9,7 @@ import type { Condition, Source } from "~/lib";
 import { renderName } from "~/lib";
 import { blue } from "@ant-design/colors";
 import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
+import { sortBy } from "lodash-es";
 
 const SourceButton = styled(Button)`
   width: 64px;
@@ -37,15 +38,16 @@ const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
 };
 
 const sortObject = function <T>(unordered: Record<string, T>) {
-  return Object.keys(unordered)
-    .sort()
-    .reduce(
-      (obj, key) => {
-        obj[key] = unordered[key]!;
-        return obj;
-      },
-      {} as Record<string, T>,
-    );
+  const keys = sortBy(Object.keys(unordered), (key) =>
+    parseInt(key.slice(1), 10),
+  );
+  return keys.reduce(
+    (obj, key) => {
+      obj[key] = unordered[key]!;
+      return obj;
+    },
+    {} as Record<string, T>,
+  );
 };
 
 type Creator = (etype?: "positive" | "negative") => MenuItemType;

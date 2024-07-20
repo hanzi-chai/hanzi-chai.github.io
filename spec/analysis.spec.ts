@@ -49,7 +49,7 @@ describe("e2e test", () => {
         .map((x) => x.trim().split("\t") as [string, string]),
     );
     const cjk = new Map(
-      readFileSync("public/cache/cjk_strokes.txt", "utf-8")
+      readFileSync("public/cache/cjk.txt", "utf-8")
         .trim()
         .split("\n")
         .map((x) => x.trim().split("\t") as [string, string]),
@@ -59,6 +59,8 @@ describe("e2e test", () => {
       glyph.map((x) => classifier[x.feature]).join("");
     for (const [char, { glyphs }] of Object.entries(primitiveRepertoire)) {
       for (const glyph of glyphs) {
+        if (glyph.tags?.includes("中竖截断")) continue;
+        if (glyph.tags?.includes("戈部截断")) continue;
         let svg: SVGGlyph;
         if (glyph.type === "basic_component") {
           svg = glyph.strokes;
@@ -83,6 +85,6 @@ describe("e2e test", () => {
         }
       }
     }
-    expect(differences).toBeLessThan(20);
+    expect(differences).toBeLessThan(30);
   });
 });

@@ -23,6 +23,7 @@ for (const filename of [
   "key_distribution",
   "pair_equivalence",
   "tygf",
+  "cjk",
 ]) {
   const url = `${assetsEndpoint}${filename}.txt`;
   const path = `${outputFolder}${filename}.txt`;
