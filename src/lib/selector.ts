@@ -111,12 +111,12 @@ export const order: Sieve<number> = {
 export const order2: Sieve<number> = {
   title: "连续笔顺",
   key: (scheme, { component }) => {
-    const indices = scheme.map((x) =>
-      binaryToIndices(component.glyph.length)(x),
-    );
+    const indices = scheme.map(binaryToIndices(component.glyph.length));
+    // 如果一个字根不是由连续的笔画构成，那么称它是不连续的
     const unSorted = indices.filter(
       (x) => x.length - 1 !== x.at(-1)! - x[0]!,
     ).length;
+    // 让不连续的字根数量少者优先
     return unSorted;
   },
 };
@@ -346,5 +346,5 @@ export const select = (
   const best = schemeData.find((v) => !v.excluded);
   if (best === undefined) return new NoSchemeError();
   // Correct result
-  return [best.scheme, schemeData] as const;
+  return [best, schemeData] as const;
 };

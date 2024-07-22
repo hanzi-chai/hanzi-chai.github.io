@@ -118,7 +118,9 @@ export const getComponentScheme = function (
     return {
       strokes: component.glyph.length,
       sequence: [component.name],
+      full: [component.name],
       corners: [0, 0, 0, 0],
+      operator: undefined,
     };
   const rootMap = new Map<number, string>(
     component.glyph.map((stroke, index) => {
@@ -143,28 +145,22 @@ export const getComponentScheme = function (
   if (selectResult instanceof Error) {
     return selectResult;
   }
-  const [bestScheme, schemeData] = selectResult;
-  const sequence = bestScheme.map((n) => rootMap.get(n)!);
-  const detail = bestScheme.map((n) => ({ name: rootMap.get(n)!, binary: n }));
-  const schemes = schemeData.map((v) => {
-    return {
-      scheme: v.scheme,
-      sequence: v.scheme.map((x) => rootMap.get(x)!),
-      data: v.evaluation,
-    };
-  });
+  const [best, schemes] = selectResult;
+  const sequence = best.scheme.map((n) => rootMap.get(n)!);
   const corners = component.corners.map((corner) =>
-    bestScheme.findIndex(
+    best.scheme.findIndex(
       (x) => x & (1 << (component.glyph.length - corner - 1)),
     ),
   ) as CornerSpecifier;
   return {
     sequence,
-    detail,
+    full: sequence,
     strokes: component.glyph.length,
     map: rootMap,
+    best,
     schemes,
     corners,
+    operator: undefined,
   };
 };
 
@@ -176,26 +172,30 @@ export type ComponentAnalysis =
   | ComponentGenuineAnalysis;
 
 export interface SchemeWithData {
-  sequence: string[];
   scheme: number[];
-  data: Map<SieveName, number | number[]>;
+  evaluation: Map<SieveName, number | number[]>;
+}
+
+export interface CommonAnalysis {
+  sequence: string[];
+  full: string[];
+  corners: CornerSpecifier;
 }
 
 /**
  * 部件本身是字根字，或者是由自定义部件拆分指定的无理拆分，无拆分细节
  */
-export interface ComponentBasicAnalysis {
+export interface ComponentBasicAnalysis extends CommonAnalysis {
   strokes: number;
-  sequence: string[];
-  corners: CornerSpecifier;
+  operator: undefined;
 }
 
 /**
  * 部件通过自动拆分算法分析得到的拆分结果的全部细节
  */
-interface ComponentGenuineAnalysis extends ComponentBasicAnalysis {
-  detail: { name: string; binary: number }[];
+export interface ComponentGenuineAnalysis extends ComponentBasicAnalysis {
   map: Map<number, string>;
+  best: SchemeWithData;
   schemes: SchemeWithData[];
 }
 

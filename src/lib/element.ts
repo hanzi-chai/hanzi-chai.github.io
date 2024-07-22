@@ -110,6 +110,11 @@ interface Custom extends Base {
   rootIndex: number;
 }
 
+interface Special extends Base {
+  type: "特殊";
+  subtype: string;
+}
+
 export type CodableObject =
   | This
   | Constant
@@ -118,7 +123,8 @@ export type CodableObject =
   | Root
   | Stroke
   | StrokePair
-  | Custom;
+  | Custom
+  | Special;
 
 export const renderName = (object: CodableObject) => {
   switch (object.type) {
@@ -139,6 +145,8 @@ export const renderName = (object: CodableObject) => {
       }, ${object.strokeIndex * 2})`;
     case "自定义":
       return `${object.subtype} ${object.rootIndex}`;
+    case "特殊":
+      return object.subtype;
   }
 };
 
@@ -159,6 +167,8 @@ export const renderList = function (
       return [...list, object.rootIndex, object.strokeIndex];
     case "自定义":
       return [...list, object.subtype, object.rootIndex];
+    case "特殊":
+      return [...list, object.subtype];
   }
   return list;
 };
@@ -190,6 +200,8 @@ export const parseList = function (value: (string | number)[]): CodableObject {
         subtype: value[1] as string,
         rootIndex: value[2] as number,
       };
+    case "特殊":
+      return { type, subtype: value[1] as string };
   }
   return { type };
 };
@@ -199,6 +211,46 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
 }
 
 export const algebraCache = new Map<string, string>();
+
+type Handler = (result: CharacterResult, extra: Extra) => string | undefined;
+
+// 张码补码
+const zhangmaSupplement: Handler = (result, { rootSequence }) => {
+  // 在补码时，竖钩视为竖，横折弯钩视为折
+  const coalesce = (n: number) => {
+    if (n === 6) return 2;
+    if (n === 7) return 5;
+    return n;
+  };
+  const { sequence } = result;
+  const first = rootSequence.get(sequence[0]!)!;
+  const last = rootSequence.get(sequence[sequence.length - 1]!)!;
+  const firstfirst = coalesce(first[0]!);
+  const lastlast = coalesce(last.at(-1)!);
+  // 单笔画补码用 61 表示
+  if (sequence.length === 1 && first.length === 1) {
+    return "61";
+  }
+  // 并型和左下围，首 + 末
+  // 其他情况，末 + 首
+  return result.operator && /[⿰⿲⿺]/.test(result.operator)
+    ? `${firstfirst}${lastlast}`
+    : `${lastlast}${firstfirst}`;
+};
+
+// 张码判断是否为准码元
+const zhangmaPseudoRoot: Handler = (result) => {
+  if (!("best" in result)) return "0";
+  const { best } = result;
+  return best.scheme.length === 2 && best.evaluation.get("能连不交")
+    ? "1"
+    : "0";
+};
+
+const specialElementHandlers: Record<string, Handler> = {
+  张码补码: zhangmaSupplement,
+  张码准码元: zhangmaPseudoRoot,
+};
 
 export const findElement = (
   object: CodableObject,
@@ -257,5 +309,7 @@ export const findElement = (
       return [stroke1, stroke2 ?? 0].join("");
     case "自定义":
       return signedIndex(result.custom[object.subtype] ?? [], object.rootIndex);
+    case "特殊":
+      return specialElementHandlers[object.subtype]?.(result, extra);
   }
 };

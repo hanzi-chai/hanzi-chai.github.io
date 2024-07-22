@@ -23,7 +23,7 @@ import {
   syncAssets,
   syncInfo,
 } from "~/atoms";
-import { listToObject } from "~/lib";
+import { examples, listToObject } from "~/lib";
 
 const items: MenuProps["items"] = [
   {
@@ -200,7 +200,7 @@ export default function Contextualized() {
     );
   }, [setRepertoire]);
 
-  if (!(id in localStorage)) {
+  if (!(id in localStorage || id in examples)) {
     return <Empty description="无方案数据" />;
   }
 

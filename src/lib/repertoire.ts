@@ -1,5 +1,11 @@
+import { isEqual } from "lodash-es";
 import { mergeClassifier } from "./classifier";
-import type { ComponentResults, ComponentAnalysis } from "./component";
+import type {
+  ComponentResults,
+  ComponentAnalysis,
+  ComponentBasicAnalysis,
+  ComponentGenuineAnalysis,
+} from "./component";
 import { disassembleComponents, recursiveRenderComponent } from "./component";
 import type { CompoundResults } from "./compound";
 import { disassembleCompounds, recursiveRenderCompound } from "./compound";
@@ -143,18 +149,35 @@ export const analysis = function (
     config,
     characters,
   );
-  const customizations: ComponentResults = new Map(
-    Object.entries(config.analysis?.customize ?? {}).map(
-      ([component, sequence]) => {
-        const pseudoResult: ComponentAnalysis = {
-          strokes: 0,
+  const customizations: ComponentResults = new Map();
+  const customConfig = config.analysis?.customize ?? {};
+  for (const [component, sequence] of Object.entries(customConfig)) {
+    const previousResult = componentResults.get(component);
+    if (previousResult !== undefined && "best" in previousResult) {
+      const maybeBetter = previousResult.schemes.find((x) => {
+        const list = x.scheme.map((y) => previousResult.map.get(y)!);
+        return isEqual(list, sequence);
+      });
+      if (maybeBetter !== undefined) {
+        const genuineResult: ComponentGenuineAnalysis = {
+          ...previousResult,
+          best: maybeBetter,
           sequence: sequence,
-          corners: [0, 0, 0, sequence.length - 1],
+          full: sequence,
         };
-        return [component, pseudoResult] as const;
-      },
-    ),
-  );
+        customizations.set(component, genuineResult);
+        continue;
+      }
+    }
+    const pseudoResult: ComponentBasicAnalysis = {
+      strokes: 0,
+      sequence: sequence,
+      full: sequence,
+      operator: undefined,
+      corners: [0, 0, 0, sequence.length - 1],
+    };
+    customizations.set(component, pseudoResult);
+  }
   const customized = new Map([...componentResults, ...customizations]);
   const [compoundResults, compoundError] = disassembleCompounds(
     repertoire,

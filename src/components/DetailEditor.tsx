@@ -118,6 +118,14 @@ export default function DetailEditor({
         }),
       })),
     },
+    {
+      value: "特殊",
+      label: "特殊",
+      children: [
+        { value: "张码补码", label: "张码补码" },
+        { value: "张码准码元", label: "张码准码元" },
+      ],
+    },
   ];
   return (
     <Panel position="top-right">

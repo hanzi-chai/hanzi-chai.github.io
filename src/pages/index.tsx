@@ -204,7 +204,7 @@ export default function HomeLayout() {
     return localStorage.getItem("user") ? "login" : "signin";
   });
 
-  const { snow, mswb, jdh, easy, zhengma, yustar } = examples;
+  const { snow, mswb, jdh, easy, zhengma, yustar, zhangma } = examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
     label: x.info.name,
@@ -233,7 +233,12 @@ export default function HomeLayout() {
       key: "4",
       type: "group",
       label: "形码",
-      children: [prepare(easy), prepare(yustar), prepare(zhengma)],
+      children: [
+        prepare(easy),
+        prepare(yustar),
+        prepare(zhengma),
+        prepare(zhangma),
+      ],
     },
   ];
 

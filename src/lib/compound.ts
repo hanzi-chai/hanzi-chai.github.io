@@ -1,6 +1,10 @@
 import type { AnalysisConfig } from "./repertoire";
 import { affineMerge } from "./affine";
-import type { ComponentResults, ComponentAnalysis } from "./component";
+import type {
+  ComponentResults,
+  ComponentAnalysis,
+  CommonAnalysis,
+} from "./component";
 import { InvalidGlyphError } from "./component";
 import type {
   Compound,
@@ -20,16 +24,14 @@ export type CompoundAnalysis = CompoundBasicAnalysis | CompoundGenuineAnalysis;
 /**
  * 复合体本身是字根字，没有拆分细节
  */
-interface CompoundBasicAnalysis {
-  sequence: string[];
-  corners: CornerSpecifier;
+interface CompoundBasicAnalysis extends CommonAnalysis {
+  operator: Operator;
 }
 
 /**
  * 复合体通过自动拆分算法导出的拆分结果
  */
 interface CompoundGenuineAnalysis extends CompoundBasicAnalysis {
-  operator: Operator;
   operandResults: PartitionResult[];
 }
 
@@ -104,15 +106,18 @@ type Serializer = (
   r: PartitionResult[],
   g: Compound,
   name?: string,
-) => {
-  sequence: string[];
-  corners: CornerSpecifier;
-};
+) => CompoundAnalysis;
 
 const sequentialSerializer: Serializer = (operandResults, glyph) => {
+  const rest = {
+    corners: [0, 0, 0, 0] as CornerSpecifier,
+    full: [],
+    operator: glyph.operator,
+    operandResults,
+  };
   if (glyph.order === undefined) {
     const sequence = operandResults.map((x) => x.sequence).flat();
-    return { sequence, corners: [0, 0, 0, 0] };
+    return { sequence, ...rest };
   }
   const sequence: string[] = [];
   const subsequences = operandResults.map((x) => ({
@@ -130,11 +135,11 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
     } else {
       const partitionResult = operandResults[index]!;
       if ("schemes" in partitionResult) {
-        const { detail, strokes: totalStrokes } = partitionResult;
+        const { best, strokes: totalStrokes } = partitionResult;
         const upperBound = 1 << (totalStrokes - data.taken);
         const lowerBound = 1 << (totalStrokes - data.taken - strokes);
-        const toTake = detail.filter(
-          ({ binary }) => binary >= lowerBound && binary < upperBound,
+        const toTake = best.scheme.filter(
+          (binary) => binary >= lowerBound && binary < upperBound,
         ).length;
         sequence.push(...data.rest.slice(0, toTake));
         data.rest = data.rest.slice(toTake);
@@ -145,7 +150,7 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
     }
   }
   // 不考虑四角
-  return { sequence, corners: [0, 0, 0, 0] };
+  return { sequence, ...rest };
 };
 
 const recursiveExpand: (x: PartitionResult[]) => PartitionResult[] = (x) => {
@@ -217,6 +222,7 @@ const robustPartition = (p: {
     }
     return {
       sequence,
+      full: [],
       corners,
       operator,
       operandResults: x,
@@ -225,7 +231,7 @@ const robustPartition = (p: {
   if (die.test(operator)) {
     const firstPartition: PartitionResult[] = [];
     const expanded = recursiveExpand(operandResults);
-    dieyan = expanded.map((x) => "operator" in x && notDie.test(x.operator));
+    dieyan = expanded.map((x) => notDie.test(x.operator ?? ""));
     for (const [i, x] of dieyan.entries()) {
       if (x) {
         const dieyanBefore = expanded.slice(start, i);
@@ -271,7 +277,13 @@ const _c3Serializer: Serializer = (operandResults, glyph) => {
       }
     }
   }
-  return { sequence: sequence.slice(0, 3), corners: [0, 0, 0, 0] };
+  return {
+    sequence: sequence.slice(0, 3),
+    corners: [0, 0, 0, 0],
+    full: [],
+    operator: glyph.operator,
+    operandResults,
+  };
 };
 
 const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
@@ -327,7 +339,13 @@ const combine = (primaryPartition: PartitionResult[], operator: Operator) => {
       }
     }
   }
-  return { sequence, corners };
+  return {
+    sequence,
+    corners,
+    full: [],
+    operator,
+    operandResults: primaryPartition,
+  };
 };
 
 const c3Serializer: Serializer = (operandResults, glyph) => {
@@ -340,9 +358,137 @@ const c3Serializer: Serializer = (operandResults, glyph) => {
   }
 };
 
+const regularize = (x: PartitionResult[], direction: Operator) => {
+  const result: PartitionResult[] = [];
+  const regex = direction === "⿰" ? /[⿰⿲]/ : /[⿱⿳]/;
+  for (const part of x) {
+    if (
+      result.length < 2 &&
+      "operandResults" in part &&
+      regex.test(part.operator)
+    ) {
+      result.push(...part.operandResults);
+    } else {
+      result.push(part);
+    }
+  }
+  return result;
+};
+
+// eslint-disable-next-line complexity
+const zhangmaSerializer: Serializer = (operandResults, glyph, name) => {
+  const corners: CornerSpecifier = [0, 0, 0, 0];
+  const sequence: string[] = [];
+  const full: string[] = [];
+  if (
+    glyph.operator === "⿶" ||
+    (glyph.operator === "⿺" && glyph.operandList[0] === "\ue09d")
+  ) {
+    for (const part of operandResults.reverse()) full.push(...part.full);
+  } else {
+    for (const part of operandResults) full.push(...part.full);
+  }
+  const getShouMo = (x: string[]) => (x.length === 1 ? x : [x[0]!, x.at(-1)!]);
+  const regularizedResults =
+    operandResults.length === 2 && /[⿰⿱]/.test(glyph.operator)
+      ? regularize(operandResults, glyph.operator)
+      : operandResults;
+  if (/[⿱⿳]/.test(glyph.operator)) {
+    const dieyanIndex = regularizedResults.findIndex(
+      (x) => "operandResults" in x && /[⿰⿲]/.test(x.operator),
+    );
+    const dieyan = regularizedResults.at(
+      dieyanIndex,
+    )! as CompoundGenuineAnalysis;
+    const aboveDieyanSequence: string[] = [];
+    switch (dieyanIndex) {
+      case -1: // 没有叠眼
+        for (const part of regularizedResults) sequence.push(...part.full);
+        break;
+      case 0: // 叠眼在开头
+        for (const part of dieyan.operandResults)
+          sequence.push(...part.full[0]!);
+        if (regularizedResults.length > 2) {
+          sequence.push(regularizedResults[1]!.full[0]!);
+          sequence.push(regularizedResults.at(-1)!.full.at(-1)!);
+        } else {
+          sequence.push(...getShouMo(regularizedResults[1]!.full));
+        }
+        break;
+      default: // 叠眼在中间或末尾
+        for (let index = 0; index < dieyanIndex; ++index) {
+          aboveDieyanSequence.push(...regularizedResults[index]!.full);
+        }
+        sequence.push(...aboveDieyanSequence.slice(0, 2));
+        if (dieyanIndex + 1 < regularizedResults.length) {
+          // 叠眼在中间
+          sequence.push(dieyan.operandResults[0]!.full[0]!);
+          if (sequence.length === 2) {
+            sequence.push(dieyan.operandResults.at(-1)!.full[0]!);
+          }
+          sequence.push(regularizedResults.at(-1)!.full.at(-1)!);
+        } else {
+          sequence.push(...dieyan.full);
+        }
+    }
+  } else if (/[⿰⿲]/.test(glyph.operator)) {
+    const left = regularizedResults[0]!;
+    if ("operandResults" in left && /[⿱⿳]/.test(left.operator)) {
+      // 左部是叠型
+      const dieyanIndex = left.operandResults.findIndex(
+        (x) => "operandResults" in x && /[⿰⿲]/.test(x.operator),
+      );
+      const dieyan = left.operandResults.at(
+        dieyanIndex,
+      )! as CompoundGenuineAnalysis;
+      if (dieyanIndex !== -1) {
+        sequence.push(left.operandResults[0]!.full[0]!);
+        if (dieyanIndex === 0)
+          sequence.push(dieyan.operandResults.at(-1)!.full[0]!);
+        else sequence.push(dieyan.operandResults[0]!.full[0]!);
+        sequence.push(left.operandResults.at(-1)!.full.at(-1)!);
+      }
+    }
+    if (sequence.length > 0) {
+      // 已经处理完左部，直接取右部末码即可
+      sequence.push(regularizedResults.at(-1)!.full.at(-1)!);
+    } else {
+      // 一般情况，左部、中部最多各取首尾两根
+      sequence.push(...getShouMo(left.full));
+      if (regularizedResults.length > 2) {
+        sequence.push(...getShouMo(regularizedResults[1]!.full));
+      }
+      // 如果左部和中部已经有 4 根，舍弃一根
+      if (sequence.length === 4) sequence.pop();
+      for (
+        let index = Math.min(2, regularizedResults.length - 1);
+        index < regularizedResults.length;
+        ++index
+      ) {
+        sequence.push(...regularizedResults[index]!.full);
+      }
+    }
+  } else {
+    // 围型：先分解围框，再分解围芯
+    sequence.push(...full);
+  }
+  if (name === "摊") {
+    console.log(sequence, full, regularizedResults);
+  }
+  // 不考虑四角
+  return {
+    sequence,
+    corners,
+    full,
+    operator: glyph.operator,
+    operandResults: regularizedResults,
+  };
+};
+
 const serializerMap: Record<string, Serializer> = {
   sequential: sequentialSerializer,
   c3: c3Serializer,
+  zhangma: zhangmaSerializer,
 };
 
 /**
@@ -370,20 +516,20 @@ export const disassembleCompounds = (
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根
-      compoundResults.set(char, { sequence: [char], corners: [0, 0, 0, 0] });
+      compoundResults.set(char, {
+        sequence: [char],
+        full: [char],
+        corners: [0, 0, 0, 0],
+        operator: glyph.operator,
+      });
       continue;
     }
-    const { operator, operandList } = glyph;
-    const rawOperandResults = operandList.map(getResult);
+    const rawOperandResults = glyph.operandList.map(getResult);
     if (rawOperandResults.every((x) => x !== undefined)) {
       // this is safe!
       const operandResults = rawOperandResults as PartitionResult[];
       const serialization = serializer(operandResults, glyph, char);
-      compoundResults.set(char, {
-        ...serialization,
-        operator,
-        operandResults: operandResults,
-      });
+      compoundResults.set(char, serialization);
     } else {
       if (knownCharacters.has(char)) {
         compoundError.push(char);

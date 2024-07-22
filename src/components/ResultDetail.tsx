@@ -16,7 +16,7 @@ import type { SchemeWithData } from "~/lib";
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {
     for (const sieve of selector) {
-      const [af, bf] = [a.data.get(sieve), b.data.get(sieve)];
+      const [af, bf] = [a.evaluation.get(sieve), b.evaluation.get(sieve)];
       if (af === undefined && bf === undefined) return 0;
       if (af === undefined) return -1;
       if (bf === undefined) return 1;
@@ -47,10 +47,10 @@ export default function ResultDetail({
       title: "拆分方式",
       dataIndex: "sequence",
       key: "sequence",
-      render: (_, { sequence }) => (
+      render: (_, { scheme }) => (
         <Space>
-          {sequence.map((root, index) => (
-            <Element key={index}>{display(root)}</Element>
+          {scheme.map((root, index) => (
+            <Element key={index}>{display(map.get(root)!)}</Element>
           ))}
         </Space>
       ),
@@ -62,8 +62,8 @@ export default function ResultDetail({
     columns.push({
       title: sieve,
       key: sieve,
-      render: (_, { data }) => {
-        const value = data.get(sieve);
+      render: (_, { evaluation }) => {
+        const value = evaluation.get(sieve);
         return (
           <span>
             {display && value ? display(value as number & number[]) : value}
@@ -76,10 +76,15 @@ export default function ResultDetail({
   columns.push({
     title: "操作",
     key: "operations",
-    render: (_, { sequence }, index) => (
+    render: (_, { scheme }, index) => (
       <Button
         disabled={index === 0}
-        onClick={() => addCustomization(char, sequence)}
+        onClick={() =>
+          addCustomization(
+            char,
+            scheme.map((x) => map.get(x)!),
+          )
+        }
       >
         采用
       </Button>

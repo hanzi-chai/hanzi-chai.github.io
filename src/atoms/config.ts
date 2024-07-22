@@ -1,12 +1,13 @@
 import { atom } from "jotai";
 import { atomFamily, atomWithStorage } from "jotai/utils";
-import type { Analysis, Data, EncoderConfig } from "~/lib";
+import type { Analysis, Data, EncoderConfig, Example } from "~/lib";
 import {
   defaultOptimization,
   type Algebra,
   type Config,
   type Info,
   defaultConfig,
+  examples,
 } from "~/lib";
 import { focusAtom } from "jotai-optics";
 import { atomWithLocation } from "jotai-location";
@@ -22,7 +23,7 @@ export const idAtom = atom((get) => {
 });
 
 const configStorage = atomFamily((id: string) =>
-  atomWithStorage(id, defaultConfig),
+  atomWithStorage<Config>(id, examples[id as Example] ?? defaultConfig),
 );
 
 export const configAtom = atom(
