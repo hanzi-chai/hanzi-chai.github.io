@@ -28,9 +28,12 @@ const ConditionButton = styled(SourceButton)`
   border-radius: 0;
 `;
 
+const sorter = (key: string) => parseInt(key.slice(1), 10);
+
 const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
   let newId = 0;
-  for (const currentId of Object.keys(sources)) {
+  const keys = sortBy(Object.keys(sources), sorter);
+  for (const currentId of keys) {
     if (currentId !== `${type}${newId}`) break;
     newId += 1;
   }
@@ -38,9 +41,7 @@ const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
 };
 
 const sortObject = function <T>(unordered: Record<string, T>) {
-  const keys = sortBy(Object.keys(unordered), (key) =>
-    parseInt(key.slice(1), 10),
-  );
+  const keys = sortBy(Object.keys(unordered), sorter);
   return keys.reduce(
     (obj, key) => {
       obj[key] = unordered[key]!;

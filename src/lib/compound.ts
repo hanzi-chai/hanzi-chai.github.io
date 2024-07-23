@@ -472,9 +472,6 @@ const zhangmaSerializer: Serializer = (operandResults, glyph, name) => {
     // 围型：先分解围框，再分解围芯
     sequence.push(...full);
   }
-  if (name === "摊") {
-    console.log(sequence, full, regularizedResults);
-  }
   // 不考虑四角
   return {
     sequence,
