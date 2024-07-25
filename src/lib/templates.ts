@@ -9,6 +9,7 @@ import easy from "../../examples/easy.yaml";
 import yustar from "../../examples/yustar.yaml";
 import zhengma from "../../examples/zhengma.yaml";
 import zhangma from "../../examples/zhangma.yaml";
+import xuma from "../../examples/xuma.yaml";
 import type { ExampleConfig } from "./config";
 
 export type Example =
@@ -18,17 +19,19 @@ export type Example =
   | "easy"
   | "zhengma"
   | "yustar"
-  | "zhangma";
+  | "zhangma"
+  | "xuma";
 
-export const examples: Record<Example, ExampleConfig> = {
-  snow: snow as ExampleConfig,
-  mswb: mswb as ExampleConfig,
-  jdh: jdh as ExampleConfig,
-  easy: easy as ExampleConfig,
-  zhengma: zhengma as ExampleConfig,
-  yustar: yustar as ExampleConfig,
-  zhangma: zhangma as ExampleConfig,
-};
+export const examples = {
+  snow,
+  mswb,
+  jdh,
+  easy,
+  zhengma,
+  yustar,
+  zhangma,
+  xuma,
+} as Record<Example, ExampleConfig>;
 
 export const classifierTypes = [
   "国标五分类",
@@ -48,6 +51,7 @@ export const keyboardTypes = [
   "郑码",
   "简单鹤",
   "张码",
+  "徐码",
   "无",
 ] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
@@ -57,6 +61,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   郑码: examples.zhengma.form,
   简单鹤: examples.jdh.form,
   张码: examples.zhangma.form,
+  徐码: examples.xuma.form,
   无: {
     alphabet: "qwertyuiopasdfghjklzxcvbnm",
     grouping: {},
@@ -69,6 +74,7 @@ export const encoderTypes = [
   "形音码（米十五笔）",
   "单编形码（张码）",
   "双编形码（郑码）",
+  "双编形码（徐码）",
   "双编形码（易码）",
   "双编形码（宇浩·星陈、虎码）",
 ] as const;
@@ -78,6 +84,7 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "形音码（米十五笔）": examples.mswb.encoder,
   "单编形码（张码）": examples.zhangma.encoder,
   "双编形码（郑码）": examples.zhengma.encoder,
+  "双编形码（徐码）": examples.xuma.encoder,
   "双编形码（易码）": examples.easy.encoder,
   "双编形码（宇浩·星陈、虎码）": examples.yustar.encoder,
 };

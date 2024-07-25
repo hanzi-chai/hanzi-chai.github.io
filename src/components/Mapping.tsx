@@ -189,9 +189,18 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
 
   const [main, setMain] = useState(Object.keys(mapping)[0]);
   const display = useAtomValue(displayAtom);
+  // const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  //   id: `onsite-${name}`,
+  // });
+  // const style = transform
+  //   ? {
+  //       transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  //     }
+  //   : undefined;
   return (
     <Popover
-      trigger={["hover"]}
+      trigger={["click"]}
+      mouseLeaveDelay={0.3}
       content={
         <AdjustableRootPopoverContent
           keys={keys}
@@ -204,6 +213,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
       <Element
         type="text"
         style={{ color: display(name) === "丢失的元素" ? "red" : "initial" }}
+        // {...attributes} {...listeners} ref={setNodeRef}
       >
         <Space size={4}>
           {display(name)}
@@ -228,23 +238,6 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
         </Space>
       </Element>
     </Popover>
-  );
-};
-
-const DraggableAdjustableRoot = ({ name, code }: MappedInfo) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: `onsite-${name}`,
-  });
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
-  return (
-    <div {...attributes} {...listeners} ref={setNodeRef} style={style}>
-      <AdjustableRoot name={name} code={code} />
-    </div>
   );
 };
 
@@ -426,7 +419,7 @@ const MappingRow = memo(
         <Char>{symbol}</Char>
         <Flex wrap="wrap">
           {roots.map(({ name, code }) => (
-            <DraggableAdjustableRoot key={name} name={name} code={code} />
+            <AdjustableRoot key={name} name={name} code={code} />
           ))}
         </Flex>
       </Flex>

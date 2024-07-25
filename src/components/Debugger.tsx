@@ -9,6 +9,11 @@ import { Select, Uploader } from "~/components/Utils";
 import type { DictEntry } from "~/lib";
 import { getSupplemental } from "~/lib";
 
+interface DictEntryWithReference extends DictEntry {
+  reference: string[];
+  status: "correct" | "incorrect" | "unknown";
+}
+
 export default function Debugger() {
   const config = useAtomValue(configAtom);
   const repertoire = useAtomValue(repertoireAtom);
@@ -39,13 +44,11 @@ export default function Debugger() {
   let correct = 0;
   let incorrect = 0;
   let unknown = 0;
-  let dataSource: (DictEntry & {
-    reference: string[];
-    status: "correct" | "incorrect" | "unknown";
-  })[] = code
+  let dataSource: DictEntryWithReference[] = code
     .filter((x) => [...x.name].length === 1 && filterFn(x.name))
     .map((x) => {
       const codes = reference[x.name] ?? [];
+      console.log(codes, x.full);
       let status: "correct" | "incorrect" | "unknown" = "unknown";
       if (codes.length === 0) {
         unknown += 1;
@@ -94,7 +97,7 @@ export default function Debugger() {
             const tsv = content
               .trim()
               .split("\n")
-              .map((x) => x.split("\t"));
+              .map((x) => x.trim().split("\t"));
             for (const line of tsv) {
               const [key, value] = line;
               if (key !== undefined && value !== undefined) {

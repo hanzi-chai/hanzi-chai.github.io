@@ -137,7 +137,7 @@ export default function ElementPool({
       )}
       <Content wrap="wrap">
         {range.map((x) => (
-          <DraggableElement
+          <Element
             key={x}
             element={x}
             currentElement={element}
