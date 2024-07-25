@@ -1,4 +1,5 @@
-import { useState } from "react";
+import type { FC } from "react";
+import { memo, useState } from "react";
 import styled from "styled-components";
 import Char from "./Character";
 import { Button, Flex, Modal, Pagination, Popover, Typography } from "antd";
@@ -16,6 +17,7 @@ import StrokeSearch from "./CharacterSearch";
 import type { ShapeElementTypes } from "./ElementPicker";
 import type { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
+import { useDraggable } from "@dnd-kit/core";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -30,14 +32,16 @@ interface PoolProps {
   name: ShapeElementTypes | PronunciationElementTypes | string;
 }
 
-const Element = ({
-  element: x,
-  setElement,
-  currentElement,
-}: {
+interface ElementProps {
   element: string;
   setElement: (s: string | undefined) => void;
   currentElement?: string;
+}
+
+const Element: FC<ElementProps> = ({
+  element: x,
+  setElement,
+  currentElement,
 }) => {
   const keyboard = useAtomValue(keyboardAtom);
   const { mapping, grouping } = keyboard;
@@ -75,6 +79,28 @@ const Element = ({
 
 const MyPagination = styled(Pagination)``;
 
+const DraggableElement = memo((props: ElementProps) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: props.element,
+  });
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ ...style, zIndex: 10 }}
+      {...listeners}
+      {...attributes}
+    >
+      <Element {...props} />
+    </div>
+  );
+});
+
 export default function ElementPool({
   element,
   setElement,
@@ -111,7 +137,7 @@ export default function ElementPool({
       )}
       <Content wrap="wrap">
         {range.map((x) => (
-          <Element
+          <DraggableElement
             key={x}
             element={x}
             currentElement={element}

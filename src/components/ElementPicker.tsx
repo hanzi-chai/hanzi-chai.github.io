@@ -1,4 +1,4 @@
-import { Button, Cascader, Flex, Popover } from "antd";
+import { Button, Cascader, Flex, Popover, Typography } from "antd";
 import { useState } from "react";
 import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";
@@ -136,7 +136,8 @@ export default function ElementPicker() {
     },
   ];
   return (
-    <Flex vertical gap="small">
+    <Flex vertical gap="small" style={{ flex: "1 0 400px" }}>
+      <Typography.Title level={3}>元素选择器</Typography.Title>
       <Flex gap="middle" align="baseline">
         <span>元素类型：</span>
         <Cascader

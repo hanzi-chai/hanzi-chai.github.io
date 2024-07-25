@@ -1,5 +1,16 @@
-import { Alert, Button, Flex, Form, List, Popover, Select, Space } from "antd";
-import { useState, useMemo } from "react";
+import {
+  Alert,
+  Button,
+  Flex,
+  Form,
+  List,
+  Popover,
+  Select,
+  Space,
+  Typography,
+} from "antd";
+import type { CSSProperties } from "react";
+import { useState, useMemo, memo } from "react";
 import {
   useAtomValue,
   useSetAtom,
@@ -23,6 +34,7 @@ import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 import type { Key } from "~/lib";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 
 interface MappedInfo {
   name: string;
@@ -179,7 +191,7 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
   const display = useAtomValue(displayAtom);
   return (
     <Popover
-      trigger={["click"]}
+      trigger={["hover"]}
       content={
         <AdjustableRootPopoverContent
           keys={keys}
@@ -216,6 +228,23 @@ const AdjustableRoot = ({ name, code }: MappedInfo) => {
         </Space>
       </Element>
     </Popover>
+  );
+};
+
+const DraggableAdjustableRoot = ({ name, code }: MappedInfo) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `onsite-${name}`,
+  });
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <div {...attributes} {...listeners} ref={setNodeRef} style={style}>
+      <AdjustableRoot name={name} code={code} />
+    </div>
   );
 };
 
@@ -304,8 +333,7 @@ const MappingUploader = ({
   );
 };
 
-export default function Mapping() {
-  const { mapping } = useAtomValue(keyboardAtom);
+const MappingHeader = () => {
   const keyboard = Array.from(
     "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?qwertyuiopasdfghjkl;zxcvbnm,./",
   );
@@ -315,18 +343,9 @@ export default function Mapping() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
   const [alphabet, setAlphabet] = useAtom(alphabetAtom);
-
-  const reversedMapping = new Map<string, MappedInfo[]>(
-    Array.from(alphabet).map((key) => [key, []]),
-  );
-  for (const [name, code] of Object.entries(mapping)) {
-    const main = code[0];
-    if (typeof main === "string") {
-      reversedMapping.get(main)?.push({ name, code });
-    }
-  }
   return (
     <>
+      <Typography.Title level={3}>键盘映射</Typography.Title>
       <Flex justify="center" align="baseline" gap="small">
         <Form.Item label="编码类型">
           <Select
@@ -375,36 +394,68 @@ export default function Mapping() {
         <MappingUploader setImportResult={setImportResult} />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
+    </>
+  );
+};
+
+const MappingRow = memo(
+  ({ symbol, roots }: { symbol: string; roots: MappedInfo[] }) => {
+    const [alphabet, setAlphabet] = useAtom(alphabetAtom);
+    const { isOver, setNodeRef } = useDroppable({
+      id: symbol,
+    });
+    const style: CSSProperties = {
+      backgroundColor: isOver ? "white" : undefined,
+    };
+    return (
+      <Flex style={{ borderTop: "1px solid #aaa", ...style }} ref={setNodeRef}>
+        <Button
+          shape="circle"
+          type="text"
+          danger
+          disabled={roots.length > 0}
+          onClick={() =>
+            setAlphabet(
+              Array.from(alphabet)
+                .filter((x) => x !== symbol)
+                .join(""),
+            )
+          }
+          icon={<DeleteOutlined />}
+        />
+        <Char>{symbol}</Char>
+        <Flex wrap="wrap">
+          {roots.map(({ name, code }) => (
+            <DraggableAdjustableRoot key={name} name={name} code={code} />
+          ))}
+        </Flex>
+      </Flex>
+    );
+  },
+);
+
+export default function Mapping() {
+  const { mapping } = useAtomValue(keyboardAtom);
+  const alphabet = useAtomValue(alphabetAtom);
+
+  const reversedMapping = new Map<string, MappedInfo[]>(
+    Array.from(alphabet).map((key) => [key, []]),
+  );
+  for (const [name, code] of Object.entries(mapping)) {
+    const main = code[0];
+    if (typeof main === "string") {
+      reversedMapping.get(main)?.push({ name, code });
+    }
+  }
+  return (
+    <Flex vertical>
+      <MappingHeader />
       <List
         dataSource={[...reversedMapping]}
-        renderItem={(item: [string, MappedInfo[]]) => {
-          const [key, roots] = item;
-          return (
-            <Flex style={{ borderTop: "1px solid #aaa" }}>
-              <Button
-                shape="circle"
-                type="text"
-                danger
-                disabled={roots.length > 0}
-                onClick={() =>
-                  setAlphabet(
-                    Array.from(alphabet)
-                      .filter((x) => x !== key)
-                      .join(""),
-                  )
-                }
-                icon={<DeleteOutlined />}
-              />
-              <Char>{key}</Char>
-              <Flex wrap="wrap">
-                {roots.map(({ name, code }) => (
-                  <AdjustableRoot key={name} name={name} code={code} />
-                ))}
-              </Flex>
-            </Flex>
-          );
-        }}
+        renderItem={([key, roots]: [string, MappedInfo[]]) => (
+          <MappingRow key={key} symbol={key} roots={roots} />
+        )}
       />
-    </>
+    </Flex>
   );
 }
