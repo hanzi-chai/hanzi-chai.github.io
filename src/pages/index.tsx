@@ -204,7 +204,8 @@ export default function HomeLayout() {
     return localStorage.getItem("user") ? "login" : "signin";
   });
 
-  const { snow, mswb, jdh, easy, zhengma, yustar, zhangma, xuma } = examples;
+  const { snow, mswb, jdh, easy, zhengma, yustar, zhangma, xuma, huma } =
+    examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
     label: x.info.name,
@@ -213,28 +214,25 @@ export default function HomeLayout() {
   const items: MenuProps["items"] = [
     {
       key: "1",
-      type: "group",
       label: "音码",
       children: [prepare(snow)],
     },
     {
       key: "2",
-      type: "group",
       label: "音形",
       children: [prepare(jdh)],
     },
     {
       key: "3",
-      type: "group",
       label: "形音",
       children: [prepare(mswb)],
     },
     {
       key: "4",
-      type: "group",
       label: "形码",
       children: [
         prepare(easy),
+        prepare(huma),
         prepare(xuma),
         prepare(yustar),
         prepare(zhangma),

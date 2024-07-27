@@ -295,6 +295,12 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   ].map((x) => [x.title, x]),
 );
 
+interface SelectResult {
+  scheme: Scheme;
+  evaluation: Map<SieveName, number | number[]>;
+  excluded: boolean;
+}
+
 /**
  * 选择最优的拆分方案
  *
@@ -346,5 +352,6 @@ export const select = (
   const best = schemeData.find((v) => !v.excluded);
   if (best === undefined) return new NoSchemeError();
   // Correct result
-  return [best, schemeData] as const;
+  const result: [SelectResult, SelectResult[]] = [best, schemeData];
+  return result;
 };

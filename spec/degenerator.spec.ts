@@ -93,8 +93,9 @@ const hasroot = (a: RenderedGlyph, indices: number[], root: RenderedGlyph) => {
 };
 
 describe("degenerate cross tests", () => {
-  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 以, 人, 氺, 丆, 疌, 龰, 夫, 龵 } =
+  const { 大, 天, 九, 丸, 山, 出, 冖, 农, 以, 人, 氺, 丆, 疌, 龰, 夫, 龵, 象 } =
     renderedGlyphs as any;
+  const mianwu = renderedGlyphs["\ue010"];
   const han = renderedGlyphs["\ue104"]!;
   const mao3 = renderedGlyphs["\ue17d"]!;
   it("says 天 has 大", () => {
@@ -128,6 +129,9 @@ describe("degenerate cross tests", () => {
   });
   it("says 龵 has 龵", () => {
     hasroot(龵, [0, 1, 2], mao3);
+  });
+  it("says 象 has 免五", () => {
+    hasroot(象, [0, 1, 2, 3, 4], mianwu);
   });
 });
 

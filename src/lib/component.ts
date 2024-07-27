@@ -146,12 +146,44 @@ export const getComponentScheme = function (
     return selectResult;
   }
   const [best, schemes] = selectResult;
-  const sequence = best.scheme.map((n) => rootMap.get(n)!);
-  const corners = component.corners.map((corner) =>
+  let sequence = best.scheme.map((n) => rootMap.get(n)!);
+  let corners = component.corners.map((corner) =>
     best.scheme.findIndex(
       (x) => x & (1 << (component.glyph.length - corner - 1)),
     ),
   ) as CornerSpecifier;
+  if (config.analysis.serializer === "c3") {
+    // 根据四角信息对 sequence 进行排序
+    const newSequence: string[] = [];
+    const newCorners: CornerSpecifier = [0, 0, 0, 0];
+    newSequence.push(sequence[corners[0]]!);
+    if (corners[0] === corners[3]) {
+      // 左上角和右下角相同
+      sequence.forEach((x, i) => {
+        if (i === corners[0]) return;
+        if (newSequence.length === 3) return;
+        newSequence.push(x);
+      });
+    } else {
+      // 左上角和右下角不同
+      let middle: number;
+      if (sequence.length > 2) {
+        middle = sequence.findIndex(
+          (_, i) => i !== corners[0] && i !== corners[3],
+        );
+      }
+      sequence.forEach((x, i) => {
+        if (i === corners[3] || i === middle) {
+          newSequence.push(x);
+        }
+        if (i === corners[3]) {
+          newCorners[3] = newSequence.length - 1;
+        }
+      });
+    }
+    sequence = newSequence;
+    corners = newCorners;
+  }
   return {
     sequence,
     full: sequence,
@@ -250,6 +282,28 @@ const overrideCorners: Map<string, CornerSpecifier> = new Map([
   ["卡", [0, 0, 3, 3]],
   ["毌", [0, 0, 0, 0]],
   ["自", [0, 0, 5, 5]],
+  ["血", [0, 0, 5, 5]],
+  ["\uE097", [0, 0, 4, 4]], // 睾字头
+  ["乜", [0, 0, 1, 1]],
+  ["也", [0, 0, 2, 2]],
+  ["㐄", [0, 0, 1, 2]],
+  ["义", [0, 0, 2, 2]],
+  ["亍", [0, 0, 2, 2]],
+  ["丰", [0, 0, 3, 3]],
+  ["午", [0, 1, 3, 3]],
+  ["巿", [0, 0, 3, 3]],
+  ["帀", [0, 0, 3, 3]],
+  ["\uE06D", [0, 0, 3, 3]],
+  ["\uE0C7", [0, 0, 3, 3]],
+  ["\uE0A4", [0, 1, 3, 3]],
+  ["乎", [0, 0, 4, 4]],
+  ["永", [0, 0, 1, 1]],
+  ["申", [0, 0, 4, 4]],
+  ["\uE098", [0, 0, 4, 4]],
+  ["屰", [0, 1, 5, 5]],
+  ["\uE061", [0, 0, 6, 6]], // 敢字旁
+  ["\uE067", [0, 1, 7, 7]], // 曾字旁
+  ["斥", [0, 0, 3, 3]],
 ]);
 
 /**

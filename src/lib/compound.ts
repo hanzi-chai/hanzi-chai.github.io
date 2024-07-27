@@ -153,38 +153,45 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
   return { sequence, ...rest };
 };
 
-const recursiveExpand: (x: PartitionResult[]) => PartitionResult[] = (x) => {
-  const result: PartitionResult[] = [];
-  for (const part of x) {
-    if ("operandResults" in part && /[⿱⿳]/.test(part.operator)) {
-      result.push(...recursiveExpand(part.operandResults));
+const robustPartition = (
+  operandResults: PartitionResult[],
+  operator: Operator,
+) => {
+  // 第一步：展开同一方向的结构
+  // 不管在同一个方向上有多少个结构，都展开到同一个数组中，并用同一个符号表示
+  const operatorMap: Map<Operator, Operator> = new Map([
+    ["⿲", "⿰"],
+    ["⿳", "⿱"],
+  ]);
+  const realOperator = operatorMap.get(operator) ?? operator;
+  const expanded: PartitionResult[] = [];
+  for (const part of operandResults) {
+    if (
+      "operandResults" in part &&
+      /[⿱⿰]/.test(part.operator) &&
+      part.operator === realOperator
+    ) {
+      expanded.push(...part.operandResults);
     } else {
-      result.push(part);
+      expanded.push(part);
     }
   }
-  return result;
-};
-
-const robustPartition = (p: {
-  operandResults: PartitionResult[];
-  operator: Operator;
-}) => {
-  const { operandResults, operator } = p;
-  let start = 0;
-  let dieyanAfter;
-  // 叠和非叠
-  const die = /[⿱⿳]/;
-  const notDie = /[^⿱⿳]/;
+  if (realOperator !== "⿱")
+    return { operator: realOperator, operandResults: expanded };
+  // 第二步：对于叠型（上下结构），找出叠眼，并且将叠眼之间的结构视为独体字
+  // 因为已经完成了展开，所以现在每一部分要么是部件，要么是非叠型复合体
   // 叠眼
-  let dieyan: boolean[];
-  const postProcess: (x: PartitionResult[]) => PartitionResult = (x) => {
-    if (x.length === 1) return x[0]!;
-    const simplified = x.length > 3 ? x.slice(0, 2).concat(x.slice(-1)) : x;
-    let operator: Operator;
-    let sequence: string[] = [getTL(simplified[0]!)];
+  const postProcess = function (
+    accumulation: PartitionResult[],
+  ): PartitionResult {
+    if (accumulation.length === 1) return accumulation[0]!;
+    let sequence: string[] = [getTL(accumulation[0]!)];
     let corners: CornerSpecifier = [0, 0, 0, 0];
-    if (simplified.length === 2) {
-      const [first, second] = simplified as [PartitionResult, PartitionResult];
+    if (accumulation.length === 2) {
+      const [first, second] = accumulation as [
+        PartitionResult,
+        PartitionResult,
+      ];
       if (first.sequence.length > 1) {
         const candidates = first.sequence.filter(
           (_, i) => i !== first.corners[0],
@@ -201,14 +208,12 @@ const robustPartition = (p: {
           corners[3] = 1;
         }
       }
-      operator = "⿱";
     } else {
-      operator = "⿳";
-      const [first, second, third] = simplified as [
-        PartitionResult,
+      const [first, second] = accumulation as [
         PartitionResult,
         PartitionResult,
       ];
+      const third = accumulation.at(-1)!;
       if (first.sequence.length > 1) {
         const candidates = first.sequence.filter(
           (_, i) => i !== first.corners[0],
@@ -224,120 +229,91 @@ const robustPartition = (p: {
       sequence,
       full: [],
       corners,
-      operator,
-      operandResults: x,
+      operator: undefined,
+      strokes: 0,
     };
   };
-  if (die.test(operator)) {
-    const firstPartition: PartitionResult[] = [];
-    const expanded = recursiveExpand(operandResults);
-    dieyan = expanded.map((x) => notDie.test(x.operator ?? ""));
-    for (const [i, x] of dieyan.entries()) {
-      if (x) {
-        const dieyanBefore = expanded.slice(start, i);
-        if (dieyanBefore.length > 0) {
-          firstPartition.push(postProcess(dieyanBefore));
-        }
-        firstPartition.push(expanded[i]!);
-        start = i + 1;
+  const finalResults: PartitionResult[] = [];
+  const accumulation: PartitionResult[] = [];
+  for (const part of expanded) {
+    if (part.operator !== undefined) {
+      if (accumulation.length > 0) {
+        finalResults.push(postProcess(accumulation));
       }
-    }
-    dieyanAfter = expanded.slice(start);
-    if (dieyanAfter.length > 0) {
-      firstPartition.push(postProcess(dieyanAfter));
-    }
-    return firstPartition;
-  } else {
-    return operandResults;
-  }
-};
-
-const _c3Serializer: Serializer = (operandResults, glyph) => {
-  const primaryPartition = robustPartition({
-    operandResults,
-    operator: glyph.operator,
-  });
-  let sequence: string[] = [];
-  if (primaryPartition.length === 1) {
-    sequence = primaryPartition[0]!.sequence.slice(0, 3);
-  } else if (primaryPartition.length === 3) {
-    sequence = primaryPartition.map((x) => x.sequence[0]!);
-  } else {
-    // 需要执行二次拆分
-    for (const part of primaryPartition) {
-      if ("operandResults" in part) {
-        const smallerParts = robustPartition(part).slice(0, 2);
-        if (smallerParts.length >= 2) {
-          sequence.push(...smallerParts.map((x) => x.sequence[0]!));
-        } else {
-          sequence.push(...smallerParts[0]!.sequence.slice(0, 2));
-        }
-      } else {
-        sequence.push(...part.sequence.slice(0, 2));
-      }
+      accumulation.length = 0;
+      finalResults.push(part);
+    } else {
+      accumulation.push(part);
     }
   }
-  return {
-    sequence: sequence.slice(0, 3),
-    corners: [0, 0, 0, 0],
-    full: [],
-    operator: glyph.operator,
-    operandResults,
-  };
+  if (accumulation.length > 0) {
+    finalResults.push(postProcess(accumulation));
+  }
+  return { operator: realOperator, operandResults: finalResults };
 };
 
 const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
 const getBR = (x: PartitionResult, already?: boolean) => {
   if (!already) return x.sequence[x.corners[3]]!;
-  if (x.corners[3] !== x.corners[0]) {
-    return x.sequence[x.corners[3]]!;
+  if ("operandResults" in x) {
+    if (/[⿰⿱⿲⿳]/.test(x.operator)) {
+      return x.sequence[x.corners[3]]!;
+    } else {
+      const inner = x.operandResults[1]!;
+      return inner.sequence[inner.corners[3]]!;
+    }
   } else {
-    return x.sequence.at(-1)!;
+    if (x.corners[3] !== x.corners[0]) {
+      return x.sequence[x.corners[3]]!;
+    } else {
+      return x.sequence.at(-1)!;
+    }
   }
 };
 
-const combine = (primaryPartition: PartitionResult[], operator: Operator) => {
+const c3Serializer: Serializer = (operandResults, glyph) => {
+  const robust = robustPartition(operandResults, glyph.operator);
+  if (robust.operandResults.length === 1) {
+    return robust.operandResults[0]! as CompoundAnalysis;
+  }
+  const operator = robust.operator;
+  const primaryPartition = robust.operandResults;
   const sequence: string[] = [];
   const corners: CornerSpecifier = [0, 0, 0, 0];
-  if (primaryPartition.length === 3) {
+  // 三部及以上，取首首末
+  if (primaryPartition.length > 2) {
     primaryPartition.forEach((x, i) => {
       if (i === 0 || i === 1) {
         sequence.push(x.sequence[0]!);
-      } else {
+      } else if (i === primaryPartition.length - 1) {
         sequence.push(getBR(x));
       }
     });
-    corners[3] = sequence.length - 1;
+    corners[3] = 2;
   } else {
     const [first, second] = primaryPartition as [
       PartitionResult,
       PartitionResult,
     ];
     sequence.push(getTL(first));
+    let firstBR: number;
+    let secondBR: number;
     if (first.sequence.length > 1) {
       sequence.push(getBR(first, true));
+      firstBR = 1;
       sequence.push(getBR(second));
-      if (/[⿰⿱⿸]/.test(operator)) {
-        corners[3] = sequence.length - 1;
-      } else {
-        corners[3] = sequence.length - 2;
-      }
+      secondBR = 2;
     } else {
+      firstBR = 0;
       sequence.push(getTL(second));
       if (second.sequence.length > 1) {
         sequence.push(getBR(second, true));
-        if (/[⿰⿱⿸]/.test(operator)) {
-          corners[3] =
-            second.corners[0] === second.corners[3]
-              ? sequence.length - 2
-              : sequence.length - 1;
-        }
+        secondBR = second.corners[0] === second.corners[3] ? 1 : 2;
       } else {
-        if (/[⿰⿱⿸]/.test(operator)) {
-          corners[3] = sequence.length - 1;
-        }
+        secondBR = 1;
       }
     }
+    corners[3] = /[⿰⿱⿸]/.test(operator) ? secondBR : firstBR;
   }
   return {
     sequence,
@@ -346,16 +322,6 @@ const combine = (primaryPartition: PartitionResult[], operator: Operator) => {
     operator,
     operandResults: primaryPartition,
   };
-};
-
-const c3Serializer: Serializer = (operandResults, glyph) => {
-  const operator = glyph.operator;
-  const primaryPartition = robustPartition({ operandResults, operator });
-  if (primaryPartition.length === 1) {
-    return primaryPartition[0]!;
-  } else {
-    return combine(primaryPartition, operator);
-  }
 };
 
 const regularize = (x: PartitionResult[], direction: Operator) => {

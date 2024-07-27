@@ -61,8 +61,8 @@ describe("select", () => {
             [8, 4, 2, 1],
           ],
           rootMap,
-        ) as [Scheme, unknown]
-      )[0],
+        ) as [{ scheme: Scheme }, unknown]
+      )[0].scheme,
     ).toEqual([8, 7]);
   });
 });

@@ -98,7 +98,9 @@ export default function ResultSummary({
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
-        <Char>{display(char)}</Char>
+        <Char onClick={() => navigator.clipboard.writeText(display(char))}>
+          {display(char)}
+        </Char>
         {sequence.map((x, index) => {
           return (
             <Flex key={index} align="center">

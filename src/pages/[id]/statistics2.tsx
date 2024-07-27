@@ -1,4 +1,4 @@
-import { Flex, Skeleton } from "antd";
+import { Flex, Skeleton, Table } from "antd";
 import type { Combined } from "~/atoms";
 import {
   alphabetAtom,
@@ -8,6 +8,7 @@ import {
   pairEquivalenceAtom,
   typeLabels,
   useChaifenTitle,
+  displayAtom,
 } from "~/atoms";
 import {
   ProForm,
@@ -19,12 +20,13 @@ import {
 import { Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import type { AdaptedFrequency, Objective } from "~/lib";
+import { renderIndexed, type AdaptedFrequency, type Objective } from "~/lib";
 import { Suspense, useState } from "react";
-import { range, sum } from "lodash-es";
+import { range, sum, sumBy } from "lodash-es";
 import { blue } from "@ant-design/colors";
 import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
 import "~/components/charts.css";
+import type { ColumnsType } from "antd/es/table";
 
 const { Column, Heatmap } = await import("~/components/export/charts");
 
@@ -528,6 +530,86 @@ const FingeringDistribution = () => {
   );
 };
 
+interface DuplicationDistributionEntry {
+  key: string;
+  count: number;
+  items: [string, string][];
+}
+
+const DuplicationDistribution = () => {
+  const combined = useAtomValue(combinedResultAtom);
+  const duplicationMap = new Map<string, Combined[]>();
+  const pairMap = new Map<string, [string, string][]>();
+  const display = useAtomValue(displayAtom);
+
+  for (const item of combined) {
+    const key = item.full;
+    const previous = duplicationMap.get(key) ?? [];
+    previous.push(item);
+    duplicationMap.set(key, previous);
+  }
+
+  for (const [key, value] of duplicationMap) {
+    if (value.length < 2) continue;
+    for (const [iFirst, first] of value.entries()) {
+      for (const [iSecond, second] of value.entries()) {
+        if (iFirst >= iSecond) continue;
+        const pair: [string, string] = [first.name, second.name];
+        const length = Math.max(first.sequence.length, second.sequence.length);
+        for (let i = 0; i < length; i++) {
+          const k1 = renderIndexed(first.sequence[i] ?? "ε", display);
+          const k2 = renderIndexed(second.sequence[i] ?? "ε", display);
+          if (k1 === k2) continue;
+          const key = `${k1}, ${k2}`;
+          const previous = pairMap.get(key) ?? [];
+          previous.push(pair);
+          pairMap.set(key, previous);
+        }
+      }
+    }
+  }
+
+  const dataSource = [...pairMap]
+    .map(([key, value]) => ({
+      key,
+      count: value.length,
+      items: value,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const columns: ColumnsType<DuplicationDistributionEntry> = [
+    {
+      title: "键",
+      dataIndex: "key",
+      key: "key",
+    },
+    {
+      title: "数量",
+      dataIndex: "count",
+      key: "count",
+    },
+    {
+      title: "对象",
+      dataIndex: "items",
+      key: "items",
+      render: (items: [string, string][]) => (
+        <span>
+          {items.map(([first, second]) => `${first} / ${second}`).join(", ")}
+        </span>
+      ),
+    },
+  ];
+  return (
+    <>
+      <Typography.Title level={3}>重码分布</Typography.Title>
+      <Typography.Paragraph>
+        重码总数：{sumBy([...duplicationMap.values()], (x) => x.length - 1)}
+      </Typography.Paragraph>
+      <Table dataSource={dataSource} columns={columns} />
+    </>
+  );
+};
+
 export default function Statistics() {
   useChaifenTitle("统计");
   return (
@@ -536,6 +618,7 @@ export default function Statistics() {
         <UnaryDistribution />
         <BinaryDistribution />
         <FingeringDistribution />
+        <DuplicationDistribution />
       </Suspense>
     </Flex>
   );
