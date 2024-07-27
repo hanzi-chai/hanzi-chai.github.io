@@ -267,6 +267,7 @@ export const integrity: Sieve<number> = {
       "\ue009" /* 假右角 */,
       "勹",
       "尸",
+      "\uE407" /* 央三 */,
     ];
     const shouldHave = [...rootMap]
       .filter(([_, name]) => priorities.includes(name))

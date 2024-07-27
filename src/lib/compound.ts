@@ -156,6 +156,7 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
 const robustPartition = (
   operandResults: PartitionResult[],
   operator: Operator,
+  name?: string,
 ) => {
   // 第一步：展开同一方向的结构
   // 不管在同一个方向上有多少个结构，都展开到同一个数组中，并用同一个符号表示
@@ -255,26 +256,24 @@ const robustPartition = (
 const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
 const getBR = (x: PartitionResult, already?: boolean) => {
   if (!already) return x.sequence[x.corners[3]]!;
-  if ("operandResults" in x) {
-    if (/[⿰⿱⿲⿳]/.test(x.operator)) {
-      return x.sequence[x.corners[3]]!;
-    } else {
+  if (x.corners[3] !== x.corners[0]) {
+    return x.sequence[x.corners[3]]!;
+  } else {
+    if ("operandResults" in x) {
       const inner = x.operandResults[1]!;
       return inner.sequence[inner.corners[3]]!;
     }
-  } else {
-    if (x.corners[3] !== x.corners[0]) {
-      return x.sequence[x.corners[3]]!;
-    } else {
-      return x.sequence.at(-1)!;
-    }
+    return x.sequence.at(-1)!;
   }
 };
 
-const c3Serializer: Serializer = (operandResults, glyph) => {
-  const robust = robustPartition(operandResults, glyph.operator);
+const c3Serializer: Serializer = (operandResults, glyph, name) => {
+  const robust = robustPartition(operandResults, glyph.operator, name);
   if (robust.operandResults.length === 1) {
     return robust.operandResults[0]! as CompoundAnalysis;
+  }
+  if (name === "寰") {
+    console.log(robust.operandResults);
   }
   const operator = robust.operator;
   const primaryPartition = robust.operandResults;
@@ -483,7 +482,7 @@ export const disassembleCompounds = (
         sequence: [char],
         full: [char],
         corners: [0, 0, 0, 0],
-        operator: glyph.operator,
+        operator: undefined,
       });
       continue;
     }

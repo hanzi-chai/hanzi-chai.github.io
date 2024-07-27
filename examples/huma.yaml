@@ -568,7 +568,7 @@ encoder:
     s3:
       object: {type: 字根, rootIndex: 1}
       index: 1
-      next: s6
+      next: null
     s4:
       object: {type: 字根, rootIndex: 2}
       index: 1
@@ -578,14 +578,10 @@ encoder:
       index: 0
       next: c2
     s6:
-      object: {type: 字根, rootIndex: 1}
-      next: null
-      index: 1
-    s7:
       object: {type: 字根, rootIndex: -1}
       index: 0
       next: null
-    s8:
+    s7:
       object: {type: 字根, rootIndex: 3}
       index: 1
       next: null
@@ -603,8 +599,8 @@ encoder:
     c2:
       object: {type: 字根, rootIndex: 4}
       operator: 存在
-      positive: s7
-      negative: s8
+      positive: s6
+      negative: s7
   short_code:
     - length_equal: 1
       schemes: [{prefix: 1}, {prefix: 2, count: 1}, {prefix: 3, count: 1}]

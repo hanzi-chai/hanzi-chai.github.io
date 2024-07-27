@@ -48,7 +48,6 @@ export default function Debugger() {
     .filter((x) => [...x.name].length === 1 && filterFn(x.name))
     .map((x) => {
       const codes = reference[x.name] ?? [];
-      console.log(codes, x.full);
       let status: "correct" | "incorrect" | "unknown" = "unknown";
       if (codes.length === 0) {
         unknown += 1;
