@@ -2,7 +2,6 @@ import { isEqual } from "lodash-es";
 import { mergeClassifier } from "./classifier";
 import type {
   ComponentResults,
-  ComponentAnalysis,
   ComponentBasicAnalysis,
   ComponentGenuineAnalysis,
 } from "./component";
@@ -134,6 +133,38 @@ const getRootSequence = function (
 };
 
 /**
+ * 确定需要分析的字符
+ */
+const getRequiredTargets = (
+  repertoire: Repertoire,
+  config: AnalysisConfig,
+  characters: string[],
+) => {
+  const queue = [...characters];
+  const components = new Set<string>();
+  const compounds = new Set<string>();
+  const knownSet = new Set<string>(characters);
+  while (queue.length) {
+    const char = queue.shift()!;
+    const glyph = repertoire[char]!.glyph!;
+    if (glyph.type === "compound") {
+      compounds.add(char);
+      if (config.primaryRoots.has(char) || config.secondaryRoots.has(char))
+        continue;
+      glyph.operandList.forEach((x) => {
+        if (!knownSet.has(x)) {
+          knownSet.add(x);
+          queue.push(x);
+        }
+      });
+    } else {
+      components.add(char);
+    }
+  }
+  return { components, compounds };
+};
+
+/**
  * 对整个字符集中的字符进行拆分
  *
  * @param repertoire - 字符集
@@ -144,10 +175,16 @@ export const analysis = function (
   config: AnalysisConfig,
   characters: string[],
 ): AnalysisResult {
+  const { components, compounds } = getRequiredTargets(
+    repertoire,
+    config,
+    characters,
+  );
   const [componentResults, componentError] = disassembleComponents(
     repertoire,
     config,
     characters,
+    components,
   );
   const customizations: ComponentResults = new Map();
   const customConfig = config.analysis?.customize ?? {};
@@ -184,6 +221,7 @@ export const analysis = function (
     config,
     customized,
     characters,
+    compounds,
   );
   const rootSequence = getRootSequence(repertoire, config);
   return {

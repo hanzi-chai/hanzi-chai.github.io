@@ -15,7 +15,7 @@ import type {
 } from "./data";
 import type { CornerSpecifier } from "./topology";
 
-export type CompoundResults = Map<string, CompoundAnalysis>;
+export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 
 type PartitionResult = ComponentAnalysis | CompoundAnalysis;
 
@@ -79,11 +79,12 @@ export const recursiveRenderCompound = function (
  *
  * @remarks 这个实现目前比较低效，需要改进
  */
-const topologicalSort = (repertoire: Repertoire) => {
+const topologicalSort = (repertoire: Repertoire, required: Set<string>) => {
   let compounds = new Map<string, CompoundCharacter>();
   for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, CompoundCharacter>();
     for (const [name, character] of Object.entries(repertoire)) {
+      if (!required.has(name)) continue;
       const { glyph } = character;
       if (compounds.get(name)) continue;
       if (glyph === undefined || glyph.type !== "compound") continue;
@@ -156,7 +157,6 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
 const robustPartition = (
   operandResults: PartitionResult[],
   operator: Operator,
-  name?: string,
 ) => {
   // 第一步：展开同一方向的结构
   // 不管在同一个方向上有多少个结构，都展开到同一个数组中，并用同一个符号表示
@@ -166,6 +166,19 @@ const robustPartition = (
   ]);
   const realOperator = operatorMap.get(operator) ?? operator;
   const expanded: PartitionResult[] = [];
+  if (realOperator === "⿸") {
+    const first = operandResults[0]!;
+    if ("operandResults" in first && first.operator === "⿸") {
+      expanded.push(...first.operandResults);
+      const second = expanded.pop()!;
+      const last = operandResults.at(-1)!;
+      const combined = c3Serializer([second, last], {
+        operator: "⿱",
+      } as Compound);
+      expanded.push(combined);
+      return { operator: realOperator, operandResults: expanded };
+    }
+  }
   for (const part of operandResults) {
     if (
       "operandResults" in part &&
@@ -177,80 +190,7 @@ const robustPartition = (
       expanded.push(part);
     }
   }
-  if (realOperator !== "⿱")
-    return { operator: realOperator, operandResults: expanded };
-  // 第二步：对于叠型（上下结构），找出叠眼，并且将叠眼之间的结构视为独体字
-  // 因为已经完成了展开，所以现在每一部分要么是部件，要么是非叠型复合体
-  // 叠眼
-  const postProcess = function (
-    accumulation: PartitionResult[],
-  ): PartitionResult {
-    if (accumulation.length === 1) return accumulation[0]!;
-    let sequence: string[] = [getTL(accumulation[0]!)];
-    let corners: CornerSpecifier = [0, 0, 0, 0];
-    if (accumulation.length === 2) {
-      const [first, second] = accumulation as [
-        PartitionResult,
-        PartitionResult,
-      ];
-      if (first.sequence.length > 1) {
-        const candidates = first.sequence.filter(
-          (_, i) => i !== first.corners[0],
-        );
-        sequence.push(candidates[0]!);
-        sequence.push(getBR(second));
-        corners[3] = 2;
-      } else {
-        sequence.push(getTL(second));
-        if (second.sequence.length > 1) {
-          sequence.push(getBR(second, true));
-          corners[3] = second.corners[0] === second.corners[3] ? 1 : 2;
-        } else {
-          corners[3] = 1;
-        }
-      }
-    } else {
-      const [first, second] = accumulation as [
-        PartitionResult,
-        PartitionResult,
-      ];
-      const third = accumulation.at(-1)!;
-      if (first.sequence.length > 1) {
-        const candidates = first.sequence.filter(
-          (_, i) => i !== first.corners[0],
-        );
-        sequence.push(candidates[0]!);
-      } else {
-        sequence.push(getTL(second));
-      }
-      sequence.push(getBR(third));
-      corners[3] = 2;
-    }
-    return {
-      sequence,
-      full: [],
-      corners,
-      operator: undefined,
-      strokes: 0,
-    };
-  };
-  const finalResults: PartitionResult[] = [];
-  const accumulation: PartitionResult[] = [];
-  for (const part of expanded) {
-    if (part.operator !== undefined) {
-      if (accumulation.length > 0) {
-        finalResults.push(postProcess(accumulation));
-      }
-      accumulation.length = 0;
-      finalResults.push(part);
-    } else {
-      accumulation.push(part);
-    }
-  }
-  if (accumulation.length > 0) {
-    finalResults.push(postProcess(accumulation));
-  }
-  return { operator: realOperator, operandResults: finalResults };
+  return { operator: realOperator, operandResults: expanded };
 };
 
 const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
@@ -267,39 +207,64 @@ const getBR = (x: PartitionResult, already?: boolean) => {
   }
 };
 
-const c3Serializer: Serializer = (operandResults, glyph, name) => {
-  const robust = robustPartition(operandResults, glyph.operator, name);
-  if (robust.operandResults.length === 1) {
-    return robust.operandResults[0]! as CompoundAnalysis;
-  }
-  if (name === "寰") {
-    console.log(robust.operandResults);
-  }
-  const operator = robust.operator;
-  const primaryPartition = robust.operandResults;
+const c3Serializer: Serializer = (rawResults, glyph) => {
+  const { operandResults, operator } = robustPartition(
+    rawResults,
+    glyph.operator,
+  );
   const sequence: string[] = [];
   const corners: CornerSpecifier = [0, 0, 0, 0];
-  // 三部及以上，取首首末
-  if (primaryPartition.length > 2) {
-    primaryPartition.forEach((x, i) => {
+  if (operator === "⿱") {
+    // 纵向结构特殊处理
+    const first = operandResults[0]!;
+    const last = operandResults.at(-1)!;
+    if ("operandResults" in first && first.operator === "⿰") {
+      // 有叠眼，取叠眼首末
+      sequence.push(getTL(first));
+      sequence.push(getBR(first, true));
+      sequence.push(getBR(last));
+      corners[3] = 2;
+    } else {
+      // 没有叠眼，视同独体字
+      sequence.push(getTL(first));
+      if (first.sequence.length > 1) {
+        const next = first.sequence.find((_, i) => i !== first.corners[0])!;
+        sequence.push(next);
+        sequence.push(getBR(last));
+        corners[3] = 2;
+      } else {
+        const second = operandResults[1]!;
+        sequence.push(getTL(second));
+        if (operandResults.length > 2) {
+          sequence.push(getBR(last));
+          corners[3] = 2;
+        } else if (second.sequence.length > 1) {
+          sequence.push(getBR(second, true));
+          corners[3] = second.corners[0] === second.corners[3] ? 1 : 2;
+        } else {
+          corners[3] = 1;
+        }
+      }
+    }
+  } else if (operandResults.length > 2) {
+    // 横向三部及以上，取首首末
+    operandResults.forEach((x, i) => {
       if (i === 0 || i === 1) {
         sequence.push(x.sequence[0]!);
-      } else if (i === primaryPartition.length - 1) {
+      } else if (i === operandResults.length - 1) {
         sequence.push(getBR(x));
       }
     });
     corners[3] = 2;
   } else {
-    const [first, second] = primaryPartition as [
-      PartitionResult,
-      PartitionResult,
-    ];
+    // 横向或外内两部，各取首末
+    const [first, second] = [operandResults[0]!, operandResults[1]!];
     sequence.push(getTL(first));
     let firstBR: number;
     let secondBR: number;
     if (first.sequence.length > 1) {
       sequence.push(getBR(first, true));
-      firstBR = 1;
+      firstBR = first.corners[0] === first.corners[3] ? 0 : 1;
       sequence.push(getBR(second));
       secondBR = 2;
     } else {
@@ -319,7 +284,7 @@ const c3Serializer: Serializer = (operandResults, glyph, name) => {
     corners,
     full: [],
     operator,
-    operandResults: primaryPartition,
+    operandResults: operandResults,
   };
 };
 
@@ -341,7 +306,7 @@ const regularize = (x: PartitionResult[], direction: Operator) => {
 };
 
 // eslint-disable-next-line complexity
-const zhangmaSerializer: Serializer = (operandResults, glyph, name) => {
+const zhangmaSerializer: Serializer = (operandResults, glyph) => {
   const corners: CornerSpecifier = [0, 0, 0, 0];
   const sequence: string[] = [];
   const full: string[] = [];
@@ -465,9 +430,10 @@ export const disassembleCompounds = (
   config: AnalysisConfig,
   componentResults: ComponentResults,
   characters: string[],
+  requiredCompounds: Set<string>,
 ) => {
   const knownCharacters = new Set(characters);
-  const compounds = topologicalSort(repertoire);
+  const compounds = topologicalSort(repertoire, requiredCompounds);
   const compoundResults: CompoundResults = new Map();
   const compoundError: string[] = [];
   const getResult = function (s: string): PartitionResult | undefined {
@@ -475,6 +441,8 @@ export const disassembleCompounds = (
   };
   const serializerName = config.analysis.serializer ?? "sequential";
   const serializer = serializerMap[serializerName] ?? sequentialSerializer;
+  const display = (s: string) => repertoire[s]?.name ?? s;
+  const warninfo: string[] = [];
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根
@@ -482,6 +450,7 @@ export const disassembleCompounds = (
         sequence: [char],
         full: [char],
         corners: [0, 0, 0, 0],
+        strokes: 0,
         operator: undefined,
       });
       continue;
@@ -491,6 +460,22 @@ export const disassembleCompounds = (
       // this is safe!
       const operandResults = rawOperandResults as PartitionResult[];
       const serialization = serializer(operandResults, glyph, char);
+      // 检查拆分是否满足递归条件
+      const hash = serialization.sequence.map(display).join(" ");
+      for (const { sequence: rawSequence, corners } of operandResults) {
+        const sequence = rawSequence.map(display);
+        let subhash: string;
+        if (sequence.length === 1) {
+          subhash = sequence[0]!;
+        } else if (corners[0] !== corners[3]) {
+          subhash = `${sequence[corners[0]]} ${sequence[corners[3]]}`;
+        } else {
+          subhash = `${sequence[0]} ${sequence.at(-1)}`;
+        }
+        if (!hash.includes(subhash)) {
+          warninfo.push(`${display(char)}：${hash} 不含构件首尾 ${subhash}`);
+        }
+      }
       compoundResults.set(char, serialization);
     } else {
       if (knownCharacters.has(char)) {

@@ -308,6 +308,8 @@ const overrideCorners: Map<string, CornerSpecifier> = new Map([
   ["串", [0, 0, 6, 6]],
   ["事", [0, 0, 7, 7]],
   ["臾", [0, 0, 7, 7]],
+  ["\uE0CB", [0, 0, 5, 5]], // 追字心
+  ["州", [0, 0, 5, 5]],
 ]);
 
 /**
@@ -352,36 +354,6 @@ export const renderRootList = (repertoire: Repertoire, elements: string[]) => {
   return rootList;
 };
 
-const getLeafComponents = (
-  repertoire: Repertoire,
-  config: AnalysisConfig,
-  characters: string[],
-) => {
-  const queue = [...characters];
-  const leafSet = new Set<string>();
-  const knownSet = new Set<string>(characters);
-  while (queue.length) {
-    const char = queue.shift()!;
-    const glyph = repertoire[char]!.glyph!;
-    if (!glyph) {
-      continue;
-    }
-    if (glyph.type === "compound") {
-      if (config.primaryRoots.has(char) || config.secondaryRoots.has(char))
-        continue;
-      glyph.operandList.forEach((x) => {
-        if (!knownSet.has(x)) {
-          knownSet.add(x);
-          queue.push(x);
-        }
-      });
-    } else {
-      leafSet.add(char);
-    }
-  }
-  return leafSet;
-};
-
 /**
  * 对所有部件进行拆分
  *
@@ -394,8 +366,8 @@ export const disassembleComponents = function (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],
+  components: Set<string>,
 ): [ComponentResults, string[]] {
-  const leafSet = getLeafComponents(repertoire, config, characters);
   const rootMap = renderRootList(repertoire, [
     ...config.primaryRoots,
     ...config.secondaryRoots,
@@ -405,7 +377,7 @@ export const disassembleComponents = function (
   const result: [string, ComponentAnalysis][] = [];
   const error: string[] = [];
   Object.entries(repertoire).forEach(([name, character]) => {
-    if (character.glyph?.type !== "basic_component" || !leafSet.has(name))
+    if (character.glyph?.type !== "basic_component" || !components.has(name))
       return;
     const cache = rootMap.has(name)
       ? rootMap.get(name)!

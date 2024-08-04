@@ -66,7 +66,7 @@ export async function roundTestConfig(config: Config) {
         message: "配置环行失败",
         description:
           "该配置在 libchai 中具有不同语义。以下是两者的差异：\n" +
-          diff(config, rustConfig),
+          JSON.stringify(diff(config, rustConfig)),
       });
       return false;
     }

@@ -16,6 +16,7 @@ export interface Info {
 // config.data begin
 
 export const characterSetSpecifiers = [
+  "minimal",
   "gb2312",
   "general",
   "basic",

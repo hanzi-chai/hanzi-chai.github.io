@@ -40,6 +40,7 @@ export const charactersAtom = atom((get) => {
     CharacterSetSpecifier,
     (k: string, v: PrimitiveCharacter) => boolean
   > = {
+    minimal: (_, v) => v.gb2312 && v.tygf > 0,
     gb2312: (_, v) => v.gb2312,
     general: (_, v) => v.tygf > 0,
     basic: (k, v) => v.tygf > 0 || isValidCJKBasicChar(k),
