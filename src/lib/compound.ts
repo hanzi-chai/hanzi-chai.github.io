@@ -79,22 +79,26 @@ export const recursiveRenderCompound = function (
  *
  * @remarks 这个实现目前比较低效，需要改进
  */
-const topologicalSort = (repertoire: Repertoire, required: Set<string>) => {
+const topologicalSort = (
+  repertoire: Repertoire,
+  required: Set<string>,
+  config: AnalysisConfig,
+) => {
   let compounds = new Map<string, CompoundCharacter>();
   for (let i = 0; i !== 10; ++i) {
     const thisLevelCompound = new Map<string, CompoundCharacter>();
     for (const [name, character] of Object.entries(repertoire)) {
-      if (!required.has(name)) continue;
+      if (!required.has(name) || compounds.get(name)) continue;
       const { glyph } = character;
-      if (compounds.get(name)) continue;
       if (glyph === undefined || glyph.type !== "compound") continue;
-      if (
-        glyph.operandList.every(
-          (x) =>
-            repertoire[x]?.glyph?.type === "basic_component" ||
-            compounds.get(x) !== undefined,
-        )
-      ) {
+      const wellKnown = glyph.operandList.every(
+        (x) =>
+          repertoire[x]?.glyph?.type === "basic_component" ||
+          compounds.get(x) !== undefined,
+      );
+      const isRoot =
+        config.primaryRoots.has(name) || config.secondaryRoots.has(name);
+      if (wellKnown || isRoot) {
         thisLevelCompound.set(name, character as CompoundCharacter);
       }
     }
@@ -433,7 +437,7 @@ export const disassembleCompounds = (
   requiredCompounds: Set<string>,
 ) => {
   const knownCharacters = new Set(characters);
-  const compounds = topologicalSort(repertoire, requiredCompounds);
+  const compounds = topologicalSort(repertoire, requiredCompounds, config);
   const compoundResults: CompoundResults = new Map();
   const compoundError: string[] = [];
   const getResult = function (s: string): PartitionResult | undefined {
