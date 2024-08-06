@@ -337,8 +337,8 @@ export const assemble = (
   const priorityMap = getPriorityMap(config.priority);
   return result.map((x) => {
     const hash = `${x.name}-${x.pinyin_list.join(",")}`;
-    const level = priorityMap.get(hash) ?? -1;
-    return { ...x, level };
+    const level = priorityMap.get(hash);
+    return level !== undefined ? { ...x, level } : x;
   });
 };
 

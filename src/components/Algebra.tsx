@@ -6,10 +6,10 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Form, Space, notification } from "antd";
-import { CloseCircleOutlined, CopyOutlined } from "@ant-design/icons";
 import type { Rule } from "~/lib";
 import { algebraAtom, useAddAtom } from "~/atoms";
 import { defaultAlgebra } from "~/lib";
+import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 
 interface AlgebraForm {
   name: string;
@@ -69,10 +69,32 @@ export default function Algebra({
       <ProFormList
         name="rules"
         label="拼写运算"
-        copyIconProps={{ Icon: CopyOutlined, tooltipText: "复制此项到末尾" }}
-        deleteIconProps={{
-          Icon: CloseCircleOutlined,
-          tooltipText: "删除这条运算",
+        actionRender={(field, action, defaultActionDom, count) => {
+          return [
+            ...defaultActionDom,
+            <ArrowUpOutlined
+              key="up_arrow"
+              style={{ marginLeft: "5px" }}
+              onClick={() => {
+                if (field.name === 0) {
+                  action.move(field.name, count - 1);
+                } else {
+                  action.move(field.name, field.name - 1);
+                }
+              }}
+            />,
+            <ArrowDownOutlined
+              key="down_arrow"
+              style={{ marginLeft: "5px" }}
+              onClick={() => {
+                if (field.name === count - 1) {
+                  action.move(field.name, 0);
+                } else {
+                  action.move(field.name, field.name + 1);
+                }
+              }}
+            />,
+          ];
         }}
       >
         <ProFormGroup key="group">
