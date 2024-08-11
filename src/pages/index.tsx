@@ -205,7 +205,7 @@ export default function HomeLayout() {
   });
 
   const { snow, jdh, mswb, ziyuan } = examples;
-  const { easy, zhengma, yustar, zhangma, xuma, huma } = examples;
+  const { easy, zhengma, zhenma, yustar, zhangma, xuma, huma } = examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
     label: x.info.name,
@@ -230,7 +230,9 @@ export default function HomeLayout() {
     {
       key: "4",
       label: "形码",
-      children: [easy, huma, xuma, yustar, zhangma, zhengma].map(prepare),
+      children: [easy, huma, xuma, yustar, zhangma, zhengma, zhenma].map(
+        prepare,
+      ),
     },
   ];
 

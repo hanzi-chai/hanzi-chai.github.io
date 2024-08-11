@@ -158,6 +158,23 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
   return { sequence, ...rest };
 };
 
+const zhenmaSerializer: Serializer = (operandResults, glyph) => {
+  const sequence: string[] = [];
+  if (glyph.operator === "⿶") {
+    sequence.push(...operandResults[1]!.sequence);
+    sequence.push(...operandResults[0]!.sequence);
+  } else {
+    operandResults.map((x) => x.sequence).forEach((x) => sequence.push(...x));
+  }
+  return {
+    sequence,
+    corners: [0, 0, 0, 0] as CornerSpecifier,
+    full: [],
+    operator: glyph.operator,
+    operandResults,
+  };
+};
+
 const robustPartition = (
   operandResults: PartitionResult[],
   operator: Operator,
@@ -420,6 +437,7 @@ const serializerMap: Record<string, Serializer> = {
   sequential: sequentialSerializer,
   c3: c3Serializer,
   zhangma: zhangmaSerializer,
+  zhenma: zhenmaSerializer,
 };
 
 /**
