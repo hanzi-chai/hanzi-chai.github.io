@@ -4,6 +4,7 @@ import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
 import snow from "../../examples/snow.yaml";
 import mswb from "../../examples/mswb.yaml";
+import ziyuan from "../../examples/ziyuan.yaml";
 import jdh from "../../examples/jdh.yaml";
 import easy from "../../examples/easy.yaml";
 import yustar from "../../examples/yustar.yaml";
@@ -17,6 +18,7 @@ export type Example =
   | "snow"
   | "jdh"
   | "mswb"
+  | "ziyuan"
   | "easy"
   | "zhengma"
   | "yustar"
@@ -27,6 +29,7 @@ export type Example =
 export const examples = {
   snow,
   mswb,
+  ziyuan,
   jdh,
   easy,
   zhengma,
@@ -50,6 +53,7 @@ const classifierMap: Record<ClassifierType, Classifier> = {
 
 export const keyboardTypes = [
   "米十五笔",
+  "字源",
   "宇浩·星陈",
   "郑码",
   "简单鹤",
@@ -61,6 +65,7 @@ export const keyboardTypes = [
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   米十五笔: examples.mswb.form,
+  字源: examples.ziyuan.form,
   宇浩·星陈: examples.yustar.form,
   郑码: examples.zhengma.form,
   简单鹤: examples.jdh.form,
@@ -77,6 +82,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
 export const encoderTypes = [
   "音形码（简单鹤）",
   "形音码（米十五笔）",
+  "形音码（字源）",
   "单编形码（张码）",
   "双编形码（郑码）",
   "双编形码（徐码）",
@@ -88,6 +94,7 @@ export type EncoderTypes = (typeof encoderTypes)[number];
 const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "音形码（简单鹤）": examples.jdh.encoder,
   "形音码（米十五笔）": examples.mswb.encoder,
+  "形音码（字源）": examples.ziyuan.encoder,
   "单编形码（张码）": examples.zhangma.encoder,
   "双编形码（郑码）": examples.zhengma.encoder,
   "双编形码（徐码）": examples.xuma.encoder,

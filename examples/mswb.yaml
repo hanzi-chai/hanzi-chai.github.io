@@ -2,8 +2,8 @@ version: '0.1'
 source: mswb
 info:
   name: 米十五笔
-  version: '2023.05.30'
   author: 李明
+  version: '2023.05.30'
   description: http://xukt.ysepan.com/
 analysis:
   classifier:

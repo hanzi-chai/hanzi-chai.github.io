@@ -204,8 +204,8 @@ export default function HomeLayout() {
     return localStorage.getItem("user") ? "login" : "signin";
   });
 
-  const { snow, mswb, jdh, easy, zhengma, yustar, zhangma, xuma, huma } =
-    examples;
+  const { snow, jdh, mswb, ziyuan } = examples;
+  const { easy, zhengma, yustar, zhangma, xuma, huma } = examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
     label: x.info.name,
@@ -225,19 +225,12 @@ export default function HomeLayout() {
     {
       key: "3",
       label: "形音",
-      children: [prepare(mswb)],
+      children: [mswb, ziyuan].map(prepare),
     },
     {
       key: "4",
       label: "形码",
-      children: [
-        prepare(easy),
-        prepare(huma),
-        prepare(xuma),
-        prepare(yustar),
-        prepare(zhangma),
-        prepare(zhengma),
-      ],
+      children: [easy, huma, xuma, yustar, zhangma, zhengma].map(prepare),
     },
   ];
 
