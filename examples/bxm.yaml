@@ -1,0 +1,1153 @@
+version: '0.1'
+source: bxm
+info:
+  name: 表形码
+  author: 陈爱文
+  version: '1.0'
+  description: 汉字表形符号和字素分类编码法
+analysis:
+  classifier:
+    圈: 4
+    捺: 5
+    平捺: 5
+    横捺: 5
+    挑捺: 5
+    弯钩: 6
+    横钩: 6
+    横撇: 6
+    横折: 6
+    横折钩: 6
+    撇钩: 6
+    横折提: 6
+    横斜钩: 6
+    横折折: 7
+    横折弯: 7
+    横折弯钩: 7
+    横折折折钩: 8
+    横撇弯钩: 8
+    横折折撇: 8
+    横折折折: 8
+    竖提: 9
+    竖折: 9
+    竖弯: 9
+    竖弯钩: 9
+    撇点: 9
+    撇折: 9
+    斜钩: 9
+    竖折撇: 10
+    竖折折钩: 10
+    竖折折: 10
+  degenerator:
+    no_cross: true
+    feature:
+      提: 横
+      捺: 点
+  selector:
+    - 结构完整
+    - 根少优先
+    - 全符笔顺
+    - 能连不交
+    - 能散不连
+    - 非形近根
+    - 取大优先
+  customize:
+    无:
+      - '1'
+      - 尢
+    戌:
+      - 戈
+      - '3'
+      - '1'
+    戍:
+      - 戈
+      - '3'
+      - '4'
+    兀:
+      - '1'
+      - 儿
+    辛:
+      - 亠
+      - 䒑
+      - 十
+    亚:
+      - '1'
+      - "\ue408"
+      - '1'
+    产:
+      - 亠
+      - 丷
+      - 厂
+    佥:
+      - "\ue43d"
+      - '1'
+      - "\ue42d"
+      - '1'
+    天:
+      - '1'
+      - 大
+    勿:
+      - 勹
+      - "\ue41e"
+    州:
+      - "\ue089"
+      - "\ue446"
+      - "\ue001"
+    豙:
+      - 亠
+      - 丷
+      - 豕
+    "\ue0a8":
+      - 冂
+      - "\ue001"
+    卞:
+      - '4'
+      - 下
+    余:
+      - "\ue43d"
+      - '1'
+      - 朩
+    互:
+      - '1'
+      - "\ue440"
+      - '1'
+    农:
+      - "\uf000"
+      - "\ue438"
+    衣:
+      - 亠
+      - "\uf038"
+      - "\ue438"
+    "\ue02c":
+      - 土
+      - 丷
+    "\ue01a":
+      - "\ue057"
+      - '3'
+    "\ue01e":
+      - "\ue057"
+      - '4'
+      - '3'
+    "\ue0b7":
+      - "\uf038"
+      - "\ue438"
+    隺:
+      - "\uf000"
+      - '2'
+      - "\ue428"
+    㒸:
+      - 丷
+      - 豕
+  strong:
+    - '1'
+    - 二
+    - "\ue40f"
+  customizeCorners: {}
+form:
+  alphabet: abcdefghijklmnopqrstuvwxyz
+  mapping_type: 1
+  grouping:
+    首字母-ê: 首字母-e
+    "\ue452": 十
+    "\ue401": 力
+    "\ue0f1": 肀
+    "\ue102": 王
+    "\ue443": "\ue068"
+    "\ue44b": 禾
+    于: 干
+    "\ue413": 十
+    "\uf037": 帀
+    "\ue0d1": 夫
+    "\ue822": 北
+  mapping:
+    '1': h
+    '2': i
+    '3': j
+    '4': d
+    '5': 'n'
+    '6': z
+    '7': z
+    '8': w
+    '9': l
+    '10': l
+    丁: t
+    土: 'y'
+    二: g
+    工: i
+    走: e
+    耂: j
+    王: i
+    三: g
+    丰: f
+    耒: m
+    "\ue064": r
+    耳: b
+    扌: f
+    艹: h
+    十: x
+    廿: h
+    甘: b
+    木: m
+    酉: s
+    "\ue052": c
+    車: f
+    覀: s
+    石: p
+    大: r
+    厂: j
+    不: t
+    豕: q
+    龙: w
+    匚: c
+    七: l
+    牙: r
+    车: l
+    弋: s
+    戈: s
+    虫: c
+    "\ue018": l
+    卜: l
+    止: 'y'
+    虍: j
+    口: o
+    囗: q
+    足: e
+    日: b
+    刂: g
+    田: q
+    由: 'y'
+    甲: t
+    申: f
+    非: x
+    小: g
+    目: b
+    冂: 'n'
+    巾: e
+    山: e
+    且: b
+    见: w
+    贝: r
+    骨: 'n'
+    罒: q
+    皿: q
+    "\ue09e": k
+    "\ue078": v
+    牛: f
+    手: f
+    气: k
+    毛: l
+    禾: u
+    攵: a
+    亻: v
+    川: g
+    片: k
+    身: r
+    臼: u
+    鬼: w
+    八: g
+    人: v
+    入: v
+    彳: v
+    乂: x
+    食: k
+    金: z
+    彡: g
+    丘: o
+    爪: j
+    瓜: j
+    舟: 'n'
+    豸: q
+    月: 'n'
+    几: w
+    犭: q
+    九: x
+    丸: x
+    鱼: u
+    儿: w
+    夕: d
+    勹: h
+    鸟: s
+    乌: s
+    匕: l
+    言: i
+    疒: j
+    冫: d
+    广: j
+    鹿: j
+    丬: k
+    门: 'n'
+    忄: l
+    丷: g
+    䒑: k
+    羊: 'y'
+    火: r
+    氵: d
+    "\ue42d": g
+    辶: z
+    宀: 'n'
+    礻: t
+    衤: t
+    心: u
+    马: s
+    尸: p
+    尹: p
+    彐: e
+    又: a
+    皮: a
+    阝: p
+    刀: h
+    习: e
+    力: x
+    也: l
+    子: z
+    己: l
+    已: l
+    巳: l
+    弓: w
+    纟: w
+    巛: g
+    母: q
+    厶: u
+    女: a
+    巴: l
+    "\ue0a6": s
+    "\ue41e": g
+    了: w
+    "\ue024": j
+    "\ue002": f
+    饣: k
+    "\ue000": i
+    龶: 'y'
+    夊: a
+    "\ue034": a
+    瓦: a
+    "\ue070": q
+    "\ue0d2": 'n'
+    㠯: b
+    "\ue414": b
+    "\ue415": s
+    禹: c
+    禺: c
+    匸: c
+    灬: d
+    "\ue447": x
+    "\ue01b": e
+    肀: f
+    "\ue06d": t
+    龷: s
+    长: k
+    镸: f
+    中: f
+    "\ue075": f
+    书: f
+    韦: f
+    "\ue440": o
+    "\ue0a7": u
+    及: a
+    龴: z
+    "\ue434": z
+    癶: x
+    夂: a
+    "\ue0b8": b
+    "\ue419": b
+    曰: b
+    臣: c
+    "\ue0d5": c
+    "\ue0b4": e
+    巨: c
+    "\ue08e": c
+    "\ue057": c
+    "\ue083": d
+    "\ue09b": x
+    "\ue088": g
+    "\ue00d": g
+    "\ue432": e
+    䶹: e
+    屮: e
+    "\ue0de": e
+    "\uf000": e
+    "\ue026": e
+    牜: f
+    "\ue029": f
+    㐄: f
+    "\ue411": f
+    事: f
+    "\ue410": f
+    "\ue003": f
+    "\uf003": f
+    巿: f
+    串: f
+    "\uf006": f
+    聿: f
+    "\uf007": f
+    "\ue048": f
+    "\ue412": f
+    "\ue0f8": f
+    "\ue089": g
+    "\ue446": g
+    "\ue03e": g
+    "\ue073": g
+    "\ue044": g
+    "\ue001": g
+    "\ue077": g
+    "\ue07f": g
+    巜: g
+    "\ue0e2": g
+    "\ue0e3": g
+    匁: e
+    "\ue050": h
+    廾: h
+    卅: h
+    世: h
+    册: h
+    "\ue0fb": h
+    "\ue11a": h
+    乃: h
+    "\ue020": h
+    "\ue0bc": h
+    "\ue423": h
+    "\ue427": h
+    正: i
+    五: i
+    "\ue0df": i
+    "\ue085": i
+    重: i
+    垂: i
+    讠: i
+    亠: i
+    "\uf008": i
+    主: i
+    "\ue428": i
+    "\ue451": 'y'
+    爫: j
+    "\uf009": j
+    "\ue838": j
+    "\ue014": k
+    "\ue07c": k
+    丌: k
+    "\ue448": g
+    "\ue422": k
+    "\ue0c8": l
+    "\ue02a": 'n'
+    东: l
+    乐: l
+    "\ue05c": l
+    "\ue079": l
+    乜: l
+    㔾: l
+    "\ue0a3": p
+    朩: m
+    屯: l
+    电: l
+    "\ue0ec": l
+    "\ue011": l
+    "\ue051": l
+    本: m
+    朿: m
+    果: m
+    柬: m
+    秉: m
+    未: m
+    "\ue421": x
+    冖: 'n'
+    内: 'n'
+    禸: 'n'
+    丹: 'n'
+    两: 'n'
+    冉: 'n'
+    "\uf00b": 'n'
+    凸: o
+    凹: o
+    囬: q
+    卩: p
+    "\ue0b2": p
+    廴: z
+    "\ue031": p
+    "\uf00c": p
+    "\ue06b": p
+    "\ue420": q
+    乑: q
+    "\ue0a9": q
+    豖: q
+    "\uf00f": q
+    "\uf011": q
+    "\ue0be": q
+    毋: q
+    "\uf012": q
+    囙: q
+    丈: r
+    史: r
+    吏: r
+    夷: r
+    夬: r
+    夫: r
+    央: r
+    曳: s
+    臾: r
+    "\ue047": r
+    矛: r
+    西: s
+    "\ue03f": s
+    戋: s
+    "\ue0da": s
+    我: s
+    "\ue417": s
+    "\ue0a5": s
+    "\ue053": s
+    "\ue007": z
+    "\ue009": z
+    丂: s
+    "\ue004": s
+    专: s
+    井: s
+    曲: s
+    开: s
+    "\ue0f4": s
+    "\ue066": s
+    弗: s
+    丅: t
+    干: t
+    帀: t
+    下: t
+    "\ue008": t
+    "\uf013": t
+    "\ue05a": t
+    "\ue0eb": t
+    弔: t
+    丆: t
+    "\ue039": t
+    "\uf014": t
+    "\ue0ee": t
+    "\uf015": t
+    "\ue016": 'y'
+    "\ue042": 'y'
+    "\ue093": 'y'
+    丩: u
+    必: u
+    "\ue43d": v
+    "\uf017": v
+    "\ue0d6": w
+    尢: w
+    "\ue100": w
+    旡: w
+    冘: w
+    北: x
+    幺: w
+    "\ue023": w
+    "\ue42f": x
+    兆: x
+    夗: x
+    "\ue408": x
+    "\ue863": x
+    "\ue42c": x
+    "\ue42b": x
+    "\ue985": x
+    "\uf018": x
+    "\uf019": x
+    士: 'y'
+    上: 'y'
+    "\ue0c1": 'y'
+    "\ue0f9": 'y'
+    "\ue0dd": 'y'
+    "\uf01a": 'y'
+    钅: z
+    孑: z
+    孓: z
+    "\uf01c": z
+    "\ue0c6": e
+    "\ue131": c
+    "\ue8b9": e
+    "\ue125": e
+    丯: f
+    "\ue15b": f
+    帇: f
+    "\ue0fa": f
+    "\ue12f": f
+    "\uf01f": f
+    "\uf01e": f
+    亊: f
+    "\ue442": g
+    卌: h
+    "\ue112": h
+    丗: h
+    "\ue076": h
+    冊: h
+    円: 'n'
+    䍏: 'n'
+    "\uf020": h
+    "\ue124": h
+    刄: h
+    㐁: i
+    飠: k
+    "\ue162": k
+    "\ue16f": k
+    "\ue14e": k
+    爿: k
+    "\ue10c": l
+    "\uebc0": l
+    "\ue127": l
+    黽: l
+    "\ue06f": l
+    東: m
+    束: m
+    "\ue130": m
+    "\ue12e": m
+    "\ue04c": h
+    乗: m
+    冄: 'n'
+    冎: 'n'
+    "\ue105": 'n'
+    "\ue060": 'n'
+    "\ueaef": 'n'
+    "\ue8b2": o
+    "\ue09c": o
+    亞: o
+    "\uf025": o
+    卪: p
+    "\ue10e": p
+    囧: q
+    "\ue0e7": r
+    "\ue068": x
+    "\ue043": r
+    "\ue449": r
+    夨: r
+    "\uf026": r
+    㬰: r
+    "\uf027": r
+    "\uf028": f
+    "\ue103": s
+    㦮: s
+    馬: s
+    鳥: s
+    烏: s
+    亐: s
+    "\ue157": s
+    "\ue0d7": s
+    襾: s
+    亜: s
+    "\uf029": s
+    "\ue0f0": s
+    糹: w
+    "\ue04e": x
+    門: x
+    鬥: x
+    "\uf02d": x
+    "\uf02e": x
+    "\uf02f": x
+    "\uf032": x
+    臦: x
+    "\uf033": x
+    戼: x
+    丱: x
+    "\uf034": x
+    "\uf035": x
+    卝: x
+    丫: 'y'
+    "\ue030": 'y'
+    "\ue0e8": 'y'
+    甴: 'y'
+    "\ue035": 'y'
+    "\ue114": 'y'
+    "\ue15a": 'y'
+    "\ue139": 'y'
+    "\uf036": z
+    首字母-a: a
+    首字母-b: b
+    首字母-c: c
+    首字母-d: d
+    首字母-e: e
+    首字母-f: f
+    首字母-g: g
+    首字母-h: h
+    首字母-j: j
+    首字母-k: k
+    首字母-l: l
+    首字母-m: m
+    首字母-n: 'n'
+    首字母-o: o
+    首字母-p: p
+    首字母-q: q
+    首字母-r: r
+    首字母-s: s
+    首字母-t: t
+    首字母-w: w
+    首字母-x: x
+    首字母-y: 'y'
+    首字母-z: z
+    凵: u
+    末: m
+    里: i
+    "\ue42e": x
+    尨: w
+    "\ue117": f
+    "\uf038": j
+    "\ue438": k
+encoder:
+  max_length: 4
+  auto_select_length: 4
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字根, rootIndex: 1}
+      next: c0
+    s2:
+      object: {type: 字根, rootIndex: 2}
+      next: c1
+    s3:
+      object: {type: 字根, rootIndex: 3}
+      next: c2
+    s4:
+      object: {type: 笔画, rootIndex: 2, strokeIndex: 1}
+      next: s5
+    s5:
+      object: {type: 字音, subtype: 首字母}
+      next: null
+    s6:
+      object: {type: 字根, rootIndex: -1}
+      next: null
+    s7:
+      object: {type: 字音, subtype: 首字母}
+      next: null
+    s8:
+      object: {type: 笔画, rootIndex: 1, strokeIndex: 1}
+      next: c3
+    s14:
+      object: {type: 笔画, rootIndex: 1, strokeIndex: 2}
+      next: s17
+    s15:
+      object: {type: 字根, rootIndex: 1}
+      next: s16
+    s16:
+      object: {type: 字音, subtype: 首字母}
+      next: null
+    s17:
+      object: {type: 字音, subtype: 首字母}
+      next: null
+  conditions:
+    c0:
+      object: {type: 字根, rootIndex: 2}
+      operator: 存在
+      positive: s2
+      negative: s8
+    c1:
+      object: {type: 字根, rootIndex: 3}
+      operator: 存在
+      positive: s3
+      negative: s4
+    c2:
+      object: {type: 字根, rootIndex: 4}
+      operator: 存在
+      positive: s6
+      negative: s7
+    c3:
+      object: {type: 笔画, rootIndex: 1, strokeIndex: 2}
+      operator: 存在
+      positive: s14
+      negative: s15
+data:
+  repertoire:
+    "\uf000":
+      unicode: 61440
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 冘, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
+      ambiguous: false
+      name: 冘二
+    "\uf003":
+      unicode: 61443
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue036", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
+      ambiguous: false
+      name: 姊字边二
+    "\uf006":
+      unicode: 61446
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 疌, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
+      ambiguous: false
+      name: 疌无人
+    "\uf007":
+      unicode: 61447
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 甫, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
+      ambiguous: false
+      name: 甫无丶
+    "\uf008":
+      unicode: 61448
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 永, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
+      ambiguous: false
+      name: 永二
+    "\uf009":
+      unicode: 61449
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 氏, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
+      ambiguous: false
+      name: 氏二
+    "\uf00a":
+      unicode: 61450
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue07e", strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}]}]
+      ambiguous: false
+      name: 旅下角后二
+    "\uf00b":
+      unicode: 61451
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue00c", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
+      ambiguous: false
+      name: 冒字头二
+    "\uf00c":
+      unicode: 61452
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 艮, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
+      ambiguous: false
+      name: 艮四
+    "\uf00f":
+      unicode: 61455
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0e9", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
+      ambiguous: false
+      name: 象下四
+    "\uf010":
+      unicode: 61456
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: []
+      ambiguous: false
+      name: 象下后四
+    "\uf011":
+      unicode: 61457
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0e9", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
+      ambiguous: false
+      name: 象下后五
+    "\uf012":
+      unicode: 61458
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue069", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
+      ambiguous: false
+      name: 卑六无丿
+    "\uf013":
+      unicode: 61459
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 疋, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
+      ambiguous: false
+      name: 疋无人
+    "\uf014":
+      unicode: 61460
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 斥, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      ambiguous: false
+      name: 斥下
+    "\uf015":
+      unicode: 61461
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue03a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
+      ambiguous: false
+      name: 定字底三
+    "\uf017":
+      unicode: 61463
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue03a", strokes: [{feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      ambiguous: false
+      name: 定字底人
+    "\uf018":
+      unicode: 61464
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 肃, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
+      ambiguous: false
+      name: 肃下
+    "\uf019":
+      unicode: 61465
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0d0", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
+      ambiguous: false
+      name: 雨四点
+    "\uf01b":
+      unicode: 61467
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: []
+      ambiguous: false
+      name: 承中
+    "\uf01c":
+      unicode: 61468
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 承, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      ambiguous: false
+      name: 承中
+    "\uf01e":
+      unicode: 61470
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue12f", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
+      ambiguous: false
+      name: 挿字边无丿
+    "\uf01f":
+      unicode: 61471
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue132", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
+      ambiguous: false
+      name: 揷字边无丿
+    "\uf020":
+      unicode: 61472
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue158", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 5}]}]
+      ambiguous: false
+      name: 飛字底四
+    "\uf021":
+      unicode: 61473
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
+      ambiguous: false
+      name: 亀无头
+    "\uf024":
+      unicode: 61476
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
+      ambiguous: false
+      name: 壺无士
+    "\uf025":
+      unicode: 61477
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿱, operandList: [冖, "\ue137"]}]
+      ambiguous: false
+      name: 壺无士
+    "\uf026":
+      unicode: 61478
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 㑒, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
+      ambiguous: false
+      name: 㑒无人
+    "\uf027":
+      unicode: 61479
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue104", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}]}]
+      ambiguous: false
+      name: 漢字边下
+    "\uf028":
+      unicode: 61480
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue150", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}]}]
+      ambiguous: false
+      name: 㵮下角下
+    "\uf029":
+      unicode: 61481
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿱, operandList: [冖, "\ue136"]}]
+      ambiguous: false
+      name: 壷无士
+    "\uf02a":
+      unicode: 61482
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
+      ambiguous: false
+      name: 州二
+    "\uf02c":
+      unicode: 61484
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: []
+      ambiguous: false
+      name: 鳏下角四点
+    "\uf02d":
+      unicode: 61485
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0d9", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      ambiguous: false
+      name: 鳏下角无竖
+    "\uf02e":
+      unicode: 61486
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue16d", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
+      ambiguous: false
+      name: 畱字头无横
+    "\uf02f":
+      unicode: 61487
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue10a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
+      ambiguous: false
+      name: 淵字边无横
+    "\uf032":
+      unicode: 61490
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿰, operandList: [刀, "\ue107"]}]
+      ambiguous: false
+      name: 齊字无丫
+    "\uf033":
+      unicode: 61491
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 丣, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
+      ambiguous: false
+      name: 丣无横
+    "\uf034":
+      unicode: 61492
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue120", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      ambiguous: false
+      name: 虛字底无横
+    "\uf035":
+      unicode: 61493
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue129", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
+      ambiguous: false
+      name: 斲字旁无横
+    "\uf036":
+      unicode: 61494
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 之, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}]}]
+      ambiguous: false
+      name: 之下
+    "\uf037":
+      unicode: 61495
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0d0", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
+      ambiguous: false
+      name: 雨字头无四点
+    "\uf038":
+      unicode: 61496
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0b7", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
+      ambiguous: false
+      name: 衣省二
+  glyph_customization:
+    "\uea02":
+      type: compound
+      operator: ⿴
+      operandList: ["\ue42b", 幺]
+      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    "\ue995":
+      type: compound
+      operator: ⿴
+      operandList: [北, 口]
+      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    "\ue9ab":
+      type: compound
+      operator: ⿴
+      operandList: ["\ue863", 白]
+      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
+  character_set: gb2312

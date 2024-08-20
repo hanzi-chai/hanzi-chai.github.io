@@ -214,6 +214,19 @@ const robustPartition = (
   return { operator: realOperator, operandResults: expanded };
 };
 
+// 另一种思路，包围结构取内部
+const _getBR = (x: PartitionResult, already?: boolean) => {
+  if (!already) return x.sequence[x.corners[3]]!;
+  if ("operandResults" in x && /[⿴⿵⿶⿷⿸⿹⿺]/.test(x.operator)) {
+    const inner = x.operandResults[1]!;
+    return inner.sequence[inner.corners[3]]!;
+  } else if (x.corners[3] !== x.corners[0]) {
+    return x.sequence[x.corners[3]]!;
+  } else {
+    return x.sequence.at(-1)!;
+  }
+};
+
 const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
 const getBR = (x: PartitionResult, already?: boolean) => {
   if (!already) return x.sequence[x.corners[3]]!;
@@ -224,7 +237,7 @@ const getBR = (x: PartitionResult, already?: boolean) => {
       const inner = x.operandResults[1]!;
       return inner.sequence[inner.corners[3]]!;
     }
-    return x.sequence.at(-1)!;
+    return x.sequence.find((_, i) => i !== x.corners[0])!;
   }
 };
 
@@ -484,7 +497,8 @@ export const disassembleCompounds = (
       const serialization = serializer(operandResults, glyph, char);
       // 检查拆分是否满足递归条件
       const hash = serialization.sequence.map(display).join(" ");
-      for (const { sequence: rawSequence, corners } of operandResults) {
+      for (const x of operandResults) {
+        const { sequence: rawSequence, corners } = x;
         const sequence = rawSequence.map(display);
         let subhash: string;
         if (sequence.length === 1) {
@@ -492,7 +506,13 @@ export const disassembleCompounds = (
         } else if (corners[0] !== corners[3]) {
           subhash = `${sequence[corners[0]]} ${sequence[corners[3]]}`;
         } else {
-          subhash = `${sequence[0]} ${sequence.at(-1)}`;
+          if ("operandResults" in x) {
+            const inner = x.operandResults[1]!;
+            const innerSequence = inner.sequence.map(display);
+            subhash = `${sequence[0]} ${innerSequence[inner.corners[3]]}`;
+          } else {
+            subhash = `${sequence[0]} ${sequence.find((_, i) => i !== corners[0])}`;
+          }
         }
         if (!hash.includes(subhash)) {
           warninfo.push(`${display(char)}：${hash} 不含构件首尾 ${subhash}`);

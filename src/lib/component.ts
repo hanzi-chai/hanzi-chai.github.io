@@ -154,6 +154,9 @@ export const getComponentScheme = function (
   ) as CornerSpecifier;
   if (config.analysis.serializer === "c3") {
     // 根据四角信息对 sequence 进行排序
+    // if (sequence.length > 3) {
+    //   console.log(component.name, sequence, corners);
+    // }
     const newSequence: string[] = [];
     const newCorners: CornerSpecifier = [0, 0, 0, 0];
     newSequence.push(sequence[corners[0]]!);
@@ -310,6 +313,25 @@ const overrideCorners: Map<string, CornerSpecifier> = new Map([
   ["臾", [0, 0, 7, 7]],
   ["\uE0CB", [0, 0, 5, 5]], // 追字心
   ["州", [0, 0, 5, 5]],
+  ["凢", [0, 0, 2, 2]],
+  ["首", [0, 1, 8, 8]],
+  ["甪", [0, 0, 5, 5]],
+  ["\uE13C", [0, 0, 2, 2]],
+  ["丯", [0, 0, 3, 3]],
+  ["\uEAF3", [0, 0, 2, 2]],
+  ["\uE076", [0, 0, 3, 3]],
+  ["\uE112", [0, 0, 5, 5]], // 帶字头
+  ["\uE158", [0, 0, 3, 3]], // 飛字底
+  ["亊", [0, 0, 6, 6]],
+  ["\uE16B", [0, 0, 6, 6]], // 龜字心
+  ["\uE151", [0, 0, 2, 2]], // 嬽上角框
+  ["平", [0, 0, 4, 4]],
+  ["乡", [0, 0, 2, 2]],
+  ["龜", [0, 0, 6, 6]],
+  ["㐧", [0, 0, 2, 2]],
+  ["\uE153", [0, 0, 3, 3]], // 虍无七
+  ["\uE165", [0, 0, 3, 3]], // 幷字旁
+  ["\uE166", [0, 0, 3, 3]], // 幷字边
 ]);
 
 /**

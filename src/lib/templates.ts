@@ -3,6 +3,7 @@ import type { Config } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
 import snow from "../../examples/snow.yaml";
+import bxm from "../../examples/bxm.yaml";
 import mswb from "../../examples/mswb.yaml";
 import ziyuan from "../../examples/ziyuan.yaml";
 import jdh from "../../examples/jdh.yaml";
@@ -21,6 +22,7 @@ export type Example =
   // 音形
   | "jdh"
   // 形音
+  | "bxm"
   | "mswb"
   | "ziyuan"
   // 形码
@@ -35,6 +37,7 @@ export type Example =
 export const examples = {
   snow,
   jdh,
+  bxm,
   mswb,
   ziyuan,
   easy,
@@ -59,12 +62,13 @@ const classifierMap: Record<ClassifierType, Classifier> = {
 };
 
 export const keyboardTypes = [
+  "简单鹤",
+  "表形码",
   "米十五笔",
   "字源",
   "宇浩·星陈",
   "郑码",
   "真码",
-  "简单鹤",
   "张码",
   "徐码",
   "虎码",
@@ -72,12 +76,13 @@ export const keyboardTypes = [
 ] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
+  简单鹤: examples.jdh.form,
+  表形码: examples.bxm.form,
   米十五笔: examples.mswb.form,
   字源: examples.ziyuan.form,
   宇浩·星陈: examples.yustar.form,
   郑码: examples.zhengma.form,
   真码: examples.zhenma.form,
-  简单鹤: examples.jdh.form,
   张码: examples.zhangma.form,
   徐码: examples.xuma.form,
   虎码: examples.huma.form,
@@ -90,6 +95,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
 
 export const encoderTypes = [
   "音形码（简单鹤）",
+  "形音码（表形码）",
   "形音码（米十五笔）",
   "形音码（字源）",
   "单编形码（张码）",
@@ -103,6 +109,7 @@ export const encoderTypes = [
 export type EncoderTypes = (typeof encoderTypes)[number];
 const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "音形码（简单鹤）": examples.jdh.encoder,
+  "形音码（表形码）": examples.bxm.encoder,
   "形音码（米十五笔）": examples.mswb.encoder,
   "形音码（字源）": examples.ziyuan.encoder,
   "单编形码（张码）": examples.zhangma.encoder,

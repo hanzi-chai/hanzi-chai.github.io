@@ -12,6 +12,7 @@ import { getSupplemental } from "~/lib";
 interface DictEntryWithReference extends DictEntry {
   reference: string[];
   status: "correct" | "incorrect" | "unknown";
+  hash: string;
 }
 
 export default function Debugger() {
@@ -48,6 +49,7 @@ export default function Debugger() {
     .filter((x) => [...x.name].length === 1 && filterFn(x.name))
     .map((x) => {
       const codes = reference[x.name] ?? [];
+      const hash = `${x.name}-${x.full}`;
       let status: "correct" | "incorrect" | "unknown" = "unknown";
       if (codes.length === 0) {
         unknown += 1;
@@ -58,7 +60,7 @@ export default function Debugger() {
         correct += 1;
         status = "correct";
       }
-      return { ...x, reference: codes, status };
+      return { ...x, reference: codes, status, hash };
     });
 
   if (incorrectOnly) {
@@ -140,7 +142,7 @@ export default function Debugger() {
         dataSource={dataSource}
         columns={columns}
         size="small"
-        rowKey="name"
+        rowKey="hash"
         pagination={{
           pageSize: 50,
         }}
