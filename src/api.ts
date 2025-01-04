@@ -8,7 +8,7 @@ export interface Err {
 }
 
 const getHeader = () => {
-  const token = localStorage.getItem("token");
+  const token = globalThis.localStorage ? localStorage.getItem("token") : null;
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -27,13 +27,10 @@ const template =
     return response as R;
   };
 
-export const list = async () =>
-  await template("GET")<PrimitiveCharacter[], undefined>("repertoire/all");
-
-export const get = async (unicode: number) =>
-  template("GET")<PrimitiveCharacter, undefined>(`repertoire/${unicode}`);
-
+export const get = template("GET");
 export const post = template("POST");
+export const put = template("PUT");
+export const del = template("DELETE");
 
 interface PUA {
   type: "component" | "compound";
@@ -45,23 +42,23 @@ interface Mutation {
   new: number;
 }
 
+export const list = async () =>
+  await get<PrimitiveCharacter[], undefined>("repertoire/all");
+
+export const fetchCharacterByUnicode = async (unicode: number) =>
+  get<PrimitiveCharacter, undefined>(`repertoire/${unicode}`);
+
 export const remoteCreateWithoutUnicode = (payload: PUA) =>
-  template("POST")<number, PUA>(`repertoire`, payload);
+  post<number, PUA>(`repertoire`, payload);
 
 export const remoteCreate = (payload: PrimitiveCharacter) =>
-  template("POST")<number, PrimitiveCharacter>(
-    `repertoire/${payload.unicode}`,
-    payload,
-  );
+  post<number, PrimitiveCharacter>(`repertoire/${payload.unicode}`, payload);
 
 export const remoteUpdate = (payload: PrimitiveCharacter) =>
-  template("PUT")<boolean, PrimitiveCharacter>(
-    `repertoire/${payload.unicode}`,
-    payload,
-  );
+  put<boolean, PrimitiveCharacter>(`repertoire/${payload.unicode}`, payload);
 
 export const remoteRemove = (unicode: number) =>
-  template("DELETE")<boolean, PrimitiveCharacter>(`repertoire/${unicode}`);
+  del<boolean, PrimitiveCharacter>(`repertoire/${unicode}`);
 
 export const remoteMutate = (payload: Mutation) =>
-  template("PUT")<boolean, Mutation>(`repertoire`, payload);
+  put<boolean, Mutation>(`repertoire`, payload);
