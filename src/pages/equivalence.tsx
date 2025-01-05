@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, SetStateAction } from "react";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -16,6 +16,9 @@ import User, { getUser } from "~/components/User";
 import { get, post } from "~/api";
 import type { EquivalenceData, Pair } from "~/lib/equivalence";
 import type { ColumnsType } from "antd/es/table";
+import { nanoid } from "nanoid";
+import { DeleteButton } from "~/components/Utils";
+import { exportJSON } from "~/lib";
 
 interface RankingData {
   user: string;
@@ -113,8 +116,7 @@ interface KeyProps {
   value: number;
   initial: number;
   final: number;
-  initialPressed: boolean;
-  finalPressed: boolean;
+  timestamps: [] | [number] | [number, number];
   handleClick: (v: number) => void;
 }
 
@@ -140,26 +142,20 @@ const KeyWrapper = styled.div<{ $type: keyof typeof COLORS }>`
   touch-action: none;
 `;
 
-const Key = ({
-  value,
-  initial,
-  initialPressed,
-  final,
-  finalPressed,
-  handleClick,
-}: KeyProps) => {
+const Key = ({ value, initial, final, timestamps, handleClick }: KeyProps) => {
+  const progress = timestamps.length;
   let $type: keyof typeof COLORS = "none";
   const labels = [];
   if (value === initial) {
     labels.push("1");
-    $type = initialPressed ? "initialPressed" : "initial";
+    $type = progress ? "initialPressed" : "initial";
   }
   if (value === final) {
     labels.push("2");
-    if (initial === final && !initialPressed) {
+    if (initial === final && progress === 0) {
       $type = "both";
     } else {
-      $type = finalPressed ? "finalPressed" : "final";
+      $type = progress === 2 ? "finalPressed" : "final";
     }
   }
   return (
@@ -208,8 +204,7 @@ const generatePairs = () => {
 const keyboard = ({
   initial,
   final,
-  initialPressed,
-  finalPressed,
+  timestamps,
   handleClick,
 }: KeyboardProps) => {
   const rows = 5;
@@ -224,8 +219,7 @@ const keyboard = ({
               value={j * rows + i}
               initial={initial}
               final={final}
-              initialPressed={initialPressed}
-              finalPressed={finalPressed}
+              timestamps={timestamps}
               handleClick={handleClick}
             />
           )),
@@ -276,60 +270,174 @@ const models = {
   },
 };
 
+const CURRENT_VERSION = 1;
+
+interface State {
+  model: keyof typeof models;
+  pairs: Pair[];
+  results: number[];
+  version: number;
+}
+
+type StateTable = State & { key: string };
+
+const ProfileLoader = ({
+  handleLoad,
+  contents,
+  setContents,
+}: {
+  handleLoad: (a: State) => void;
+  contents: StateTable[];
+  setContents: (a: SetStateAction<StateTable[]>) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>加载存档</Button>
+      <Modal
+        open={open}
+        closable={false}
+        maskClosable={false}
+        onCancel={() => setOpen(false)}
+        onOk={() => setOpen(false)}
+        title="加载存档"
+        okText="好"
+        cancelButtonProps={{ style: { display: "none" } }}
+      >
+        <Typography.Paragraph>
+          您可以在下面选择要加载的存档。
+        </Typography.Paragraph>
+        <Table<StateTable>
+          size="small"
+          columns={[
+            { title: "模型", dataIndex: "model" },
+            {
+              title: "进度",
+              render: (_, { results, pairs }) =>
+                `${results.length} / ${pairs.length}`,
+            },
+            {
+              title: "操作",
+              render: (_, value) => (
+                <>
+                  <Button onClick={() => handleLoad(value)}>加载</Button>
+                  <DeleteButton
+                    onClick={() => {
+                      setContents(contents.filter((c) => c.key !== value.key));
+                      localStorage.removeItem(value.key);
+                    }}
+                  />
+                </>
+              ),
+            },
+          ]}
+          dataSource={contents}
+        />
+      </Modal>
+    </>
+  );
+};
+
 const Equivalence = () => {
   const [pairs, setPairs] = useState<Pair[]>([]);
   const [results, setResults] = useState<number[]>([]);
-  const [index, setIndex] = useState(0);
-  const [initialPressed, setInitialPressed] = useState(false);
-  const [initialTime, setInitialTime] = useState(0);
-  const [finalPressed, setFinalPressed] = useState(false);
+  const [timestamps, setTimestamps] = useState<
+    [] | [number] | [number, number]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [model, setModel] = useState("手机五行七列" as keyof typeof models);
   const user = getUser();
+  const index = results.length;
   const { initial: lastInitial, final: lastFinal } =
     pairs[index - 1] ?? defaultPair;
   const { initial, final } = pairs[index] ?? defaultPair;
+  const [contents, setContents] = useState<StateTable[]>(() => {
+    return Object.entries(localStorage)
+      .filter(([key]) => key.startsWith("equivalence_"))
+      .map(([key, value]) => ({
+        ...JSON.parse(value),
+        key,
+      }));
+  });
+
+  useEffect(() => {
+    const handler = (ev: BeforeUnloadEvent) => {
+      ev.preventDefault();
+      ev.returnValue = "something";
+      return "something";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  });
+
+  const handleSave = () => {
+    const id = `equivalence_${nanoid(9)}`;
+    localStorage.setItem(
+      id,
+      JSON.stringify({ model, pairs, results, version: CURRENT_VERSION }),
+    );
+    setContents([
+      ...contents,
+      {
+        key: id,
+        model,
+        pairs,
+        results,
+        version: CURRENT_VERSION,
+      },
+    ]);
+    notification.success({
+      message: "保存成功",
+      description: "您可以在下次访问时恢复数据",
+    });
+  };
+
+  const handleLoad = (data: State) => {
+    setModel(data.model);
+    setPairs(data.pairs);
+    setResults(data.results);
+    setTimestamps([]);
+  };
 
   const handleClick = (v: number) => {
     if (!pairs) return;
-    if (initialPressed) {
+    if (timestamps.length === 1) {
       if (v === final) {
-        const time = Math.round(performance.now() - initialTime);
-        setResults([...results, time]);
-        setFinalPressed(true);
-        // 100ms 后进入下一组
-        setTimeout(() => {
-          setInitialPressed(false);
-          setFinalPressed(false);
-          setInitialTime(0);
-          setIndex(index + 1);
-        }, 100);
+        const last = performance.now();
+        const delta = Math.round(last - timestamps[0]);
+        if (delta > 500) {
+          notification.error({
+            message: "间隔过长",
+            description: "请尽可能快地依次按下两个键",
+          });
+          setTimestamps([]);
+        } else {
+          setTimestamps([timestamps[0], last]);
+          // 100ms 后进入下一组
+          setTimeout(() => {
+            setResults([...results, delta]);
+            setTimestamps([]);
+          }, 100);
+        }
       } else {
-        setInitialPressed(false);
+        setTimestamps([]);
       }
     } else {
       if (v === initial) {
-        setInitialTime(performance.now());
-        setInitialPressed(true);
+        setTimestamps([performance.now()]);
       }
     }
   };
 
   const handleBackspace = () => {
     setResults(results.slice(0, -1));
-    setIndex(index - 1);
-    setInitialPressed(false);
-    setFinalPressed(false);
-    setInitialTime(0);
+    setTimestamps([]);
   };
 
   const reset = () => {
     setPairs([]);
     setResults([]);
-    setIndex(0);
-    setInitialPressed(false);
-    setInitialTime(0);
-    setFinalPressed(false);
+    setTimestamps([]);
   };
   return (
     <>
@@ -342,7 +450,8 @@ const Equivalence = () => {
           <Ranking model={model} />
         </Flex>
         {user && (
-          <Flex justify="center" gap="middle">
+          <Flex justify="center" gap="middle" align="center">
+            模型
             <Select
               value={model}
               options={Object.keys(models).map((key) => ({
@@ -355,13 +464,16 @@ const Equivalence = () => {
               }}
             />
             <UserGuide>{models[model].description}</UserGuide>
+          </Flex>
+        )}
+        {user && (
+          <Flex justify="center" gap="middle">
             <Button
               type="primary"
               onClick={() => {
                 setPairs(models[model].generatePairs());
                 setResults([]);
-                setIndex(0);
-                setInitialPressed(false);
+                setTimestamps([]);
               }}
             >
               开始
@@ -369,6 +481,14 @@ const Equivalence = () => {
             <Button onClick={handleBackspace} disabled={results.length === 0}>
               撤销
             </Button>
+            <Button onClick={handleSave} disabled={results.length === 0}>
+              存档
+            </Button>
+            <ProfileLoader
+              handleLoad={handleLoad}
+              contents={contents}
+              setContents={setContents}
+            />
           </Flex>
         )}
         {user && pairs.length > 0 && (
@@ -391,8 +511,7 @@ const Equivalence = () => {
         models[model].keyboard({
           initial,
           final,
-          initialPressed,
-          finalPressed,
+          timestamps,
           handleClick,
         })}
       <Modal
@@ -416,23 +535,30 @@ const Equivalence = () => {
             data,
           };
           setLoading(true);
-          const result = await post<boolean, EquivalenceData>(
-            "equivalence",
-            payload,
-          );
+          const result = await Promise.race([
+            post<boolean, EquivalenceData>("equivalence", payload),
+            new Promise<boolean>((resolve) => {
+              setTimeout(() => {
+                resolve(false);
+              }, 10000);
+            }),
+          ]);
           setLoading(false);
           if (result) {
             notification.success({
               message: "上传成功",
               description: "感谢您的参与",
             });
+            reset();
           } else {
             notification.error({
               message: "上传失败",
-              description: "请联系管理员",
+              description: "已将数据下载为 JSON 文件，请您把它手动发送给管理员",
             });
+            setTimeout(() => {
+              exportJSON(payload, "equivalence.json");
+            }, 500);
           }
-          reset();
         }}
         onCancel={reset}
       >
