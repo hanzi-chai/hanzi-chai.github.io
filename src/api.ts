@@ -4,7 +4,7 @@ export const endpoint = "https://api.chaifen.app/";
 
 export interface Err {
   err: string;
-  message: string;
+  msg: string;
 }
 
 const getHeader = () => {
@@ -24,7 +24,7 @@ const template =
       headers: getHeader(),
       body: payload && JSON.stringify(payload),
     }).then((res) => res.json());
-    return response as R;
+    return response as R | Err;
   };
 
 export const get = template("GET");

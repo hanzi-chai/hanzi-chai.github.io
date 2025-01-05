@@ -53,6 +53,7 @@ function Ranking({ model }: { model: keyof typeof models }) {
   useEffect(() => {
     (async () => {
       const data = await get<EquivalenceData[], undefined>("equivalence");
+      if ("err" in data) return;
       const modelData = data.filter((d) => d.model === model);
       const modelDataByUser = new Map<string, number[]>();
       for (const d of modelData) {
@@ -544,7 +545,7 @@ const Equivalence = () => {
             }),
           ]);
           setLoading(false);
-          if (result) {
+          if (result === true) {
             notification.success({
               message: "上传成功",
               description: "感谢您的参与",
