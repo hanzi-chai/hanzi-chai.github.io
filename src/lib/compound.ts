@@ -14,6 +14,7 @@ import type {
   CompoundCharacter,
 } from "./data";
 import type { CornerSpecifier } from "./topology";
+import type { Analysis } from "./config";
 
 export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 
@@ -446,11 +447,41 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
   };
 };
 
-const serializerMap: Record<string, Serializer> = {
+const snow2Serializer: Serializer = (operandResults, glyph) => {
+  const sequence: string[] = [];
+  const corners: CornerSpecifier = [0, 0, 0, 0];
+  const [first, last] = [operandResults[0]!, operandResults.at(-1)!];
+  sequence.push(getTL(first));
+  if (/[⿴⿵⿶⿷⿹⿺⿻]/.test(glyph.operator)) {
+    if (first.corners[0] !== first.corners[3]) {
+      sequence.push(getBR(first, true));
+      corners[3] = 1;
+    } else {
+      sequence.push(getBR(last));
+      corners[3] = 0;
+    }
+  } else {
+    sequence.push(getBR(last));
+    corners[3] = 1;
+  }
+  return {
+    sequence,
+    corners,
+    full: [],
+    operator: glyph.operator,
+    operandResults,
+  };
+};
+
+const serializerMap: Record<
+  Exclude<Analysis["serializer"], undefined>,
+  Serializer
+> = {
   sequential: sequentialSerializer,
   c3: c3Serializer,
   zhangma: zhangmaSerializer,
   zhenma: zhenmaSerializer,
+  snow2: snow2Serializer,
 };
 
 /**

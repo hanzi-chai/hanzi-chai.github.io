@@ -32,6 +32,7 @@ const Customize = ({
   const add = useAddAtom(customizeAtom);
   const addCorner = useAddAtom(customizeCornersAtom);
   const serializer = useAtomValue(serializerAtom);
+  const showCorners = serializer === "c3" || serializer === "snow2";
   return (
     <ProForm<{ content: string[]; corners: CornerSpecifier }>
       title={component}
@@ -63,7 +64,7 @@ const Customize = ({
         )}
       </ProFormList>
       <ProFormGroup>
-        {serializer === "c3" &&
+        {showCorners &&
           range(4).map((i) => (
             <ProFormSelect
               key={i}

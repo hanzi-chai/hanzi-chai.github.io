@@ -1,22 +1,21 @@
-import { mean, round, sortBy } from "lodash-es";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { mean, round, sortBy, sum } from "lodash-es";
 import { erf, std } from "mathjs";
+import { exit } from "process";
 import { get } from "~/api";
-import type { EquivalenceData } from "~/lib/equivalence";
+import type { EquivalenceData, Pair } from "~/lib/equivalence";
 import { distance, partition, 手机五行七列 } from "~/lib/equivalence";
 
-const partitions = partition(手机五行七列);
-const hashmap = new Map<string, number>();
-
-for (const [index, set] of partitions.entries()) {
-  for (const v of set) {
-    hashmap.set(`${v.initial},${v.final}`, index);
-  }
-}
-
-interface Measurement {
-  mean: number;
+interface Estimation {
+  value: number;
   std: number;
   length: number;
+}
+
+interface Equivalence {
+  distance: number;
+  value: number;
+  std: number;
 }
 
 // discard outliers using Chauvenet's criterion
@@ -30,12 +29,18 @@ function chauvenet(data: number[]) {
   });
 }
 
-function measure(data: number[]): Measurement {
+function measure(data: number[]): Estimation {
   if (data.length === 0) {
     return {
-      mean: NaN,
+      value: NaN,
       std: NaN,
       length: 0,
+    };
+  } else if (data.length === 1) {
+    return {
+      value: data[0]!,
+      std: 0,
+      length: 1,
     };
   }
   // recursively discard outliers
@@ -46,13 +51,17 @@ function measure(data: number[]): Measurement {
     finalData = newData;
   }
   return {
-    mean: mean(finalData),
-    std: std(finalData, "unbiased") as number,
+    value: mean(finalData),
+    std: (std(finalData, "unbiased") as number) / Math.sqrt(finalData.length),
     length: finalData.length,
   };
 }
 
-function analyze(d: EquivalenceData) {
+function analyze(
+  d: EquivalenceData,
+  partitions: Set<Pair>[],
+  hashmap: Map<string, number>,
+) {
   const { data } = d;
   const result = partitions.map((x) => ({ set: x, data: [] as number[] }));
   for (const { initial, final, time } of data) {
@@ -65,32 +74,107 @@ function analyze(d: EquivalenceData) {
   }
   const stats = result.map(({ set, data }) => {
     const dist = distance([...set][0]!);
-    console.log(dist, data);
     return {
       ...measure(data),
       rawLength: data.length,
       distance: dist,
     };
   });
-  return sortBy(stats, (x) => x.distance);
+  return stats;
 }
 
-const data = await get<EquivalenceData[], undefined>("equivalence");
+function preprocess(modelData: EquivalenceData[]) {
+  const partitions = partition(手机五行七列);
+  const hashmap = new Map<string, number>();
+  for (const [index, set] of partitions.entries()) {
+    for (const v of set) {
+      hashmap.set(`${v.initial},${v.final}`, index);
+    }
+  }
 
-const modelData = data.find((d) => d.model === "手机五行七列")!;
+  const sampleData = partitions.map((x) => ({
+    set: x,
+    data: [] as Equivalence[],
+  }));
 
-const analyzeResult = analyze(modelData);
-for (const { distance, mean, std } of analyzeResult) {
-  console.log(`键距 ${distance}：${round(mean, 2)} ± ${round(std, 2)} ms`);
+  for (const sample of modelData) {
+    // 和 partitions 一一对应
+    const sampleResult = analyze(sample, partitions, hashmap);
+    const baseline = sampleResult.find((x) => x.distance === 0);
+    if (!baseline) continue;
+    sampleResult.forEach(({ distance, value, std }, index) => {
+      if (distance === 0) {
+        sampleData[index]!.data.push({ distance, value: 1, std: 0 });
+      } else {
+        const ratio = value / baseline.value;
+        const correction = 1 + baseline.std ** 2 / baseline.value ** 2;
+        if (correction > 1.0003) console.log(distance, ratio, correction);
+        const ratioStd =
+          Math.sqrt((std / value) ** 2 + (baseline.std / baseline.value) ** 2) *
+          ratio;
+        sampleData[index]!.data.push({
+          distance,
+          value: ratio * correction,
+          std: ratioStd,
+        });
+      }
+    });
+  }
+  return sampleData;
 }
-const baseline = analyzeResult.find((x) => x.distance === 0)!;
-const others = analyzeResult.filter((x) => x.distance !== 0);
 
-for (const { distance, mean, std, rawLength, length } of others) {
-  const quotient = mean / baseline.mean;
-  const qstd = std / baseline.mean;
-  const diff = rawLength - length;
-  console.log(
-    `键距 ${distance}：${round(quotient, 2)} ± ${round(qstd, 2)}（${rawLength} 个样本${diff ? `，${diff} 个无效样本` : ""}）`,
-  );
+function finalize(sampleData: { set: Set<Pair>; data: Equivalence[] }[]) {
+  return sampleData.map(({ set, data }) => {
+    const distance = data[0]!.distance;
+    const values = data.map((x) => x.value);
+    const stds = data.map((x) => x.std);
+    const variances = stds.map((x) => x ** 2);
+    const coefficients = data.map(() => 1 / data.length);
+    // 另一种权重计算方法
+    // const suminvvar = sum(variances.map((x) => 1 / x));
+    // const coefficients = variances.map((x) => 1 / x / suminvvar);
+    const value = sum(values.map((x, j) => x * coefficients[j]!));
+    const variance = sum(variances.map((x, j) => x * coefficients[j]! ** 2));
+    const std = Math.sqrt(variance);
+    const equivalence: Equivalence = { distance, value, std };
+    return { set, ...equivalence };
+  });
 }
+
+let data: EquivalenceData[];
+if (existsSync("scripts/data.json")) {
+  data = JSON.parse(readFileSync("scripts/data.json", "utf-8"));
+} else {
+  const res = await get<EquivalenceData[], undefined>("equivalence");
+  if ("err" in res) exit(1);
+  data = res;
+  writeFileSync("scripts/data.json", JSON.stringify(data, null, 2));
+}
+const modelData = data.filter((d) => d.model === "手机五行七列");
+const sampleData = preprocess(modelData);
+const equivalence = finalize(sampleData);
+const sortedEquivalence = sortBy(equivalence, "distance", "value");
+
+writeFileSync("scripts/equivalence.json", JSON.stringify(sampleData, null, 2));
+
+const content = [["组合", "分组", "当量", "不确定度"].join("\t")];
+const counter = new Map<number, number>();
+for (const { distance, value, std, set } of sortedEquivalence) {
+  let groupname: string;
+  if (distance === -1) {
+    groupname = "/";
+  } else {
+    const distanceCount = counter.get(distance) ?? 0;
+    groupname = `${distance}${"ABCDEFGHIJKLMNOPQRSTUVWXYZ"[distanceCount]}`;
+    counter.set(distance, distanceCount + 1);
+  }
+  for (const { initial, final } of sortBy([...set], "initial", "final")) {
+    content.push(
+      [`${initial}-${final}`, groupname, round(value, 3), round(std, 3)].join(
+        "\t",
+      ),
+    );
+  }
+}
+
+writeFileSync("scripts/手机 5 × 7 当量.txt", content.join("\n") + "\n");

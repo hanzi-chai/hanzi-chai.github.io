@@ -24,10 +24,10 @@ export function partition<T>({ group, relation }: Model<T>) {
     const stack = [v];
     while (stack.length > 0) {
       const u = stack.pop()!;
-      if (visited.has(u)) continue;
       visited.add(u);
       subgroup.add(u);
       for (const w of group) {
+        if (visited.has(w)) continue;
         if (relation(u, w)) stack.push(w);
       }
     }
@@ -42,7 +42,13 @@ export interface Pair {
 }
 
 const isDifferentHand = (p: Pair) => {
+  if (p.initial === p.final) return false;
   return (p.initial < 20 && p.final >= 15) || (p.initial >= 15 && p.final < 20);
+};
+
+const isSameHand = (p1: Pair, p2: Pair) => {
+  const numbers = [p1.initial, p1.final, p2.initial, p2.final];
+  return numbers.every((n) => n < 15) || numbers.every((n) => n >= 20);
 };
 
 const reflect = (n: number) => {
@@ -57,6 +63,12 @@ export const distance = (p: Pair) => {
   return (x1 - x2) ** 2 + (y1 - y2) ** 2;
 };
 
+export const displacement = (p: Pair) => {
+  let [x1, y1] = [Math.floor(p.initial / 5), p.initial % 5];
+  let [x2, y2] = [Math.floor(p.final / 5), p.final % 5];
+  return [x2 - x1, y2 - y1] as const;
+};
+
 export const 手机五行七列: Model<Pair> = {
   group: new Set(
     range(35)
@@ -64,16 +76,19 @@ export const 手机五行七列: Model<Pair> = {
       .flat(),
   ),
   relation: (p1, p2) => {
-    return distance(p1) === distance(p2);
-    // // 当量 0
-    // if (isDifferentHand(p1) && isDifferentHand(p2)) return true;
-    // // 当量 1
-    // if (p1.initial === p1.final && p2.initial === p2.final) return true;
-    // // 时间反演
-    // if (p1.initial === p2.final && p1.final === p2.initial) return true;
-    // // 空间镜像
-    // if (reflect(p1.initial) === p2.initial && reflect(p1.final) === p2.final)
-    //   return true;
-    // return false;
+    // 异指连击当量相同
+    if (isDifferentHand(p1) && isDifferentHand(p2)) return true;
+    // 同键连击当量相同
+    if (p1.initial === p1.final && p2.initial === p2.final) return true;
+    // 时间反演
+    if (p1.initial === p2.final && p1.final === p2.initial) return true;
+    // 空间镜像
+    if (reflect(p1.initial) === p2.initial && reflect(p1.final) === p2.final)
+      return true;
+    // 空间平移（同手）
+    const [dx1, dy1] = displacement(p1);
+    const [dx2, dy2] = displacement(p2);
+    if (isSameHand(p1, p2) && dx1 === dx2 && dy1 === dy2) return true;
+    return false;
   },
 };

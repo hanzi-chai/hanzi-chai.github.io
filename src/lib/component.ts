@@ -152,7 +152,10 @@ export const getComponentScheme = function (
       (x) => x & (1 << (component.glyph.length - corner - 1)),
     ),
   ) as CornerSpecifier;
-  if (config.analysis.serializer === "c3") {
+  if (
+    config.analysis.serializer === "c3" ||
+    config.analysis.serializer === "snow2"
+  ) {
     // 根据四角信息对 sequence 进行排序
     // if (sequence.length > 3) {
     //   console.log(component.name, sequence, corners);
@@ -277,6 +280,8 @@ export const recursiveRenderComponent = function (
 };
 
 const overrideCorners: Map<string, CornerSpecifier> = new Map([
+  ["七", [0, 0, 1, 1]],
+  ["九", [0, 0, 1, 1]],
   ["良", [0, 0, 4, 6]],
   ["\uE06A", [0, 0, 4, 5]],
   ["世", [0, 0, 4, 4]],
