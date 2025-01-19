@@ -136,7 +136,7 @@ export default function ElementPicker() {
     },
   ];
   return (
-    <Flex vertical gap="small" style={{ flex: "1 0 400px" }}>
+    <Flex vertical gap="small" style={{ flex: "0 0 400px" }}>
       <Typography.Title level={3}>元素选择器</Typography.Title>
       <Flex gap="middle" align="baseline">
         <span>元素类型：</span>

@@ -1,8 +1,8 @@
 import type { FC } from "react";
-import { memo, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import Char from "./Character";
-import { Button, Flex, Modal, Pagination, Popover, Typography } from "antd";
+import { Button, Flex, Modal, Pagination, Tooltip, Typography } from "antd";
 import {
   useAtomValue,
   repertoireAtom,
@@ -12,12 +12,11 @@ import {
   glyphAtom,
 } from "~/atoms";
 import { isPUA, makeFilter } from "~/lib";
-import { StrokesView } from "./GlyphView";
 import StrokeSearch from "./CharacterSearch";
 import type { ShapeElementTypes } from "./ElementPicker";
 import type { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
-import { useDraggable } from "@dnd-kit/core";
+import { svgDisplay } from "./Utils";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -58,48 +57,14 @@ const Element: FC<ElementProps> = ({
       onClick={() => setElement(x === currentElement ? undefined : x)}
       type={type}
     >
-      {display(x)}
+      {svgDisplay(x, glyphMap)}
     </Char>
   );
   if (!isPUA(x)) return core;
-  const glyph = glyphMap.get(x);
-  if (glyph === undefined) return core;
-  return (
-    <Popover
-      content={
-        <div style={{ width: "200px" }}>
-          <StrokesView glyph={glyph} />
-        </div>
-      }
-    >
-      {core}
-    </Popover>
-  );
+  return <Tooltip title={display(x)}>{core}</Tooltip>;
 };
 
 const MyPagination = styled(Pagination)``;
-
-const DraggableElement = memo((props: ElementProps) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: props.element,
-  });
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ ...style, zIndex: 10 }}
-      {...listeners}
-      {...attributes}
-    >
-      <Element {...props} />
-    </div>
-  );
-});
 
 export default function ElementPool({
   element,

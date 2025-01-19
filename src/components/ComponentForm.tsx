@@ -240,7 +240,7 @@ export default function ComponentForm({
     >
       <EditorRow>
         <EditorColumn span={10}>
-          <Box style={{ width: 400, height: 400 }}>
+          <Box>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
                 const component = props as Component;
@@ -250,6 +250,7 @@ export default function ComponentForm({
                     : new Error();
                 return (
                   <StrokesView
+                    displayMode
                     glyph={rendered instanceof Error ? [] : rendered}
                     setGlyph={(g: SVGStroke[]) => {
                       const projection = component.strokes.map((x, index) =>

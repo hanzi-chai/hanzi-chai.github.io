@@ -13,6 +13,9 @@ import type { MouseEventHandler } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
+import type { SVGGlyph } from "~/lib";
+import { isPUA } from "~/lib";
+import { StrokesView } from "./GlyphView";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -119,4 +122,15 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
       icon={<DeleteOutlined />}
     />
   );
+};
+
+export const svgDisplay = (name: string, glyphMap: Map<string, SVGGlyph>) => {
+  if (!isPUA(name)) {
+    return name;
+  }
+  const glyph = glyphMap.get(name);
+  if (glyph === undefined) {
+    return name;
+  }
+  return <StrokesView glyph={glyph} />;
 };

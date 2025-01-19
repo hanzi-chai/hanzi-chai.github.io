@@ -16,7 +16,7 @@ import type {
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import type { Key } from "./config";
+import type { Key, Mapped, Mapping } from "./config";
 import type { IndexedElement } from "./assembly";
 
 interface Loss {
@@ -433,3 +433,21 @@ export type Tuple<T, N extends number> = N extends N
 type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
   ? R
   : _TupleOf<T, N, [T, ...R]>;
+
+export interface MappedInfo {
+  name: string;
+  code: Mapped;
+}
+
+export const getReversedMapping = (mapping: Mapping, alphabet: string) => {
+  const reversedMapping = new Map<string, MappedInfo[]>(
+    Array.from(alphabet).map((key) => [key, []]),
+  );
+  for (const [name, code] of Object.entries(mapping)) {
+    const main = code[0];
+    if (typeof main === "string") {
+      reversedMapping.get(main)?.push({ name, code });
+    }
+  }
+  return reversedMapping;
+};

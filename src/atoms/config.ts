@@ -1,6 +1,12 @@
 import { atom } from "jotai";
 import { atomFamily, atomWithStorage } from "jotai/utils";
-import type { Analysis, Data, EncoderConfig, Example } from "~/lib";
+import type {
+  Analysis,
+  Data,
+  EncoderConfig,
+  Example,
+  DiagramConfig,
+} from "~/lib";
 import {
   defaultOptimization,
   type Algebra,
@@ -58,3 +64,7 @@ export const optimAtom = focusAtom(configAtom, (o) =>
   o.prop("optimization").valueOr(defaultOptimization),
 );
 optimAtom.debugLabel = "config.optimization";
+export const diagramAtom = focusAtom(configAtom, (o) =>
+  o.prop("diagram").valueOr({ layout: [], contents: [] } as DiagramConfig),
+);
+diagramAtom.debugLabel = "config.diagram";

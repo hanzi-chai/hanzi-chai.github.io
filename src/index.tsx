@@ -28,6 +28,12 @@ const GlobalStyle = createGlobalStyle`
   html, body, #root {
     height: 100%;
   }
+
+  @media print {
+    header, aside {
+      display: none;
+    }
+  }  
 `;
 
 const createRouter =

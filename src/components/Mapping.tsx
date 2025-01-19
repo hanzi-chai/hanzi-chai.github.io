@@ -9,7 +9,6 @@ import {
   Space,
   Typography,
 } from "antd";
-import type { CSSProperties } from "react";
 import { useState, useMemo, memo } from "react";
 import {
   useAtomValue,
@@ -24,22 +23,24 @@ import {
   useAddAtom,
   useRemoveAtom,
   useAtom,
+  glyphAtom,
 } from "~/atoms";
 
 import Element from "./Element";
 import Char from "./Character";
-import { isPUA, joinKeys, printableAscii, renderMapped } from "~/lib";
-import { DeleteButton, Uploader } from "./Utils";
+import {
+  getReversedMapping,
+  isPUA,
+  joinKeys,
+  printableAscii,
+  renderMapped,
+} from "~/lib";
+import { DeleteButton, svgDisplay, Uploader } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import type { Key } from "~/lib";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
-
-interface MappedInfo {
-  name: string;
-  code: string | Key[];
-}
+import type { Key, MappedInfo, Mapping } from "~/lib";
+import styled from "styled-components";
 
 const useAffiliates = (name: string) => {
   const mapping = useAtomValue(mappingAtom);
@@ -96,9 +97,7 @@ const KeysEditor = ({
         <DeleteButton
           onClick={() => {
             removeMapping(name);
-            if (onDelete) {
-              onDelete();
-            }
+            onDelete?.();
           }}
         />
       </Space>
@@ -106,24 +105,19 @@ const KeysEditor = ({
   );
 };
 
-interface AdjustableRootPopoverContentProps {
+interface ElementDetailProps {
   keys: Key[];
   name: string;
   main: string;
   setMain: Function;
 }
-const AdjustableRootPopoverContent = ({
-  keys,
-  name,
-  main,
-  setMain,
-}: AdjustableRootPopoverContentProps) => {
+const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
   const addMapping = useAddAtom(mappingAtom);
   const addGrouping = useAddAtom(groupingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
   const removeGrouping = useRemoveAtom(groupingAtom);
   const [affiliates, partialAffiliates] = useAffiliates(name);
-  const display = useAtomValue(displayAtom);
+  const glyphMap = useAtomValue(glyphAtom);
   return (
     <Flex vertical gap="middle">
       <KeysEditor
@@ -136,7 +130,7 @@ const AdjustableRootPopoverContent = ({
           <span>归并元素</span>
           {affiliates.map((x) => (
             <Flex key={x} justify="space-between">
-              <Element>{display(x)}</Element>
+              <Element>{svgDisplay(x, glyphMap)}</Element>
               <Button
                 onClick={() => {
                   addMapping(x, joinKeys(keys));
@@ -180,63 +174,74 @@ const AdjustableRootPopoverContent = ({
   );
 };
 
-const AdjustableRoot = ({ name, code }: MappedInfo) => {
-  const { mapping_type, mapping } = useAtomValue(keyboardAtom);
+const ElementLabelWrapper = styled.span`
+  display: inline-flex;
+  align-items: end;
+  cursor: pointer;
+  line-height: 1;
 
+  &:hover {
+    background-color: #ddd;
+  }
+`;
+
+export const ElementLabel = ({
+  name,
+  code,
+  useProperName,
+  ...rest
+}: MappedInfo & { useProperName?: boolean }) => {
   const [affiliates, partialAffiliates] = useAffiliates(name);
-  const padding = Math.max((mapping_type ?? 1) - code.length, 0);
-  const keys = Array.from(code).concat(Array(padding).fill(""));
+  const glyphMap = useAtomValue(glyphAtom);
+  const properName =
+    name.includes("-") && useProperName
+      ? name.split("-").slice(1).join("-")
+      : name;
+  const myDisplay = (name: string) => svgDisplay(name, glyphMap);
+  return (
+    <ElementLabelWrapper {...rest}>
+      {/* 主要字根 */ myDisplay(properName)}
+      {
+        /* 归并字根 */ affiliates.length >= 1 && (
+          <span style={{ fontSize: "0.7em", display: "inline-flex" }}>
+            {affiliates.map(myDisplay)}
+          </span>
+        )
+      }
+      {
+        /* 第二码及之后的编码 */ code.length > 1 && (
+          <span style={{ fontSize: "0.8em" }}>
+            {renderMapped(code.slice(1))}
+          </span>
+        )
+      }
+      {
+        /* 部分归并字根 */ partialAffiliates.length >= 1 &&
+          partialAffiliates.map(([element, mapped], index) => (
+            <span style={{ fontSize: "0.7em" }} key={index}>
+              [{myDisplay(element)}
+              &nbsp;
+              {renderMapped(mapped.slice(1))}]
+            </span>
+          ))
+      }
+    </ElementLabelWrapper>
+  );
+};
 
+const AdjustableElement = ({ name, code }: MappedInfo) => {
+  const { mapping } = useAtomValue(keyboardAtom);
+  const keys = Array.from(code);
   const [main, setMain] = useState(Object.keys(mapping)[0]);
-  const display = useAtomValue(displayAtom);
-  // const { attributes, listeners, setNodeRef, transform } = useDraggable({
-  //   id: `onsite-${name}`,
-  // });
-  // const style = transform
-  //   ? {
-  //       transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  //     }
-  //   : undefined;
   return (
     <Popover
-      trigger={["click"]}
+      trigger={["hover", "click"]}
       mouseLeaveDelay={0.3}
       content={
-        <AdjustableRootPopoverContent
-          keys={keys}
-          name={name}
-          main={main!}
-          setMain={setMain}
-        />
+        <ElementDetail keys={keys} name={name} main={main!} setMain={setMain} />
       }
     >
-      <Element
-        type="text"
-        style={{ color: display(name) === "丢失的元素" ? "red" : "initial" }}
-        // {...attributes} {...listeners} ref={setNodeRef}
-      >
-        <Space size={4}>
-          {display(name)}
-          {affiliates.length >= 1 && (
-            <span style={{ fontSize: "0.8em" }}>
-              ({affiliates.map(display).join(",")})
-            </span>
-          )}
-          {code.length > 1 && (
-            <span style={{ fontSize: "0.8em" }}>
-              {renderMapped(code.slice(1))}
-            </span>
-          )}
-          {partialAffiliates.length >= 1 &&
-            partialAffiliates.map(([element, mapped], index) => (
-              <span style={{ fontSize: "0.8em" }} key={index}>
-                [{display(element)}
-                &nbsp;
-                {renderMapped(mapped.slice(1))}]
-              </span>
-            ))}
-        </Space>
-      </Element>
+      <ElementLabel name={name} code={code} />
     </Popover>
   );
 };
@@ -392,21 +397,15 @@ const MappingHeader = () => {
 };
 
 const MappingRow = memo(
-  ({ symbol, roots }: { symbol: string; roots: MappedInfo[] }) => {
+  ({ symbol, elements }: { symbol: string; elements: MappedInfo[] }) => {
     const [alphabet, setAlphabet] = useAtom(alphabetAtom);
-    const { isOver, setNodeRef } = useDroppable({
-      id: symbol,
-    });
-    const style: CSSProperties = {
-      backgroundColor: isOver ? "white" : undefined,
-    };
     return (
-      <Flex style={{ borderTop: "1px solid #aaa", ...style }} ref={setNodeRef}>
+      <Flex style={{ borderTop: "1px solid #aaa" }}>
         <Button
           shape="circle"
           type="text"
           danger
-          disabled={roots.length > 0}
+          disabled={elements.length > 0}
           onClick={() =>
             setAlphabet(
               Array.from(alphabet)
@@ -417,9 +416,9 @@ const MappingRow = memo(
           icon={<DeleteOutlined />}
         />
         <Char>{symbol}</Char>
-        <Flex wrap="wrap">
-          {roots.map(({ name, code }) => (
-            <AdjustableRoot key={name} name={name} code={code} />
+        <Flex gap="small" align="center" wrap="wrap">
+          {elements.map(({ name, code }) => (
+            <AdjustableElement key={name} name={name} code={code} />
           ))}
         </Flex>
       </Flex>
@@ -430,23 +429,15 @@ const MappingRow = memo(
 export default function Mapping() {
   const { mapping } = useAtomValue(keyboardAtom);
   const alphabet = useAtomValue(alphabetAtom);
+  const reversedMapping = getReversedMapping(mapping, alphabet);
 
-  const reversedMapping = new Map<string, MappedInfo[]>(
-    Array.from(alphabet).map((key) => [key, []]),
-  );
-  for (const [name, code] of Object.entries(mapping)) {
-    const main = code[0];
-    if (typeof main === "string") {
-      reversedMapping.get(main)?.push({ name, code });
-    }
-  }
   return (
     <Flex vertical>
       <MappingHeader />
       <List
         dataSource={[...reversedMapping]}
         renderItem={([key, roots]: [string, MappedInfo[]]) => (
-          <MappingRow key={key} symbol={key} roots={roots} />
+          <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />
     </Flex>

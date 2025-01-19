@@ -91,6 +91,7 @@ export default function CompoundForm({
                     : new Error();
                 return (
                   <StrokesView
+                    displayMode
                     glyph={rendered instanceof Error ? [] : rendered}
                   />
                 );

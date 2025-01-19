@@ -100,7 +100,9 @@ export type Element = string;
 
 export type Key = string | { element: string; index: number };
 
-export type Mapping = Record<Element, string | Key[]>;
+export type Mapped = string | Key[];
+
+export type Mapping = Record<Element, Mapped>;
 
 export type Grouping = Record<Element, Element>;
 // config.form end
@@ -266,6 +268,35 @@ export interface Solver {
 }
 // config.optimization end
 
+// config.diagram begin
+
+export type BoxConfig = {
+  style?: string;
+} & (
+  | {
+      type: "key" | "uppercase";
+    }
+  | {
+      type: "element";
+      match?: string;
+    }
+  | {
+      type: "custom";
+      mapping?: string;
+    }
+);
+
+export interface DiagramConfig {
+  layout: {
+    keys: string[];
+  }[];
+  contents: BoxConfig[];
+  row_style?: string;
+  cell_style?: string;
+}
+
+// config.diagram end
+
 export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
@@ -277,6 +308,7 @@ export interface Config {
   form: Keyboard;
   encoder: EncoderConfig;
   optimization?: Optimization;
+  diagram?: DiagramConfig;
 }
 
 export type ExampleConfig = Required<Config>;

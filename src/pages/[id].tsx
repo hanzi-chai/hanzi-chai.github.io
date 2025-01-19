@@ -24,6 +24,7 @@ import {
   syncInfo,
 } from "~/atoms";
 import { examples, listToObject } from "~/lib";
+import { AppstoreOutlined } from "@ant-design/icons";
 
 const items: MenuProps["items"] = [
   {
@@ -44,7 +45,7 @@ const items: MenuProps["items"] = [
   {
     label: "拆分",
     key: "analysis",
-    icon: <ProfileOutlined />,
+    icon: <AppstoreOutlined />,
   },
   {
     label: "编码",
@@ -70,6 +71,11 @@ const items: MenuProps["items"] = [
     label: "优化",
     key: "optimization",
     icon: <RiseOutlined />,
+  },
+  {
+    label: "图示",
+    key: "diagram",
+    icon: <ProfileOutlined />,
   },
 ];
 
@@ -161,22 +167,13 @@ function EditorLayout() {
           style={{
             marginLeft: isCollapsed ? "58px" : "160px",
             padding: "10px 24px",
+            height: "100%",
+            overflowY: "auto",
           }}
         >
-          <Flex justify="center" style={{ height: "100%" }}>
-            <div
-              style={{
-                maxWidth: "100rem",
-                minWidth: "20rem",
-                width: "100rem",
-                overflowY: "auto",
-              }}
-            >
-              <Suspense fallback={<CusSpin tip="加载标签页…" />}>
-                <Outlet />
-              </Suspense>
-            </div>
-          </Flex>
+          <Suspense fallback={<CusSpin tip="加载标签页…" />}>
+            <Outlet />
+          </Suspense>
         </Layout.Content>
       </Layout>
     </Layout>

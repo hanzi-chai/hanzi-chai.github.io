@@ -14,6 +14,10 @@ const Box = styled.div`
   aspect-ratio: 1;
   display: grid;
 
+  width: 400px;
+  height: 400px;
+  font-size: 350px;
+
   & svg {
     grid-area: 1 / 1 / 1 / 1;
   }
@@ -32,6 +36,7 @@ const processPath = ({ start, curveList }: SVGStroke) =>
 interface StrokesViewProps {
   glyph: SVGStroke[];
   setGlyph?: (glyph: SVGStroke[]) => void;
+  displayMode?: boolean;
 }
 
 interface PointIndex {
@@ -57,7 +62,11 @@ const Circle: React.FC<{
   );
 };
 
-const StrokesView: React.FC<StrokesViewProps> = ({ glyph, setGlyph }) => {
+const StrokesView: React.FC<StrokesViewProps> = ({
+  glyph,
+  setGlyph,
+  displayMode,
+}) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [index, setIndex] = useState<PointIndex | null>(null);
   const renderedGlyph = renderSVGGlyph(glyph);
@@ -87,8 +96,8 @@ const StrokesView: React.FC<StrokesViewProps> = ({ glyph, setGlyph }) => {
         if (curve.command === "h" || curve.command === "v") {
           curve.parameterList[0] += curve.command === "h" ? diff[0] : diff[1];
         } else {
-          curve.parameterList[controlIndex * 2 - 2] += diff[0];
-          curve.parameterList[controlIndex * 2 - 1] += diff[1];
+          curve.parameterList[controlIndex * 2 - 2]! += diff[0];
+          curve.parameterList[controlIndex * 2 - 1]! += diff[1];
         }
       }
 
@@ -111,15 +120,16 @@ const StrokesView: React.FC<StrokesViewProps> = ({ glyph, setGlyph }) => {
     };
   }, [setGlyph, index, glyph, onMouseMove]);
 
+  const strokeWidth = displayMode ? "1" : "7";
+
   return (
     <svg
       ref={svgRef}
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
-      width="100%"
-      viewBox="-10 -10 120 120"
+      width="1em"
+      viewBox="0 0 100 100"
     >
-      <rect x="0" y="0" width="100" height="100" fill="#eee" />
       {glyph.map((stroke, strokeIndex) => {
         const start = stroke.start;
         let current: Point = [start[0], start[1]];
@@ -127,8 +137,8 @@ const StrokesView: React.FC<StrokesViewProps> = ({ glyph, setGlyph }) => {
           <g key={strokeIndex}>
             <path
               d={processPath(stroke)}
-              stroke="red"
-              strokeWidth="0.5"
+              stroke="black"
+              strokeWidth={strokeWidth}
               fill="none"
             />
             {setGlyph && (
