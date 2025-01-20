@@ -17,6 +17,7 @@ import type { PronunciationElementTypes } from "~/lib";
 import { operators } from "~/lib";
 import { phonemeEnumerationAtom } from "~/atoms";
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
+import ElementCounter from "./ElementCounter";
 
 const AlgebraEditor = function ({
   type,
@@ -165,6 +166,7 @@ export default function ElementPicker() {
         name={secondary}
       />
       <ElementAdder element={element} />
+      <ElementCounter />
     </Flex>
   );
 }

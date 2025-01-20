@@ -317,20 +317,27 @@ export const makeCharacterFilter = (
   input: CharacterFilter,
   repertoire: Repertoire | PrimitiveRepertoire,
   sequenceMap: Map<string, string>,
-) =>
-  function (name: string) {
+) => {
+  let sequenceRegex: RegExp | undefined;
+  try {
+    if (input.sequence) {
+      sequenceRegex = new RegExp(input.sequence);
+    }
+  } catch {}
+  return function (name: string) {
     const character = repertoire[name];
     if (character === undefined) return false;
     const sequence = sequenceMap.get(name) ?? "";
     const isNameMatched = ((character.name ?? "") + name).includes(
       input.name ?? "",
     );
-    const isSequenceMatched = sequence.startsWith(input.sequence ?? "");
+    const isSequenceMatched = sequenceRegex?.test(sequence) ?? true;
     const isUnicodeMatched =
       input.unicode === undefined || input.unicode === name.codePointAt(0);
     const isMatched = match(character, input);
     return isNameMatched && isSequenceMatched && isUnicodeMatched && isMatched;
   };
+};
 
 export interface CharacterFilter {
   name?: string;
