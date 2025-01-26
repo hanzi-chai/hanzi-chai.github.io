@@ -239,7 +239,7 @@ export default function ComponentForm({
       formRef={formRef}
     >
       <EditorRow>
-        <EditorColumn span={10}>
+        <EditorColumn span={10} style={{ padding: 0 }}>
           <Box>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {

@@ -33,6 +33,7 @@ import {
   Mutate,
   QuickPatchAmbiguous,
   EditReading,
+  EditGF,
 } from "~/components/Action";
 import ComponentForm from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
@@ -64,21 +65,136 @@ function ReadingList({ readings }: { readings: Reading[] }) {
   );
 }
 
+export const InlineUpdater = ({
+  character,
+}: {
+  character: PrimitiveCharacter;
+}) => {
+  const { glyphs, unicode } = character;
+  const char = String.fromCodePoint(unicode);
+  const remote = useContext(RemoteContext);
+  const userRepertoire = useAtomValue(userRepertoireAtom);
+  const display = useAtomValue(displayAtom);
+  const userTags = useAtomValue(userTagsAtom);
+  const addUser = useAddAtom(userRepertoireAtom);
+  const add = useAddAtom(primitiveRepertoireAtom);
+  const selectedIndex = findGlyphIndex(glyphs, userTags);
+  const inlineUpdate = async (newCharacter: PrimitiveCharacter) => {
+    if (userRepertoire[char] !== undefined) {
+      addUser(char, newCharacter);
+      return true;
+    }
+    const res = await remoteUpdate(newCharacter);
+    if (!errorFeedback(res)) {
+      add(char, newCharacter);
+    }
+    return true;
+  };
+  return (
+    <Flex gap="small">
+      {glyphs.map((x, i) => {
+        const lens = O.compose("glyphs", O.at(i));
+        const primary = i === selectedIndex;
+        return (
+          <Flex key={i}>
+            {x.type === "compound" ? (
+              <CompoundForm
+                key={i}
+                title={`${x.operator} ${x.operandList.map(display).join(" ")}`}
+                initialValues={x}
+                onFinish={(values) => {
+                  const newGlyphs = O.set(
+                    O.compose("glyphs", O.appendTo),
+                    values,
+                    O.remove(lens, character),
+                  );
+                  return inlineUpdate(newGlyphs);
+                }}
+                primary={primary}
+                readonly={!remote && userRepertoire[char] === undefined}
+              />
+            ) : (
+              <ComponentForm
+                key={i}
+                title="部件"
+                initialValues={x}
+                current={String.fromCodePoint(unicode)}
+                onFinish={(values) => {
+                  const newGlyphs = O.set(
+                    O.compose("glyphs", O.appendTo),
+                    values,
+                    O.remove(lens, character),
+                  );
+                  return inlineUpdate(newGlyphs);
+                }}
+                primary={primary}
+                readonly={!remote && userRepertoire[char] === undefined}
+              />
+            )}
+            {remote || userRepertoire[char] !== undefined ? (
+              <DeleteButton
+                onClick={() => inlineUpdate(O.remove(lens, character))}
+              />
+            ) : null}
+          </Flex>
+        );
+      })}
+    </Flex>
+  );
+};
+
+export const InlineCustomizer = ({
+  character,
+}: {
+  character: PrimitiveCharacter;
+}) => {
+  const addCustomGlyph = useAddAtom(customGlyphAtom);
+  const customGlyph = useAtomValue(customGlyphAtom);
+  const { unicode } = character;
+  const char = String.fromCodePoint(unicode);
+  const customized = customGlyph[char];
+  const display = useAtomValue(displayAtom);
+  if (customized === undefined) return null;
+  return (
+    <Flex gap="small">
+      {customized.type === "compound" ? (
+        <CompoundForm
+          title={
+            customized.operator + customized.operandList.map(display).join(" ")
+          }
+          initialValues={customized}
+          onFinish={async (values) => {
+            addCustomGlyph(char, values);
+            return true;
+          }}
+          primary
+        />
+      ) : (
+        <ComponentForm
+          title="部件"
+          initialValues={customized}
+          current={String.fromCodePoint(unicode)}
+          onFinish={async (values) => {
+            addCustomGlyph(char, values);
+            return true;
+          }}
+          primary
+        />
+      )}
+    </Flex>
+  );
+};
+
 export default function CharacterTable() {
   const allRepertoire = useAtomValue(allRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
-  const addUser = useAddAtom(userRepertoireAtom);
-  const userTags = useAtomValue(userTagsAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
-  const addCustomGlyph = useAddAtom(customGlyphAtom);
   const customReadings = useAtomValue(customReadingsAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [page, setPage] = useState(1);
   const [filterProps, setFilterProps] = useState<CharacterFilter>({});
-  const display = useAtomValue(displayAtom);
   const getLength = (a: string) => sequenceMap.get(a)?.length ?? Infinity;
   const remote = useContext(RemoteContext);
-  const add = useAddAtom(primitiveRepertoireAtom);
   const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
   const isUserCharacter = (a: string) =>
     -Number(userRepertoire[a] !== undefined);
@@ -151,83 +267,38 @@ export default function CharacterTable() {
   const gf0014: Column = {
     title: "GF0014",
     dataIndex: "gf0014_id",
-    width: 128,
+    render: (_, record) => (
+      <EditGF
+        type="gf0014_id"
+        value={record.gf0014_id}
+        unicode={record.unicode}
+      />
+    ),
+    width: 96,
     filters: [{ text: "只看非空", value: 1 }],
     onFilter: (_, record) => record.gf0014_id !== null,
     sorter: (a, b) => Number(a.gf0014_id) - Number(b.gf0014_id),
   };
 
+  const gf3001: Column = {
+    title: "GF3001",
+    dataIndex: "gf3001_id",
+    render: (_, record) => (
+      <EditGF
+        type="gf3001_id"
+        value={record.gf3001_id}
+        unicode={record.unicode}
+      />
+    ),
+    width: 96,
+    filters: [{ text: "只看非空", value: 1 }],
+    onFilter: (_, record) => record.gf3001_id !== null,
+    sorter: (a, b) => Number(a.gf3001_id) - Number(b.gf3001_id),
+  };
+
   const glyphs: Column = {
     title: "系统字形",
-    render: (_, character) => {
-      const { glyphs, unicode } = character;
-      const char = String.fromCodePoint(unicode);
-      const inlineUpdate = async (newCharacter: PrimitiveCharacter) => {
-        if (userRepertoire[char] !== undefined) {
-          addUser(char, newCharacter);
-          return true;
-        }
-        const res = await remoteUpdate(newCharacter);
-        if (!errorFeedback(res)) {
-          add(char, newCharacter);
-        }
-        return true;
-      };
-      const selectedIndex = findGlyphIndex(glyphs, userTags);
-      return (
-        <Flex gap="small">
-          {glyphs.map((x, i) => {
-            const lens = O.compose("glyphs", O.at(i));
-            const primary = i === selectedIndex;
-            return (
-              <Space key={i}>
-                {x.type === "compound" ? (
-                  <CompoundForm
-                    key={i}
-                    title={`${x.operator} ${x.operandList
-                      .map(display)
-                      .join(" ")}`}
-                    initialValues={x}
-                    onFinish={(values) => {
-                      const newGlyphs = O.set(
-                        O.compose("glyphs", O.appendTo),
-                        values,
-                        O.remove(lens, character),
-                      );
-                      return inlineUpdate(newGlyphs);
-                    }}
-                    primary={primary}
-                    readonly={!remote && userRepertoire[char] === undefined}
-                  />
-                ) : (
-                  <ComponentForm
-                    key={i}
-                    title="部件"
-                    initialValues={x}
-                    current={String.fromCodePoint(unicode)}
-                    onFinish={(values) => {
-                      const newGlyphs = O.set(
-                        O.compose("glyphs", O.appendTo),
-                        values,
-                        O.remove(lens, character),
-                      );
-                      return inlineUpdate(newGlyphs);
-                    }}
-                    primary={primary}
-                    readonly={!remote && userRepertoire[char] === undefined}
-                  />
-                )}
-                {remote || userRepertoire[char] !== undefined ? (
-                  <DeleteButton
-                    onClick={() => inlineUpdate(O.remove(lens, character))}
-                  />
-                ) : null}
-              </Space>
-            );
-          })}
-        </Flex>
-      );
-    },
+    render: (_, character) => <InlineUpdater character={character} />,
     width: 256,
     sorter: (a, b) => {
       const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
@@ -249,41 +320,7 @@ export default function CharacterTable() {
 
   const customGlyphColumn: Column = {
     title: "自定义字形",
-    render: (_, character) => {
-      const { unicode } = character;
-      const char = String.fromCodePoint(unicode);
-      const customized = customGlyph[char];
-      if (customized === undefined) return null;
-      return (
-        <Flex gap="small">
-          {customized.type === "compound" ? (
-            <CompoundForm
-              title={
-                customized.operator +
-                customized.operandList.map(display).join(" ")
-              }
-              initialValues={customized}
-              onFinish={async (values) => {
-                addCustomGlyph(char, values);
-                return true;
-              }}
-              primary
-            />
-          ) : (
-            <ComponentForm
-              title="部件"
-              initialValues={customized}
-              current={String.fromCodePoint(unicode)}
-              onFinish={async (values) => {
-                addCustomGlyph(char, values);
-                return true;
-              }}
-              primary
-            />
-          )}
-        </Flex>
-      );
-    },
+    render: (_, character) => <InlineCustomizer character={character} />,
     width: 128,
   };
 
@@ -359,6 +396,7 @@ export default function CharacterTable() {
     gb2312,
     readings,
     glyphs,
+    gf3001,
     gf0014,
     ambiguous,
     operations,

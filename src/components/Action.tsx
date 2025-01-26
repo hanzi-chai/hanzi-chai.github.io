@@ -16,7 +16,7 @@ import {
   remoteRemove,
   remoteMutate,
 } from "~/api";
-import { DeleteButton, Select } from "~/components/Utils";
+import { DeleteButton, NumberInput, Select } from "~/components/Utils";
 import type { Reading } from "~/lib";
 import {
   chars,
@@ -47,6 +47,7 @@ import CompoundForm from "./CompoundForm";
 import type { MenuProps } from "antd/lib";
 import * as O from "optics-ts/standalone";
 import ReadingForm from "./ReadingForm";
+import { isInteger } from "lodash-es";
 
 interface CreateProps {
   charOrName: string;
@@ -168,6 +169,7 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
     </Form>
   );
 }
+
 export const Mutate = ({ unicode }: { unicode: number }) => {
   const [newName, setNewName] = useState("");
   const remote = useContext(RemoteContext);
@@ -215,6 +217,49 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
         style={{ display: remote ? "initial" : "none" }}
       >
         更改
+      </Button>
+    </Popconfirm>
+  );
+};
+
+export const EditGF = ({
+  type,
+  value,
+  unicode,
+}: {
+  type: "gf3001_id" | "gf0014_id";
+  value: number | null;
+  unicode: number;
+}) => {
+  const [id, setId] = useState(0);
+  const remote = useContext(RemoteContext);
+  const repertoire = useAtomValue(primitiveRepertoireAtom);
+  const update = useAddAtom(primitiveRepertoireAtom);
+  const name = String.fromCodePoint(unicode);
+  return (
+    <Popconfirm
+      title="新 ID"
+      description={
+        <NumberInput value={id} onChange={(value) => setId(value as number)} />
+      }
+      onConfirm={async () => {
+        // id = 0 时表示删除
+        const valid = isInteger(id) && id >= 0 && id < 561;
+        if (!valid) return;
+        const character = repertoire[name];
+        if (!character) return;
+        const newCharacter: PrimitiveCharacter = {
+          ...character,
+          [type]: id === 0 ? null : id,
+        };
+        const res = await remoteUpdate(newCharacter);
+        if (!errorFeedback(res)) {
+          update(name, newCharacter);
+        }
+      }}
+    >
+      <Button style={{ display: remote ? "initial" : "none" }}>
+        {value ?? "无"}
       </Button>
     </Popconfirm>
   );
@@ -332,7 +377,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
   }
   return (
     <Dropdown menu={{ items }}>
-      <Button>{(isCustomization ? "自定义" : "添加") + "字形"}</Button>
+      <Button>{(isCustomization ? "自定义" : "编辑") + "字形"}</Button>
     </Dropdown>
   );
 };
@@ -391,7 +436,7 @@ export const EditReading = ({
   }
   return (
     <Dropdown menu={{ items }}>
-      <Button>{(isCustomization ? "自定义" : "修改") + "字音"}</Button>
+      <Button>{(isCustomization ? "自定义" : "编辑") + "字音"}</Button>
     </Dropdown>
   );
 };

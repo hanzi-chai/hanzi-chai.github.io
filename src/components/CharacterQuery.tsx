@@ -10,6 +10,7 @@ import {
 import { useAtomValue } from "jotai";
 import { tagsAtom } from "~/atoms";
 import { GlyphSelect } from "./CharacterSelect";
+import { debounce } from "lodash-es";
 
 interface StrokeSearchProps {
   setFilter: (s: CharacterFilter) => void;
@@ -17,9 +18,10 @@ interface StrokeSearchProps {
 
 export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
   const tags = useAtomValue(tagsAtom);
+  const debounced = debounce(setFilter, 500);
   return (
     <QueryFilter<CharacterFilter>
-      onValuesChange={async (_, values) => setFilter(values)}
+      onValuesChange={async (_, values) => debounced(values)}
       submitter={false}
       style={{ maxWidth: 1080 }}
       autoFocusFirstInput={false}

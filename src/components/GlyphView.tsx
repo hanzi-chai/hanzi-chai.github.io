@@ -12,15 +12,9 @@ import { add, subtract } from "~/lib/mathjs";
 const Box = styled.div`
   border: 1px solid black;
   aspect-ratio: 1;
-  display: grid;
-
   width: 400px;
   height: 400px;
-  font-size: 400px;
-
-  & svg {
-    grid-area: 1 / 1 / 1 / 1;
-  }
+  font-size: 398px;
 `;
 
 const processPath = ({ start, curveList }: SVGStroke) =>
