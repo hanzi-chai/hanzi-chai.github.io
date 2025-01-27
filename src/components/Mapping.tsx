@@ -226,7 +226,10 @@ export const ElementLabel = ({
       {
         /* 部分归并字根 */ partialAffiliates.length >= 1 &&
           partialAffiliates.map(([element, mapped], index) => (
-            <span style={{ fontSize: "0.7em", display: "inline-flex" }} key={index}>
+            <span
+              style={{ fontSize: "0.7em", display: "inline-flex" }}
+              key={index}
+            >
               [<Display name={element} />
               &nbsp;
               {renderMapped(mapped.slice(1))}]

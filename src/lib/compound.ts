@@ -450,7 +450,8 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
   };
 };
 
-const snow2Serializer: Serializer = (operandResults, glyph) => {
+// 两角拆分，暂时不用
+const _snow2Serializer: Serializer = (operandResults, glyph) => {
   const sequence: string[] = [];
   const order =
     glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));

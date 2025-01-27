@@ -219,6 +219,63 @@ interface AssembleConfig {
   priority: [string, string, number][];
 }
 
+const compileSnow2 =
+  (keyboard: Keyboard, encoder: EncoderConfig, algebra: Algebra) =>
+  (
+    result: CharacterResult,
+    repertoire: Repertoire,
+    extra: Extra,
+  ): IndexedElement[] => {
+    const shengjie = findElement(
+      { type: "字音", subtype: "声介" as any },
+      result,
+      algebra,
+      extra,
+    )!;
+    const yundiao = findElement(
+      { type: "字音", subtype: "韵调" as any },
+      result,
+      algebra,
+      extra,
+    )!;
+    const elements = [
+      { element: shengjie, index: 0 },
+      { element: yundiao, index: 0 },
+    ];
+    const sequence = result.sequence;
+    const first = sequence[0]!;
+    const last = sequence[sequence.length - 1]!;
+    const groupedFirst = keyboard.grouping?.[first] || first;
+    const groupedLast = keyboard.grouping?.[last] || last;
+    const mappedFirst = keyboard.mapping[groupedFirst];
+    const mappedLast = keyboard.mapping[groupedLast];
+    if (mappedFirst === undefined || mappedLast === undefined) return elements;
+    if (sequence.length === 1) {
+      for (const [index, key] of Array.from(mappedFirst).entries()) {
+        elements.push({ element: groupedFirst, index });
+      }
+    } else {
+      const corner = result.corners;
+      const isFirstIndependent = corner[0] === 1 || corner[1] === 1;
+      const isLastIndependent = corner[2] === 1 || corner[3] === 1;
+      if (isFirstIndependent && Array.from(mappedFirst).length === 2) {
+        elements.push({ element: groupedFirst, index: 0 });
+        elements.push({ element: groupedFirst, index: 1 });
+      } else if (
+        !isFirstIndependent &&
+        isLastIndependent &&
+        Array.from(mappedLast).length === 2
+      ) {
+        elements.push({ element: groupedLast, index: 0 });
+        elements.push({ element: groupedLast, index: 1 });
+      } else {
+        elements.push({ element: groupedFirst, index: 0 });
+        elements.push({ element: groupedLast, index: 0 });
+      }
+    }
+    return elements;
+  };
+
 /**
  * 给定一个拆分结果，返回所有可能的编码
  *

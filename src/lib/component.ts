@@ -213,6 +213,7 @@ export interface SchemeWithData {
 
 export interface CommonAnalysis {
   sequence: string[];
+  sequencePartIndex?: number[];
   full: string[];
   corners: CornerSpecifier;
 }
