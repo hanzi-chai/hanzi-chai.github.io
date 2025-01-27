@@ -13,6 +13,7 @@ import { atomEffect } from "jotai-effect";
 import { configAtom } from "./config";
 import { assetsAtom } from "./assets";
 import { assemblyResultAtom } from "./cache";
+import { atom } from "jotai";
 
 export const syncConfig = atomEffect((get) => {
   const value = get(configAtom);
@@ -141,3 +142,5 @@ export class Thread {
 }
 
 export const thread = new Thread();
+
+export const currentElementAtom = atom<string | undefined>(undefined);

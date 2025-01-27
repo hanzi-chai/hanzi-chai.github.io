@@ -1,17 +1,12 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Element from "./Element";
-import {
-  customizeAtom,
-  displayAtom,
-  selectorAtom,
-  useAddAtom,
-  useAtomValue,
-} from "~/atoms";
+import { customizeAtom, selectorAtom, useAddAtom, useAtomValue } from "~/atoms";
 import type { Selector } from "~/lib";
 import { isLess, sieveMap } from "~/lib";
 import { binaryToIndices } from "~/lib";
 import type { SchemeWithData } from "~/lib";
+import { Display } from "./Utils";
 
 const makeSorter = (selector: Selector) => {
   return (a: SchemeWithData, b: SchemeWithData) => {
@@ -39,7 +34,6 @@ export default function ResultDetail({
   strokes: number;
 }) {
   const selector = useAtomValue(selectorAtom);
-  const display = useAtomValue(displayAtom);
   const addCustomization = useAddAtom(customizeAtom);
 
   const columns: ColumnsType<SchemeWithData> = [
@@ -50,7 +44,9 @@ export default function ResultDetail({
       render: (_, { scheme }) => (
         <Space>
           {scheme.map((root, index) => (
-            <Element key={index}>{display(map.get(root)!)}</Element>
+            <Element key={index}>
+              <Display name={map.get(root)!} />
+            </Element>
           ))}
         </Space>
       ),
@@ -110,7 +106,9 @@ export default function ResultDetail({
         <span>包含字根</span>
         {[...reversedRootMap].map(([s, v]) => (
           <Space key={s}>
-            <Element>{display(s)}</Element>
+            <Element>
+              <Display name={s} />
+            </Element>
             <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>
         ))}

@@ -1,6 +1,5 @@
 import {
   useAtomValue,
-  displayAtom,
   useAddAtom,
   customizeAtom,
   useRemoveAtom,
@@ -8,9 +7,7 @@ import {
   serializerAtom,
 } from "~/atoms";
 import { Button, Flex, Form, Popover } from "antd";
-import Element from "./Element";
 import ElementSelect from "./ElementSelect";
-import Char from "./Character";
 import {
   ProForm,
   ProFormGroup,
@@ -18,9 +15,10 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 import { InlineRender } from "./ComponentForm";
-import type { CornerSpecifier } from "~/lib";
-import { wordLengthArray, type CompoundAnalysis } from "~/lib";
+import type { CommonAnalysis, CornerSpecifier } from "~/lib";
+import { wordLengthArray } from "~/lib";
 import { range } from "lodash-es";
+import { CharWithTooltip, ElementWithTooltip } from "./ElementPool";
 
 const Customize = ({
   component,
@@ -83,11 +81,10 @@ export default function ResultSummary({
   disableCustomize = false,
 }: {
   char: string;
-  analysis: CompoundAnalysis;
+  analysis: CommonAnalysis;
   disableCustomize?: boolean;
 }) {
   const { sequence, corners } = analysis;
-  const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
   const customizeCorners = useAtomValue(customizeCornersAtom);
   const remove = useRemoveAtom(customizeAtom);
@@ -99,13 +96,11 @@ export default function ResultSummary({
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
-        <Char onClick={() => navigator.clipboard.writeText(display(char))}>
-          {display(char)}
-        </Char>
+        <CharWithTooltip element={char} />
         {sequence.map((x, index) => {
           return (
             <Flex key={index} align="center">
-              <Element>{display(x)}</Element>
+              <ElementWithTooltip element={x} />
               {serializer === "c3" &&
                 corners.map((sIndex, cornerType) =>
                   sIndex === index ? (
@@ -119,7 +114,7 @@ export default function ResultSummary({
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
             {overrideRootSeries.map((x, i) => (
-              <Element key={i}>{display(x)}</Element>
+              <ElementWithTooltip key={i} element={x} />
             ))}
           </Flex>
         )}

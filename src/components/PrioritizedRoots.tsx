@@ -2,7 +2,6 @@ import { Button, Flex, Space, Typography } from "antd";
 import {
   useAtomValue,
   analysisAtom,
-  displayAtom,
   useExcludeAtom,
   strongAtom,
   useAppendAtom,
@@ -11,6 +10,7 @@ import {
 import Element from "./Element";
 import { useState } from "react";
 import ElementSelect from "./ElementSelect";
+import { Display } from "./Utils";
 
 export default function PrioritizedRoots({
   variant,
@@ -21,7 +21,6 @@ export default function PrioritizedRoots({
   const list = analysis ? analysis[variant] : [];
   const [current, setCurrent] = useState<string | undefined>(undefined);
   const atom = variant === "strong" ? strongAtom : weakAtom;
-  const display = useAtomValue(displayAtom);
   const exclude = useExcludeAtom(atom);
   const append = useAppendAtom(atom);
   return (
@@ -32,7 +31,9 @@ export default function PrioritizedRoots({
       <Flex wrap="wrap" gap="small">
         {(list ?? []).map((x, i) => (
           <Space key={x}>
-            <Element>{display(x)}</Element>
+            <Element>
+              <Display name={x} />
+            </Element>
             <a onClick={() => exclude(i)}>删除</a>
           </Space>
         ))}

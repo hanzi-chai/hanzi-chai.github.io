@@ -4,9 +4,11 @@ import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";
 import {
   algebraAtom,
+  currentElementAtom,
   customClassifierAtom,
   processedCustomElementsAtom,
   sortedRepertoireAtom,
+  useAtom,
   useAtomValue,
   useRemoveAtom,
 } from "~/atoms";
@@ -102,7 +104,7 @@ const useAllElements = () => {
 };
 
 export default function ElementPicker() {
-  const [element, setElement] = useState<string | undefined>(undefined);
+  const [element, setElement] = useAtom(currentElementAtom);
   const [types, setTypes] = useState<[string, string]>(["shape", "字根"]);
   const elements = useAllElements();
   const { shape, pronunciation, custom } = elements;

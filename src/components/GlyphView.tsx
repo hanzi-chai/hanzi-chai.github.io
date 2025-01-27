@@ -120,7 +120,7 @@ const StrokesView: React.FC<StrokesViewProps> = ({
     };
   }, [setGlyph, index, glyph, onMouseMove]);
 
-  const strokeWidth = displayMode ? "1" : "7";
+  const strokeWidth = displayMode ? "1" : "8";
 
   return (
     <svg
@@ -137,7 +137,7 @@ const StrokesView: React.FC<StrokesViewProps> = ({
           <g key={strokeIndex}>
             <path
               d={processPath(stroke)}
-              stroke="black"
+              stroke="currentColor"
               strokeWidth={strokeWidth}
               fill="none"
             />

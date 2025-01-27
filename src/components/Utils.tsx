@@ -16,6 +16,7 @@ import MinusOutlined from "@ant-design/icons/MinusOutlined";
 import type { SVGGlyph } from "~/lib";
 import { isPUA } from "~/lib";
 import { StrokesView } from "./GlyphView";
+import { glyphAtom, useAtomValue } from "~/atoms";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -124,7 +125,8 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
   );
 };
 
-export const svgDisplay = (name: string, glyphMap: Map<string, SVGGlyph>) => {
+export const Display = ({ name }: { name: string }) => {
+  const glyphMap = useAtomValue(glyphAtom);
   if (!isPUA(name)) {
     return name;
   }

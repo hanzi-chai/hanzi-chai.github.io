@@ -16,17 +16,15 @@ import {
   keyboardAtom,
   groupingAtom,
   repertoireAtom,
-  displayAtom,
   alphabetAtom,
   mappingTypeAtom,
   mappingAtom,
   useAddAtom,
   useRemoveAtom,
   useAtom,
-  glyphAtom,
+  currentElementAtom,
 } from "~/atoms";
 
-import Element from "./Element";
 import Char from "./Character";
 import {
   getReversedMapping,
@@ -35,12 +33,14 @@ import {
   printableAscii,
   renderMapped,
 } from "~/lib";
-import { DeleteButton, svgDisplay, Uploader } from "./Utils";
+import { DeleteButton, Display, Uploader } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 import type { Key, MappedInfo, Mapping } from "~/lib";
 import styled from "styled-components";
+import { blue } from "@ant-design/colors";
+import { ElementWithTooltip } from "./ElementPool";
 
 const useAffiliates = (name: string) => {
   const mapping = useAtomValue(mappingAtom);
@@ -76,10 +76,9 @@ const KeysEditor = ({
 }) => {
   const addMapping = useAddAtom(mappingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
-  const display = useAtomValue(displayAtom);
   return (
     <Flex justify="space-between" gap="large">
-      <Element>{display(name)}</Element>
+      <ElementWithTooltip element={name} />
       <Space>
         {keys.map((key, index) => {
           return (
@@ -117,7 +116,6 @@ const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
   const removeMapping = useRemoveAtom(mappingAtom);
   const removeGrouping = useRemoveAtom(groupingAtom);
   const [affiliates, partialAffiliates] = useAffiliates(name);
-  const glyphMap = useAtomValue(glyphAtom);
   return (
     <Flex vertical gap="middle">
       <KeysEditor
@@ -130,7 +128,7 @@ const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
           <span>归并元素</span>
           {affiliates.map((x) => (
             <Flex key={x} justify="space-between">
-              <Element>{svgDisplay(x, glyphMap)}</Element>
+              <ElementWithTooltip element={x} />
               <Button
                 onClick={() => {
                   addMapping(x, joinKeys(keys));
@@ -174,11 +172,15 @@ const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
   );
 };
 
-const ElementLabelWrapper = styled.span`
+const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
   display: inline-flex;
   align-items: end;
   cursor: pointer;
   line-height: 1;
+  background: ${({ $shouldHighlight }) =>
+    $shouldHighlight ? blue[2] : "transparent"};
+  outline: ${({ $shouldHighlight }) =>
+    $shouldHighlight ? `3px solid ${blue.primary}` : "none"};
 
   &:hover {
     background-color: #ddd;
@@ -192,19 +194,25 @@ export const ElementLabel = ({
   ...rest
 }: MappedInfo & { useProperName?: boolean }) => {
   const [affiliates, partialAffiliates] = useAffiliates(name);
-  const glyphMap = useAtomValue(glyphAtom);
   const properName =
     name.includes("-") && useProperName
       ? name.split("-").slice(1).join("-")
       : name;
-  const myDisplay = (name: string) => svgDisplay(name, glyphMap);
+  const currentElement = useAtomValue(currentElementAtom);
+  const shouldHighlight =
+    currentElement !== undefined &&
+    (name === currentElement ||
+      affiliates.includes(currentElement) ||
+      partialAffiliates.map(([x]) => x).includes(currentElement));
   return (
-    <ElementLabelWrapper {...rest}>
-      {/* 主要字根 */ myDisplay(properName)}
+    <ElementLabelWrapper {...rest} $shouldHighlight={shouldHighlight}>
+      {/* 主要字根 */ <Display name={properName} />}
       {
         /* 归并字根 */ affiliates.length >= 1 && (
           <span style={{ fontSize: "0.7em", display: "inline-flex" }}>
-            {affiliates.map(myDisplay)}
+            {affiliates.map((x) => (
+              <Display key={x} name={x} />
+            ))}
           </span>
         )
       }
@@ -219,7 +227,7 @@ export const ElementLabel = ({
         /* 部分归并字根 */ partialAffiliates.length >= 1 &&
           partialAffiliates.map(([element, mapped], index) => (
             <span style={{ fontSize: "0.7em" }} key={index}>
-              [{myDisplay(element)}
+              [<Display name={element} />
               &nbsp;
               {renderMapped(mapped.slice(1))}]
             </span>
@@ -230,8 +238,11 @@ export const ElementLabel = ({
 };
 
 const AdjustableElement = ({ name, code }: MappedInfo) => {
-  const { mapping } = useAtomValue(keyboardAtom);
+  const { mapping, mapping_type } = useAtomValue(keyboardAtom);
   const keys = Array.from(code);
+  while (keys.length < (mapping_type ?? 1)) {
+    keys.push("");
+  }
   const [main, setMain] = useState(Object.keys(mapping)[0]);
   return (
     <Popover

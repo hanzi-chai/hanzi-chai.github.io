@@ -1,11 +1,6 @@
 import { useAtomValue } from "jotai";
-import {
-  keyboardAtom,
-  repertoireAtom,
-  displayAtom,
-  sequenceAtom,
-} from "~/atoms";
-import { Select } from "./Utils";
+import { keyboardAtom, repertoireAtom, sequenceAtom } from "~/atoms";
+import { Select, Display } from "./Utils";
 import type { SelectProps } from "antd";
 import type { ProFormSelectProps } from "@ant-design/pro-components";
 
@@ -32,7 +27,6 @@ export default function ElementSelect(
   if (customFilter) {
     keys = keys.filter(customFilter);
   }
-  const display = useAtomValue(displayAtom);
   return (
     <Select
       {...rest}
@@ -40,7 +34,7 @@ export default function ElementSelect(
       placeholder="输入笔画搜索"
       options={keys.map((x) => ({
         value: x,
-        label: display(x),
+        label: <Display name={x} />,
       }))}
       filterOption={(input, option) => {
         if (option === undefined) return false;

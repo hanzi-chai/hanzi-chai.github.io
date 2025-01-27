@@ -9,14 +9,14 @@ import {
   sequenceAtom,
   displayAtom,
   keyboardAtom,
-  glyphAtom,
 } from "~/atoms";
 import { isPUA, makeFilter } from "~/lib";
 import StrokeSearch from "./CharacterSearch";
 import type { ShapeElementTypes } from "./ElementPicker";
 import type { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
-import { svgDisplay } from "./Utils";
+import { Display } from "./Utils";
+import Element from "./Element";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -33,18 +33,28 @@ interface PoolProps {
 
 interface ElementProps {
   element: string;
-  setElement: (s: string | undefined) => void;
+  setElement?: (s: string | undefined) => void;
   currentElement?: string;
 }
 
-const Element: FC<ElementProps> = ({
+export const ElementWithTooltip = ({ element: x }: { element: string }) => {
+  const display = useAtomValue(displayAtom);
+  const core = (
+    <Element>
+      <Display name={x} />
+    </Element>
+  );
+  if (!isPUA(x)) return core;
+  return <Tooltip title={display(x)}>{core}</Tooltip>;
+};
+
+export const CharWithTooltip: FC<ElementProps> = ({
   element: x,
   setElement,
   currentElement,
 }) => {
   const keyboard = useAtomValue(keyboardAtom);
   const { mapping, grouping } = keyboard;
-  const glyphMap = useAtomValue(glyphAtom);
   const type =
     x === currentElement
       ? "primary"
@@ -54,10 +64,10 @@ const Element: FC<ElementProps> = ({
   const display = useAtomValue(displayAtom);
   const core = (
     <Char
-      onClick={() => setElement(x === currentElement ? undefined : x)}
+      onClick={() => setElement?.(x === currentElement ? undefined : x)}
       type={type}
     >
-      {svgDisplay(x, glyphMap)}
+      <Display name={x} />
     </Char>
   );
   if (!isPUA(x)) return core;
@@ -102,7 +112,7 @@ export default function ElementPool({
       )}
       <Content wrap="wrap">
         {range.map((x) => (
-          <Element
+          <CharWithTooltip
             key={x}
             element={x}
             currentElement={element}

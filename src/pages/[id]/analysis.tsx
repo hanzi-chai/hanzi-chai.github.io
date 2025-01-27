@@ -31,6 +31,7 @@ import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
 import { analysisResultAtom } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
+import { Display } from "~/components/Utils";
 
 const dumpAnalysisResult = (
   characters: string[],
@@ -118,9 +119,23 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
       {componentError.length + compoundError.length > 0 ? (
         <Alert
           message="有些部件或复合体拆分时出错，请检查"
-          description={`部件：${componentError
-            .map(display)
-            .join("、")}\n复合体：${compoundError.map(display).join("、")}`}
+          description={
+            <>
+              <p>
+                部件：$
+                {componentError.map((x, i) => (
+                  <Display key={i} name={x} />
+                ))}
+              </p>
+              <p>
+                复合体：$
+                {compoundError.map((x, i) => (
+                  <Display key={i} name={x} />
+                ))}
+                `
+              </p>
+            </>
+          }
           type="warning"
           showIcon
           closable
