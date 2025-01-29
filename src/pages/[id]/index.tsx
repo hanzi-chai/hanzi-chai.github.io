@@ -183,6 +183,7 @@ export default function Index() {
   useChaifenTitle("基本信息");
   const [characterSet, setCharacterSet] = useAtom(characterSetAtom);
   const specifierNames: Record<CharacterSetSpecifier, string> = {
+    minimal: "极简",
     gb2312: "GB2312",
     general: "通用",
     basic: "基本",

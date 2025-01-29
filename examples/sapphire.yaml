@@ -1,0 +1,894 @@
+version: '0.1'
+source: sapphire
+info:
+  name: 蓝宝石（第三代）
+  author: 秋风
+  version: 3.0.0
+  description: 乱序字根、二笔补码的低重纯形字词方案
+analysis:
+  classifier: {}
+  degenerator:
+    feature:
+      提: 横
+      捺: 点
+    no_cross: false
+  selector:
+    - 结构完整
+    - 根少优先
+    - 能连不交
+    - 能散不连
+    - 全符笔顺
+    - 取大优先
+  customize:
+    两:
+      - "\ue063"
+      - 从
+    乎:
+      - 乊
+      - "\ue413"
+    产:
+      - "\ue054"
+      - 厂
+    兀:
+      - '1'
+      - 儿
+    果:
+      - 日
+      - 木
+    "\ue082":
+      - 大
+      - 丷
+    "\ue0eb":
+      - 日
+      - 十
+    凸:
+      - '2'
+      - '1'
+      - '2'
+      - '5'
+      - '1'
+    冉:
+      - 冂
+      - 土
+    再:
+      - "\ue063"
+      - 土
+    凹:
+      - '2'
+      - '5'
+      - '2'
+      - '5'
+      - '1'
+    卅:
+      - '1'
+      - 川
+    卞:
+      - '4'
+      - 下
+    "\ue01e":
+      - "\ue057"
+      - "\ue089"
+    夷:
+      - '1'
+      - 弓
+      - 人
+    禹:
+      - '3'
+      - 口
+      - 冂
+      - "\ue04d"
+    隶:
+      - "\ue431"
+      - 氺
+    "\ue048":
+      - "\ue431"
+      - "\ue0d2"
+      - '2'
+    并:
+      - 丷
+      - 开
+    无:
+      - '1'
+      - 尢
+    州:
+      - "\ue089"
+      - '4'
+      - '2'
+      - '4'
+      - '2'
+    "\ue053":
+      - 耳
+      - '5'
+      - '3'
+      - '4'
+    末:
+      - '1'
+      - 木
+    柬:
+      - '1'
+      - "\ue436"
+      - "\ue445"
+    巿:
+      - '1'
+      - 巾
+    隺:
+      - 冖
+      - 隹
+    毋:
+      - "\ue405"
+      - "\ue068"
+    "\ue08a":
+      - 禾
+      - '5'
+      - '3'
+      - '4'
+    秉:
+      - "\uf002"
+      - "\ue431"
+      - "\ue445"
+  customizeCorners: {}
+form:
+  alphabet: qwertyuiopasdfghjklxcvbnm
+  grouping:
+    '10': '1'
+    '20': '2'
+    '30': '3'
+    '40': '4'
+    '50': '5'
+    "\ue0c9": 辛
+    "\ue424": 儿
+    "\ue451": 止
+    "\ue008": 丁
+    "\ue070": 日
+    "\ue030": "\ue016"
+    "\ue0c8": 车
+    牜: 牛
+    朩: 木
+    "\ue446": 八
+    "\ue0c2": 舌
+    "\uf000": 黑
+    孑: 子
+    "\ue020": "\ue0bc"
+    "\ue413": 十
+    "\ue08c": 用
+    "\ue0d0": 雨
+    "\ue43d": 人
+    "\uf004": "\ue0bb"
+    "\ue401": 力
+    "\ue403": 勹
+    "\ue44b": 禾
+    "\uf005": 肀
+    "\ue0d6": 几
+    "\ue087": 八
+    "\ue011": 匕
+    "\ue439": 冂
+    "\ue102": 王
+    "\ue043": 大
+    "\ue822": 北
+    "\ue838": 鹿
+    "\ue04c": 木
+  mapping:
+    '1': f
+    '2': j
+    '3': e
+    '4': i
+    '5': v
+    '11': g
+    '12': f
+    '13': d
+    '14': s
+    '15': a
+    '21': h
+    '22': j
+    '23': k
+    '24': l
+    '25': m
+    '31': t
+    '32': r
+    '33': e
+    '34': w
+    '35': q
+    '41': 'y'
+    '42': u
+    '43': i
+    '44': o
+    '45': p
+    '51': b
+    '52': v
+    '53': c
+    '54': x
+    '55': 'n'
+    纟: q
+    "\ue0b2": q
+    龴: q
+    "\ue40c": q
+    弓: q
+    直: q
+    乍: q
+    革: q
+    干: q
+    "\ue03e": q
+    丷: q
+    我: w
+    弋: w
+    元: w
+    共: w
+    上: w
+    "\ue40f": w
+    音: w
+    辛: w
+    阝: w
+    亼: w
+    儿: w
+    礻: w
+    "\ue083": w
+    里: w
+    米: w
+    "\ue42b": w
+    鹿: w
+    讠: e
+    父: e
+    曲: e
+    辶: e
+    䒑: e
+    "\ue174": e
+    "\ue820": e
+    云: e
+    莫: e
+    "\ue07d": e
+    戋: e
+    "\ue01c": e
+    甘: e
+    止: e
+    丁: r
+    疒: r
+    旡: r
+    耒: r
+    日: r
+    "\ue80e": r
+    "\ue03c": r
+    主: r
+    "\ue016": r
+    "\ue17b": r
+    车: r
+    "\ue411": r
+    "\ue41e": r
+    巛: r
+    斤: t
+    "\ue0a3": t
+    "\ue431": t
+    广: t
+    交: t
+    少: t
+    金: t
+    犭: t
+    "\ue003": t
+    夫: t
+    "\ue916": t
+    冫: t
+    "\ue416": t
+    万: t
+    "\ue031": t
+    "\ue044": t
+    "\ue94c": t
+    骨: t
+    人: 'y'
+    气: 'y'
+    身: 'y'
+    酉: 'y'
+    衤: 'y'
+    太: 'y'
+    户: 'y'
+    屯: 'y'
+    贝: 'y'
+    "\ue093": 'y'
+    "\ue0da": 'y'
+    "\ue02c": 'y'
+    "\ue8c6": 'y'
+    "\ue079": 'y'
+    臼: 'y'
+    毌: 'y'
+    "\ue064": 'y'
+    "\ue0d5": u
+    "\ue0d8": u
+    了: u
+    牛: u
+    君: u
+    文: u
+    己: u
+    "\ue018": u
+    囬: u
+    心: u
+    "\ue025": u
+    及: u
+    "\ue007": u
+    月: u
+    天: u
+    自: u
+    聿: u
+    力: u
+    旦: u
+    丌: u
+    甫: u
+    土: i
+    宀: i
+    来: i
+    夕: i
+    "\ue42c": i
+    癶: i
+    光: i
+    幺: i
+    "\ue08e": i
+    "\ue0a9": i
+    乑: i
+    长: i
+    井: i
+    "\ue0cd": o
+    乂: o
+    "\ue006": o
+    鸟: o
+    毛: o
+    木: o
+    瓜: o
+    平: o
+    彐: o
+    勹: o
+    "\ue01a": o
+    "\ue422": o
+    "\ue073": o
+    "\ue09b": o
+    龶: o
+    㔾: o
+    㐄: o
+    "\ue985": o
+    "\ue04b": o
+    "\ue85e": p
+    彳: p
+    千: p
+    合: p
+    片: p
+    艹: p
+    巾: p
+    另: p
+    尹: p
+    刀: p
+    "\ue010": p
+    㠯: p
+    "\ue0c1": p
+    示: p
+    四: p
+    龙: p
+    "\ue072": p
+    "\ue057": p
+    "\ue088": p
+    隹: p
+    "\ue07f": p
+    氵: a
+    戈: a
+    壬: a
+    "\ue815": a
+    羊: a
+    五: a
+    皮: a
+    刂: a
+    丩: a
+    卩: a
+    卜: a
+    其: a
+    "\ue07e": a
+    "\ue05f": a
+    "\ue0d9": a
+    "\ue420": a
+    "\ue436": a
+    是: s
+    攵: s
+    束: s
+    皿: s
+    扌: s
+    九: s
+    丂: s
+    亍: s
+    王: s
+    龰: s
+    "\ue05a": s
+    白: d
+    廴: d
+    丬: d
+    "\ue0e3": d
+    目: d
+    耳: d
+    肀: d
+    "\ue06e": d
+    立: d
+    亲: d
+    豸: d
+    臣: d
+    走: d
+    也: d
+    巳: d
+    "\ue990": d
+    尸: d
+    娄: d
+    丆: f
+    歹: f
+    "\ue080": f
+    亠: f
+    去: f
+    早: f
+    罒: f
+    鱼: f
+    黑: f
+    "\ue952": f
+    舟: f
+    "\ue0e2": f
+    龹: f
+    巜: f
+    "\ue068": g
+    耂: g
+    西: g
+    垂: g
+    "\ue02a": g
+    冂: g
+    豕: g
+    执: g
+    八: g
+    夭: g
+    夹: g
+    忄: g
+    关: g
+    "\ue023": g
+    "\ue00c": g
+    卝: h
+    覀: h
+    山: h
+    求: h
+    妾: h
+    首: h
+    小: h
+    "\ue445": h
+    舌: h
+    居: h
+    门: h
+    京: h
+    从: h
+    牙: h
+    习: h
+    几: h
+    手: h
+    戊: h
+    彑: h
+    饣: h
+    "\ue03f": h
+    "\ue800": h
+    "\ue041": h
+    "\ue0f4": h
+    不: j
+    正: j
+    瓦: j
+    林: j
+    钅: j
+    已: j
+    七: j
+    "\ue417": j
+    子: j
+    "\ue00d": j
+    "\ue00a": j
+    "\uf001": j
+    "\ue054": j
+    "\uf002": j
+    "\ue0bc": j
+    "\ue423": j
+    仑: j
+    母: j
+    "\ue405": j
+    化: j
+    比: j
+    "\ue02e": k
+    寸: k
+    "\ue0d2": k
+    巴: k
+    亻: k
+    彡: k
+    爪: k
+    㐬: k
+    士: k
+    "\ue002": k
+    业: k
+    㡀: k
+    "\ue419": k
+    "\ue434": k
+    "\ue0a8": k
+    吂: k
+    员: k
+    生: l
+    占: l
+    水: l
+    氺: l
+    "\ue051": l
+    十: l
+    凵: l
+    "\ue009": l
+    丑: l
+    二: l
+    龵: l
+    "\ue078": l
+    欠: l
+    穴: l
+    囗: l
+    用: l
+    犬: l
+    廾: l
+    今: l
+    予: l
+    "\ue089": l
+    "\ue421": l
+    至: m
+    入: m
+    先: m
+    厶: m
+    三: m
+    亚: m
+    且: m
+    冖: m
+    火: m
+    雨: m
+    "\ue046": m
+    "\ue04e": m
+    "\ue015": m
+    龸: m
+    戉: m
+    "\ue09e": m
+    車: x
+    "\uf003": x
+    之: x
+    亡: x
+    匚: x
+    "\ue432": x
+    女: x
+    古: x
+    龷: x
+    由: x
+    厂: x
+    开: x
+    "\ue063": x
+    镸: x
+    灬: x
+    吅: x
+    齿: x
+    "\ue415": x
+    "\ue0b7": x
+    "\ue0a0": x
+    爿: x
+    "\ue0ad": x
+    禾: c
+    丰: c
+    虍: c
+    "\ue0ed": c
+    工: c
+    田: c
+    艮: c
+    壴: c
+    言: c
+    者: v
+    方: v
+    兴: v
+    甲: v
+    马: v
+    氏: v
+    "\ue075": v
+    乊: v
+    石: v
+    丘: v
+    北: v
+    㓁: v
+    "\ue0c6": v
+    缶: v
+    "\ue050": v
+    "\ue0aa": v
+    中: b
+    六: b
+    川: b
+    "\ue0c3": b
+    又: b
+    尢: b
+    韦: b
+    釆: b
+    夂: b
+    尺: b
+    "\ue06d": b
+    虫: b
+    原: b
+    屮: b
+    䶹: b
+    "\ue07c": b
+    你: 'n'
+    "\ue029": 'n'
+    匕: 'n'
+    "\ue823": 'n'
+    口: 'n'
+    下: 'n'
+    廿: 'n'
+    "\ue04d": 'n'
+    "\ue042": 'n'
+    分: 'n'
+    亽: 'n'
+    "\ue0bb": t
+    乃: c
+    大: c
+    爫: c
+    "\ue024": c
+    "\ue0ba": d
+    矢: b
+    "\ue410": h
+    相: t
+    "\ue039": k
+    "\uf007": w
+encoder:
+  max_length: 4
+  select_keys:
+    - _
+    - ;
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字根, rootIndex: 1}
+      next: c0
+    s2:
+      object: {type: 字根, rootIndex: 2}
+      next: c1
+    s3:
+      object: {type: 固定, key: j}
+      next: s9
+    s4:
+      object: {type: 二笔, rootIndex: 2, strokeIndex: 1}
+      next: s11
+    s5:
+      object: {type: 字根, rootIndex: 3}
+      next: c2
+    s6:
+      object: {type: 字根, rootIndex: -1}
+      next: null
+    s7:
+      object: {type: 二笔, rootIndex: 3, strokeIndex: 1}
+      next: null
+    s8:
+      object: {type: 二笔, rootIndex: 1, strokeIndex: 1}
+      next: s10
+    s9:
+      object: {type: 固定, key: j}
+      next: null
+    s10:
+      object: {type: 笔画, rootIndex: 1, strokeIndex: -1}
+      next: null
+    s11:
+      object: {type: 二笔, rootIndex: 1, strokeIndex: 1}
+      next: null
+  conditions:
+    c0:
+      object: {type: 字根, rootIndex: 2}
+      operator: 存在
+      positive: s2
+      negative: c3
+    c1:
+      object: {type: 字根, rootIndex: 3}
+      operator: 存在
+      positive: s5
+      negative: s4
+    c2:
+      object: {type: 字根, rootIndex: 4}
+      operator: 存在
+      positive: s6
+      negative: s7
+    c3:
+      object: {type: 汉字}
+      operator: 是
+      positive: s3
+      negative: s8
+      value: 一
+  short_code:
+    - length_equal: 1
+      schemes: [{prefix: 1}, {prefix: 2, count: 1}, {prefix: 3, count: 1}]
+  rules:
+    - length_equal: 2
+      formula: AaAbBaBb
+    - length_equal: 3
+      formula: AaBaCaCb
+    - length_in_range: [4, 10]
+      formula: AaBaCaZa
+data:
+  character_set: gb2312
+  tags:
+    - 旅字框
+    - 落字框
+  repertoire:
+    "\uf000":
+      unicode: 61440
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 熏, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}, {feature: reference, index: 11}, {feature: reference, index: 12}, {feature: reference, index: 13}]}]
+      ambiguous: false
+      name: 熏字底
+    "\uf001":
+      unicode: 61441
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue0a6", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      ambiguous: false
+      name: 兼无䒑无八
+    "\uf002":
+      unicode: 61442
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 千, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
+      ambiguous: false
+      name: 千二
+    "\uf003":
+      unicode: 61443
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: "\ue052", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
+      ambiguous: false
+      name: 惠字头无丶
+    "\uf004":
+      unicode: 61444
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿰, operandList: ["\ue001", "\ue014"]}]
+      ambiguous: false
+      name: 临无右下
+    "\uf005":
+      unicode: 61445
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 事, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
+      ambiguous: false
+      name: 事字底
+    "\uf006":
+      unicode: 61446
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿲, operandList: [止, 首, 巳], order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}, {index: 2, strokes: 0}]}]
+      ambiguous: false
+      name: 夔字头
+    "\uf007":
+      unicode: 61447
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: derived_component, source: 重, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
+      ambiguous: false
+      name: 重无前二
+    "\uf008":
+      unicode: 61448
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿳, operandList: [吅, 田, "\ue800"]}]
+      ambiguous: false
+      name: 鼍字头带口
+    "\uf009":
+      unicode: 61449
+      tygf: 0
+      gb2312: false
+      gf0014_id: null
+      readings: []
+      glyphs: [{type: compound, operator: ⿴, operandList: [韭, "\ue0e3"]}]
+      ambiguous: false
+      name: 齑字底
+  glyph_customization:
+    临:
+      type: compound
+      operator: ⿸
+      operandList: ["\uf004", "\ue070"]
+    鬼:
+      type: compound
+      operator: ⿺
+      operandList: ["\ue0ed", 厶]
+    兰:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 三]
+      tags: []
+    后:
+      type: compound
+      tags: [同字心]
+      operator: ⿸
+      operandList: ["\ue024", "\ue800"]
+    哀:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue006", "\ue0b7"]
+    壹:
+      type: compound
+      operator: ⿳
+      operandList: ["\ue04b", 口, 䒑]
+    夔:
+      type: compound
+      operator: ⿱
+      operandList: ["\uf006", "\ue989"]
+    容:
+      type: compound
+      operator: ⿳
+      operandList: [穴, "\ue43d", 口]
+    寡:
+      type: compound
+      operator: ⿳
+      operandList: [宀, "\ue03d", 分]
+    廑:
+      type: compound
+      operator: ⿸
+      operandList: ["\ue85e", "\ue0dd"]
+    "\ue9be":
+      type: compound
+      operator: ⿴
+      operandList: [矢, 比]
+    㝵:
+      type: compound
+      operator: ⿱
+      operandList: [旦, 寸]
+    重:
+      type: compound
+      operator: ⿻
+      operandList: ["\uf002", "\uf007"]
+    熏:
+      type: compound
+      operator: ⿻
+      operandList: ["\uf002", "\uf000"]
+    衰:
+      type: compound
+      operator: ⿳
+      operandList: ["\ue006", 一, "\ue0b7"]
+    衮:
+      type: compound
+      operator: ⿳
+      operandList: [六, 厶, "\ue0b7"]
+    "\ue0e4":
+      type: compound
+      operator: ⿴
+      operandList: [吅, 口]
+    "\ue995":
+      type: compound
+      operator: ⿴
+      operandList: [口, 北]
+    㒸:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 豕]
+    "\uea02":
+      type: compound
+      operator: ⿴
+      operandList: [幺, "\ue42b"]
+    "\ue819":
+      type: compound
+      operator: ⿳
+      operandList: [十, 从, 冖]
+    蕖:
+      type: compound
+      operator: ⿱
+      operandList: [菃, 木]
+    鼍:
+      type: compound
+      operator: ⿱
+      operandList: ["\uf008", 电]
+    齑:
+      type: compound
+      operator: ⿱
+      operandList: [文, "\uf009"]

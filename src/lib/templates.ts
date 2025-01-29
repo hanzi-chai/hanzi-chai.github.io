@@ -14,6 +14,7 @@ import zhenma from "../../examples/zhenma.yaml";
 import zhangma from "../../examples/zhangma.yaml";
 import xuma from "../../examples/xuma.yaml";
 import huma from "../../examples/huma.yaml";
+import sapphire from "../../examples/sapphire.yaml";
 import type { ExampleConfig } from "./config";
 
 export type Example =
@@ -28,6 +29,7 @@ export type Example =
   // 形码
   | "easy"
   | "huma"
+  | "sapphire"
   | "xuma"
   | "yustar"
   | "zhangma"
@@ -42,6 +44,7 @@ export const examples = {
   ziyuan,
   easy,
   huma,
+  sapphire,
   xuma,
   yustar,
   zhangma,
@@ -72,6 +75,7 @@ export const keyboardTypes = [
   "张码",
   "徐码",
   "虎码",
+  "蓝宝石",
   "无",
 ] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
@@ -86,6 +90,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   张码: examples.zhangma.form,
   徐码: examples.xuma.form,
   虎码: examples.huma.form,
+  蓝宝石: examples.sapphire.form,
   无: {
     alphabet: "qwertyuiopasdfghjklzxcvbnm",
     grouping: {},
@@ -99,6 +104,7 @@ export const encoderTypes = [
   "形音码（米十五笔）",
   "形音码（字源）",
   "单编形码（张码）",
+  "单编形码（蓝宝石）",
   "双编形码（郑码）",
   "双编形码（真码）",
   "双编形码（徐码）",
@@ -113,6 +119,7 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "形音码（米十五笔）": examples.mswb.encoder,
   "形音码（字源）": examples.ziyuan.encoder,
   "单编形码（张码）": examples.zhangma.encoder,
+  "单编形码（蓝宝石）": examples.sapphire.encoder,
   "双编形码（郑码）": examples.zhengma.encoder,
   "双编形码（真码）": examples.zhenma.encoder,
   "双编形码（徐码）": examples.xuma.encoder,
