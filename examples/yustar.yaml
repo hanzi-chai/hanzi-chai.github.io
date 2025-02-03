@@ -1,9 +1,9 @@
-version: '0.1'
+version: 3.7.0
 source: yustar
 info:
   name: 宇浩·星陈
   author: 朱宇浩
-  version: '3.5.0'
+  version: 3.7.0
   description: 全汉字字形输入・繁简通打
 analysis:
   classifier:
@@ -98,9 +98,6 @@ analysis:
       - 亻
       - "\ue077"
       - "\ue088"
-    "\ue066":
-      - 卄
-      - 日
     "\ue034":
       - 夕
       - '4'
@@ -116,16 +113,9 @@ analysis:
       - '5'
       - 口
       - 丄
-    曲:
-      - "\ue439"
-      - 龷
     㦮:
       - 二
       - 戈
-    亜:
-      - "\uf006"
-      - 口
-      - '1'
     严:
       - '1'
       - 业
@@ -141,7 +131,13 @@ analysis:
       - "\ue424"
     丼:
       - 廾
-      - 亠
+      - 亠 
+    奐:
+      - "\ue895"
+      - 大
+    烉:
+      - "\ue895"
+      - 火
     "\ue121":
       - '6'
       - "\ue00d"
@@ -149,10 +145,14 @@ analysis:
       - 口
       - "\ue001"
       - '1'
+    "\ue00b":
+      - 䒑
+      - 夫
   weak:
     - "\ue410"
     - "\ue039"
     - "\ue042"
+  customizeCorners: {}
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   grouping:
@@ -232,7 +232,6 @@ form:
     "\ue031": 尸
     "\ue06b": 尸
     "\ue0b4": 彐
-    "\ue0e8": 韋
     "\ue059": 水
     氺: 水
     "\ue0d9": 水
@@ -317,7 +316,6 @@ form:
     卌: 卅
     "\uf007": 卅
     "\uf008": 夕
-    "\ue16e": 韋
     "\ue131": 臣
     "\ue11c": 臣
     "\ue154": 艹
@@ -331,7 +329,6 @@ form:
     飠: 食
     "\ue019": 食
     "\ue157": 馬
-    "\uebc0": 黽
     "\uf00c": 米
     "\uebc2": 彳
     "\ue873": 士
@@ -341,6 +338,11 @@ form:
     "\ue153": 虎
     虍: 虎
     "\uf00f": 忄
+    "\ue016": 羊
+    "\ue0a9": 日
+    "\ue16e": "\ue0e8"
+    "\ue136": 八
+    "\ue171": "\ue16a"
   mapping:
     '1': fi
     '2': us
@@ -358,7 +360,6 @@ form:
     马: bm
     尸: bs
     弓: bg
-    韋: bw
     皮: bp
     又: bo
     癶: bo
@@ -370,6 +371,7 @@ form:
     冂: ck
     见: cj
     贝: cb
+    页: cy
     雨: cv
     彳: cc
     彡: cp
@@ -385,6 +387,7 @@ form:
     片: dp
     申: ds
     由: do
+    曲: dq
     电: dd
     車: dc
     叀: dc
@@ -450,6 +453,7 @@ form:
     且: jq
     見: jj
     貝: jb
+    頁: je
     缶: jf
     矢: ji
     卯: km
@@ -611,10 +615,14 @@ form:
     鳥: dn
     鬥: du
     門: dm
-    黽: dm
     飛: yf
     "\ue831": gw
     "\ue14f": uz
+    正: lz
+    "\ue0e8": bw
+    "\ue066": cv
+    "\ue16a": jv
+    "\ue895": xv
   mapping_type: 2
 encoder:
   max_length: 4
@@ -881,10 +889,7 @@ data:
       type: compound
       operator: ⿰
       operandList: [扌, 气]
-  tags:
-    - 赢字框
-    - 彀字框
-    - 微字框
+  tags: []
   repertoire:
     "\uf000":
       unicode: 61440
