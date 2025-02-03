@@ -3,10 +3,8 @@ source: yujoy
 info:
   name: 宇浩·卿云
   author: 朱宇浩, 钱多多
-  version: '3.7.0'
-  description: 十万汉字字形输入・繁简通打。
-    卿云是宇浩输入法的乱序单编衍生方案。
-    方案名取自《尚书大传》之「卿雲爛兮，糺縵縵兮」。
+  version: 3.7.0
+  description: 十万汉字字形输入・繁简通打。 卿云是宇浩输入法的乱序单编衍生方案。 方案名取自《尚书大传》之「卿雲爛兮"\uff0c"糺縵縵兮」。
 analysis:
   classifier:
     竖钩: 5
@@ -143,6 +141,13 @@ analysis:
     "\ue076":
       - 巛
       - '1'
+    "\ue10e":
+      - 彐
+      - '3'
+    "\ue121":
+      - '6'
+      - '4'
+      - '4'
   weak:
     - "\ue410"
     - "\ue039"
@@ -162,8 +167,6 @@ form:
     "\ue025": 亦
     "\ue420": 豕
     爫: 爪
-    "\ue018": 卜
-    "\ue07c": 卜
     "\ue03e": 小
     "\ue073": 小
     "\ue0c3": 尚
@@ -185,9 +188,7 @@ form:
     "\ue0ec": 电
     "\ue421": 臼
     "\ue028": 向
-    "\ue02d": 向
     "\ue400": 斤
-    "\ue024": 斤
     "\ue0e0": 片
     "\ue0e1": 爿
     "\ue07e": "\ue0b7"
@@ -196,7 +197,6 @@ form:
     "\ue078": 竹
     "\ue441": 乃
     "\ue004": 丂
-    "\ue413": 寸
     "\ue8d9": 卯
     "\ue08e": 卯
     "\ue01a": 卯
@@ -223,7 +223,6 @@ form:
     "\ue0d9": 水
     "\ue039": 干
     "\ue0dc": 鹿
-    "\ue08d": 辰
     "\ue0da": 鸟
     "\ue00d": 二
     "\ue088": 二
@@ -283,8 +282,6 @@ form:
     "\uf003": 合
     "\ue003": 丰
     "\uf004": 月
-    "\uf005": 丩
-    丱: 丩
     "\uf006": 丌
     "\ue130": 木
     冊: "\ue055"
@@ -302,7 +299,6 @@ form:
     尙: 尚
     "\uf00a": 片
     "\uf00b": 爿
-    "\ue10c": 卜
     "\ue10b": 月
     飠: 食
     "\ue019": 食
@@ -316,7 +312,6 @@ form:
     "\ue153": 虎
     虍: 虎
     "\uf00f": 忄
-    "\ue016": 羊
     "\ue0a9": 日
     "\ue16e": "\ue0e8"
     "\ue171": "\ue16a"
@@ -341,6 +336,9 @@ form:
     "\ue136": "\ue137"
     "\ue0ba": "\ue0e3"
     巜: 巛
+    "\ue07c": "\ue018"
+    "\ue10c": "\ue018"
+    "\uf005": 丱
   mapping:
     '1': fi
     '2': ls
@@ -421,7 +419,7 @@ form:
     犭: qq
     臣: jc
     土: ht
-    耂: ht
+    耂: hl
     士: hs
     龶: hs
     走: hz
@@ -558,7 +556,6 @@ form:
     其: rq
     巾: rj
     山: js
-    卜: ub
     虎: th
     鹵: tl
     瓜: vg
@@ -578,7 +575,7 @@ form:
     里: el
     田: st
     禺: vv
-    魚: uv
+    魚: ov
     儿: ee
     屮: jc
     丩: jj
@@ -597,13 +594,13 @@ form:
     阝: pf
     "\ue068": xz
     㐄: ak
-    "\ue0b7": gi
-    "\ue0e2": bs
+    "\ue0b7": si
+    "\ue0e2": lv
     "\ue007": ek
     "\ue009": ek
     "\ue064": md
     "\ue055": pc
-    "\ue0cb": hd
+    "\ue0cb": wd
     馬: cm
     烏: qw
     鳥: qn
@@ -624,6 +621,14 @@ form:
     "\ue137": ei
     "\ue129": ed
     "\ue834": dl
+    "\ue018": uv
+    "\ue08d": lv
+    "\ue413": em
+    "\ue024": hi
+    卜: ub
+    "\ue016": mr
+    "\ue02d": ov
+    丱: jg
   mapping_type: 2
 encoder:
   max_length: 4
@@ -1129,6 +1134,12 @@ data:
       type: derived_component
       source: 乀
       strokes: [{feature: reference, index: 0}]
+    卿:
+      type: compound
+      tags: [横向包夹]
+      operator: ⿴
+      operandList: [卯, "\ue01c"]
+      order: [{index: 0, strokes: 3}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
   tags: []
   repertoire:
     "\uf000":
