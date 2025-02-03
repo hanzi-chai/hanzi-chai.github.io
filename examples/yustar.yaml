@@ -120,24 +120,27 @@ analysis:
       - '1'
       - 业
       - '3'
-    夨:
-      - '6'
-      - 大
-    甴:
-      - 囗
-      - 丄
-    "\ue168":
-      - 丅
-      - "\ue424"
     丼:
       - 廾
       - 亠
-    "\ue121":
-      - '6'
-      - "\ue00d"
     "\ue00b":
       - 䒑
       - 夫
+    匁:
+      - 勹
+      - 乂
+    "\ue168":
+      - '1'
+      - "\ue07f"
+    "\ue108":
+      - 二
+      - 儿
+    "\ue13d":
+      - '1'
+      - 夫
+    "\ue076":
+      - 巛
+      - '1'
   weak:
     - "\ue410"
     - "\ue039"
@@ -800,10 +803,6 @@ data:
       tags: [中竖截断]
       operator: ⿱
       operandList: ["\ue093", 氺]
-    抇:
-      type: compound
-      operator: ⿰
-      operandList: [扌, 日]
     黃:
       type: compound
       operator: ⿳
@@ -879,7 +878,7 @@ data:
     烉:
       type: compound
       operator: ⿱
-      operandList: ["\ue895", 大]
+      operandList: ["\ue895", 火]
     㐯:
       type: compound
       operator: ⿳
@@ -996,6 +995,141 @@ data:
       tags: [彀字框]
       operator: ⿹
       operandList: ["\ue872", 口]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    豰:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 豕]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    毂:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue873", "\ue0c8"]
+      order: [{index: 0, strokes: 5}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    幑:
+      type: compound
+      tags: [微字框]
+      operator: ⿵
+      operandList: ["\ue824", 巾]
+      order: [{index: 0, strokes: 7}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    殼:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 几]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    徾:
+      type: compound
+      tags: [微字框]
+      operator: ⿵
+      operandList: ["\uebc2", 言]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    羸:
+      type: compound
+      tags: [赢字框]
+      operator: ⿵
+      operandList: ["\ue834", 羊]
+      order: [{index: 0, strokes: 10}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    榖:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 木]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    殻:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue873", 几]
+      order: [{index: 0, strokes: 5}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    瑴:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 王]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    瞉:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 目]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    糓:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 米]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    臝:
+      type: compound
+      tags: [赢字框]
+      operator: ⿵
+      operandList: ["\ue834", 果]
+      order: [{index: 0, strokes: 10}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    蠃:
+      type: compound
+      tags: [赢字框]
+      operator: ⿵
+      operandList: ["\ue834", 虫]
+      order: [{index: 0, strokes: 10}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    縠:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 糸]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    "\ueb01":
+      type: compound
+      operator: ⿲
+      operandList: [止, 百, 巳]
+      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}, {index: 2, strokes: 0}]
+    轂:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 車]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    裛:
+      type: compound
+      operator: ⿳
+      operandList: ["\ue006", 巴, "\ue0b7"]
+    黴:
+      type: compound
+      tags: [微字框]
+      operator: ⿵
+      operandList: ["\ue824", 黑]
+      order: [{index: 0, strokes: 7}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    鸁:
+      type: compound
+      tags: [赢字框]
+      operator: ⿵
+      operandList: ["\ue834", 鳥]
+      order: [{index: 0, strokes: 10}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    鷇:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 鳥]
+      order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    鰴:
+      type: compound
+      tags: [微字框]
+      operator: ⿵
+      operandList: ["\ue824", 魚]
+      order: [{index: 0, strokes: 7}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    驘:
+      type: compound
+      tags: [赢字框]
+      operator: ⿵
+      operandList: ["\ue834", 馬]
+      order: [{index: 0, strokes: 10}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    觳:
+      type: compound
+      tags: [彀字框]
+      operator: ⿹
+      operandList: ["\ue872", 角]
       order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
   tags: []
   repertoire:
