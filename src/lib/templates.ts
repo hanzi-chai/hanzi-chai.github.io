@@ -9,6 +9,7 @@ import ziyuan from "../../examples/ziyuan.yaml";
 import jdh from "../../examples/jdh.yaml";
 import easy from "../../examples/easy.yaml";
 import yustar from "../../examples/yustar.yaml";
+import yujoy from "../../examples/yujoy.yaml";
 import zhengma from "../../examples/zhengma.yaml";
 import zhenma from "../../examples/zhenma.yaml";
 import zhangma from "../../examples/zhangma.yaml";
@@ -32,6 +33,7 @@ export type Example =
   | "sapphire"
   | "xuma"
   | "yustar"
+  | "yujoy"
   | "zhangma"
   | "zhengma"
   | "zhenma";
@@ -47,6 +49,7 @@ export const examples = {
   sapphire,
   xuma,
   yustar,
+  yujoy,
   zhangma,
   zhengma,
   zhenma,
@@ -70,6 +73,7 @@ export const keyboardTypes = [
   "米十五笔",
   "字源",
   "宇浩·星陈",
+  "宇浩·卿云",
   "郑码",
   "真码",
   "张码",
@@ -85,6 +89,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   米十五笔: examples.mswb.form,
   字源: examples.ziyuan.form,
   宇浩·星陈: examples.yustar.form,
+  宇浩·卿云: examples.yujoy.form,
   郑码: examples.zhengma.form,
   真码: examples.zhenma.form,
   张码: examples.zhangma.form,
@@ -110,6 +115,7 @@ export const encoderTypes = [
   "双编形码（徐码）",
   "双编形码（易码）",
   "双编形码（宇浩·星陈）",
+  "双编形码（宇浩·卿云）",
   "双编形码（虎码）",
 ] as const;
 export type EncoderTypes = (typeof encoderTypes)[number];
@@ -125,6 +131,7 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "双编形码（徐码）": examples.xuma.encoder,
   "双编形码（易码）": examples.easy.encoder,
   "双编形码（宇浩·星陈）": examples.yustar.encoder,
+  "双编形码（宇浩·卿云）": examples.yujoy.encoder,
   "双编形码（虎码）": examples.huma.encoder,
 };
 
