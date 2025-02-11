@@ -39,13 +39,13 @@ export const defaultAlgebra: Record<PronunciationElementTypes, Rule[]> = {
     // 恢复 iou, uei, uen
     { type: "xform", from: "iu", to: "iou" },
     { type: "xform", from: "u([in])", to: "ue$1" },
-    { type: "xform", from: r`^.*?([aeiouv].*|m|ng?)\d$`, to: "$1" },
+    { type: "xform", from: r`^.*?([aeêiouv].*|m|ng?)\d$`, to: "$1" },
   ],
   双拼声母: [
     { type: "xform", from: "^([bpmfdtnlgkhjqxzcsryw]h?|^).+$", to: "$1" },
     { type: "xform", from: "^$", to: "0" },
   ],
-  双拼韵母: [{ type: "xform", from: r`^.*?([aeiouv].*|m|ng?)\d$`, to: "$1" }],
+  双拼韵母: [{ type: "xform", from: r`^.*?([aeêiouv].*|m|ng?)\d$`, to: "$1" }],
   声调: [{ type: "xform", from: r`.+(\d)`, to: "$1" }],
   首字母: [{ type: "xform", from: r`^(.).+`, to: "$1" }],
   末字母: [{ type: "xform", from: r`.*(.)\d`, to: "$1" }],

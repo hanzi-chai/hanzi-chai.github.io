@@ -139,7 +139,7 @@ export interface Reading {
  * 原始字符 PrimitiveCharacter
  * unicode: 字符的 Unicode 编码
  * tygf: 字符在通用规范汉字集中的类型，0 为不存在，1 为一级字，2 为二级字，3 为三级字
- * gb2312: 字符是否在 GB2312 中
+ * gb2312: 字符在 GB2312 中的类型，0 为不存在，1 为一级字，2 为二级字
  * name: 字符的别名（当字符是 PUA 时，这个别名会用来在界面上渲染）
  * gf0014_id: 字符在 GF0014-2009 中的编号
  * readings: 字符的读音列表
@@ -149,7 +149,7 @@ export interface Reading {
 export interface PrimitiveCharacter {
   unicode: number;
   tygf: 0 | 1 | 2 | 3;
-  gb2312: boolean;
+  gb2312: 0 | 1 | 2;
   name: string | null;
   gf0014_id: number | null;
   readings: Reading[];

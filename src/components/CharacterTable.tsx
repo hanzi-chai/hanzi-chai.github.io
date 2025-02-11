@@ -130,12 +130,13 @@ export default function CharacterTable() {
     title: "GB 2312",
     dataIndex: "gb2312",
     render: (_, record) => {
-      return <Checkbox checked={record.gb2312} />;
+      return <Checkbox checked={record.gb2312 > 0} />;
     },
     width: 96,
     filters: [
-      { text: "是", value: true },
-      { text: "否", value: false },
+      { text: "一级", value: 1 },
+      { text: "二级", value: 2 },
+      { text: "否", value: 0 },
     ],
     onFilter: (value, record) => value === record.gb2312,
   };
