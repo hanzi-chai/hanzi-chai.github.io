@@ -4,7 +4,8 @@ info:
   name: 宇浩·星陈
   author: 朱宇浩
   version: 3.7.0
-  description: 十万汉字字形输入・繁简通打。
+  description: |
+    十万汉字字形输入・繁简通打。
     相似字根分九十九大类排布于二十五键。
     方案名取自《尚书大传》之「明明上天，烂然星陈」。
 analysis:

@@ -1,10 +1,13 @@
-version: 3.7.0
+version: '0.1'
 source: yujoy
 info:
   name: 宇浩·卿云
   author: 朱宇浩, 钱多多
   version: 3.7.0
-  description: 十万汉字字形输入・繁简通打。 卿云是宇浩输入法的乱序单编衍生方案。 方案名取自《尚书大传》之「卿雲爛兮，糺縵縵兮」。
+  description: |
+    十万汉字字形输入・繁简通打。
+    卿云是宇浩输入法的乱序单编衍生方案。
+    方案名取自《尚书大传》之「卿雲爛兮，糺縵縵兮」。
 analysis:
   classifier:
     竖钩: 5
