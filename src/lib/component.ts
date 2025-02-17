@@ -152,10 +152,7 @@ export const getComponentScheme = function (
       (x) => x & (1 << (component.glyph.length - corner - 1)),
     ),
   ) as CornerSpecifier;
-  if (
-    config.analysis.serializer === "c3" ||
-    config.analysis.serializer === "snow2"
-  ) {
+  if (config.analysis.serializer === "c3") {
     // 根据四角信息对 sequence 进行排序
     // if (sequence.length > 3) {
     //   console.log(component.name, sequence, corners);
@@ -396,8 +393,8 @@ export const disassembleComponents = function (
   components: Set<string>,
 ): [ComponentResults, string[]] {
   const rootMap = renderRootList(repertoire, [
-    ...config.primaryRoots,
-    ...config.secondaryRoots,
+    ...config.primaryRoots.keys(),
+    ...config.secondaryRoots.keys(),
   ]);
   const rootList = [...rootMap.values()];
   const classifier = mergeClassifier(config.analysis?.classifier);

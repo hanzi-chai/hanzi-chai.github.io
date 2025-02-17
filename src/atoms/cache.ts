@@ -57,11 +57,11 @@ export const analysisResultAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
   const analysisConfig: AnalysisConfig = {
     analysis: get(analysisAtom),
-    primaryRoots: new Set(
-      Object.keys(get(mappingAtom)).filter((x) => repertoire[x]),
+    primaryRoots: new Map(
+      Object.entries(get(mappingAtom)).filter(([x]) => repertoire[x]),
     ),
-    secondaryRoots: new Set(
-      Object.keys(get(groupingAtom)).filter((x) => repertoire[x]),
+    secondaryRoots: new Map(
+      Object.entries(get(groupingAtom)).filter(([x]) => repertoire[x]),
     ),
   };
   const characters = get(charactersAtom);

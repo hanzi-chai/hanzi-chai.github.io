@@ -15,6 +15,7 @@ import type {
 } from "./data";
 import type { CornerSpecifier } from "./topology";
 import type { Analysis } from "./config";
+import { range, sortBy } from "lodash-es";
 
 export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 
@@ -111,23 +112,22 @@ const topologicalSort = (
 type Serializer = (
   r: PartitionResult[],
   g: Compound,
-  name?: string,
+  c: AnalysisConfig,
 ) => CompoundAnalysis;
 
 const sequentialSerializer: Serializer = (operandResults, glyph) => {
   const rest = {
     corners: [0, 0, 0, 0] as CornerSpecifier,
-    full: [],
     operator: glyph.operator,
     operandResults,
   };
   if (glyph.order === undefined) {
-    const sequence = operandResults.map((x) => x.sequence).flat();
-    return { sequence, ...rest };
+    const full = operandResults.map((x) => x.full).flat();
+    return { sequence: [...full], full, ...rest };
   }
-  const sequence: string[] = [];
+  const full: string[] = [];
   const subsequences = operandResults.map((x) => ({
-    rest: x.sequence,
+    rest: x.full,
     taken: 0,
   }));
   for (const { index, strokes } of glyph.order) {
@@ -136,7 +136,7 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
       continue;
     }
     if (strokes === 0) {
-      sequence.push(...data.rest);
+      full.push(...data.rest);
       data.rest = [];
     } else {
       const partitionResult = operandResults[index]!;
@@ -147,16 +147,15 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
         const toTake = best.scheme.filter(
           (binary) => binary >= lowerBound && binary < upperBound,
         ).length;
-        sequence.push(...data.rest.slice(0, toTake));
+        full.push(...data.rest.slice(0, toTake));
         data.rest = data.rest.slice(toTake);
       } else {
-        sequence.push(...data.rest);
+        full.push(...data.rest);
         data.rest = [];
       }
     }
   }
-  // 不考虑四角
-  return { sequence, ...rest };
+  return { sequence: [...full], full, ...rest };
 };
 
 const zhenmaSerializer: Serializer = (operandResults, glyph) => {
@@ -194,9 +193,13 @@ const robustPartition = (
       expanded.push(...first.operandResults);
       const second = expanded.pop()!;
       const last = operandResults.at(-1)!;
-      const combined = c3Serializer([second, last], {
-        operator: "⿱",
-      } as Compound);
+      const combined = c3Serializer(
+        [second, last],
+        {
+          operator: "⿱",
+        } as Compound,
+        {} as any,
+      );
       expanded.push(combined);
       return { operator: realOperator, operandResults: expanded };
     }
@@ -449,25 +452,92 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
 
 const snow2Serializer: Serializer = (operandResults, glyph) => {
   const sequence: string[] = [];
-  const corners: CornerSpecifier = [0, 0, 0, 0];
-  const [first, last] = [operandResults[0]!, operandResults.at(-1)!];
-  sequence.push(getTL(first));
-  if (/[⿴⿵⿶⿷⿹⿺⿻]/.test(glyph.operator)) {
-    if (first.corners[0] !== first.corners[3]) {
-      sequence.push(getBR(first, true));
-      corners[3] = 1;
-    } else {
-      sequence.push(getBR(last));
-      corners[3] = 0;
-    }
-  } else {
-    sequence.push(getBR(last));
-    corners[3] = 1;
-  }
+  const order =
+    glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+  const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
+    order.findIndex((b) => b.index === i),
+  ).map((i) => operandResults[i]!);
+  const first = sortedOperandResults[0]!;
+  const second = sortedOperandResults[1]!;
+  sequence.push(first.sequence[0]!);
+  sequence.push(second.sequence[0]!);
   return {
     sequence,
-    corners,
+    corners: [0, 0, 0, 0],
     full: [],
+    operator: glyph.operator,
+    operandResults,
+  };
+};
+
+const limit = (sequence: string[], maximum: number, config: AnalysisConfig) => {
+  let codes = 0; // 记录整体的取码数
+  const { primaryRoots, secondaryRoots } = config;
+  const final: string[] = [];
+  for (const x of sequence) {
+    if (x === "·") {
+      final.push(x);
+      continue;
+    }
+    const y = secondaryRoots.get(x) ?? x;
+    const length = primaryRoots.get(y)?.length ?? 1;
+    codes += length;
+    final.push(y);
+    if (codes >= maximum) break;
+  }
+  return final;
+};
+
+const xkjdSerializer: Serializer = (operandResults, glyph, config) => {
+  const { primaryRoots, secondaryRoots } = config;
+  const order =
+    glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+  const sequence: string[] = [];
+  const full: string[] = [];
+  const sequential = sequentialSerializer(operandResults, glyph, config);
+  full.push(...sequential.full);
+  if (order[0]?.strokes !== 1) {
+    // 第一个书写的部分并不是只写了一笔，此时不考虑笔顺交错，依次取各个部分
+    const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
+      order.findIndex((b) => b.index === i),
+    ).map((i) => operandResults[i]!);
+    for (const [index, part] of sortedOperandResults.entries()) {
+      if (index === 0) {
+        let codes = 0; // 记录部分的取码数
+        for (const x of part.full) {
+          const y = secondaryRoots.get(x) ?? x;
+          const length = primaryRoots.get(y)?.length ?? 1;
+          if (codes === 1 && length > 1) {
+            const equivalent: Record<string, string> = {
+              土: "1",
+              艹: "2",
+              金: "2",
+              手: "2",
+              十: "3",
+              日: "4",
+              贝: "5",
+            };
+            sequence.push(equivalent[y] ?? "1");
+          } else {
+            sequence.push(x);
+          }
+          codes += length;
+          if (codes >= 2) break;
+        }
+        // sequence.push("·"); // 二分标记
+      } else {
+        sequence.push(...part.full);
+      }
+    }
+  } else {
+    // 第一个书写的部分只写了一笔，此时考虑笔顺交错
+    sequence.push(...sequential.sequence);
+  }
+  const finalSequence = limit(sequence, 4, config);
+  return {
+    sequence: finalSequence,
+    full,
+    corners: [0, 0, 0, 0],
     operator: glyph.operator,
     operandResults,
   };
@@ -482,6 +552,7 @@ const serializerMap: Record<
   zhangma: zhangmaSerializer,
   zhenma: zhenmaSerializer,
   snow2: snow2Serializer,
+  xkjd: xkjdSerializer,
 };
 
 /**
@@ -507,6 +578,15 @@ export const disassembleCompounds = (
   };
   const serializerName = config.analysis.serializer ?? "sequential";
   const serializer = serializerMap[serializerName] ?? sequentialSerializer;
+  if (serializerName === "xkjd") {
+    for (const [_, result] of componentResults.entries()) {
+      result.sequence = limit(result.sequence, 4, config);
+    }
+  } else if (serializerName === "snow2") {
+    for (const [_, result] of componentResults.entries()) {
+      result.sequence = result.sequence.slice(0, 1).concat([""]);
+    }
+  }
   const display = (s: string) => repertoire[s]?.name ?? s;
   const warninfo: string[] = [];
   for (const [char, { glyph }] of compounds.entries()) {
@@ -525,7 +605,7 @@ export const disassembleCompounds = (
     if (rawOperandResults.every((x) => x !== undefined)) {
       // this is safe!
       const operandResults = rawOperandResults as PartitionResult[];
-      const serialization = serializer(operandResults, glyph, char);
+      const serialization = serializer(operandResults, glyph, config);
       // 检查拆分是否满足递归条件
       const hash = serialization.sequence.map(display).join(" ");
       for (const x of operandResults) {

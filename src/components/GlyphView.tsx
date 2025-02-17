@@ -16,7 +16,7 @@ const Box = styled.div`
 
   width: 400px;
   height: 400px;
-  font-size: 350px;
+  font-size: 400px;
 
   & svg {
     grid-area: 1 / 1 / 1 / 1;

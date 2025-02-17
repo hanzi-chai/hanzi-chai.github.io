@@ -152,6 +152,7 @@ export interface PrimitiveCharacter {
   gb2312: 0 | 1 | 2;
   name: string | null;
   gf0014_id: number | null;
+  gf3001_id: number | null;
   readings: Reading[];
   glyphs: (BasicComponent | DerivedComponent | Compound)[];
   ambiguous: boolean;

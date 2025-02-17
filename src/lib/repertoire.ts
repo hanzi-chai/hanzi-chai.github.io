@@ -8,7 +8,13 @@ import type {
 import { disassembleComponents, recursiveRenderComponent } from "./component";
 import type { CompoundResults } from "./compound";
 import { disassembleCompounds, recursiveRenderCompound } from "./compound";
-import type { Analysis, CustomGlyph, CustomReadings } from "./config";
+import type {
+  Analysis,
+  CustomGlyph,
+  CustomReadings,
+  Element,
+  Mapped,
+} from "./config";
 import type {
   Compound,
   Character,
@@ -96,8 +102,8 @@ export interface AnalysisResult {
 
 export interface AnalysisConfig {
   analysis: Analysis;
-  primaryRoots: Set<string>;
-  secondaryRoots: Set<string>;
+  primaryRoots: Map<Element, Mapped>;
+  secondaryRoots: Map<Element, Element>;
 }
 
 const getRootSequence = function (
@@ -122,7 +128,10 @@ const getRootSequence = function (
     }
   };
   const rootSequence = new Map<string, number[]>();
-  const roots = new Set([...config.primaryRoots, ...config.secondaryRoots]);
+  const roots = new Set([
+    ...config.primaryRoots.keys(),
+    ...config.secondaryRoots.keys(),
+  ]);
   for (const root of roots) {
     rootSequence.set(root, findSequence(root));
   }

@@ -80,7 +80,7 @@ export default function CompoundForm({
       submitter={readonly ? false : undefined}
     >
       <EditorRow>
-        <EditorColumn span={8}>
+        <EditorColumn span={10}>
           <Box>
             <ProFormDependency name={["type", "operator", "operandList"]}>
               {(props) => {
@@ -99,7 +99,7 @@ export default function CompoundForm({
             </ProFormDependency>
           </Box>
         </EditorColumn>
-        <EditorColumn span={16}>
+        <EditorColumn span={14}>
           <CommonForm />
           <Flex gap="0px 8px" wrap="wrap">
             <ProFormSelect

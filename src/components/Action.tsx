@@ -56,7 +56,7 @@ interface CreateProps {
 export const Create = forwardRef(
   (
     { onCreate }: { onCreate: (s: string) => void },
-    ref: ForwardedRef<HTMLElement>,
+    ref: ForwardedRef<HTMLAnchorElement>,
   ) => (
     <Popover content={<CreatePopoverContent onCreate={onCreate} />}>
       <Button type="primary" ref={ref}>
@@ -77,10 +77,11 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
     { label: "复合体", value: "compound" },
   ];
   const handle = async ({ charOrName, type }: CreateProps) => {
-    const base = {
+    const base: Omit<PrimitiveCharacter, "unicode" | "name"> = {
       tygf: 0 as 0,
-      gb2312: false,
+      gb2312: 0 as 0,
       gf0014_id: null,
+      gf3001_id: null,
       readings: [],
       glyphs: [
         type === "component"

@@ -45,7 +45,7 @@ export interface Analysis {
   customizeCorners?: Record<string, CornerSpecifier>;
   strong?: string[];
   weak?: string[];
-  serializer?: "sequential" | "c3" | "zhangma" | "zhenma" | "snow2";
+  serializer?: "sequential" | "c3" | "zhangma" | "zhenma" | "snow2" | "xkjd";
 }
 
 export interface Degenerator {
