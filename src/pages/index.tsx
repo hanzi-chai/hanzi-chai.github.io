@@ -87,8 +87,17 @@ export default function HomeLayout() {
   );
 
   const { snow, jdh, bxm, mswb, ziyuan } = examples;
-  const { easy, sapphire, zhengma, zhenma, yustar, zhangma, xuma, huma } =
-    examples;
+  const {
+    easy,
+    sapphire,
+    zhengma,
+    zhenma,
+    yustar,
+    yujoy,
+    zhangma,
+    xuma,
+    huma,
+  } = examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
     label: x.info.name,
@@ -119,6 +128,7 @@ export default function HomeLayout() {
         sapphire,
         xuma,
         yustar,
+        yujoy,
         zhangma,
         zhengma,
         zhenma,
