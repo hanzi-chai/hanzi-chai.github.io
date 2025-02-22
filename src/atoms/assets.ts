@@ -111,6 +111,11 @@ export const dictionaryAtom = atom(async (get) => {
 
 const db = new MiniDb<Dictionary>();
 
+export const userCharacterSetAtom = atomWithStorage<string[] | undefined>(
+  "user_character_set",
+  undefined,
+);
+
 export const userFrequencyAtom = atomWithStorage<Frequency | undefined>(
   "user_frequency",
   undefined,

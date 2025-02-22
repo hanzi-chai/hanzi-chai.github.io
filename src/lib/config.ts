@@ -21,6 +21,7 @@ export const characterSetSpecifiers = [
   "general",
   "basic",
   "extended",
+  "custom",
 ] as const;
 export type CharacterSetSpecifier = (typeof characterSetSpecifiers)[number];
 

@@ -13,7 +13,6 @@ import type { MouseEventHandler } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import type { SVGGlyph } from "~/lib";
 import { isPUA } from "~/lib";
 import { StrokesView } from "./GlyphView";
 import { glyphAtom, useAtomValue } from "~/atoms";

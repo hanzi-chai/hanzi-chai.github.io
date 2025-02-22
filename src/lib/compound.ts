@@ -450,8 +450,7 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
   };
 };
 
-// 两角拆分，暂时不用
-const _snow2Serializer: Serializer = (operandResults, glyph) => {
+const snow2Serializer: Serializer = (operandResults, glyph) => {
   const sequence: string[] = [];
   const order =
     glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
@@ -584,8 +583,9 @@ export const disassembleCompounds = (
       result.sequence = limit(result.sequence, 4, config);
     }
   } else if (serializerName === "snow2") {
-    for (const [_, result] of componentResults.entries()) {
-      result.sequence = result.sequence.slice(0, 1).concat([""]);
+    for (const [key, result] of componentResults.entries()) {
+      result.sequence = result.sequence.slice(0, 1);
+      if (result.sequence[0] !== key) result.sequence.push("");
     }
   }
   const display = (s: string) => repertoire[s]?.name ?? s;

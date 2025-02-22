@@ -12,6 +12,7 @@ import {
   useAtom,
   useAtomValue,
   useChaifenTitle,
+  userCharacterSetAtom,
 } from "~/atoms";
 import {
   CharacterSetSpecifier,
@@ -51,7 +52,9 @@ const getTSVFromDistribution = (distribution: Distribution) => {
   });
 };
 
-function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
+function AssetUploader<
+  V extends Equivalence | Distribution | Dictionary | string[],
+>({
   atom,
   defaultAtom,
   title,
@@ -60,21 +63,26 @@ function AssetUploader<V extends Equivalence | Distribution | Dictionary>({
   dumper,
 }: {
   atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
-  defaultAtom: Atom<Promise<V>>;
+  defaultAtom?: Atom<Promise<V>>;
   title: string;
   description: string;
   parser: (text: string) => V;
-  dumper: (value: V) => string[][];
+  dumper?: (value: V) => string[][];
 }) {
   const [value, setValue] = useAtom(atom);
-  const defaultValue = useAtomValue(defaultAtom);
-  const tsv = dumper(defaultValue);
+  const defaultValue = defaultAtom ? useAtomValue(defaultAtom) : undefined;
   return (
     <>
       <Flex align="baseline" gap="middle">
         <Typography.Title level={3}>{title}</Typography.Title>
         <div style={{ flex: 1 }} />
-        <Button onClick={() => exportTSV(tsv, `${title}.txt`)}>下载预置</Button>
+        {defaultValue && dumper && (
+          <Button
+            onClick={() => exportTSV(dumper(defaultValue), `${title}.txt`)}
+          >
+            下载预置
+          </Button>
+        )}
         <Uploader type="txt" action={(text) => setValue(parser(text))} />
         <Button
           disabled={value === undefined}
@@ -188,6 +196,7 @@ export default function Index() {
     general: "通用",
     basic: "基本",
     extended: "扩展",
+    custom: "自定义",
   };
   return (
     <EditorRow>
@@ -211,16 +220,22 @@ export default function Index() {
           字集是系统所处理的字符集合，您可以选择通用、基本或扩展三者之一。字集越大，您的方案能输入的字符就越多，但是在拆分时要考虑的字形种类也就更多。建议您从通用字集开始，根据实际需要逐步扩展。
         </Typography.Paragraph>
         <ul>
-          <li>通用字集（8105 个字符）即《通用规范汉字表》中的所有字符；</li>
           <li>
-            基本字集（21265
+            极简（6638 个字符）即 GB2312
+            和《通用规范汉字表》的交集中的所有字符；
+          </li>
+          <li>GB2312（6763 个字符）即 GB2312 中的所有字符；</li>
+          <li>通用（8105 个字符）即《通用规范汉字表》中的所有字符；</li>
+          <li>
+            基本（21265
             个字符）是在通用字集的基础上增加了所有中日韩统一表意文字基本区的字符；
           </li>
           <li>
-            扩展字集（27780
+            扩展（27780
             个字符）是在基本字集的基础上增加了所有中日韩统一表意文字扩展区 A
             的字符；
           </li>
+          <li>自定义（任意数量）即用户自定义的字符集合。</li>
         </ul>
       </EditorColumn>
       <EditorColumn span={12}>
@@ -245,6 +260,17 @@ export default function Index() {
           defaultAtom={defaultDictionaryAtom}
           parser={getDictFromTSV}
           dumper={(dict) => dict}
+        />
+        <AssetUploader
+          title="字集"
+          description="您可以上传自定义字集并在字集中选取「自定义」来使用自己的字集。"
+          atom={userCharacterSetAtom}
+          parser={(text) =>
+            text
+              .trim()
+              .split("\n")
+              .map((x) => x.trim())
+          }
         />
         <AssetUploader
           title="当量"

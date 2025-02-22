@@ -2,15 +2,8 @@ import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useMemo, useState } from "react";
 import Element from "~/components/Element";
-import {
-  repertoireAtom,
-  displayAtom,
-  primitiveRepertoireAtom,
-  errorFeedback,
-  useAddAtom,
-  glyphAtom,
-} from "~/atoms";
-import { list, remoteUpdate } from "~/api";
+import { repertoireAtom, displayAtom, primitiveRepertoireAtom } from "~/atoms";
+import { list } from "~/api";
 import type {
   BasicComponent,
   DerivedComponent,
@@ -26,11 +19,8 @@ import { computeComponent, type ComputedComponent } from "~/lib";
 import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
-import { EditorColumn, EditorRow, svgDisplay } from "~/components/Utils";
-import * as O from "optics-ts/standalone";
-import CompoundForm from "~/components/CompoundForm";
-import ComponentForm from "~/components/ComponentForm";
-import { InlineCustomizer, InlineUpdater } from "~/components/CharacterTable";
+import { Display } from "~/components/Utils";
+import { InlineUpdater } from "~/components/CharacterTable";
 import { Delete, EditGlyph, Mutate } from "~/components/Action";
 
 interface TreeNodeData {
@@ -90,12 +80,11 @@ const TreeNode = ({
   name: string;
   character: PrimitiveCharacter;
 }) => {
-  const display = useAtomValue(displayAtom);
-  const glyphMap = useAtomValue(glyphAtom);
   return (
     <Flex align="center">
-      <Element>{svgDisplay(name, glyphMap)}</Element>
-      <span>{display(name)}</span>
+      <Element>
+        <Display name={name} />
+      </Element>
       <InlineUpdater character={character} />
       <Space>
         <EditGlyph character={character} />

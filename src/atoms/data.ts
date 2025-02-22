@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { primitiveRepertoireAtom } from "./assets";
+import { primitiveRepertoireAtom, userCharacterSetAtom } from "./assets";
 import type {
   CharacterSetSpecifier,
   CustomReadings,
@@ -36,6 +36,8 @@ export const userTagsAtom = focusAtom(dataAtom, (o) =>
 export const charactersAtom = atom((get) => {
   const primitiveRepertoire = get(primitiveRepertoireAtom);
   const characterSet = get(characterSetAtom);
+  const userCharacterSet = get(userCharacterSetAtom);
+  const userCharacterSetSet = new Set(userCharacterSet ?? []);
   const filters: Record<
     CharacterSetSpecifier,
     (k: string, v: PrimitiveCharacter) => boolean
@@ -45,6 +47,10 @@ export const charactersAtom = atom((get) => {
     general: (_, v) => v.tygf > 0,
     basic: (k, v) => v.tygf > 0 || isValidCJKBasicChar(k),
     extended: (k, v) => v.tygf > 0 || isValidCJKChar(k),
+    custom: (k, v) => {
+      if (userCharacterSet !== undefined) return userCharacterSetSet.has(k);
+      return v.gb2312 > 0 && v.tygf > 0;
+    },
   };
 
   const filter = filters[characterSet];
