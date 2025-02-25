@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { primitiveRepertoireAtom, userCharacterSetAtom } from "./assets";
 import type {
+  BoundingBox,
   CharacterSetSpecifier,
   CustomReadings,
   PrimitiveCharacter,
@@ -86,13 +87,19 @@ export const repertoireAtom = atom((get) => {
 export const glyphAtom = atom((get) => {
   const repertoire = get(repertoireAtom);
   const result = new Map<string, SVGGlyph>();
+  const boundingBoxCache = new Map<string, BoundingBox>();
   for (const [char, { glyph }] of Object.entries(repertoire)) {
     if (glyph === undefined) continue;
     if (result.has(char)) continue;
     if (glyph.type === "basic_component") {
       result.set(char, glyph.strokes);
     } else {
-      const svgglyph = recursiveRenderCompound(glyph, repertoire, result);
+      const svgglyph = recursiveRenderCompound(
+        glyph,
+        repertoire,
+        result,
+        boundingBoxCache,
+      );
       if (svgglyph instanceof Error) continue;
       result.set(char, svgglyph);
     }
@@ -111,9 +118,9 @@ export const sortedRepertoireAtom = atom((get) => {
 });
 
 export const sequenceAtom = atom((get) => {
-  const determinedRepertoire = get(glyphAtom);
+  const glyphs = get(glyphAtom);
   const result = new Map<string, string>(
-    [...determinedRepertoire].map(([name, glyph]) => [
+    [...glyphs].map(([name, glyph]) => [
       name,
       glyph.map((x) => classifier[x.feature]).join(""),
     ]),

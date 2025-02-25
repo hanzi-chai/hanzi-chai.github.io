@@ -126,6 +126,11 @@ const area = (p: Point, q: Point) => p[0] * q[1] - p[1] * q[0];
 
 type Interval = [number, number];
 
+interface BoundingBox {
+  x: Interval;
+  y: Interval;
+}
+
 type Position = -1 | -0.5 | 0 | 0.5 | 1;
 
 const getIntervalPosition = function (i: Interval, j: Interval): Position {
@@ -233,4 +238,4 @@ export {
   isBoundedBy,
 };
 export type { LinearCurve, CubicCurve, Curve, RenderedStroke };
-export type { Interval, Position };
+export type { Interval, Position, BoundingBox };

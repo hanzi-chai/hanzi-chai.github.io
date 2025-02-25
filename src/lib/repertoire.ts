@@ -144,7 +144,7 @@ const getRootSequence = function (
 /**
  * 确定需要分析的字符
  */
-const getRequiredTargets = (
+export const getRequiredTargets = (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],

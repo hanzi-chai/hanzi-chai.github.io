@@ -16,6 +16,7 @@ import type {
 import type { CornerSpecifier } from "./topology";
 import type { Analysis } from "./config";
 import { range, sortBy } from "lodash-es";
+import type { BoundingBox } from "./bezier";
 
 export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 
@@ -37,6 +38,37 @@ interface CompoundGenuineAnalysis extends CompoundBasicAnalysis {
   operandResults: PartitionResult[];
 }
 
+const getBoundingBox = (glyph: SVGGlyph) => {
+  let [xmin, ymin, xmax, ymax] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const { start, curveList } of glyph) {
+    xmin = Math.min(xmin, start[0]);
+    ymin = Math.min(ymin, start[1]);
+    let [x, y] = start;
+    for (const { command, parameterList } of curveList) {
+      switch (command) {
+        case "h":
+          x += parameterList[0];
+          break;
+        case "v":
+          y += parameterList[0];
+          break;
+        default: {
+          const [_x1, _y1, _x2, _y2, x3, y3] = parameterList;
+          x += x3;
+          y += y3;
+          break;
+        }
+      }
+      xmin = Math.min(xmin, x);
+      ymin = Math.min(ymin, y);
+      xmax = Math.max(xmax, x);
+      ymax = Math.max(ymax, y);
+    }
+  }
+  const bb: BoundingBox = { x: [xmin, xmax], y: [ymin, ymax] };
+  return bb;
+};
+
 /**
  * 将复合体递归渲染为 SVG 图形
  *
@@ -50,13 +82,21 @@ export const recursiveRenderCompound = function (
   compound: Compound,
   repertoire: Repertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
+  boundingBoxCache: Map<string, BoundingBox> = new Map(),
 ): SVGGlyph | InvalidGlyphError {
   const glyphs: SVGGlyph[] = [];
+  const boxes: BoundingBox[] = [];
   for (const char of compound.operandList) {
     const glyph = repertoire[char]?.glyph;
     if (glyph === undefined) return new InvalidGlyphError();
     if (glyph.type === "basic_component") {
       glyphs.push(glyph.strokes);
+      let bb = boundingBoxCache.get(char);
+      if (bb === undefined) {
+        bb = getBoundingBox(glyph.strokes);
+        boundingBoxCache.set(char, bb);
+      }
+      boxes.push(bb);
     } else {
       const cache = glyphCache.get(char);
       if (cache !== undefined) {

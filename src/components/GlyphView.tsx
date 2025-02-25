@@ -6,7 +6,8 @@ import React, {
   Fragment,
 } from "react";
 import styled from "styled-components";
-import { renderSVGGlyph, type N6, type Point, type SVGStroke } from "~/lib";
+import type { Draw, Feature, N6, Point, SVGStroke } from "~/lib";
+import { renderSVGGlyph } from "~/lib";
 import { add, subtract } from "~/lib/mathjs";
 
 const Box = styled.div`
@@ -17,15 +18,52 @@ const Box = styled.div`
   font-size: 398px;
 `;
 
-const processPath = ({ start, curveList }: SVGStroke) =>
-  "M" +
-  start.join(" ") +
-  curveList
-    .map(
-      ({ command, parameterList }) =>
-        command.replace("z", "c") + parameterList.join(" "),
-    )
-    .join("");
+const drawLength = ({ command, parameterList }: Draw) => {
+  if (command === "h" || command === "v") {
+    return parameterList[0];
+  } else {
+    const [_x1, _y1, _x2, _y2, x3, y3] = parameterList as N6;
+    return Math.sqrt(x3 * x3 + y3 * y3);
+  }
+};
+
+const processPath = ({ start, feature, curveList }: SVGStroke) => {
+  const svgCommands: string[] = ["M" + start.join(" ")];
+  for (const [index, { command, parameterList }] of curveList.entries()) {
+    let svgCommand: string;
+    if (
+      index === curveList.length - 1 &&
+      command === "h" &&
+      feature.endsWith("提")
+    ) {
+      const length = parameterList[0];
+      svgCommand = `l ${length} ${-0.2 * length}`;
+    } else {
+      svgCommand = command.replace("z", "c") + parameterList.join(" ");
+    }
+    svgCommands.push(svgCommand);
+  }
+  const type1Gou: Feature[] = ["横钩"]; // 左下
+  const type2Gou: Feature[] = [
+    "竖钩",
+    "横折钩",
+    "竖折折钩",
+    "横折折折钩",
+    "弯钩",
+    "横撇弯钩",
+  ]; // 左上
+  const type3Gou: Feature[] = ["斜钩", "横斜钩", "竖弯钩", "横折弯钩", "撇钩"]; // 上
+  const referenceLength = drawLength(curveList.at(-1)!);
+  const gouLength = 5 + referenceLength * 0.25;
+  if (type1Gou.includes(feature)) {
+    svgCommands.push(`l ${-gouLength * 0.4} ${gouLength}`);
+  } else if (type2Gou.includes(feature)) {
+    svgCommands.push(`l ${-gouLength} ${-gouLength * 0.3}`);
+  } else if (type3Gou.includes(feature)) {
+    svgCommands.push(`l ${gouLength * 0.3} ${-gouLength}`);
+  }
+  return svgCommands.join(" ");
+};
 
 interface StrokesViewProps {
   glyph: SVGStroke[];
@@ -53,6 +91,81 @@ const Circle: React.FC<{
       onMouseDown={() => setIndex(index)}
       style={{ cursor: "pointer" }}
     />
+  );
+};
+
+interface ControlProps {
+  stroke: SVGStroke;
+  strokeIndex: number;
+  setIndex: (i: PointIndex) => void;
+}
+
+const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
+  const start = stroke.start;
+  let current: Point = [start[0], start[1]];
+  return (
+    <>
+      <Circle
+        center={start}
+        index={{ strokeIndex, curveIndex: -1, controlIndex: -1 }}
+        setIndex={setIndex}
+      />
+      {stroke.curveList.map((curve, curveIndex) => {
+        if (curve.command === "h" || curve.command === "v") {
+          const previous: Point = [...current];
+          if (curve.command === "h") previous[0] += curve.parameterList[0];
+          if (curve.command === "v") previous[1] += curve.parameterList[0];
+          current = structuredClone(previous);
+          return (
+            <Circle
+              key={curveIndex}
+              center={previous}
+              index={{
+                strokeIndex,
+                curveIndex,
+                controlIndex: 1,
+              }}
+              setIndex={setIndex}
+            />
+          );
+        } else {
+          const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
+          const previous: Point = [...current];
+          const control1 = add(previous, [x1, y1]);
+          const control2 = add(previous, [x2, y2]);
+          const control3 = add(previous, [x, y]);
+          current = structuredClone(control3);
+          return (
+            <Fragment key={curveIndex}>
+              <Circle
+                key={0}
+                center={control1}
+                index={{ strokeIndex, curveIndex, controlIndex: 1 }}
+                setIndex={setIndex}
+              />
+              <Circle
+                key={1}
+                center={control2}
+                index={{ strokeIndex, curveIndex, controlIndex: 2 }}
+                setIndex={setIndex}
+              />
+              <Circle
+                key={2}
+                center={current}
+                index={{ strokeIndex, curveIndex, controlIndex: 3 }}
+                setIndex={setIndex}
+              />
+              <path
+                d={`M ${previous.join(" ")} L ${control1[0]} ${control1[1]} L ${control2[0]} ${control2[1]} L ${current[0]} ${current[1]}`}
+                stroke="grey"
+                strokeWidth="0.3"
+                fill="none"
+              />
+            </Fragment>
+          );
+        }
+      })}
+    </>
   );
 };
 
@@ -125,8 +238,6 @@ const StrokesView: React.FC<StrokesViewProps> = ({
       viewBox="0 0 100 100"
     >
       {glyph.map((stroke, strokeIndex) => {
-        const start = stroke.start;
-        let current: Point = [start[0], start[1]];
         return (
           <g key={strokeIndex}>
             <path
@@ -136,70 +247,11 @@ const StrokesView: React.FC<StrokesViewProps> = ({
               fill="none"
             />
             {setGlyph && (
-              <>
-                <Circle
-                  center={start}
-                  index={{ strokeIndex, curveIndex: -1, controlIndex: -1 }}
-                  setIndex={setIndex}
-                />
-                {stroke.curveList.map((curve, curveIndex) => {
-                  if (curve.command === "h" || curve.command === "v") {
-                    const previous: Point = [...current];
-                    if (curve.command === "h")
-                      previous[0] += curve.parameterList[0];
-                    if (curve.command === "v")
-                      previous[1] += curve.parameterList[0];
-                    current = structuredClone(previous);
-                    return (
-                      <Circle
-                        key={curveIndex}
-                        center={previous}
-                        index={{
-                          strokeIndex,
-                          curveIndex,
-                          controlIndex: 1,
-                        }}
-                        setIndex={setIndex}
-                      />
-                    );
-                  } else {
-                    const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
-                    const previous: Point = [...current];
-                    const control1 = add(previous, [x1, y1]);
-                    const control2 = add(previous, [x2, y2]);
-                    const control3 = add(previous, [x, y]);
-                    current = structuredClone(control3);
-                    return (
-                      <Fragment key={curveIndex}>
-                        <Circle
-                          key={0}
-                          center={control1}
-                          index={{ strokeIndex, curveIndex, controlIndex: 1 }}
-                          setIndex={setIndex}
-                        />
-                        <Circle
-                          key={1}
-                          center={control2}
-                          index={{ strokeIndex, curveIndex, controlIndex: 2 }}
-                          setIndex={setIndex}
-                        />
-                        <Circle
-                          key={2}
-                          center={current}
-                          index={{ strokeIndex, curveIndex, controlIndex: 3 }}
-                          setIndex={setIndex}
-                        />
-                        <path
-                          d={`M ${previous.join(" ")} L ${control1[0]} ${control1[1]} L ${control2[0]} ${control2[1]} L ${current[0]} ${current[1]}`}
-                          stroke="grey"
-                          strokeWidth="0.3"
-                          fill="none"
-                        />
-                      </Fragment>
-                    );
-                  }
-                })}
-              </>
+              <Control
+                stroke={stroke}
+                strokeIndex={strokeIndex}
+                setIndex={setIndex}
+              />
             )}
           </g>
         );

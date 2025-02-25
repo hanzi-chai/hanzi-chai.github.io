@@ -550,6 +550,7 @@ form:
   mapping_type: 2
 encoder:
   max_length: 4
+  auto_select_length: 4
   select_keys:
     - _
     - ;
