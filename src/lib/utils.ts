@@ -13,6 +13,7 @@ import type {
   PrimitiveRepertoire,
   PrimitiveCharacter,
   Character,
+  SplicedComponent,
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
@@ -89,6 +90,14 @@ export const getDummyDerivedComponent = function (): DerivedComponent {
   };
 };
 
+export const getDummySplicedComponent = function (): SplicedComponent {
+  return {
+    type: "spliced_component",
+    operator: "⿰",
+    operandList: ["一", "丨"],
+  };
+};
+
 export const getDummyReferenceStroke = function (): ReferenceStroke {
   return {
     feature: "reference",
@@ -127,7 +136,7 @@ export const getDummyCompound = function (operator: Operator): Compound {
 };
 
 export const isComponent = function (
-  glyph: BasicComponent | DerivedComponent | Compound,
+  glyph: BasicComponent | DerivedComponent | SplicedComponent | Compound,
 ): glyph is BasicComponent | DerivedComponent {
   return glyph.type === "basic_component" || glyph.type === "derived_component";
 };

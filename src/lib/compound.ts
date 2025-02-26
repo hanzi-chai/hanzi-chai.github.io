@@ -12,6 +12,7 @@ import type {
   Operator,
   SVGGlyph,
   CompoundCharacter,
+  SVGGlyphWithBox,
 } from "./data";
 import type { CornerSpecifier } from "./topology";
 import type { Analysis } from "./config";
@@ -38,12 +39,14 @@ interface CompoundGenuineAnalysis extends CompoundBasicAnalysis {
   operandResults: PartitionResult[];
 }
 
-const getBoundingBox = (glyph: SVGGlyph) => {
+export const getGlyphBoundingBox = (glyph: SVGGlyph) => {
   let [xmin, ymin, xmax, ymax] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const { start, curveList } of glyph) {
-    xmin = Math.min(xmin, start[0]);
-    ymin = Math.min(ymin, start[1]);
     let [x, y] = start;
+    xmin = Math.min(xmin, x);
+    ymin = Math.min(ymin, y);
+    xmax = Math.max(xmax, x);
+    ymax = Math.max(ymax, y);
     for (const { command, parameterList } of curveList) {
       switch (command) {
         case "h":
@@ -81,22 +84,19 @@ const getBoundingBox = (glyph: SVGGlyph) => {
 export const recursiveRenderCompound = function (
   compound: Compound,
   repertoire: Repertoire,
-  glyphCache: Map<string, SVGGlyph> = new Map(),
-  boundingBoxCache: Map<string, BoundingBox> = new Map(),
-): SVGGlyph | InvalidGlyphError {
-  const glyphs: SVGGlyph[] = [];
-  const boxes: BoundingBox[] = [];
+  glyphCache: Map<string, SVGGlyphWithBox> = new Map(),
+): SVGGlyphWithBox | InvalidGlyphError {
+  const glyphs: SVGGlyphWithBox[] = [];
   for (const char of compound.operandList) {
     const glyph = repertoire[char]?.glyph;
     if (glyph === undefined) return new InvalidGlyphError();
     if (glyph.type === "basic_component") {
-      glyphs.push(glyph.strokes);
-      let bb = boundingBoxCache.get(char);
-      if (bb === undefined) {
-        bb = getBoundingBox(glyph.strokes);
-        boundingBoxCache.set(char, bb);
+      let box = glyphCache.get(char)?.box;
+      if (box === undefined) {
+        box = getGlyphBoundingBox(glyph.strokes);
+        glyphCache.set(char, { strokes: glyph.strokes, box: box });
       }
-      boxes.push(bb);
+      glyphs.push({ strokes: glyph.strokes, box });
     } else {
       const cache = glyphCache.get(char);
       if (cache !== undefined) {

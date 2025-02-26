@@ -63,7 +63,10 @@ export const determine = (
     const rawglyph = customGlyph[name] ?? glyphs[selectedIndex];
     let finalGlyph: Character["glyph"];
     const finalReadings = customReadings[name] ?? readings;
-    if (rawglyph?.type === "derived_component") {
+    if (
+      rawglyph?.type === "derived_component" ||
+      rawglyph?.type === "spliced_component"
+    ) {
       const svgglyph = recursiveRenderComponent(
         rawglyph,
         repertoire,
@@ -124,7 +127,7 @@ const getRootSequence = function (
     } else {
       const sequence = recursiveRenderCompound(glyph, repertoire);
       if (sequence instanceof Error) return [];
-      return sequence.map((s) => classifier[s.feature]);
+      return sequence.strokes.map((s) => classifier[s.feature]);
     }
   };
   const rootSequence = new Map<string, number[]>();

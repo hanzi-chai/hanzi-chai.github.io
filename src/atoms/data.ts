@@ -1,16 +1,21 @@
 import { atom } from "jotai";
 import { primitiveRepertoireAtom, userCharacterSetAtom } from "./assets";
 import type {
-  BoundingBox,
   CharacterSetSpecifier,
   CustomReadings,
   PrimitiveCharacter,
+  SVGGlyphWithBox,
 } from "~/lib";
-import { isPUA, isValidCJKBasicChar, isValidCJKChar } from "~/lib";
+import {
+  getGlyphBoundingBox,
+  isPUA,
+  isValidCJKBasicChar,
+  isValidCJKChar,
+} from "~/lib";
 import { recursiveRenderCompound } from "~/lib";
 import { dataAtom } from ".";
 import { focusAtom } from "jotai-optics";
-import type { PrimitiveRepertoire, SVGGlyph } from "~/lib";
+import type { PrimitiveRepertoire } from "~/lib";
 import type { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
@@ -86,20 +91,15 @@ export const repertoireAtom = atom((get) => {
 
 export const glyphAtom = atom((get) => {
   const repertoire = get(repertoireAtom);
-  const result = new Map<string, SVGGlyph>();
-  const boundingBoxCache = new Map<string, BoundingBox>();
+  const result = new Map<string, SVGGlyphWithBox>();
   for (const [char, { glyph }] of Object.entries(repertoire)) {
     if (glyph === undefined) continue;
     if (result.has(char)) continue;
     if (glyph.type === "basic_component") {
-      result.set(char, glyph.strokes);
+      const box = getGlyphBoundingBox(glyph.strokes);
+      result.set(char, { strokes: glyph.strokes, box });
     } else {
-      const svgglyph = recursiveRenderCompound(
-        glyph,
-        repertoire,
-        result,
-        boundingBoxCache,
-      );
+      const svgglyph = recursiveRenderCompound(glyph, repertoire, result);
       if (svgglyph instanceof Error) continue;
       result.set(char, svgglyph);
     }
@@ -122,7 +122,7 @@ export const sequenceAtom = atom((get) => {
   const result = new Map<string, string>(
     [...glyphs].map(([name, glyph]) => [
       name,
-      glyph.map((x) => classifier[x.feature]).join(""),
+      glyph.strokes.map((x) => classifier[x.feature]).join(""),
     ]),
   );
   return result;

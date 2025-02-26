@@ -1,11 +1,12 @@
 import { Button, Flex, Form } from "antd";
-import type { Compound } from "~/lib";
+import type { Compound, SplicedComponent, SVGGlyphWithBox } from "~/lib";
 import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
 import { GlyphSelect } from "./CharacterSelect";
 import {
   ModalForm,
   ProFormDependency,
+  ProFormDigit,
   ProFormGroup,
   ProFormList,
   ProFormSelect,
@@ -28,6 +29,7 @@ export const CommonForm = () => {
         options={[
           { label: "基本部件", value: "basic_component" },
           { label: "衍生部件", value: "derived_component" },
+          { label: "拼接部件", value: "spliced_component" },
           { label: "复合体", value: "compound" },
         ]}
         disabled
@@ -42,6 +44,8 @@ export const CommonForm = () => {
   );
 };
 
+type CompoundOrSplicedComponent = Compound | SplicedComponent;
+
 export default function CompoundForm({
   title,
   initialValues,
@@ -51,8 +55,8 @@ export default function CompoundForm({
   readonly,
 }: {
   title: string;
-  initialValues: Compound;
-  onFinish: (c: Compound) => Promise<boolean>;
+  initialValues: CompoundOrSplicedComponent;
+  onFinish: (c: CompoundOrSplicedComponent) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
@@ -73,6 +77,9 @@ export default function CompoundForm({
       trigger={trigger}
       initialValues={initialValues}
       onFinish={onFinish}
+      onValuesChange={(_, all) => {
+        console.log(all);
+      }}
       modalProps={{
         width: 1080,
       }}
@@ -82,17 +89,23 @@ export default function CompoundForm({
       <EditorRow>
         <EditorColumn span={10}>
           <Box>
-            <ProFormDependency name={["type", "operator", "operandList"]}>
+            <ProFormDependency
+              name={["type", "operator", "operandList", "parameters"]}
+            >
               {(props) => {
                 const component = props as Compound;
                 const rendered =
                   component?.type !== undefined
                     ? recursiveRenderCompound(component, repertoire)
                     : new Error();
+                const defaultGlyph: SVGGlyphWithBox = {
+                  strokes: [],
+                  box: { x: [0, 100], y: [0, 100] },
+                };
                 return (
                   <StrokesView
                     displayMode
-                    glyph={rendered instanceof Error ? [] : rendered}
+                    glyph={rendered instanceof Error ? defaultGlyph : rendered}
                   />
                 );
               }}
@@ -149,12 +162,15 @@ export default function CompoundForm({
             </ProFormGroup>
           </ProFormList>
           <ProFormGroup>
-            <Button
-              onClick={() => {
-                form.setFieldValue("order", undefined);
-              }}
-            >
+            <ProFormDigit name={["parameters", "gap2"]} label="间距 2" />
+            <ProFormDigit name={["parameters", "scale2"]} label="缩放 2" />
+          </ProFormGroup>
+          <ProFormGroup>
+            <Button onClick={() => form.setFieldValue("order", undefined)}>
               清空笔顺
+            </Button>
+            <Button onClick={() => form.setFieldValue("parameters", undefined)}>
+              清空参数
             </Button>
           </ProFormGroup>
         </EditorColumn>

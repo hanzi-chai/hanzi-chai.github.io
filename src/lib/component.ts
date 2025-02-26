@@ -4,6 +4,7 @@ import type {
   PrimitiveRepertoire,
   SVGGlyph,
   Component,
+  SVGGlyphWithBox,
 } from "./data";
 import { defaultDegenerator, generateSliceBinaries } from "./degenerator";
 import { select } from "./selector";
@@ -13,7 +14,8 @@ import { findCorners, findTopology, renderSVGGlyph } from "./topology";
 import { mergeClassifier, type Classifier } from "./classifier";
 import { isComponent } from "./utils";
 import type { AnalysisConfig } from "./repertoire";
-import { recursiveRenderCompound } from "./compound";
+import { getGlyphBoundingBox, recursiveRenderCompound } from "./compound";
+import { affineMerge } from "./affine";
 
 export class InvalidGlyphError extends Error {}
 
@@ -254,27 +256,47 @@ export const recursiveRenderComponent = function (
   glyphCache: Map<string, SVGGlyph> = new Map(),
 ): SVGGlyph | InvalidGlyphError {
   if (component.type === "basic_component") return component.strokes;
-  const sourceComponent =
-    repertoire[component.source]?.glyphs.find(isComponent);
-  if (sourceComponent === undefined) return new InvalidGlyphError();
-  const sourceGlyph = recursiveRenderComponent(
-    sourceComponent,
-    repertoire,
-    glyphCache,
-  );
-  if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
-  const glyph: SVGGlyph = [];
-  component.strokes.forEach((x) => {
-    if (x.feature === "reference") {
-      const sourceStroke = sourceGlyph[x.index];
-      // 允许指标越界
-      if (sourceStroke === undefined) return;
-      glyph.push(sourceStroke);
-    } else {
-      glyph.push(x);
+  if (component.type === "derived_component") {
+    const sourceComponent =
+      repertoire[component.source]?.glyphs.find(isComponent);
+    if (sourceComponent === undefined) return new InvalidGlyphError();
+    const sourceGlyph = recursiveRenderComponent(
+      sourceComponent,
+      repertoire,
+      glyphCache,
+    );
+    if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
+    const glyph: SVGGlyph = [];
+    component.strokes.forEach((x) => {
+      if (x.feature === "reference") {
+        const sourceStroke = sourceGlyph[x.index];
+        // 允许指标越界
+        if (sourceStroke === undefined) return;
+        glyph.push(sourceStroke);
+      } else {
+        glyph.push(x);
+      }
+    });
+    return glyph;
+  }
+  if (component.type === "spliced_component") {
+    const glyphs: SVGGlyphWithBox[] = [];
+    for (const name of component.operandList) {
+      const sourceComponent = repertoire[name]?.glyphs.find(isComponent);
+      if (sourceComponent === undefined) return new InvalidGlyphError();
+      const sourceGlyph = recursiveRenderComponent(
+        sourceComponent,
+        repertoire,
+        glyphCache,
+      );
+      if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
+      const box = getGlyphBoundingBox(sourceGlyph);
+      glyphs.push({ strokes: sourceGlyph, box });
     }
-  });
-  return glyph;
+    const asCompound = { ...component, type: "compound" as const };
+    return affineMerge(asCompound, glyphs).strokes;
+  }
+  return new InvalidGlyphError();
 };
 
 const overrideCorners: Map<string, CornerSpecifier> = new Map([
@@ -373,7 +395,7 @@ export const renderRootList = (repertoire: Repertoire, elements: string[]) => {
     } else {
       const rendered = recursiveRenderCompound(glyph, repertoire);
       if (rendered instanceof Error) continue;
-      rootList.set(root, computeComponent(root, rendered));
+      rootList.set(root, computeComponent(root, rendered.strokes));
     }
   }
   return rootList;

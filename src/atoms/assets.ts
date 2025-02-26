@@ -53,7 +53,10 @@ export const mutateRepertoireAtom = atom(
           value.glyphs.forEach((x) => {
             if (x.type === "derived_component") {
               x.source = x.source && replaceIf(x.source);
-            } else if (x.type === "compound") {
+            } else if (
+              x.type === "compound" ||
+              x.type === "spliced_component"
+            ) {
               x.operandList = x.operandList.map(replaceIf);
             }
           });

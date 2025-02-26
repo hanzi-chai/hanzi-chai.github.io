@@ -24,6 +24,7 @@ import {
   getDummyCompound,
   getDummyDerivedComponent,
   getDummyBasicComponent,
+  getDummySplicedComponent,
 } from "~/lib";
 import {
   useAtomValue,
@@ -334,6 +335,17 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       ),
     },
     {
+      key: -2,
+      label: (
+        <CompoundForm
+          title="添加自定义拼接部件"
+          initialValues={getDummySplicedComponent()}
+          onFinish={onFinish}
+          noButton
+        />
+      ),
+    },
+    {
       key: -3,
       label: (
         <CompoundForm
@@ -347,7 +359,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
   ];
   if (remote) {
     items.unshift({
-      key: -2,
+      key: -4,
       label: (
         <ComponentForm
           title="添加自定义基本部件"

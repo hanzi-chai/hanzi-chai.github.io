@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from "react";
-import { isPUA, makeCharacterFilter, unicodeBlock } from "~/lib";
+import { makeCharacterFilter, unicodeBlock } from "~/lib";
 import {
   Checkbox,
   Flex,
@@ -46,6 +46,7 @@ import TagPicker from "./TagPicker";
 import { findGlyphIndex } from "~/lib";
 import type { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
+import { ElementWithTooltip } from "./ElementPool";
 
 type Column = ColumnType<PrimitiveCharacter>;
 
@@ -95,12 +96,16 @@ export const InlineUpdater = ({
       {glyphs.map((x, i) => {
         const lens = O.compose("glyphs", O.at(i));
         const primary = i === selectedIndex;
+        const title =
+          x.type === "compound"
+            ? `${x.operator} ${x.operandList.map(display).join(" ")}`
+            : "部件";
         return (
           <Flex key={i}>
-            {x.type === "compound" ? (
+            {x.type === "compound" || x.type === "spliced_component" ? (
               <CompoundForm
                 key={i}
-                title={`${x.operator} ${x.operandList.map(display).join(" ")}`}
+                title={title}
                 initialValues={x}
                 onFinish={(values) => {
                   const newGlyphs = O.set(
@@ -116,7 +121,7 @@ export const InlineUpdater = ({
             ) : (
               <ComponentForm
                 key={i}
-                title="部件"
+                title={title}
                 initialValues={x}
                 current={String.fromCodePoint(unicode)}
                 onFinish={(values) => {
@@ -157,7 +162,8 @@ export const InlineCustomizer = ({
   if (customized === undefined) return null;
   return (
     <Flex gap="small">
-      {customized.type === "compound" ? (
+      {customized.type === "compound" ||
+      customized.type === "spliced_component" ? (
         <CompoundForm
           title={
             customized.operator + customized.operandList.map(display).join(" ")
@@ -208,10 +214,15 @@ export default function CharacterTable() {
   const unicodeColumn: Column = {
     title: "Unicode",
     dataIndex: "unicode",
-    render: (_, { unicode, name }) => {
+    render: (_, { unicode }) => {
       const char = String.fromCodePoint(unicode);
       const hex = unicode.toString(16).toUpperCase();
-      return (isPUA(char) ? name : char) + ` (${hex})`;
+      return (
+        <Flex align="center" gap="small">
+          <ElementWithTooltip element={char} />
+          {hex}
+        </Flex>
+      );
     },
     filters: [
       { text: "CJK 基本集", value: "cjk" },

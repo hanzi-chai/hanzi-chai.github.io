@@ -1,3 +1,4 @@
+import type { BoundingBox } from "./bezier";
 import type { Feature } from "./classifier";
 
 export type N1 = [number];
@@ -48,6 +49,11 @@ export interface ReferenceStroke {
  */
 export type SVGGlyph = SVGStroke[];
 
+export interface SVGGlyphWithBox {
+  strokes: SVGGlyph;
+  box: BoundingBox;
+}
+
 /**
  * 广义的笔画，包括 SVG 笔画和引用笔画
  */
@@ -80,9 +86,17 @@ export interface DerivedComponent {
 }
 
 /**
+ * 拼接部件 SplicedComponent
+ * 与复合体相同，但作为部件使用
+ */
+export interface SplicedComponent extends Omit<Compound, "type"> {
+  type: "spliced_component";
+}
+
+/**
  * 部件，包括基本部件和派生部件
  */
-export type Component = BasicComponent | DerivedComponent;
+export type Component = BasicComponent | DerivedComponent | SplicedComponent;
 
 export const operators = [
   "⿰",
@@ -115,6 +129,11 @@ export interface Block {
   strokes: number;
 }
 
+export interface CompoundParameters {
+  gap2?: number;
+  scale2?: number;
+}
+
 /**
  * 复合体 Compound
  * operator: 结构表示符
@@ -128,6 +147,7 @@ export interface Compound {
   operandList: string[];
   tags?: string[];
   order?: Block[];
+  parameters?: CompoundParameters;
 }
 
 export interface Reading {
@@ -155,7 +175,7 @@ export interface PrimitiveCharacter {
   gf0014_id: number | null;
   gf3001_id: number | null;
   readings: Reading[];
-  glyphs: (BasicComponent | DerivedComponent | Compound)[];
+  glyphs: (BasicComponent | DerivedComponent | SplicedComponent | Compound)[];
   ambiguous: boolean;
 }
 

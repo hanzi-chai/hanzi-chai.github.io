@@ -1,4 +1,4 @@
-import type { Compound, SVGGlyph } from "~/lib";
+import type { Compound, SVGGlyph, SVGGlyphWithBox } from "~/lib";
 import { affineMerge } from "~/lib";
 import { describe, expect, it } from "vitest";
 
@@ -12,7 +12,7 @@ describe("affine transformations", () => {
     const A: SVGGlyph = [
       {
         feature: "横",
-        start: [10, 50],
+        start: [20, 50],
         curveList: [{ command: "h", parameterList: [60] }],
       },
     ];
@@ -23,21 +23,24 @@ describe("affine transformations", () => {
         curveList: [{ command: "v", parameterList: [80] }],
       },
     ];
-    const glyphList: SVGGlyph[] = [A, B];
+    const glyphList: SVGGlyphWithBox[] = [
+      { strokes: A, box: { x: [20, 80], y: [50, 50] } },
+      { strokes: B, box: { x: [50, 50], y: [10, 90] } },
+    ];
     const expected: SVGGlyph = [
       {
         feature: "横",
-        start: [5, 50],
-        curveList: [{ command: "h", parameterList: [30] }],
+        start: [20, 50],
+        curveList: [{ command: "h", parameterList: [60] }],
       },
       {
         feature: "竖",
-        start: [75, 10],
+        start: [100, 10],
         curveList: [{ command: "v", parameterList: [80] }],
       },
     ];
 
-    expect(affineMerge(compound, glyphList)).toEqual(expected);
+    expect(affineMerge(compound, glyphList).strokes).toEqual(expected);
   });
 
   it("should merge the components with order info correctly", () => {
@@ -64,7 +67,10 @@ describe("affine transformations", () => {
         curveList: [{ command: "z", parameterList: [20, 0, 30, 0, 40, 10] }],
       },
     ];
-    const glyphList: SVGGlyph[] = [A, B];
+    const glyphList: SVGGlyphWithBox[] = [
+      { strokes: A, box: { x: [0, 100], y: [0, 100] } },
+      { strokes: B, box: { x: [0, 100], y: [0, 100] } },
+    ];
     const expected: SVGGlyph = [
       {
         feature: "平点",
@@ -74,6 +80,6 @@ describe("affine transformations", () => {
       ...A,
     ];
 
-    expect(affineMerge(compound, glyphList)).toEqual(expected);
+    expect(affineMerge(compound, glyphList).strokes).toEqual(expected);
   });
 });

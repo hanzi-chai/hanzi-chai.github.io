@@ -69,7 +69,7 @@ describe("e2e test", () => {
           svg = svgglyph instanceof Error ? [] : svgglyph;
         } else {
           const svgglyph = recursiveRenderCompound(glyph, repertoire);
-          svg = svgglyph instanceof Error ? [] : svgglyph;
+          svg = svgglyph instanceof Error ? [] : svgglyph.strokes;
         }
         result.set(char, (result.get(char) ?? []).concat(summarize(svg)));
       }

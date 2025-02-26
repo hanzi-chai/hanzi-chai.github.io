@@ -6,7 +6,15 @@ import React, {
   Fragment,
 } from "react";
 import styled from "styled-components";
-import type { Draw, Feature, N6, Point, SVGStroke } from "~/lib";
+import type {
+  BoundingBox,
+  Draw,
+  Feature,
+  N6,
+  Point,
+  SVGGlyphWithBox,
+  SVGStroke,
+} from "~/lib";
 import { renderSVGGlyph } from "~/lib";
 import { add, subtract } from "~/lib/mathjs";
 
@@ -66,7 +74,7 @@ const processPath = ({ start, feature, curveList }: SVGStroke) => {
 };
 
 interface StrokesViewProps {
-  glyph: SVGStroke[];
+  glyph: SVGGlyphWithBox;
   setGlyph?: (glyph: SVGStroke[]) => void;
   displayMode?: boolean;
 }
@@ -169,11 +177,28 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
   );
 };
 
-const StrokesView: React.FC<StrokesViewProps> = ({
-  glyph,
+const determineWidthAndViewBox = (box: BoundingBox, displayMode: boolean) => {
+  const strokeWidthPercentage = displayMode ? 0.01 : 0.08;
+  const {
+    x: [xMin, xMax],
+    y: [yMin, yMax],
+  } = box;
+  const padding = 10;
+  const xSpan = xMax - xMin + 2 * padding;
+  const ySpan = yMax - yMin + 2 * padding;
+  const maxSpan = Math.max(xSpan, ySpan);
+  const xMinFinal = (xMax + xMin) / 2 - maxSpan / 2;
+  const yMinFinal = (yMax + yMin) / 2 - maxSpan / 2;
+  const viewBox = `${xMinFinal} ${yMinFinal} ${maxSpan} ${maxSpan}`;
+  const strokeWidth = maxSpan * strokeWidthPercentage;
+  return { strokeWidth, viewBox };
+};
+
+const StrokesView = ({
+  glyph: { strokes: glyph, box },
   setGlyph,
   displayMode,
-}) => {
+}: StrokesViewProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [index, setIndex] = useState<PointIndex | null>(null);
   const renderedGlyph = renderSVGGlyph(glyph);
@@ -227,7 +252,10 @@ const StrokesView: React.FC<StrokesViewProps> = ({
     };
   }, [setGlyph, index, glyph, onMouseMove]);
 
-  const strokeWidth = displayMode ? "1" : "8";
+  const { strokeWidth, viewBox } = determineWidthAndViewBox(
+    box,
+    displayMode ?? false,
+  );
 
   return (
     <svg
@@ -235,7 +263,9 @@ const StrokesView: React.FC<StrokesViewProps> = ({
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
       width="1em"
-      viewBox="0 0 100 100"
+      height="1em"
+      preserveAspectRatio="none"
+      viewBox={viewBox}
     >
       {glyph.map((stroke, strokeIndex) => {
         return (

@@ -5,9 +5,11 @@ import type {
   Operator,
   Point,
   SVGGlyph,
+  SVGGlyphWithBox,
   SVGStroke,
 } from "./data";
 import { cloneDeep } from "lodash-es";
+import type { BoundingBox } from "./bezier";
 
 class Affine {
   private xscale: number;
@@ -37,7 +39,7 @@ class Affine {
       case "z":
         for (const index of [0, 2, 4] as const) {
           next.parameterList[index] *= this.xscale;
-          next.parameterList[index + 1] *= this.yscale;
+          next.parameterList[index + 1]! *= this.yscale;
         }
         break;
     }
@@ -96,24 +98,69 @@ const affineMap: Record<Operator, Affine[]> = {
  * @param glyphList - 各部分渲染后的 SVG 图形
  * @returns 合并后的 SVG 图形
  */
-export function affineMerge(compound: Compound, glyphList: SVGGlyph[]) {
-  const { operator, order } = compound;
+export function affineMerge(compound: Compound, glyphList: SVGGlyphWithBox[]) {
+  const { operator, order, parameters } = compound;
   const transformedGlyphs: SVGGlyph[] = [];
-  for (const [index, affine] of affineMap[operator].entries()) {
-    const transformed = affine.transformSVGGlyph(glyphList[index]!);
-    transformedGlyphs.push(transformed);
-  }
-  if (order === undefined) return transformedGlyphs.flat();
-  const result: SVGGlyph = [];
-  for (const { index, strokes } of order) {
-    const glyph = transformedGlyphs[index];
-    if (glyph === undefined) continue;
-    if (strokes === 0) {
-      result.push(...glyph);
-    } else {
-      result.push(...glyph.slice(0, strokes));
-      transformedGlyphs[index] = glyph.slice(strokes);
+  const boundingBox: BoundingBox = { x: [0, 100], y: [0, 100] };
+  if (["⿰", "⿲", "⿱", "⿳"].includes(operator)) {
+    // 上下、上中下、左右、左中右，直接拼接
+    let mainAxisOffset = 0;
+    const isLR = ["⿰", "⿲"].includes(operator);
+    for (const [index, { strokes, box }] of glyphList.entries()) {
+      const mainAxisLength = isLR ? box.x[1] - box.x[0] : box.y[1] - box.y[0];
+      if (index === 0) {
+        transformedGlyphs.push(structuredClone(strokes));
+        boundingBox.x = structuredClone(box.x);
+        boundingBox.y = structuredClone(box.y);
+        mainAxisOffset = isLR ? box.x[1] : box.y[1];
+        continue;
+      }
+      let gap = 20;
+      if (index === 1 && parameters?.gap2 !== undefined) {
+        gap = parameters.gap2;
+      }
+      mainAxisOffset += gap;
+      const increase = gap + mainAxisLength;
+      let affine: Affine;
+      if (isLR) {
+        affine = new Affine(1, 1, [mainAxisOffset - box.x[0], 0]);
+        boundingBox.x[1] += increase;
+        boundingBox.y[0] = Math.min(boundingBox.y[0], box.y[0]);
+        boundingBox.y[1] = Math.max(boundingBox.y[1], box.y[1]);
+      } else {
+        affine = new Affine(1, 1, [0, mainAxisOffset - box.y[0]]);
+        boundingBox.y[1] += increase;
+        boundingBox.x[0] = Math.min(boundingBox.x[0], box.x[0]);
+        boundingBox.x[1] = Math.max(boundingBox.x[1], box.x[1]);
+      }
+      transformedGlyphs.push(affine.transformSVGGlyph(strokes));
+      mainAxisOffset += mainAxisLength;
+    }
+  } else {
+    // 包围或结构，暂时还没有优化拼接的算法，用原来的仿射变换算法
+    for (const [index, affine] of affineMap[operator].entries()) {
+      const transformed = affine.transformSVGGlyph(glyphList[index]!.strokes);
+      transformedGlyphs.push(transformed);
     }
   }
-  return result;
+  const result: SVGGlyph = [];
+  if (order === undefined) {
+    result.push(...transformedGlyphs.flat());
+  } else {
+    for (const { index, strokes } of order) {
+      const glyph = transformedGlyphs[index];
+      if (glyph === undefined) continue;
+      if (strokes === 0) {
+        result.push(...glyph);
+      } else {
+        result.push(...glyph.slice(0, strokes));
+        transformedGlyphs[index] = glyph.slice(strokes);
+      }
+    }
+  }
+  const merged: SVGGlyphWithBox = {
+    strokes: result,
+    box: boundingBox,
+  };
+  return merged;
 }

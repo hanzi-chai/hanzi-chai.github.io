@@ -3,9 +3,15 @@ import { Button, Dropdown, Flex, Form } from "antd";
 import { EditorColumn, EditorRow } from "./Utils";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef } from "react";
-import type { Character, Component, SVGStroke } from "~/lib";
+import type {
+  Character,
+  Component,
+  SplicedComponent,
+  SVGGlyphWithBox,
+  SVGStroke,
+} from "~/lib";
 import type { Feature } from "~/lib";
-import { getDummySVGStroke, schema } from "~/lib";
+import { getDummySVGStroke, getGlyphBoundingBox, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
 import { allRepertoireAtom, useAtomValue } from "~/atoms";
 import { GlyphSelect } from "./CharacterSelect";
@@ -55,7 +61,7 @@ const ModalForm = styled(_ModalForm)`
   & .ant-pro-form-list > .ant-form-item {
     margin-bottom: 0;
   }
-`;
+` as typeof _ModalForm;
 
 export const InlineRender = ({
   listDom,
@@ -188,6 +194,8 @@ const StrokeForm = ({
   );
 };
 
+type BasicOrDerivedComponent = Exclude<Component, SplicedComponent>;
+
 export default function ComponentForm({
   title,
   initialValues,
@@ -198,9 +206,9 @@ export default function ComponentForm({
   readonly,
 }: {
   title: string;
-  initialValues: Component;
+  initialValues: BasicOrDerivedComponent;
   current: string;
-  onFinish: (c: Component) => Promise<boolean>;
+  onFinish: (c: BasicOrDerivedComponent) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
@@ -224,7 +232,7 @@ export default function ComponentForm({
   };
   const formRef = useRef<ProFormInstance>();
   return (
-    <ModalForm<Component>
+    <ModalForm<BasicOrDerivedComponent>
       title={title}
       layout="horizontal"
       omitNil={true}
@@ -243,15 +251,26 @@ export default function ComponentForm({
           <Box>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
-                const component = props as Component;
+                const component = props as BasicOrDerivedComponent;
                 const rendered =
                   component?.type !== undefined
                     ? recursiveRenderComponent(component, repertoire)
                     : new Error();
+                const defaultGlyph: SVGGlyphWithBox = {
+                  strokes: [],
+                  box: { x: [0, 100], y: [0, 100] },
+                };
                 return (
                   <StrokesView
                     displayMode
-                    glyph={rendered instanceof Error ? [] : rendered}
+                    glyph={
+                      rendered instanceof Error
+                        ? defaultGlyph
+                        : {
+                            strokes: rendered,
+                            box: getGlyphBoundingBox(rendered),
+                          }
+                    }
                     setGlyph={(g: SVGStroke[]) => {
                       const projection = component.strokes.map((x, index) =>
                         x.feature === "reference" ? x : g[index]!,
