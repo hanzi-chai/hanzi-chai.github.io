@@ -4,9 +4,12 @@ import { EditorColumn, EditorRow } from "./Utils";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef } from "react";
 import type {
+  BasicComponent,
   Character,
   Component,
+  DerivedComponent,
   SplicedComponent,
+  Stroke,
   SVGGlyphWithBox,
   SVGStroke,
 } from "~/lib";
@@ -33,7 +36,11 @@ import Element from "./Element";
 import { recursiveRenderComponent } from "~/lib";
 import { Box, StrokesView } from "./GlyphView";
 import type { BaseOptionType } from "antd/es/select";
-import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CameraOutlined,
+} from "@ant-design/icons";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={56} name={name} fieldProps={{ min: -100 }} />
@@ -305,8 +312,11 @@ export default function ComponentForm({
             {({ source }) => {
               const maxIndex =
                 typeof source === "string"
-                  ? repertoire[source]?.glyphs.find(isComponent)?.strokes
-                      .length ?? 0
+                  ? repertoire[source]?.glyphs.find(
+                      (x) =>
+                        x.type === "basic_component" ||
+                        x.type === "derived_component",
+                    )?.strokes.length ?? 0
                   : 0;
               return (
                 <>
@@ -336,6 +346,29 @@ export default function ComponentForm({
                             } else {
                               action.move(field.name, field.name + 1);
                             }
+                          }}
+                        />,
+                        <CameraOutlined
+                          key="camera"
+                          style={{ marginLeft: "5px" }}
+                          onClick={() => {
+                            const component = formRef.current?.getFieldsValue();
+                            const rendered =
+                              component?.type !== undefined
+                                ? recursiveRenderComponent(
+                                    component,
+                                    repertoire,
+                                  )
+                                : new Error();
+                            if (rendered instanceof Error) return;
+                            const strokes: Stroke[] =
+                              formRef.current?.getFieldValue("strokes") ?? [];
+                            const vectorized = structuredClone(
+                              rendered[field.name],
+                            );
+                            if (!vectorized) return;
+                            strokes[field.name] = vectorized;
+                            formRef.current?.setFieldValue("strokes", strokes);
                           }}
                         />,
                       ];
@@ -380,6 +413,44 @@ export default function ComponentForm({
                       }
                     >
                       添加笔画引用
+                    </Button>
+                    <Button
+                      disabled={typeof source !== "string"}
+                      onClick={() => {
+                        const component: DerivedComponent =
+                          formRef.current?.getFieldsValue();
+                        const notReady = component.strokes.some(
+                          (x) => x.feature === "reference",
+                        );
+                        if (notReady) {
+                          alert("请先删除笔画引用");
+                          return;
+                        }
+                        const newComponent: BasicComponent = {
+                          type: "basic_component",
+                          tags: component.tags,
+                          strokes: component.strokes as SVGStroke[],
+                        };
+                        formRef.current?.setFieldsValue(newComponent);
+                      }}
+                    >
+                      转化为基本部件
+                    </Button>
+                    <Button
+                      disabled={typeof source === "string"}
+                      onClick={() => {
+                        const component: BasicComponent =
+                          formRef.current?.getFieldsValue();
+                        const newComponent: DerivedComponent = {
+                          type: "derived_component",
+                          source: "一",
+                          tags: component.tags,
+                          strokes: component.strokes as SVGStroke[],
+                        };
+                        formRef.current?.setFieldsValue(newComponent);
+                      }}
+                    >
+                      转化为衍生部件
                     </Button>
                   </Flex>
                 </>

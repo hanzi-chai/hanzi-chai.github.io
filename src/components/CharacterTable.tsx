@@ -91,6 +91,11 @@ export const InlineUpdater = ({
     }
     return true;
   };
+  const typenames = {
+    basic_component: "基本部件",
+    derived_component: "衍生部件",
+    spliced_component: "拼接部件",
+  };
   return (
     <Flex gap="small">
       {glyphs.map((x, i) => {
@@ -99,7 +104,7 @@ export const InlineUpdater = ({
         const title =
           x.type === "compound"
             ? `${x.operator} ${x.operandList.map(display).join(" ")}`
-            : "部件";
+            : typenames[x.type];
         return (
           <Flex key={i}>
             {x.type === "compound" || x.type === "spliced_component" ? (
@@ -316,6 +321,10 @@ export default function CharacterTable() {
       return as.localeCompare(bs);
     },
     sortDirections: ["ascend", "descend"],
+    filters: [{ text: "部件", value: 1 }],
+    onFilter: (_, record) => {
+      return record.glyphs.some((x) => x.type !== "compound");
+    },
   };
 
   const customReadingsColumn: Column = {

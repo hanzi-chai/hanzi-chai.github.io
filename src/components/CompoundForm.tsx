@@ -77,9 +77,6 @@ export default function CompoundForm({
       trigger={trigger}
       initialValues={initialValues}
       onFinish={onFinish}
-      onValuesChange={(_, all) => {
-        console.log(all);
-      }}
       modalProps={{
         width: 1080,
       }}
@@ -162,8 +159,18 @@ export default function CompoundForm({
             </ProFormGroup>
           </ProFormList>
           <ProFormGroup>
-            <ProFormDigit name={["parameters", "gap2"]} label="间距 2" />
-            <ProFormDigit name={["parameters", "scale2"]} label="缩放 2" />
+            <ProFormDigit
+              name={["parameters", "gap2"]}
+              label="间距 2"
+              min={-100}
+              max={100}
+            />
+            <ProFormDigit
+              name={["parameters", "scale2"]}
+              label="缩放 2"
+              min={0}
+              max={10}
+            />
           </ProFormGroup>
           <ProFormGroup>
             <Button onClick={() => form.setFieldValue("order", undefined)}>

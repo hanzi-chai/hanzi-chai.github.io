@@ -155,10 +155,6 @@ export const getComponentScheme = function (
     ),
   ) as CornerSpecifier;
   if (config.analysis.serializer === "c3") {
-    // 根据四角信息对 sequence 进行排序
-    // if (sequence.length > 3) {
-    //   console.log(component.name, sequence, corners);
-    // }
     const newSequence: string[] = [];
     const newCorners: CornerSpecifier = [0, 0, 0, 0];
     newSequence.push(sequence[corners[0]]!);
@@ -254,7 +250,12 @@ export const recursiveRenderComponent = function (
   component: Component,
   repertoire: PrimitiveRepertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
+  depth = 0,
 ): SVGGlyph | InvalidGlyphError {
+  if (depth > 100) {
+    console.error("Recursion depth exceeded", component);
+    return new InvalidGlyphError();
+  }
   if (component.type === "basic_component") return component.strokes;
   if (component.type === "derived_component") {
     const sourceComponent =
@@ -264,6 +265,7 @@ export const recursiveRenderComponent = function (
       sourceComponent,
       repertoire,
       glyphCache,
+      depth + 1,
     );
     if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
     const glyph: SVGGlyph = [];
@@ -288,6 +290,7 @@ export const recursiveRenderComponent = function (
         sourceComponent,
         repertoire,
         glyphCache,
+        depth + 1,
       );
       if (sourceGlyph instanceof InvalidGlyphError) return sourceGlyph;
       const box = getGlyphBoundingBox(sourceGlyph);

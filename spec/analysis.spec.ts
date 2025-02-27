@@ -64,7 +64,10 @@ describe("e2e test", () => {
         let svg: SVGGlyph;
         if (glyph.type === "basic_component") {
           svg = glyph.strokes;
-        } else if (glyph.type === "derived_component") {
+        } else if (
+          glyph.type === "derived_component" ||
+          glyph.type === "spliced_component"
+        ) {
           const svgglyph = recursiveRenderComponent(glyph, primitiveRepertoire);
           svg = svgglyph instanceof Error ? [] : svgglyph;
         } else {

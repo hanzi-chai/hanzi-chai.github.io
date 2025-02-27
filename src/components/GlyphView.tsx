@@ -194,14 +194,11 @@ const determineWidthAndViewBox = (box: BoundingBox, displayMode: boolean) => {
   return { strokeWidth, viewBox };
 };
 
-const StrokesView = ({
-  glyph: { strokes: glyph, box },
-  setGlyph,
-  displayMode,
-}: StrokesViewProps) => {
+const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [index, setIndex] = useState<PointIndex | null>(null);
-  const renderedGlyph = renderSVGGlyph(glyph);
+  const { strokes, box } = glyph;
+  const renderedGlyph = renderSVGGlyph(strokes);
 
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -215,7 +212,7 @@ const StrokesView = ({
       );
       const x = Math.round(transformedPoint.x);
       const y = Math.round(transformedPoint.y);
-      const newGlyph = structuredClone(glyph);
+      const newGlyph = structuredClone(strokes);
       const { strokeIndex, curveIndex, controlIndex } = index;
       if (curveIndex === -1) {
         newGlyph[strokeIndex]!.start = [x, y];
@@ -235,7 +232,7 @@ const StrokesView = ({
 
       setGlyph!(newGlyph);
     },
-    [index, glyph, renderedGlyph, setGlyph],
+    [index, strokes, renderedGlyph, setGlyph],
   );
 
   const onMouseUp = () => {
@@ -250,7 +247,7 @@ const StrokesView = ({
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [setGlyph, index, glyph, onMouseMove]);
+  }, [setGlyph, index, strokes, onMouseMove]);
 
   const { strokeWidth, viewBox } = determineWidthAndViewBox(
     box,
@@ -264,10 +261,9 @@ const StrokesView = ({
       version="1.1"
       width="1em"
       height="1em"
-      preserveAspectRatio="none"
       viewBox={viewBox}
     >
-      {glyph.map((stroke, strokeIndex) => {
+      {strokes.map((stroke, strokeIndex) => {
         return (
           <g key={strokeIndex}>
             <path

@@ -137,8 +137,12 @@ export const getDummyCompound = function (operator: Operator): Compound {
 
 export const isComponent = function (
   glyph: BasicComponent | DerivedComponent | SplicedComponent | Compound,
-): glyph is BasicComponent | DerivedComponent {
-  return glyph.type === "basic_component" || glyph.type === "derived_component";
+): glyph is BasicComponent | DerivedComponent | SplicedComponent {
+  return (
+    glyph.type === "basic_component" ||
+    glyph.type === "derived_component" ||
+    glyph.type === "spliced_component"
+  );
 };
 
 export const getSupplemental = (repertoire: Repertoire, list: string[]) => {

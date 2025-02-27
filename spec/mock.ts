@@ -32,11 +32,11 @@ export const computedGlyphs2 = Object.fromEntries(
 export const focusAnalysis = (config: Config, repertoire: Repertoire) => {
   const result: AnalysisConfig = {
     analysis: config.analysis ?? {},
-    primaryRoots: new Set(
-      Object.keys(config.form.mapping).filter((x) => repertoire[x]),
+    primaryRoots: new Map(
+      Object.entries(config.form.mapping).filter(([x]) => repertoire[x]),
     ),
-    secondaryRoots: new Set(
-      Object.keys(config.form.grouping ?? []).filter((x) => repertoire[x]),
+    secondaryRoots: new Map(
+      Object.entries(config.form.grouping ?? []).filter(([x]) => repertoire[x]),
     ),
   };
   return result;
