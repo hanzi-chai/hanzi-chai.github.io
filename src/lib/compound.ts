@@ -55,6 +55,11 @@ export const getGlyphBoundingBox = (glyph: SVGGlyph) => {
         case "v":
           y += parameterList[0];
           break;
+        case "a":
+          xmin = Math.min(xmin, x - parameterList[0]);
+          xmax = Math.max(xmax, x + parameterList[0]);
+          ymax = Math.max(ymax, y + 2 * parameterList[0]);
+          break;
         default: {
           const [_x1, _y1, _x2, _y2, x3, y3] = parameterList;
           x += x3;

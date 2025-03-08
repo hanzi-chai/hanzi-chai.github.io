@@ -19,7 +19,8 @@ export type Draw =
   | {
       command: "c" | "z";
       parameterList: N6;
-    };
+    }
+  | { command: "a"; parameterList: N1 };
 
 export type Point = N2;
 
@@ -132,6 +133,8 @@ export interface Block {
 export interface CompoundParameters {
   gap2?: number;
   scale2?: number;
+  gap3?: number;
+  scale3?: number;
 }
 
 /**

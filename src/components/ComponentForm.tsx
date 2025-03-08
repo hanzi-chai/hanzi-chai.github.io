@@ -316,7 +316,7 @@ export default function ComponentForm({
                       (x) =>
                         x.type === "basic_component" ||
                         x.type === "derived_component",
-                    )?.strokes.length ?? 0
+                    )?.strokes.length ?? 10
                   : 0;
               return (
                 <>

@@ -124,9 +124,15 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
   );
 };
 
-export const Display = ({ name }: { name: string }) => {
+export const Display = ({
+  name,
+  alwaysUseGlyph,
+}: {
+  name: string;
+  alwaysUseGlyph?: boolean;
+}) => {
   const glyphMap = useAtomValue(glyphAtom);
-  if (!isPUA(name)) {
+  if (!isPUA(name) && !alwaysUseGlyph) {
     return name;
   }
   const glyph = glyphMap.get(name);

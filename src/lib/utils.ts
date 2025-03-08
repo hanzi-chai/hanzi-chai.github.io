@@ -119,6 +119,8 @@ export const getDummySVGStroke = function (
         return oldCurveList[index]!;
       }
       switch (command) {
+        case "a":
+          return { command, parameterList: [20] };
         case "h":
         case "v":
           return { command, parameterList: [20] };

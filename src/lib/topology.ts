@@ -163,7 +163,11 @@ const renderSVGStroke = ({ feature, start, curveList }: SVGStroke) => {
   for (const draw of curveList) {
     const curve = makeCurve(previousPosition, draw);
     previousPosition =
-      curve.type === "linear" ? curve.controls[1] : curve.controls[3];
+      curve.type === "linear"
+        ? curve.controls[1]
+        : curve.type === "arc"
+          ? curve.controls[1]
+          : curve.controls[3];
     r.curveList.push(curve);
   }
   return r;

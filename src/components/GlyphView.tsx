@@ -15,7 +15,7 @@ import type {
   SVGGlyphWithBox,
   SVGStroke,
 } from "~/lib";
-import { renderSVGGlyph } from "~/lib";
+import { renderSVGGlyph, renderSVGStroke } from "~/lib";
 import { add, subtract } from "~/lib/mathjs";
 
 const Box = styled.div`
@@ -29,6 +29,8 @@ const Box = styled.div`
 const drawLength = ({ command, parameterList }: Draw) => {
   if (command === "h" || command === "v") {
     return parameterList[0];
+  } else if (command === "a") {
+    return 0;
   } else {
     const [_x1, _y1, _x2, _y2, x3, y3] = parameterList as N6;
     return Math.sqrt(x3 * x3 + y3 * y3);
@@ -45,7 +47,10 @@ const processPath = ({ start, feature, curveList }: SVGStroke) => {
       feature.endsWith("提")
     ) {
       const length = parameterList[0];
-      svgCommand = `l ${length} ${-0.2 * length}`;
+      svgCommand = `l ${length} ${-0.15 * length}`;
+    } else if (command === "a") {
+      svgCommands.push("a 50,50 0 1,1 0,100");
+      svgCommand = "a 50,50 0 1,1 0,-100";
     } else {
       svgCommand = command.replace("z", "c") + parameterList.join(" ");
     }
@@ -64,7 +69,7 @@ const processPath = ({ start, feature, curveList }: SVGStroke) => {
   const referenceLength = drawLength(curveList.at(-1)!);
   const gouLength = 5 + referenceLength * 0.25;
   if (type1Gou.includes(feature)) {
-    svgCommands.push(`l ${-gouLength * 0.4} ${gouLength}`);
+    svgCommands.push(`l ${0} ${20}`);
   } else if (type2Gou.includes(feature)) {
     svgCommands.push(`l ${-gouLength} ${-gouLength * 0.3}`);
   } else if (type3Gou.includes(feature)) {
@@ -136,6 +141,8 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
               setIndex={setIndex}
             />
           );
+        } else if (curve.command === "a") {
+          return null;
         } else {
           const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
           const previous: Point = [...current];
@@ -177,8 +184,48 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
   );
 };
 
+const Rectangles = ({
+  stroke,
+  strokeWidth,
+}: {
+  stroke: SVGStroke;
+  strokeWidth: number;
+}) => {
+  const { curveList } = renderSVGStroke(stroke);
+  const firstCommand = stroke.curveList[0]!.command;
+  const lastCommand = stroke.curveList.at(-1)!.command;
+  const firstCurve = curveList[0]!;
+  const lastCurve = curveList.at(-1)!;
+  const shouldDrawFist =
+    (firstCommand === "h" || firstCommand === "v") &&
+    !stroke.feature.endsWith("提");
+  const shouldDrawLast =
+    (lastCommand === "h" || lastCommand === "v") &&
+    !stroke.feature.endsWith("提");
+  return (
+    <>
+      {shouldDrawFist && (
+        <rect
+          x={firstCurve.controls[0][0] - strokeWidth / 2}
+          y={firstCurve.controls[0][1] - strokeWidth / 2}
+          width={strokeWidth}
+          height={strokeWidth}
+        />
+      )}
+      {shouldDrawLast && (
+        <rect
+          x={lastCurve.controls.at(-1)![0] - strokeWidth / 2}
+          y={lastCurve.controls.at(-1)![1] - strokeWidth / 2}
+          width={strokeWidth}
+          height={strokeWidth}
+        />
+      )}
+    </>
+  );
+};
+
 const determineWidthAndViewBox = (box: BoundingBox, displayMode: boolean) => {
-  const strokeWidthPercentage = displayMode ? 0.01 : 0.08;
+  const strokeWidthPercentage = displayMode ? 0.01 : 0.07;
   const {
     x: [xMin, xMax],
     y: [yMin, yMax],
@@ -266,6 +313,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       {strokes.map((stroke, strokeIndex) => {
         return (
           <g key={strokeIndex}>
+            <Rectangles stroke={stroke} strokeWidth={strokeWidth} />
             <path
               d={processPath(stroke)}
               stroke="currentColor"

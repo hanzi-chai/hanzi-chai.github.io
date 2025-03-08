@@ -37,15 +37,21 @@ interface ElementProps {
   currentElement?: string;
 }
 
-export const ElementWithTooltip = ({ element: x }: { element: string }) => {
+export const ElementWithTooltip = ({
+  element,
+  alwaysUseGlyph,
+}: {
+  element: string;
+  alwaysUseGlyph?: boolean;
+}) => {
   const display = useAtomValue(displayAtom);
   const core = (
     <Element>
-      <Display name={x} />
+      <Display name={element} alwaysUseGlyph={alwaysUseGlyph} />
     </Element>
   );
-  if (!isPUA(x)) return core;
-  return <Tooltip title={display(x)}>{core}</Tooltip>;
+  if (!isPUA(element)) return core;
+  return <Tooltip title={display(element)}>{core}</Tooltip>;
 };
 
 export const CharWithTooltip: FC<ElementProps> = ({

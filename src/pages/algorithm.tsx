@@ -9,6 +9,7 @@ import type {
   DerivedComponent,
   PrimitiveCharacter,
   PrimitiveRepertoire,
+  SplicedComponent,
 } from "~/lib";
 import {
   binaryToIndices,
@@ -19,9 +20,9 @@ import { computeComponent, type ComputedComponent } from "~/lib";
 import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
-import { Display } from "~/components/Utils";
 import { InlineUpdater } from "~/components/CharacterTable";
 import { Delete, EditGlyph, Mutate } from "~/components/Action";
+import { ElementWithTooltip } from "~/components/ElementPool";
 
 interface TreeNodeData {
   name: string;
@@ -32,12 +33,15 @@ interface TreeNodeData {
 const treeify = (repertoire: PrimitiveRepertoire) => {
   const components: {
     name: string;
-    glyph: BasicComponent | DerivedComponent;
+    glyph: BasicComponent | DerivedComponent | SplicedComponent;
     character: PrimitiveCharacter;
   }[] = [];
   for (const [name, character] of Object.entries(repertoire)) {
     const glyph = character.glyphs.find(
-      (x) => x.type === "basic_component" || x.type === "derived_component",
+      (x) =>
+        x.type === "basic_component" ||
+        x.type === "derived_component" ||
+        x.type === "spliced_component",
     );
     if (!glyph) continue;
     components.push({ name, glyph, character });
@@ -45,7 +49,10 @@ const treeify = (repertoire: PrimitiveRepertoire) => {
   const treeData: TreeNodeData[] = [];
   // build tree according to DerivedComponent["source"]
   const treeMap = new Map<string, TreeNodeData>();
+  let counter = 0;
   while (components.length) {
+    counter++;
+    if (counter > 4000) break;
     const { name, glyph, character } = components.shift()!;
     if (glyph.type === "basic_component") {
       const node: TreeNodeData = {
@@ -56,7 +63,10 @@ const treeify = (repertoire: PrimitiveRepertoire) => {
       treeData.push(node);
       treeMap.set(name, node);
     } else {
-      const source = treeMap.get(glyph.source);
+      const source =
+        glyph.type === "derived_component"
+          ? treeMap.get(glyph.source)
+          : treeMap.get(glyph.operandList[0]!);
       if (!source) {
         components.push({ name, glyph, character });
       } else {
@@ -70,6 +80,7 @@ const treeify = (repertoire: PrimitiveRepertoire) => {
       }
     }
   }
+  console.log("剩余的", components);
   return treeData;
 };
 
@@ -82,26 +93,23 @@ const TreeNode = ({
 }) => {
   return (
     <Flex align="center">
-      <Element>
-        <Display name={name} />
-      </Element>
+      <ElementWithTooltip element={name} alwaysUseGlyph />
+      {name}
       <InlineUpdater character={character} />
-      <Space>
-        <EditGlyph character={character} />
-        <Mutate unicode={character.unicode} />
-        <Delete unicode={character.unicode} />
-      </Space>
+      <EditGlyph character={character} />
     </Flex>
   );
 };
 
 const Tree = ({ data, level }: { data: TreeNodeData; level: number }) => {
   return (
-    <Flex vertical style={{ paddingLeft: "16px" }}>
+    <Flex gap="middle" align="start">
       <TreeNode name={data.name} character={data.character} />
-      {data.children.map((x) => (
-        <Tree key={x.name} data={x} level={level + 1} />
-      ))}
+      <Flex vertical>
+        {data.children.map((x) => (
+          <Tree key={x.name} data={x} level={level + 1} />
+        ))}
+      </Flex>
     </Flex>
   );
 };
@@ -234,12 +242,8 @@ export default function Algorithm() {
         }}
       >
         <Typography.Title>部件分解</Typography.Title>
-        <ComponentsTreeView />
-        {/* <EditorColumn span={6}>
-          </EditorColumn>
-          <EditorColumn span={18}>
-            <DegeneratorTable />
-          </EditorColumn> */}
+        {/* <ComponentsTreeView /> */}
+        <DegeneratorTable />
       </Layout.Content>
     </Layout>
   );

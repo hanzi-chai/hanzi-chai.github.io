@@ -171,6 +171,18 @@ export default function CompoundForm({
               min={0}
               max={10}
             />
+            <ProFormDigit
+              name={["parameters", "gap3"]}
+              label="间距 3"
+              min={-100}
+              max={100}
+            />
+            <ProFormDigit
+              name={["parameters", "scale3"]}
+              label="缩放 3"
+              min={0}
+              max={10}
+            />
           </ProFormGroup>
           <ProFormGroup>
             <Button onClick={() => form.setFieldValue("order", undefined)}>

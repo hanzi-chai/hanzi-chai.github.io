@@ -118,6 +118,8 @@ export function affineMerge(compound: Compound, glyphList: SVGGlyphWithBox[]) {
       let gap = 20;
       if (index === 1 && parameters?.gap2 !== undefined) {
         gap = parameters.gap2;
+      } else if (index === 2 && parameters?.gap3 !== undefined) {
+        gap = parameters.gap3;
       }
       mainAxisOffset += gap;
       const increase = gap + mainAxisLength;

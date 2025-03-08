@@ -23,11 +23,6 @@ export const computedComponents = Object.fromEntries(
       return [k, computeComponent(k, glyph)];
     }),
 );
-export const computedGlyphs2 = Object.fromEntries(
-  Object.entries(computedComponents).map(([k, v]) => {
-    return [k, v.glyph];
-  }),
-);
 
 export const focusAnalysis = (config: Config, repertoire: Repertoire) => {
   const result: AnalysisConfig = {

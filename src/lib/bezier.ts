@@ -28,10 +28,16 @@ interface CubicCurve {
   controls: [Point, Point, Point, Point];
 }
 
+interface ArcCurve {
+  type: "arc";
+  orientation: Orientation;
+  controls: [Point, Point];
+}
+
 /**
  * Bezier 曲线，可能为一次或者三次
  */
-type Curve = LinearCurve | CubicCurve;
+type Curve = LinearCurve | CubicCurve | ArcCurve;
 
 /**
  * 渲染后的笔画
@@ -67,6 +73,8 @@ const evaluate = function (a: Curve, t: number): Point {
       multiply(1 - t, a.controls[0]) as Point,
       multiply(t, a.controls[1]) as Point,
     );
+  } else if (a.type === "arc") {
+    return [0, 0];
   } else {
     const v01 = add(
       multiply(Math.pow(1 - t, 3), a.controls[0]),
@@ -84,6 +92,13 @@ const makeCurve = function (
   start: Point,
   { command, parameterList }: Draw,
 ): Curve {
+  if (command === "a") {
+    return {
+      type: "arc",
+      orientation: "horizontal",
+      controls: [start, start],
+    };
+  }
   if (command === "c" || command === "z") {
     const p1 = add(start, parameterList.slice(0, 2) as Point);
     const p2 = add(start, parameterList.slice(2, 4) as Point);
@@ -116,7 +131,11 @@ const render = ({ feature, start, curveList }: SVGStroke) => {
   for (const draw of curveList) {
     const curve = makeCurve(previousPosition, draw);
     previousPosition =
-      curve.type === "linear" ? curve.controls[1] : curve.controls[3];
+      curve.type === "linear"
+        ? curve.controls[1]
+        : curve.type === "arc"
+          ? curve.controls[1]
+          : curve.controls[3];
     r.curveList.push(curve);
   }
   return r;

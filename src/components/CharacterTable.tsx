@@ -164,15 +164,22 @@ export const InlineCustomizer = ({
   const char = String.fromCodePoint(unicode);
   const customized = customGlyph[char];
   const display = useAtomValue(displayAtom);
+  const typenames = {
+    basic_component: "基本部件",
+    derived_component: "衍生部件",
+    spliced_component: "拼接部件",
+  };
   if (customized === undefined) return null;
+  const title =
+    customized.type === "compound"
+      ? `${customized.operator} ${customized.operandList.map(display).join(" ")}`
+      : typenames[customized.type];
   return (
     <Flex gap="small">
       {customized.type === "compound" ||
       customized.type === "spliced_component" ? (
         <CompoundForm
-          title={
-            customized.operator + customized.operandList.map(display).join(" ")
-          }
+          title={title}
           initialValues={customized}
           onFinish={async (values) => {
             addCustomGlyph(char, values);
@@ -182,7 +189,7 @@ export const InlineCustomizer = ({
         />
       ) : (
         <ComponentForm
-          title="部件"
+          title={title}
           initialValues={customized}
           current={String.fromCodePoint(unicode)}
           onFinish={async (values) => {

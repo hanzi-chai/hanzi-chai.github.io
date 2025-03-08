@@ -105,5 +105,5 @@ export const schema: Record<Feature, Draw["command"][]> = {
   斜钩: ["c"], // 美化：钩
   撇钩: ["c"], // 美化：钩
   挑捺: ["c", "c"],
-  圈: ["c"],
+  圈: ["a"],
 };
