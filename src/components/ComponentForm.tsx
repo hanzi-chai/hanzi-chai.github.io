@@ -312,11 +312,11 @@ export default function ComponentForm({
             {({ source }) => {
               const maxIndex =
                 typeof source === "string"
-                  ? repertoire[source]?.glyphs.find(
+                  ? (repertoire[source]?.glyphs.find(
                       (x) =>
                         x.type === "basic_component" ||
                         x.type === "derived_component",
-                    )?.strokes.length ?? 10
+                    )?.strokes.length ?? 10)
                   : 0;
               return (
                 <>

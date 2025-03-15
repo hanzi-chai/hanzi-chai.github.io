@@ -141,7 +141,6 @@ analysis:
     - '1'
     - 二
     - "\ue40f"
-  customizeCorners: {}
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping_type: 1

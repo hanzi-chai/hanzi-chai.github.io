@@ -56,12 +56,12 @@ const filterType = (type: keyof Objective, combined: Combined[]) => {
     ? filtered.map((item) => ({
         name: item.name,
         code: item.full,
-        importance: item.importance,
+        importance: item.frequency,
       }))
     : filtered.map((item) => ({
         name: item.name,
         code: item.short,
-        importance: item.importance,
+        importance: item.frequency,
       }));
 };
 

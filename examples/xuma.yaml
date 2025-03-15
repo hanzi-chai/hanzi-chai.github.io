@@ -236,7 +236,6 @@ analysis:
   weak:
     - "\ue410"
     - "\ue039"
-  customizeCorners: {}
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   grouping:

@@ -2,10 +2,10 @@ import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
   displayAtom,
-  assetsAtom,
   priorityShortCodesAtom,
   maxLengthAtom,
   combinedResultAtom,
+  adaptedFrequencyAtom,
 } from "~/atoms";
 import type { DictEntry, IndexedElement } from "~/lib";
 import { getPriorityMap, summarize } from "~/lib";
@@ -36,18 +36,18 @@ const ExportAssembly = () => {
       onClick={() => {
         const tsv: string[][] = [];
         for (const {
-          name: object,
-          sequence: elements,
-          importance,
+          name,
+          sequence,
+          frequency: importance,
           pinyin_list,
         } of assemblyResult) {
-          const summary = summarize(elements);
-          const hash = `${object}-${pinyin_list.join(",")}`;
+          const summary = summarize(sequence);
+          const hash = `${name}-${pinyin_list.join(",")}`;
           const level = priorityMap.get(hash);
           if (level !== undefined) {
-            tsv.push([object, summary, String(importance), String(level)]);
+            tsv.push([name, summary, String(importance), String(level)]);
           } else {
-            tsv.push([object, summary, String(importance)]);
+            tsv.push([name, summary, String(importance)]);
           }
         }
         exportTSV(tsv, "elements.txt");
@@ -110,14 +110,13 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
 export default function SequenceTable() {
   const display = useAtomValue(displayAtom);
   const max_length = useAtomValue(maxLengthAtom);
-  const assets = useAtomValue(assetsAtom);
-  const frequencyMap = assets.frequency;
+  const frequencyMap = useAtomValue(adaptedFrequencyAtom);
   const combinedResult = useAtomValue(combinedResultAtom);
 
   const dataSource = combinedResult.map(
-    ({ name, sequence, importance, ...rest }) => {
+    ({ name, sequence, frequency: importance, ...rest }) => {
       const frequency = Math.round(
-        ((frequencyMap[name] ?? 0) * importance) / 100,
+        ((frequencyMap.get(name) ?? 0) * importance) / 100,
       );
       const key = `${name}-${summarize(sequence)}`;
       const entry: MainEntry = {

@@ -1,5 +1,5 @@
 import type { Config } from "~/lib";
-import { isValidCJKChar, stringifySequence } from "~/lib";
+import { isValidCJKChar } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -9,28 +9,7 @@ import { isEqual } from "lodash-es";
 import { diff } from "deep-object-diff";
 import { load } from "js-yaml";
 import type { WorkerOutput } from "~/worker";
-import { atomEffect } from "jotai-effect";
-import { configAtom } from "./config";
-import { assetsAtom } from "./assets";
-import { assemblyResultAtom } from "./cache";
 import { atom } from "jotai";
-
-export const syncConfig = atomEffect((get) => {
-  const value = get(configAtom);
-  thread.spawn("sync", ["config", value]);
-});
-
-export const syncAssets = atomEffect((get) => {
-  get(assetsAtom).then(async (value) => {
-    await thread.spawn("sync", ["assets", value]);
-  });
-});
-
-export const syncInfo = atomEffect((get) => {
-  get(assemblyResultAtom).then(async (value) => {
-    await thread.spawn("sync", ["info", stringifySequence(value)]);
-  });
-});
 
 export const RemoteContext = createContext(true);
 
@@ -69,6 +48,8 @@ export async function roundTestConfig(config: Config) {
           "该配置在 libchai 中具有不同语义。以下是两者的差异：\n" +
           JSON.stringify(diff(config, rustConfig)),
       });
+      console.log("config", config);
+      console.log("rustConfig", rustConfig);
       return false;
     }
   } catch (e) {
@@ -84,15 +65,10 @@ export const errorFeedback = function <T extends number | boolean>(
   res: T | Err,
 ): res is Err {
   if (typeof res === "object" && "err" in res && "msg" in res) {
-    notification.error({
-      message: `错误 ${res.err}`,
-      description: res.msg,
-    });
+    notification.error({ message: `错误 ${res.err}`, description: res.msg });
     return true;
   } else {
-    notification.success({
-      message: "操作成功",
-    });
+    notification.success({ message: "操作成功" });
     return false;
   }
 };

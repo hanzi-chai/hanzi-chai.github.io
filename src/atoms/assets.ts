@@ -13,10 +13,13 @@ import {
   getDictFromTSV,
   getDistributionFromTSV,
   getRecordFromTSV,
+  stringifySequence,
   type PrimitiveRepertoire,
 } from "~/lib";
 import { produce } from "immer";
 import { charactersAtom } from "./data";
+import { configAtom } from "./config";
+import { assemblyResultAtom } from "./cache";
 
 const _cache: Record<string, any> = {};
 export async function fetchAsset(
@@ -79,24 +82,19 @@ export const pairEquivalenceAtom = atom<Promise<Equivalence>>(async () =>
   getRecordFromTSV(await fetchAsset("pair_equivalence", "txt")),
 );
 
-export interface Assets {
-  frequency: Frequency;
-  key_distribution: Distribution;
-  pair_equivalence: Equivalence;
-}
-
-export const assetsAtom = atom(async (get) => {
-  const frequency = get(userFrequencyAtom) ?? (await get(frequencyAtom));
+export const inputAtom = atom(async (get) => {
   const key_distribution =
     get(userKeyDistributionAtom) ?? (await get(keyDistributionAtom));
   const pair_equivalence =
     get(userPairEquivalenceAtom) ?? (await get(pairEquivalenceAtom));
-  const assets: Assets = {
-    frequency,
-    key_distribution,
-    pair_equivalence,
+  const config = get(configAtom);
+  const assemblyResult = stringifySequence(await get(assemblyResultAtom));
+  return {
+    配置: config,
+    词列表: assemblyResult,
+    原始键位分布信息: key_distribution,
+    原始当量信息: pair_equivalence,
   };
-  return assets;
 });
 
 export const adaptedFrequencyAtom = atom(async (get) => {

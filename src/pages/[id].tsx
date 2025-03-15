@@ -18,65 +18,21 @@ import {
   useAtomValue,
   fetchAsset,
   primitiveRepertoireAtom,
-  useAtom,
-  syncConfig,
-  syncAssets,
-  syncInfo,
 } from "~/atoms";
 import { examples, listToObject } from "~/lib";
 import { AppstoreOutlined } from "@ant-design/icons";
 
 const items: MenuProps["items"] = [
-  {
-    label: "基本",
-    key: "",
-    icon: <MailOutlined />,
-  },
-  {
-    label: "数据",
-    key: "repertoire",
-    icon: <DatabaseOutlined />,
-  },
-  {
-    label: "元素",
-    key: "element",
-    icon: <SettingOutlined />,
-  },
-  {
-    label: "拆分",
-    key: "analysis",
-    icon: <AppstoreOutlined />,
-  },
-  {
-    label: "编码",
-    key: "assembly",
-    icon: <OrderedListOutlined />,
-  },
-  {
-    label: "校对",
-    key: "debug",
-    icon: <BoldOutlined />,
-  },
-  {
-    label: "统计一",
-    key: "statistics",
-    icon: <NumberOutlined />,
-  },
-  {
-    label: "统计二",
-    key: "statistics2",
-    icon: <NumberOutlined />,
-  },
-  {
-    label: "优化",
-    key: "optimization",
-    icon: <RiseOutlined />,
-  },
-  {
-    label: "图示",
-    key: "diagram",
-    icon: <ProfileOutlined />,
-  },
+  { label: "基本", key: "", icon: <MailOutlined /> },
+  { label: "数据", key: "repertoire", icon: <DatabaseOutlined /> },
+  { label: "元素", key: "element", icon: <SettingOutlined /> },
+  { label: "拆分", key: "analysis", icon: <AppstoreOutlined /> },
+  { label: "编码", key: "assembly", icon: <OrderedListOutlined /> },
+  { label: "校对", key: "debug", icon: <BoldOutlined /> },
+  { label: "统计一", key: "statistics", icon: <NumberOutlined /> },
+  { label: "统计二", key: "statistics2", icon: <NumberOutlined /> },
+  { label: "优化", key: "optimization", icon: <RiseOutlined /> },
+  { label: "图示", key: "diagram", icon: <ProfileOutlined /> },
 ];
 
 const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
@@ -89,9 +45,6 @@ const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
 };
 
 function EditorLayout() {
-  useAtom(syncConfig);
-  useAtom(syncAssets);
-  useAtom(syncInfo);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");

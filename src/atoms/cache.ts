@@ -24,7 +24,7 @@ import {
   priorityShortCodesAtom,
   repertoireAtom,
 } from ".";
-import { assetsAtom, customElementsAtom } from "./assets";
+import { adaptedFrequencyAtom, customElementsAtom, inputAtom } from "./assets";
 import { thread } from "./utils";
 
 const mergedAlgebraAtom = atom((get) => {
@@ -82,12 +82,14 @@ export const assemblyResultAtom = atom(async (get) => {
   const analysisResult = await get(analysisResultAtom);
   const customElements = get(customElementsAtom);
   const priority = get(priorityShortCodesAtom);
+  const adaptedFrequency = await get(adaptedFrequencyAtom);
   const config = { algebra, encoder, keyboard, priority };
   return await thread.spawn<AssemblyResult>("assembly", [
     repertoire,
     config,
     characters,
     dictionary,
+    adaptedFrequency,
     analysisResult,
     customElements,
   ]);
@@ -95,14 +97,10 @@ export const assemblyResultAtom = atom(async (get) => {
 
 export const encodeResultAtom = atom(async (get) => {
   const objective = get(meaningfulObjectiveAtom);
-  const config = get(configAtom);
-  const assemblyResult = await get(assemblyResultAtom);
-  const assets = await get(assetsAtom);
+  const input = await get(inputAtom);
   return await thread.spawn<[EncodeResult, Metric]>("encode", [
+    input,
     objective,
-    config.info.name,
-    assemblyResult[0],
-    assets.pair_equivalence,
   ]);
 });
 

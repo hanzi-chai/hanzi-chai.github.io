@@ -101,7 +101,6 @@ analysis:
     甩:
       - 用
       - '5'
-  customizeCorners: {}
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   grouping:

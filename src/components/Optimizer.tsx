@@ -11,7 +11,7 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { thread, metaheuristicAtom } from "~/atoms";
+import { thread, metaheuristicAtom, inputAtom } from "~/atoms";
 import { exportYAML, formatDate } from "~/lib";
 import type { WorkerOutput } from "~/worker";
 import { load } from "js-yaml";
@@ -77,6 +77,7 @@ export default function Optimizer() {
   const [autoParams, setAutoParams] =
     useState<Partial<Solver["parameters"]>>(undefined);
   const params = metaheuristic.parameters ?? autoParams;
+  const input = useAtomValue(inputAtom);
   return (
     <>
       <Button
@@ -128,7 +129,7 @@ export default function Optimizer() {
                 break;
             }
           };
-          worker.postMessage({ type: "optimize" });
+          worker.postMessage({ type: "optimize", data: [input] });
         }}
       >
         开始优化

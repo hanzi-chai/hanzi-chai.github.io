@@ -155,7 +155,6 @@ analysis:
     - "\ue410"
     - "\ue039"
     - "\ue042"
-  customizeCorners: {}
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   grouping:

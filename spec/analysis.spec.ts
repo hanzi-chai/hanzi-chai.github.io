@@ -35,6 +35,7 @@ describe("e2e test", () => {
       },
       characters,
       [],
+      new Map(),
       analysisResult,
       {},
     );

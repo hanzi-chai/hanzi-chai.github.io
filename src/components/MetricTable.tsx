@@ -1,4 +1,4 @@
-import "@antv/s2-react/dist/style.min.css";
+import "@antv/s2-react/dist/s2-react.min.css";
 import { useAtomValue } from "jotai";
 import { encodeResultAtom, meaningfulTypesAtom, typeLabels } from "~/atoms";
 import type { Objective } from "~/lib";

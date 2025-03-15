@@ -126,7 +126,6 @@ analysis:
       - "\uf002"
       - "\ue431"
       - "\ue445"
-  customizeCorners: {}
 form:
   alphabet: qwertyuiopasdfghjklxcvbnm
   grouping:
