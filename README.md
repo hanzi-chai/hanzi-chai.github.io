@@ -15,6 +15,6 @@
 仓库克隆到本地后，首先运行 `npm i` 安装依赖，然后运行 `npm run fetch` 来下载方案所需要的汉字数据。本项目使用 Vite 作为打包工具。
 
 - `npm run start` 在本地运行开发服务器，可以访问 [localhost:5173](http://localhost:5173) 来查看；
-- `npm run format` 使用 Prettier 格式化代码（无需手动运行，在每次提交代码前自动运行）；
+- `npm run format` 使用 Biome 格式化代码（无需手动运行，在每次提交代码前自动运行）；
 
 代码推送至仓库时会自动构建并部署到 [chaifen.app](https://chaifen.app)。
