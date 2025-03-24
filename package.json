@@ -1,8 +1,22 @@
 {
   "name": "chai",
   "private": true,
+  "description": "汉字自动拆分系统网页版",
+  "author": {
+    "name": "tansongchen",
+    "email": "i@tansongchen.com",
+    "url": "https://tansongchen.com"
+  },
   "version": "0.2.3",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hanzi-chai/hanzi-chai.github.io"
+  },
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "vite --mode CF",
     "fetch": "tsx scripts/fetch.ts",
@@ -12,11 +26,11 @@
     "build:CF": "vite build --mode CF",
     "build2": "npm run fetch && npm run build:PAGES",
     "build": "npm run fetch && npm run build:CF",
-    "version": "tsc && npm run build:BEX && npm run build:PAGES && npm run build:CF",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "fix": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
     "preview": "vite preview --mode CF --outDir dist/cf",
-    "format": "npx prettier . --write && git add .",
+    "version": "tsc && npm run build:BEX && npm run build:PAGES && npm run build:CF",
+    "lint": "npx @biomejs/biome lint ./src",
+    "fix": "npx @biomejs/biome lint --fix ./src",
+    "format": "npx @biomejs/biome format --write . && git add .",
     "test": "vitest",
     "testui": "vitest --ui --coverage",
     "coverage": "vitest run --coverage"
@@ -58,6 +72,7 @@
     "use-immer": "^0.10.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@emotion/react": "^11.11.4",
     "@jsdevtools/version-bump-prompt": "^6.1.0",
     "@mdx-js/react": "^3.0.1",
@@ -104,9 +119,7 @@
   "peerDependencies": {
     "decimal.js": "^10.4.3"
   },
-  "pre-commit": [
-    "format"
-  ],
+  "pre-commit": ["format"],
   "eslintConfig": {
     "root": true,
     "env": {
@@ -119,15 +132,9 @@
       "alloy/typescript",
       "plugin:react-hooks/recommended"
     ],
-    "ignorePatterns": [
-      "dist",
-      "index.tsx"
-    ],
+    "ignorePatterns": ["dist", "index.tsx"],
     "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "react-refresh",
-      "eslint-plugin-tsdoc"
-    ],
+    "plugins": ["react-refresh", "eslint-plugin-tsdoc"],
     "rules": {
       "max-params": "off",
       "@typescript-eslint/consistent-type-assertions": "off",
@@ -144,9 +151,7 @@
     }
   },
   "hintConfig": {
-    "extends": [
-      "development"
-    ],
+    "extends": ["development"],
     "hints": {
       "typescript-config/is-valid": "off",
       "no-inline-styles": "off"

@@ -212,20 +212,18 @@ const keyboard = ({
   const columns = 7;
   return (
     <Keyboard>
-      {range(rows)
-        .map((i) =>
-          range(columns).map((j) => (
-            <Key
-              key={j * rows + i}
-              value={j * rows + i}
-              initial={initial}
-              final={final}
-              timestamps={timestamps}
-              handleClick={handleClick}
-            />
-          )),
-        )
-        .flat()}
+      {range(rows).flatMap((i) =>
+        range(columns).map((j) => (
+          <Key
+            key={j * rows + i}
+            value={j * rows + i}
+            initial={initial}
+            final={final}
+            timestamps={timestamps}
+            handleClick={handleClick}
+          />
+        )),
+      )}
     </Keyboard>
   );
 };

@@ -29,12 +29,10 @@ interface AttachRelation {
   second: "前" | "中" | "后";
 }
 
-const makeAttachRelation = function (
+const makeAttachRelation = (
   first: AttachRelation["first"],
   second: AttachRelation["second"],
-): AttachRelation {
-  return { type: "连", first, second };
-};
+): AttachRelation => ({ type: "连", first, second });
 
 interface ParallelRelation {
   type: "平行";
@@ -51,7 +49,7 @@ interface PerpendicularRelation {
 type DisjointRelation = ParallelRelation | PerpendicularRelation;
 type CurveRelation = CrossRelation | AttachRelation | DisjointRelation;
 
-const getParallelRelation = function (a: Curve, b: Curve): ParallelRelation {
+const getParallelRelation = (a: Curve, b: Curve): ParallelRelation => {
   const [amain, across] = getIntervalOnOrientation(a);
   const [bmain, bcross] = getIntervalOnOrientation(b);
   const mainPosition = getIntervalPosition(amain, bmain);
@@ -59,7 +57,7 @@ const getParallelRelation = function (a: Curve, b: Curve): ParallelRelation {
   return { type: "平行", mainAxis: mainPosition, crossAxis: crossPosition };
 };
 
-const getDisjointRelation = function (a: Curve, b: Curve): DisjointRelation {
+const getDisjointRelation = (a: Curve, b: Curve): DisjointRelation => {
   if (a.orientation === b.orientation) return getParallelRelation(a, b);
   const [astart, aend] = getBoundingBox(a);
   const [bstart, bend] = getBoundingBox(b);
@@ -70,10 +68,7 @@ const getDisjointRelation = function (a: Curve, b: Curve): DisjointRelation {
   };
 };
 
-const getAttachRelation = function (
-  a: Curve,
-  b: Curve,
-): AttachRelation | undefined {
+const getAttachRelation = (a: Curve, b: Curve): AttachRelation | undefined => {
   const [astart, aend] = getBoundingBox(a);
   const [bstart, bend] = getBoundingBox(b);
   if (isEqual(astart, bstart)) return makeAttachRelation("前", "前");
@@ -92,10 +87,7 @@ const getAttachRelation = function (
   }
 };
 
-const linearRelation = function (
-  a: LinearCurve,
-  b: LinearCurve,
-): CurveRelation {
+const linearRelation = (a: LinearCurve, b: LinearCurve): CurveRelation => {
   const [astart, aend] = a.controls;
   const [bstart, bend] = b.controls;
   const [v, v1, v2] = [
@@ -116,7 +108,7 @@ const linearRelation = function (
   return getDisjointRelation(a, b);
 };
 
-const genericRelation = function (a: Curve, b: Curve): CurveRelation {
+const genericRelation = (a: Curve, b: Curve): CurveRelation => {
   const crossPoint = findCrossPoint(a, [0, 1], b, [0, 1]);
   if (crossPoint === undefined) return getDisjointRelation(a, b);
   const [astart, aend] = getBoundingBox(a);
@@ -142,10 +134,10 @@ const curveRelation = (c1: Curve, c2: Curve) => {
   return genericRelation(c1, c2);
 };
 
-const strokeRelation = function (
+const strokeRelation = (
   stroke1: RenderedStroke,
   stroke2: RenderedStroke,
-): StrokeRelation {
+): StrokeRelation => {
   const strokeRelation: StrokeRelation = [];
   for (const curve1 of stroke1.curveList) {
     for (const curve2 of stroke2.curveList) {
@@ -233,7 +225,7 @@ const findCorners = (renderedGlyph: RenderedGlyph) => {
   ) as CornerSpecifier;
 };
 
-const findTopology = function (renderedGlyph: RenderedGlyph) {
+const findTopology = (renderedGlyph: RenderedGlyph) => {
   const topology: Topology = { matrix: [], orientedPairs: [] };
   for (const [index1, stroke1] of renderedGlyph.entries()) {
     const row = [] as StrokeRelation[];

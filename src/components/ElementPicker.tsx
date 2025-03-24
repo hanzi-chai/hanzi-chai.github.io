@@ -19,7 +19,7 @@ import { phonemeEnumerationAtom } from "~/atoms";
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import ElementCounter from "./ElementCounter";
 
-const AlgebraEditor = function ({
+const AlgebraEditor = ({
   type,
   defaultType,
   setType,
@@ -27,7 +27,7 @@ const AlgebraEditor = function ({
   type: PronunciationElementTypes;
   defaultType: PronunciationElementTypes;
   setType: (s: PronunciationElementTypes) => void;
-}) {
+}) => {
   const algebra = useAtomValue(algebraAtom);
   const removeAlgebra = useRemoveAtom(algebraAtom);
   return (
@@ -86,9 +86,9 @@ const useAllElements = () => {
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
-  const allErbi = allStrokes
-    .map((x) => ["0"].concat(allStrokes).map((y) => x + y))
-    .flat();
+  const allErbi = allStrokes.flatMap((x) =>
+    ["0"].concat(allStrokes).map((y) => x + y),
+  );
   const allGlyph = sortedForm.map(([x]) => x);
   const shapeElements: Map<ShapeElementTypes, string[]> = new Map([
     ["字根", allGlyph],

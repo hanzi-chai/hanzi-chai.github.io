@@ -1,8 +1,8 @@
 import { Button, Flex, Input, Space, Typography, Upload } from "antd";
 import {
-  Atom,
-  SetStateAction,
-  WritableAtom,
+  type Atom,
+  type SetStateAction,
+  type WritableAtom,
   characterSetAtom,
   defaultDictionaryAtom,
   frequencyAtom,
@@ -15,11 +15,11 @@ import {
   userCharacterSetAtom,
 } from "~/atoms";
 import {
-  CharacterSetSpecifier,
-  Dictionary,
-  Distribution,
-  Equivalence,
-  Info,
+  type CharacterSetSpecifier,
+  type Dictionary,
+  type Distribution,
+  type Equivalence,
+  type Info,
   characterSetSpecifiers,
   exportTSV,
   getDictFromTSV,

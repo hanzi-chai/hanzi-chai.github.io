@@ -1,10 +1,5 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  Fragment,
-} from "react";
+import type React from "react";
+import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import styled from "styled-components";
 import type {
   BoundingBox,

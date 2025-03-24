@@ -40,9 +40,10 @@ export default function DetailEditor({
   const algebra = useAtomValue(algebraAtom);
   const customElements = useAtomValue(customElementsAtom);
   if (data === undefined) return null;
-  const genericIndices = [...Array(10).keys()]
-    .map((x) => [x + 1, -(x + 1)])
-    .flat();
+  const genericIndices = [...Array(10).keys()].flatMap((x) => [
+    x + 1,
+    -(x + 1),
+  ]);
   const options: Option[] = [
     {
       value: "字音",

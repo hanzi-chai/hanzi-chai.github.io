@@ -150,9 +150,7 @@ export const renderName = (object: CodableObject) => {
   }
 };
 
-export const renderList = function (
-  object: CodableObject,
-): (string | number)[] {
+export const renderList = (object: CodableObject): (string | number)[] => {
   const list = [object.type];
   switch (object.type) {
     case "固定":
@@ -173,7 +171,7 @@ export const renderList = function (
   return list;
 };
 
-export const parseList = function (value: (string | number)[]): CodableObject {
+export const parseList = (value: (string | number)[]): CodableObject => {
   const type = value[0] as CodableObject["type"];
   switch (type) {
     case "固定":

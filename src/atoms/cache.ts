@@ -36,9 +36,7 @@ export const phonemeEnumerationAtom = atom((get) => {
   const repertoire = get(repertoireAtom);
   const syllables = [
     ...new Set(
-      Object.values(repertoire)
-        .map((x) => x.readings.map((y) => y.pinyin))
-        .flat(),
+      Object.values(repertoire).flatMap((x) => x.readings.map((y) => y.pinyin)),
     ),
   ];
   const mergedAlgebras = Object.entries(get(mergedAlgebraAtom));

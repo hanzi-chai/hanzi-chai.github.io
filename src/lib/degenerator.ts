@@ -94,7 +94,7 @@ const verifySpecialRoots = (
     const otherStrokes = component.glyph.filter(
       (_, index) => !indices.includes(index),
     );
-    const otherCurves = otherStrokes.map((s) => s.curveList).flat();
+    const otherCurves = otherStrokes.flatMap((s) => s.curveList);
     const pieAndNaIsSeparated = otherCurves.some(
       (x) =>
         x.type === "linear" &&
@@ -145,9 +145,9 @@ export const generateSliceBinaries = (
     const allindices = [...Array(cglyph.length).keys()];
     queue = queue.filter((indices) => {
       const others = allindices.filter((x) => !indices.includes(x));
-      const allCombinations = indices
-        .map((x) => others.map((y) => sortTwoNumbers([x, y])))
-        .flat();
+      const allCombinations = indices.flatMap((x) =>
+        others.map((y) => sortTwoNumbers([x, y])),
+      );
       return allCombinations.every(([x, y]) => {
         const relation = ctopology.matrix[y]![x]!;
         return relation.every((cr) => cr.type !== "交");
@@ -165,7 +165,7 @@ export const generateSliceBinaries = (
  * 这种方式要求穷举一个部件中所有的笔画取幂集，复杂度为 O(2^n)，所以目前只用于测试
  */
 export const degenerate = (degenerator: Degenerator, glyph: RenderedGlyph) => {
-  let featureMap = degenerator.feature ?? ({} as Record<Feature, Feature>);
+  const featureMap = degenerator.feature ?? ({} as Record<Feature, Feature>);
   return [
     glyph.map((x) => x.feature).map((x) => featureMap[x] || x),
     findTopology(glyph),

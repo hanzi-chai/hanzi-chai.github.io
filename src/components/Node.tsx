@@ -28,7 +28,7 @@ const ConditionButton = styled(SourceButton)`
   border-radius: 0;
 `;
 
-const sorter = (key: string) => parseInt(key.slice(1), 10);
+const sorter = (key: string) => Number.parseInt(key.slice(1), 10);
 
 const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
   let newId = 0;
@@ -40,7 +40,7 @@ const getNewId = (sources: Record<string, any>, type: "s" | "c") => {
   return `${type}${newId}`;
 };
 
-const sortObject = function <T>(unordered: Record<string, T>) {
+const sortObject = <T,>(unordered: Record<string, T>) => {
   const keys = sortBy(Object.keys(unordered), sorter);
   return keys.reduce(
     (obj, key) => {

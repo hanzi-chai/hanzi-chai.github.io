@@ -93,9 +93,9 @@ export const unbias: Sieve<number[]> = {
 export const order: Sieve<number> = {
   title: "全符笔顺",
   key: (scheme, { component }) => {
-    const indices = scheme
-      .map((x) => binaryToIndices(component.glyph.length)(x))
-      .flat();
+    const indices = scheme.flatMap((x) =>
+      binaryToIndices(component.glyph.length)(x),
+    );
     const isSorted = indices.slice(1).every((v, i) => indices[i]! < v);
     return Number(!isSorted);
   },
@@ -164,11 +164,11 @@ export const weak: Sieve<number> = {
   },
 };
 
-const makeTopologySieve = function (
+const makeTopologySieve = (
   relationType: CurveRelation["type"],
   avoidRelationType: CurveRelation["type"][],
   title: SieveName,
-): Sieve<number> {
+): Sieve<number> => {
   const key: Sieve<number>["key"] = (scheme, { component }) => {
     const parsedScheme = scheme.map((x) =>
       binaryToIndices(component.glyph.length)(x),

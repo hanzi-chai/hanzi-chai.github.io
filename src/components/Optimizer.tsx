@@ -12,7 +12,7 @@ import {
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { thread, metaheuristicAtom, inputAtom } from "~/atoms";
-import { exportYAML, formatDate, Metric } from "~/lib";
+import { exportYAML, formatDate, type Metric } from "~/lib";
 import type { WorkerOutput } from "~/worker";
 import { dump, load } from "js-yaml";
 import type { Config, Solver } from "~/lib";
@@ -57,7 +57,8 @@ const Schedule = ({
       {progress ? (
         <Progress
           percent={Math.round(
-            (progress.steps / (params?.steps ?? Infinity)) * 100,
+            (progress.steps / (params?.steps ?? Number.POSITIVE_INFINITY)) *
+              100,
           )}
         />
       ) : null}

@@ -109,10 +109,7 @@ export interface AnalysisConfig {
   secondaryRoots: Map<Element, Element>;
 }
 
-const getRootSequence = function (
-  repertoire: Repertoire,
-  config: AnalysisConfig,
-) {
+const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {
   const classifier = mergeClassifier(config.analysis?.classifier);
   const findSequence = (x: string) => {
     if (x.match(/[0-9]+/)) {
@@ -182,11 +179,11 @@ export const getRequiredTargets = (
  * @param repertoire - 字符集
  * @param config - 配置
  */
-export const analysis = function (
+export const analysis = (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],
-): AnalysisResult {
+): AnalysisResult => {
   const { components, compounds } = getRequiredTargets(
     repertoire,
     config,

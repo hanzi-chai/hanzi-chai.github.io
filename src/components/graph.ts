@@ -16,17 +16,15 @@ export type SourceData = Omit<Source, "next">;
 
 export type SNode = Node<SourceData>;
 
-export const makeSourceNode = function (data: SourceData, id: string): SNode {
-  return {
-    type: "source",
-    width: 64,
-    height: 32,
-    id,
-    data,
-    position: { x: 0, y: 0 },
-    selectable: id !== "s0",
-  };
-};
+export const makeSourceNode = (data: SourceData, id: string): SNode => ({
+  type: "source",
+  width: 64,
+  height: 32,
+  id,
+  data,
+  position: { x: 0, y: 0 },
+  selectable: id !== "s0",
+});
 
 export type ConditionData =
   | Omit<UnaryCondition, "positive" | "negative">
@@ -50,26 +48,24 @@ export const renderType = {
   negative: "否",
 };
 
-export const makeEdge = function (
+export const makeEdge = (
   source: string,
   target: string,
   type?: string,
-): Edge {
-  return {
-    id: `${source}-${target}`,
-    source,
-    sourceHandle: type,
-    type: "smoothstep",
-    target,
-    animated: true,
-    label: type && renderType[type as keyof typeof renderType],
-  };
-};
+): Edge => ({
+  id: `${source}-${target}`,
+  source,
+  sourceHandle: type,
+  type: "smoothstep",
+  target,
+  animated: true,
+  label: type && renderType[type as keyof typeof renderType],
+});
 
-export const getLayoutedElements = function (
+export const getLayoutedElements = (
   nodes: (SNode | CNode)[],
   edges: Edge[],
-): [(SNode | CNode)[], Edge[]] {
+): [(SNode | CNode)[], Edge[]] => {
   const graph = Object.fromEntries(
     nodes.map((node) => [
       node.id,
@@ -141,7 +137,7 @@ export const getLayoutedElements = function (
 };
 
 export const sortNodes = (a: Node, b: Node) => {
-  const indexa = parseInt(a.id.slice(1), 10);
-  const indexb = parseInt(b.id.slice(1), 10);
+  const indexa = Number.parseInt(a.id.slice(1), 10);
+  const indexb = Number.parseInt(b.id.slice(1), 10);
   return indexa - indexb;
 };

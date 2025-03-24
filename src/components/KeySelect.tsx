@@ -8,7 +8,7 @@ import {
 } from "~/atoms";
 import { DisplayWithSuperScript, Select } from "./Utils";
 import type { Key } from "~/lib";
-import { BaseOptionType } from "antd/es/select";
+import type { BaseOptionType } from "antd/es/select";
 
 export interface KeySelectProps {
   value: Key;
@@ -35,15 +35,15 @@ export default function KeySelect({
   }));
   if (!disableAlphabets) keyOptions.push(...alphabetOptions);
   const mapping = useAtomValue(mappingAtom);
-  const referenceOptions = Object.entries(mapping)
-    .map(([element, mapped]) => {
+  const referenceOptions = Object.entries(mapping).flatMap(
+    ([element, mapped]) => {
       const length = mapped.length;
       return [...Array(length).keys()].map((index) => ({
         label: <DisplayWithSuperScript name={element} index={index} />,
         value: JSON.stringify({ element, index }),
       }));
-    })
-    .flat();
+    },
+  );
   if (!disableElements) keyOptions.push(...referenceOptions);
   const sequenceMap = useAtomValue(sequenceAtom);
   const form = useAtomValue(repertoireAtom);

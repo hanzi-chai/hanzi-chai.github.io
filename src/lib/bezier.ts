@@ -55,7 +55,7 @@ export const sortTwoNumbers = (ar: [number, number]) =>
 const getBoundingBox = (a: Curve) =>
   [a.controls[0], a.controls[a.controls.length - 1]] as [Point, Point];
 
-const getIntervalOnOrientation = function (a: Curve): [Interval, Interval] {
+const getIntervalOnOrientation = (a: Curve): [Interval, Interval] => {
   const start = a.controls[0];
   const end = a.controls.at(-1)!;
   const i1 = sortTwoNumbers([start[0], end[0]]);
@@ -67,7 +67,7 @@ const getIntervalOnOrientation = function (a: Curve): [Interval, Interval] {
   }
 };
 
-const evaluate = function (a: Curve, t: number): Point {
+const evaluate = (a: Curve, t: number): Point => {
   if (a.type === "linear") {
     return add(
       multiply(1 - t, a.controls[0]) as Point,
@@ -88,10 +88,7 @@ const evaluate = function (a: Curve, t: number): Point {
   }
 };
 
-const makeCurve = function (
-  start: Point,
-  { command, parameterList }: Draw,
-): Curve {
+const makeCurve = (start: Point, { command, parameterList }: Draw): Curve => {
   if (command === "a") {
     return {
       type: "arc",
@@ -152,7 +149,7 @@ interface BoundingBox {
 
 type Position = -1 | -0.5 | 0 | 0.5 | 1;
 
-const getIntervalPosition = function (i: Interval, j: Interval): Position {
+const getIntervalPosition = (i: Interval, j: Interval): Position => {
   const [imin, imax] = i.sort((a, b) => a - b);
   const [jmin, jmax] = j.sort((a, b) => a - b);
   // totally disjoint
@@ -164,12 +161,12 @@ const getIntervalPosition = function (i: Interval, j: Interval): Position {
   return 0;
 };
 
-const findCrossPoint = function (
+const findCrossPoint = (
   a: Curve,
   at: Interval,
   b: Curve,
   bt: Interval,
-): Point | undefined {
+): Point | undefined => {
   const [astart, aend] = [evaluate(a, at[0]), evaluate(a, at[1])];
   const [bstart, bend] = [evaluate(b, bt[0]), evaluate(b, bt[1])];
   const xposition = getIntervalPosition(
@@ -220,9 +217,7 @@ const curveLength = (curve: Curve) => {
   return distance(start, end);
 };
 
-const sort = function (a: Interval): Interval {
-  return a.sort((a, b) => a - b);
-};
+const sort = (a: Interval): Interval => a.sort((a, b) => a - b);
 
 const contains = (r1: Interval, r2: Interval) => {
   return r1[0] <= r2[0] && r1[1] >= r2[1];

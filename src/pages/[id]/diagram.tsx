@@ -68,7 +68,7 @@ const Keyboard = () => {
       }
       return { ...content, match };
     } else if (content.type === "custom") {
-      let mapping: Map<string, string> = new Map();
+      const mapping: Map<string, string> = new Map();
       content.mapping
         ?.trim()
         .split("\n")
@@ -89,7 +89,7 @@ const Keyboard = () => {
             <div className="cell" key={j}>
               {processedConents.map((value, k) => {
                 const { type } = value;
-                let boxes: ReactNode[] = [];
+                const boxes: ReactNode[] = [];
                 if (type === "key") {
                   boxes.push(key);
                 } else if (type === "uppercase") {

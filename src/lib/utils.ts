@@ -75,41 +75,33 @@ export const chars = (s: string) => {
   return Array.from(s).length;
 };
 
-export const getDummyBasicComponent = function (): BasicComponent {
-  return {
-    type: "basic_component",
-    strokes: [getDummySVGStroke("横")],
-  };
-};
+export const getDummyBasicComponent = (): BasicComponent => ({
+  type: "basic_component",
+  strokes: [getDummySVGStroke("横")],
+});
 
-export const getDummyDerivedComponent = function (): DerivedComponent {
-  return {
-    type: "derived_component",
-    source: "一",
-    strokes: [getDummyReferenceStroke()],
-  };
-};
+export const getDummyDerivedComponent = (): DerivedComponent => ({
+  type: "derived_component",
+  source: "一",
+  strokes: [getDummyReferenceStroke()],
+});
 
-export const getDummySplicedComponent = function (): SplicedComponent {
-  return {
-    type: "spliced_component",
-    operator: "⿰",
-    operandList: ["一", "丨"],
-  };
-};
+export const getDummySplicedComponent = (): SplicedComponent => ({
+  type: "spliced_component",
+  operator: "⿰",
+  operandList: ["一", "丨"],
+});
 
-export const getDummyReferenceStroke = function (): ReferenceStroke {
-  return {
-    feature: "reference",
-    index: 0,
-  };
-};
+export const getDummyReferenceStroke = (): ReferenceStroke => ({
+  feature: "reference",
+  index: 0,
+});
 
-export const getDummySVGStroke = function (
+export const getDummySVGStroke = (
   feature: Feature,
   start: Point = [0, 0],
   oldCurveList: Draw[] = [],
-): SVGStroke {
+): SVGStroke => {
   const typelist = schema[feature];
   return {
     feature,
@@ -133,19 +125,18 @@ export const getDummySVGStroke = function (
   };
 };
 
-export const getDummyCompound = function (operator: Operator): Compound {
-  return { type: "compound", operator, operandList: ["一", "一"] };
-};
+export const getDummyCompound = (operator: Operator): Compound => ({
+  type: "compound",
+  operator,
+  operandList: ["一", "一"],
+});
 
-export const isComponent = function (
+export const isComponent = (
   glyph: BasicComponent | DerivedComponent | SplicedComponent | Compound,
-): glyph is BasicComponent | DerivedComponent | SplicedComponent {
-  return (
-    glyph.type === "basic_component" ||
-    glyph.type === "derived_component" ||
-    glyph.type === "spliced_component"
-  );
-};
+): glyph is BasicComponent | DerivedComponent | SplicedComponent =>
+  glyph.type === "basic_component" ||
+  glyph.type === "derived_component" ||
+  glyph.type === "spliced_component";
 
 export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
   const set = new Set(list);
@@ -172,13 +163,8 @@ export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
   return Array.from(new Set(suppList));
 };
 
-export const listToObject = function <T extends { unicode: number }>(
-  list: T[],
-) {
-  return Object.fromEntries(
-    list.map((x) => [String.fromCodePoint(x.unicode), x]),
-  );
-};
+export const listToObject = <T extends { unicode: number }>(list: T[]) =>
+  Object.fromEntries(list.map((x) => [String.fromCodePoint(x.unicode), x]));
 
 export function getRecordFromTSV(text: string): Record<string, number> {
   const tsv = text
@@ -339,7 +325,7 @@ export const makeCharacterFilter = (
       sequenceRegex = new RegExp(input.sequence);
     }
   } catch {}
-  return function (name: string) {
+  return (name: string) => {
     const character = repertoire[name];
     if (character === undefined) return false;
     const sequence = sequenceMap.get(name) ?? "";
@@ -367,8 +353,8 @@ export const makeFilter =
   (input: string, form: Repertoire, sequence: Map<string, string>) =>
   (char: string) => {
     if ((sequence.get(char)?.length ?? 0) <= 1) return false;
-    let name = form[char]?.name ?? "";
-    let seq = sequence.get(char) ?? "";
+    const name = form[char]?.name ?? "";
+    const seq = sequence.get(char) ?? "";
     return (
       name.includes(input) || char.includes(input) || seq.startsWith(input)
     );
@@ -425,7 +411,7 @@ export const adapt = (frequency: Frequency, words: Set<string>) => {
     if (words.has(word)) {
       result.set(word, (result.get(word) ?? 0) + value);
     } else {
-      let chars = [...word];
+      const chars = [...word];
       let end = chars.length;
       let start: number;
       while (end > 0) {

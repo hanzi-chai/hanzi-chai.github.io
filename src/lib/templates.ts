@@ -142,7 +142,7 @@ export interface StarterType {
   encoder: EncoderTypes;
 }
 
-export const createConfig = function (starter: StarterType): Config {
+export const createConfig = (starter: StarterType): Config => {
   const form = keyboardMap[starter.keyboard];
   const classifier = classifierMap[starter.data];
 

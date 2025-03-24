@@ -4,7 +4,7 @@ import {
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
-  ProFormInstance,
+  type ProFormInstance,
   ProFormList,
 } from "@ant-design/pro-components";
 import {

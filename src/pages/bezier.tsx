@@ -4,7 +4,8 @@ import { fetchCharacterByUnicode } from "~/api";
 import { useChaifenTitle } from "~/atoms";
 import { Box, StrokesView } from "~/components/GlyphView";
 import { dump } from "js-yaml";
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 const TestComponent: React.FC<{
   character: PrimitiveCharacter;

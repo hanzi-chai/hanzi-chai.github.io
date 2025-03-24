@@ -61,9 +61,9 @@ export async function roundTestConfig(config: Config) {
   }
 }
 
-export const errorFeedback = function <T extends number | boolean>(
+export const errorFeedback = <T extends number | boolean>(
   res: T | Err,
-): res is Err {
+): res is Err => {
   if (typeof res === "object" && "err" in res && "msg" in res) {
     notification.error({ message: `错误 ${res.err}`, description: res.msg });
     return true;

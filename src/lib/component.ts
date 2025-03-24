@@ -107,12 +107,12 @@ export class MultipleSchemeError extends Error {}
  * @throws NoSchemeError 无拆分方案
  * @throws MultipleSchemeError 多个拆分方案
  */
-export const getComponentScheme = function (
+export const getComponentScheme = (
   component: ComputedComponent,
   rootData: ComputedComponent[],
   config: AnalysisConfig,
   classifier: Classifier,
-): ComponentAnalysis | NoSchemeError | MultipleSchemeError {
+): ComponentAnalysis | NoSchemeError | MultipleSchemeError => {
   if (
     config.primaryRoots.has(component.name) ||
     config.secondaryRoots.has(component.name)
@@ -246,12 +246,12 @@ export type ComponentResults = Map<string, ComponentAnalysis>;
  * @returns 部件的 SVG 图形
  * @throws InvalidGlyphError 无法渲染
  */
-export const recursiveRenderComponent = function (
+export const recursiveRenderComponent = (
   component: Component,
   repertoire: PrimitiveRepertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
   depth = 0,
-): SVGGlyph | InvalidGlyphError {
+): SVGGlyph | InvalidGlyphError => {
   if (depth > 100) {
     console.error("Recursion depth exceeded", component);
     return new InvalidGlyphError();
@@ -412,12 +412,12 @@ export const renderRootList = (repertoire: Repertoire, elements: string[]) => {
  *
  * @returns 拆分结果和无法拆分的汉字列表
  */
-export const disassembleComponents = function (
+export const disassembleComponents = (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],
   components: Set<string>,
-): [ComponentResults, string[]] {
+): [ComponentResults, string[]] => {
   const rootMap = renderRootList(repertoire, [
     ...config.primaryRoots.keys(),
     ...config.secondaryRoots.keys(),

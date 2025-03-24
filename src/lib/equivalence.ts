@@ -52,28 +52,26 @@ const isSameHand = (p1: Pair, p2: Pair) => {
 };
 
 const reflect = (n: number) => {
-  let [col, row] = [Math.floor(n / 5), n % 5];
+  const [col, row] = [Math.floor(n / 5), n % 5];
   return (6 - col) * 5 + row;
 };
 
 export const distance = (p: Pair) => {
   if (isDifferentHand(p)) return -1;
-  let [x1, y1] = [Math.floor(p.initial / 5), p.initial % 5];
-  let [x2, y2] = [Math.floor(p.final / 5), p.final % 5];
+  const [x1, y1] = [Math.floor(p.initial / 5), p.initial % 5];
+  const [x2, y2] = [Math.floor(p.final / 5), p.final % 5];
   return (x1 - x2) ** 2 + (y1 - y2) ** 2;
 };
 
 export const displacement = (p: Pair) => {
-  let [x1, y1] = [Math.floor(p.initial / 5), p.initial % 5];
-  let [x2, y2] = [Math.floor(p.final / 5), p.final % 5];
+  const [x1, y1] = [Math.floor(p.initial / 5), p.initial % 5];
+  const [x2, y2] = [Math.floor(p.final / 5), p.final % 5];
   return [x2 - x1, y2 - y1] as const;
 };
 
 export const 手机五行七列: Model<Pair> = {
   group: new Set(
-    range(35)
-      .map((n) => range(35).map((m) => ({ initial: n, final: m })))
-      .flat(),
+    range(35).flatMap((n) => range(35).map((m) => ({ initial: n, final: m }))),
   ),
   relation: (p1, p2) => {
     // 异指连击当量相同

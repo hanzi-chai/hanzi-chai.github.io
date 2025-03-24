@@ -1,7 +1,7 @@
 import init, { Web } from "libchai";
 import { analysis } from "./lib/repertoire";
 import { assemble } from "./lib/assembly";
-import { Metric } from "./lib";
+import type { Metric } from "./lib";
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
   data: any;
@@ -54,5 +54,3 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
     channel.postMessage({ type: "error", error } as WorkerOutput);
   }
 };
-
-export {};

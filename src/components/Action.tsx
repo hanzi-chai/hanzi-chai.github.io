@@ -80,8 +80,8 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
   ];
   const handle = async ({ charOrName, type }: CreateProps) => {
     const base: Omit<PrimitiveCharacter, "unicode" | "name"> = {
-      tygf: 0 as 0,
-      gb2312: 0 as 0,
+      tygf: 0 as const,
+      gb2312: 0 as const,
       gf0014_id: null,
       gf3001_id: null,
       readings: [],

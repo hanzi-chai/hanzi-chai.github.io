@@ -211,7 +211,8 @@ export default function CharacterTable() {
   const sequenceMap = useAtomValue(sequenceAtom);
   const [page, setPage] = useState(1);
   const [filterProps, setFilterProps] = useState<CharacterFilter>({});
-  const getLength = (a: string) => sequenceMap.get(a)?.length ?? Infinity;
+  const getLength = (a: string) =>
+    sequenceMap.get(a)?.length ?? Number.POSITIVE_INFINITY;
   const remote = useContext(RemoteContext);
   const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
   const isUserCharacter = (a: string) =>

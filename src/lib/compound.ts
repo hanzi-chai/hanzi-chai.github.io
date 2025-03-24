@@ -40,7 +40,12 @@ interface CompoundGenuineAnalysis extends CompoundBasicAnalysis {
 }
 
 export const getGlyphBoundingBox = (glyph: SVGGlyph) => {
-  let [xmin, ymin, xmax, ymax] = [Infinity, Infinity, -Infinity, -Infinity];
+  let [xmin, ymin, xmax, ymax] = [
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ];
   for (const { start, curveList } of glyph) {
     let [x, y] = start;
     xmin = Math.min(xmin, x);
@@ -86,11 +91,11 @@ export const getGlyphBoundingBox = (glyph: SVGGlyph) => {
  * @returns SVG 图形
  * @throws InvalidGlyphError 无法渲染
  */
-export const recursiveRenderCompound = function (
+export const recursiveRenderCompound = (
   compound: Compound,
   repertoire: Repertoire,
   glyphCache: Map<string, SVGGlyphWithBox> = new Map(),
-): SVGGlyphWithBox | InvalidGlyphError {
+): SVGGlyphWithBox | InvalidGlyphError => {
   const glyphs: SVGGlyphWithBox[] = [];
   for (const char of compound.operandList) {
     const glyph = repertoire[char]?.glyph;
@@ -167,7 +172,7 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
     operandResults,
   };
   if (glyph.order === undefined) {
-    const full = operandResults.map((x) => x.full).flat();
+    const full = operandResults.flatMap((x) => x.full);
     return { sequence: [...full], full, ...rest };
   }
   const full: string[] = [];
@@ -618,9 +623,8 @@ export const disassembleCompounds = (
   const compounds = topologicalSort(repertoire, requiredCompounds, config);
   const compoundResults: CompoundResults = new Map();
   const compoundError: string[] = [];
-  const getResult = function (s: string): PartitionResult | undefined {
-    return componentResults.get(s) || compoundResults.get(s);
-  };
+  const getResult = (s: string): PartitionResult | undefined =>
+    componentResults.get(s) || compoundResults.get(s);
   const serializerName = config.analysis.serializer ?? "sequential";
   const serializer = serializerMap[serializerName] ?? sequentialSerializer;
   if (serializerName === "xkjd") {

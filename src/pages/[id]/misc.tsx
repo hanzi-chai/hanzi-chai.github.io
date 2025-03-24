@@ -21,13 +21,13 @@ import {
 import Element from "~/components/Element";
 import { Display } from "~/components/Utils";
 import {
-  BasicComponent,
+  type BasicComponent,
   classifier,
   degenerate,
   exportYAML,
-  Feature,
+  type Feature,
   renderSVGGlyph,
-  Repertoire,
+  type Repertoire,
   type AnalysisConfig,
 } from "~/lib";
 
@@ -275,11 +275,11 @@ export default function Misc() {
     });
   }
   dataSource.sort((a, b) => {
-    let dlength = a.length - b.length;
+    const dlength = a.length - b.length;
     if (dlength !== 0) return dlength;
-    let dcount = b.count.length - a.count.length;
+    const dcount = b.count.length - a.count.length;
     if (dcount !== 0) return dcount;
-    let dcategory = a.categories.localeCompare(b.categories);
+    const dcategory = a.categories.localeCompare(b.categories);
     if (dcategory !== 0) return dcategory;
     return a.strokes.localeCompare(b.strokes);
   });

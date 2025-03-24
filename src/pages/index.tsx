@@ -9,17 +9,17 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { Config, ExampleConfig, Info } from "~/lib";
+import type { Config, ExampleConfig, Info } from "~/lib";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
-import { Updater, useImmer } from "use-immer";
-import { Example, examples } from "~/lib";
+import { type Updater, useImmer } from "use-immer";
+import { type Example, examples } from "~/lib";
 import { DeleteButton, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
 import { useChaifenTitle, validateConfig } from "~/atoms";
-import { MenuProps } from "antd/lib";
+import type { MenuProps } from "antd/lib";
 import styled from "styled-components";
 import Changelog from "~/components/changelog/ChangelogDrawer";
 import User from "~/components/User";
