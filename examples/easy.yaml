@@ -10,7 +10,7 @@ data:
     :
       unicode: 61443
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 㗊上
       gf0014_id: null
       readings: []
@@ -24,7 +24,7 @@ data:
     :
       unicode: 61440
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 其字头无横
       gf0014_id: null
       readings: []
@@ -46,7 +46,7 @@ data:
     :
       unicode: 61442
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 囱字框省
       gf0014_id: null
       readings: []
@@ -64,7 +64,7 @@ data:
     :
       unicode: 61441
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 乑省
       gf0014_id: null
       readings: []
@@ -86,7 +86,7 @@ data:
     :
       unicode: 61444
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 㗊下
       gf0014_id: null
       readings: []
@@ -100,7 +100,7 @@ data:
     䒤:
       unicode: 17572
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: null
       gf0014_id: null
       readings: []

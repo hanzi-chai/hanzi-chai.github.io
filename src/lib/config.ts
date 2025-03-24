@@ -6,7 +6,7 @@ import type { CornerSpecifier } from "./topology";
 
 // config.info begin
 export interface Info {
-  name: string;
+  name?: string;
   author?: string;
   version?: string;
   description?: string;
@@ -91,7 +91,7 @@ interface Transliteration {
 
 // config.form begin
 export interface Keyboard {
-  alphabet: string;
+  alphabet?: string;
   mapping_type?: number;
   mapping: Mapping;
   grouping?: Grouping;
@@ -99,7 +99,9 @@ export interface Keyboard {
 
 export type Element = string;
 
-export type Key = string | { element: string; index: number };
+export type ElementWithIndex = { element: string; index: number };
+
+export type Key = string | ElementWithIndex;
 
 export type Mapped = string | Key[];
 
@@ -226,12 +228,33 @@ export interface AtomicConstraint {
   keys?: string[];
 }
 
+interface ElementAffinity {
+  from: ElementWithIndex;
+  to: ElementWithIndex;
+  affinity: number;
+}
+
+interface KeyAffinity {
+  from: ElementWithIndex;
+  to: string;
+  affinity: number;
+}
+
+export interface Regularization {
+  strength?: number; // default 1e-2
+  element_affinities?: ElementAffinity[];
+  key_affinities?: KeyAffinity[];
+}
+
 export interface Objective {
   characters_full?: PartialWeights;
   characters_short?: PartialWeights;
   words_full?: PartialWeights;
   words_short?: PartialWeights;
+  regularization?: Regularization;
 }
+
+export type PartialWeightTypes = Exclude<keyof Objective, "regularization">;
 
 export interface Constraints {
   elements?: AtomicConstraint[];
@@ -254,18 +277,18 @@ export const defaultOptimization: Optimization = {
 
 export interface Solver {
   algorithm: "SimulatedAnnealing";
-  runtime?: number;
-  report_after?: number;
   parameters?: {
     t_max: number;
     t_min: number;
     steps: number;
   };
+  report_after?: number;
   search_method?: {
     random_move: number;
     random_swap: number;
     random_full_key_swap: number;
   };
+  update_interval?: number;
 }
 // config.optimization end
 
@@ -302,12 +325,12 @@ export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: Example | null;
-  info: Info;
+  info?: Info;
   data?: Data;
   analysis?: Analysis;
   algebra?: Algebra;
-  form: Keyboard;
-  encoder: EncoderConfig;
+  form?: Keyboard;
+  encoder?: EncoderConfig;
   optimization?: Optimization;
   diagram?: DiagramConfig;
 }

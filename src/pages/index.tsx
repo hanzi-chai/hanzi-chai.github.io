@@ -148,7 +148,7 @@ export default function HomeLayout() {
   const listData = Object.entries(configs).map(([id, { info }]) => ({
     id,
     setConfigs,
-    info,
+    info: info ?? {},
   }));
 
   return (

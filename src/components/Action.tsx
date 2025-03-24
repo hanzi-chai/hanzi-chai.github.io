@@ -381,7 +381,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
     );
     if (customGlyph[name] !== undefined) {
       items.push({
-        key: -3,
+        key: -5,
         label: <span>取消自定义字形</span>,
         onClick: () => removeCustomization(name),
       });

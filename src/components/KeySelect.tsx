@@ -6,49 +6,53 @@ import {
   mappingAtom,
   sequenceAtom,
 } from "~/atoms";
-import { Select } from "./Utils";
+import { DisplayWithSuperScript, Select } from "./Utils";
 import type { Key } from "~/lib";
-import { renderSuperScript } from "~/lib";
+import { BaseOptionType } from "antd/es/select";
 
 export interface KeySelectProps {
   value: Key;
   onChange: (k: Key) => void;
   allowEmpty?: boolean;
+  disableAlphabets?: boolean;
+  disableElements?: boolean;
 }
 
 export default function KeySelect({
   value,
   onChange,
   allowEmpty,
+  disableAlphabets,
+  disableElements,
 }: KeySelectProps) {
+  const keyOptions: BaseOptionType[] = allowEmpty
+    ? [{ label: "无", value: JSON.stringify("") }]
+    : [];
   const alphabet = useAtomValue(alphabetAtom);
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: JSON.stringify(x),
   }));
-  const allOptions = [{ label: "无", value: JSON.stringify("") }].concat(
-    alphabetOptions,
-  );
-  const keyOptions = allowEmpty ? allOptions : alphabetOptions;
+  if (!disableAlphabets) keyOptions.push(...alphabetOptions);
   const mapping = useAtomValue(mappingAtom);
-  const display = useAtomValue(displayAtom);
   const referenceOptions = Object.entries(mapping)
     .map(([element, mapped]) => {
       const length = mapped.length;
       return [...Array(length).keys()].map((index) => ({
-        label: renderSuperScript(display(element), index),
+        label: <DisplayWithSuperScript name={element} index={index} />,
         value: JSON.stringify({ element, index }),
       }));
     })
     .flat();
+  if (!disableElements) keyOptions.push(...referenceOptions);
   const sequenceMap = useAtomValue(sequenceAtom);
   const form = useAtomValue(repertoireAtom);
   return (
     <Select
-      style={{ width: 64 }}
+      style={{ width: 96 }}
       showSearch
       placeholder="输入笔画搜索"
-      options={keyOptions.concat(referenceOptions)}
+      options={keyOptions}
       value={JSON.stringify(value)}
       onChange={(raw) => onChange(JSON.parse(raw))}
       filterOption={(input, option) => {
@@ -65,10 +69,19 @@ export default function KeySelect({
         }
       }}
       filterSort={(a, b) => {
-        return (
-          Number(alphabet.includes(b.value)) -
-          Number(alphabet.includes(a.value))
-        );
+        const ak: Key = JSON.parse(a.value);
+        const bk: Key = JSON.parse(b.value);
+        if (typeof ak === "string" && typeof bk === "string") {
+          return ak.localeCompare(bk);
+        } else if (typeof ak === "string") {
+          return -1;
+        } else if (typeof bk === "string") {
+          return 1;
+        } else {
+          const amapped = sequenceMap.get(ak.element) ?? "";
+          const bmapped = sequenceMap.get(bk.element) ?? "";
+          return amapped.localeCompare(bmapped);
+        }
       }}
     />
   );

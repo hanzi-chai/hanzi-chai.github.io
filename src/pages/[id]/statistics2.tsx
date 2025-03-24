@@ -20,7 +20,12 @@ import {
 import { Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import { renderIndexed, type AdaptedFrequency, type Objective } from "~/lib";
+import {
+  PartialWeightTypes,
+  renderIndexed,
+  type AdaptedFrequency,
+  type Objective,
+} from "~/lib";
 import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
 import { blue } from "@ant-design/colors";
@@ -48,7 +53,7 @@ function interpolate(color1: string, color2: string, percent: number) {
   // Convert the interpolated RGB values back to a hex color
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
-const filterType = (type: keyof Objective, combined: Combined[]) => {
+const filterType = (type: PartialWeightTypes, combined: Combined[]) => {
   const filtered = type.includes("character")
     ? combined.filter((item) => [...item.name].length === 1)
     : combined.filter((item) => [...item.name].length > 1);
@@ -66,7 +71,7 @@ const filterType = (type: keyof Objective, combined: Combined[]) => {
 };
 
 interface DistributionConfig {
-  type: keyof Objective;
+  type: PartialWeightTypes;
   index: number[];
   dynamic: boolean;
 }

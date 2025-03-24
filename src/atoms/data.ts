@@ -141,8 +141,11 @@ export const tagsAtom = atom((get) => {
 
 export const nextUnicodeAtom = atom((get) => {
   const customization = get(userRepertoireAtom);
-  const maxCode = Math.max(
-    ...Object.keys(customization).map((x) => x.codePointAt(0)!),
+  const codes = new Set(
+    Object.keys(customization).map((x) => x.codePointAt(0)!),
   );
-  return Math.max(maxCode + 1, 0xf000);
+  for (let i = 0xf000; i <= 0xf8ff; ++i) {
+    if (!codes.has(i)) return i;
+  }
+  return 0xffff;
 });

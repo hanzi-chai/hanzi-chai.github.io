@@ -115,7 +115,8 @@ const compile = (
   encoder: EncoderConfig,
   algebra: Algebra,
 ) => {
-  const { mapping, grouping, alphabet } = keyboard;
+  const { mapping, grouping } = keyboard;
+  const alphabet = keyboard.alphabet ?? "";
   const totalMapping = merge(mapping, grouping ?? {});
   return (result: CharacterResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
@@ -258,7 +259,11 @@ export const assemble = (
       customized.get(character) || compoundResults.get(character);
     if (shapeInfo === undefined) continue;
     const final: Assembly[] = [];
-    for (const reading of repertoire[character]!.readings) {
+    const readings = [...repertoire[character]!.readings];
+    if (readings.length === 0) {
+      readings.push({ pinyin: "", importance: 100 });
+    }
+    for (const reading of readings) {
       const result: CharacterResult = {
         char: character,
         pinyin: reading.pinyin,

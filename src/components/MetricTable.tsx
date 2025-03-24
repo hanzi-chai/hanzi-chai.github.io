@@ -1,7 +1,7 @@
 import "@antv/s2-react/dist/s2-react.min.css";
 import { useAtomValue } from "jotai";
 import { encodeResultAtom, meaningfulTypesAtom, typeLabels } from "~/atoms";
-import type { Objective } from "~/lib";
+import type { Objective, PartialWeightTypes } from "~/lib";
 import { fingeringLabels, type PartialMetric } from "~/lib";
 import { Flex } from "antd";
 import { Select } from "./Utils";
@@ -75,7 +75,7 @@ const preprocess = (partialMetric: PartialMetric) => {
 export default function MetricTable() {
   const [_, evaluateResult] = useAtomValue(encodeResultAtom);
   const types = useAtomValue(meaningfulTypesAtom);
-  const [type, setType] = useState<keyof Objective>(types[0]!);
+  const [type, setType] = useState<PartialWeightTypes>(types[0]!);
   const data = preprocess(evaluateResult[type]!);
   return (
     <>

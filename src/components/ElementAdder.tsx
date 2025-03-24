@@ -7,6 +7,8 @@ import {
   mappingAtom,
   groupingAtom,
   useRemoveAtom,
+  alphabetAtom,
+  mappingTypeAtom,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
@@ -14,7 +16,9 @@ import type { Key } from "~/lib";
 import { joinKeys } from "~/lib";
 
 export default function ElementAdder({ element }: { element?: string }) {
-  const { alphabet, mapping_type, mapping } = useAtomValue(keyboardAtom);
+  const alphabet = useAtomValue(alphabetAtom);
+  const mapping = useAtomValue(mappingAtom);
+  const mapping_type = useAtomValue(mappingTypeAtom);
   const [main, setMain] = useState(Object.keys(mapping)[0]!);
   const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
   const addMapping = useAddAtom(mappingAtom);

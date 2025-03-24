@@ -141,3 +141,21 @@ export const Display = ({
   }
   return <StrokesView glyph={glyph} />;
 };
+
+export const DisplayWithSuperScript = ({
+  name,
+  index,
+  alwaysUseGlyph,
+}: {
+  name: string;
+  index: number;
+  alwaysUseGlyph?: boolean;
+}) => {
+  const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  return (
+    <span>
+      {Display({ name, alwaysUseGlyph })}
+      {index ? superscripts[index] : ""}
+    </span>
+  );
+};

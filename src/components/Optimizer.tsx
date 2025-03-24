@@ -12,9 +12,9 @@ import {
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { thread, metaheuristicAtom, inputAtom } from "~/atoms";
-import { exportYAML, formatDate } from "~/lib";
+import { exportYAML, formatDate, Metric } from "~/lib";
 import type { WorkerOutput } from "~/worker";
-import { load } from "js-yaml";
+import { dump, load } from "js-yaml";
 import type { Config, Solver } from "~/lib";
 import { nanoid } from "nanoid";
 
@@ -69,7 +69,7 @@ export default function Optimizer() {
   const metaheuristic = useAtomValue(metaheuristicAtom);
   const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
   const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
-  const [bestMetric, setBestMetric] = useState("");
+  const [bestMetric, setBestMetric] = useState<Metric | undefined>(undefined);
   const [optimizing, setOptimizing] = useState(false);
   const [progress, setProgress] = useState<
     { steps: number; temperature: number } | undefined
@@ -86,7 +86,7 @@ export default function Optimizer() {
         onClick={() => {
           setResult([]);
           setBestResult(undefined);
-          setBestMetric("");
+          setBestMetric(undefined);
           setAutoParams(undefined);
           setProgress(undefined);
           setOptimizing(true);
@@ -98,6 +98,7 @@ export default function Optimizer() {
             switch (data.type) {
               case "better_solution":
                 config = load(data.config) as Config;
+                config.info ??= {};
                 config.info.version = formatDate(date);
                 setBestResult(config);
                 setBestMetric(data.metric);
@@ -139,7 +140,7 @@ export default function Optimizer() {
       {bestMetric && bestResult ? (
         <>
           <Typography.Text>
-            <pre>{bestMetric}</pre>
+            <pre>{dump(bestMetric)}</pre>
           </Typography.Text>
           <Flex justify="center" gap="middle">
             <Button

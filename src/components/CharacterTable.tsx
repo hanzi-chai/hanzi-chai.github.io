@@ -435,6 +435,8 @@ export default function CharacterTable() {
     customReadingsColumn,
     customGlyphColumn,
     operations,
+    gb2312,
+    ambiguous,
   ];
   const columns: ColumnsType<PrimitiveCharacter> = remote
     ? adminColumns

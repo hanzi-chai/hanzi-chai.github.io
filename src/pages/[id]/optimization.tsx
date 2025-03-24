@@ -1,4 +1,13 @@
 import {
+  ModalForm,
+  ProForm,
+  ProFormDependency,
+  ProFormDigit,
+  ProFormGroup,
+  ProFormInstance,
+  ProFormList,
+} from "@ant-design/pro-components";
+import {
   Button,
   Dropdown,
   Flex,
@@ -7,17 +16,19 @@ import {
   Switch,
   Typography,
   Select as AntdSelect,
+  Skeleton,
 } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import { focusAtom } from "jotai-optics";
-import { useMemo } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import {
-  keyboardAtom,
-  useListAtom,
   constraintsAtom,
   objectiveAtom,
+  alphabetAtom,
+  regularizationAtom,
 } from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
+import KeySelect from "~/components/KeySelect";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
 import {
@@ -30,8 +41,8 @@ import type {
   AtomicConstraint,
   Constraints,
   LevelWeights,
-  Objective,
   PartialWeights,
+  Regularization,
   TierWeights,
 } from "~/lib";
 
@@ -271,7 +282,7 @@ const PartialObjective = ({
   type,
 }: {
   title: string;
-  type: keyof Objective;
+  type: "characters_full" | "characters_short" | "words_full" | "words_short";
 }) => {
   const partialObjectiveAtom = useMemo(
     () => focusAtom(objectiveAtom, (o) => o.prop(type)),
@@ -351,11 +362,6 @@ const PartialObjective = ({
               value={pair_equivalence}
               onChange={(value) => update("pair_equivalence", value)}
             />
-            <AtomicObjective
-              title="词间速度当量权重"
-              value={extended_pair_equivalence}
-              onChange={(value) => update("extended_pair_equivalence", value)}
-            />
             <ListObjective
               title="指法"
               value={currentPart.fingering}
@@ -415,105 +421,141 @@ const PartialObjective = ({
   );
 };
 
-const ConstraintList = ({
-  title,
-  type,
-}: {
-  title: string;
-  type: keyof Constraints;
-}) => {
-  const listAtom = useMemo(
-    () =>
-      focusAtom(constraintsAtom, (o) =>
-        o
-          .valueOr({
-            elements: undefined,
-            indices: undefined,
-            element_indices: undefined,
-          })
-          .prop(type)
-          .valueOr([] as AtomicConstraint[]),
-      ),
-    [type],
-  );
-
-  const [list, append, exclude, modify] = useListAtom(listAtom);
-  const { alphabet } = useAtomValue(keyboardAtom);
-  const defaultConstraints: Record<keyof Constraints, AtomicConstraint> = {
-    elements: { element: "1" },
-    indices: { index: 1 },
-    element_indices: { element: "1", index: 1 },
-  };
+const Regularization = ({}) => {
+  const [regularization, set] = useAtom(regularizationAtom);
   return (
     <>
-      <Typography.Title level={3}>{title}</Typography.Title>
-      <Flex vertical gap="small">
-        {list.map((constraint, index) => {
-          const { element, index: idx, keys } = constraint;
-          return (
-            <Flex vertical gap="small" key={index}>
-              <Flex key={index} align="center" gap="small">
-                将
-                {type !== "indices" ? (
-                  <ElementSelect
-                    excludeGrouped
-                    value={element}
-                    onChange={(char) =>
-                      modify(index, { ...constraint, element: char })
-                    }
-                  />
-                ) : (
-                  "所有元素"
-                )}
-                的
-                {type !== "elements" ? (
-                  <Select
-                    value={idx}
-                    options={[0, 1, 2, 3].map((x) => ({
-                      label: `第 ${x + 1} 码`,
-                      value: x,
-                    }))}
-                    onChange={(value) =>
-                      modify(index, { ...constraint, index: value })
-                    }
-                  />
-                ) : (
-                  "所有码"
-                )}
-                限制在
-                <Select
-                  value={keys === undefined}
-                  options={[
-                    { label: "当前按键", value: true },
-                    { label: "指定按键", value: false },
-                  ]}
-                  onChange={(value) =>
-                    modify(index, {
-                      ...constraint,
-                      keys: value ? undefined : [],
-                    })
-                  }
-                />
-                {keys && (
-                  <AntdSelect
-                    mode="multiple"
-                    value={keys}
-                    onChange={(ks) =>
-                      modify(index, { ...constraint, keys: ks })
-                    }
-                    options={[...alphabet].map((x) => ({ label: x, value: x }))}
-                  />
-                )}
-                <DeleteButton onClick={() => exclude(index)} />
-              </Flex>
-            </Flex>
-          );
-        })}
-        <Button onClick={() => append(defaultConstraints[type])}>
-          添加约束
-        </Button>
-      </Flex>
+      <ModalForm<Regularization>
+        title="正则化"
+        trigger={
+          <Button type="primary" style={{ marginBottom: "1rem" }}>
+            正则化
+          </Button>
+        }
+        layout="horizontal"
+        onFinish={async (values) => {
+          set(values);
+          return true;
+        }}
+        initialValues={regularization}
+      >
+        <ProFormDigit name="strength" label="强度" />
+        <Typography.Title level={3}>元素亲和力</Typography.Title>
+        <ProFormList name="element_affinities" alwaysShowItemLabel>
+          <ProFormGroup>
+            <ProForm.Item name="from" label="元素" vertical={false}>
+              {/* @ts-ignore */}
+              <KeySelect disableAlphabets />
+            </ProForm.Item>
+            <ProFormList name="to" label="目标" alwaysShowItemLabel>
+              <ProFormGroup>
+                <ProForm.Item name="element" label="元素">
+                  {/* @ts-ignore */}
+                  <KeySelect disableAlphabets />
+                </ProForm.Item>
+                <ProFormDigit name="affinity" label="亲和" />
+              </ProFormGroup>
+            </ProFormList>
+          </ProFormGroup>
+        </ProFormList>
+        <Typography.Title level={3}>按键亲和力</Typography.Title>
+        <ProFormList name="key_affinities">
+          <ProFormGroup>
+            <ProForm.Item name="from" label="元素" vertical={false}>
+              {/* @ts-ignore */}
+              <KeySelect disableAlphabets />
+            </ProForm.Item>
+            <ProForm.Item name="to" label="目标">
+              {/* @ts-ignore */}
+              <KeySelect disableElements />
+            </ProForm.Item>
+            <ProFormDigit name="affinity" label="亲和" width={64} />
+          </ProFormGroup>
+        </ProFormList>
+      </ModalForm>
     </>
+  );
+};
+
+const ConstraintsForm = ({
+  label,
+  type,
+}: {
+  label: string;
+  type: "elements" | "indices" | "element_indices";
+}) => {
+  const alphabet = useAtomValue(alphabetAtom);
+  const [constraints, set] = useAtom(constraintsAtom);
+  const current = constraints?.[type] ?? [];
+  const formRef = useRef<ProFormInstance>();
+  return (
+    <ModalForm<{ items: AtomicConstraint[] }>
+      trigger={<Button>{label}</Button>}
+      layout="horizontal"
+      formRef={formRef}
+      initialValues={{ items: current }}
+      onFinish={async ({ items }) => {
+        set((prev) => ({ ...prev, [type]: items }));
+        return true;
+      }}
+    >
+      <Typography.Title level={3}>元素约束</Typography.Title>
+      <ProFormList name="items" alwaysShowItemLabel>
+        {(_, index) => (
+          <ProFormDependency name={["items"]}>
+            {({ items }) => {
+              const keys = items[index].keys;
+              const negated = keys === undefined ? [] : undefined;
+              return (
+                <ProFormGroup>
+                  {type !== "indices" && (
+                    <ProForm.Item name="element" label="元素">
+                      <ElementSelect excludeGrouped />
+                    </ProForm.Item>
+                  )}
+                  {type !== "elements" && (
+                    <ProForm.Item name="index" label="码位">
+                      <Select
+                        options={[0, 1, 2, 3].map((x) => ({
+                          label: `第 ${x + 1} 码`,
+                          value: x,
+                        }))}
+                      />
+                    </ProForm.Item>
+                  )}
+                  <ProForm.Item label="限制在">
+                    <Select
+                      value={keys === undefined}
+                      options={[
+                        { label: "当前元素", value: true },
+                        { label: "指定元素", value: false },
+                      ]}
+                      onChange={(value) =>
+                        formRef.current?.setFieldValue(
+                          ["elements", index, "keys"],
+                          negated,
+                        )
+                      }
+                    />
+                  </ProForm.Item>
+                  {keys !== undefined && (
+                    <ProForm.Item name="keys" label="按键">
+                      <AntdSelect
+                        mode="multiple"
+                        options={[...alphabet].map((x) => ({
+                          label: x,
+                          value: x,
+                        }))}
+                      />
+                    </ProForm.Item>
+                  )}
+                </ProFormGroup>
+              );
+            }}
+          </ProFormDependency>
+        )}
+      </ProFormList>
+    </ModalForm>
   );
 };
 
@@ -526,16 +568,21 @@ export default function Optimization() {
         <PartialObjective title="一字词简码" type="characters_short" />
         <PartialObjective title="多字词全码" type="words_full" />
         <PartialObjective title="多字词简码" type="words_short" />
+        {/* <Regularization /> */}
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>
-        <ConstraintList title="元素约束" type="elements" />
-        <ConstraintList title="码位约束" type="indices" />
-        <ConstraintList title="元素 + 码位约束" type="element_indices" />
+        <Flex gap="middle" justify="center">
+          <ConstraintsForm label="元素约束" type="elements" />
+          <ConstraintsForm label="码位约束" type="indices" />
+          <ConstraintsForm label="元素码位约束" type="element_indices" />
+        </Flex>
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>优化</Typography.Title>
-        <Optimizer />
+        <Suspense fallback={<Skeleton active />}>
+          <Optimizer />
+        </Suspense>
       </EditorColumn>
     </EditorRow>
   );

@@ -53,10 +53,6 @@ export default function SolverForm() {
                     "parameters",
                     value ? undefined : defaultParams,
                   );
-                  formRef?.current?.setFieldValue(
-                    "runtime",
-                    value ? 10 : undefined,
-                  );
                   formRef?.current?.submit();
                 }}
               />
@@ -66,9 +62,7 @@ export default function SolverForm() {
       </ProFormGroup>
       <ProFormDependency name={["parameters"]}>
         {({ parameters }) =>
-          parameters === undefined ? (
-            <ProFormDigit label="运行时间（分钟）" name="runtime" width="xs" />
-          ) : (
+          parameters !== undefined && (
             <ProFormGroup title="参数">
               <ProFormDigit
                 label="最高温"

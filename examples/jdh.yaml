@@ -10,7 +10,7 @@ data:
     "\uf000":
       unicode: 61440
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 禺字底
       gf0014_id: null
       readings: []
@@ -19,7 +19,7 @@ data:
     "\uf001":
       unicode: 61441
       tygf: 0
-      gb2312: false
+      gb2312: 0
       name: 草头
       gf0014_id: null
       readings: []

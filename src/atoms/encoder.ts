@@ -4,6 +4,7 @@ import type {
   LevelWeights,
   Objective,
   PartialWeights,
+  PartialWeightTypes,
   ShortCodeRule,
   WordRule,
 } from "~/lib";
@@ -102,10 +103,10 @@ export const meaningfulObjectiveAtom = atom((get) => {
 
 export const meaningfulTypesAtom = atom((get) => {
   const objective = get(meaningfulObjectiveAtom);
-  return Object.keys(objective) as (keyof Objective)[];
+  return Object.keys(objective) as PartialWeightTypes[];
 });
 
-export const typeLabels: Record<keyof Objective, string> = {
+export const typeLabels: Record<PartialWeightTypes, string> = {
   characters_full: "一字全码",
   characters_short: "一字简码",
   words_full: "多字全码",

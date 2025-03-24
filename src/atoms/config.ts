@@ -6,6 +6,7 @@ import type {
   EncoderConfig,
   Example,
   DiagramConfig,
+  Keyboard,
 } from "~/lib";
 import {
   defaultOptimization,
@@ -54,7 +55,9 @@ export const algebraAtom = focusAtom(configAtom, (o) =>
   o.prop("algebra").valueOr({} as Algebra),
 );
 algebraAtom.debugLabel = "config.algebra";
-export const keyboardAtom = focusAtom(configAtom, (o) => o.prop("form"));
+export const keyboardAtom = focusAtom(configAtom, (o) =>
+  o.prop("form").valueOr({} as Keyboard),
+);
 keyboardAtom.debugLabel = "config.keyboards";
 export const encoderAtom = focusAtom(configAtom, (o) =>
   o.prop("encoder").valueOr({} as EncoderConfig),

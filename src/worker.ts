@@ -1,6 +1,7 @@
 import init, { Web } from "libchai";
 import { analysis } from "./lib/repertoire";
 import { assemble } from "./lib/assembly";
+import { Metric } from "./lib";
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
   data: any;
@@ -9,8 +10,8 @@ export interface WorkerInput {
 export type WorkerOutput =
   | { type: "success"; result: any }
   | { type: "error"; error: Error }
-  | { type: "better_solution"; config: string; metric: string; save: boolean }
-  | { type: "progress"; steps: number; temperature: number; metric: string }
+  | { type: "better_solution"; config: string; metric: Metric; save: boolean }
+  | { type: "progress"; steps: number; temperature: number; metric: Metric }
   | { type: "parameters"; t_max?: number; t_min?: number; steps?: number };
 
 await init();
@@ -46,12 +47,11 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
       case "optimize":
         webInterface.sync(data[0]);
         webInterface.optimize();
-        self.postMessage({ type: "success" } as WorkerOutput);
+        channel.postMessage({ type: "success" } as WorkerOutput);
         break;
     }
   } catch (error) {
     channel.postMessage({ type: "error", error } as WorkerOutput);
-    self.postMessage({ type: "error", error } as WorkerOutput);
   }
 };
 

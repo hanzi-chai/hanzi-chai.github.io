@@ -235,7 +235,9 @@ export default function Index() {
             个字符）是在基本字集的基础上增加了所有中日韩统一表意文字扩展区 A
             的字符；
           </li>
-          <li>自定义（任意数量）即用户自定义的字符集合。</li>
+          <li>
+            自定义即用户自定义的字符集合，可以是上述 27780 字符的任意子集。
+          </li>
         </ul>
       </EditorColumn>
       <EditorColumn span={12}>

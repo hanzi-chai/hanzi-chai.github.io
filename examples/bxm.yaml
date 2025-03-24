@@ -749,7 +749,7 @@ data:
     "\uf000":
       unicode: 61440
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 冘, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
@@ -758,7 +758,7 @@ data:
     "\uf003":
       unicode: 61443
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue036", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
@@ -767,7 +767,7 @@ data:
     "\uf006":
       unicode: 61446
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 疌, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
@@ -776,7 +776,7 @@ data:
     "\uf007":
       unicode: 61447
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 甫, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
@@ -785,7 +785,7 @@ data:
     "\uf008":
       unicode: 61448
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 永, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
@@ -794,7 +794,7 @@ data:
     "\uf009":
       unicode: 61449
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 氏, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
@@ -803,7 +803,7 @@ data:
     "\uf00a":
       unicode: 61450
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue07e", strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}]}]
@@ -812,7 +812,7 @@ data:
     "\uf00b":
       unicode: 61451
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue00c", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
@@ -821,7 +821,7 @@ data:
     "\uf00c":
       unicode: 61452
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 艮, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
@@ -830,7 +830,7 @@ data:
     "\uf00f":
       unicode: 61455
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue0e9", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
@@ -839,7 +839,7 @@ data:
     "\uf010":
       unicode: 61456
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: []
@@ -848,7 +848,7 @@ data:
     "\uf011":
       unicode: 61457
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue0e9", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
@@ -857,7 +857,7 @@ data:
     "\uf012":
       unicode: 61458
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue069", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
@@ -866,7 +866,7 @@ data:
     "\uf013":
       unicode: 61459
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 疋, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
@@ -875,7 +875,7 @@ data:
     "\uf014":
       unicode: 61460
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 斥, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
@@ -884,7 +884,7 @@ data:
     "\uf015":
       unicode: 61461
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue03a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
@@ -893,7 +893,7 @@ data:
     "\uf017":
       unicode: 61463
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue03a", strokes: [{feature: reference, index: 3}, {feature: reference, index: 4}]}]
@@ -902,7 +902,7 @@ data:
     "\uf018":
       unicode: 61464
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 肃, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
@@ -911,7 +911,7 @@ data:
     "\uf019":
       unicode: 61465
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue0d0", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
@@ -920,7 +920,7 @@ data:
     "\uf01b":
       unicode: 61467
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: []
@@ -929,7 +929,7 @@ data:
     "\uf01c":
       unicode: 61468
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 承, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
@@ -938,7 +938,7 @@ data:
     "\uf01e":
       unicode: 61470
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue12f", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
@@ -947,7 +947,7 @@ data:
     "\uf01f":
       unicode: 61471
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue132", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
@@ -956,7 +956,7 @@ data:
     "\uf020":
       unicode: 61472
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue158", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 5}]}]
@@ -965,7 +965,7 @@ data:
     "\uf021":
       unicode: 61473
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
@@ -974,7 +974,7 @@ data:
     "\uf024":
       unicode: 61476
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
@@ -983,7 +983,7 @@ data:
     "\uf025":
       unicode: 61477
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [冖, "\ue137"]}]
@@ -992,7 +992,7 @@ data:
     "\uf026":
       unicode: 61478
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 㑒, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
@@ -1001,7 +1001,7 @@ data:
     "\uf027":
       unicode: 61479
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue104", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}]}]
@@ -1010,7 +1010,7 @@ data:
     "\uf028":
       unicode: 61480
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue150", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}]}]
@@ -1019,7 +1019,7 @@ data:
     "\uf029":
       unicode: 61481
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [冖, "\ue136"]}]
@@ -1028,7 +1028,7 @@ data:
     "\uf02a":
       unicode: 61482
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
@@ -1037,7 +1037,7 @@ data:
     "\uf02c":
       unicode: 61484
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: []
@@ -1046,7 +1046,7 @@ data:
     "\uf02d":
       unicode: 61485
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue0d9", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
@@ -1055,7 +1055,7 @@ data:
     "\uf02e":
       unicode: 61486
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue16d", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
@@ -1064,7 +1064,7 @@ data:
     "\uf02f":
       unicode: 61487
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue10a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
@@ -1073,7 +1073,7 @@ data:
     "\uf032":
       unicode: 61490
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿰, operandList: [刀, "\ue107"]}]
@@ -1082,7 +1082,7 @@ data:
     "\uf033":
       unicode: 61491
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 丣, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
@@ -1091,7 +1091,7 @@ data:
     "\uf034":
       unicode: 61492
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue120", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
@@ -1100,7 +1100,7 @@ data:
     "\uf035":
       unicode: 61493
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue129", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
@@ -1109,7 +1109,7 @@ data:
     "\uf036":
       unicode: 61494
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 之, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}]}]
@@ -1118,7 +1118,7 @@ data:
     "\uf037":
       unicode: 61495
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue0d0", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
@@ -1127,7 +1127,7 @@ data:
     "\uf038":
       unicode: 61496
       tygf: 0
-      gb2312: false
+      gb2312: 0
       gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue0b7", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
