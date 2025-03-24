@@ -23,7 +23,7 @@ export default function Debugger() {
   const referenceAtom = useMemo(
     () =>
       atomWithStorage<Record<string, string[]>>(
-        "reference_" + config.info.name,
+        `reference_${config.info.name}`,
         {},
       ),
     [config.info?.name],
@@ -134,7 +134,7 @@ export default function Debugger() {
           <Statistic
             style={{ width: 80 }}
             title="准确率"
-            value={Math.round((correct / (correct + incorrect)) * 100) + "%"}
+            value={`${Math.round((correct / (correct + incorrect)) * 100)}%`}
           />
         </Flex>
       </Flex>

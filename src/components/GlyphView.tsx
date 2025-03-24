@@ -24,16 +24,16 @@ const Box = styled.div`
 const drawLength = ({ command, parameterList }: Draw) => {
   if (command === "h" || command === "v") {
     return parameterList[0];
-  } else if (command === "a") {
-    return 0;
-  } else {
-    const [_x1, _y1, _x2, _y2, x3, y3] = parameterList as N6;
-    return Math.sqrt(x3 * x3 + y3 * y3);
   }
+  if (command === "a") {
+    return 0;
+  }
+  const [_x1, _y1, _x2, _y2, x3, y3] = parameterList as N6;
+  return Math.sqrt(x3 * x3 + y3 * y3);
 };
 
 const processPath = ({ start, feature, curveList }: SVGStroke) => {
-  const svgCommands: string[] = ["M" + start.join(" ")];
+  const svgCommands: string[] = [`M${start.join(" ")}`];
   for (const [index, { command, parameterList }] of curveList.entries()) {
     let svgCommand: string;
     if (
@@ -136,44 +136,44 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
               setIndex={setIndex}
             />
           );
-        } else if (curve.command === "a") {
-          return null;
-        } else {
-          const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
-          const previous: Point = [...current];
-          const control1 = add(previous, [x1, y1]);
-          const control2 = add(previous, [x2, y2]);
-          const control3 = add(previous, [x, y]);
-          current = structuredClone(control3);
-          return (
-            <Fragment key={curveIndex}>
-              <Circle
-                key={0}
-                center={control1}
-                index={{ strokeIndex, curveIndex, controlIndex: 1 }}
-                setIndex={setIndex}
-              />
-              <Circle
-                key={1}
-                center={control2}
-                index={{ strokeIndex, curveIndex, controlIndex: 2 }}
-                setIndex={setIndex}
-              />
-              <Circle
-                key={2}
-                center={current}
-                index={{ strokeIndex, curveIndex, controlIndex: 3 }}
-                setIndex={setIndex}
-              />
-              <path
-                d={`M ${previous.join(" ")} L ${control1[0]} ${control1[1]} L ${control2[0]} ${control2[1]} L ${current[0]} ${current[1]}`}
-                stroke="grey"
-                strokeWidth="0.3"
-                fill="none"
-              />
-            </Fragment>
-          );
         }
+        if (curve.command === "a") {
+          return null;
+        }
+        const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
+        const previous: Point = [...current];
+        const control1 = add(previous, [x1, y1]);
+        const control2 = add(previous, [x2, y2]);
+        const control3 = add(previous, [x, y]);
+        current = structuredClone(control3);
+        return (
+          <Fragment key={curveIndex}>
+            <Circle
+              key={0}
+              center={control1}
+              index={{ strokeIndex, curveIndex, controlIndex: 1 }}
+              setIndex={setIndex}
+            />
+            <Circle
+              key={1}
+              center={control2}
+              index={{ strokeIndex, curveIndex, controlIndex: 2 }}
+              setIndex={setIndex}
+            />
+            <Circle
+              key={2}
+              center={current}
+              index={{ strokeIndex, curveIndex, controlIndex: 3 }}
+              setIndex={setIndex}
+            />
+            <path
+              d={`M ${previous.join(" ")} L ${control1[0]} ${control1[1]} L ${control2[0]} ${control2[1]} L ${current[0]} ${current[1]}`}
+              stroke="grey"
+              strokeWidth="0.3"
+              fill="none"
+            />
+          </Fragment>
+        );
       })}
     </>
   );
@@ -187,8 +187,8 @@ const Rectangles = ({
   strokeWidth: number;
 }) => {
   const { curveList } = renderSVGStroke(stroke);
-  const firstCommand = stroke.curveList[0]!.command;
-  const lastCommand = stroke.curveList.at(-1)!.command;
+  const firstCommand = stroke.curveList[0]?.command;
+  const lastCommand = stroke.curveList.at(-1)?.command;
   const firstCurve = curveList[0]!;
   const lastCurve = curveList.at(-1)!;
   const shouldDrawFist =
@@ -209,8 +209,8 @@ const Rectangles = ({
       )}
       {shouldDrawLast && (
         <rect
-          x={lastCurve.controls.at(-1)![0] - strokeWidth / 2}
-          y={lastCurve.controls.at(-1)![1] - strokeWidth / 2}
+          x={lastCurve.controls.at(-1)?.[0] - strokeWidth / 2}
+          y={lastCurve.controls.at(-1)?.[1] - strokeWidth / 2}
           width={strokeWidth}
           height={strokeWidth}
         />
@@ -250,7 +250,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       point.x = e.clientX;
       point.y = e.clientY;
       const transformedPoint = point.matrixTransform(
-        svg.getScreenCTM()!.inverse(),
+        svg.getScreenCTM()?.inverse(),
       );
       const x = Math.round(transformedPoint.x);
       const y = Math.round(transformedPoint.y);
@@ -259,9 +259,9 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       if (curveIndex === -1) {
         newGlyph[strokeIndex]!.start = [x, y];
       } else {
-        const curve = newGlyph[strokeIndex]!.curveList[curveIndex]!;
+        const curve = newGlyph[strokeIndex]?.curveList[curveIndex]!;
         const renderedCurve =
-          renderedGlyph[strokeIndex]!.curveList[curveIndex]!;
+          renderedGlyph[strokeIndex]?.curveList[curveIndex]!;
         const previous = renderedCurve.controls[controlIndex]!;
         const diff = subtract([x, y], previous);
         if (curve.command === "h" || curve.command === "v") {
@@ -272,7 +272,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
         }
       }
 
-      setGlyph!(newGlyph);
+      setGlyph?.(newGlyph);
     },
     [index, strokes, renderedGlyph, setGlyph],
   );
@@ -298,6 +298,8 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
 
   return (
     <svg
+      role="img"
+      aria-label="strokes view"
       ref={svgRef}
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
@@ -335,6 +337,8 @@ interface FontViewProps {
 
 const FontView: React.FC<FontViewProps> = ({ reference }) => (
   <svg
+    role="img"
+    aria-label="font view"
     xmlns="http://www.w3.org/2000/svg"
     version="1.1"
     width="100%"

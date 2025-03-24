@@ -40,7 +40,8 @@ interface Sieve<T extends Comparable> {
 export function isLess<T extends Comparable>(a: T, b: T) {
   if (typeof a === "number" && typeof b === "number") {
     return a < b;
-  } else if (Array.isArray(a) && Array.isArray(b)) {
+  }
+  if (Array.isArray(a) && Array.isArray(b)) {
     for (const [i, v] of a.entries()) {
       const u = b[i];
       if (u === undefined) return false;
@@ -68,7 +69,7 @@ const countStrokes: (n: number) => number = (n) =>
 export const bias: Sieve<number[]> = {
   title: "取大优先",
   key: (scheme) => scheme.map(countStrokes).map((x) => -x),
-  display: (data: number[]) => "(" + data.map((x) => -x).join(", ") + ")",
+  display: (data: number[]) => `(${data.map((x) => -x).join(", ")})`,
 };
 
 /**
@@ -79,7 +80,7 @@ export const bias: Sieve<number[]> = {
 export const unbias: Sieve<number[]> = {
   title: "取小优先",
   key: (scheme) => scheme.map(countStrokes),
-  display: (data: number[]) => "(" + data.join(", ") + ")",
+  display: (data: number[]) => `(${data.join(", ")})`,
 };
 
 /**
@@ -182,7 +183,7 @@ const makeTopologySieve = (
         for (const k of bi) {
           for (const l of bj) {
             const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
-            const relations = component.topology.matrix[larger]![smaller]!;
+            const relations = component.topology.matrix[larger]?.[smaller]!;
             r ||= relations.some((v) => v.type === relationType);
             a ||= relations.some((v) => avoidRelationType.includes(v.type));
           }

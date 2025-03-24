@@ -191,7 +191,7 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   ];
 
   const coorder = render(maxLength - analyzer.position.length);
-  const space = Math.pow(alphabet.length, maxLength - analyzer.position.length);
+  const space = alphabet.length ** (maxLength - analyzer.position.length);
   const estimation = sumBy(lengths, (x) =>
     analyzer.position.length === maxLength ? x - 1 : (x * x) / 2 / space,
   );
@@ -234,7 +234,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
           key,
           range(maxLength).map(() => new Set()),
         );
-      reverseMap.get(key)![i]!.add(name);
+      reverseMap.get(key)?.[i]?.add(name);
     });
   }
   const dataSource = [...reverseMap]
@@ -354,10 +354,9 @@ const MarginalFirstOrderDuplication = () => {
               if (option === undefined) return false;
               const value = option.value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "");
               if (repertoire[value] !== undefined) {
-                return sequenceMap.get(value)!.startsWith(input);
-              } else {
-                return value.includes(input);
+                return sequenceMap.get(value)?.startsWith(input);
               }
+              return value.includes(input);
             }}
             filterSort={(a, b) => {
               return (

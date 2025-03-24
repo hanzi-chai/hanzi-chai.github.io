@@ -66,7 +66,7 @@ export const applyRules = (name: string, rules: Rule[], syllable: string) => {
         break;
     }
   }
-  return name + "-" + result;
+  return `${name}-${result}`;
 };
 
 interface This extends Base {
@@ -277,7 +277,7 @@ export const findElement = (
       return undefined;
     case "字音":
       name = object.subtype;
-      hash = name + ":" + pinyin;
+      hash = `${name}:${pinyin}`;
       if (algebraCache.has(hash)) return algebraCache.get(hash);
       rules = defaultAlgebra[name] || algebra?.[name];
       transformed = applyRules(name, rules, pinyin);

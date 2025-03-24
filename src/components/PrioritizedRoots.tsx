@@ -34,7 +34,9 @@ export default function PrioritizedRoots({
             <Element>
               <Display name={x} />
             </Element>
-            <a onClick={() => exclude(i)}>删除</a>
+            <Button variant="text" color="danger" onClick={() => exclude(i)}>
+              删除
+            </Button>
           </Space>
         ))}
       </Flex>

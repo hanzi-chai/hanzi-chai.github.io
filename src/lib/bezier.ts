@@ -62,9 +62,8 @@ const getIntervalOnOrientation = (a: Curve): [Interval, Interval] => {
   const i2 = sortTwoNumbers([start[1], end[1]]);
   if (a.orientation === "horizontal") {
     return [i1, i2];
-  } else {
-    return [i2, i1];
   }
+  return [i2, i1];
 };
 
 const evaluate = (a: Curve, t: number): Point => {
@@ -73,19 +72,19 @@ const evaluate = (a: Curve, t: number): Point => {
       multiply(1 - t, a.controls[0]) as Point,
       multiply(t, a.controls[1]) as Point,
     );
-  } else if (a.type === "arc") {
-    return [0, 0];
-  } else {
-    const v01 = add(
-      multiply(Math.pow(1 - t, 3), a.controls[0]),
-      multiply(3 * Math.pow(1 - t, 2) * t, a.controls[1]),
-    );
-    const v23 = add(
-      multiply(3 * (1 - t) * Math.pow(t, 2), a.controls[2]),
-      multiply(Math.pow(t, 3), a.controls[3]),
-    );
-    return add(v01, v23) as Point;
   }
+  if (a.type === "arc") {
+    return [0, 0];
+  }
+  const v01 = add(
+    multiply((1 - t) ** 3, a.controls[0]),
+    multiply(3 * (1 - t) ** 2 * t, a.controls[1]),
+  );
+  const v23 = add(
+    multiply(3 * (1 - t) * t ** 2, a.controls[2]),
+    multiply(t ** 3, a.controls[3]),
+  );
+  return add(v01, v23) as Point;
 };
 
 const makeCurve = (start: Point, { command, parameterList }: Draw): Curve => {

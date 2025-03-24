@@ -18,11 +18,11 @@ const checkIDsInData = (data: PrimitiveCharacter[]) => {
   data.forEach(({ gf3001_id, gf0014_id, unicode, name }) => {
     if (gf3001_id) {
       if (!reverseGF3001Map.has(gf3001_id)) reverseGF3001Map.set(gf3001_id, []);
-      reverseGF3001Map.get(gf3001_id)!.push({ unicode, name });
+      reverseGF3001Map.get(gf3001_id)?.push({ unicode, name });
     }
     if (gf0014_id) {
       if (!reverseGF0014Map.has(gf0014_id)) reverseGF0014Map.set(gf0014_id, []);
-      reverseGF0014Map.get(gf0014_id)!.push({ unicode, name });
+      reverseGF0014Map.get(gf0014_id)?.push({ unicode, name });
     }
   });
   for (let i = 1; i <= 560; ++i) {

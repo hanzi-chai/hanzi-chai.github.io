@@ -87,7 +87,7 @@ export const getLayoutedElements = (
   });
 
   const postdfs = (id: string) => {
-    const childrefs = graph[id]!.children;
+    const childrefs = graph[id]?.children;
     if (!childrefs.length) {
       graph[id]!.width = 64;
     } else {
@@ -95,14 +95,14 @@ export const getLayoutedElements = (
         postdfs(cid);
       }
       graph[id]!.width =
-        sum(childrefs.map(([cid]) => graph[cid]!.width)) +
+        sum(childrefs.map(([cid]) => graph[cid]?.width)) +
         (childrefs.length - 1) * 64;
     }
   };
 
   const predfs = (id: string) => {
-    const position = graph[id]!.position;
-    const childrefs = graph[id]!.children;
+    const position = graph[id]?.position;
+    const childrefs = graph[id]?.children;
     if (!childrefs.length) return;
     if (childrefs.length === 1) {
       const [cid] = childrefs[0]!;
@@ -110,7 +110,7 @@ export const getLayoutedElements = (
       predfs(cid);
     } else {
       const [[cid1], [cid2]] = [childrefs[0]!, childrefs[1]!];
-      const span = 64 + graph[cid1]!.width / 2 + graph[cid2]!.width / 2;
+      const span = 64 + graph[cid1]?.width / 2 + graph[cid2]?.width / 2;
       graph[cid1]!.position = add(position, [-span / 2, 64]);
       graph[cid2]!.position = add(position, [span / 2, 64]);
       predfs(cid1);
@@ -124,14 +124,14 @@ export const getLayoutedElements = (
   // remove useless nodes
   return [
     nodes
-      .filter((node) => graph[node.id]!.width)
+      .filter((node) => graph[node.id]?.width)
       .map((node) => {
-        const [x, y] = graph[node.id]!.position;
+        const [x, y] = graph[node.id]?.position;
         return { ...node, position: { x, y } };
       }),
     edges.filter(
       ({ source, target }) =>
-        graph[source]!.width > 0 && graph[target]!.width > 0,
+        graph[source]?.width > 0 && graph[target]?.width > 0,
     ),
   ];
 };

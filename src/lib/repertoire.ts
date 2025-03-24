@@ -121,11 +121,10 @@ const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {
     }
     if (glyph.type === "basic_component") {
       return glyph.strokes.map((s) => classifier[s.feature]);
-    } else {
-      const sequence = recursiveRenderCompound(glyph, repertoire);
-      if (sequence instanceof Error) return [];
-      return sequence.strokes.map((s) => classifier[s.feature]);
     }
+    const sequence = recursiveRenderCompound(glyph, repertoire);
+    if (sequence instanceof Error) return [];
+    return sequence.strokes.map((s) => classifier[s.feature]);
   };
   const rootSequence = new Map<string, number[]>();
   const roots = new Set([
@@ -155,7 +154,7 @@ export const getRequiredTargets = (
   const knownSet = new Set<string>(characters);
   while (queue.length) {
     const char = queue.shift()!;
-    const glyph = repertoire[char]!.glyph!;
+    const glyph = repertoire[char]?.glyph!;
     if (glyph.type === "compound") {
       compounds.add(char);
       if (config.primaryRoots.has(char) || config.secondaryRoots.has(char))

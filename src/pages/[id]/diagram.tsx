@@ -67,7 +67,8 @@ const Keyboard = () => {
         } catch {}
       }
       return { ...content, match };
-    } else if (content.type === "custom") {
+    }
+    if (content.type === "custom") {
       const mapping: Map<string, string> = new Map();
       content.mapping
         ?.trim()
@@ -201,7 +202,8 @@ const Sidebar = () => {
               {({ type }) => {
                 if (type === "element") {
                   return <ProFormText name="match" label="匹配" />;
-                } else if (type === "custom") {
+                }
+                if (type === "custom") {
                   return (
                     <ProFormTextArea
                       name="mapping"

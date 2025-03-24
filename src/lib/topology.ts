@@ -238,7 +238,7 @@ const findTopology = (renderedGlyph: RenderedGlyph) => {
   for (const [index1] of renderedGlyph.entries()) {
     for (const [index2] of renderedGlyph.entries()) {
       if (index2 >= index1) break;
-      const relations = topology.matrix[index1]![index2]!;
+      const relations = topology.matrix[index1]?.[index2]!;
       if (relations.some((v) => v.type === "交" || v.type === "连")) continue;
       const parallelIndex = relations.findIndex(
         (v) => v.type === "平行" && v.mainAxis === 0,

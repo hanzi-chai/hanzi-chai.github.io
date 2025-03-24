@@ -59,15 +59,15 @@ const verifySpecialRoots = (
 ) => {
   if (["土", "士"].includes(root.name)) {
     const [i1, _, i3] = indices as [number, number, number];
-    const upperHeng = component.glyph[i1]!.curveList[0]!;
-    const lowerHeng = component.glyph[i3]!.curveList[0]!;
+    const upperHeng = component.glyph[i1]?.curveList[0]!;
+    const lowerHeng = component.glyph[i3]?.curveList[0]!;
     const lowerIsLonger = curveLength(upperHeng) < curveLength(lowerHeng);
     return root.name === "土" ? lowerIsLonger : !lowerIsLonger;
   }
   if (["未", "末"].includes(root.name)) {
     const [i1, i2] = indices as [number, number];
-    const upperHeng = component.glyph[i1]!.curveList[0]!;
-    const lowerHeng = component.glyph[i2]!.curveList[0]!;
+    const upperHeng = component.glyph[i1]?.curveList[0]!;
+    const lowerHeng = component.glyph[i2]?.curveList[0]!;
     const lowerIsLonger = curveLength(upperHeng) < curveLength(lowerHeng);
     return root.name === "未" ? lowerIsLonger : !lowerIsLonger;
   }
@@ -76,8 +76,8 @@ const verifySpecialRoots = (
       return root.name === "囗";
     }
     const [i1, _, i3] = indices as [number, number, number];
-    const upperLeft = component.glyph[i1]!.curveList[0]!.controls[0];
-    const lowerRight = component.glyph[i3]!.curveList[0]!.controls.at(-1)!;
+    const upperLeft = component.glyph[i1]?.curveList[0]?.controls[0];
+    const lowerRight = component.glyph[i3]?.curveList[0]?.controls.at(-1)!;
     const xrange: Interval = [upperLeft[0], lowerRight[0]];
     const yrange: Interval = [upperLeft[1], lowerRight[1]];
     const otherStrokes = component.glyph.filter(
@@ -90,7 +90,7 @@ const verifySpecialRoots = (
   }
   if (["\ue087" /* 木无十 */, "\ue43d" /* 全字头 */].includes(root.name)) {
     const [i1] = indices as [number];
-    const attachPoint = component.glyph[i1]!.curveList[0]!.controls[0];
+    const attachPoint = component.glyph[i1]?.curveList[0]?.controls[0];
     const otherStrokes = component.glyph.filter(
       (_, index) => !indices.includes(index),
     );
@@ -132,7 +132,7 @@ export const generateSliceBinaries = (
         if (!strokeFeatureEqual(degenerator, cStroke.feature, rStroke.feature))
           continue;
         const realIndex = cIndex + start;
-        const cStrokeTopology = ctopology.matrix[realIndex]!.filter((_, i) =>
+        const cStrokeTopology = ctopology.matrix[realIndex]?.filter((_, i) =>
           indexList.includes(i),
         );
         if (!isEqual(cStrokeTopology, rStrokeTopology)) continue;
@@ -149,7 +149,7 @@ export const generateSliceBinaries = (
         others.map((y) => sortTwoNumbers([x, y])),
       );
       return allCombinations.every(([x, y]) => {
-        const relation = ctopology.matrix[y]![x]!;
+        const relation = ctopology.matrix[y]?.[x]!;
         return relation.every((cr) => cr.type !== "交");
       });
     });

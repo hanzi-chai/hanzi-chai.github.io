@@ -51,13 +51,13 @@ const DuplicationMatrix = () => {
             res.set(key, { flag: 1, items: [] });
           }
           res.get(key)!.flag *= 2;
-          res.get(key)!.items.push(name);
+          res.get(key)?.items.push(name);
         } else if (sequence[0] === y) {
           if (!res.has(key)) {
             res.set(key, { flag: 1, items: [] });
           }
           res.get(key)!.flag *= 3;
-          res.get(key)!.items.push(name);
+          res.get(key)?.items.push(name);
         }
       }
       const count = sumBy([...res.values()], (x) => (x.flag % 6 === 0 ? 1 : 0));
@@ -117,10 +117,9 @@ const DuplicationMatrix = () => {
               if (option === undefined) return false;
               const value = option.value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "");
               if (repertoire[value] !== undefined) {
-                return sequenceMap.get(value)!.startsWith(input);
-              } else {
-                return value.includes(input);
+                return sequenceMap.get(value)?.startsWith(input);
               }
+              return value.includes(input);
             }}
             filterSort={(a, b) => {
               return (
@@ -133,7 +132,7 @@ const DuplicationMatrix = () => {
           />
         </Form.Item>
       </Flex>
-      <Heatmap {...config} />;
+      <Heatmap {...config} />
     </>
   );
 };

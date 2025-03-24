@@ -43,9 +43,8 @@ const dumpAnalysisResult = (
     const analysis = customized.get(char) ?? compoundResults.get(char);
     if (!analysis) {
       return [char, ""];
-    } else {
-      return [char, analysis.sequence.map(display).join(" ")];
     }
+    return [char, analysis.sequence.map(display).join(" ")];
   });
   exportTSV(tsv, "拆分结果.txt");
 };

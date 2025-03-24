@@ -41,17 +41,14 @@ export async function roundTestConfig(config: Config) {
         description: "该配置在 libchai 中具有同样语义。",
       });
       return true;
-    } else {
-      notification.warning({
-        message: "配置环行失败",
-        description:
-          "该配置在 libchai 中具有不同语义。以下是两者的差异：\n" +
-          JSON.stringify(diff(config, rustConfig)),
-      });
-      console.log("config", config);
-      console.log("rustConfig", rustConfig);
-      return false;
     }
+    notification.warning({
+      message: "配置环行失败",
+      description: `该配置在 libchai 中具有不同语义。以下是两者的差异：\n${JSON.stringify(diff(config, rustConfig))}`,
+    });
+    console.log("config", config);
+    console.log("rustConfig", rustConfig);
+    return false;
   } catch (e) {
     notification.error({
       message: "配置校验失败，原因是：",
@@ -67,10 +64,9 @@ export const errorFeedback = <T extends number | boolean>(
   if (typeof res === "object" && "err" in res && "msg" in res) {
     notification.error({ message: `错误 ${res.err}`, description: res.msg });
     return true;
-  } else {
-    notification.success({ message: "操作成功" });
-    return false;
   }
+  notification.success({ message: "操作成功" });
+  return false;
 };
 
 export const verifyNewName = (newName: string) => {

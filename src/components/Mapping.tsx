@@ -445,7 +445,7 @@ const MappingRow = memo(
   },
 );
 
-export default function Mapping() {
+export default function MappingComponent() {
   const { mapping } = useAtomValue(keyboardAtom);
   const alphabet = useAtomValue(alphabetAtom);
   const reversedMapping = getReversedMapping(mapping, alphabet);

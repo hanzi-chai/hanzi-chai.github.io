@@ -24,9 +24,8 @@ const locationAtom = atomWithLocation();
 export const idAtom = atom((get) => {
   if (import.meta.env.MODE === "CF") {
     return get(locationAtom).pathname?.split("/")[1] ?? "";
-  } else {
-    return get(locationAtom).hash?.split("/")[1] ?? "";
   }
+  return get(locationAtom).hash?.split("/")[1] ?? "";
 });
 
 const configStorage = atomFamily((id: string) =>

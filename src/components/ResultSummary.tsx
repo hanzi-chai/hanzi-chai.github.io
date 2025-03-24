@@ -104,7 +104,7 @@ export default function ResultSummary({
               {serializer === "c3" &&
                 corners.map((sIndex, cornerType) =>
                   sIndex === index ? (
-                    <span key={cornerType + "a"}>{arrows[cornerType]}</span>
+                    <span key={`${cornerType}a`}>{arrows[cornerType]}</span>
                   ) : null,
                 )}
             </Flex>

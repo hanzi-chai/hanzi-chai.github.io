@@ -58,7 +58,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     useContext(CacheContext);
   if (sources[id] === undefined && conditions[id] === undefined) return null;
   const createSourceNode: Creator = (etype) => {
-    const label = "添加源节点" + (etype ? `（${renderType[etype]}）` : "");
+    const label = `添加源节点${etype ? `（${renderType[etype]}）` : ""}`;
     return {
       key: `create-source-${etype}`,
       label,
@@ -82,7 +82,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     };
   };
   const createConditionNode: Creator = (etype) => {
-    const label = "添加条件节点" + (etype ? `（${renderType[etype]}）` : "");
+    const label = `添加条件节点${etype ? `（${renderType[etype]}）` : ""}`;
     return {
       key: `create-condition-${etype}`,
       label,
@@ -150,12 +150,12 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   const items: (MenuItemType | MenuItemGroupType)[] = [];
   if (id[0] === "s") {
     if (id !== "s0") items.push(deleteNode);
-    if (sources[id]!.next === null)
+    if (sources[id]?.next === null)
       items.push(createSourceNode(), createConditionNode());
   } else {
     items.push(deleteNode);
     for (const label of ["positive", "negative"] as const) {
-      if (conditions[id]![label] === null)
+      if (conditions[id]?.[label] === null)
         items.push(createSourceNode(label), createConditionNode(label));
     }
   }
@@ -192,7 +192,7 @@ const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
     <>
       <ContextMenu id={id}>
         <ConditionButton type="dashed">
-          {renderName(data.object) + ": " + data.operator + "?"}
+          {`${renderName(data.object)}: ${data.operator}?`}
         </ConditionButton>
       </ContextMenu>
       <Handle type="target" position={Position.Top} />

@@ -116,8 +116,6 @@ export const getDummySVGStroke = (
         case "h":
         case "v":
           return { command, parameterList: [20] };
-        case "c":
-        case "z":
         default:
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
       }
@@ -175,7 +173,7 @@ export function getRecordFromTSV(text: string): Record<string, number> {
   tsv.forEach(([char, freq]) => {
     if (char === undefined || freq === undefined) return;
     const maybeNumber = Number(freq);
-    if (isNaN(maybeNumber)) return;
+    if (Number.isNaN(maybeNumber)) return;
     data[char] = maybeNumber;
   });
   return data;
@@ -200,7 +198,12 @@ export function getDistributionFromTSV(text: string): Distribution {
       lt_penalty_s,
       gt_penalty_s,
     ].map(Number) as [number, number, number];
-    if (isNaN(ideal) || isNaN(lt_penalty) || isNaN(gt_penalty)) return;
+    if (
+      Number.isNaN(ideal) ||
+      Number.isNaN(lt_penalty) ||
+      Number.isNaN(gt_penalty)
+    )
+      return;
     data[char] = { ideal, lt_penalty, gt_penalty };
   });
   return data;
@@ -229,15 +232,15 @@ const processExport = (content: string, filename: string) => {
 export const exportYAML = (config: object, filename: string) => {
   const unsafeContent = dump(config, { flowLevel: 4 });
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `"\\u${c.codePointAt(0)!.toString(16)}"`;
+    return `"\\u${c.codePointAt(0)?.toString(16)}"`;
   });
-  processExport(fileContent, filename + ".yaml");
+  processExport(fileContent, `${filename}.yaml`);
 };
 
 export const exportJSON = (data: object, filename: string) => {
   const unsafeContent = JSON.stringify(data);
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `\\u${c.codePointAt(0)!.toString(16)}`;
+    return `\\u${c.codePointAt(0)?.toString(16)}`;
   });
   processExport(fileContent, filename);
 };
@@ -253,11 +256,11 @@ export const renderIndexed = (
 ) => {
   if (element === undefined) {
     return "ε";
-  } else if (typeof element === "string") {
-    return display(element);
-  } else {
-    return renderSuperScript(display(element.element), element.index);
   }
+  if (typeof element === "string") {
+    return display(element);
+  }
+  return renderSuperScript(display(element.element), element.index);
 };
 
 export const renderSuperScript = (element: string, index: number) => {
@@ -299,19 +302,18 @@ const match = (
         (x) => "operandList" in x && x.operandList.includes(part),
       );
     return isTagMatched && isOperatorMatched && isPartMatched;
-  } else {
-    const isTagMatched =
-      tag === undefined || character.glyph?.tags?.includes(tag);
-    const isOperatorMatched =
-      operator === undefined ||
-      (character.glyph?.type === "compound" &&
-        character.glyph.operator.includes(operator));
-    const isPartMatched =
-      part === undefined ||
-      (character.glyph?.type === "compound" &&
-        character.glyph.operandList.includes(part));
-    return isTagMatched && isOperatorMatched && isPartMatched;
   }
+  const isTagMatched =
+    tag === undefined || character.glyph?.tags?.includes(tag);
+  const isOperatorMatched =
+    operator === undefined ||
+    (character.glyph?.type === "compound" &&
+      character.glyph.operator.includes(operator));
+  const isPartMatched =
+    part === undefined ||
+    (character.glyph?.type === "compound" &&
+      character.glyph.operandList.includes(part));
+  return isTagMatched && isOperatorMatched && isPartMatched;
 };
 
 export const makeCharacterFilter = (

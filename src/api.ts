@@ -49,7 +49,7 @@ export const fetchCharacterByUnicode = async (unicode: number) =>
   get<PrimitiveCharacter, undefined>(`repertoire/${unicode}`);
 
 export const remoteCreateWithoutUnicode = (payload: PUA) =>
-  post<number, PUA>(`repertoire`, payload);
+  post<number, PUA>("repertoire", payload);
 
 export const remoteCreate = (payload: PrimitiveCharacter) =>
   post<number, PrimitiveCharacter>(`repertoire/${payload.unicode}`, payload);
@@ -61,4 +61,4 @@ export const remoteRemove = (unicode: number) =>
   del<boolean, PrimitiveCharacter>(`repertoire/${unicode}`);
 
 export const remoteMutate = (payload: Mutation) =>
-  put<boolean, Mutation>(`repertoire`, payload);
+  put<boolean, Mutation>("repertoire", payload);

@@ -141,7 +141,7 @@ export function affineMerge(compound: Compound, glyphList: SVGGlyphWithBox[]) {
   } else {
     // 包围或结构，暂时还没有优化拼接的算法，用原来的仿射变换算法
     for (const [index, affine] of affineMap[operator].entries()) {
-      const transformed = affine.transformSVGGlyph(glyphList[index]!.strokes);
+      const transformed = affine.transformSVGGlyph(glyphList[index]?.strokes);
       transformedGlyphs.push(transformed);
     }
   }

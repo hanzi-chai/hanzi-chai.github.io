@@ -199,7 +199,7 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
     if (matched) {
       const tokens = Array.from(rule.formula);
       for (let i = 0; i < tokens.length; i = i + 2) {
-        const charIndex = tokens[i]!.toLowerCase();
+        const charIndex = tokens[i]?.toLowerCase();
         const elementIndex = tokens[i + 1]!;
         const elements = signedIndex(totalElements, charIndex);
         if (elements === undefined) return undefined;
@@ -259,7 +259,7 @@ export const assemble = (
       customized.get(character) || compoundResults.get(character);
     if (shapeInfo === undefined) continue;
     const final: Assembly[] = [];
-    const readings = [...repertoire[character]!.readings];
+    const readings = [...repertoire[character]?.readings];
     if (readings.length === 0) {
       readings.push({ pinyin: "", importance: 100 });
     }
@@ -272,7 +272,7 @@ export const assemble = (
         custom: customLookup(character),
       };
       const elements = func(result, repertoire, extra);
-      characterCache.set(character + ":" + reading.pinyin, elements);
+      characterCache.set(`${character}:${reading.pinyin}`, elements);
       const summary = summarize(elements);
       let isDuplicated = false;
       for (const previous of final) {
@@ -307,7 +307,7 @@ export const assemble = (
     for (const [i, character] of characters.entries()) {
       const pinyin = syllables[i]!;
       // 复用已有的编码
-      const hash = character + ":" + pinyin;
+      const hash = `${character}:${pinyin}`;
       let elements = characterCache.get(hash);
       if (elements !== undefined) {
         totalElements.push(elements);
@@ -332,7 +332,7 @@ export const assemble = (
     if (!valid) continue;
     const wordElements = gather(totalElements, rules);
     if (wordElements === undefined) continue;
-    const hash = word + ":" + summarize(wordElements);
+    const hash = `${word}:${summarize(wordElements)}`;
     if (knownWords.has(hash)) continue;
     // 多音的多字词数量很少，所以不再计算分频比例，直接设为 100
     result.push({
@@ -362,11 +362,10 @@ export const summarize = (elements: (IndexedElement | undefined)[]) => {
     .map((x) => {
       if (x === undefined) return "ε";
       if (typeof x === "string") return x;
-      else if (x.index === 0) {
+      if (x.index === 0) {
         return x.element;
-      } else {
-        return `${x.element}.${x.index}`;
       }
+      return `${x.element}.${x.index}`;
     })
     .join(" ");
 };

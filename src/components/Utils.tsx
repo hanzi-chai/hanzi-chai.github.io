@@ -61,7 +61,7 @@ export const Uploader = ({
 }) => {
   return (
     <Upload
-      accept={"." + (type ?? "yaml")}
+      accept={`.${type ?? "yaml"}`}
       customRequest={({ file }) => {
         const reader = new FileReader();
         reader.addEventListener("load", () => {

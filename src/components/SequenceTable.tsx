@@ -71,7 +71,7 @@ const ExportCode = () => {
     <Button
       disabled={code === null}
       onClick={() => {
-        exportTSV(code!.map(flatten), "code.txt");
+        exportTSV(code?.map(flatten), "code.txt");
       }}
     >
       导出码表
@@ -96,7 +96,7 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
         }
       />
       <Space>
-        <Button onClick={() => clearFilters && clearFilters()}>重置</Button>
+        <Button onClick={() => clearFilters?.()}>重置</Button>
         <Button type="primary" onClick={() => confirm()}>
           搜索
         </Button>

@@ -34,7 +34,7 @@ const preprocess = (partialMetric: PartialMetric) => {
       subtype: "当量",
       value: undefined,
     });
-    for (const [index, value] of fingering!.entries()) {
+    for (const [index, value] of fingering?.entries()) {
       if (value === undefined) continue;
       result.push({
         tier,
@@ -60,7 +60,7 @@ const preprocess = (partialMetric: PartialMetric) => {
     subtype: "当量",
     value: pair_equivalence,
   });
-  for (const [index, value] of partialMetric.fingering!.entries()) {
+  for (const [index, value] of partialMetric.fingering?.entries()) {
     if (value === undefined) continue;
     result.push({
       tier: "加权",
@@ -103,13 +103,13 @@ export default function MetricTable() {
                 if (typeof value === "number") {
                   if (value === 0) {
                     return "0";
-                  } else if (value < 1) {
-                    return `${(value * 100).toFixed(2)}%`;
-                  } else {
-                    return Number.isInteger(value)
-                      ? value.toString()
-                      : value.toFixed(3);
                   }
+                  if (value < 1) {
+                    return `${(value * 100).toFixed(2)}%`;
+                  }
+                  return Number.isInteger(value)
+                    ? value.toString()
+                    : value.toFixed(3);
                 }
                 return "-";
               },

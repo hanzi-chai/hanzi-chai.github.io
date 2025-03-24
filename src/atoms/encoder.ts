@@ -47,9 +47,8 @@ export const conditionsAtom = focusAtom(encoderAtom, (o) =>
 const isMulti = (s: ShortCodeRule) => {
   if ("length_equal" in s) {
     return s.length_equal > 1;
-  } else {
-    return s.length_in_range[1] > 1;
   }
+  return s.length_in_range[1] > 1;
 };
 
 const makeTier = (top: number, levelWeights: LevelWeights[]) => ({

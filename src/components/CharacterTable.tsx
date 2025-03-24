@@ -57,7 +57,7 @@ function ReadingList({ readings }: { readings: Reading[] }) {
         const core = <Element key={index}>{reading.pinyin}</Element>;
         if (readings.length === 1) return core;
         return (
-          <Tooltip key={index} title={reading.importance + "%"}>
+          <Tooltip key={index} title={`${reading.importance}%`}>
             {core}
           </Tooltip>
         );

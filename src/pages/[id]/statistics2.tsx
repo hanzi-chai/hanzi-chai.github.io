@@ -51,7 +51,7 @@ function interpolate(color1: string, color2: string, percent: number) {
   const b = Math.round(b1 + (b2 - b1) * percent);
 
   // Convert the interpolated RGB values back to a hex color
-  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 const filterType = (type: PartialWeightTypes, combined: Combined[]) => {
   const filtered = type.includes("character")

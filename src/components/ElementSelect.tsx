@@ -40,10 +40,9 @@ export default function ElementSelect(
         if (option === undefined) return false;
         const value = option.value;
         if (repertoire[value] !== undefined) {
-          return sequenceMap.get(value)!.startsWith(input);
-        } else {
-          return value.includes(input);
+          return sequenceMap.get(value)?.startsWith(input);
         }
+        return value.includes(input);
       }}
       filterSort={(a, b) => {
         return (

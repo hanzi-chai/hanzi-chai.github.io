@@ -60,7 +60,7 @@ function Ranking({ model }: { model: keyof typeof models }) {
         if (!modelDataByUser.has(d.user)) {
           modelDataByUser.set(d.user, []);
         }
-        modelDataByUser.get(d.user)!.push(...d.data.map((x) => x.time));
+        modelDataByUser.get(d.user)?.push(...d.data.map((x) => x.time));
       }
       const dataSource = [...modelDataByUser].map(([user, data]) => {
         return {
@@ -529,7 +529,7 @@ const Equivalence = () => {
             };
           });
           const payload: EquivalenceData = {
-            user: user!.id,
+            user: user?.id,
             model,
             data,
           };

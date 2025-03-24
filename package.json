@@ -29,7 +29,7 @@
     "preview": "vite preview --mode CF --outDir dist/cf",
     "version": "tsc && npm run build:BEX && npm run build:PAGES && npm run build:CF",
     "lint": "npx @biomejs/biome lint ./src",
-    "fix": "npx @biomejs/biome lint --fix ./src",
+    "fix": "npx @biomejs/biome lint --fix --unsafe ./src",
     "format": "npx @biomejs/biome format --write . && git add .",
     "test": "vitest",
     "testui": "vitest --ui --coverage",

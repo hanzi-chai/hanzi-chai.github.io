@@ -97,7 +97,7 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
         ...base,
         name: charOrName,
       };
-      let char;
+      let char: string;
       if (remote) {
         const unicode = await remoteCreateWithoutUnicode({
           type,
@@ -113,21 +113,20 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
         addUser(char, value);
       }
       return char;
-    } else {
-      const character: PrimitiveCharacter = {
-        unicode: charOrName.codePointAt(0)!,
-        name: null,
-        ...base,
-      };
-      if (remote) {
-        const res = await remoteCreate(character);
-        if (errorFeedback(res)) return;
-        add(charOrName, character);
-      } else {
-        addUser(charOrName, character);
-      }
-      return charOrName;
     }
+    const character: PrimitiveCharacter = {
+      unicode: charOrName.codePointAt(0)!,
+      name: null,
+      ...base,
+    };
+    if (remote) {
+      const res = await remoteCreate(character);
+      if (errorFeedback(res)) return;
+      add(charOrName, character);
+    } else {
+      addUser(charOrName, character);
+    }
+    return charOrName;
   };
   return (
     <Form<CreateProps>
@@ -316,10 +315,9 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
         return true;
       }
       return false;
-    } else {
-      addUser(name, newCharacter);
-      return true;
     }
+    addUser(name, newCharacter);
+    return true;
   };
   const items: MenuProps["items"] = [
     {
@@ -389,7 +387,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
   }
   return (
     <Dropdown menu={{ items }}>
-      <Button>{(isCustomization ? "自定义" : "编辑") + "字形"}</Button>
+      <Button>{`${isCustomization ? "自定义" : "编辑"}字形`}</Button>
     </Dropdown>
   );
 };
@@ -422,10 +420,9 @@ export const EditReading = ({
         return true;
       }
       return false;
-    } else {
-      addUser(name, newCharacter);
-      return true;
     }
+    addUser(name, newCharacter);
+    return true;
   };
   const items: MenuProps["items"] = [
     {
@@ -448,7 +445,7 @@ export const EditReading = ({
   }
   return (
     <Dropdown menu={{ items }}>
-      <Button>{(isCustomization ? "自定义" : "编辑") + "字音"}</Button>
+      <Button>{`${isCustomization ? "自定义" : "编辑"}字音`}</Button>
     </Dropdown>
   );
 };

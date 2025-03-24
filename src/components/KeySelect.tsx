@@ -60,28 +60,27 @@ export default function KeySelect({
         const key: Key = JSON.parse(option.value);
         if (typeof key === "string") {
           return key.includes(input);
-        } else {
-          if (form[key.element] !== undefined) {
-            return sequenceMap.get(key.element)?.startsWith(input) ?? false;
-          } else {
-            return key.element.includes(input);
-          }
         }
+        if (form[key.element] !== undefined) {
+          return sequenceMap.get(key.element)?.startsWith(input) ?? false;
+        }
+        return key.element.includes(input);
       }}
       filterSort={(a, b) => {
         const ak: Key = JSON.parse(a.value);
         const bk: Key = JSON.parse(b.value);
         if (typeof ak === "string" && typeof bk === "string") {
           return ak.localeCompare(bk);
-        } else if (typeof ak === "string") {
-          return -1;
-        } else if (typeof bk === "string") {
-          return 1;
-        } else {
-          const amapped = sequenceMap.get(ak.element) ?? "";
-          const bmapped = sequenceMap.get(bk.element) ?? "";
-          return amapped.localeCompare(bmapped);
         }
+        if (typeof ak === "string") {
+          return -1;
+        }
+        if (typeof bk === "string") {
+          return 1;
+        }
+        const amapped = sequenceMap.get(ak.element) ?? "";
+        const bmapped = sequenceMap.get(bk.element) ?? "";
+        return amapped.localeCompare(bmapped);
       }}
     />
   );

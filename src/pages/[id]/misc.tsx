@@ -50,13 +50,13 @@ const getComponentCounts = (repertoire: Repertoire, characters: string[]) => {
   const knownSet = new Set<string>(characters);
   while (queue.length) {
     const char = queue.shift()!;
-    const glyph = repertoire[char]!.glyph!;
+    const glyph = repertoire[char]?.glyph!;
     if (glyph.type === "basic_component") {
       二分.set(char, [char]);
     } else {
       const parts = glyph.operandList.slice(0, 2);
       if (parts.every((x) => 二分.has(x))) {
-        const components = parts.map((x) => 二分.get(x)![0]!);
+        const components = parts.map((x) => 二分.get(x)?.[0]!);
         二分.set(char, components);
       } else {
         for (const part of parts) {
@@ -73,7 +73,7 @@ const getComponentCounts = (repertoire: Repertoire, characters: string[]) => {
     const components = 二分.get(char)!;
     for (const component of components) {
       if (!count.has(component)) count.set(component, []);
-      count.get(component)!.push(char);
+      count.get(component)?.push(char);
     }
   }
   return count;
@@ -91,9 +91,8 @@ const RootCheckbox = ({ name }: { name: string }) => {
           setSelected((prev) => {
             if (checked) {
               return [...prev, name || ""];
-            } else {
-              return prev.filter((x) => x !== name);
             }
+            return prev.filter((x) => x !== name);
           });
         }}
       />
@@ -188,9 +187,9 @@ const RootTree = () => {
   }
   const elements = Object.keys(mapping).filter((x) => repertoire[x]);
   for (const element of elements) {
-    const glyph = repertoire[element]!.glyph!;
+    const glyph = repertoire[element]?.glyph!;
     const rendered = renderSVGGlyph((glyph as BasicComponent).strokes);
-    parentMap.set(element, classifier[rendered[0]!.feature].toString());
+    parentMap.set(element, classifier[rendered[0]?.feature].toString());
     for (let i = rendered.length - 1; i > 1; --i) {
       const slice = rendered.slice(0, i);
       const hash = JSON.stringify(degenerate(degenerator, slice));
@@ -240,8 +239,8 @@ export default function Misc() {
           length: slice.length,
           count: [],
         });
-      degeneratedMap.get(hash)!.names.push(name);
-      degeneratedMap.get(hash)!.count.push(...components.get(name)!);
+      degeneratedMap.get(hash)?.names.push(name);
+      degeneratedMap.get(hash)?.count.push(...components.get(name)!);
     }
   }
   // 找出独立字根
@@ -252,7 +251,7 @@ export default function Misc() {
   for (const [hash, { length, names, count }] of degeneratedMap) {
     const key = names.join(", ");
     if (!invertedMap.has(key)) invertedMap.set(key, []);
-    invertedMap.get(key)!.push({ hash, length, count });
+    invertedMap.get(key)?.push({ hash, length, count });
   }
   // 生成表格数据
   const dataSource: Degenerated[] = [];

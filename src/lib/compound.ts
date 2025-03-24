@@ -211,8 +211,8 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
 const zhenmaSerializer: Serializer = (operandResults, glyph) => {
   const sequence: string[] = [];
   if (glyph.operator === "⿶") {
-    sequence.push(...operandResults[1]!.sequence);
-    sequence.push(...operandResults[0]!.sequence);
+    sequence.push(...operandResults[1]?.sequence);
+    sequence.push(...operandResults[0]?.sequence);
   } else {
     operandResults.map((x) => x.sequence).forEach((x) => sequence.push(...x));
   }
@@ -274,11 +274,11 @@ const _getBR = (x: PartitionResult, already?: boolean) => {
   if ("operandResults" in x && /[⿴⿵⿶⿷⿸⿹⿺]/.test(x.operator)) {
     const inner = x.operandResults[1]!;
     return inner.sequence[inner.corners[3]]!;
-  } else if (x.corners[3] !== x.corners[0]) {
-    return x.sequence[x.corners[3]]!;
-  } else {
-    return x.sequence.at(-1)!;
   }
+  if (x.corners[3] !== x.corners[0]) {
+    return x.sequence[x.corners[3]]!;
+  }
+  return x.sequence.at(-1)!;
 };
 
 const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
@@ -286,13 +286,12 @@ const getBR = (x: PartitionResult, already?: boolean) => {
   if (!already) return x.sequence[x.corners[3]]!;
   if (x.corners[3] !== x.corners[0]) {
     return x.sequence[x.corners[3]]!;
-  } else {
-    if ("operandResults" in x) {
-      const inner = x.operandResults[1]!;
-      return inner.sequence[inner.corners[3]]!;
-    }
-    return x.sequence.find((_, i) => i !== x.corners[0])!;
   }
+  if ("operandResults" in x) {
+    const inner = x.operandResults[1]!;
+    return inner.sequence[inner.corners[3]]!;
+  }
+  return x.sequence.find((_, i) => i !== x.corners[0])!;
 };
 
 const c3Serializer: Serializer = (rawResults, glyph) => {
@@ -427,24 +426,24 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
         for (const part of dieyan.operandResults)
           sequence.push(...part.full[0]!);
         if (regularizedResults.length > 2) {
-          sequence.push(regularizedResults[1]!.full[0]!);
-          sequence.push(regularizedResults.at(-1)!.full.at(-1)!);
+          sequence.push(regularizedResults[1]?.full[0]!);
+          sequence.push(regularizedResults.at(-1)?.full.at(-1)!);
         } else {
-          sequence.push(...getShouMo(regularizedResults[1]!.full));
+          sequence.push(...getShouMo(regularizedResults[1]?.full));
         }
         break;
       default: // 叠眼在中间或末尾
         for (let index = 0; index < dieyanIndex; ++index) {
-          aboveDieyanSequence.push(...regularizedResults[index]!.full);
+          aboveDieyanSequence.push(...regularizedResults[index]?.full);
         }
         sequence.push(...aboveDieyanSequence.slice(0, 2));
         if (dieyanIndex + 1 < regularizedResults.length) {
           // 叠眼在中间
-          sequence.push(dieyan.operandResults[0]!.full[0]!);
+          sequence.push(dieyan.operandResults[0]?.full[0]!);
           if (sequence.length === 2) {
-            sequence.push(dieyan.operandResults.at(-1)!.full[0]!);
+            sequence.push(dieyan.operandResults.at(-1)?.full[0]!);
           }
-          sequence.push(regularizedResults.at(-1)!.full.at(-1)!);
+          sequence.push(regularizedResults.at(-1)?.full.at(-1)!);
         } else {
           sequence.push(...dieyan.full);
         }
@@ -460,21 +459,21 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
         dieyanIndex,
       )! as CompoundGenuineAnalysis;
       if (dieyanIndex !== -1) {
-        sequence.push(left.operandResults[0]!.full[0]!);
+        sequence.push(left.operandResults[0]?.full[0]!);
         if (dieyanIndex === 0)
-          sequence.push(dieyan.operandResults.at(-1)!.full[0]!);
-        else sequence.push(dieyan.operandResults[0]!.full[0]!);
-        sequence.push(left.operandResults.at(-1)!.full.at(-1)!);
+          sequence.push(dieyan.operandResults.at(-1)?.full[0]!);
+        else sequence.push(dieyan.operandResults[0]?.full[0]!);
+        sequence.push(left.operandResults.at(-1)?.full.at(-1)!);
       }
     }
     if (sequence.length > 0) {
       // 已经处理完左部，直接取右部末码即可
-      sequence.push(regularizedResults.at(-1)!.full.at(-1)!);
+      sequence.push(regularizedResults.at(-1)?.full.at(-1)!);
     } else {
       // 一般情况，左部、中部最多各取首尾两根
       sequence.push(...getShouMo(left.full));
       if (regularizedResults.length > 2) {
-        sequence.push(...getShouMo(regularizedResults[1]!.full));
+        sequence.push(...getShouMo(regularizedResults[1]?.full));
       }
       // 如果左部和中部已经有 4 根，舍弃一根
       if (sequence.length === 4) sequence.pop();
@@ -483,7 +482,7 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
         index < regularizedResults.length;
         ++index
       ) {
-        sequence.push(...regularizedResults[index]!.full);
+        sequence.push(...regularizedResults[index]?.full);
       }
     }
   } else {

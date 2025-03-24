@@ -116,27 +116,26 @@ const ListObjective = ({
         />
       </Flex>
       <Flex gap="small">
-        {value &&
-          value.map((num, index) => (
-            <Form.Item
-              key={index}
-              label={weightTitles[index]}
-              style={{
-                marginBottom: 0,
-                display: weightTitles[index] === "备用" ? "none" : "initial",
+        {value?.map((num, index) => (
+          <Form.Item
+            key={index}
+            label={weightTitles[index]}
+            style={{
+              marginBottom: 0,
+              display: weightTitles[index] === "备用" ? "none" : "initial",
+            }}
+          >
+            <InputNumber
+              style={{ width: "64px" }}
+              value={num}
+              onChange={(n) => {
+                const newValue = [...value];
+                newValue[index] = n;
+                onChange(newValue);
               }}
-            >
-              <InputNumber
-                style={{ width: "64px" }}
-                value={num}
-                onChange={(n) => {
-                  const newValue = [...value];
-                  newValue[index] = n;
-                  onChange(newValue);
-                }}
-              />
-            </Form.Item>
-          ))}
+            />
+          </Form.Item>
+        ))}
       </Flex>
     </>
   );
@@ -421,7 +420,7 @@ const PartialObjective = ({
   );
 };
 
-const Regularization = ({}) => {
+const RegularizationComponent = () => {
   const [regularization, set] = useAtom(regularizationAtom);
   return (
     <>
@@ -568,7 +567,7 @@ export default function Optimization() {
         <PartialObjective title="一字词简码" type="characters_short" />
         <PartialObjective title="多字词全码" type="words_full" />
         <PartialObjective title="多字词简码" type="words_short" />
-        {/* <Regularization /> */}
+        {/* <RegularizationComponent /> */}
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>
