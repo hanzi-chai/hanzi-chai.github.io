@@ -1,4 +1,10 @@
 import {
+  ProForm,
+  ProFormGroup,
+  ProFormItem,
+  ProFormList,
+} from "@ant-design/pro-components";
+import {
   Button,
   Checkbox,
   Flex,
@@ -19,6 +25,7 @@ import {
   repertoireAtom,
 } from "~/atoms";
 import Element from "~/components/Element";
+import ElementSelect from "~/components/ElementSelect";
 import { Display } from "~/components/Utils";
 import {
   type BasicComponent,
@@ -28,7 +35,6 @@ import {
   type Feature,
   renderSVGGlyph,
   type Repertoire,
-  type AnalysisConfig,
 } from "~/lib";
 
 interface Degenerated {
@@ -111,32 +117,33 @@ const RootCheckbox = ({ name }: { name: string }) => {
 };
 
 interface TreeNode {
-  name: string;
-  children: TreeNode[];
+  字根: string;
+  孩子们: TreeNode[];
 }
 
-function buildForest(map: Map<string, string | undefined>): TreeNode[] {
+function 构建字根树(map: Map<string, string | undefined>): TreeNode {
   const nodes = new Map<string, TreeNode>();
-  const roots: TreeNode[] = [];
+  let roots: TreeNode | undefined = undefined;
 
   // 先创建所有的节点
   for (const key of map.keys()) {
-    nodes.set(key, { name: key, children: [] });
+    nodes.set(key, { 字根: key, 孩子们: [] });
   }
 
   // 组装树结构
   for (const [child, parent] of map.entries()) {
     const childNode = nodes.get(child)!;
     if (parent === undefined) {
-      roots.push(childNode);
+      roots = childNode;
     } else {
       const parentNode = nodes.get(parent);
       if (parentNode) {
-        parentNode.children.push(childNode);
+        parentNode.孩子们.push(childNode);
       }
     }
   }
 
+  if (!roots) throw new Error("没有找到根节点");
   return roots;
 }
 
@@ -144,10 +151,10 @@ const Tree = ({ tree }: { tree: TreeNode }) => {
   return (
     <Flex>
       <Element>
-        <Display name={tree.name} />
+        <Display name={tree.字根} />
       </Element>
       <div style={{ paddingLeft: "8px" }}>
-        {tree.children.map((child, index) => (
+        {tree.孩子们.map((child, index) => (
           <Flex key={index} gap="4px">
             <span>→</span>
             <Tree key={index} tree={child} />
@@ -181,9 +188,9 @@ const RootTree = () => {
     }
   }
 
-  const parentMap = new Map<string, string | undefined>();
+  const parentMap = new Map<string, string | undefined>([["", undefined]]);
   for (let i = 1; i <= 5; ++i) {
-    parentMap.set(i.toString(), undefined);
+    parentMap.set(i.toString(), "");
   }
   const elements = Object.keys(mapping).filter((x) => repertoire[x]);
   for (const element of elements) {
@@ -201,13 +208,51 @@ const RootTree = () => {
       }
     }
   }
-  const trees = buildForest(parentMap);
+  const 总树 = 构建字根树(parentMap);
   return (
     <Flex vertical gap="8px 0" wrap="wrap" style={{ height: "2400px" }}>
-      {trees.map((tree, index) => (
+      <Button onClick={() => exportYAML(总树, "tree")}>导出</Button>
+      {总树.孩子们.map((tree, index) => (
         <Tree key={index} tree={tree} />
       ))}
     </Flex>
+  );
+};
+
+interface 双编码分解 {
+  字根: string;
+  第一码: string;
+  第二码: string;
+}
+
+const 双编码原子 = atomWithStorage<双编码分解[]>("dual_code", []);
+
+const 双编码编辑器 = () => {
+  const [双编码信息, set双编码信息] = useAtom(双编码原子);
+  return (
+    <ProForm<{ 双编码信息: 双编码分解[] }>
+      initialValues={{ 双编码信息 }}
+      layout="horizontal"
+      onValuesChange={async (_, { 双编码信息 }) => {
+        console.log("双编码信息", 双编码信息);
+        set双编码信息(双编码信息);
+      }}
+    >
+      <Button onClick={() => exportYAML(双编码信息, "dual")}>导出</Button>
+      <ProFormList name="双编码信息" alwaysShowItemLabel>
+        <ProFormGroup>
+          <ProFormItem name="字根" label="字根">
+            <ElementSelect />
+          </ProFormItem>
+          <ProFormItem name="第一码" label="第一码">
+            <ElementSelect />
+          </ProFormItem>
+          <ProFormItem name="第二码" label="第二码">
+            <ElementSelect />
+          </ProFormItem>
+        </ProFormGroup>
+      </ProFormList>
+    </ProForm>
   );
 };
 
@@ -321,6 +366,7 @@ export default function Misc() {
     <>
       <Typography.Title level={2}>字根研究</Typography.Title>
       <RootTree />
+      <双编码编辑器 />
       <Flex justify="center" gap="middle">
         <Statistic value={最大字根数} title="总笔画数" />
         <Statistic value={degeneratedMap.size} title="总计" />

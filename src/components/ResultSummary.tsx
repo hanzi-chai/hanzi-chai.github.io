@@ -3,7 +3,6 @@ import {
   useAddAtom,
   customizeAtom,
   useRemoveAtom,
-  customizeCornersAtom,
   serializerAtom,
 } from "~/atoms";
 import { Button, Flex, Form, Popover } from "antd";
@@ -28,19 +27,13 @@ const Customize = ({
   initialValues: string[];
 }) => {
   const add = useAddAtom(customizeAtom);
-  const addCorner = useAddAtom(customizeCornersAtom);
-  const serializer = useAtomValue(serializerAtom);
-  const showCorners = serializer === "c3" || serializer === "snow2";
   return (
     <ProForm<{ content: string[]; corners: CornerSpecifier }>
       title={component}
       layout="horizontal"
       initialValues={{ content: initialValues, corners: [0, 0, 0, 0] }}
-      onFinish={async ({ content, corners }) => {
+      onFinish={async ({ content }) => {
         add(component, content);
-        if (corners) {
-          addCorner(component, corners);
-        }
         return true;
       }}
     >
@@ -61,16 +54,6 @@ const Customize = ({
           </Form.Item>
         )}
       </ProFormList>
-      <ProFormGroup>
-        {showCorners &&
-          range(4).map((i) => (
-            <ProFormSelect
-              key={i}
-              name={["corners", i]}
-              options={wordLengthArray}
-            />
-          ))}
-      </ProFormGroup>
     </ProForm>
   );
 };
@@ -84,15 +67,10 @@ export default function ResultSummary({
   analysis: CommonAnalysis;
   disableCustomize?: boolean;
 }) {
-  const { sequence, corners } = analysis;
+  const { sequence } = analysis;
   const customize = useAtomValue(customizeAtom);
-  const customizeCorners = useAtomValue(customizeCornersAtom);
   const remove = useRemoveAtom(customizeAtom);
-  const removeCorner = useRemoveAtom(customizeCornersAtom);
   const overrideRootSeries = customize[char];
-  const overrideCorners = customizeCorners[char];
-  const arrows = ["↖", "↗", "↙", "↘"] as const;
-  const serializer = useAtomValue(serializerAtom);
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
@@ -101,12 +79,6 @@ export default function ResultSummary({
           return (
             <Flex key={index} align="center">
               <ElementWithTooltip element={x} />
-              {serializer === "c3" &&
-                corners.map((sIndex, cornerType) =>
-                  sIndex === index ? (
-                    <span key={`${cornerType}a`}>{arrows[cornerType]}</span>
-                  ) : null,
-                )}
             </Flex>
           );
         })}
@@ -118,25 +90,11 @@ export default function ResultSummary({
             ))}
           </Flex>
         )}
-        {overrideCorners && (
-          <Flex gap="small" align="center">
-            {overrideCorners.map((x, i) => (
-              <span key={i}>{x}</span>
-            ))}
-          </Flex>
-        )}
       </Flex>
       {!disableCustomize && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {overrideRootSeries && (
-            <Button
-              onClick={() => {
-                remove(char);
-                removeCorner(char);
-              }}
-            >
-              取消自定义
-            </Button>
+            <Button onClick={() => remove(char)}>取消自定义</Button>
           )}
           <Popover
             title=""

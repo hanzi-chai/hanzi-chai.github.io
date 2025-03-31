@@ -500,7 +500,6 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
 };
 
 const snow2Serializer: Serializer = (operandResults, glyph) => {
-  const sequence: string[] = [];
   const order =
     glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
   const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
@@ -508,8 +507,11 @@ const snow2Serializer: Serializer = (operandResults, glyph) => {
   ).map((i) => operandResults[i]!);
   const first = sortedOperandResults[0]!;
   const second = sortedOperandResults[1]!;
-  sequence.push(first.sequence[0]!);
-  sequence.push(second.sequence[0]!);
+  const sequence = [
+    first.sequence[0]!,
+    second.sequence[0]!,
+    first.sequence.length > 1 ? "w" : "q",
+  ];
   return {
     sequence,
     corners: [0, 0, 0, 0],

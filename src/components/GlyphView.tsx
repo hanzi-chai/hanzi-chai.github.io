@@ -201,6 +201,7 @@ const Rectangles = ({
     <>
       {shouldDrawFist && (
         <rect
+          fill="currentColor"
           x={firstCurve.controls[0][0] - strokeWidth / 2}
           y={firstCurve.controls[0][1] - strokeWidth / 2}
           width={strokeWidth}
@@ -209,8 +210,9 @@ const Rectangles = ({
       )}
       {shouldDrawLast && (
         <rect
-          x={lastCurve.controls.at(-1)?.[0] - strokeWidth / 2}
-          y={lastCurve.controls.at(-1)?.[1] - strokeWidth / 2}
+          fill="currentColor"
+          x={lastCurve.controls.at(-1)![0] - strokeWidth / 2}
+          y={lastCurve.controls.at(-1)![1] - strokeWidth / 2}
           width={strokeWidth}
           height={strokeWidth}
         />

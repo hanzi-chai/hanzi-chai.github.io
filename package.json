@@ -7,7 +7,7 @@
     "email": "i@tansongchen.com",
     "url": "https://tansongchen.com"
   },
-  "version": "0.2.3",
+  "version": "0.2.4",
   "type": "module",
   "repository": {
     "type": "git",
@@ -59,7 +59,7 @@
     "jotai-optics": "^0.4.0",
     "js-md5": "^0.8.3",
     "js-yaml": "4.1.0",
-    "libchai": "^0.2.3",
+    "libchai": "^0.2.4",
     "lodash-es": "^4.17.21",
     "mathjs": "^13.0.1",
     "nanoid": "^5.0.7",
@@ -111,5 +111,7 @@
   "peerDependencies": {
     "decimal.js": "^10.4.3"
   },
-  "pre-commit": ["format"]
+  "pre-commit": [
+    "format"
+  ]
 }

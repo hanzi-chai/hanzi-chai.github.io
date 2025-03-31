@@ -70,7 +70,7 @@ export default function Optimizer() {
   const metaheuristic = useAtomValue(metaheuristicAtom);
   const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
   const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
-  const [bestMetric, setBestMetric] = useState<Metric | undefined>(undefined);
+  const [bestMetric, setBestMetric] = useState("");
   const [optimizing, setOptimizing] = useState(false);
   const [progress, setProgress] = useState<
     { steps: number; temperature: number } | undefined
@@ -87,7 +87,7 @@ export default function Optimizer() {
         onClick={() => {
           setResult([]);
           setBestResult(undefined);
-          setBestMetric(undefined);
+          setBestMetric("");
           setAutoParams(undefined);
           setProgress(undefined);
           setOptimizing(true);
@@ -95,10 +95,9 @@ export default function Optimizer() {
           worker.onmessage = (event: MessageEvent<WorkerOutput>) => {
             const { data } = event;
             const date = new Date();
-            let config: Config;
             switch (data.type) {
               case "better_solution":
-                config = load(data.config) as Config;
+                const config = data.config;
                 config.info ??= {};
                 config.info.version = formatDate(date);
                 setBestResult(config);
@@ -141,7 +140,7 @@ export default function Optimizer() {
       {bestMetric && bestResult ? (
         <>
           <Typography.Text>
-            <pre>{dump(bestMetric)}</pre>
+            <pre>{bestMetric}</pre>
           </Typography.Text>
           <Flex justify="center" gap="middle">
             <Button
@@ -152,6 +151,9 @@ export default function Optimizer() {
               }}
             >
               在新标签页中打开方案
+            </Button>
+            <Button onClick={() => exportYAML(bestResult, "优化结果")}>
+              下载方案
             </Button>
           </Flex>
         </>

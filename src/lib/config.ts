@@ -43,7 +43,6 @@ export interface Analysis {
   degenerator?: Degenerator;
   selector?: Selector;
   customize?: Record<string, string[]>;
-  customizeCorners?: Record<string, CornerSpecifier>;
   strong?: string[];
   weak?: string[];
   serializer?: "sequential" | "c3" | "zhangma" | "zhenma" | "snow2" | "xkjd";
@@ -228,22 +227,25 @@ export interface AtomicConstraint {
   keys?: string[];
 }
 
-interface ElementAffinity {
-  from: ElementWithIndex;
-  to: ElementWithIndex;
+interface ElementAffinityTarget {
+  element: ElementWithIndex;
   affinity: number;
 }
 
-interface KeyAffinity {
-  from: ElementWithIndex;
-  to: string;
+interface KeyAffinityTarget {
+  key: string;
   affinity: number;
+}
+
+interface AffinityList<T> {
+  from: ElementWithIndex;
+  to: T[];
 }
 
 export interface Regularization {
   strength?: number; // default 1e-2
-  element_affinities?: ElementAffinity[];
-  key_affinities?: KeyAffinity[];
+  element_affinities?: AffinityList<ElementAffinityTarget>[];
+  key_affinities?: AffinityList<KeyAffinityTarget>[];
 }
 
 export interface Objective {
@@ -329,8 +331,8 @@ export interface Config {
   data?: Data;
   analysis?: Analysis;
   algebra?: Algebra;
-  form?: Keyboard;
-  encoder?: EncoderConfig;
+  form: Keyboard;
+  encoder: EncoderConfig;
   optimization?: Optimization;
   diagram?: DiagramConfig;
 }

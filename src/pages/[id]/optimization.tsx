@@ -458,17 +458,21 @@ const RegularizationComponent = () => {
           </ProFormGroup>
         </ProFormList>
         <Typography.Title level={3}>按键亲和力</Typography.Title>
-        <ProFormList name="key_affinities">
+        <ProFormList name="key_affinities" alwaysShowItemLabel>
           <ProFormGroup>
             <ProForm.Item name="from" label="元素" vertical={false}>
               {/* @ts-ignore */}
               <KeySelect disableAlphabets />
             </ProForm.Item>
-            <ProForm.Item name="to" label="目标">
-              {/* @ts-ignore */}
-              <KeySelect disableElements />
-            </ProForm.Item>
-            <ProFormDigit name="affinity" label="亲和" width={64} />
+            <ProFormList name="to" label="目标" alwaysShowItemLabel>
+              <ProFormGroup>
+                <ProForm.Item name="key" label="键">
+                  {/* @ts-ignore */}
+                  <KeySelect disableElements />
+                </ProForm.Item>
+                <ProFormDigit name="affinity" label="亲和" />
+              </ProFormGroup>
+            </ProFormList>
           </ProFormGroup>
         </ProFormList>
       </ModalForm>
@@ -567,7 +571,7 @@ export default function Optimization() {
         <PartialObjective title="一字词简码" type="characters_short" />
         <PartialObjective title="多字词全码" type="words_full" />
         <PartialObjective title="多字词简码" type="words_short" />
-        {/* <RegularizationComponent /> */}
+        <RegularizationComponent />
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
         <Typography.Title level={2}>优化约束</Typography.Title>
