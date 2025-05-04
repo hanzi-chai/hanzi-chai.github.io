@@ -7,9 +7,12 @@ import bxm from "../../examples/bxm.yaml";
 import mswb from "../../examples/mswb.yaml";
 import ziyuan from "../../examples/ziyuan.yaml";
 import jdh from "../../examples/jdh.yaml";
+import xkjd from "../../examples/xkjd.yaml";
+import longma from "../../examples/longma.yaml";
 import easy from "../../examples/easy.yaml";
 import yustar from "../../examples/yustar.yaml";
 import yujoy from "../../examples/yujoy.yaml";
+import tianma from "../../examples/tianma.yaml";
 import zhengma from "../../examples/zhengma.yaml";
 import zhenma from "../../examples/zhenma.yaml";
 import zhangma from "../../examples/zhangma.yaml";
@@ -21,8 +24,10 @@ import type { ExampleConfig } from "./config";
 export type Example =
   // 音码
   | "snow"
+  | "longma"
   // 音形
   | "jdh"
+  | "xkjd"
   // 形音
   | "bxm"
   | "mswb"
@@ -30,6 +35,7 @@ export type Example =
   // 形码
   | "easy"
   | "huma"
+  | "tianma"
   | "sapphire"
   | "xuma"
   | "yustar"
@@ -40,12 +46,15 @@ export type Example =
 
 export const examples = {
   snow,
+  longma,
   jdh,
+  xkjd,
   bxm,
   mswb,
   ziyuan,
   easy,
   huma,
+  tianma,
   sapphire,
   xuma,
   yustar,
@@ -68,7 +77,10 @@ const classifierMap: Record<ClassifierType, Classifier> = {
 };
 
 export const keyboardTypes = [
+  "冰雪四拼",
+  "龙码",
   "简单鹤",
+  "星空键道",
   "表形码",
   "米十五笔",
   "字源",
@@ -79,12 +91,16 @@ export const keyboardTypes = [
   "张码",
   "徐码",
   "虎码",
+  "天码",
   "蓝宝石",
   "无",
 ] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
+  冰雪四拼: examples.snow.form,
+  龙码: examples.longma.form,
   简单鹤: examples.jdh.form,
+  星空键道: examples.xkjd.form,
   表形码: examples.bxm.form,
   米十五笔: examples.mswb.form,
   字源: examples.ziyuan.form,
@@ -95,6 +111,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   张码: examples.zhangma.form,
   徐码: examples.xuma.form,
   虎码: examples.huma.form,
+  天码: examples.tianma.form,
   蓝宝石: examples.sapphire.form,
   无: {
     alphabet: "qwertyuiopasdfghjklzxcvbnm",
@@ -104,7 +121,10 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
 };
 
 export const encoderTypes = [
+  "音码（冰雪四拼）",
+  "音码（龙码）",
   "音形码（简单鹤）",
+  "音形码（星空键道）",
   "形音码（表形码）",
   "形音码（米十五笔）",
   "形音码（字源）",
@@ -117,10 +137,14 @@ export const encoderTypes = [
   "双编形码（宇浩·星陈）",
   "双编形码（宇浩·卿云）",
   "双编形码（虎码）",
+  "双编形码（天码）",
 ] as const;
 export type EncoderTypes = (typeof encoderTypes)[number];
 const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
+  "音码（冰雪四拼）": examples.snow.encoder,
+  "音码（龙码）": examples.longma.encoder,
   "音形码（简单鹤）": examples.jdh.encoder,
+  "音形码（星空键道）": examples.xkjd.encoder,
   "形音码（表形码）": examples.bxm.encoder,
   "形音码（米十五笔）": examples.mswb.encoder,
   "形音码（字源）": examples.ziyuan.encoder,
@@ -133,6 +157,7 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "双编形码（宇浩·星陈）": examples.yustar.encoder,
   "双编形码（宇浩·卿云）": examples.yujoy.encoder,
   "双编形码（虎码）": examples.huma.encoder,
+  "双编形码（天码）": examples.tianma.encoder,
 };
 
 export interface StarterType {
@@ -150,7 +175,7 @@ export const createConfig = (starter: StarterType): Config => {
   for (const value of Object.values(mergeClassifier(classifier))) {
     const element = value.toString();
     if (!form.mapping[element]) {
-      form.mapping[element] = form.alphabet[0]!;
+      form.mapping[element] = form.alphabet?.[0]!;
     }
   }
 

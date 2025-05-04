@@ -49,7 +49,6 @@ export default function KeySelect({
   const form = useAtomValue(repertoireAtom);
   return (
     <Select
-      style={{ width: 96 }}
       showSearch
       placeholder="输入笔画搜索"
       options={keyOptions}

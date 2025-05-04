@@ -14,9 +14,9 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useAtom, useAtomValue } from "jotai";
+import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { sample, sortBy } from "lodash-es";
+import { isEqual, sample, sortBy } from "lodash-es";
 import {
   charactersAtom,
   degeneratorAtom,
@@ -33,9 +33,114 @@ import {
   degenerate,
   exportYAML,
   type Feature,
+  Mapping,
   renderSVGGlyph,
   type Repertoire,
 } from "~/lib";
+
+export interface TreeNode {
+  字根: string;
+  孩子们: TreeNode[];
+}
+
+function 构建字根树(map: Map<string, string | undefined>): TreeNode {
+  const nodes = new Map<string, TreeNode>();
+  let roots: TreeNode | undefined = undefined;
+
+  // 先创建所有的节点
+  for (const key of map.keys()) {
+    nodes.set(key, { 字根: key, 孩子们: [] });
+  }
+
+  // 组装树结构
+  for (const [child, parent] of map.entries()) {
+    const childNode = nodes.get(child)!;
+    if (parent === undefined) {
+      roots = childNode;
+    } else {
+      const parentNode = nodes.get(parent);
+      if (parentNode) {
+        parentNode.孩子们.push(childNode);
+      }
+    }
+  }
+
+  if (!roots) throw new Error("没有找到根节点");
+  return roots;
+}
+
+export const parentMapAtom = atom((get) => {
+  const mapping = get(mappingAtom);
+  const grouping = get(groupingAtom);
+  const repertoire = get(repertoireAtom);
+  const degenerator = get(degeneratorAtom);
+  const degeneratorMap = new Map<string, string>();
+
+  for (const element of Object.keys(mapping).concat(Object.keys(grouping))) {
+    const glyph = repertoire[element]?.glyph;
+    if (glyph === undefined) continue;
+    if (glyph.type !== "basic_component") {
+      console.log("Not a basic component:", element);
+      continue;
+    }
+    const rendered = renderSVGGlyph(glyph.strokes);
+    const hash = JSON.stringify(degenerate(degenerator, rendered));
+    if (!degeneratorMap.has(hash)) {
+      degeneratorMap.set(hash, element);
+    } else {
+      console.log("Duplicate hash found:", hash);
+    }
+  }
+
+  const parentMap = new Map<string, string | undefined>([["", undefined]]);
+  for (let i = 1; i <= 5; ++i) {
+    parentMap.set(i.toString(), "");
+  }
+  const elements = Object.keys(mapping).filter((x) => repertoire[x]);
+  for (const element of elements) {
+    const glyph = repertoire[element]?.glyph!;
+    const rendered = renderSVGGlyph((glyph as BasicComponent).strokes);
+    parentMap.set(element, classifier[rendered[0]!.feature].toString());
+    for (let i = rendered.length - 1; i > 1; --i) {
+      const slice = rendered.slice(0, i);
+      const hash = JSON.stringify(degenerate(degenerator, slice));
+      if (degeneratorMap.has(hash)) {
+        const rawParent = degeneratorMap.get(hash)!;
+        const parent = grouping[rawParent] || rawParent;
+        parentMap.set(element, parent);
+        break;
+      }
+    }
+  }
+  return parentMap;
+});
+
+export const treeAtom = atom((get) => {
+  const parentMap = get(parentMapAtom);
+  return 构建字根树(parentMap);
+});
+
+export const 精简映射原子 = atom((get) => {
+  const mapping = get(mappingAtom);
+  const parentMap = get(parentMapAtom);
+  const newMapping: Mapping = {};
+  for (const [key, value] of Object.entries(mapping)) {
+    let shouldAdd = "一二三四五六七八九十".includes(key);
+    const parent = parentMap.get(key);
+    if (!parent) {
+      shouldAdd = true;
+    } else {
+      const parentValue = mapping[parent];
+      if (!isEqual(value, parentValue)) {
+        shouldAdd = true;
+      }
+    }
+    if (shouldAdd) {
+      newMapping[key] = value;
+    }
+  }
+  return newMapping;
+});
 
 interface Degenerated {
   hash: string;
@@ -116,37 +221,6 @@ const RootCheckbox = ({ name }: { name: string }) => {
   );
 };
 
-interface TreeNode {
-  字根: string;
-  孩子们: TreeNode[];
-}
-
-function 构建字根树(map: Map<string, string | undefined>): TreeNode {
-  const nodes = new Map<string, TreeNode>();
-  let roots: TreeNode | undefined = undefined;
-
-  // 先创建所有的节点
-  for (const key of map.keys()) {
-    nodes.set(key, { 字根: key, 孩子们: [] });
-  }
-
-  // 组装树结构
-  for (const [child, parent] of map.entries()) {
-    const childNode = nodes.get(child)!;
-    if (parent === undefined) {
-      roots = childNode;
-    } else {
-      const parentNode = nodes.get(parent);
-      if (parentNode) {
-        parentNode.孩子们.push(childNode);
-      }
-    }
-  }
-
-  if (!roots) throw new Error("没有找到根节点");
-  return roots;
-}
-
 const Tree = ({ tree }: { tree: TreeNode }) => {
   return (
     <Flex>
@@ -166,49 +240,7 @@ const Tree = ({ tree }: { tree: TreeNode }) => {
 };
 
 const RootTree = () => {
-  const mapping = useAtomValue(mappingAtom);
-  const grouping = useAtomValue(groupingAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const degenerator = useAtomValue(degeneratorAtom);
-  const degeneratorMap = new Map<string, string>();
-
-  for (const element of Object.keys(mapping).concat(Object.keys(grouping))) {
-    const glyph = repertoire[element]?.glyph;
-    if (glyph === undefined) continue;
-    if (glyph.type !== "basic_component") {
-      console.log("Not a basic component:", element);
-      continue;
-    }
-    const rendered = renderSVGGlyph(glyph.strokes);
-    const hash = JSON.stringify(degenerate(degenerator, rendered));
-    if (!degeneratorMap.has(hash)) {
-      degeneratorMap.set(hash, element);
-    } else {
-      console.log("Duplicate hash found:", hash);
-    }
-  }
-
-  const parentMap = new Map<string, string | undefined>([["", undefined]]);
-  for (let i = 1; i <= 5; ++i) {
-    parentMap.set(i.toString(), "");
-  }
-  const elements = Object.keys(mapping).filter((x) => repertoire[x]);
-  for (const element of elements) {
-    const glyph = repertoire[element]?.glyph!;
-    const rendered = renderSVGGlyph((glyph as BasicComponent).strokes);
-    parentMap.set(element, classifier[rendered[0]?.feature].toString());
-    for (let i = rendered.length - 1; i > 1; --i) {
-      const slice = rendered.slice(0, i);
-      const hash = JSON.stringify(degenerate(degenerator, slice));
-      if (degeneratorMap.has(hash)) {
-        const rawParent = degeneratorMap.get(hash)!;
-        const parent = grouping[rawParent] || rawParent;
-        parentMap.set(element, parent);
-        break;
-      }
-    }
-  }
-  const 总树 = 构建字根树(parentMap);
+  const 总树 = useAtomValue(treeAtom);
   return (
     <Flex vertical gap="8px 0" wrap="wrap" style={{ height: "2400px" }}>
       <Button onClick={() => exportYAML(总树, "tree")}>导出</Button>

@@ -19,9 +19,11 @@ import {
   useAtom,
   useAtomValue,
   useChaifenTitle,
+  serializerAtom,
 } from "~/atoms";
 import { ElementLabel } from "~/components/Mapping";
 import { getReversedMapping, type BoxConfig, type DiagramConfig } from "~/lib";
+import { 精简映射原子 } from "./misc";
 
 const PrintArea = styled.div`
   width: 297mm;
@@ -55,9 +57,12 @@ const KeyboardArea = styled.div`
 const Keyboard = () => {
   const diagram = useAtomValue(diagramAtom);
   const mapping = useAtomValue(mappingAtom);
+  const 精简映射 = useAtomValue(精简映射原子);
   const alphabet = useAtomValue(alphabetAtom);
+  const serializer = useAtomValue(serializerAtom);
   const { contents, layout } = diagram;
-  const reversedMapping = getReversedMapping(mapping, alphabet);
+  const finalMapping = serializer === "snow2" ? 精简映射 : mapping;
+  const reversedMapping = getReversedMapping(finalMapping, alphabet);
   const processedConents = contents.map((content) => {
     if (content.type === "element") {
       let match: RegExp | undefined;
@@ -69,16 +74,16 @@ const Keyboard = () => {
       return { ...content, match };
     }
     if (content.type === "custom") {
-      const mapping: Map<string, string> = new Map();
+      const customMap: Map<string, string> = new Map();
       content.mapping
         ?.trim()
         .split("\n")
         .forEach((line) => {
           const [key, value] = line.split("\t");
           if (!key || !value) return;
-          mapping.set(key, value);
+          customMap.set(key, value);
         });
-      return { ...content, mapping };
+      return { ...content, mapping: customMap };
     }
     return content;
   });

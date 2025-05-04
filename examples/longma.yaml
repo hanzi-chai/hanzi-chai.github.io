@@ -1,0 +1,224 @@
+version: '0.2'
+source: longma
+info:
+  name: 龙码
+  author: 晡时之光
+  version: '1.0'
+  description: 带调乱序双拼
+form:
+  alphabet: qwertyuiopasdfghjklzxcvbnm
+  mapping:
+    龙码声母-a: q
+    龙码声母-b: i
+    龙码声母-c: x
+    龙码声母-ch: s
+    龙码声母-d: h
+    龙码声母-e: b
+    龙码声母-f: v
+    龙码声母-g: l
+    龙码声母-h: m
+    龙码声母-j: e
+    龙码声母-k: u
+    龙码声母-l: d
+    龙码声母-m: p
+    龙码声母-n: 'y'
+    龙码声母-o: r
+    龙码声母-p: w
+    龙码声母-q: a
+    龙码声母-r: f
+    龙码声母-s: z
+    龙码声母-sh: t
+    龙码声母-t: o
+    龙码声母-w: g
+    龙码声母-x: c
+    龙码声母-y: j
+    龙码声母-z: 'n'
+    龙码声母-zh: k
+    龙码韵母-a1: e
+    龙码韵母-a2: a
+    龙码韵母-a3: v
+    龙码韵母-a4: r
+    龙码韵母-ai1: a
+    龙码韵母-ai2: j
+    龙码韵母-ai3: r
+    龙码韵母-ai4: b
+    龙码韵母-an1: o
+    龙码韵母-an2: q
+    龙码韵母-an3: 'n'
+    龙码韵母-an4: s
+    龙码韵母-ang1: 'y'
+    龙码韵母-ang2: z
+    龙码韵母-ang3: p
+    龙码韵母-ang4: u
+    龙码韵母-ao1: u
+    龙码韵母-ao2: r
+    龙码韵母-ao3: t
+    龙码韵母-ao4: w
+    龙码韵母-e1: k
+    龙码韵母-e2: d
+    龙码韵母-e3: r
+    龙码韵母-e4: r
+    龙码韵母-ei2: h
+    龙码韵母-ei1: x
+    龙码韵母-ei3: g
+    龙码韵母-ei4: d
+    龙码韵母-en1: q
+    龙码韵母-en2: 'y'
+    龙码韵母-en3: g
+    龙码韵母-en4: w
+    龙码韵母-eng1: h
+    龙码韵母-eng2: o
+    龙码韵母-eng3: m
+    龙码韵母-eng4: w
+    龙码韵母-er2: j
+    龙码韵母-er3: p
+    龙码韵母-er4: o
+    龙码韵母-i1: g
+    龙码韵母-i2: 'n'
+    龙码韵母-i3: f
+    龙码韵母-i4: l
+    龙码韵母-ia1: o
+    龙码韵母-ia2: d
+    龙码韵母-ia3: a
+    龙码韵母-ia4: 'y'
+    龙码韵母-ian1: x
+    龙码韵母-ian2: b
+    龙码韵母-ian3: q
+    龙码韵母-ian4: u
+    龙码韵母-iang1: m
+    龙码韵母-iang2: q
+    龙码韵母-iang3: 'n'
+    龙码韵母-iang4: w
+    龙码韵母-iao1: d
+    龙码韵母-iao2: o
+    龙码韵母-iao3: z
+    龙码韵母-iao4: p
+    龙码韵母-ie1: h
+    龙码韵母-ie2: k
+    龙码韵母-ie3: w
+    龙码韵母-ie4: p
+    龙码韵母-in1: v
+    龙码韵母-in2: s
+    龙码韵母-in3: 'y'
+    龙码韵母-in4: r
+    龙码韵母-ing1: j
+    龙码韵母-ing2: k
+    龙码韵母-ing3: q
+    龙码韵母-ing4: a
+    龙码韵母-iong1: s
+    龙码韵母-iong2: v
+    龙码韵母-iong3: v
+    龙码韵母-iong4: t
+    龙码韵母-iu1: o
+    龙码韵母-iu2: 'y'
+    龙码韵母-iu3: z
+    龙码韵母-iu4: e
+    龙码韵母-o1: t
+    龙码韵母-o2: q
+    龙码韵母-o3: j
+    龙码韵母-o4: f
+    龙码韵母-ong1: v
+    龙码韵母-ong2: a
+    龙码韵母-ong3: q
+    龙码韵母-ong4: z
+    龙码韵母-ou1: x
+    龙码韵母-ou2: t
+    龙码韵母-ou3: d
+    龙码韵母-ou4: k
+    龙码韵母-u1: j
+    龙码韵母-u2: m
+    龙码韵母-u3: c
+    龙码韵母-u4: i
+    龙码韵母-ua1: z
+    龙码韵母-ua2: q
+    龙码韵母-ua3: f
+    龙码韵母-ua4: f
+    龙码韵母-uai1: h
+    龙码韵母-uai2: v
+    龙码韵母-uai3: j
+    龙码韵母-uai4: o
+    龙码韵母-uan1: f
+    龙码韵母-uan2: i
+    龙码韵母-uan3: b
+    龙码韵母-uan4: c
+    龙码韵母-uang1: a
+    龙码韵母-uang2: g
+    龙码韵母-uang3: e
+    龙码韵母-uang4: b
+    龙码韵母-ui1: l
+    龙码韵母-ui2: b
+    龙码韵母-ui3: z
+    龙码韵母-ui4: e
+    龙码韵母-un1: s
+    龙码韵母-un2: h
+    龙码韵母-un3: m
+    龙码韵母-un4: x
+    龙码韵母-uo1: s
+    龙码韵母-uo2: s
+    龙码韵母-uo3: p
+    龙码韵母-uo4: x
+    龙码韵母-v1: e
+    龙码韵母-v2: b
+    龙码韵母-v3: s
+    龙码韵母-v4: h
+    龙码韵母-ve1: 'y'
+    龙码韵母-ve2: i
+    龙码韵母-ve3: b
+    龙码韵母-ve4: o
+encoder:
+  max_length: 4
+  auto_select_length: 2
+  rules:
+    - length_equal: 2
+      formula: AaAbBaBb
+    - length_equal: 3
+      formula: AaBaCaCb
+    - length_in_range: [4, 10]
+      formula: AaBaCaZa
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字音, subtype: 龙码声母}
+      next: s2
+    s2:
+      object: {type: 字音, subtype: 龙码韵母}
+      next: null
+  conditions: {}
+algebra:
+  龙码韵母:
+    - type: xform
+      from: (?<=[jqxy])u(?=\d)
+      to: v
+    - type: xform
+      from: ^.*?([aeiouv].*|m|ng?)(\d)$
+      to: $1$2
+    - type: xform
+      from: '5'
+      to: '1'
+    - type: xform
+      from: ^ng
+      to: eng
+    - type: xform
+      from: ^m
+      to: en
+    - type: xform
+      from: ue(?=\d)
+      to: ve
+  龙码声母:
+    - type: xform
+      from: ^([bpmfdtnlgkhjqxzcsrywaoe]h?|).*$
+      to: $1
+optimization:
+  objective:
+    characters_full:
+      duplication: 0
+    words_full:
+      duplication: 1
+  metaheuristic:
+    algorithm: SimulatedAnnealing
+    parameters:
+      t_max: 1
+      t_min: 0.00001
+      steps: 1000000

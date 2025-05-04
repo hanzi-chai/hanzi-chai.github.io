@@ -86,17 +86,18 @@ export default function HomeLayout() {
     ),
   );
 
-  const { snow, jdh, bxm, mswb, ziyuan } = examples;
+  const { snow, jdh, xkjd, longma, bxm, mswb, ziyuan } = examples;
   const {
     easy,
+    huma,
     sapphire,
-    zhengma,
-    zhenma,
+    tianma,
+    xuma,
     yustar,
     yujoy,
     zhangma,
-    xuma,
-    huma,
+    zhengma,
+    zhenma,
   } = examples;
   const prepare = (x: ExampleConfig) => ({
     key: x.source!,
@@ -107,12 +108,12 @@ export default function HomeLayout() {
     {
       key: "1",
       label: "音码",
-      children: [prepare(snow)],
+      children: [snow, longma].map(prepare),
     },
     {
       key: "2",
       label: "音形",
-      children: [prepare(jdh)],
+      children: [jdh, xkjd].map(prepare),
     },
     {
       key: "3",
@@ -126,6 +127,7 @@ export default function HomeLayout() {
         easy,
         huma,
         sapphire,
+        tianma,
         xuma,
         yustar,
         yujoy,

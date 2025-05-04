@@ -39,7 +39,9 @@ export const printableAscii = range(33, 127).map((x) =>
 );
 
 export const formatDate = (date: Date) => {
-  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  return `${
+    date.getMonth() + 1
+  }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 };
 
 export const unicodeBlock = (code: number) => {
@@ -406,32 +408,43 @@ export interface Metric {
   words_short?: PartialMetric;
 }
 
-// 使用使用逆向最大匹配算法来分词
-export const adapt = (frequency: Frequency, words: Set<string>) => {
-  const result: Map<string, number> = new Map();
-  for (const [word, value] of Object.entries(frequency)) {
-    if (words.has(word)) {
-      result.set(word, (result.get(word) ?? 0) + value);
-    } else {
-      const chars = [...word];
-      let end = chars.length;
-      let start: number;
-      while (end > 0) {
-        start = end - 1;
-        if (!words.has(chars[start]!)) {
-          end -= 1;
-          continue;
-        }
-        while (start > 0 && words.has(chars.slice(start - 1, end).join(""))) {
-          start -= 1;
-        }
-        const subword = chars.slice(start, end).join("");
-        result.set(subword, (result.get(subword) ?? 0) + value);
-        end = start;
+function 最大逆向匹配分词(词典: Set<string>, 文本: string) {
+  const 词列表: string[] = [];
+  const 字符列表 = [...文本];
+  let 结束位置 = 字符列表.length;
+  while (结束位置 > 0) {
+    const 末字 = 字符列表[结束位置 - 1]!;
+    if (!词典.has(末字)) {
+      词列表.unshift(末字);
+      结束位置 -= 1;
+      continue;
+    }
+    for (let 开始位置 = 0; 开始位置 < 结束位置; 开始位置++) {
+      const 词 = 字符列表.slice(开始位置, 结束位置).join("");
+      if (词典.has(词)) {
+        词列表.unshift(词);
+        结束位置 = 开始位置;
+        break;
       }
     }
   }
-  return result;
+  return 词列表;
+}
+
+// 使用使用逆向最大匹配算法来分词
+export const adapt = (原始词频映射: Frequency, 词典: Set<string>) => {
+  const 新词频映射: Map<string, number> = new Map();
+  for (const [词, 词频] of Object.entries(原始词频映射)) {
+    if (词典.has(词)) {
+      新词频映射.set(词, (新词频映射.get(词) ?? 0) + 词频);
+    } else {
+      const 子词列表 = 最大逆向匹配分词(词典, 词);
+      for (const 子词 of 子词列表) {
+        新词频映射.set(子词, (新词频映射.get(子词) ?? 0) + 词频);
+      }
+    }
+  }
+  return 新词频映射;
 };
 
 export type Tuple<T, N extends number> = N extends N
