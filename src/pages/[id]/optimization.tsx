@@ -488,44 +488,41 @@ const ConstraintsForm = ({
   type: "elements" | "indices" | "element_indices";
 }) => {
   const alphabet = useAtomValue(alphabetAtom);
-  const [constraints, set] = useAtom(constraintsAtom);
-  const current = constraints?.[type] ?? [];
+  const [constraints, setConstraints] = useAtom(constraintsAtom);
   const formRef = useRef<ProFormInstance>();
   return (
     <ModalForm<{ items: AtomicConstraint[] }>
       trigger={<Button>{label}</Button>}
       layout="horizontal"
       formRef={formRef}
-      initialValues={{ items: current }}
+      initialValues={{ items: constraints?.[type] ?? [] }}
       onFinish={async ({ items }) => {
-        set((prev) => ({ ...prev, [type]: items }));
+        setConstraints((prev) => ({ ...prev, [type]: items }));
         return true;
       }}
     >
       <Typography.Title level={3}>元素约束</Typography.Title>
       <ProFormList name="items" alwaysShowItemLabel>
         {(_, index) => (
-          <ProFormDependency name={["items"]}>
-            {({ items }) => {
-              const keys = items[index].keys;
-              const negated = keys === undefined ? [] : undefined;
-              return (
+          <ProFormGroup>
+            {type !== "indices" && (
+              <ProForm.Item name="element" label="元素">
+                <ElementSelect excludeGrouped />
+              </ProForm.Item>
+            )}
+            {type !== "elements" && (
+              <ProForm.Item name="index" label="码位">
+                <Select
+                  options={[0, 1, 2, 3].map((x) => ({
+                    label: `第 ${x + 1} 码`,
+                    value: x,
+                  }))}
+                />
+              </ProForm.Item>
+            )}
+            <ProFormDependency name={["keys"]}>
+              {({ keys }) => (
                 <ProFormGroup>
-                  {type !== "indices" && (
-                    <ProForm.Item name="element" label="元素">
-                      <ElementSelect excludeGrouped />
-                    </ProForm.Item>
-                  )}
-                  {type !== "elements" && (
-                    <ProForm.Item name="index" label="码位">
-                      <Select
-                        options={[0, 1, 2, 3].map((x) => ({
-                          label: `第 ${x + 1} 码`,
-                          value: x,
-                        }))}
-                      />
-                    </ProForm.Item>
-                  )}
                   <ProForm.Item label="限制在">
                     <Select
                       value={keys === undefined}
@@ -535,8 +532,8 @@ const ConstraintsForm = ({
                       ]}
                       onChange={(value) =>
                         formRef.current?.setFieldValue(
-                          ["elements", index, "keys"],
-                          negated,
+                          ["items", index, "keys"],
+                          value ? undefined : [],
                         )
                       }
                     />
@@ -553,9 +550,9 @@ const ConstraintsForm = ({
                     </ProForm.Item>
                   )}
                 </ProFormGroup>
-              );
-            }}
-          </ProFormDependency>
+              )}
+            </ProFormDependency>
+          </ProFormGroup>
         )}
       </ProFormList>
     </ModalForm>

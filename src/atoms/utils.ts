@@ -44,7 +44,9 @@ export async function roundTestConfig(config: Config) {
     }
     notification.warning({
       message: "配置环行失败",
-      description: `该配置在 libchai 中具有不同语义。以下是两者的差异：\n${JSON.stringify(diff(config, rustConfig))}`,
+      description: `该配置在 libchai 中具有不同语义。以下是两者的差异：\n${JSON.stringify(
+        diff(config, rustConfig),
+      )}`,
     });
     console.log("config", config);
     console.log("rustConfig", rustConfig);
@@ -95,16 +97,24 @@ export class Thread {
     });
   }
 
-  public async spawn<R>(type: string, data: any[]): Promise<R> {
+  public async spawn<R>(
+    type: string,
+    data: any[],
+    updater?: (a: any) => void,
+  ): Promise<R> {
+    const channel = new MessageChannel();
     return await new Promise((resolve, reject) => {
-      const channel = new MessageChannel();
       channel.port1.onmessage = ({ data }: { data: WorkerOutput }) => {
-        channel.port1.close();
         if (data.type === "success") {
           resolve(data.result);
+          channel.port1.close();
         } else if (data.type === "error") {
           reject(data.error);
+          channel.port1.close();
+        } else if (typeof data.type === "string" && updater) {
+          updater(data);
         } else {
+          console.log(data);
           throw new Error(`Unexpected message: ${data}`);
         }
       };

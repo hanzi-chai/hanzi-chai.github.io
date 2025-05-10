@@ -180,12 +180,12 @@ export const createConfig = (starter: StarterType): Config => {
   }
 
   return {
-    version: "0.1",
+    version: "0.2",
     source: null,
     info: {
       name: starter.name,
       author: "无名氏",
-      version: "0.1.0",
+      version: "1.0.0",
       description: "从模板创建",
     },
     analysis: {

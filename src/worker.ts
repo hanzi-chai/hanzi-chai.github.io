@@ -12,20 +12,23 @@ export type WorkerOutput =
   | { type: "error"; error: Error }
   | { type: "better_solution"; config: Config; metric: string; save: boolean }
   | { type: "progress"; steps: number; temperature: number; metric: string }
-  | { type: "parameters"; t_max?: number; t_min?: number; steps?: number };
+  | { type: "parameters"; t_max?: number; t_min?: number; steps?: number }
+  | { type: "elapsed"; time: number }
+  | { type: "trial_max"; temperature: number; accept_rate: number }
+  | { type: "trial_min"; temperature: number; improve_rate: number };
 
 await init();
 
 self.onmessage = async (event: MessageEvent<WorkerInput>) => {
-  const channel = event.ports[0]!;
+  const port = event.ports[0]!;
   const data = event.data.data;
-  const webInterface = Web.new(self.postMessage);
+  const webInterface = Web.new(port.postMessage.bind(port));
   let result: any;
   try {
     switch (event.data.type) {
       case "analysis":
         result = analysis(data[0], data[1], data[2]);
-        channel.postMessage({ type: "success", result });
+        port.postMessage({ type: "success", result });
         break;
       case "assembly":
         result = assemble(
@@ -37,20 +40,20 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
           data[5],
           data[6],
         );
-        channel.postMessage({ type: "success", result });
+        port.postMessage({ type: "success", result });
         break;
       case "encode":
         webInterface.sync(data[0]);
         result = webInterface.encode_evaluate(data[1]);
-        channel.postMessage({ type: "success", result });
+        port.postMessage({ type: "success", result });
         break;
       case "optimize":
         webInterface.sync(data[0]);
         webInterface.optimize();
-        self.postMessage({ type: "success" });
+        port.postMessage({ type: "success" });
         break;
     }
   } catch (error) {
-    self.postMessage({ type: "error", error });
+    port.postMessage({ type: "error", error });
   }
 };

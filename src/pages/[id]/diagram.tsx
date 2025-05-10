@@ -23,7 +23,6 @@ import {
 } from "~/atoms";
 import { ElementLabel } from "~/components/Mapping";
 import { getReversedMapping, type BoxConfig, type DiagramConfig } from "~/lib";
-import { 精简映射原子 } from "./misc";
 
 const PrintArea = styled.div`
   width: 297mm;
@@ -57,12 +56,9 @@ const KeyboardArea = styled.div`
 const Keyboard = () => {
   const diagram = useAtomValue(diagramAtom);
   const mapping = useAtomValue(mappingAtom);
-  const 精简映射 = useAtomValue(精简映射原子);
   const alphabet = useAtomValue(alphabetAtom);
-  const serializer = useAtomValue(serializerAtom);
   const { contents, layout } = diagram;
-  const finalMapping = serializer === "snow2" ? 精简映射 : mapping;
-  const reversedMapping = getReversedMapping(finalMapping, alphabet);
+  const reversedMapping = getReversedMapping(mapping, alphabet);
   const processedConents = contents.map((content) => {
     if (content.type === "element") {
       let match: RegExp | undefined;

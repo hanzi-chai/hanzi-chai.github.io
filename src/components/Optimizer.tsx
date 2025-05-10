@@ -84,53 +84,65 @@ export default function Optimizer() {
       <Button
         type="primary"
         disabled={optimizing}
-        onClick={() => {
+        onClick={async () => {
           setResult([]);
           setBestResult(undefined);
           setBestMetric("");
           setAutoParams(undefined);
           setProgress(undefined);
           setOptimizing(true);
-          const worker = thread.worker;
-          worker.onmessage = (event: MessageEvent<WorkerOutput>) => {
-            const { data } = event;
-            const date = new Date();
-            switch (data.type) {
-              case "better_solution":
-                const config = data.config;
-                config.info ??= {};
-                config.info.version = formatDate(date);
-                setBestResult(config);
-                setBestMetric(data.metric);
-                if (data.save) {
-                  setResult((result) => [{ date, config }].concat(result));
+          try {
+            await thread.spawn<undefined>(
+              "optimize",
+              [input],
+              (data: WorkerOutput) => {
+                const date = new Date();
+                switch (data.type) {
+                  case "better_solution":
+                    const config = data.config;
+                    config.info ??= {};
+                    config.info.version = formatDate(date);
+                    setBestResult(config);
+                    setBestMetric(data.metric);
+                    if (data.save) {
+                      setResult((result) => [{ date, config }].concat(result));
+                    }
+                    break;
+                  case "progress":
+                    setProgress(data);
+                    break;
+                  case "parameters":
+                    setAutoParams((params) => ({
+                      t_max: data.t_max ?? params?.t_max,
+                      t_min: data.t_min ?? params?.t_min,
+                      steps: data.steps ?? params?.steps,
+                    }));
+                    break;
+                  case "trial_max":
+                    setAutoParams((params) => ({
+                      ...params,
+                      t_max: data.temperature,
+                    }));
+                    break;
+                  case "trial_min":
+                    setAutoParams((params) => ({
+                      ...params,
+                      t_min: data.temperature,
+                    }));
+                    break;
                 }
-                break;
-              case "progress":
-                setProgress(data);
-                break;
-              case "parameters":
-                setAutoParams((params) => ({
-                  t_max: data.t_max ?? params?.t_max,
-                  t_min: data.t_min ?? params?.t_min,
-                  steps: data.steps ?? params?.steps,
-                }));
-                break;
-              case "success":
-                notification.success({
-                  message: "优化已完成，请查看结果!",
-                });
-                setOptimizing(false);
-                break;
-              case "error":
-                notification.error({
-                  message: "优化过程中 libchai 出现错误",
-                  description: data.error.message,
-                });
-                break;
-            }
-          };
-          worker.postMessage({ type: "optimize", data: [input] });
+              },
+            );
+            notification.success({
+              message: "优化已完成，请查看结果!",
+            });
+          } catch (error) {
+            notification.error({
+              message: "优化过程中 libchai 出现错误",
+              description: (error as any).message,
+            });
+          }
+          setOptimizing(false);
         }}
       >
         开始优化

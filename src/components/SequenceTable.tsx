@@ -110,14 +110,10 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
 export default function SequenceTable() {
   const display = useAtomValue(displayAtom);
   const max_length = useAtomValue(maxLengthAtom);
-  const frequencyMap = useAtomValue(adaptedFrequencyAtom);
   const combinedResult = useAtomValue(combinedResultAtom);
 
   const dataSource = combinedResult.map(
-    ({ name, sequence, frequency: importance, ...rest }) => {
-      const frequency = Math.round(
-        ((frequencyMap.get(name) ?? 0) * importance) / 100,
-      );
+    ({ name, sequence, frequency, ...rest }) => {
       const key = `${name}-${summarize(sequence)}`;
       const entry: MainEntry = {
         key,
