@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mean, round, sortBy, sum } from "lodash-es";
 import { erf, std } from "mathjs";
-import { exit } from "process";
+import { exit } from "node:process";
 import { get } from "~/api";
 import type { EquivalenceData, Pair } from "~/lib/equivalence";
 import { distance, partition, 手机五行七列 } from "~/lib/equivalence";
@@ -32,17 +32,19 @@ function chauvenet(data: number[]) {
 function measure(data: number[]): Estimation {
   if (data.length === 0) {
     return {
-      value: NaN,
-      std: NaN,
+      value: Number.NaN,
+      std: Number.NaN,
       length: 0,
     };
-  } else if (data.length === 1) {
+  }
+  if (data.length === 1) {
     return {
       value: data[0]!,
       std: 0,
       length: 1,
     };
   }
+
   // recursively discard outliers
   let finalData = data;
   while (true) {
@@ -177,4 +179,4 @@ for (const { distance, value, std, set } of sortedEquivalence) {
   }
 }
 
-writeFileSync("scripts/手机 5 × 7 当量.txt", content.join("\n") + "\n");
+writeFileSync("scripts/手机 5 × 7 当量.txt", `${content.join("\n")}\n`);

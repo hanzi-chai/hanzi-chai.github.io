@@ -34,7 +34,9 @@ const preprocess = (partialMetric: PartialMetric) => {
       subtype: "当量",
       value: undefined,
     });
-    for (const [index, value] of fingering?.entries()) {
+
+    if (fingering === undefined) continue;
+    for (const [index, value] of fingering!.entries()) {
       if (value === undefined) continue;
       result.push({
         tier,
@@ -60,7 +62,8 @@ const preprocess = (partialMetric: PartialMetric) => {
     subtype: "当量",
     value: pair_equivalence,
   });
-  for (const [index, value] of partialMetric.fingering?.entries()) {
+  if (partialMetric.fingering === undefined) return result;
+  for (const [index, value] of partialMetric.fingering!.entries()) {
     if (value === undefined) continue;
     result.push({
       tier: "加权",

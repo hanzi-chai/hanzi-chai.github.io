@@ -13,9 +13,9 @@ const outputFolder = "public/cache/";
 mkdirSync(outputFolder, { recursive: true });
 
 const repertoire = JSON.stringify(
-  await fetch(apiEndpoint + "repertoire/all").then((res) => res.json()),
+  await fetch(`${apiEndpoint}repertoire/all`).then((res) => res.json()),
 );
-writeFileSync(outputFolder + "repertoire.json", repertoire);
+writeFileSync(`${outputFolder}repertoire.json`, repertoire);
 
 for (const filename of [
   "frequency",

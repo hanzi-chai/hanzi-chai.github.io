@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dump } from "js-yaml";
 import { sumBy } from "lodash-es";
 import type { Reading } from "~/lib";
@@ -50,7 +50,7 @@ for (const char of dedupedList) {
         const importance = Math.round((reading.importance / sum) * 100);
         return {
           ...reading,
-          importance: isNaN(importance) ? 100 : importance,
+          importance: Number.isNaN(importance) ? 100 : importance,
         };
       }),
     );

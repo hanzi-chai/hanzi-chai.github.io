@@ -98,7 +98,7 @@ export default function Optimizer() {
               (data: WorkerOutput) => {
                 const date = new Date();
                 switch (data.type) {
-                  case "better_solution":
+                  case "better_solution": {
                     const config = data.config;
                     config.info ??= {};
                     config.info.version = formatDate(date);
@@ -108,6 +108,7 @@ export default function Optimizer() {
                       setResult((result) => [{ date, config }].concat(result));
                     }
                     break;
+                  }
                   case "progress":
                     setProgress(data);
                     break;

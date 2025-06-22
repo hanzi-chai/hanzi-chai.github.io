@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import type { PrimitiveCharacter, PrimitiveRepertoire } from "~/lib/";
 
 const repertoire: PrimitiveCharacter[] = JSON.parse(
@@ -7,14 +7,13 @@ const repertoire: PrimitiveCharacter[] = JSON.parse(
 
 const data = repertoire
   .filter((char) => char.tygf > 0)
-  .map((char) =>
+  .flatMap((char) =>
     char.readings.map((reading) => [
       String.fromCodePoint(char.unicode),
       reading.pinyin,
       reading.importance,
     ]),
-  )
-  .flat();
+  );
 
 writeFileSync(
   "public/cache/heteronyms.txt",

@@ -10,11 +10,11 @@ import {
   recursiveRenderCompound,
 } from "~/lib";
 import { focusAnalysis, primitiveRepertoire, repertoire } from "./mock";
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 describe("e2e test", () => {
   it("checks database integrity", () => {
-    const config = examples["mswb"];
+    const config = examples.mswb;
     const analysisResult = analysis(
       repertoire,
       focusAnalysis(config, repertoire),

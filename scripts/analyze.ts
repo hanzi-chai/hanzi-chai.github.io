@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 import { load } from "js-yaml";
 
 const estimate = (n: number, k: number) => (n * n) / (2 * k);

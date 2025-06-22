@@ -199,7 +199,7 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
     if (matched) {
       const tokens = Array.from(rule.formula);
       for (let i = 0; i < tokens.length; i = i + 2) {
-        const charIndex = tokens[i]?.toLowerCase();
+        const charIndex = tokens[i]!.toLowerCase();
         const elementIndex = tokens[i + 1]!;
         const elements = signedIndex(totalElements, charIndex);
         if (elements === undefined) return undefined;
@@ -259,7 +259,8 @@ export const assemble = (
       customized.get(character) || compoundResults.get(character);
     if (shapeInfo === undefined) continue;
     const final: Assembly[] = [];
-    const readings = [...repertoire[character]?.readings];
+    if (character in repertoire === false) continue;
+    const readings = [...repertoire[character]!.readings];
     if (readings.length === 0) {
       readings.push({ pinyin: "", importance: 100 });
     }

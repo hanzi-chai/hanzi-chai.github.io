@@ -33,7 +33,7 @@ import {
   degenerate,
   exportYAML,
   type Feature,
-  Mapping,
+  type Mapping,
   renderSVGGlyph,
   type Repertoire,
 } from "~/lib";

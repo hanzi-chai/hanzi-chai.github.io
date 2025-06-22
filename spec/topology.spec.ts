@@ -24,7 +24,7 @@ describe("interval position", () => {
 
 describe("linear relation", () => {
   const 田 = computedComponents.田!.glyph;
-  const [l, t, r, h, v, b] = 田.map((x) => x.curveList).flat() as [
+  const [l, t, r, h, v, b] = 田.flatMap((x) => x.curveList) as [
     LinearCurve,
     LinearCurve,
     LinearCurve,
@@ -69,7 +69,7 @@ describe("linear relation", () => {
 
 describe("linear relation 2", () => {
   const 艹 = computedComponents.艹!.glyph;
-  const [_, s1, s2] = 艹!.map((x) => x.curveList).flat() as [
+  const [_, s1, s2] = 艹!.flatMap((x) => x.curveList) as [
     LinearCurve,
     LinearCurve,
     LinearCurve,
@@ -86,7 +86,7 @@ describe("linear relation 2", () => {
 describe("curve relation", () => {
   it("figures out all relations in 天", () => {
     const 天 = computedComponents.天!.glyph;
-    const [c1, c2, c3, c4] = 天.map((x) => x.curveList).flat() as [
+    const [c1, c2, c3, c4] = 天.flatMap((x) => x.curveList) as [
       LinearCurve,
       LinearCurve,
       CubicCurve,
@@ -112,7 +112,7 @@ describe("curve relation", () => {
   });
   it("figures out all relations in 义", () => {
     const 义 = computedComponents.义!.glyph;
-    const [c1, c2, c3] = 义!.map((x) => x.curveList).flat() as [
+    const [c1, c2, c3] = 义!.flatMap((x) => x.curveList) as [
       CubicCurve,
       CubicCurve,
       CubicCurve,
@@ -131,7 +131,7 @@ describe("curve relation", () => {
   });
   it("figures out all relations in 升", () => {
     const 升 = computedComponents.升!.glyph;
-    const [c1, c2, c3, c4] = 升!.map((x) => x.curveList).flat() as [
+    const [c1, c2, c3, c4] = 升!.flatMap((x) => x.curveList) as [
       CubicCurve,
       LinearCurve,
       CubicCurve,

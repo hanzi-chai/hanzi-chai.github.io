@@ -1,7 +1,7 @@
 import init, { Web } from "libchai";
 import { analysis } from "./lib/repertoire";
 import { assemble } from "./lib/assembly";
-import { Config } from "./lib";
+import type { Config } from "./lib";
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "assembly";
   data: any;

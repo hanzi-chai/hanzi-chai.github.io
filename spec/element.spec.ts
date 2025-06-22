@@ -9,7 +9,7 @@ import {
 
 describe("element", () => {
   it("applyRules should apply the specified rules to the given syllable", () => {
-    const rules = defaultAlgebra["韵母"];
+    const rules = defaultAlgebra.韵母;
     const syllable = "you";
     expect(applyRules("韵母", rules, syllable)).toBe("韵母-iou");
   });

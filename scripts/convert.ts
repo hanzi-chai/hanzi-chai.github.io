@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const zhenma = readFileSync(
   "/Users/tansongchen/Downloads/zhenma-raw.txt",
