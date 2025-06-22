@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 import path from "node:path";
 import { defineConfig, type UserConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
@@ -6,10 +6,7 @@ import yaml from "@modyfi/vite-plugin-yaml";
 import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
 import { visualizer } from "rollup-plugin-visualizer";
-import { chunkSplitPlugin } from "vite-plugin-chunk-split";
 import mdx from "@mdx-js/rollup";
-
-// vite.config.js
 
 const wasmContentTypePlugin = {
   name: "wasm-content-type-plugin",
@@ -40,6 +37,21 @@ export default defineConfig(({ mode }) => {
         treeshake: {
           moduleSideEffects: "no-external",
         },
+        output: {
+          manualChunks: {
+            lodash: ["lodash"],
+            yaml: ["js-yaml"],
+            md5: ["js-md5"],
+            "styled-components": ["styled-components"],
+            react: ["react", "react-dom", "react-router-dom"],
+            immer: ["immer"],
+            reactflow: ["reactflow"],
+            antd: ["antd"],
+            "pro-form": ["@ant-design/pro-form"],
+            g: ["@antv/g"],
+            g2: ["@antv/g2"],
+          },
+        },
       },
     },
     esbuild: {
@@ -64,21 +76,6 @@ export default defineConfig(({ mode }) => {
       Pages({
         importMode: "async",
       }),
-      chunkSplitPlugin({
-        customSplitting: {
-          lodash: [/node_modules\/lodash/],
-          antd: [/node_modules\/antd/],
-          router: [/node_modules\/react-router/],
-          react: [/node_modules\/react(-dom)?\//],
-          immer: [/node_modules\/immer/],
-          //mathjs: [/node_modules\/mathjs/],
-          yaml: [/node_modules\/js-yaml/],
-          reactflow: [/node_modules\/@reactflow/],
-          //chart: [/node_modules\/@ant-design/],
-          //antv: [/node_modules\/@antv/],
-          tools: [/node_modules\/styled-components/, /node_modules\/js-md5/],
-        },
-      }),
     ],
     test: {
       globals: true,
@@ -93,20 +90,16 @@ export default defineConfig(({ mode }) => {
     },
   };
 
-  switch (mode) {
-    case "CF":
-      break;
-    case "BEX":
-      sharedConfig.plugins?.push(
-        visualizer({
-          brotliSize: true,
-          title: "打包产物分析",
-          filename: "dist/visualizer.html",
-        }) as PluginOption,
-      );
-      break;
-    case "PAGES":
-      break;
+  if (mode === "BEX") {
+    sharedConfig.build!.outDir = "dist/pages";
+    sharedConfig.plugins?.push(
+      visualizer({
+        brotliSize: true,
+        title: "打包产物分析",
+        filename: "dist/visualizer.html",
+      }) as PluginOption,
+    );
   }
+
   return sharedConfig;
 });

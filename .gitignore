@@ -26,4 +26,4 @@ dist-ssr
 
 coverage
 cache
-bun.lockb
+bun.lock*

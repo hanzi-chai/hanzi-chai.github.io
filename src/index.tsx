@@ -37,9 +37,7 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const createRouter =
-  import.meta.env.MODE === "BEX" || import.meta.env.MODE === "PAGES"
-    ? createHashRouter
-    : createBrowserRouter;
+  import.meta.env.MODE === "CF" ? createBrowserRouter : createHashRouter;
 
 const router = createRouter(AutoRoute);
 
