@@ -90,6 +90,8 @@ const affineMap: Record<Operator, Affine[]> = {
   "⿹": [id, new Affine(0.5, 0.5, [10, 40])],
   "⿺": [id, new Affine(0.5, 0.5, [40, 10])],
   "⿻": [id, id],
+  "⿾": [id],
+  "⿿": [id],
 };
 
 /**

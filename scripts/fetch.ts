@@ -6,6 +6,7 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import axios from "axios";
+import pako from "pako";
 
 const apiEndpoint = "https://api.chaifen.app/";
 const assetsEndpoint = "https://assets.chaifen.app/";
@@ -15,7 +16,10 @@ mkdirSync(outputFolder, { recursive: true });
 const repertoire = JSON.stringify(
   await fetch(`${apiEndpoint}repertoire/all`).then((res) => res.json()),
 );
-writeFileSync(`${outputFolder}repertoire.json`, repertoire);
+
+// Compress the repertoire data
+const output = pako.deflate(repertoire);
+writeFileSync(`${outputFolder}repertoire.json.deflate`, output);
 
 for (const filename of [
   "frequency",

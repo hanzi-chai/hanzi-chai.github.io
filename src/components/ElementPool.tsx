@@ -37,17 +37,11 @@ interface ElementProps {
   currentElement?: string;
 }
 
-export const ElementWithTooltip = ({
-  element,
-  alwaysUseGlyph,
-}: {
-  element: string;
-  alwaysUseGlyph?: boolean;
-}) => {
+export const ElementWithTooltip = ({ element }: { element: string }) => {
   const display = useAtomValue(displayAtom);
   const core = (
     <Element>
-      <Display name={element} alwaysUseGlyph={alwaysUseGlyph} />
+      <Display name={element} />
     </Element>
   );
   if (!isPUA(element)) return core;

@@ -14,22 +14,20 @@ import {
   remoteCreateWithoutUnicode,
   remoteUpdate,
   remoteRemove,
-  remoteMutate,
+  remoteBatchUpdate,
 } from "~/api";
 import { DeleteButton, NumberInput, Select } from "~/components/Utils";
-import type { Reading } from "~/lib";
+import type { Glyph, PrimitiveRepertoire, Reading } from "~/lib";
 import {
   chars,
-  isValidCJKChar,
   getDummyCompound,
   getDummyDerivedComponent,
   getDummyBasicComponent,
   getDummySplicedComponent,
+  isPUA,
 } from "~/lib";
 import {
   useAtomValue,
-  useSetAtom,
-  mutateRepertoireAtom,
   repertoireAtom,
   nextUnicodeAtom,
   useAddAtom,
@@ -38,17 +36,18 @@ import {
   primitiveRepertoireAtom,
   customGlyphAtom,
   errorFeedback,
-  verifyNewName,
   RemoteContext,
   customReadingsAtom,
+  useAtom,
 } from "~/atoms";
 import type { PrimitiveCharacter, Compound, Component } from "~/lib";
-import ComponentForm from "./ComponentForm";
+import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import type { MenuProps } from "antd/lib";
 import * as O from "optics-ts/standalone";
 import ReadingForm from "./ReadingForm";
 import { isInteger } from "lodash-es";
+import CharacterSelect from "./CharacterSelect";
 
 interface CreateProps {
   charOrName: string;
@@ -145,8 +144,6 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
               if (!value) return Promise.reject(new Error("不能为空"));
               if (determinedRepertoire[value as string] !== undefined)
                 return Promise.reject(new Error("字符已存在"));
-              const valid = Array.from(value as string).every(isValidCJKChar);
-              if (!valid) return Promise.reject(new Error("限 CJK/扩展 A"));
               return Promise.resolve();
             },
           },
@@ -170,13 +167,76 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
   );
 }
 
-export const Mutate = ({ unicode }: { unicode: number }) => {
+const planMerge = (
+  oldUnicode: number,
+  newUnicode: number,
+  repertoire: PrimitiveRepertoire,
+) => {
+  const before = String.fromCodePoint(oldUnicode);
+  const after = String.fromCodePoint(newUnicode);
+  const replaceIf = (s: string, o: { changed: boolean }) => {
+    if (s === before) {
+      o.changed = true;
+      return after;
+    }
+    return s;
+  };
+  const payload: PrimitiveRepertoire = {};
+  for (const [key, value] of Object.entries(repertoire)) {
+    let o = { changed: false };
+    const newValue = structuredClone(value);
+    newValue.glyphs.forEach((x) => {
+      if (x.type === "derived_component" || x.type === "identity") {
+        x.source = replaceIf(x.source, o);
+      } else if (x.type === "compound" || x.type === "spliced_component") {
+        x.operandList = x.operandList.map((v) => replaceIf(v, o));
+      }
+    });
+    if (o.changed) {
+      payload[key] = newValue;
+    }
+  }
+  return payload;
+};
+
+export const Merge = ({ unicode }: { unicode: number }) => {
   const [newName, setNewName] = useState("");
   const remote = useContext(RemoteContext);
-  const mutate = useSetAtom(mutateRepertoireAtom);
+  const [repertoire, setRepertoire] = useAtom(primitiveRepertoireAtom);
+  return (
+    <Popconfirm
+      title="输入笔画搜索"
+      description={<CharacterSelect value={newName} onChange={setNewName} />}
+      onConfirm={async () => {
+        // 改变 Unicode，需要联动更新
+        const newUnicode = newName.codePointAt(0)!;
+        const payload: PrimitiveRepertoire = planMerge(
+          unicode,
+          newUnicode,
+          repertoire,
+        );
+        const res = await remoteBatchUpdate(Object.values(payload));
+        if (!errorFeedback(res)) {
+          setRepertoire((prev) => ({ ...prev, ...payload }));
+        }
+      }}
+    >
+      <Button style={{ display: remote ? "initial" : "none" }}>合并到</Button>
+    </Popconfirm>
+  );
+};
+
+export const Rename = ({
+  unicode,
+  name,
+}: {
+  unicode: number;
+  name: string | null;
+}) => {
+  const [newName, setNewName] = useState("");
+  const remote = useContext(RemoteContext);
   const repertoire = useAtomValue(primitiveRepertoireAtom);
   const update = useAddAtom(primitiveRepertoireAtom);
-  const name = String.fromCodePoint(unicode);
   return (
     <Popconfirm
       title="新字形名称"
@@ -187,36 +247,22 @@ export const Mutate = ({ unicode }: { unicode: number }) => {
         />
       }
       onConfirm={async () => {
-        const valid = verifyNewName(newName);
-        if (!valid) return;
-        if (Array.from(newName).length === 1) {
-          // 改变 Unicode，需要联动更新
-          const newUnicode = newName.codePointAt(0)!;
-          const payload = { old: unicode, new: newUnicode };
-          const res = await remoteMutate(payload);
-          if (!errorFeedback(res)) {
-            mutate([unicode, newUnicode]);
-          }
-        } else {
-          // 改变别名，不需要联动更新
-          const character = repertoire[name];
-          if (!character) return;
-          const newCharacter: PrimitiveCharacter = {
-            ...character,
-            name: newName,
-          };
-          const res = await remoteUpdate(newCharacter);
-          if (!errorFeedback(res)) {
-            update(name, newCharacter);
-          }
+        const cname = String.fromCodePoint(unicode);
+        // 改变别名，不需要联动更新
+        const character = repertoire[cname];
+        if (!character) return;
+        const newCharacter: PrimitiveCharacter = {
+          ...character,
+          name: newName,
+        };
+        const res = await remoteUpdate(newCharacter);
+        if (!errorFeedback(res)) {
+          update(cname, newCharacter);
         }
       }}
     >
-      <Button
-        disabled={isValidCJKChar(String.fromCodePoint(unicode))}
-        style={{ display: remote ? "initial" : "none" }}
-      >
-        更改
+      <Button style={{ display: remote ? "initial" : "none" }}>
+        {name ?? "无"}
       </Button>
     </Popconfirm>
   );
@@ -298,7 +344,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
   const removeCustomization = useRemoveAtom(customGlyphAtom);
   const name = String.fromCodePoint(character.unicode);
   const isCustomization = !remote && repertoire[name] !== undefined;
-  const onFinish = async (component: Component | Compound) => {
+  const onFinish = async (component: Glyph) => {
     if (isCustomization) {
       addCustomization(name, component);
       return true;
@@ -362,6 +408,18 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
         <ComponentForm
           title="添加自定义基本部件"
           initialValues={getDummyBasicComponent()}
+          current={name}
+          onFinish={onFinish}
+          noButton
+        />
+      ),
+    });
+    items.unshift({
+      key: -5,
+      label: (
+        <IdentityForm
+          title="添加自定义全等字形"
+          initialValues={{ type: "identity", source: "一" }}
           current={name}
           onFinish={onFinish}
           noButton

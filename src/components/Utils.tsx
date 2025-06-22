@@ -15,7 +15,7 @@ import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
 import { isPUA } from "~/lib";
 import { StrokesView } from "./GlyphView";
-import { glyphAtom, useAtomValue } from "~/atoms";
+import { puaGlyphAtom, useAtomValue } from "~/atoms";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -124,15 +124,9 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
   );
 };
 
-export const Display = ({
-  name,
-  alwaysUseGlyph,
-}: {
-  name: string;
-  alwaysUseGlyph?: boolean;
-}) => {
-  const glyphMap = useAtomValue(glyphAtom);
-  if (!isPUA(name) && !alwaysUseGlyph) {
+export const Display = ({ name }: { name: string }) => {
+  const glyphMap = useAtomValue(puaGlyphAtom);
+  if (!isPUA(name)) {
     return name;
   }
   const glyph = glyphMap.get(name);
@@ -145,16 +139,14 @@ export const Display = ({
 export const DisplayWithSuperScript = ({
   name,
   index,
-  alwaysUseGlyph,
 }: {
   name: string;
   index: number;
-  alwaysUseGlyph?: boolean;
 }) => {
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
   return (
     <span>
-      {Display({ name, alwaysUseGlyph })}
+      {Display({ name })}
       {index ? superscripts[index] : ""}
     </span>
   );

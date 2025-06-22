@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { PrimitiveCharacter } from "~/lib";
 import { listToObject } from "~/lib";
 import { Layout } from "antd";
-import { list } from "~/api";
+import { list, listAll } from "~/api";
 import CharacterTable from "~/components/CharacterTable";
 import { primitiveRepertoireAtom, useChaifenTitle, useSetAtom } from "~/atoms";
 
@@ -43,7 +43,6 @@ export default function AdminLayout() {
   useEffect(() => {
     list().then((data) => {
       if ("err" in data) return;
-      checkIDsInData(data);
       load(listToObject(data));
     });
   }, [load]);

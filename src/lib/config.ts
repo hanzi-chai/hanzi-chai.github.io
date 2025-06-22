@@ -1,5 +1,11 @@
 import type { Feature } from "./classifier";
-import type { Compound, PrimitiveRepertoire, Component, Reading } from "./data";
+import type {
+  Compound,
+  PrimitiveRepertoire,
+  Component,
+  Reading,
+  Identity,
+} from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
 import type { CornerSpecifier } from "./topology";
@@ -21,6 +27,8 @@ export const characterSetSpecifiers = [
   "general",
   "basic",
   "extended",
+  "supplement",
+  "maximal",
   "custom",
 ] as const;
 export type CharacterSetSpecifier = (typeof characterSetSpecifiers)[number];
@@ -33,7 +41,7 @@ export interface Data {
   tags?: string[];
 }
 
-export type CustomGlyph = Record<string, Component | Compound>;
+export type CustomGlyph = Record<string, Component | Compound | Identity>;
 export type CustomReadings = Record<string, Reading[]>;
 // config.data end
 

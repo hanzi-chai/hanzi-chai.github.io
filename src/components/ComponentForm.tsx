@@ -8,6 +8,7 @@ import type {
   Character,
   Component,
   DerivedComponent,
+  Identity,
   SplicedComponent,
   Stroke,
   SVGGlyphWithBox,
@@ -17,7 +18,7 @@ import type { Feature } from "~/lib";
 import { getDummySVGStroke, getGlyphBoundingBox, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
 import { allRepertoireAtom, useAtomValue } from "~/atoms";
-import { GlyphSelect } from "./CharacterSelect";
+import CharacterSelect from "./CharacterSelect";
 import type {
   ProFormInstance,
   ProFormListProps,
@@ -299,7 +300,7 @@ export default function ComponentForm({
               type === "derived_component" ? (
                 <ProFormGroup>
                   <Form.Item name="source" label="源字">
-                    <GlyphSelect
+                    <CharacterSelect
                       style={{ width: "96px" }}
                       customFilter={isValidSource}
                     />
@@ -459,6 +460,52 @@ export default function ComponentForm({
           </ProFormDependency>
         </EditorColumn>
       </EditorRow>
+    </ModalForm>
+  );
+}
+
+export function IdentityForm({
+  title,
+  initialValues,
+  current,
+  onFinish,
+  noButton,
+  primary,
+  readonly,
+}: {
+  title: string;
+  initialValues: Identity;
+  current: string;
+  onFinish: (c: Identity) => Promise<boolean>;
+  noButton?: boolean;
+  primary?: boolean;
+  readonly?: boolean;
+}) {
+  const trigger = noButton ? (
+    <span>{title}</span>
+  ) : (
+    <Element type={primary ? "default" : "text"}>{title}</Element>
+  );
+  return (
+    <ModalForm<Identity>
+      title={title}
+      layout="horizontal"
+      omitNil={true}
+      trigger={trigger}
+      initialValues={initialValues}
+      onFinish={onFinish}
+      readonly={readonly}
+      submitter={readonly ? false : undefined}
+    >
+      <CommonForm />
+      <ProFormGroup>
+        <Form.Item name="source" label="源字">
+          <CharacterSelect
+            style={{ width: "96px" }}
+            customFilter={([x]) => x !== current}
+          />
+        </Form.Item>
+      </ProFormGroup>
     </ModalForm>
   );
 }

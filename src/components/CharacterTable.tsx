@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from "react";
-import { makeCharacterFilter, unicodeBlock } from "~/lib";
+import { isPUA, makeCharacterFilter, unicodeBlock, unicodeBlocks } from "~/lib";
 import {
   Checkbox,
   Flex,
@@ -20,6 +20,7 @@ import {
   errorFeedback,
   primitiveRepertoireAtom,
   sequenceAtom,
+  sortedCharactersAtom,
   useAddAtom,
   useAtomValue,
   userRepertoireAtom,
@@ -30,12 +31,13 @@ import {
   EditGlyph,
   Create,
   Delete,
-  Mutate,
+  Merge,
   QuickPatchAmbiguous,
   EditReading,
   EditGF,
+  Rename,
 } from "~/components/Action";
-import ComponentForm from "./ComponentForm";
+import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/api";
 import { DeleteButton } from "./Utils";
@@ -66,6 +68,13 @@ function ReadingList({ readings }: { readings: Reading[] }) {
   );
 }
 
+const typenames = {
+  basic_component: "基本部件",
+  derived_component: "衍生部件",
+  spliced_component: "拼接部件",
+  identity: "全等",
+};
+
 export const InlineUpdater = ({
   character,
 }: {
@@ -90,11 +99,6 @@ export const InlineUpdater = ({
       add(char, newCharacter);
     }
     return true;
-  };
-  const typenames = {
-    basic_component: "基本部件",
-    derived_component: "衍生部件",
-    spliced_component: "拼接部件",
   };
   return (
     <Flex gap="small">
@@ -123,8 +127,26 @@ export const InlineUpdater = ({
                 primary={primary}
                 readonly={!remote && userRepertoire[char] === undefined}
               />
-            ) : (
+            ) : x.type === "basic_component" ||
+              x.type === "derived_component" ? (
               <ComponentForm
+                key={i}
+                title={title}
+                initialValues={x}
+                current={String.fromCodePoint(unicode)}
+                onFinish={(values) => {
+                  const newGlyphs = O.set(
+                    O.compose("glyphs", O.appendTo),
+                    values,
+                    O.remove(lens, character),
+                  );
+                  return inlineUpdate(newGlyphs);
+                }}
+                primary={primary}
+                readonly={!remote && userRepertoire[char] === undefined}
+              />
+            ) : (
+              <IdentityForm
                 key={i}
                 title={title}
                 initialValues={x}
@@ -164,15 +186,12 @@ export const InlineCustomizer = ({
   const char = String.fromCodePoint(unicode);
   const customized = customGlyph[char];
   const display = useAtomValue(displayAtom);
-  const typenames = {
-    basic_component: "基本部件",
-    derived_component: "衍生部件",
-    spliced_component: "拼接部件",
-  };
   if (customized === undefined) return null;
   const title =
     customized.type === "compound"
-      ? `${customized.operator} ${customized.operandList.map(display).join(" ")}`
+      ? `${customized.operator} ${customized.operandList
+          .map(display)
+          .join(" ")}`
       : typenames[customized.type];
   return (
     <Flex gap="small">
@@ -187,8 +206,20 @@ export const InlineCustomizer = ({
           }}
           primary
         />
-      ) : (
+      ) : customized.type === "basic_component" ||
+        customized.type === "derived_component" ? (
         <ComponentForm
+          title={title}
+          initialValues={customized}
+          current={String.fromCodePoint(unicode)}
+          onFinish={async (values) => {
+            addCustomGlyph(char, values);
+            return true;
+          }}
+          primary
+        />
+      ) : (
+        <IdentityForm
           title={title}
           initialValues={customized}
           current={String.fromCodePoint(unicode)}
@@ -204,44 +235,42 @@ export const InlineCustomizer = ({
 };
 
 export default function CharacterTable() {
+  const primitiveRepertoire = useAtomValue(primitiveRepertoireAtom);
   const allRepertoire = useAtomValue(allRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
+  const sortedCharacters = useAtomValue(sortedCharactersAtom);
+  const sortedRepertoire = sortedCharacters.map((x) => [
+    x,
+    primitiveRepertoire[x],
+  ]) as [string, PrimitiveCharacter][];
   const customGlyph = useAtomValue(customGlyphAtom);
   const customReadings = useAtomValue(customReadingsAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const [page, setPage] = useState(1);
   const [filterProps, setFilterProps] = useState<CharacterFilter>({});
-  const getLength = (a: string) =>
-    sequenceMap.get(a)?.length ?? Number.POSITIVE_INFINITY;
   const remote = useContext(RemoteContext);
   const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
-  const isUserCharacter = (a: string) =>
-    -Number(userRepertoire[a] !== undefined);
 
-  const dataSource = Object.entries(allRepertoire)
-    .sort(([a], [b]) => getLength(a) - getLength(b))
-    .sort(([a], [b]) => isUserCharacter(a) - isUserCharacter(b))
+  const dataSource = Object.entries(userRepertoire)
+    .concat(sortedRepertoire)
     .filter(([x]) => filter(x))
     .map(([, glyph]) => glyph);
 
   const unicodeColumn: Column = {
     title: "Unicode",
     dataIndex: "unicode",
-    render: (_, { unicode }) => {
+    render: (_, { unicode, name }) => {
       const char = String.fromCodePoint(unicode);
       const hex = unicode.toString(16).toUpperCase();
       return (
         <Flex align="center" gap="small">
           <ElementWithTooltip element={char} />
           {hex}
+          {isPUA(char) && <Rename unicode={unicode} name={name} />}
         </Flex>
       );
     },
-    filters: [
-      { text: "CJK 基本集", value: "cjk" },
-      { text: "CJK 扩展集 A", value: "cjk-a" },
-      { text: "非成字", value: "pua" },
-    ],
+    filters: unicodeBlocks.map((x) => ({ text: x.label, value: x.name })),
     onFilter: (value, record) => {
       return unicodeBlock(record.unicode) === value;
     },
@@ -285,7 +314,6 @@ export default function CharacterTable() {
     title: "系统字音",
     dataIndex: "readings",
     render: (_, record) => <ReadingList readings={record.readings} />,
-    width: 128,
   };
 
   const gf0014: Column = {
@@ -323,7 +351,6 @@ export default function CharacterTable() {
   const glyphs: Column = {
     title: "系统字形",
     render: (_, character) => <InlineUpdater character={character} />,
-    width: 256,
     sorter: (a, b) => {
       const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
       return as.localeCompare(bs);
@@ -353,7 +380,7 @@ export default function CharacterTable() {
   };
 
   const ambiguous: Column = {
-    title: "分部歧义",
+    title: "歧义",
     dataIndex: "ambiguous",
     render: (_, record) => {
       return <QuickPatchAmbiguous checked={record.ambiguous} record={record} />;
@@ -363,7 +390,7 @@ export default function CharacterTable() {
       { text: "只看无歧义", value: 0 },
     ],
     onFilter: (value, record) => Number(record.ambiguous) === value,
-    width: 96,
+    width: 64,
   };
 
   const operations: Column = {
@@ -373,7 +400,7 @@ export default function CharacterTable() {
       <Space>
         <EditGlyph character={record} />
         <EditReading character={record} />
-        <Mutate unicode={record.unicode} />
+        <Merge unicode={record.unicode} />
         <Delete unicode={record.unicode} />
       </Space>
     ),

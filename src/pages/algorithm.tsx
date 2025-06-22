@@ -21,7 +21,7 @@ import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
 import { InlineUpdater } from "~/components/CharacterTable";
-import { Delete, EditGlyph, Mutate } from "~/components/Action";
+import { Delete, EditGlyph, Merge } from "~/components/Action";
 import { ElementWithTooltip } from "~/components/ElementPool";
 
 interface TreeNodeData {
@@ -93,7 +93,7 @@ const TreeNode = ({
 }) => {
   return (
     <Flex align="center">
-      <ElementWithTooltip element={name} alwaysUseGlyph />
+      <ElementWithTooltip element={name} />
       {name}
       <InlineUpdater character={character} />
       <EditGlyph character={character} />

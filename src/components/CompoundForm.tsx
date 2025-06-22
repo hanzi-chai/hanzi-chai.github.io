@@ -1,8 +1,13 @@
 import { Button, Flex, Form } from "antd";
-import type { Compound, SplicedComponent, SVGGlyphWithBox } from "~/lib";
+import type {
+  Compound,
+  Operator,
+  SplicedComponent,
+  SVGGlyphWithBox,
+} from "~/lib";
 import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
-import { GlyphSelect } from "./CharacterSelect";
+import CharacterSelect from "./CharacterSelect";
 import {
   ModalForm,
   ProFormDependency,
@@ -31,6 +36,7 @@ export const CommonForm = () => {
           { label: "衍生部件", value: "derived_component" },
           { label: "拼接部件", value: "spliced_component" },
           { label: "复合体", value: "compound" },
+          { label: "等同", value: "identity" },
         ]}
         disabled
       />
@@ -115,8 +121,13 @@ export default function CompoundForm({
             <ProFormSelect
               label="结构"
               name="operator"
-              onChange={(value) => {
-                const newLength = value === "⿲" || value === "⿳" ? 3 : 2;
+              onChange={(value: Operator) => {
+                const newLength =
+                  value === "⿲" || value === "⿳"
+                    ? 3
+                    : value === "⿾" || value === "⿿"
+                      ? 1
+                      : 2;
                 const newList = list.concat("一").slice(0, newLength);
                 form.setFieldValue("operandList", newList);
               }}
@@ -127,7 +138,10 @@ export default function CompoundForm({
             <StaticList name="operandList" itemRender={InlineRender}>
               {(meta) => (
                 <Form.Item noStyle {...meta}>
-                  <GlyphSelect style={{ width: "96px" }} disabled={readonly} />
+                  <CharacterSelect
+                    style={{ width: "96px" }}
+                    disabled={readonly}
+                  />
                 </Form.Item>
               )}
             </StaticList>

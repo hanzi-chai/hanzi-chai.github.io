@@ -18,6 +18,7 @@ import type { CornerSpecifier } from "./topology";
 import type { Analysis } from "./config";
 import { range, sortBy } from "lodash-es";
 import type { BoundingBox } from "./bezier";
+import { classifier } from "./classifier";
 
 export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 
@@ -120,6 +121,61 @@ export const recursiveRenderCompound = (
     }
   }
   return affineMerge(compound, glyphs);
+};
+
+/**
+ * 将复合体递归渲染为 SVG 图形
+ *
+ * @param compound - 复合体
+ * @param repertoire - 原始字符集
+ *
+ * @returns SVG 图形
+ * @throws InvalidGlyphError 无法渲染
+ */
+export const recursiveRenderStrokeSequence = (
+  compound: Compound,
+  repertoire: Repertoire,
+  sequenceCache: Map<string, string> = new Map(),
+): string | InvalidGlyphError => {
+  const sequences: string[] = [];
+  for (const char of compound.operandList) {
+    const glyph = repertoire[char]?.glyph;
+    if (glyph === undefined) return new InvalidGlyphError();
+    if (glyph.type === "basic_component") {
+      sequences.push(glyph.strokes.map((x) => classifier[x.feature]).join(""));
+    } else {
+      const cache = sequenceCache.get(char);
+      if (cache !== undefined) {
+        sequences.push(cache);
+        continue;
+      }
+      const rendered = recursiveRenderStrokeSequence(
+        glyph,
+        repertoire,
+        sequenceCache,
+      );
+      if (rendered instanceof Error) return rendered;
+      sequences.push(rendered);
+      sequenceCache.set(char, rendered);
+    }
+  }
+  const { order } = compound;
+  if (order === undefined) {
+    return sequences.join("");
+  } else {
+    const merged: string[] = [];
+    for (const { index, strokes } of order) {
+      const seq = sequences[index];
+      if (seq === undefined) continue;
+      if (strokes === 0) {
+        merged.push(seq);
+      } else {
+        merged.push(seq.slice(0, strokes));
+        sequences[index] = seq.slice(strokes);
+      }
+    }
+    return merged.join("");
+  }
 };
 
 /**
@@ -657,29 +713,6 @@ export const disassembleCompounds = (
       // this is safe!
       const operandResults = rawOperandResults as PartitionResult[];
       const serialization = serializer(operandResults, glyph, config);
-      // 检查拆分是否满足递归条件
-      const hash = serialization.sequence.map(display).join(" ");
-      for (const x of operandResults) {
-        const { sequence: rawSequence, corners } = x;
-        const sequence = rawSequence.map(display);
-        let subhash: string;
-        if (sequence.length === 1) {
-          subhash = sequence[0]!;
-        } else if (corners[0] !== corners[3]) {
-          subhash = `${sequence[corners[0]]} ${sequence[corners[3]]}`;
-        } else {
-          if ("operandResults" in x) {
-            const inner = x.operandResults[1]!;
-            const innerSequence = inner.sequence.map(display);
-            subhash = `${sequence[0]} ${innerSequence[inner.corners[3]]}`;
-          } else {
-            subhash = `${sequence[0]} ${sequence.find((_, i) => i !== corners[0])}`;
-          }
-        }
-        if (!hash.includes(subhash)) {
-          warninfo.push(`${display(char)}：${hash} 不含构件首尾 ${subhash}`);
-        }
-      }
       compoundResults.set(char, serialization);
     } else {
       if (knownCharacters.has(char)) {

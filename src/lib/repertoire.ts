@@ -22,12 +22,11 @@ import type {
   PrimitiveRepertoire,
   SVGGlyph,
   Component,
+  Glyph,
+  BasicComponent,
 } from "./data";
 
-export const findGlyphIndex = (
-  glyphs: (Component | Compound)[],
-  tags: string[],
-) => {
+export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
   for (const tag of tags) {
     const withTag = glyphs.findIndex((x) => (x.tags ?? []).includes(tag));
     if (withTag !== -1) return withTag;
@@ -60,38 +59,44 @@ export const determine = (
   for (const [name, character] of Object.entries(repertoire)) {
     const { ambiguous: _, glyphs, readings, ...rest } = character;
     const selectedIndex = findGlyphIndex(glyphs, tags);
-    const rawglyph = customGlyph[name] ?? glyphs[selectedIndex];
-    let finalGlyph: Character["glyph"];
+    const rawglyph = customGlyph[name]! ?? glyphs[selectedIndex]!;
+    const glyph = recursiveHandleRawGlyph(rawglyph, glyphCache, repertoire);
     const finalReadings = customReadings[name] ?? readings;
-    if (
-      rawglyph?.type === "derived_component" ||
-      rawglyph?.type === "spliced_component"
-    ) {
-      const svgglyph = recursiveRenderComponent(
-        rawglyph,
-        repertoire,
-        glyphCache,
-      );
-      if (svgglyph instanceof Error) {
-        continue;
-      }
-      finalGlyph = {
-        type: "basic_component",
-        tags: rawglyph.tags,
-        strokes: svgglyph,
-      };
-    } else {
-      finalGlyph = rawglyph;
-    }
     const determined_character: Character = {
       ...rest,
-      glyph: finalGlyph,
+      glyph,
       readings: finalReadings,
     };
     determined[name] = determined_character;
   }
   return determined;
 };
+
+function recursiveHandleRawGlyph(
+  glyph: Glyph,
+  glyphCache: Map<string, SVGGlyph>,
+  repertoire: PrimitiveRepertoire,
+): BasicComponent | Compound {
+  if (
+    glyph.type === "derived_component" ||
+    glyph.type === "spliced_component"
+  ) {
+    const svgglyph = recursiveRenderComponent(glyph, repertoire, glyphCache);
+    return {
+      type: "basic_component",
+      tags: glyph.tags,
+      strokes: svgglyph instanceof Error ? [] : svgglyph,
+    };
+  } else if (glyph.type === "identity") {
+    return recursiveHandleRawGlyph(
+      repertoire[glyph.source]!.glyphs[0]!,
+      glyphCache,
+      repertoire,
+    );
+  } else {
+    return glyph;
+  }
+}
 
 export interface AnalysisResult {
   componentResults: ComponentResults;

@@ -7,7 +7,7 @@ import {
   currentElementAtom,
   customClassifierAtom,
   processedCustomElementsAtom,
-  sortedRepertoireAtom,
+  sortedCharactersAtom,
   useAtom,
   useAtomValue,
   useRemoveAtom,
@@ -82,16 +82,15 @@ const useAllElements = () => {
   const customizedClassifier = useAtomValue(customClassifierAtom);
   const pronunciationElements = useAtomValue(phonemeEnumerationAtom);
   const customElements = useAtomValue(processedCustomElementsAtom);
-  const sortedForm = useAtomValue(sortedRepertoireAtom);
+  const sortedCharacters = useAtomValue(sortedCharactersAtom);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
   const allErbi = allStrokes.flatMap((x) =>
     ["0"].concat(allStrokes).map((y) => x + y),
   );
-  const allGlyph = sortedForm.map(([x]) => x);
   const shapeElements: Map<ShapeElementTypes, string[]> = new Map([
-    ["字根", allGlyph],
+    ["字根", sortedCharacters],
     ["笔画", allStrokes],
     ["二笔", allErbi],
     ["结构", [...operators]],

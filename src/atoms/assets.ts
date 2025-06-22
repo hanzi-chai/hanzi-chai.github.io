@@ -16,70 +16,72 @@ import {
   stringifySequence,
   type PrimitiveRepertoire,
 } from "~/lib";
-import { produce } from "immer";
 import { charactersAtom } from "./data";
 import { configAtom } from "./config";
 import { assemblyResultAtom } from "./cache";
+import pako from "pako";
 
 const _cache: Record<string, any> = {};
-export async function fetchAsset(
-  filename: string,
-  type: "json" | "txt" = "json",
-) {
+
+export async function fetchAsset(filename: string) {
+  // 检查缓存
   if (filename in _cache) {
     return _cache[filename];
   }
-  const response = await fetch(`/cache/${filename}.${type}`);
-  const content = await (type === "json" ? response.json() : response.text());
-  _cache[filename] = content;
-  return content;
+  try {
+    const response = await fetch(`/cache/${filename}`);
+    if (!response.ok) {
+      throw new Error(`获取资源失败: ${filename}, 状态码: ${response.status}`);
+    }
+    let result: any;
+    if (filename.endsWith(".deflate")) {
+      result = await handleCompressedFile(filename, response);
+    } else if (filename.endsWith(".json")) {
+      result = await response.json();
+    } else {
+      result = await response.text();
+    }
+    // 缓存结果
+    _cache[filename] = result;
+    return result;
+  } catch (error) {
+    console.error(`处理资源时出错: ${filename}`, error);
+    throw error;
+  }
+}
+
+async function handleCompressedFile(filename: string, response: Response) {
+  console.log(`解压文件: ${filename}`);
+  const name = filename.replace(/\.deflate$/, "");
+  const arrayBuffer = await response.arrayBuffer();
+  try {
+    const content = pako.inflate(arrayBuffer, { to: "string" });
+    if (name.endsWith(".json")) {
+      try {
+        return JSON.parse(content);
+      } catch (error) {
+        throw new Error(`解析JSON文件失败: ${name}`);
+      }
+    }
+  } catch (error) {
+    throw new Error(`解压文件失败: ${name}`);
+  }
 }
 
 export const primitiveRepertoireAtom = atom<PrimitiveRepertoire>({});
 primitiveRepertoireAtom.debugLabel = "repertoire";
 
-export const mutateRepertoireAtom = atom(
-  null,
-  (get, set, twoUnicode: [number, number]) => {
-    const before = String.fromCodePoint(twoUnicode[0]);
-    const after = String.fromCodePoint(twoUnicode[1]);
-    const replaceIf = (s: string) => (s === before ? after : s);
-
-    set(primitiveRepertoireAtom, (previous) =>
-      produce(previous, (state) => {
-        // update itself
-        const value = state[before]!;
-        delete state[before];
-        state[after] = { ...value, unicode: after.codePointAt(0)! };
-        // update references
-        for (const [_, value] of Object.entries(state)) {
-          value.glyphs.forEach((x) => {
-            if (x.type === "derived_component") {
-              x.source = x.source && replaceIf(x.source);
-            } else if (
-              x.type === "compound" ||
-              x.type === "spliced_component"
-            ) {
-              x.operandList = x.operandList.map(replaceIf);
-            }
-          });
-        }
-      }),
-    );
-  },
-);
-
 export const defaultDictionaryAtom = atom<Promise<Dictionary>>(async () =>
-  getDictFromTSV(await fetchAsset("dictionary", "txt")),
+  getDictFromTSV(await fetchAsset("dictionary.txt")),
 );
 export const frequencyAtom = atom<Promise<Frequency>>(async () =>
-  getRecordFromTSV(await fetchAsset("frequency", "txt")),
+  getRecordFromTSV(await fetchAsset("frequency.txt")),
 );
 export const keyDistributionAtom = atom<Promise<Distribution>>(async () =>
-  getDistributionFromTSV(await fetchAsset("key_distribution", "txt")),
+  getDistributionFromTSV(await fetchAsset("key_distribution.txt")),
 );
 export const pairEquivalenceAtom = atom<Promise<Equivalence>>(async () =>
-  getRecordFromTSV(await fetchAsset("pair_equivalence", "txt")),
+  getRecordFromTSV(await fetchAsset("pair_equivalence.txt")),
 );
 
 export const inputAtom = atom(async (get) => {

@@ -1,6 +1,5 @@
 import type { BasicComponent, PrimitiveCharacter, SVGStroke } from "~/lib";
 import { Flex, Layout, Typography } from "antd";
-import { fetchCharacterByUnicode } from "~/api";
 import { useChaifenTitle } from "~/atoms";
 import { Box, StrokesView } from "~/components/GlyphView";
 import { dump } from "js-yaml";
@@ -48,11 +47,11 @@ const TestComponent: React.FC<{
 export default function BezierLayout() {
   useChaifenTitle("Bezier 曲线测试");
   const [data, setData] = useState([] as PrimitiveCharacter[]);
-  useEffect(() => {
-    Promise.all(
-      [0x4e00, 0x4e01, 0x4e03, 0x4e07, 0x4e08].map(fetchCharacterByUnicode),
-    ).then(setData);
-  }, []);
+  // useEffect(() => {
+  //   Promise.all(
+  //     [0x4e00, 0x4e01, 0x4e03, 0x4e07, 0x4e08].map(fetchCharacterByUnicode),
+  //   ).then(setData);
+  // }, []);
 
   return (
     <Layout style={{ height: "100%", overflowY: "scroll" }}>

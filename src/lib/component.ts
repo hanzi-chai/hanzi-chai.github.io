@@ -5,6 +5,7 @@ import type {
   SVGGlyph,
   Component,
   SVGGlyphWithBox,
+  Identity,
 } from "./data";
 import { defaultDegenerator, generateSliceBinaries } from "./degenerator";
 import { select } from "./selector";
@@ -247,7 +248,7 @@ export type ComponentResults = Map<string, ComponentAnalysis>;
  * @throws InvalidGlyphError 无法渲染
  */
 export const recursiveRenderComponent = (
-  component: Component,
+  component: Component | Identity,
   repertoire: PrimitiveRepertoire,
   glyphCache: Map<string, SVGGlyph> = new Map(),
   depth = 0,
@@ -259,7 +260,7 @@ export const recursiveRenderComponent = (
   if (component.type === "basic_component") return component.strokes;
   if (component.type === "derived_component") {
     const sourceComponent =
-      repertoire[component.source]?.glyphs.find(isComponent);
+      repertoire[component.source]?.glyphs?.find?.(isComponent);
     if (sourceComponent === undefined) return new InvalidGlyphError();
     const sourceGlyph = recursiveRenderComponent(
       sourceComponent,
@@ -284,7 +285,7 @@ export const recursiveRenderComponent = (
   if (component.type === "spliced_component") {
     const glyphs: SVGGlyphWithBox[] = [];
     for (const name of component.operandList) {
-      const sourceComponent = repertoire[name]?.glyphs.find(isComponent);
+      const sourceComponent = repertoire[name]?.glyphs?.find?.(isComponent);
       if (sourceComponent === undefined) return new InvalidGlyphError();
       const sourceGlyph = recursiveRenderComponent(
         sourceComponent,
@@ -298,6 +299,17 @@ export const recursiveRenderComponent = (
     }
     const asCompound = { ...component, type: "compound" as const };
     return affineMerge(asCompound, glyphs).strokes;
+  }
+  if (component.type === "identity") {
+    const sourceComponent =
+      repertoire[component.source]?.glyphs?.find?.(isComponent);
+    if (sourceComponent === undefined) return new InvalidGlyphError();
+    return recursiveRenderComponent(
+      sourceComponent,
+      repertoire,
+      glyphCache,
+      depth + 1,
+    );
   }
   return new InvalidGlyphError();
 };

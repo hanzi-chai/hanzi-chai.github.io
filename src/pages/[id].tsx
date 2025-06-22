@@ -21,6 +21,7 @@ import {
 } from "~/atoms";
 import { examples, listToObject } from "~/lib";
 import { AppstoreOutlined } from "@ant-design/icons";
+import { fromModel } from "~/api";
 
 const items: MenuProps["items"] = [
   { label: "基本", key: "", icon: <MailOutlined /> },
@@ -145,8 +146,8 @@ export default function Contextualized() {
   const setRepertoire = useSetAtom(primitiveRepertoireAtom);
 
   useEffect(() => {
-    fetchAsset("repertoire").then((value) =>
-      setRepertoire(listToObject(value)),
+    fetchAsset("repertoire.json.deflate").then((value) =>
+      setRepertoire(listToObject(value.map(fromModel))),
     );
   }, [setRepertoire]);
 

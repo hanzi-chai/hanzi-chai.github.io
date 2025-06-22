@@ -9,7 +9,7 @@ import {
 } from "@ant-design/pro-components";
 import { useAtomValue } from "jotai";
 import { tagsAtom } from "~/atoms";
-import { GlyphSelect } from "./CharacterSelect";
+import CharacterSelect from "./CharacterSelect";
 import { debounce } from "lodash-es";
 
 interface StrokeSearchProps {
@@ -40,7 +40,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
         options={operators.map((x) => ({ label: x, value: x }))}
       />
       <Form.Item label="包含部分" name="part">
-        <GlyphSelect allowClear={true} />
+        <CharacterSelect allowClear={true} />
       </Form.Item>
     </QueryFilter>
   );

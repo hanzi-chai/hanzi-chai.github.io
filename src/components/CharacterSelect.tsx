@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { sequenceAtom, sortedRepertoireAtom } from "~/atoms";
+import { repertoireAtom, sequenceAtom, sortedCharactersAtom } from "~/atoms";
 import { Display, Select } from "./Utils";
 import type { SelectProps } from "antd";
 import type { Character } from "~/lib";
@@ -10,9 +10,16 @@ interface ItemSelectProps extends SelectProps {
   customFilter?: (e: [string, Character]) => boolean;
 }
 
-export const GlyphSelect = (props: ItemSelectProps & ProFormSelectProps) => {
+export default function CharacterSelect(
+  props: ItemSelectProps & ProFormSelectProps,
+) {
   const { customFilter, ...rest } = props;
-  const sortedRepertoire = useAtomValue(sortedRepertoireAtom);
+  const sortedCharacters = useAtomValue(sortedCharactersAtom);
+  const repertoire = useAtomValue(repertoireAtom);
+  const sortedRepertoire = sortedCharacters.map((x) => [x, repertoire[x]]) as [
+    string,
+    Character,
+  ][];
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char = props.value;
   const sequenceMap = useAtomValue(sequenceAtom);
@@ -31,7 +38,14 @@ export const GlyphSelect = (props: ItemSelectProps & ProFormSelectProps) => {
       .filter(customFilter ?? (() => true))
       .map(([x]) => ({
         value: x,
-        label: <Display name={x} />,
+        label: (
+          <span style={{ display: "flex", gap: "4px" }}>
+            <Display name={x} />
+            <span style={{ fontSize: "0.8em" }}>
+              {x.codePointAt(0)?.toString(16)}
+            </span>
+          </span>
+        ),
       }))
       .filter(({ value }) => {
         return sequenceMap.get(value)?.startsWith(input);
@@ -49,4 +63,4 @@ export const GlyphSelect = (props: ItemSelectProps & ProFormSelectProps) => {
     onSearch,
   };
   return <Select {...rest} {...commonProps} />;
-};
+}

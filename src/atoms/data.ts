@@ -11,6 +11,8 @@ import {
   isPUA,
   isValidCJKBasicChar,
   isValidCJKChar,
+  isValidCJKSupplement,
+  recursiveRenderStrokeSequence,
 } from "~/lib";
 import { recursiveRenderCompound } from "~/lib";
 import { dataAtom } from ".";
@@ -19,6 +21,7 @@ import type { PrimitiveRepertoire } from "~/lib";
 import type { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
+import { sortBy } from "lodash-es";
 
 export const characterSetAtom = focusAtom(dataAtom, (o) =>
   o.prop("character_set").valueOr("general" as CharacterSetSpecifier),
@@ -53,6 +56,9 @@ export const charactersAtom = atom((get) => {
     general: (_, v) => v.tygf > 0,
     basic: (k, v) => v.tygf > 0 || isValidCJKBasicChar(k),
     extended: (k, v) => v.tygf > 0 || isValidCJKChar(k),
+    supplement: (k, v) =>
+      v.tygf > 0 || isValidCJKChar(k) || isValidCJKSupplement(k),
+    maximal: (k, v) => !isPUA(k),
     custom: (k, v) => {
       if (userCharacterSet !== undefined) return userCharacterSetSet.has(k);
       return v.gb2312 > 0 && v.tygf > 0;
@@ -89,10 +95,11 @@ export const repertoireAtom = atom((get) => {
   return determine(repertoire, customGlyph, customReadings, tags);
 });
 
-export const glyphAtom = atom((get) => {
+export const puaGlyphAtom = atom((get) => {
   const repertoire = get(repertoireAtom);
   const result = new Map<string, SVGGlyphWithBox>();
   for (const [char, { glyph }] of Object.entries(repertoire)) {
+    if (!isPUA(char)) continue;
     if (glyph === undefined) continue;
     if (result.has(char)) continue;
     if (glyph.type === "basic_component") {
@@ -107,24 +114,32 @@ export const glyphAtom = atom((get) => {
   return result;
 });
 
-export const sortedRepertoireAtom = atom((get) => {
-  const determinedRepertoire = get(repertoireAtom);
+export const sortedCharactersAtom = atom((get) => {
+  const repertoire = get(repertoireAtom);
   const sequence = get(sequenceAtom);
-  return Object.entries(determinedRepertoire).sort((a, b) => {
-    return (
-      (sequence.get(a[0]) ?? "").length - (sequence.get(b[0]) ?? "").length
-    );
-  });
+  return sortBy(
+    Object.keys(repertoire),
+    (char) => sequence.get(char)?.length ?? 0,
+  );
 });
 
 export const sequenceAtom = atom((get) => {
-  const glyphs = get(glyphAtom);
-  const result = new Map<string, string>(
-    [...glyphs].map(([name, glyph]) => [
-      name,
-      glyph.strokes.map((x) => classifier[x.feature]).join(""),
-    ]),
-  );
+  const repertoire = get(repertoireAtom);
+  const result = new Map<string, string>();
+  for (const [char, { glyph }] of Object.entries(repertoire)) {
+    if (glyph === undefined) continue;
+    if (result.has(char)) continue;
+    if (glyph.type === "basic_component") {
+      result.set(
+        char,
+        glyph.strokes.map((x) => classifier[x.feature]).join(""),
+      );
+    } else {
+      const svgglyph = recursiveRenderStrokeSequence(glyph, repertoire, result);
+      if (svgglyph instanceof Error) continue;
+      result.set(char, svgglyph);
+    }
+  }
   return result;
 });
 

@@ -1,5 +1,4 @@
 import type { Config } from "~/lib";
-import { isValidCJKChar } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -69,17 +68,6 @@ export const errorFeedback = <T extends number | boolean>(
   }
   notification.success({ message: "操作成功" });
   return false;
-};
-
-export const verifyNewName = (newName: string) => {
-  if (!Array.from(newName).every(isValidCJKChar)) {
-    notification.error({
-      message: "名称含有非法字符",
-      description: "只有 CJK 基本集或扩展集 A 中的才是合法字符",
-    });
-    return false;
-  }
-  return true;
 };
 
 export function useChaifenTitle(title: string) {

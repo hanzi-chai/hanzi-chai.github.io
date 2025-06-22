@@ -42,7 +42,7 @@ const createRouter =
 const router = createRouter(AutoRoute);
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  <>
     <GlobalStyle />
     <ConfigProvider
       button={{ autoInsertSpace: false }}
@@ -59,5 +59,5 @@ createRoot(document.getElementById("root")!).render(
         <RouterProvider router={router} />
       </Suspense>
     </ConfigProvider>
-  </StrictMode>,
+  </>,
 );

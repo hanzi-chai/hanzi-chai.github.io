@@ -112,6 +112,8 @@ export const operators = [
   "⿹",
   "⿺",
   "⿻",
+  "⿾",
+  "⿿",
 ] as const;
 
 /**
@@ -153,6 +155,14 @@ export interface Compound {
   parameters?: CompoundParameters;
 }
 
+export interface Identity {
+  type: "identity";
+  tags?: string[];
+  source: string;
+}
+
+export type Glyph = Component | Compound | Identity;
+
 export interface Reading {
   pinyin: string;
   importance: number;
@@ -178,7 +188,7 @@ export interface PrimitiveCharacter {
   gf0014_id: number | null;
   gf3001_id: number | null;
   readings: Reading[];
-  glyphs: (BasicComponent | DerivedComponent | SplicedComponent | Compound)[];
+  glyphs: Glyph[];
   ambiguous: boolean;
 }
 
@@ -188,7 +198,7 @@ export interface PrimitiveCharacter {
  */
 export interface Character
   extends Omit<PrimitiveCharacter, "glyphs" | "ambiguous"> {
-  glyph: BasicComponent | Compound | undefined;
+  glyph: BasicComponent | Compound;
 }
 
 export interface ComponentCharacter extends Character {
