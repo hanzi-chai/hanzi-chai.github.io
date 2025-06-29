@@ -239,10 +239,9 @@ export default function CharacterTable() {
   const allRepertoire = useAtomValue(allRepertoireAtom);
   const userRepertoire = useAtomValue(userRepertoireAtom);
   const sortedCharacters = useAtomValue(sortedCharactersAtom);
-  const sortedRepertoire = sortedCharacters.map((x) => [
-    x,
-    primitiveRepertoire[x],
-  ]) as [string, PrimitiveCharacter][];
+  const sortedRepertoire = sortedCharacters
+    .filter((x) => primitiveRepertoire[x] !== undefined)
+    .map((x) => [x, primitiveRepertoire[x]]) as [string, PrimitiveCharacter][];
   const customGlyph = useAtomValue(customGlyphAtom);
   const customReadings = useAtomValue(customReadingsAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
