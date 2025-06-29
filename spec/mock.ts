@@ -1,4 +1,4 @@
-import rawrepertoire from "../public/cache/repertoire.json";
+import { readFileSync } from "node:fs";
 import type {
   AnalysisConfig,
   BasicComponent,
@@ -7,6 +7,11 @@ import type {
   Repertoire,
 } from "~/lib";
 import { determine, computeComponent } from "~/lib";
+import Pako from "pako";
+
+const compressed = readFileSync("public/cache/repertoire.json.deflate");
+const decompressed = Pako.inflate(compressed, { to: "string" });
+const rawrepertoire = JSON.parse(decompressed);
 
 export const primitiveRepertoire = Object.fromEntries(
   (rawrepertoire as PrimitiveCharacter[]).map((x) => [

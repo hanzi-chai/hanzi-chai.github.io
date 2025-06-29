@@ -32,6 +32,7 @@
     "build:BEX": "vite build --mode BEX",
     "build:PAGES": "vite build --mode PAGES",
     "build:CF": "vite build --mode CF",
+    "build:CLIENT": "vite build --mode CLIENT",
     "build": "npm run fetch && npm run build:CF",
     "publish": "bump --tag --commit --push"
   },
