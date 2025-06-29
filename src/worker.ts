@@ -21,9 +21,6 @@ export type WorkerOutput =
 
 await init();
 
-// 修复WebSocket连接地址
-const ADDRESS = "localhost:3200";
-const API_URL = `http://${ADDRESS}/api`;
 let currentPort: MessagePort | null = null;
 
 // 优化状态
@@ -40,7 +37,7 @@ async function pollStatus(onProgress?: (data: any) => void): Promise<any> {
 
   while (attempts < maxAttempts) {
     try {
-      const response = await axios.get(`${API_URL}/status`, {
+      const response = await axios.get("/api/status", {
         timeout: 5000,
         headers: {
           "Content-Type": "application/json",
@@ -146,7 +143,7 @@ async function apiCall(endpoint: any, data: any) {
   // console.log(`📡 ${endpoint} 请求:`, data);
   let result = {};
   await axios
-    .post(`${API_URL}/${endpoint}`, data, {
+    .post(`/api/${endpoint}`, data, {
       timeout: 60000,
       headers: {
         "Content-Type": "application/json",
