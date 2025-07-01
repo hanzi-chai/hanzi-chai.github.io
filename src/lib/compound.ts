@@ -694,8 +694,6 @@ export const disassembleCompounds = (
       if (result.sequence[0] !== key) result.sequence.push("");
     }
   }
-  const display = (s: string) => repertoire[s]?.name ?? s;
-  const warninfo: string[] = [];
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根

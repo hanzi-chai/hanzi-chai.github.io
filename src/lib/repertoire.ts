@@ -112,6 +112,8 @@ export interface AnalysisConfig {
   analysis: Analysis;
   primaryRoots: Map<Element, Mapped>;
   secondaryRoots: Map<Element, Element>;
+  optionalPrimaryRoots: Map<Element, Mapped>;
+  optionalSecondaryRoots: Map<Element, Element>;
 }
 
 const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {

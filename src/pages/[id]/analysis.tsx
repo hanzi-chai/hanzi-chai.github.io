@@ -20,6 +20,9 @@ import {
   useChaifenTitle,
   customizeAtom,
   charactersAtom,
+  mappingAtom,
+  groupingAtom,
+  optionalMappingAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
@@ -79,12 +82,18 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
+  const mapping = useAtomValue(mappingAtom);
+  const grouping = useAtomValue(groupingAtom);
+  const optionalMapping = useAtomValue(optionalMappingAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
-  const componentsNeedAnalysis = [...componentResults].filter(
-    ([, v]) => v.sequence.length > 1,
-  );
+  const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
+    if (optionalMapping[k]) return true;
+    if (mapping[k] || grouping[k]) return false;
+    if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
+    return true;
+  });
   const componentDisplay = componentsNeedAnalysis
     .filter(([x]) => !customizedOnly || customize[x])
     .filter(([x]) => filterFn(x))
@@ -121,13 +130,13 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
           description={
             <>
               <p>
-                部件：$
+                部件：
                 {componentError.map((x, i) => (
                   <Display key={i} name={x} />
                 ))}
               </p>
               <p>
-                复合体：$
+                复合体：
                 {compoundError.map((x, i) => (
                   <Display key={i} name={x} />
                 ))}

@@ -1,6 +1,6 @@
 import { focusAtom } from "jotai-optics";
 import { keyboardAtom } from "./config";
-import type { Grouping, Mapping } from "~/lib";
+import type { Grouping, Keyboard, Mapping } from "~/lib";
 
 export const alphabetAtom = focusAtom(keyboardAtom, (o) =>
   o.prop("alphabet").valueOr("abcdefghijklmnopqrstuvwxyz"),
@@ -15,5 +15,20 @@ export const mappingAtom = focusAtom(keyboardAtom, (o) =>
 );
 
 export const groupingAtom = focusAtom(keyboardAtom, (o) =>
+  o.prop("grouping").valueOr({} as Grouping),
+);
+
+export const optionalAtom = focusAtom(keyboardAtom, (o) =>
+  o.prop("optional").valueOr({
+    mapping: {} as Mapping,
+    grouping: undefined,
+  } as NonNullable<Keyboard["optional"]>),
+);
+
+export const optionalMappingAtom = focusAtom(optionalAtom, (o) =>
+  o.prop("mapping"),
+);
+
+export const optionalGroupingAtom = focusAtom(optionalAtom, (o) =>
   o.prop("grouping").valueOr({} as Grouping),
 );

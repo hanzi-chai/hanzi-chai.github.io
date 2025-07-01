@@ -3,10 +3,13 @@ import {
   Button,
   Flex,
   Form,
+  Input,
   List,
+  Popconfirm,
   Popover,
   Select,
   Space,
+  Statistic,
   Typography,
 } from "antd";
 import { useState, useMemo, memo } from "react";
@@ -23,10 +26,13 @@ import {
   useRemoveAtom,
   useAtom,
   currentElementAtom,
+  optionalAtom,
+  optionalMappingAtom,
 } from "~/atoms";
 
 import Char from "./Character";
 import {
+  chars,
   getReversedMapping,
   isPUA,
   joinKeys,
@@ -41,6 +47,8 @@ import type { Key, MappedInfo, Mapping } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
 import { ElementWithTooltip } from "./ElementPool";
+import CharacterSelect from "./CharacterSelect";
+import { sortBy } from "lodash-es";
 
 const useAffiliates = (name: string) => {
   const mapping = useAtomValue(mappingAtom);
@@ -116,6 +124,7 @@ const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
   const removeMapping = useRemoveAtom(mappingAtom);
   const removeGrouping = useRemoveAtom(groupingAtom);
   const [affiliates, partialAffiliates] = useAffiliates(name);
+  const optionalMapping = useAtomValue(optionalMappingAtom);
   return (
     <Flex vertical gap="middle">
       <KeysEditor
@@ -168,6 +177,7 @@ const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
           </Button>
         </Space>
       )}
+      {optionalMapping[name] && "可选字根"}
     </Flex>
   );
 };
@@ -346,11 +356,7 @@ const MappingUploader = ({
 };
 
 const MappingHeader = () => {
-  const keyboard = Array.from(
-    "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?qwertyuiopasdfghjkl;zxcvbnm,./",
-  );
-  const keyboardSort = (a: string, b: string) =>
-    keyboard.findIndex((x) => x === a) - keyboard.findIndex((x) => x === b);
+  const [order, setOrder] = useState("");
   const [char, setChar] = useState<string | undefined>(undefined);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
@@ -391,18 +397,22 @@ const MappingHeader = () => {
         >
           添加
         </Button>
-        <Button
-          onClick={() => setAlphabet(Array.from(alphabet).sort().join(""))}
-        >
-          排列为字典序
-        </Button>
-        <Button
-          onClick={() =>
-            setAlphabet(Array.from(alphabet).sort(keyboardSort).join(""))
+        <Popconfirm
+          title="请输入排列顺序"
+          description={
+            <Input
+              value={order}
+              onChange={(event) => setOrder(event.target.value)}
+            />
+          }
+          onConfirm={() =>
+            setAlphabet(
+              sortBy(Array.from(alphabet), (x) => order.indexOf(x)).join(""),
+            )
           }
         >
-          排列为键盘序
-        </Button>
+          <Button>自定义排列顺序</Button>
+        </Popconfirm>
         <MappingUploader setImportResult={setImportResult} />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
@@ -445,8 +455,60 @@ const MappingRow = memo(
   },
 );
 
+const Optional = () => {
+  const mapping = useAtomValue(mappingAtom);
+  const grouping = useAtomValue(groupingAtom);
+  const [optionalMapping, setOptionalMapping] = useAtom(optionalMappingAtom);
+  const add = useAddAtom(optionalMappingAtom);
+  const remove = useRemoveAtom(optionalMappingAtom);
+  const [newChar, setNewChar] = useState<string | undefined>(undefined);
+  const required = Object.keys(mapping)
+    .concat(Object.keys(grouping))
+    .filter((x) => !optionalMapping[x] && chars(x) === 1);
+  return (
+    <>
+      <Typography.Title level={3}>可选字根</Typography.Title>
+      <Flex gap="middle" justify="center">
+        <Statistic title="必要字根" value={required.length} />
+        <Statistic
+          title="可选字根"
+          value={Object.keys(optionalMapping).length}
+        />
+      </Flex>
+      {/* <Button
+        onClick={() => {
+          const newOptionalMapping = { ...optionalMapping };
+          for (const k of Object.keys(grouping).concat(Object.keys(mapping))) {
+            if (chars(k) === 1 && !/\d/.test(k)) {
+              newOptionalMapping[k] = "a";
+            }
+          }
+          setOptionalMapping(newOptionalMapping);
+        }}
+      /> */}
+      <Flex wrap>
+        {Object.keys(optionalMapping).map((x) => (
+          <span key={x}>
+            <Display name={x} />
+            <DeleteButton onClick={() => remove(x)} />
+          </span>
+        ))}
+      </Flex>
+      <Flex>
+        <CharacterSelect value={newChar} onChange={setNewChar} />
+        <Button
+          onClick={() => add(newChar!, "a")}
+          disabled={newChar === undefined}
+        >
+          添加
+        </Button>
+      </Flex>
+    </>
+  );
+};
+
 export default function MappingComponent() {
-  const { mapping } = useAtomValue(keyboardAtom);
+  const mapping = useAtomValue(mappingAtom);
   const alphabet = useAtomValue(alphabetAtom);
   const reversedMapping = getReversedMapping(mapping, alphabet);
 
@@ -459,6 +521,7 @@ export default function MappingComponent() {
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />
+      <Optional />
     </Flex>
   );
 }

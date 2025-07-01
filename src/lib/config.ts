@@ -102,6 +102,10 @@ export interface Keyboard {
   mapping_type?: number;
   mapping: Mapping;
   grouping?: Grouping;
+  optional?: {
+    mapping: Mapping;
+    grouping?: Grouping;
+  };
 }
 
 export type Element = string;

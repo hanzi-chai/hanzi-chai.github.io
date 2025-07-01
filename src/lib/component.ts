@@ -45,11 +45,14 @@ export const makeIntervalSum = (strokes: number, rootsSet: Set<number>) => {
  * 将这些可能性与此前已经拆分的部分组合，得到新的拆分方案
  * 直到所有的笔画都使用完毕
  */
-export const generateSchemes = (strokes: number, roots: number[]) => {
-  const rootsSet = new Set(roots);
+export const generateSchemes = (
+  strokes: number,
+  roots: number[],
+  requiredRoots: Set<number>,
+) => {
   const schemeList: number[][] = [];
   const total = (1 << strokes) - 1;
-  const intervalSums = makeIntervalSum(strokes, rootsSet);
+  const intervalSums = makeIntervalSum(strokes, requiredRoots);
   const combineNext = (
     partialSum: number,
     scheme: number[],
@@ -114,10 +117,18 @@ export const getComponentScheme = (
   config: AnalysisConfig,
   classifier: Classifier,
 ): ComponentAnalysis | NoSchemeError | MultipleSchemeError => {
-  if (
-    config.primaryRoots.has(component.name) ||
-    config.secondaryRoots.has(component.name)
-  )
+  const currentRoots = new Set([
+    ...config.primaryRoots.keys(),
+    ...config.secondaryRoots.keys(),
+  ]);
+  const optionalRoots = new Set([
+    ...config.optionalPrimaryRoots.keys(),
+    ...config.optionalSecondaryRoots.keys(),
+  ]);
+  const requiredRoots = new Set(
+    [...currentRoots].filter((x) => !optionalRoots.has(x)),
+  );
+  if (requiredRoots.has(component.name))
     return {
       strokes: component.glyph.length,
       sequence: [component.name],
@@ -140,59 +151,45 @@ export const getComponentScheme = (
     binaries.forEach((binary) => rootMap.set(binary, root.name));
   }
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
-  const schemeList = generateSchemes(component.glyph.length, roots);
+  const requiredRootsBinary = new Set(
+    [...rootMap].filter(([K, v]) => requiredRoots.has(v)).map(([K, v]) => K),
+  );
+  const schemeList = generateSchemes(
+    component.glyph.length,
+    roots,
+    requiredRootsBinary,
+  );
   if (schemeList.length === 0) {
     return new NoSchemeError();
   }
-  const selectResult = select(config, component, schemeList, rootMap);
+  const selectResult = select(
+    config,
+    component,
+    schemeList,
+    rootMap,
+    requiredRootsBinary,
+  );
   if (selectResult instanceof Error) {
     return selectResult;
   }
-  const [best, schemes] = selectResult;
+  const best = selectResult.find((x) =>
+    x.scheme.every(
+      (y) => currentRoots.has(rootMap.get(y)!) || /\d/.test(rootMap.get(y)!),
+    ),
+  )!;
   let sequence = best.scheme.map((n) => rootMap.get(n)!);
   let corners = component.corners.map((corner) =>
     best.scheme.findIndex(
       (x) => x & (1 << (component.glyph.length - corner - 1)),
     ),
   ) as CornerSpecifier;
-  if (config.analysis.serializer === "c3") {
-    const newSequence: string[] = [];
-    const newCorners: CornerSpecifier = [0, 0, 0, 0];
-    newSequence.push(sequence[corners[0]]!);
-    if (corners[0] === corners[3]) {
-      // 左上角和右下角相同
-      sequence.forEach((x, i) => {
-        if (i === corners[0]) return;
-        if (newSequence.length === 3) return;
-        newSequence.push(x);
-      });
-    } else {
-      // 左上角和右下角不同
-      let middle: number;
-      if (sequence.length > 2) {
-        middle = sequence.findIndex(
-          (_, i) => i !== corners[0] && i !== corners[3],
-        );
-      }
-      sequence.forEach((x, i) => {
-        if (i === corners[3] || i === middle) {
-          newSequence.push(x);
-        }
-        if (i === corners[3]) {
-          newCorners[3] = newSequence.length - 1;
-        }
-      });
-    }
-    sequence = newSequence;
-    corners = newCorners;
-  }
   return {
     sequence,
     full: sequence,
     strokes: component.glyph.length,
     map: rootMap,
     best,
-    schemes,
+    schemes: selectResult,
     corners,
     operator: undefined,
   };
@@ -208,6 +205,7 @@ export type ComponentAnalysis =
 export interface SchemeWithData {
   scheme: number[];
   evaluation: Map<SieveName, number | number[]>;
+  optional: boolean;
 }
 
 export interface CommonAnalysis {
@@ -433,6 +431,8 @@ export const disassembleComponents = (
   const rootMap = renderRootList(repertoire, [
     ...config.primaryRoots.keys(),
     ...config.secondaryRoots.keys(),
+    ...config.optionalPrimaryRoots.keys(),
+    ...config.optionalSecondaryRoots.keys(),
   ]);
   const rootList = [...rootMap.values()];
   const classifier = mergeClassifier(config.analysis?.classifier);
