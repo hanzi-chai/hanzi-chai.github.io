@@ -53,7 +53,14 @@ export interface Analysis {
   customize?: Record<string, string[]>;
   strong?: string[];
   weak?: string[];
-  serializer?: "sequential" | "c3" | "zhangma" | "zhenma" | "snow2" | "xkjd";
+  serializer?:
+    | "sequential"
+    | "c3"
+    | "zhangma"
+    | "zhenma"
+    | "snow2"
+    | "xkjd"
+    | "shouyou";
 }
 
 export interface Degenerator {

@@ -202,9 +202,9 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
         const charIndex = tokens[i]!.toLowerCase();
         const elementIndex = tokens[i + 1]!;
         const elements = signedIndex(totalElements, charIndex);
-        if (elements === undefined) return undefined;
+        if (elements === undefined) continue;
         const element = signedIndex(elements, elementIndex);
-        if (element === undefined) return undefined;
+        if (element === undefined) continue;
         result.push(element);
       }
       break;

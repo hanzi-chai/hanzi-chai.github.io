@@ -650,6 +650,33 @@ const xkjdSerializer: Serializer = (operandResults, glyph, config) => {
   };
 };
 
+const shouyouSerializer: Serializer = (operandResults, glyph, config) => {
+  const order =
+    glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+  const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
+    order.findIndex((b) => b.index === i),
+  ).map((i) => operandResults[i]!);
+  const first = sortedOperandResults[0]!;
+  const second = sortedOperandResults[1]!;
+  let sequence;
+  const full = sequentialSerializer(operandResults, glyph, config).full;
+  if (
+    /[⿰⿲]/.test(glyph.operator) ||
+    (glyph.operator === "⿺" && order[0]!.index === 0)
+  )
+    sequence = [first.full[0]!, second.full[0]!];
+  else {
+    sequence = [...full];
+  }
+  return {
+    sequence,
+    corners: [0, 0, 0, 0],
+    full,
+    operator: glyph.operator,
+    operandResults,
+  };
+};
+
 const serializerMap: Record<
   Exclude<Analysis["serializer"], undefined>,
   Serializer
@@ -660,6 +687,7 @@ const serializerMap: Record<
   zhenma: zhenmaSerializer,
   snow2: snow2Serializer,
   xkjd: xkjdSerializer,
+  shouyou: shouyouSerializer,
 };
 
 /**
