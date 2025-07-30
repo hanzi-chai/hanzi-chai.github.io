@@ -1,4 +1,4 @@
-import { isEqual } from "lodash-es";
+import { isEqual, sortBy } from "lodash-es";
 import { mergeClassifier } from "./classifier";
 import type {
   ComponentResults,
@@ -7,7 +7,11 @@ import type {
 } from "./component";
 import { disassembleComponents, recursiveRenderComponent } from "./component";
 import type { CompoundResults } from "./compound";
-import { disassembleCompounds, recursiveRenderCompound } from "./compound";
+import {
+  disassembleCompounds,
+  recursiveRenderCompound,
+  topologicalSort,
+} from "./compound";
 import type {
   Analysis,
   CustomGlyph,
@@ -25,6 +29,7 @@ import type {
   Glyph,
   BasicComponent,
 } from "./data";
+import { range } from "d3-array";
 
 export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
   for (const tag of tags) {
@@ -112,6 +117,7 @@ export interface AnalysisConfig {
   analysis: Analysis;
   primaryRoots: Map<Element, Mapped>;
   secondaryRoots: Map<Element, Element>;
+  optionalRoots: Map<Element, Mapped>;
 }
 
 const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {
@@ -135,6 +141,7 @@ const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {
   const roots = new Set([
     ...config.primaryRoots.keys(),
     ...config.secondaryRoots.keys(),
+    ...config.optionalRoots.keys(),
   ]);
   for (const root of roots) {
     rootSequence.set(root, findSequence(root));
@@ -162,8 +169,10 @@ export const getRequiredTargets = (
     const glyph = repertoire[char]?.glyph!;
     if (glyph.type === "compound") {
       compounds.add(char);
-      if (config.primaryRoots.has(char) || config.secondaryRoots.has(char))
-        continue;
+      const isCurrentRoot =
+        config.primaryRoots.has(char) || config.secondaryRoots.has(char);
+      const isOptionalRoot = config.optionalRoots.has(char);
+      if (isCurrentRoot && !isOptionalRoot) continue;
       glyph.operandList.forEach((x) => {
         if (!knownSet.has(x)) {
           knownSet.add(x);
@@ -224,9 +233,39 @@ export const analysis = (
       sequence: sequence,
       full: sequence,
       operator: undefined,
-      corners: [0, 0, 0, sequence.length - 1],
     };
     customizations.set(component, pseudoResult);
+  }
+  const all = new Set([
+    ...config.primaryRoots.keys(),
+    ...config.secondaryRoots.keys(),
+  ]);
+  for (const [component, sequenceList] of Object.entries(
+    config.analysis?.dynamicCustomize ?? {},
+  )) {
+    let found = false;
+    for (const sequence of sequenceList) {
+      if (!sequence.every((x) => /\d/.test(x) || all.has(x))) continue;
+      const pseudoResult: ComponentBasicAnalysis = {
+        strokes: 0,
+        sequence: sequence,
+        full: sequence,
+        operator: undefined,
+      };
+      found = true;
+      customizations.set(component, pseudoResult);
+      console.log(
+        `Dynamic customization for ${component} found: ${JSON.stringify(sequence)}`,
+      );
+      break;
+    }
+    if (!found) {
+      console.warn(
+        `Dynamic customization for ${component} not found in ${JSON.stringify(
+          sequenceList,
+        )}`,
+      );
+    }
   }
   const customized = new Map([...componentResults, ...customizations]);
   const [compoundResults, compoundError] = disassembleCompounds(
@@ -245,5 +284,105 @@ export const analysis = (
     compoundResults,
     compoundError,
     rootSequence,
+  };
+};
+
+export const dynamicAnalysis = (
+  repertoire: Repertoire,
+  config: AnalysisConfig,
+  characters: string[],
+) => {
+  const { components, compounds } = getRequiredTargets(
+    repertoire,
+    config,
+    characters,
+  );
+  const [componentResults, componentError] = disassembleComponents(
+    repertoire,
+    config,
+    characters,
+    components,
+  );
+
+  const segmentMap = new Map<string, string[]>();
+  const segmentDynamicAnalysis = new Map<string, string[][]>();
+
+  for (const [name, analysis] of componentResults) {
+    const maybeCustomDynamicAnalysis = config.analysis.dynamicCustomize?.[name];
+    if (maybeCustomDynamicAnalysis) {
+      segmentDynamicAnalysis.set(name, maybeCustomDynamicAnalysis);
+    } else if ("schemes" in analysis) {
+      segmentDynamicAnalysis.set(
+        name,
+        analysis.schemes.filter((x) => x.optional).map((x) => x.roots),
+      );
+    } else {
+      segmentDynamicAnalysis.set(name, [analysis.sequence]);
+    }
+  }
+  const sortedCompounds = topologicalSort(repertoire, compounds, config);
+  for (const name of segmentDynamicAnalysis.keys()) {
+    segmentMap.set(name, [name]);
+  }
+  for (const [name, compound] of sortedCompounds) {
+    const isCurrentRoots =
+      config.primaryRoots.has(name) || config.secondaryRoots.has(name);
+    const isOptionalRoots = config.optionalRoots.has(name);
+    // 必选字根
+    if (isCurrentRoots && !isOptionalRoots) {
+      segmentDynamicAnalysis.set(name, [[name]]);
+      segmentMap.set(name, [name]);
+      continue;
+    }
+    const glyph = compound.glyph;
+    const order =
+      glyph.order ??
+      glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+    const sortedOperandList = sortBy(range(glyph.operandList.length), (i) =>
+      order.findIndex((b) => b.index === i),
+    ).map((i) => glyph.operandList[i]!);
+    const componentList: string[] = [];
+    for (const child of sortedOperandList) {
+      console.assert(segmentMap.has(child), `${child} not found`);
+      componentList.push(...segmentMap.get(child)!);
+    }
+    // 可选字根
+    if (isOptionalRoots) {
+      let dynamic: string[][] = [[]];
+      for (const operand of componentList) {
+        console.assert(
+          segmentDynamicAnalysis.has(operand),
+          `${operand} not found`,
+        );
+        const dynamicAnalysis = segmentDynamicAnalysis.get(operand)!;
+        dynamic = dynamic
+          .map((x) => dynamicAnalysis.map((y) => x.concat(y)))
+          .flat();
+      }
+      segmentDynamicAnalysis.set(name, [[name]].concat(dynamic));
+      segmentMap.set(name, [name]);
+      continue;
+    }
+    // 非字根
+    segmentMap.set(name, componentList);
+  }
+  const filteredSegmentMap = new Map(
+    characters.map((x) => [x, segmentMap.get(x)!]),
+  );
+  for (const [segment, methods] of segmentDynamicAnalysis) {
+    const last = methods[methods.length - 1]!;
+    if (!last.every((x) => !config.optionalRoots.has(x))) {
+      console.warn(
+        `Dynamic analysis for ${segment} ${segment.codePointAt(0)} contains optional roots: ${JSON.stringify(
+          last,
+        )}`,
+      );
+    }
+  }
+  const rootSequence = getRootSequence(repertoire, config);
+  return {
+    固定拆分: filteredSegmentMap,
+    动态拆分: segmentDynamicAnalysis,
+    字根笔画: rootSequence,
   };
 };

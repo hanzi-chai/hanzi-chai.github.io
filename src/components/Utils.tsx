@@ -124,16 +124,20 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
   );
 };
 
-export const Display = ({ name }: { name: string }) => {
+export const Display = ({ name, ...rest }: { name: string }) => {
   const glyphMap = useAtomValue(puaGlyphAtom);
   if (!isPUA(name)) {
-    return name;
+    return <span {...rest}>{name}</span>;
   }
   const glyph = glyphMap.get(name);
   if (glyph === undefined) {
-    return name;
+    return <span {...rest}>{name}</span>;
   }
-  return <StrokesView glyph={glyph} />;
+  return (
+    <span {...rest}>
+      <StrokesView glyph={glyph} />
+    </span>
+  );
 };
 
 export const DisplayWithSuperScript = ({

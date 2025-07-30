@@ -51,11 +51,11 @@ export interface Analysis {
   degenerator?: Degenerator;
   selector?: Selector;
   customize?: Record<string, string[]>;
+  dynamicCustomize?: Record<string, string[][]>;
   strong?: string[];
   weak?: string[];
   serializer?:
     | "sequential"
-    | "c3"
     | "zhangma"
     | "zhenma"
     | "snow2"
@@ -109,6 +109,7 @@ export interface Keyboard {
   mapping_type?: number;
   mapping: Mapping;
   grouping?: Grouping;
+  optional?: Mapping;
 }
 
 export type Element = string;

@@ -3,10 +3,13 @@ import {
   Button,
   Flex,
   Form,
+  Input,
   List,
+  Popconfirm,
   Popover,
   Select,
   Space,
+  Statistic,
   Typography,
 } from "antd";
 import { useState, useMemo, memo } from "react";
@@ -23,10 +26,12 @@ import {
   useRemoveAtom,
   useAtom,
   currentElementAtom,
+  optionalAtom,
 } from "~/atoms";
 
 import Char from "./Character";
 import {
+  chars,
   getReversedMapping,
   isPUA,
   joinKeys,
@@ -41,6 +46,8 @@ import type { Key, MappedInfo, Mapping } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
 import { ElementWithTooltip } from "./ElementPool";
+import CharacterSelect from "./CharacterSelect";
+import { sortBy } from "lodash-es";
 
 const useAffiliates = (name: string) => {
   const mapping = useAtomValue(mappingAtom);
@@ -187,6 +194,10 @@ const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
   }
 `;
 
+const DisplayWrapper = styled(Display)<{ $optional: boolean }>`
+  color: ${({ $optional }) => ($optional ? "#9d9d9d" : "black")};
+`;
+
 export const ElementLabel = ({
   name,
   code,
@@ -204,14 +215,24 @@ export const ElementLabel = ({
     (name === currentElement ||
       affiliates.includes(currentElement) ||
       partialAffiliates.map(([x]) => x).includes(currentElement));
+  const optionalMapping = useAtomValue(optionalAtom);
   return (
     <ElementLabelWrapper {...rest} $shouldHighlight={shouldHighlight}>
-      {/* 主要字根 */ <Display name={properName} />}
+      {
+        /* 主要字根 */ <DisplayWrapper
+          name={properName}
+          $optional={name in optionalMapping}
+        />
+      }
       {
         /* 归并字根 */ affiliates.length >= 1 && (
           <span style={{ fontSize: "0.7em", display: "inline-flex" }}>
             {affiliates.map((x) => (
-              <Display key={x} name={x} />
+              <DisplayWrapper
+                key={x}
+                name={x}
+                $optional={x in optionalMapping}
+              />
             ))}
           </span>
         )
@@ -230,7 +251,11 @@ export const ElementLabel = ({
               style={{ fontSize: "0.7em", display: "inline-flex" }}
               key={index}
             >
-              [<Display name={element} />
+              [
+              <DisplayWrapper
+                name={element}
+                $optional={element in optionalMapping}
+              />
               &nbsp;
               {renderMapped(mapped.slice(1))}]
             </span>
@@ -346,11 +371,7 @@ const MappingUploader = ({
 };
 
 const MappingHeader = () => {
-  const keyboard = Array.from(
-    "QWERTYUIOPASDFGHJKL:ZXCVBNM<>?qwertyuiopasdfghjkl;zxcvbnm,./",
-  );
-  const keyboardSort = (a: string, b: string) =>
-    keyboard.findIndex((x) => x === a) - keyboard.findIndex((x) => x === b);
+  const [order, setOrder] = useState("");
   const [char, setChar] = useState<string | undefined>(undefined);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
@@ -391,18 +412,22 @@ const MappingHeader = () => {
         >
           添加
         </Button>
-        <Button
-          onClick={() => setAlphabet(Array.from(alphabet).sort().join(""))}
-        >
-          排列为字典序
-        </Button>
-        <Button
-          onClick={() =>
-            setAlphabet(Array.from(alphabet).sort(keyboardSort).join(""))
+        <Popconfirm
+          title="请输入排列顺序"
+          description={
+            <Input
+              value={order}
+              onChange={(event) => setOrder(event.target.value)}
+            />
+          }
+          onConfirm={() =>
+            setAlphabet(
+              sortBy(Array.from(alphabet), (x) => order.indexOf(x)).join(""),
+            )
           }
         >
-          排列为键盘序
-        </Button>
+          <Button>自定义排列顺序</Button>
+        </Popconfirm>
         <MappingUploader setImportResult={setImportResult} />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
@@ -445,8 +470,50 @@ const MappingRow = memo(
   },
 );
 
+const Optional = () => {
+  const currentElement = useAtomValue(currentElementAtom);
+  const mapping = useAtomValue(mappingAtom);
+  const grouping = useAtomValue(groupingAtom);
+  const optionalMapping = useAtomValue(optionalAtom);
+  const add = useAddAtom(optionalAtom);
+  const remove = useRemoveAtom(optionalAtom);
+  const [newChar, setNewChar] = useState<string | undefined>(undefined);
+  const required = Object.keys(mapping)
+    .concat(Object.keys(grouping))
+    .filter((x) => !optionalMapping[x] && chars(x) === 1);
+  return (
+    <>
+      <Typography.Title level={3}>可选字根</Typography.Title>
+      <Flex gap="large" justify="center" align="center">
+        <Statistic title="必要字根" value={required.length} />
+        <Statistic
+          title="可选字根"
+          value={Object.keys(optionalMapping).length}
+        />
+        <CharacterSelect value={newChar} onChange={setNewChar} />
+        <Button
+          onClick={() => add(newChar!, "a")}
+          disabled={newChar === undefined}
+        >
+          添加
+        </Button>
+      </Flex>
+      <Flex wrap>
+        {Object.keys(optionalMapping).map((x) => (
+          <Flex align="center" key={x}>
+            <ElementLabelWrapper $shouldHighlight={x === currentElement}>
+              <Display name={x} />
+            </ElementLabelWrapper>
+            <DeleteButton onClick={() => remove(x)} />
+          </Flex>
+        ))}
+      </Flex>
+    </>
+  );
+};
+
 export default function MappingComponent() {
-  const { mapping } = useAtomValue(keyboardAtom);
+  const mapping = useAtomValue(mappingAtom);
   const alphabet = useAtomValue(alphabetAtom);
   const reversedMapping = getReversedMapping(mapping, alphabet);
 
@@ -459,6 +526,7 @@ export default function MappingComponent() {
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />
+      <Optional />
     </Flex>
   );
 }

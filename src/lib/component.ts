@@ -45,11 +45,14 @@ export const makeIntervalSum = (strokes: number, rootsSet: Set<number>) => {
  * 将这些可能性与此前已经拆分的部分组合，得到新的拆分方案
  * 直到所有的笔画都使用完毕
  */
-export const generateSchemes = (strokes: number, roots: number[]) => {
-  const rootsSet = new Set(roots);
+export const generateSchemes = (
+  strokes: number,
+  roots: number[],
+  requiredRoots: Set<number>,
+) => {
   const schemeList: number[][] = [];
   const total = (1 << strokes) - 1;
-  const intervalSums = makeIntervalSum(strokes, rootsSet);
+  const intervalSums = makeIntervalSum(strokes, requiredRoots);
   const combineNext = (
     partialSum: number,
     scheme: number[],
@@ -89,7 +92,6 @@ export interface ComputedComponent {
   name: string;
   glyph: RenderedGlyph;
   topology: Topology;
-  corners: CornerSpecifier;
 }
 
 export class NoSchemeError extends Error {}
@@ -114,15 +116,19 @@ export const getComponentScheme = (
   config: AnalysisConfig,
   classifier: Classifier,
 ): ComponentAnalysis | NoSchemeError | MultipleSchemeError => {
-  if (
-    config.primaryRoots.has(component.name) ||
-    config.secondaryRoots.has(component.name)
-  )
+  const currentRoots = new Set([
+    ...config.primaryRoots.keys(),
+    ...config.secondaryRoots.keys(),
+  ]);
+  const optionalRoots = new Set([...config.optionalRoots.keys()]);
+  const requiredRoots = new Set(
+    [...currentRoots].filter((x) => !optionalRoots.has(x)),
+  );
+  if (requiredRoots.has(component.name))
     return {
       strokes: component.glyph.length,
       sequence: [component.name],
       full: [component.name],
-      corners: [0, 0, 0, 0],
       operator: undefined,
     };
   const rootMap = new Map<number, string>(
@@ -140,60 +146,40 @@ export const getComponentScheme = (
     binaries.forEach((binary) => rootMap.set(binary, root.name));
   }
   const roots = Array.from(rootMap.keys()).sort((a, b) => a - b);
-  const schemeList = generateSchemes(component.glyph.length, roots);
+  const requiredRootsBinary = new Set(
+    [...rootMap].filter(([K, v]) => requiredRoots.has(v)).map(([K, v]) => K),
+  );
+  const schemeList = generateSchemes(
+    component.glyph.length,
+    roots,
+    requiredRootsBinary,
+  );
   if (schemeList.length === 0) {
     return new NoSchemeError();
   }
-  const selectResult = select(config, component, schemeList, rootMap);
+  const selectResult = select(
+    config,
+    component,
+    schemeList,
+    rootMap,
+    requiredRootsBinary,
+  );
   if (selectResult instanceof Error) {
     return selectResult;
   }
-  const [best, schemes] = selectResult;
-  let sequence = best.scheme.map((n) => rootMap.get(n)!);
-  let corners = component.corners.map((corner) =>
-    best.scheme.findIndex(
-      (x) => x & (1 << (component.glyph.length - corner - 1)),
+  const best = selectResult.find((x) =>
+    x.scheme.every(
+      (y) => currentRoots.has(rootMap.get(y)!) || /\d/.test(rootMap.get(y)!),
     ),
-  ) as CornerSpecifier;
-  if (config.analysis.serializer === "c3") {
-    const newSequence: string[] = [];
-    const newCorners: CornerSpecifier = [0, 0, 0, 0];
-    newSequence.push(sequence[corners[0]]!);
-    if (corners[0] === corners[3]) {
-      // 左上角和右下角相同
-      sequence.forEach((x, i) => {
-        if (i === corners[0]) return;
-        if (newSequence.length === 3) return;
-        newSequence.push(x);
-      });
-    } else {
-      // 左上角和右下角不同
-      let middle: number;
-      if (sequence.length > 2) {
-        middle = sequence.findIndex(
-          (_, i) => i !== corners[0] && i !== corners[3],
-        );
-      }
-      sequence.forEach((x, i) => {
-        if (i === corners[3] || i === middle) {
-          newSequence.push(x);
-        }
-        if (i === corners[3]) {
-          newCorners[3] = newSequence.length - 1;
-        }
-      });
-    }
-    sequence = newSequence;
-    corners = newCorners;
-  }
+  )!;
+  let sequence = best.scheme.map((n) => rootMap.get(n)!);
   return {
     sequence,
     full: sequence,
     strokes: component.glyph.length,
     map: rootMap,
     best,
-    schemes,
-    corners,
+    schemes: selectResult,
     operator: undefined,
   };
 };
@@ -207,14 +193,15 @@ export type ComponentAnalysis =
 
 export interface SchemeWithData {
   scheme: number[];
+  roots: string[];
   evaluation: Map<SieveName, number | number[]>;
+  optional: boolean;
 }
 
 export interface CommonAnalysis {
   sequence: string[];
   sequencePartIndex?: number[];
   full: string[];
-  corners: CornerSpecifier;
 }
 
 /**
@@ -314,81 +301,15 @@ export const recursiveRenderComponent = (
   return new InvalidGlyphError();
 };
 
-const overrideCorners: Map<string, CornerSpecifier> = new Map([
-  ["七", [0, 0, 1, 1]],
-  ["九", [0, 0, 1, 1]],
-  ["良", [0, 0, 4, 6]],
-  ["\uE06A", [0, 0, 4, 5]],
-  ["世", [0, 0, 4, 4]],
-  ["中", [0, 1, 3, 3]],
-  ["争", [0, 1, 5, 5]],
-  ["卡", [0, 0, 3, 3]],
-  ["毌", [0, 0, 0, 0]],
-  ["自", [0, 0, 5, 5]],
-  ["血", [0, 0, 5, 5]],
-  ["\uE097", [0, 0, 4, 4]], // 睾字头
-  ["乜", [0, 0, 1, 1]],
-  ["也", [0, 0, 2, 2]],
-  ["㐄", [0, 0, 1, 2]],
-  ["义", [0, 0, 2, 2]],
-  ["亍", [0, 0, 2, 2]],
-  ["丰", [0, 0, 3, 3]],
-  ["午", [0, 1, 3, 3]],
-  ["巿", [0, 0, 3, 3]],
-  ["帀", [0, 0, 3, 3]],
-  ["\uE06D", [0, 0, 3, 3]],
-  ["\uE0C7", [0, 0, 3, 3]],
-  ["\uE0A4", [0, 1, 3, 3]],
-  ["乎", [0, 0, 4, 4]],
-  ["永", [0, 0, 1, 1]],
-  ["申", [0, 0, 4, 4]],
-  ["\uE098", [0, 0, 4, 4]],
-  ["屰", [0, 1, 5, 5]],
-  ["\uE061", [0, 0, 6, 6]], // 敢字旁
-  ["\uE067", [0, 1, 7, 7]], // 曾字旁
-  ["斥", [0, 0, 3, 3]],
-  ["\uE01C", [0, 0, 4, 4]], // 即字旁
-  ["串", [0, 0, 6, 6]],
-  ["事", [0, 0, 7, 7]],
-  ["臾", [0, 0, 7, 7]],
-  ["\uE0CB", [0, 0, 5, 5]], // 追字心
-  ["州", [0, 0, 5, 5]],
-  ["凢", [0, 0, 2, 2]],
-  ["首", [0, 1, 8, 8]],
-  ["甪", [0, 0, 5, 5]],
-  ["\uE13C", [0, 0, 2, 2]],
-  ["丯", [0, 0, 3, 3]],
-  ["\uEAF3", [0, 0, 2, 2]],
-  ["\uE076", [0, 0, 3, 3]],
-  ["\uE112", [0, 0, 5, 5]], // 帶字头
-  ["\uE158", [0, 0, 3, 3]], // 飛字底
-  ["亊", [0, 0, 6, 6]],
-  ["\uE16B", [0, 0, 6, 6]], // 龜字心
-  ["\uE151", [0, 0, 2, 2]], // 嬽上角框
-  ["平", [0, 0, 4, 4]],
-  ["乡", [0, 0, 2, 2]],
-  ["龜", [0, 0, 6, 6]],
-  ["㐧", [0, 0, 2, 2]],
-  ["\uE153", [0, 0, 3, 3]], // 虍无七
-  ["\uE165", [0, 0, 3, 3]], // 幷字旁
-  ["\uE166", [0, 0, 3, 3]], // 幷字边
-]);
-
 /**
  * 把一个基本部件从 SVG 图形出发，先渲染成 Bezier 图形，然后计算拓扑
  *
  * 这样，便于后续的字根认同计算
  */
-export const computeComponent = (name: string, glyph: SVGGlyph) => {
-  const renderedGlyph = renderSVGGlyph(glyph);
-  const topology = findTopology(renderedGlyph);
-  const corners = overrideCorners.get(name) ?? findCorners(renderedGlyph);
-  const cache: ComputedComponent = {
-    glyph: renderedGlyph,
-    topology,
-    corners,
-    name,
-  };
+export const computeComponent = (name: string, svgglyph: SVGGlyph) => {
+  const glyph = renderSVGGlyph(svgglyph);
+  const topology = findTopology(glyph);
+  const cache: ComputedComponent = { glyph, topology, name };
   return cache;
 };
 
@@ -433,6 +354,7 @@ export const disassembleComponents = (
   const rootMap = renderRootList(repertoire, [
     ...config.primaryRoots.keys(),
     ...config.secondaryRoots.keys(),
+    ...config.optionalRoots.keys(),
   ]);
   const rootList = [...rootMap.values()];
   const classifier = mergeClassifier(config.analysis?.classifier);

@@ -8,20 +8,6 @@ import { binaryToIndices } from "~/lib";
 import type { SchemeWithData } from "~/lib";
 import { Display } from "./Utils";
 
-const makeSorter = (selector: Selector) => {
-  return (a: SchemeWithData, b: SchemeWithData) => {
-    for (const sieve of selector) {
-      const [af, bf] = [a.evaluation.get(sieve), b.evaluation.get(sieve)];
-      if (af === undefined && bf === undefined) return 0;
-      if (af === undefined) return -1;
-      if (bf === undefined) return 1;
-      if (isLess(af, bf)) return -1;
-      if (isLess(bf, af)) return 1;
-    }
-    return 0; // never
-  };
-};
-
 export default function ResultDetail({
   char,
   data,
@@ -41,13 +27,14 @@ export default function ResultDetail({
       title: "拆分方式",
       dataIndex: "sequence",
       key: "sequence",
-      render: (_, { scheme }) => (
+      render: (_, { scheme, optional }) => (
         <Space>
           {scheme.map((root, index) => (
             <Element key={index}>
               <Display name={map.get(root)!} />
             </Element>
           ))}
+          {optional && <span>［备选］</span>}
         </Space>
       ),
     },
@@ -74,7 +61,6 @@ export default function ResultDetail({
     key: "operations",
     render: (_, { scheme }, index) => (
       <Button
-        disabled={index === 0}
         onClick={() =>
           addCustomization(
             char,
@@ -116,7 +102,7 @@ export default function ResultDetail({
       <Table
         columns={columns}
         rowKey="scheme"
-        dataSource={data.sort(makeSorter(selector))}
+        dataSource={data}
         pagination={{ hideOnSinglePage: true, defaultPageSize: 10 }}
         size="small"
       />
