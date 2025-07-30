@@ -3,10 +3,10 @@ import {
   type ComputedComponent,
   NoSchemeError,
 } from "./component";
-import type { Analysis, SieveName } from "./config";
+import type { Analysis, Element, Mapped, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import type { CurveRelation } from "./topology";
-import { isEqual } from "lodash-es";
+import { findLastKey, isEqual } from "lodash-es";
 import { sortTwoNumbers } from "./bezier";
 import type { AnalysisConfig } from "./repertoire";
 
@@ -27,8 +27,8 @@ export interface Environment {
   component: ComputedComponent;
   rootMap: Map<number, string>;
   analysis: Analysis;
-  primaryRoots: Set<string>;
-  secondaryRoots: Set<string>;
+  primaryRoots: Map<Element, Mapped>;
+  secondaryRoots: Map<Element, Element>;
 }
 
 interface Sieve<T extends Comparable> {
@@ -297,12 +297,6 @@ export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
   ].map((x) => [x.title, x]),
 );
 
-interface SelectResult {
-  scheme: Scheme;
-  evaluation: Map<SieveName, number | number[]>;
-  excluded: boolean;
-}
-
 /**
  * 选择最优的拆分方案
  *
@@ -316,44 +310,59 @@ export const select = (
   component: ComputedComponent,
   schemeList: Scheme[],
   rootMap: Map<number, string>,
+  requiredRoots: Set<number>,
 ) => {
-  const schemeData = schemeList.map((scheme) => ({
-    scheme,
-    evaluation: new Map<SieveName, number | number[]>(),
-    excluded: false,
-  }));
   const environment: Environment = {
     component,
     rootMap,
     ...config,
   };
-  for (const sieveName of config.analysis.selector ?? defaultSelector) {
-    const sieve = sieveMap.get(sieveName)!;
-    let min: number | number[] | undefined;
-    for (const data of schemeData) {
-      if (data.excluded) continue;
-      const value = sieve.key(data.scheme, environment);
-      data.evaluation.set(sieve.title, value);
-      if (min === undefined) {
-        min = value;
-      } else if (isLess(value, min)) {
-        min = value;
+  const sieveNames = config.analysis.selector ?? defaultSelector;
+  const schemeData = schemeList.map((scheme) => {
+    const evaluation: Map<SieveName, number | number[]> = new Map();
+    for (const sieveName of sieveNames) {
+      const sieve = sieveMap.get(sieveName)!;
+      const value = sieve.key(scheme, environment);
+      evaluation.set(sieve.title, value);
+    }
+    return {
+      scheme,
+      roots: scheme.map((x) => rootMap.get(x)!),
+      evaluation,
+      optional: false,
+    };
+  });
+  schemeData.sort((a, b) => {
+    for (const sieveName of sieveNames) {
+      const aValue = a.evaluation.get(sieveName)!;
+      const bValue = b.evaluation.get(sieveName)!;
+      if (isLess(aValue, bValue)) return -1;
+      if (isLess(bValue, aValue)) return 1;
+      continue;
+    }
+    return 0;
+  });
+  const requiredRootsNames = Array.from(requiredRoots).map(
+    (x) => rootMap.get(x)!,
+  );
+  const optionalRootsData = schemeData.map((x) =>
+    x.roots.filter((y) => !requiredRootsNames.includes(y)),
+  );
+  for (const [index, data] of schemeData.entries()) {
+    data.optional = true;
+    for (let prevIndex = 0; prevIndex != index; ++prevIndex) {
+      const current = optionalRootsData[index]!;
+      const previous = optionalRootsData[prevIndex]!;
+      if (previous.every((x) => current.includes(x))) {
+        data.optional = false;
+        break;
       }
     }
-    schemeData.forEach((data) => {
-      if (data.evaluation.get(sieve.title) !== min) {
-        data.excluded = true;
-      }
-    });
+    if (data.scheme.every((x) => requiredRoots.has(x) || (x & (x - 1)) === 0)) {
+      break;
+    }
   }
-  // 1. If there are multiple schemes, error
-  if (schemeData.filter((x) => !x.excluded).length !== 1) {
-    return new MultipleSchemeError();
-  }
-  // 2. If there is no scheme, error
-  const best = schemeData.find((v) => !v.excluded);
-  if (best === undefined) return new NoSchemeError();
-  // Correct result
-  const result: [SelectResult, SelectResult[]] = [best, schemeData];
-  return result;
+  // If there is no scheme, error
+  if (schemeData.length === 0) return new NoSchemeError();
+  return schemeData;
 };

@@ -21,6 +21,7 @@ import {
   keyboardAtom,
   mappingAtom,
   meaningfulObjectiveAtom,
+  optionalAtom,
   priorityShortCodesAtom,
   repertoireAtom,
 } from ".";
@@ -51,8 +52,9 @@ export const phonemeEnumerationAtom = atom((get) => {
   return content;
 });
 
-export const analysisResultAtom = atom(async (get) => {
+export const analysisConfigAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
+  const optional = get(optionalAtom);
   const analysisConfig: AnalysisConfig = {
     analysis: get(analysisAtom),
     primaryRoots: new Map(
@@ -61,7 +63,25 @@ export const analysisResultAtom = atom(async (get) => {
     secondaryRoots: new Map(
       Object.entries(get(groupingAtom)).filter(([x]) => repertoire[x]),
     ),
+    optionalRoots: new Map(Object.entries(optional)),
   };
+  return analysisConfig;
+});
+
+export const analysisResultAtom = atom(async (get) => {
+  const repertoire = get(repertoireAtom);
+  const analysisConfig = await get(analysisConfigAtom);
+  // const analysisConfig: AnalysisConfig = {
+  //   analysis: get(analysisAtom),
+  //   primaryRoots: new Map(
+  //     Object.entries(get(mappingAtom)).filter(([x]) => repertoire[x] && !optional.mapping[x]),
+  //   ),
+  //   secondaryRoots: new Map(
+  //     Object.entries(get(groupingAtom)).filter(([x]) => repertoire[x] && !optional.mapping[x]),
+  //   ),
+  //   optionalPrimaryRoots: new Map(),
+  //   optionalSecondaryRoots: new Map(),
+  // };
   const characters = get(charactersAtom);
   return await thread.spawn<AnalysisResult>("analysis", [
     repertoire,

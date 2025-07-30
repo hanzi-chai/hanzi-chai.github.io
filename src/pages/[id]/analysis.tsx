@@ -20,12 +20,21 @@ import {
   useChaifenTitle,
   customizeAtom,
   charactersAtom,
+  mappingAtom,
+  groupingAtom,
+  optionalAtom,
+  analysisConfigAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
 import type { AnalysisResult, CharacterFilter } from "~/lib";
-import { exportTSV, makeCharacterFilter } from "~/lib";
+import {
+  dynamicAnalysis,
+  exportTSV,
+  exportYAML,
+  makeCharacterFilter,
+} from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
@@ -39,13 +48,17 @@ const dumpAnalysisResult = (
   display: (s: string) => string,
 ) => {
   const { customized, compoundResults } = a;
+  const stat = new Map<number, number>();
   const tsv = characters.map((char) => {
     const analysis = customized.get(char) ?? compoundResults.get(char);
     if (!analysis) {
       return [char, ""];
     }
+    const length = Math.min(analysis.sequence.length, 5);
+    stat.set(length, (stat.get(length) ?? 0) + 1);
     return [char, analysis.sequence.map(display).join(" ")];
   });
+  console.log("拆分结果统计：", Object.fromEntries(stat));
   exportTSV(tsv, "拆分结果.txt");
 };
 
@@ -79,12 +92,19 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
+  const mapping = useAtomValue(mappingAtom);
+  const grouping = useAtomValue(groupingAtom);
+  const optionalMapping = useAtomValue(optionalAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
+  const analysisConfig = useAtomValue(analysisConfigAtom);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
-  const componentsNeedAnalysis = [...componentResults].filter(
-    ([, v]) => v.sequence.length > 1,
-  );
+  const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
+    if (optionalMapping[k]) return true;
+    if (mapping[k] || grouping[k]) return false;
+    if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
+    return true;
+  });
   const componentDisplay = componentsNeedAnalysis
     .filter(([x]) => !customizedOnly || customize[x])
     .filter(([x]) => filterFn(x))
@@ -121,13 +141,13 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
           description={
             <>
               <p>
-                部件：$
+                部件：
                 {componentError.map((x, i) => (
                   <Display key={i} name={x} />
                 ))}
               </p>
               <p>
-                复合体：$
+                复合体：
                 {compoundError.map((x, i) => (
                   <Display key={i} name={x} />
                 ))}
@@ -155,6 +175,26 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
           }
         >
           导出完整拆分
+        </Button>
+        <Button
+          onClick={() => {
+            const { 固定拆分, 动态拆分, 字根笔画 } = dynamicAnalysis(
+              repertoire,
+              analysisConfig,
+              characters,
+            );
+            exportYAML(
+              {
+                固定拆分: Object.fromEntries(固定拆分),
+                动态拆分: Object.fromEntries(动态拆分),
+                字根笔画: Object.fromEntries(字根笔画),
+              },
+              "dynamic_analysis",
+              2,
+            );
+          }}
+        >
+          导出动态拆分
         </Button>
       </Flex>
       <Row style={{ width: "80%", alignItems: "center" }}>

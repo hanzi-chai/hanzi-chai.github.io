@@ -429,8 +429,12 @@ const processExport = (content: string, filename: string) => {
   window.URL.revokeObjectURL(url); // 避免内存泄漏
 };
 
-export const exportYAML = (config: object, filename: string) => {
-  const unsafeContent = dump(config, { flowLevel: 4 });
+export const exportYAML = (
+  config: object,
+  filename: string,
+  flowLevel: number = 4,
+) => {
+  const unsafeContent = dump(config, { flowLevel });
   const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
     return `"\\u${c.codePointAt(0)?.toString(16)}"`;
   });
