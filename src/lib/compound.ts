@@ -187,7 +187,7 @@ export const recursiveRenderStrokeSequence = (
  *
  * @remarks 这个实现目前比较低效，需要改进
  */
-const topologicalSort = (
+export const topologicalSort = (
   repertoire: Repertoire,
   required: Set<string>,
   config: AnalysisConfig,
@@ -267,8 +267,8 @@ const sequentialSerializer: Serializer = (operandResults, glyph) => {
 const zhenmaSerializer: Serializer = (operandResults, glyph) => {
   const sequence: string[] = [];
   if (glyph.operator === "⿶") {
-    sequence.push(...operandResults[1]?.sequence);
-    sequence.push(...operandResults[0]?.sequence);
+    sequence.push(...operandResults[1]!.sequence);
+    sequence.push(...operandResults[0]!.sequence);
   } else {
     operandResults.map((x) => x.sequence).forEach((x) => sequence.push(...x));
   }
@@ -278,156 +278,6 @@ const zhenmaSerializer: Serializer = (operandResults, glyph) => {
     full: [],
     operator: glyph.operator,
     operandResults,
-  };
-};
-
-const robustPartition = (
-  operandResults: PartitionResult[],
-  operator: Operator,
-) => {
-  // 第一步：展开同一方向的结构
-  // 不管在同一个方向上有多少个结构，都展开到同一个数组中，并用同一个符号表示
-  const operatorMap: Map<Operator, Operator> = new Map([
-    ["⿲", "⿰"],
-    ["⿳", "⿱"],
-  ]);
-  const realOperator = operatorMap.get(operator) ?? operator;
-  const expanded: PartitionResult[] = [];
-  if (realOperator === "⿸") {
-    const first = operandResults[0]!;
-    if ("operandResults" in first && first.operator === "⿸") {
-      expanded.push(...first.operandResults);
-      const second = expanded.pop()!;
-      const last = operandResults.at(-1)!;
-      const combined = c3Serializer(
-        [second, last],
-        {
-          operator: "⿱",
-        } as Compound,
-        {} as any,
-      );
-      expanded.push(combined);
-      return { operator: realOperator, operandResults: expanded };
-    }
-  }
-  for (const part of operandResults) {
-    if (
-      "operandResults" in part &&
-      /[⿱⿰]/.test(part.operator) &&
-      part.operator === realOperator
-    ) {
-      expanded.push(...part.operandResults);
-    } else {
-      expanded.push(part);
-    }
-  }
-  return { operator: realOperator, operandResults: expanded };
-};
-
-// 另一种思路，包围结构取内部
-const _getBR = (x: PartitionResult, already?: boolean) => {
-  if (!already) return x.sequence[x.corners[3]]!;
-  if ("operandResults" in x && /[⿴⿵⿶⿷⿸⿹⿺]/.test(x.operator)) {
-    const inner = x.operandResults[1]!;
-    return inner.sequence[inner.corners[3]]!;
-  }
-  if (x.corners[3] !== x.corners[0]) {
-    return x.sequence[x.corners[3]]!;
-  }
-  return x.sequence.at(-1)!;
-};
-
-const getTL = (x: PartitionResult) => x.sequence[x.corners[0]]!;
-const getBR = (x: PartitionResult, already?: boolean) => {
-  if (!already) return x.sequence[x.corners[3]]!;
-  if (x.corners[3] !== x.corners[0]) {
-    return x.sequence[x.corners[3]]!;
-  }
-  if ("operandResults" in x) {
-    const inner = x.operandResults[1]!;
-    return inner.sequence[inner.corners[3]]!;
-  }
-  return x.sequence.find((_, i) => i !== x.corners[0])!;
-};
-
-const c3Serializer: Serializer = (rawResults, glyph) => {
-  const { operandResults, operator } = robustPartition(
-    rawResults,
-    glyph.operator,
-  );
-  const sequence: string[] = [];
-  const corners: CornerSpecifier = [0, 0, 0, 0];
-  if (operator === "⿱") {
-    // 纵向结构特殊处理
-    const first = operandResults[0]!;
-    const last = operandResults.at(-1)!;
-    if ("operandResults" in first && first.operator === "⿰") {
-      // 有叠眼，取叠眼首末
-      sequence.push(getTL(first));
-      sequence.push(getBR(first, true));
-      sequence.push(getBR(last));
-      corners[3] = 2;
-    } else {
-      // 没有叠眼，视同独体字
-      sequence.push(getTL(first));
-      if (first.sequence.length > 1) {
-        const next = first.sequence.find((_, i) => i !== first.corners[0])!;
-        sequence.push(next);
-        sequence.push(getBR(last));
-        corners[3] = 2;
-      } else {
-        const second = operandResults[1]!;
-        sequence.push(getTL(second));
-        if (operandResults.length > 2) {
-          sequence.push(getBR(last));
-          corners[3] = 2;
-        } else if (second.sequence.length > 1) {
-          sequence.push(getBR(second, true));
-          corners[3] = second.corners[0] === second.corners[3] ? 1 : 2;
-        } else {
-          corners[3] = 1;
-        }
-      }
-    }
-  } else if (operandResults.length > 2) {
-    // 横向三部及以上，取首首末
-    operandResults.forEach((x, i) => {
-      if (i === 0 || i === 1) {
-        sequence.push(x.sequence[0]!);
-      } else if (i === operandResults.length - 1) {
-        sequence.push(getBR(x));
-      }
-    });
-    corners[3] = 2;
-  } else {
-    // 横向或外内两部，各取首末
-    const [first, second] = [operandResults[0]!, operandResults[1]!];
-    sequence.push(getTL(first));
-    let firstBR: number;
-    let secondBR: number;
-    if (first.sequence.length > 1) {
-      sequence.push(getBR(first, true));
-      firstBR = first.corners[0] === first.corners[3] ? 0 : 1;
-      sequence.push(getBR(second));
-      secondBR = 2;
-    } else {
-      firstBR = 0;
-      sequence.push(getTL(second));
-      if (second.sequence.length > 1) {
-        sequence.push(getBR(second, true));
-        secondBR = second.corners[0] === second.corners[3] ? 1 : 2;
-      } else {
-        secondBR = 1;
-      }
-    }
-    corners[3] = /[⿰⿱⿸]/.test(operator) ? secondBR : firstBR;
-  }
-  return {
-    sequence,
-    corners,
-    full: [],
-    operator,
-    operandResults: operandResults,
   };
 };
 
@@ -485,12 +335,12 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
           sequence.push(regularizedResults[1]?.full[0]!);
           sequence.push(regularizedResults.at(-1)?.full.at(-1)!);
         } else {
-          sequence.push(...getShouMo(regularizedResults[1]?.full));
+          sequence.push(...getShouMo(regularizedResults[1]!.full));
         }
         break;
       default: // 叠眼在中间或末尾
         for (let index = 0; index < dieyanIndex; ++index) {
-          aboveDieyanSequence.push(...regularizedResults[index]?.full);
+          aboveDieyanSequence.push(...regularizedResults[index]!.full);
         }
         sequence.push(...aboveDieyanSequence.slice(0, 2));
         if (dieyanIndex + 1 < regularizedResults.length) {
@@ -529,7 +379,7 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
       // 一般情况，左部、中部最多各取首尾两根
       sequence.push(...getShouMo(left.full));
       if (regularizedResults.length > 2) {
-        sequence.push(...getShouMo(regularizedResults[1]?.full));
+        sequence.push(...getShouMo(regularizedResults[1]!.full));
       }
       // 如果左部和中部已经有 4 根，舍弃一根
       if (sequence.length === 4) sequence.pop();
@@ -538,7 +388,7 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
         index < regularizedResults.length;
         ++index
       ) {
-        sequence.push(...regularizedResults[index]?.full);
+        sequence.push(...regularizedResults[index]!.full);
       }
     }
   } else {
@@ -682,7 +532,6 @@ const serializerMap: Record<
   Serializer
 > = {
   sequential: sequentialSerializer,
-  c3: c3Serializer,
   zhangma: zhangmaSerializer,
   zhenma: zhenmaSerializer,
   snow2: snow2Serializer,
@@ -722,15 +571,12 @@ export const disassembleCompounds = (
       if (result.sequence[0] !== key) result.sequence.push("");
     }
   }
-  const display = (s: string) => repertoire[s]?.name ?? s;
-  const warninfo: string[] = [];
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
       // 复合体本身是一个字根
       compoundResults.set(char, {
         sequence: [char],
         full: [char],
-        corners: [0, 0, 0, 0],
         strokes: 0,
         operator: undefined,
       });

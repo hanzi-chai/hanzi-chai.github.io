@@ -70,8 +70,9 @@ export const CharWithTooltip: FC<ElementProps> = ({
       <Display name={x} />
     </Char>
   );
-  if (!isPUA(x)) return core;
-  return <Tooltip title={display(x)}>{core}</Tooltip>;
+  const codepoint = x.codePointAt(0)!.toString(16);
+  const title = isPUA(x) ? `${display(x)} ${codepoint}` : codepoint;
+  return <Tooltip title={title}>{core}</Tooltip>;
 };
 
 const MyPagination = styled(Pagination)``;

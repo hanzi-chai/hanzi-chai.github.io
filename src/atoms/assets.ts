@@ -51,7 +51,6 @@ export async function fetchAsset(filename: string) {
 }
 
 async function handleCompressedFile(filename: string, response: Response) {
-  console.log(`解压文件: ${filename}`);
   const name = filename.replace(/\.deflate$/, "");
   const arrayBuffer = await response.arrayBuffer();
   try {
