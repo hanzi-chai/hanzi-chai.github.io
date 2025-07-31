@@ -10,6 +10,7 @@ import {
 import { Button, Flex } from "antd";
 import { atomWithStorage } from "jotai/utils";
 import {
+  alphabetAtom,
   mappingAtom,
   optionalAtom,
   useAtomValue,
@@ -32,14 +33,14 @@ interface 读音 {
   韵母: string;
 }
 
-interface 声母 {
-  类型: "声母";
-  声母: string;
+interface 键位 {
+  类型: "键位";
+  键位: string;
 }
 
 interface 规则 {
   元素: string;
-  规则: (归并 | 读音 | 声母)[];
+  规则: (归并 | 读音 | 键位)[];
   允许乱序?: boolean;
 }
 
@@ -47,6 +48,7 @@ const rulesAtom = atomWithStorage<规则[]>("rules", []);
 
 const RulesForm = ({ initialValues }: { initialValues: 规则 }) => {
   const addRule = useSetAtom(rulesAtom);
+  const alphabet = useAtomValue(alphabetAtom);
   return (
     <ModalForm
       initialValues={initialValues}
@@ -84,7 +86,7 @@ const RulesForm = ({ initialValues }: { initialValues: 规则 }) => {
             options={[
               { label: "归并", value: "归并" },
               { label: "读音", value: "读音" },
-              { label: "声母", value: "声母" },
+              { label: "键位", value: "键位" },
             ]}
             allowClear={false}
           />
@@ -101,11 +103,13 @@ const RulesForm = ({ initialValues }: { initialValues: 规则 }) => {
                   </ProFormItem>
                 );
               }
-              if (类型 === "声母") {
+              if (类型 === "键位") {
                 return (
-                  <ProFormItem name="声母" label="声母">
-                    <ElementSelect style={{ width: 96 }} allowClear={false} />
-                  </ProFormItem>
+                  <ProFormSelect
+                    name="键位"
+                    label="键位"
+                    options={[...alphabet]}
+                  />
                 );
               }
               if (类型 === "读音") {
@@ -141,9 +145,9 @@ function topologicalSort(all: string[], rules: 规则[]) {
       if (rule.类型 === "归并") {
         graph.get(rule.字根)!.add(key);
         ins.add(rule.字根);
-      } else if (rule.类型 === "声母") {
-        graph.get(rule.声母)!.add(key);
-        ins.add(rule.声母);
+      } else if (rule.类型 === "键位") {
+        graph.get(rule.键位)!.add(key);
+        ins.add(rule.键位);
       } else if (rule.类型 === "读音") {
         graph.get(rule.声母)!.add(key);
         graph.get(rule.韵母)!.add(key);
@@ -234,10 +238,10 @@ export default function Rules() {
                         <Display name={rule.字根} />
                       </Element>
                     );
-                  case "声母":
+                  case "键位":
                     return (
                       <Element key={i}>
-                        <Display name={rule.声母} />
+                        <Display name={rule.键位} />
                       </Element>
                     );
                   case "读音":
