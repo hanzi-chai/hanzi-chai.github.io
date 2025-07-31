@@ -10,6 +10,7 @@ import { ConfigProvider } from "antd";
 import CusSpin from "~/components/CustomSpin";
 import ErrorResult from "./components/Error";
 import AutoRoute from "~react-pages";
+import { useHashRouter } from "./utils";
 
 import "./index.css";
 
@@ -36,8 +37,7 @@ const GlobalStyle = createGlobalStyle`
   }  
 `;
 
-const createRouter =
-  import.meta.env.MODE === "CF" ? createBrowserRouter : createHashRouter;
+const createRouter = useHashRouter ? createHashRouter : createBrowserRouter;
 
 const router = createRouter(AutoRoute);
 

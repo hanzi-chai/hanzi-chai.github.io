@@ -22,6 +22,7 @@ import {
 import { examples, listToObject } from "~/lib";
 import { AppstoreOutlined } from "@ant-design/icons";
 import { fromModel } from "~/api";
+import { getCurrentId } from "~/utils";
 
 const items: MenuProps["items"] = [
   { label: "基本", key: "", icon: <MailOutlined /> },
@@ -135,14 +136,7 @@ function EditorLayout() {
 }
 
 export default function Contextualized() {
-  let id = "";
-  // cloudflare 平台是 history 模式的 router,但 PAGES 是 hash 模式的 router
-  // 要区别对待
-  if (import.meta.env.MODE === "CF") {
-    id = location.pathname.split("/")[1] ?? "";
-  } else {
-    id = location.hash.split("/")[1] ?? "";
-  }
+  let id = getCurrentId();
   const setRepertoire = useSetAtom(primitiveRepertoireAtom);
 
   useEffect(() => {

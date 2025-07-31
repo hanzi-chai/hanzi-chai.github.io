@@ -17,6 +17,7 @@ import type { WorkerOutput } from "~/worker";
 import { dump, load } from "js-yaml";
 import type { Config, Solver } from "~/lib";
 import { nanoid } from "nanoid";
+import { basePath } from "~/utils";
 
 const Schedule = ({
   params,
@@ -160,7 +161,7 @@ export default function Optimizer() {
               onClick={() => {
                 const id = nanoid(9);
                 localStorage.setItem(id, JSON.stringify(bestResult));
-                window.open(`/${id}`, "_blank");
+                window.open(`${basePath}${id}`, "_blank");
               }}
             >
               在新标签页中打开方案
