@@ -4,6 +4,7 @@ import {
   Col,
   Flex,
   Modal,
+  notification,
   Pagination,
   Radio,
   Row,
@@ -24,6 +25,7 @@ import {
   groupingAtom,
   optionalAtom,
   analysisConfigAtom,
+  adaptedFrequencyAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
@@ -87,6 +89,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const analysisResult = useAtomValue(analysisResultAtom);
   const { componentResults, compoundResults, componentError, compoundError } =
     analysisResult;
+  const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
   const characters = useAtomValue(charactersAtom);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -178,16 +181,18 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         </Button>
         <Button
           onClick={() => {
-            const { 固定拆分, 动态拆分, 字根笔画 } = dynamicAnalysis(
+            const { 固定拆分, 动态拆分, 字根笔画, 字音频率 } = dynamicAnalysis(
               repertoire,
               analysisConfig,
               characters,
+              adaptedFrequency,
             );
             exportYAML(
               {
                 固定拆分: Object.fromEntries(固定拆分),
                 动态拆分: Object.fromEntries(动态拆分),
                 字根笔画: Object.fromEntries(字根笔画),
+                字音频率: Object.fromEntries(字音频率),
               },
               "dynamic_analysis",
               2,
@@ -195,6 +200,47 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
           }}
         >
           导出动态拆分
+        </Button>
+        <Button
+          onClick={() => {
+            const { dynamicCustomize } = analysisConfig.analysis;
+            const { primaryRoots, secondaryRoots, optionalRoots } =
+              analysisConfig;
+            const illegal: string[] = [];
+            for (const [char, customize] of Object.entries(
+              dynamicCustomize ?? {},
+            )) {
+              const last = customize[customize.length - 1]!;
+              const valid = last.every(
+                (x) =>
+                  (/\d+/.test(x) ||
+                    primaryRoots.has(x) ||
+                    secondaryRoots.has(x)) &&
+                  !optionalRoots.has(x),
+              );
+              if (!valid) {
+                illegal.push(char);
+              }
+            }
+            if (illegal.length > 0) {
+              notification.error({
+                message: "这些字的最后一个拆分并非全部由必要字根构成",
+                description: (
+                  <span>
+                    {illegal.map((x) => (
+                      <Display key={x} name={x} />
+                    ))}
+                  </span>
+                ),
+              });
+            } else {
+              notification.success({
+                message: "自定义动态拆分检查通过",
+              });
+            }
+          }}
+        >
+          检查自定义动态拆分
         </Button>
       </Flex>
       <Row style={{ width: "80%", alignItems: "center" }}>

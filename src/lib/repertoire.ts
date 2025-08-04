@@ -255,7 +255,9 @@ export const analysis = (
       found = true;
       customizations.set(component, pseudoResult);
       console.log(
-        `Dynamic customization for ${component} found: ${JSON.stringify(sequence)}`,
+        `Dynamic customization for ${component} found: ${JSON.stringify(
+          sequence,
+        )}`,
       );
       break;
     }
@@ -291,6 +293,7 @@ export const dynamicAnalysis = (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],
+  adaptedFrequency: Map<string, number>,
 ) => {
   const { components, compounds } = getRequiredTargets(
     repertoire,
@@ -373,16 +376,27 @@ export const dynamicAnalysis = (
     const last = methods[methods.length - 1]!;
     if (!last.every((x) => !config.optionalRoots.has(x))) {
       console.warn(
-        `Dynamic analysis for ${segment} ${segment.codePointAt(0)} contains optional roots: ${JSON.stringify(
-          last,
-        )}`,
+        `Dynamic analysis for ${segment} ${segment.codePointAt(
+          0,
+        )} contains optional roots: ${JSON.stringify(last)}`,
       );
     }
   }
   const rootSequence = getRootSequence(repertoire, config);
+  const pinyin = new Map(
+    characters.map((x) => {
+      const readings = repertoire[x]?.readings ?? [];
+      const frequencies = readings.map(({ pinyin, importance }) => ({
+        拼音: pinyin,
+        频率: Math.round(((adaptedFrequency.get(x) ?? 0) * importance) / 100),
+      }));
+      return [x, frequencies];
+    }),
+  );
   return {
     固定拆分: filteredSegmentMap,
     动态拆分: segmentDynamicAnalysis,
     字根笔画: rootSequence,
+    字音频率: pinyin,
   };
 };
