@@ -45,7 +45,7 @@ interface 规则 {
   允许乱序?: boolean;
 }
 
-const rulesAtom = atomWithStorage<规则[]>("rules", []);
+const rulesAtom = atomWithStorage<规则[]>("rules1", []);
 
 const RulesForm = ({ initialValues }: { initialValues: 规则 }) => {
   const addRule = useSetAtom(rulesAtom);
@@ -77,7 +77,7 @@ const RulesForm = ({ initialValues }: { initialValues: 规则 }) => {
       </ProFormGroup>
       <ProFormList
         name="规则"
-        creatorRecord={() => ({ type: "归并" })}
+        creatorRecord={() => ({ 类型: "归并" })}
         alwaysShowItemLabel
       >
         <ProFormGroup>
@@ -166,14 +166,16 @@ function topologicalSort(
   const in_degree: Map<string, number> = new Map(all.map((key) => [key, 0]));
   for (const 元素规则 of rules) {
     const { 元素: key, 规则: value } = 元素规则;
+    if (!graph.has(key)) {
+      console.warn(`Element ${key} not found in graph, skipping rules for it.`);
+      continue;
+    }
     const ins = new Set<string>();
     for (const rule of value) {
       if (rule.类型 === "归并") {
         graph.get(rule.字根)!.add(key);
         ins.add(rule.字根);
       } else if (rule.类型 === "键位") {
-        graph.get(rule.键位)!.add(key);
-        ins.add(rule.键位);
       } else if (rule.类型 === "读音") {
         graph.get(rule.声母)!.add(key);
         graph.get(rule.韵母)!.add(key);
