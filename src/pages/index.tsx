@@ -86,7 +86,7 @@ export default function HomeLayout() {
     ),
   );
 
-  const { snow, jdh, xkjd, longma, bxm, mswb, ziyuan } = examples;
+  const { snow, jdh, shouyou, xkjd, longma, bxm, mswb, ziyuan } = examples;
   const {
     easy,
     huma,
@@ -113,7 +113,7 @@ export default function HomeLayout() {
     {
       key: "2",
       label: "音形",
-      children: [jdh, xkjd].map(prepare),
+      children: [jdh, shouyou, xkjd].map(prepare),
     },
     {
       key: "3",

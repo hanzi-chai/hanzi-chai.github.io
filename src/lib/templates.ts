@@ -7,6 +7,7 @@ import bxm from "../../examples/bxm.yaml";
 import mswb from "../../examples/mswb.yaml";
 import ziyuan from "../../examples/ziyuan.yaml";
 import jdh from "../../examples/jdh.yaml";
+import shouyou from "../../examples/shouyou.yaml";
 import xkjd from "../../examples/xkjd.yaml";
 import longma from "../../examples/longma.yaml";
 import easy from "../../examples/easy.yaml";
@@ -27,6 +28,7 @@ export type Example =
   | "longma"
   // 音形
   | "jdh"
+  | "shouyou"
   | "xkjd"
   // 形音
   | "bxm"
@@ -48,6 +50,7 @@ export const examples = {
   snow,
   longma,
   jdh,
+  shouyou,
   xkjd,
   bxm,
   mswb,
@@ -80,6 +83,7 @@ export const keyboardTypes = [
   "冰雪四拼",
   "龙码",
   "简单鹤",
+  "首右拼音",
   "星空键道",
   "表形码",
   "米十五笔",
@@ -100,6 +104,7 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   冰雪四拼: examples.snow.form,
   龙码: examples.longma.form,
   简单鹤: examples.jdh.form,
+  首右拼音: examples.shouyou.form,
   星空键道: examples.xkjd.form,
   表形码: examples.bxm.form,
   米十五笔: examples.mswb.form,
@@ -124,6 +129,7 @@ export const encoderTypes = [
   "音码（冰雪四拼）",
   "音码（龙码）",
   "音形码（简单鹤）",
+  "音形码（首右拼音）",
   "音形码（星空键道）",
   "形音码（表形码）",
   "形音码（米十五笔）",
@@ -144,6 +150,7 @@ const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
   "音码（冰雪四拼）": examples.snow.encoder,
   "音码（龙码）": examples.longma.encoder,
   "音形码（简单鹤）": examples.jdh.encoder,
+  "音形码（首右拼音）": examples.shouyou.encoder,
   "音形码（星空键道）": examples.xkjd.encoder,
   "形音码（表形码）": examples.bxm.encoder,
   "形音码（米十五笔）": examples.mswb.encoder,

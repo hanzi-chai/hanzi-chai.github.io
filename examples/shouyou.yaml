@@ -1,0 +1,318 @@
+version: '0.2'
+source: shouyou
+info:
+  name: 首右拼音
+  author: 王治阳
+  version: 1.0.0
+  description: 含辛茹苦、艰苦奋斗、精忠报国、天下第一
+analysis:
+  classifier: {}
+  degenerator:
+    feature:
+      提: 横
+      捺: 点
+    no_cross: false
+  selector:
+    - 全符笔顺
+    - 结构完整
+    - 根少优先
+    - 能连不交
+    - 能散不连
+    - 取大优先
+  serializer: shouyou
+  customize:
+    大:
+      - '1'
+      - '4'
+    天:
+      - '1'
+      - '4'
+    夫:
+      - '1'
+      - '4'
+    田:
+      - '2'
+      - '1'
+    由:
+      - '2'
+      - '1'
+    失:
+      - '3'
+      - '4'
+    斗:
+      - '4'
+      - '2'
+    头:
+      - '4'
+      - '4'
+    夭:
+      - '3'
+      - '4'
+    夬:
+      - '5'
+      - '4'
+    央:
+      - '2'
+      - '4'
+    内:
+      - '2'
+      - '4'
+    隹:
+      - 亻
+      - '1'
+    丙:
+      - '1'
+      - '4'
+    井:
+      - '1'
+      - '2'
+    用:
+      - '3'
+      - '2'
+    关:
+      - '4'
+      - '4'
+    夷:
+      - '1'
+      - '4'
+    夹:
+      - '1'
+      - '4'
+    奂:
+      - '3'
+      - '4'
+    矢:
+      - '3'
+      - '4'
+    生:
+      - '3'
+      - '1'
+    臾:
+      - '3'
+      - '4'
+    再:
+      - '1'
+      - '1'
+    卅:
+      - '1'
+      - '2'
+    堇:
+      - 艹
+      - '1'
+    "\ue050":
+      - '1'
+      - '2'
+    "\ue047":
+      - '5'
+      - '4'
+    必:
+      - 心
+      - '3'
+    柬:
+      - '1'
+      - '4'
+    "\ue043":
+      - '1'
+      - '4'
+    甩:
+      - '3'
+      - '5'
+    秉:
+      - '3'
+      - '4'
+algebra:
+  鹤韵:
+    - type: xform
+      from: ^[aeo](.)\d$
+      to: $1
+    - type: xform
+      from: ^.*?([aeiouv].*|m|ng?)\d$
+      to: $1
+  鹤声:
+    - type: xform
+      from: ^([mn]g?\d)$
+      to: o$1
+    - type: xform
+      from: ^([bpmfdtnlgkhjqxzcsrywaoe]h?|^).+$
+      to: $1
+form:
+  alphabet: qwertyuiopasdfghjklzxcvbnm
+  mapping_type: 1
+  mapping:
+    '1': h
+    '2': s
+    '3': p
+    '4': d
+    '5': z
+    鹤声-a: a
+    鹤声-b: b
+    鹤声-c: c
+    鹤声-ch: i
+    鹤声-d: d
+    鹤声-e: e
+    鹤声-f: f
+    鹤声-g: g
+    鹤声-h: h
+    鹤声-j: j
+    鹤声-k: k
+    鹤声-l: l
+    鹤声-m: m
+    鹤声-n: 'n'
+    鹤声-o: o
+    鹤声-p: p
+    鹤声-q: q
+    鹤声-r: r
+    鹤声-s: s
+    鹤声-sh: u
+    鹤声-t: t
+    鹤声-w: w
+    鹤声-x: x
+    鹤声-y: 'y'
+    鹤声-z: z
+    鹤声-zh: v
+    鹤韵-a: a
+    鹤韵-ai: d
+    鹤韵-an: j
+    鹤韵-ang: h
+    鹤韵-ao: c
+    鹤韵-e: e
+    鹤韵-ei: w
+    鹤韵-en: f
+    鹤韵-eng: g
+    鹤韵-i: i
+    鹤韵-ia: x
+    鹤韵-ian: m
+    鹤韵-iang: l
+    鹤韵-iao: 'n'
+    鹤韵-ie: p
+    鹤韵-in: b
+    鹤韵-ing: k
+    鹤韵-iong: s
+    鹤韵-iu: q
+    鹤韵-m: m
+    鹤韵-n: 'n'
+    鹤韵-ng: g
+    鹤韵-o: o
+    鹤韵-ong: s
+    鹤韵-ou: z
+    鹤韵-r: r
+    鹤韵-u: u
+    鹤韵-ua: x
+    鹤韵-uai: k
+    鹤韵-uan: r
+    鹤韵-uang: l
+    鹤韵-ue: t
+    鹤韵-ui: v
+    鹤韵-un: 'y'
+    鹤韵-uo: o
+    鹤韵-v: v
+    鹤韵-ve: t
+    足: q
+    王: w
+    日: e
+    土: t
+    月: u
+    火: g
+    口: k
+    辶: l
+    艹: c
+    虫: v
+    宀: b
+    𘮐: 'n'
+    木: m
+    人: r
+    心: x
+    手: o
+    水: a
+    金: j
+    言: 'y'
+    糸: i
+    竹: f
+  grouping:
+    "\ue0c6": 足
+    "\ue43a": 土
+    亻: 人
+    忄: 心
+    扌: 手
+    灬: 火
+    "\ue0d2": 月
+    "\ue43d": 人
+    廾: 艹
+    氵: 水
+    朩: 木
+    士: 土
+    钅: 金
+    氺: 水
+    "\ue00c": 日
+    讠: 言
+    曰: 日
+    "\ue102": 王
+    "\ue09e": 竹
+    纟: 糸
+    "\ue023": 糸
+    幺: 糸
+encoder:
+  max_length: 4
+  select_keys:
+    - _
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字音, subtype: 鹤声}
+      next: s2
+    s2:
+      object: {type: 字音, subtype: 鹤韵}
+      next: s3
+    s3:
+      object: {type: 字根, rootIndex: 1}
+      next: s4
+    s4:
+      object: {type: 字根, rootIndex: -1}
+      next: null
+  conditions: {}
+data:
+  character_set: gb2312
+  glyph_customization:
+    修:
+      type: compound
+      operator: ⿲
+      operandList: [亻, 丨, "\ue80d"]
+    倏:
+      type: compound
+      operator: ⿲
+      operandList: [亻, 丨, "\ue80f"]
+    "\uebc7":
+      type: spliced_component
+      operator: ⿱
+      operandList: ["\ue018", 囗]
+      parameters: {gap2: 0}
+    卤:
+      type: compound
+      operator: ⿴
+      operandList: ["\uebc7", 一]
+    攸:
+      type: compound
+      operator: ⿲
+      operandList: [亻, 丨, 攵]
+    毫:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue804", 毛]
+    畿:
+      type: compound
+      operator: ⿱
+      operandList: [幺, 戈]
+    郴:
+      type: compound
+      operator: ⿲
+      operandList: [木, 木, 阝]
+    鬼:
+      type: spliced_component
+      operator: ⿺
+      operandList: ["\ue0ed", 厶]
+    鸿:
+      type: compound
+      operator: ⿲
+      operandList: [氵, 工, 鸟]
