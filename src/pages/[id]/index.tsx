@@ -4,6 +4,7 @@ import {
   type SetStateAction,
   type WritableAtom,
   characterSetAtom,
+  charactersAtom,
   defaultDictionaryAtom,
   frequencyAtom,
   infoAtom,
@@ -63,7 +64,7 @@ function AssetUploader<
   dumper,
 }: {
   atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
-  defaultAtom?: Atom<Promise<V>>;
+  defaultAtom?: Atom<Promise<V>> | Atom<V>;
   title: string;
   description: string;
   parser: (text: string) => V;
@@ -275,12 +276,14 @@ export default function Index() {
           title="字集"
           description="您可以上传自定义字集并在字集中选取「自定义」来使用自己的字集。"
           atom={userCharacterSetAtom}
+          defaultAtom={charactersAtom}
           parser={(text) =>
             text
               .trim()
               .split("\n")
               .map((x) => x.trim())
           }
+          dumper={(set) => set.map((x) => [x])}
         />
         <AssetUploader
           title="当量"

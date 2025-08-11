@@ -82,24 +82,6 @@ const satisfy = (
   return fn(target, null, totalMapping);
 };
 
-const merge = (mapping: Mapping, grouping: Grouping) => {
-  const compiledMapping: Record<string, string> = {};
-  for (const [element, mapped] of Object.entries(mapping)) {
-    compiledMapping[element] =
-      typeof mapped === "string"
-        ? mapped
-        : mapped
-            .map((x) =>
-              typeof x === "string" ? x : mapping[x.element]?.[x.index],
-            )
-            .join("");
-  }
-  const compiledGrouping = Object.fromEntries(
-    Object.entries(grouping).map(([x, y]) => [x, compiledMapping[y]!]),
-  );
-  return Object.assign(compiledGrouping, compiledMapping);
-};
-
 export type IndexedElement = string | { element: string; index: number };
 export interface Assembly {
   name: string;
@@ -115,9 +97,9 @@ const compile = (
   encoder: EncoderConfig,
   algebra: Algebra,
 ) => {
-  const { mapping, grouping } = keyboard;
+  const { mapping } = keyboard;
   const alphabet = keyboard.alphabet ?? "";
-  const totalMapping = merge(mapping, grouping ?? {});
+  const totalMapping = {};
   return (result: CharacterResult, data: Repertoire, extra: Extra) => {
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
@@ -138,11 +120,18 @@ const compile = (
             node = next;
             continue;
           }
-          const groupedElement = grouping?.[element] || element;
-          const mappedElement = mapping[groupedElement];
+          let mappedElement = mapping[element];
+          let groupedElement = element;
           if (mappedElement === undefined) {
             node = next;
             continue;
+          }
+          while (
+            typeof mappedElement === "object" &&
+            "element" in mappedElement
+          ) {
+            groupedElement = mappedElement.element;
+            mappedElement = mapping[mappedElement.element]!;
           }
           if (index === undefined) {
             // 如果没有定义指标，就是全取
@@ -156,12 +145,15 @@ const compile = (
           } else {
             // 检查指标是否有效
             const key = mappedElement[index];
-            if (key !== undefined) {
-              codes.push(
-                typeof key === "string"
-                  ? { element: groupedElement, index }
-                  : key,
-              );
+            if (typeof key === "string") {
+              codes.push({ element: groupedElement, index });
+            } else if (key !== undefined) {
+              // 冰雪清韵特殊规则
+              if (index === 0) {
+                codes.push({ element: groupedElement, index });
+              } else {
+                codes.push(key);
+              }
             }
           }
         }

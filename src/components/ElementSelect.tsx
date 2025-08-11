@@ -6,7 +6,6 @@ import type { ProFormSelectProps } from "@ant-design/pro-components";
 
 interface ElementSelectProps extends SelectProps<string> {
   customFilter?: (s: string) => boolean;
-  excludeGrouped?: boolean;
   includeOptional?: boolean;
   onlyRootsAndStrokes?: boolean;
 }
@@ -14,25 +13,16 @@ interface ElementSelectProps extends SelectProps<string> {
 export default function ElementSelect(
   props: ElementSelectProps & ProFormSelectProps,
 ) {
-  const {
-    customFilter,
-    excludeGrouped,
-    onlyRootsAndStrokes,
-    includeOptional,
-    ...rest
-  } = props;
-  const { mapping, grouping, optional } = useAtomValue(keyboardAtom);
+  const { customFilter, onlyRootsAndStrokes, includeOptional, ...rest } = props;
+  const { mapping, grouping, mapping_space } = useAtomValue(keyboardAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const repertoire = useAtomValue(repertoireAtom);
   let keys = Object.keys(mapping).concat(Object.keys(grouping ?? {}));
-  if (excludeGrouped) {
-    keys = keys.filter((x) => grouping?.[x] === undefined);
-  }
   if (onlyRootsAndStrokes) {
     keys = keys.filter((x) => repertoire[x] || x.match(/\d/));
   }
   if (includeOptional) {
-    for (const key of Object.keys(optional ?? {})) {
+    for (const key of Object.keys(mapping_space ?? {})) {
       if (!keys.includes(key)) {
         keys.push(key);
       }

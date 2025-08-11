@@ -13,6 +13,7 @@ import {
   topologicalSort,
 } from "./compound";
 import type {
+  Algebra,
   Analysis,
   CustomGlyph,
   CustomReadings,
@@ -30,6 +31,7 @@ import type {
   BasicComponent,
 } from "./data";
 import { range } from "d3-array";
+import { applyRules } from "./element";
 
 export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
   for (const tag of tags) {
@@ -117,7 +119,7 @@ export interface AnalysisConfig {
   analysis: Analysis;
   primaryRoots: Map<Element, Mapped>;
   secondaryRoots: Map<Element, Element>;
-  optionalRoots: Map<Element, Mapped>;
+  optionalRoots: Set<Element>;
 }
 
 const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {
@@ -294,6 +296,8 @@ export const dynamicAnalysis = (
   config: AnalysisConfig,
   characters: string[],
   adaptedFrequency: Map<string, number>,
+  dictionary: [string, string][],
+  algebra: Algebra,
 ) => {
   const { components, compounds } = getRequiredTargets(
     repertoire,
@@ -369,9 +373,6 @@ export const dynamicAnalysis = (
     // 非字根
     segmentMap.set(name, componentList);
   }
-  const filteredSegmentMap = new Map(
-    characters.map((x) => [x, segmentMap.get(x)!]),
-  );
   for (const [segment, methods] of segmentDynamicAnalysis) {
     const last = methods[methods.length - 1]!;
     if (!last.every((x) => !config.optionalRoots.has(x))) {
@@ -383,20 +384,32 @@ export const dynamicAnalysis = (
     }
   }
   const rootSequence = getRootSequence(repertoire, config);
-  const pinyin = new Map(
-    characters.map((x) => {
-      const readings = repertoire[x]?.readings ?? [];
-      const frequencies = readings.map(({ pinyin, importance }) => ({
-        拼音: pinyin,
-        频率: Math.round(((adaptedFrequency.get(x) ?? 0) * importance) / 100),
-      }));
-      return [x, frequencies];
-    }),
-  );
+  const all = characters.map((x) => {
+    const readings = repertoire[x]?.readings ?? [];
+    const frequency = adaptedFrequency.get(x) ?? 0;
+    const frequencies = readings.map(({ pinyin, importance }) => ({
+      拼音: pinyin,
+      频率: Math.round((frequency * importance) / 100),
+      声: applyRules("声", algebra["声"] ?? [], pinyin),
+      韵: applyRules("韵", algebra["韵"] ?? [], pinyin),
+    }));
+    return {
+      汉字: x,
+      通规: repertoire[x]?.tygf ?? 0,
+      频率: frequency,
+      读音: frequencies,
+      拆分: segmentMap.get(x) ?? [],
+    };
+  });
+  const words = dictionary.map(([word, pinyin]) => ({
+    词语: word,
+    拼音: pinyin.split(" "),
+    频率: adaptedFrequency.get(word) ?? 0,
+  }));
   return {
-    固定拆分: filteredSegmentMap,
-    动态拆分: segmentDynamicAnalysis,
-    字根笔画: rootSequence,
-    字音频率: pinyin,
+    固定拆分: all,
+    动态拆分: Object.fromEntries(segmentDynamicAnalysis),
+    字根笔画: Object.fromEntries(rootSequence),
+    词语读音频率: words,
   };
 };

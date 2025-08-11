@@ -14,14 +14,14 @@ import {
   algebraAtom,
   analysisAtom,
   charactersAtom,
-  configAtom,
   dictionaryAtom,
   encoderAtom,
   groupingAtom,
   keyboardAtom,
   mappingAtom,
+  mappingSpaceAtom,
+  mappingTypeAtom,
   meaningfulObjectiveAtom,
-  optionalAtom,
   priorityShortCodesAtom,
   repertoireAtom,
 } from ".";
@@ -54,7 +54,7 @@ export const phonemeEnumerationAtom = atom((get) => {
 
 export const analysisConfigAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
-  const optional = get(optionalAtom);
+  const mappingSpace = get(mappingSpaceAtom);
   const analysisConfig: AnalysisConfig = {
     analysis: get(analysisAtom),
     primaryRoots: new Map(
@@ -63,7 +63,11 @@ export const analysisConfigAtom = atom(async (get) => {
     secondaryRoots: new Map(
       Object.entries(get(groupingAtom)).filter(([x]) => repertoire[x]),
     ),
-    optionalRoots: new Map(Object.entries(optional)),
+    optionalRoots: new Set(
+      Object.entries(mappingSpace)
+        .filter(([_, v]) => v.some((x) => x.value == null))
+        .map(([k, v]) => k),
+    ),
   };
   return analysisConfig;
 });
@@ -71,17 +75,6 @@ export const analysisConfigAtom = atom(async (get) => {
 export const analysisResultAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
   const analysisConfig = await get(analysisConfigAtom);
-  // const analysisConfig: AnalysisConfig = {
-  //   analysis: get(analysisAtom),
-  //   primaryRoots: new Map(
-  //     Object.entries(get(mappingAtom)).filter(([x]) => repertoire[x] && !optional.mapping[x]),
-  //   ),
-  //   secondaryRoots: new Map(
-  //     Object.entries(get(groupingAtom)).filter(([x]) => repertoire[x] && !optional.mapping[x]),
-  //   ),
-  //   optionalPrimaryRoots: new Map(),
-  //   optionalSecondaryRoots: new Map(),
-  // };
   const characters = get(charactersAtom);
   return await thread.spawn<AnalysisResult>("analysis", [
     repertoire,
