@@ -185,7 +185,7 @@ export default function HomeLayout() {
                   action={async (s) => {
                     const config = load(s) as Config;
                     const valid = await validateConfig(config);
-                    if (!valid) return;
+                    // if (!valid) return;
                     setConfigs((configs) => {
                       configs[nanoid(9)] = load(s) as Config;
                     });

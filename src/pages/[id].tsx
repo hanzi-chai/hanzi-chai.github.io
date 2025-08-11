@@ -34,7 +34,6 @@ const items: MenuProps["items"] = [
   { label: "统计二", key: "statistics2", icon: <NumberOutlined /> },
   { label: "优化", key: "optimization", icon: <RiseOutlined /> },
   { label: "图示", key: "diagram", icon: <ProfileOutlined /> },
-  { label: "规则", key: "rules", icon: <BulbOutlined /> },
 ];
 
 const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {

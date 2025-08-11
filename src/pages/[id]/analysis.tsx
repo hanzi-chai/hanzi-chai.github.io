@@ -23,9 +23,12 @@ import {
   charactersAtom,
   mappingAtom,
   groupingAtom,
-  optionalAtom,
   analysisConfigAtom,
   adaptedFrequencyAtom,
+  dictionaryAtom,
+  algebraAtom,
+  mappingTypeAtom,
+  mappingSpaceAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
@@ -90,6 +93,8 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const { componentResults, compoundResults, componentError, compoundError } =
     analysisResult;
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
+  const dictionary = useAtomValue(dictionaryAtom);
+  const algebra = useAtomValue(algebraAtom);
   const characters = useAtomValue(charactersAtom);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -97,13 +102,13 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const customize = useAtomValue(customizeAtom);
   const mapping = useAtomValue(mappingAtom);
   const grouping = useAtomValue(groupingAtom);
-  const optionalMapping = useAtomValue(optionalAtom);
+  const mappingSpace = useAtomValue(mappingSpaceAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
   const analysisConfig = useAtomValue(analysisConfigAtom);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
   const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
-    if (optionalMapping[k]) return true;
+    if (mappingSpace[k]?.some((x) => x.value == null)) return true;
     if (mapping[k] || grouping[k]) return false;
     if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
     return true;
@@ -181,22 +186,15 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         </Button>
         <Button
           onClick={() => {
-            const { 固定拆分, 动态拆分, 字根笔画, 字音频率 } = dynamicAnalysis(
+            const result = dynamicAnalysis(
               repertoire,
               analysisConfig,
               characters,
               adaptedFrequency,
+              dictionary,
+              algebra,
             );
-            exportYAML(
-              {
-                固定拆分: Object.fromEntries(固定拆分),
-                动态拆分: Object.fromEntries(动态拆分),
-                字根笔画: Object.fromEntries(字根笔画),
-                字音频率: Object.fromEntries(字音频率),
-              },
-              "dynamic_analysis",
-              2,
-            );
+            exportYAML(result, "dynamic_analysis", 2);
           }}
         >
           导出动态拆分
@@ -210,6 +208,19 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
             for (const [char, customize] of Object.entries(
               dynamicCustomize ?? {},
             )) {
+              for (const method of customize) {
+                const valid = method.every(
+                  (x) =>
+                    /\d+/.test(x) ||
+                    primaryRoots.has(x) ||
+                    secondaryRoots.has(x) ||
+                    optionalRoots.has(x),
+                );
+                if (!valid) {
+                  illegal.push(char);
+                  break;
+                }
+              }
               const last = customize[customize.length - 1]!;
               const valid = last.every(
                 (x) =>

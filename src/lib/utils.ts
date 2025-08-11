@@ -482,9 +482,11 @@ export const renderMapped = (mapped: string | Key[]) => {
   if (typeof mapped === "string") {
     return mapped;
   }
-  return mapped.map((x) => {
-    return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
-  });
+  return mapped
+    .map((x) => {
+      return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
+    })
+    .join("");
 };
 
 const match = (
@@ -661,17 +663,25 @@ type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
 
 export interface MappedInfo {
   name: string;
-  code: Mapped;
+  code: Exclude<Mapped, null | { element: string }>;
 }
 
 export const getReversedMapping = (mapping: Mapping, alphabet: string) => {
   const reversedMapping = new Map<string, MappedInfo[]>(
     Array.from(alphabet).map((key) => [key, []]),
   );
+  const recursivelyRenderKey = (key: Key): string => {
+    if (typeof key === "string") return key;
+    const mapped = mapping[key.element]!;
+    if (typeof mapped === "object" && "element" in mapped) {
+      return "";
+    }
+    return recursivelyRenderKey(mapped[key.index]!);
+  };
   for (const [name, code] of Object.entries(mapping)) {
-    const main = code[0];
-    if (typeof main === "string") {
-      reversedMapping.get(main)?.push({ name, code });
+    if (typeof code === "string" || Array.isArray(code)) {
+      const first = recursivelyRenderKey(code[0]!);
+      reversedMapping.get(first)?.push({ name, code });
     }
   }
   return reversedMapping;

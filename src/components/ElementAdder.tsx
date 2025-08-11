@@ -59,21 +59,13 @@ export default function ElementAdder({ element }: { element?: string }) {
       </Flex>
       <Flex justify="center" align="center" gap="small">
         <span>归并至</span>
-        <ElementSelect
-          excludeGrouped
-          value={undefined}
-          onChange={(event) => setMain(event)}
-        />
-        {/* <Select style={{width: "128px"}} options={allStyles.map(x => ({
-          value: x,
-          label: x === -1 ? "完整归并" : `第 ${x + 1} 码归并`
-        }))} value={groupingStyle} onChange={setGroupingStyle}/> */}
+        <ElementSelect value={undefined} onChange={(event) => setMain(event)} />
         <Button
           type="primary"
           disabled={element === undefined || Object.keys(mapping).length === 0}
           onClick={() => {
-            addGrouping(element!, main);
-            removeMapping(element!);
+            addMapping(element!, { element: main });
+            removeGrouping(element!);
           }}
         >
           归并

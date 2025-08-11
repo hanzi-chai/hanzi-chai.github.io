@@ -1,6 +1,7 @@
 import {
   Alert,
   Button,
+  Divider,
   Flex,
   Form,
   Input,
@@ -26,10 +27,11 @@ import {
   useRemoveAtom,
   useAtom,
   currentElementAtom,
-  optionalAtom,
+  mappingSpaceAtom,
+  mappingCompatibleAtom,
 } from "~/atoms";
-
 import Char from "./Character";
+import IdleList, { RulesForm } from "./IdleList";
 import {
   chars,
   getReversedMapping,
@@ -46,144 +48,131 @@ import type { Key, MappedInfo, Mapping } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
 import { ElementWithTooltip } from "./ElementPool";
-import CharacterSelect from "./CharacterSelect";
 import { sortBy } from "lodash-es";
 
 const useAffiliates = (name: string) => {
-  const mapping = useAtomValue(mappingAtom);
-  const grouping = useAtomValue(groupingAtom);
-  const fullAffiliates = useMemo(
-    () =>
-      Object.entries(grouping)
-        .filter(([, to]) => to === name)
-        .map(([x]) => x),
-    [grouping, name],
-  );
-  const partialAffiliates = useMemo(
-    () =>
-      Object.entries(mapping).filter(([, mapped]) => {
-        if (typeof mapped === "string") return false;
-        const key = mapped[0];
-        if (typeof key !== "object") return false;
-        return key.element === name;
-      }) as [string, Key[]][],
-    [mapping, name],
-  );
-  return [fullAffiliates, partialAffiliates] as const;
+  const mapping = useAtomValue(mappingCompatibleAtom);
+  const result: { from: string; to: string }[] = [];
+  const queue = [name];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const affiliates = Object.entries(mapping)
+      .filter(
+        ([, to]) =>
+          typeof to === "object" && "element" in to && to.element === current,
+      )
+      .map(([x]) => x);
+    affiliates.forEach((x) => result.push({ from: x, to: current }));
+    queue.push(...affiliates);
+  }
+  return result;
 };
 
-const KeysEditor = ({
-  name,
-  keys,
-  onDelete,
+export const KeysEditor = ({
+  value,
+  onChange,
 }: {
+  value: string | Key[];
+  onChange: (newValue: string | Key[]) => void;
+}) => {
+  const mappingType = useAtomValue(mappingTypeAtom);
+  const keys = Array.from(value);
+  while (keys.length < (mappingType ?? 1)) {
+    keys.push("");
+  }
+  return (
+    <Space>
+      {keys.map((key, index) => {
+        return (
+          <KeySelect
+            key={index}
+            value={key}
+            onChange={(event) => {
+              const newValue = keys.map((v, i) => {
+                return i === index ? event : v;
+              });
+              onChange(joinKeys(newValue));
+            }}
+            allowEmpty={index !== 0}
+          />
+        );
+      })}
+    </Space>
+  );
+};
+
+const ElementDetail = ({
+  keys,
+  name,
+}: {
+  keys: string | Key[] | { element: string };
   name: string;
-  keys: Key[];
-  onDelete?: () => void;
 }) => {
   const addMapping = useAddAtom(mappingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
-  return (
-    <Flex justify="space-between" gap="large">
-      <ElementWithTooltip element={name} />
-      <Space>
-        {keys.map((key, index) => {
-          return (
-            <KeySelect
-              key={index}
-              value={key}
-              onChange={(event) => {
-                keys[index] = event;
-                addMapping(name, joinKeys(keys));
-              }}
-              allowEmpty={index !== 0}
-            />
-          );
-        })}
-        <DeleteButton
-          onClick={() => {
-            removeMapping(name);
-            onDelete?.();
-          }}
-        />
-      </Space>
-    </Flex>
-  );
-};
-
-interface ElementDetailProps {
-  keys: Key[];
-  name: string;
-  main: string;
-  setMain: Function;
-}
-const ElementDetail = ({ keys, name, main, setMain }: ElementDetailProps) => {
-  const addMapping = useAddAtom(mappingAtom);
-  const addGrouping = useAddAtom(groupingAtom);
-  const removeMapping = useRemoveAtom(mappingAtom);
-  const removeGrouping = useRemoveAtom(groupingAtom);
-  const [affiliates, partialAffiliates] = useAffiliates(name);
+  const affiliates = useAffiliates(name);
+  const alphabet = useAtomValue(alphabetAtom);
   return (
     <Flex vertical gap="middle">
-      <KeysEditor
-        name={name}
-        keys={keys}
-        onDelete={() => affiliates?.map((x) => removeGrouping(x))}
-      />
-      {affiliates.length > 0 && (
-        <Flex vertical gap="small">
-          <span>归并元素</span>
-          {affiliates.map((x) => (
-            <Flex key={x} justify="space-between">
-              <ElementWithTooltip element={x} />
-              <Button
-                onClick={() => {
-                  addMapping(x, joinKeys(keys));
-                  removeGrouping(x);
-                }}
-              >
-                取消归并
-              </Button>
-            </Flex>
-          ))}
-        </Flex>
+      {typeof keys === "object" && "element" in keys ? (
+        <>
+          <Flex gap="small" align="center">
+            <ElementWithTooltip element={name} />
+            当前归并
+            <ElementSelect
+              value={keys.element}
+              onChange={(event: string) => addMapping(name, { element: event })}
+              customFilter={(s) => s !== name}
+            />
+            <DeleteButton
+              onClick={() => removeMapping(name)}
+              disabled={affiliates.length > 0}
+            />
+          </Flex>
+          <Space>
+            或改为键位
+            <KeysEditor
+              value={alphabet[0]!}
+              onChange={(newValue) => addMapping(name, newValue)}
+            />
+          </Space>
+        </>
+      ) : (
+        <>
+          <Flex gap="small" align="center">
+            <ElementWithTooltip element={name} />
+            当前键位
+            <KeysEditor
+              value={keys}
+              onChange={(newValue) => addMapping(name, newValue)}
+            />
+            <DeleteButton
+              onClick={() => removeMapping(name)}
+              disabled={affiliates.length > 0}
+            />
+          </Flex>
+          <Space>
+            或改为归并
+            <ElementSelect
+              value={undefined}
+              onChange={(event: string) => addMapping(name, { element: event })}
+              customFilter={(s) => s !== name}
+            />
+          </Space>
+        </>
       )}
-      {partialAffiliates.length > 0 && (
-        <Flex vertical gap="small">
-          <span>部分归并元素</span>
-          {partialAffiliates.map(([x, keys]) => (
-            <KeysEditor key={x} name={x} keys={keys} />
-          ))}
-        </Flex>
-      )}
-      {affiliates.length === 0 && partialAffiliates.length === 0 && (
-        <Space>
-          或归并至
-          <ElementSelect
-            excludeGrouped
-            value={undefined}
-            onChange={(event) => setMain(event)}
-            customFilter={(s) => s !== name}
-          />
-          <Button
-            onClick={() => {
-              addGrouping(name, main!);
-              removeMapping(name);
-            }}
-          >
-            归并
-          </Button>
-        </Space>
-      )}
+      <Divider size="small" />
+      <RulesForm name={name} />
     </Flex>
   );
 };
 
-const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
-  display: inline-flex;
-  align-items: end;
+export const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
+  align-items: baseline;
   cursor: pointer;
   line-height: 1;
+  padding: 8px 0px;
+  border-radius: 4px;
   background: ${({ $shouldHighlight }) =>
     $shouldHighlight ? blue[2] : "transparent"};
   outline: ${({ $shouldHighlight }) =>
@@ -198,90 +187,60 @@ const DisplayWrapper = styled(Display)<{ $optional: boolean }>`
   color: ${({ $optional }) => ($optional ? "#9d9d9d" : "black")};
 `;
 
-export const ElementLabel = ({
+export const AdjustableElementGroup = ({
   name,
   code,
-  useProperName,
-  ...rest
-}: MappedInfo & { useProperName?: boolean }) => {
-  const [affiliates, partialAffiliates] = useAffiliates(name);
-  const properName =
-    name.includes("-") && useProperName
-      ? name.split("-").slice(1).join("-")
-      : name;
+  displayMode,
+}: MappedInfo & { displayMode?: boolean }) => {
+  const affiliates = useAffiliates(name);
+  const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
   const currentElement = useAtomValue(currentElementAtom);
-  const shouldHighlight =
-    currentElement !== undefined &&
-    (name === currentElement ||
-      affiliates.includes(currentElement) ||
-      partialAffiliates.map(([x]) => x).includes(currentElement));
-  const optionalMapping = useAtomValue(optionalAtom);
+  const shouldHighlight = name === currentElement;
+  const mappingSpace = useAtomValue(mappingSpaceAtom);
+  const isOptional = (name: string) =>
+    mappingSpace[name]?.some((x) => x.value === null) ?? false;
   return (
-    <ElementLabelWrapper {...rest} $shouldHighlight={shouldHighlight}>
-      {
-        /* 主要字根 */ <DisplayWrapper
-          name={properName}
-          $optional={name in optionalMapping}
-        />
-      }
-      {
-        /* 归并字根 */ affiliates.length >= 1 && (
-          <span style={{ fontSize: "0.7em", display: "inline-flex" }}>
-            {affiliates.map((x) => (
-              <DisplayWrapper
-                key={x}
-                name={x}
-                $optional={x in optionalMapping}
-              />
-            ))}
-          </span>
-        )
-      }
+    <span>
+      <Popover
+        title="编辑决策"
+        trigger={["hover", "click"]}
+        mouseLeaveDelay={0.3}
+        content={<ElementDetail keys={code} name={name} />}
+      >
+        <ElementLabelWrapper $shouldHighlight={shouldHighlight}>
+          <DisplayWrapper
+            name={normalize(name)}
+            $optional={!displayMode && isOptional(name)}
+          />
+        </ElementLabelWrapper>
+      </Popover>
+      {affiliates.map(({ from, to }) => (
+        <Popover
+          title="编辑决策"
+          trigger={["hover", "click"]}
+          mouseLeaveDelay={0.3}
+          content={<ElementDetail keys={{ element: to }} name={from} />}
+        >
+          <ElementLabelWrapper
+            $shouldHighlight={shouldHighlight}
+            style={{ fontSize: "0.85em" }}
+          >
+            <DisplayWrapper
+              key={from}
+              name={from}
+              $optional={!displayMode && isOptional(from)}
+            />
+          </ElementLabelWrapper>
+        </Popover>
+      ))}
       {
         /* 第二码及之后的编码 */ code.length > 1 && (
-          <span style={{ fontSize: "0.8em" }}>
-            {renderMapped(code.slice(1))}
+          <span style={{ fontSize: "0.85em", paddingLeft: "2px" }}>
+            {normalize(renderMapped(code.slice(1)))}
           </span>
         )
       }
-      {
-        /* 部分归并字根 */ partialAffiliates.length >= 1 &&
-          partialAffiliates.map(([element, mapped], index) => (
-            <span
-              style={{ fontSize: "0.7em", display: "inline-flex" }}
-              key={index}
-            >
-              [
-              <DisplayWrapper
-                name={element}
-                $optional={element in optionalMapping}
-              />
-              &nbsp;
-              {renderMapped(mapped.slice(1))}]
-            </span>
-          ))
-      }
-    </ElementLabelWrapper>
-  );
-};
-
-const AdjustableElement = ({ name, code }: MappedInfo) => {
-  const { mapping, mapping_type } = useAtomValue(keyboardAtom);
-  const keys = Array.from(code);
-  while (keys.length < (mapping_type ?? 1)) {
-    keys.push("");
-  }
-  const [main, setMain] = useState(Object.keys(mapping)[0]);
-  return (
-    <Popover
-      trigger={["hover", "click"]}
-      mouseLeaveDelay={0.3}
-      content={
-        <ElementDetail keys={keys} name={name} main={main!} setMain={setMain} />
-      }
-    >
-      <ElementLabel name={name} code={code} />
-    </Popover>
+    </span>
   );
 };
 
@@ -455,62 +414,15 @@ const MappingRow = memo(
           icon={<DeleteOutlined />}
         />
         <Char>{symbol}</Char>
-        <Flex
-          gap="small"
-          align="center"
-          wrap="wrap"
-          style={{ padding: "8px 0" }}
-        >
+        <Flex align="center" wrap="wrap" gap="small">
           {elements.map(({ name, code }) => (
-            <AdjustableElement key={name} name={name} code={code} />
+            <AdjustableElementGroup key={name} name={name} code={code} />
           ))}
         </Flex>
       </Flex>
     );
   },
 );
-
-const Optional = () => {
-  const currentElement = useAtomValue(currentElementAtom);
-  const mapping = useAtomValue(mappingAtom);
-  const grouping = useAtomValue(groupingAtom);
-  const optionalMapping = useAtomValue(optionalAtom);
-  const add = useAddAtom(optionalAtom);
-  const remove = useRemoveAtom(optionalAtom);
-  const [newChar, setNewChar] = useState<string | undefined>(undefined);
-  const required = Object.keys(mapping)
-    .concat(Object.keys(grouping))
-    .filter((x) => !optionalMapping[x] && chars(x) === 1);
-  return (
-    <>
-      <Typography.Title level={3}>可选字根</Typography.Title>
-      <Flex gap="large" justify="center" align="center">
-        <Statistic title="必要字根" value={required.length} />
-        <Statistic
-          title="可选字根"
-          value={Object.keys(optionalMapping).length}
-        />
-        <CharacterSelect value={newChar} onChange={setNewChar} />
-        <Button
-          onClick={() => add(newChar!, "a")}
-          disabled={newChar === undefined}
-        >
-          添加
-        </Button>
-      </Flex>
-      <Flex wrap>
-        {Object.keys(optionalMapping).map((x) => (
-          <Flex align="center" key={x}>
-            <ElementLabelWrapper $shouldHighlight={x === currentElement}>
-              <Display name={x} />
-            </ElementLabelWrapper>
-            <DeleteButton onClick={() => remove(x)} />
-          </Flex>
-        ))}
-      </Flex>
-    </>
-  );
-};
 
 export default function MappingComponent() {
   const mapping = useAtomValue(mappingAtom);
@@ -526,7 +438,7 @@ export default function MappingComponent() {
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />
-      <Optional />
+      <IdleList />
     </Flex>
   );
 }

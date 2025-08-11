@@ -21,7 +21,6 @@ import {
   useChaifenTitle,
   serializerAtom,
 } from "~/atoms";
-import { ElementLabel } from "~/components/Mapping";
 import { getReversedMapping, type BoxConfig, type DiagramConfig } from "~/lib";
 
 const PrintArea = styled.div`
@@ -104,9 +103,7 @@ const Keyboard = () => {
                       if (value.match && !value.match.test(name)) {
                         continue;
                       }
-                      boxes.push(
-                        <ElementLabel name={name} code={code} useProperName />,
-                      );
+                      boxes.push(<div>{name}</div>);
                     }
                   }
                 } else if (type === "custom") {

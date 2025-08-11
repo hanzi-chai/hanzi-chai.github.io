@@ -108,9 +108,18 @@ export interface Keyboard {
   alphabet?: string;
   mapping_type?: number;
   mapping: Mapping;
+  mapping_space?: MappingSpace;
+  mapping_generator?: MappingGeneratorRule[];
   grouping?: Grouping;
-  optional?: Mapping;
 }
+
+export interface MappingGeneratorRule {
+  score: number;
+  position: number;
+  elements: string[];
+  keys: string[];
+}
+[];
 
 export type Element = string;
 
@@ -118,9 +127,13 @@ export type ElementWithIndex = { element: string; index: number };
 
 export type Key = string | ElementWithIndex;
 
-export type Mapped = string | Key[];
+export type Mapped = null | string | Key[] | { element: string };
 
-export type Mapping = Record<Element, Mapped>;
+export type Mapping = Record<Element, Exclude<Mapped, null>>;
+
+export type ValueWithScore = { value: Mapped; score: number };
+
+export type MappingSpace = Record<Element, ValueWithScore[]>;
 
 export type Grouping = Record<Element, Element>;
 // config.form end

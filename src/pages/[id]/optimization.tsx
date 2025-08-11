@@ -507,7 +507,7 @@ const ConstraintsForm = ({
           <ProFormGroup>
             {type !== "indices" && (
               <ProForm.Item name="element" label="元素">
-                <ElementSelect excludeGrouped />
+                <ElementSelect />
               </ProForm.Item>
             )}
             {type !== "elements" && (
