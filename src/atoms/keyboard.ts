@@ -25,16 +25,6 @@ export const groupingAtom = focusAtom(keyboardAtom, (o) =>
   o.prop("grouping").valueOr({} as Grouping),
 );
 
-export const mappingCompatibleAtom = atom((get) => {
-  const mapping = get(mappingAtom);
-  const grouping = get(groupingAtom);
-  const mappingCompatible: Mapping = {};
-  for (const [key, value] of Object.entries(grouping)) {
-    mappingCompatible[key] = { element: value };
-  }
-  return { ...mappingCompatible, ...mapping };
-});
-
 export const mappingSpaceAtom = focusAtom(keyboardAtom, (o) =>
   o.prop("mapping_space").valueOr({} as MappingSpace),
 );

@@ -34,8 +34,8 @@ export const customizeAtom = focusAtom(analysisAtom, (o) =>
 
 export const dynamicCustomizeAtom = focusAtom(analysisAtom, (o) =>
   o
-    .prop("dynamicCustomize")
-    .valueOr({} as NonNullable<Analysis["dynamicCustomize"]>),
+    .prop("dynamic_customize")
+    .valueOr({} as NonNullable<Analysis["dynamic_customize"]>),
 );
 
 export const classifierCustomizationAtom = focusAtom(analysisAtom, (o) =>

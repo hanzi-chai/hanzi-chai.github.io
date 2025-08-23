@@ -1,5 +1,5 @@
-import { Button, Flex, notification, Popover, Typography } from "antd";
-import { isEqual } from "lodash-es";
+import { Button, Flex, notification, Popover, Select, Typography } from "antd";
+import { isEqual, sortBy } from "lodash-es";
 import {
   alphabetAtom,
   currentElementAtom,
@@ -13,9 +13,15 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
-import { ElementLabelWrapper, KeysEditor } from "~/components/Mapping";
+import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, Display, NumberInput } from "~/components/Utils";
-import { exportYAML, MappingGeneratorRule, MappingSpace } from "~/lib";
+import {
+  chars,
+  exportYAML,
+  MappingGeneratorRule,
+  MappingSpace,
+  ValueDescription,
+} from "~/lib";
 import Element from "./Element";
 import {
   ModalForm,
@@ -27,6 +33,7 @@ import {
 } from "@ant-design/pro-components";
 import CharacterSelect from "./CharacterSelect";
 import { useState } from "react";
+import ValueEditor from "./Value";
 
 export const RulesForm = ({ name }: { name: string }) => {
   const alphabet = useAtomValue(alphabetAtom);
@@ -45,49 +52,106 @@ export const RulesForm = ({ name }: { name: string }) => {
       values.map((v, i) => (i === index ? { ...v, [key]: value } : v)),
     );
   };
+  const updateCondition = (
+    index: number,
+    conditionIndex: number,
+    key: string,
+    value: any,
+  ) => {
+    const currentCondition = values[index]!.condition ?? [];
+    update(
+      index,
+      "condition",
+      currentCondition.map((c, i) =>
+        i === conditionIndex ? { ...c, [key]: value } : c,
+      ),
+    );
+  };
   return (
     <Flex vertical gap="middle">
-      {values.map(({ value, score }, index) => {
+      {values.map(({ value, score, condition }, index) => {
+        const currentCondition = condition ?? [];
         return (
-          <Flex gap="small" key={index} align="center">
-            {value === null || value === undefined ? (
-              "禁用"
-            ) : typeof value === "string" || Array.isArray(value) ? (
-              <>
-                备选键位
-                <KeysEditor
-                  value={value}
-                  onChange={(newValue) => update(index, "value", newValue)}
-                />
-              </>
-            ) : (
-              <>
-                备选归并
+          <Flex vertical gap="small" key={index}>
+            <Flex gap="small" key={index} align="center">
+              <ValueEditor
+                value={value}
+                onChange={(newValue) => update(index, "value", newValue)}
+              />
+              打分
+              <NumberInput
+                value={score}
+                width={96}
+                onChange={(newValue) => update(index, "score", newValue)}
+              />
+              <Button
+                onClick={() => {
+                  update(
+                    index,
+                    "condition",
+                    currentCondition.concat([
+                      { element: name, op: "不是", value: null },
+                    ]),
+                  );
+                }}
+              >
+                添加条件
+              </Button>
+              <DeleteButton
+                onClick={() => {
+                  if (values.length === 1) {
+                    removeMappingSpace(name);
+                  } else {
+                    addMappingSpace(
+                      name,
+                      values.filter((_, i) => i !== index),
+                    );
+                  }
+                }}
+              />
+            </Flex>
+            {currentCondition.map((c, i) => (
+              <Flex
+                key={i}
+                gap="small"
+                align="center"
+                style={{ paddingLeft: "32px" }}
+              >
+                当
                 <ElementSelect
-                  value={value.element}
-                  onChange={(newValue) =>
-                    update(index, "value", { element: newValue })
+                  value={c.element}
+                  onChange={(element) =>
+                    updateCondition(index, i, "element", element)
                   }
                   style={{ width: 96 }}
                   allowClear={false}
                   includeOptional
                 />
-              </>
-            )}
-            打分
-            <NumberInput value={score} width={96} />
-            <DeleteButton
-              onClick={() => {
-                if (values.length === 1) {
-                  removeMappingSpace(name);
-                } else {
-                  addMappingSpace(
-                    name,
-                    values.filter((_, i) => i !== index),
-                  );
-                }
-              }}
-            />
+                <Select
+                  value={c.op}
+                  options={[
+                    { label: "是", value: "是" },
+                    { label: "不是", value: "不是" },
+                  ]}
+                  onChange={(op) => updateCondition(index, i, "op", op)}
+                />
+                <ValueEditor
+                  value={c.value}
+                  onChange={(value) =>
+                    updateCondition(index, i, "value", value)
+                  }
+                />
+                <DeleteButton
+                  onClick={() => {
+                    update(
+                      index,
+                      "condition",
+                      currentCondition.filter((_, j) => j !== i),
+                    );
+                  }}
+                />
+              </Flex>
+            ))}
           </Flex>
         );
       })}
@@ -128,18 +192,18 @@ class IncompleteError extends Error {
 }
 
 function topologicalSort(
-  mappingSpace: MappingSpace,
+  mappingSpaceEntries: [string, ValueDescription[]][],
 ): string[] | NegativeDegreeError | IncompleteError {
-  const elements = Object.keys(mappingSpace);
+  const elements = mappingSpaceEntries.map(([key]) => key);
   const graph: Map<string, Set<string>> = new Map(
     elements.map((key) => [key, new Set<string>()]),
   );
   const in_degree: Map<string, number> = new Map(
     elements.map((key) => [key, 0]),
   );
-  for (const [key, values] of Object.entries(mappingSpace)) {
+  for (const [key, values] of mappingSpaceEntries) {
     const ins = new Set<string>();
-    for (const { value, score } of values) {
+    for (const { value, condition } of values) {
       if (value === null) continue;
       if (typeof value === "string") continue;
       if ("element" in value) {
@@ -158,6 +222,10 @@ function topologicalSort(
           ins.add(item.element);
         }
       }
+      for (const c of condition ?? []) {
+        ins.add(c.element);
+        graph.get(c.element)!.add(key);
+      }
     }
     in_degree.set(key, ins.size);
   }
@@ -172,7 +240,12 @@ function topologicalSort(
   while (queue.length > 0) {
     const current = queue.shift()!;
     sorted.push(current);
-    for (const neighbor of graph.get(current)!) {
+    const neighbors = sortBy(
+      Array.from(graph.get(current)!),
+      (x) => (chars(x) === 1 ? 1 : 0),
+      (x) => x,
+    );
+    for (const neighbor of neighbors) {
       const degree = in_degree.get(neighbor)! - 1;
       if (degree < 0) {
         return new NegativeDegreeError(
@@ -260,13 +333,22 @@ export default function Rules() {
         <Button
           type="primary"
           onClick={() => {
-            const maybeSorted = topologicalSort(mappingSpace);
+            const completeSpace: MappingSpace = structuredClone(mappingSpace);
+            for (const [name, value] of Object.entries(mapping)) {
+              if (completeSpace[name] === undefined) {
+                completeSpace[name] = [{ value, score: 0 }];
+              } else {
+                completeSpace[name].push({ value, score: 0 });
+              }
+            }
+            const initialSorted = sortBy(
+              Object.entries(completeSpace),
+              ([name]) => (chars(name) === 1 ? 1 : 0),
+              ([name]) => name,
+            );
+            const maybeSorted = topologicalSort(initialSorted);
             if (Array.isArray(maybeSorted)) {
-              const sorted = maybeSorted.map((x) => ({
-                element: x,
-                space: mappingSpace[x],
-              }));
-              exportYAML(sorted, "rules", 2);
+              exportYAML(maybeSorted, "rules", 2);
             } else if (maybeSorted instanceof NegativeDegreeError) {
               notification.error({
                 message: "负入度错误",

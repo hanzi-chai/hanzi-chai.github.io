@@ -3,7 +3,7 @@ import {
   type ComputedComponent,
   NoSchemeError,
 } from "./component";
-import type { Analysis, Element, Mapped, SieveName } from "./config";
+import type { Analysis, Element, Value, SieveName } from "./config";
 import { binaryToIndices } from "./degenerator";
 import type { CurveRelation } from "./topology";
 import { findLastKey, isEqual } from "lodash-es";
@@ -27,7 +27,7 @@ export interface Environment {
   component: ComputedComponent;
   rootMap: Map<number, string>;
   analysis: Analysis;
-  primaryRoots: Map<Element, Mapped>;
+  primaryRoots: Map<Element, Value>;
   secondaryRoots: Map<Element, Element>;
 }
 

@@ -10,15 +10,12 @@ import {
   Popover,
   Select,
   Space,
-  Statistic,
   Typography,
 } from "antd";
-import { useState, useMemo, memo } from "react";
+import { useState, memo } from "react";
 import {
   useAtomValue,
   useSetAtom,
-  keyboardAtom,
-  groupingAtom,
   repertoireAtom,
   alphabetAtom,
   mappingTypeAtom,
@@ -28,13 +25,12 @@ import {
   useAtom,
   currentElementAtom,
   mappingSpaceAtom,
-  mappingCompatibleAtom,
 } from "~/atoms";
 import Char from "./Character";
 import IdleList, { RulesForm } from "./IdleList";
 import {
-  chars,
   getReversedMapping,
+  isMerge,
   isPUA,
   joinKeys,
   printableAscii,
@@ -44,23 +40,21 @@ import { DeleteButton, Display, Uploader } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import type { Key, MappedInfo, Mapping } from "~/lib";
+import type { Key, MappedInfo, Mapping, Value } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
 import { ElementWithTooltip } from "./ElementPool";
 import { sortBy } from "lodash-es";
+import ValueEditor from "./Value";
 
 const useAffiliates = (name: string) => {
-  const mapping = useAtomValue(mappingCompatibleAtom);
+  const mapping = useAtomValue(mappingAtom);
   const result: { from: string; to: string }[] = [];
   const queue = [name];
   while (queue.length > 0) {
     const current = queue.shift()!;
     const affiliates = Object.entries(mapping)
-      .filter(
-        ([, to]) =>
-          typeof to === "object" && "element" in to && to.element === current,
-      )
+      .filter(([, to]) => isMerge(to) && to.element === current)
       .map(([x]) => x);
     affiliates.forEach((x) => result.push({ from: x, to: current }));
     queue.push(...affiliates);
@@ -68,99 +62,29 @@ const useAffiliates = (name: string) => {
   return result;
 };
 
-export const KeysEditor = ({
-  value,
-  onChange,
-}: {
-  value: string | Key[];
-  onChange: (newValue: string | Key[]) => void;
-}) => {
-  const mappingType = useAtomValue(mappingTypeAtom);
-  const keys = Array.from(value);
-  while (keys.length < (mappingType ?? 1)) {
-    keys.push("");
-  }
-  return (
-    <Space>
-      {keys.map((key, index) => {
-        return (
-          <KeySelect
-            key={index}
-            value={key}
-            onChange={(event) => {
-              const newValue = keys.map((v, i) => {
-                return i === index ? event : v;
-              });
-              onChange(joinKeys(newValue));
-            }}
-            allowEmpty={index !== 0}
-          />
-        );
-      })}
-    </Space>
-  );
-};
-
 const ElementDetail = ({
   keys,
   name,
 }: {
-  keys: string | Key[] | { element: string };
+  keys: Exclude<Value, null>;
   name: string;
 }) => {
   const addMapping = useAddAtom(mappingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
   const affiliates = useAffiliates(name);
-  const alphabet = useAtomValue(alphabetAtom);
   return (
     <Flex vertical gap="middle">
-      {typeof keys === "object" && "element" in keys ? (
-        <>
-          <Flex gap="small" align="center">
-            <ElementWithTooltip element={name} />
-            当前归并
-            <ElementSelect
-              value={keys.element}
-              onChange={(event: string) => addMapping(name, { element: event })}
-              customFilter={(s) => s !== name}
-            />
-            <DeleteButton
-              onClick={() => removeMapping(name)}
-              disabled={affiliates.length > 0}
-            />
-          </Flex>
-          <Space>
-            或改为键位
-            <KeysEditor
-              value={alphabet[0]!}
-              onChange={(newValue) => addMapping(name, newValue)}
-            />
-          </Space>
-        </>
-      ) : (
-        <>
-          <Flex gap="small" align="center">
-            <ElementWithTooltip element={name} />
-            当前键位
-            <KeysEditor
-              value={keys}
-              onChange={(newValue) => addMapping(name, newValue)}
-            />
-            <DeleteButton
-              onClick={() => removeMapping(name)}
-              disabled={affiliates.length > 0}
-            />
-          </Flex>
-          <Space>
-            或改为归并
-            <ElementSelect
-              value={undefined}
-              onChange={(event: string) => addMapping(name, { element: event })}
-              customFilter={(s) => s !== name}
-            />
-          </Space>
-        </>
-      )}
+      <Flex gap="small" align="center">
+        <ElementWithTooltip element={name} />
+        <ValueEditor
+          value={keys}
+          onChange={(newValue) => addMapping(name, newValue!)}
+        />
+        <DeleteButton
+          onClick={() => removeMapping(name)}
+          disabled={affiliates.length > 0}
+        />
+      </Flex>
       <Divider size="small" />
       <RulesForm name={name} />
     </Flex>
@@ -216,6 +140,7 @@ export const AdjustableElementGroup = ({
       </Popover>
       {affiliates.map(({ from, to }) => (
         <Popover
+          key={`${from}-${to}`}
           title="编辑决策"
           trigger={["hover", "click"]}
           mouseLeaveDelay={0.3}

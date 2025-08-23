@@ -1,13 +1,12 @@
-import type {
-  Algebra,
-  Condition,
-  EncoderConfig,
-  Grouping,
-  Keyboard,
-  Mapping,
-  Op,
-  Source,
-  WordRule,
+import {
+  isMerge,
+  type Algebra,
+  type Condition,
+  type EncoderConfig,
+  type Keyboard,
+  type Op,
+  type Source,
+  type WordRule,
 } from "./config";
 import type { ComponentAnalysis } from "./component";
 import type { CompoundAnalysis } from "./compound";
@@ -120,22 +119,19 @@ const compile = (
             node = next;
             continue;
           }
-          let mappedElement = mapping[element];
+          let mapped = mapping[element];
           let groupedElement = element;
-          if (mappedElement === undefined) {
+          if (mapped === undefined) {
             node = next;
             continue;
           }
-          while (
-            typeof mappedElement === "object" &&
-            "element" in mappedElement
-          ) {
-            groupedElement = mappedElement.element;
-            mappedElement = mapping[mappedElement.element]!;
+          while (isMerge(mapped)) {
+            groupedElement = mapped.element;
+            mapped = mapping[mapped.element]!;
           }
           if (index === undefined) {
             // 如果没有定义指标，就是全取
-            for (const [index, key] of Array.from(mappedElement).entries()) {
+            for (const [index, key] of Array.from(mapped).entries()) {
               codes.push(
                 typeof key === "string"
                   ? { element: groupedElement, index }
@@ -144,16 +140,13 @@ const compile = (
             }
           } else {
             // 检查指标是否有效
-            const key = mappedElement[index];
-            if (typeof key === "string") {
-              codes.push({ element: groupedElement, index });
-            } else if (key !== undefined) {
-              // 冰雪清韵特殊规则
-              if (index === 0) {
-                codes.push({ element: groupedElement, index });
-              } else {
-                codes.push(key);
-              }
+            const key = mapped[index];
+            if (key !== undefined) {
+              codes.push(
+                typeof key === "string"
+                  ? { element: groupedElement, index }
+                  : key,
+              );
             }
           }
         }

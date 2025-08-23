@@ -12,7 +12,7 @@ import {
 } from "~/atoms";
 import { AdjustableElementGroup } from "~/components/Mapping";
 import { Display } from "~/components/Utils";
-import { getReversedMapping, MappedInfo } from "~/lib";
+import { getReversedMapping, isMerge, MappedInfo } from "~/lib";
 
 const PrintArea = styled.div`
   width: 210mm;
@@ -130,10 +130,7 @@ function LineView() {
     elements: Object.entries(mapping)
       .filter(
         ([_, value]) =>
-          value == char ||
-          (typeof value === "object" &&
-            "element" in value &&
-            mapping[value.element] === char),
+          value == char || (isMerge(value) && mapping[value.element] === char),
       )
       .map(([key]) => key.replace("韵-", ""))
       .filter((name) => ["m", "ng", "ueng", "io"].includes(name) === false), // 排除韵母 m 和 ng,
@@ -165,11 +162,10 @@ function LineView() {
       render: (_, { key }) => {
         const roots = reversedMapping
           .get(key)!
-          .filter(({ name }) => /^\d$/.test(name))
-          .filter(({ code }) => typeof code[0] === "string");
+          .filter(({ name }) => /^\d$/.test(name));
         return list(roots);
       },
-      width: 48,
+      width: 80,
     },
     {
       title: "键名字根",
@@ -181,7 +177,7 @@ function LineView() {
           .filter(({ code }) => typeof code[0] === "string");
         return list(roots);
       },
-      width: 80,
+      width: 96,
     },
     {
       title: "其他字根",

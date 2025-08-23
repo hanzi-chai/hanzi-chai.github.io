@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { Button, Flex } from "antd";
 import {
-  keyboardAtom,
   useAtomValue,
   useAddAtom,
   mappingAtom,
-  groupingAtom,
-  useRemoveAtom,
   alphabetAtom,
   mappingTypeAtom,
 } from "~/atoms";
@@ -17,14 +14,10 @@ import { joinKeys } from "~/lib";
 
 export default function ElementAdder({ element }: { element?: string }) {
   const alphabet = useAtomValue(alphabetAtom);
-  const mapping = useAtomValue(mappingAtom);
   const mapping_type = useAtomValue(mappingTypeAtom);
-  const [main, setMain] = useState(Object.keys(mapping)[0]!);
+  const [main, setMain] = useState<string | undefined>(undefined);
   const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
   const addMapping = useAddAtom(mappingAtom);
-  const addGrouping = useAddAtom(groupingAtom);
-  const removeMapping = useRemoveAtom(mappingAtom);
-  const removeGrouping = useRemoveAtom(groupingAtom);
   return (
     <>
       <Flex justify="center" align="center" gap="small">
@@ -51,7 +44,6 @@ export default function ElementAdder({ element }: { element?: string }) {
           onClick={() => {
             const slice = keys.slice(0, mapping_type ?? 1);
             addMapping(element!, joinKeys(slice));
-            removeGrouping(element!);
           }}
         >
           添加
@@ -62,11 +54,8 @@ export default function ElementAdder({ element }: { element?: string }) {
         <ElementSelect value={undefined} onChange={(event) => setMain(event)} />
         <Button
           type="primary"
-          disabled={element === undefined || Object.keys(mapping).length === 0}
-          onClick={() => {
-            addMapping(element!, { element: main });
-            removeGrouping(element!);
-          }}
+          disabled={element === undefined || main === undefined}
+          onClick={() => addMapping(element!, { element: main! })}
         >
           归并
         </Button>

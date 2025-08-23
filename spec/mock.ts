@@ -32,7 +32,7 @@ export const computedComponents = Object.fromEntries(
 export const focusAnalysis = (config: Config, repertoire: Repertoire) => {
   const result: AnalysisConfig = {
     analysis: config.analysis ?? {},
-    primaryRoots: new Map(
+    roots: new Map(
       Object.entries(config.form.mapping).filter(([x]) => repertoire[x]),
     ),
     secondaryRoots: new Map(

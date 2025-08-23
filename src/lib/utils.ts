@@ -19,7 +19,7 @@ import type {
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import type { Key, Mapped, Mapping } from "./config";
+import { isMerge, type Key, type Value, type Mapping } from "./config";
 import type { IndexedElement } from "./assembly";
 
 interface Loss {
@@ -663,7 +663,7 @@ type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
 
 export interface MappedInfo {
   name: string;
-  code: Exclude<Mapped, null | { element: string }>;
+  code: Exclude<Value, null | { element: string }>;
 }
 
 export const getReversedMapping = (mapping: Mapping, alphabet: string) => {
