@@ -16,11 +16,9 @@ import {
   charactersAtom,
   dictionaryAtom,
   encoderAtom,
-  groupingAtom,
   keyboardAtom,
   mappingAtom,
   mappingSpaceAtom,
-  mappingTypeAtom,
   meaningfulObjectiveAtom,
   priorityShortCodesAtom,
   repertoireAtom,
@@ -54,20 +52,18 @@ export const phonemeEnumerationAtom = atom((get) => {
 
 export const analysisConfigAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
+  const mapping = get(mappingAtom);
   const mappingSpace = get(mappingSpaceAtom);
+  const optionalRoots = new Set<string>();
+  for (const [key, value] of Object.entries(mappingSpace)) {
+    if (value.some((x) => x.value == null) || mapping[key] === undefined) {
+      optionalRoots.add(key);
+    }
+  }
   const analysisConfig: AnalysisConfig = {
     analysis: get(analysisAtom),
-    primaryRoots: new Map(
-      Object.entries(get(mappingAtom)).filter(([x]) => repertoire[x]),
-    ),
-    secondaryRoots: new Map(
-      Object.entries(get(groupingAtom)).filter(([x]) => repertoire[x]),
-    ),
-    optionalRoots: new Set(
-      Object.entries(mappingSpace)
-        .filter(([_, v]) => v.some((x) => x.value == null))
-        .map(([k, v]) => k),
-    ),
+    roots: new Map(Object.entries(mapping).filter(([x]) => repertoire[x])),
+    optionalRoots,
   };
   return analysisConfig;
 });

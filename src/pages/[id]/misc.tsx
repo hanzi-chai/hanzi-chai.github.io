@@ -20,7 +20,6 @@ import { isEqual, sample, sortBy } from "lodash-es";
 import {
   charactersAtom,
   degeneratorAtom,
-  groupingAtom,
   mappingAtom,
   repertoireAtom,
 } from "~/atoms";
@@ -71,12 +70,11 @@ function 构建字根树(map: Map<string, string | undefined>): TreeNode {
 
 export const parentMapAtom = atom((get) => {
   const mapping = get(mappingAtom);
-  const grouping = get(groupingAtom);
   const repertoire = get(repertoireAtom);
   const degenerator = get(degeneratorAtom);
   const degeneratorMap = new Map<string, string>();
 
-  for (const element of Object.keys(mapping).concat(Object.keys(grouping))) {
+  for (const element of Object.keys(mapping)) {
     const glyph = repertoire[element]?.glyph;
     if (glyph === undefined) continue;
     if (glyph.type !== "basic_component") {
@@ -105,8 +103,7 @@ export const parentMapAtom = atom((get) => {
       const slice = rendered.slice(0, i);
       const hash = JSON.stringify(degenerate(degenerator, slice));
       if (degeneratorMap.has(hash)) {
-        const rawParent = degeneratorMap.get(hash)!;
-        const parent = grouping[rawParent] || rawParent;
+        const parent = degeneratorMap.get(hash)!;
         parentMap.set(element, parent);
         break;
       }

@@ -116,10 +116,7 @@ export const getComponentScheme = (
   config: AnalysisConfig,
   classifier: Classifier,
 ): ComponentAnalysis | NoSchemeError | MultipleSchemeError => {
-  const currentRoots = new Set([
-    ...config.primaryRoots.keys(),
-    ...config.secondaryRoots.keys(),
-  ]);
+  const currentRoots = new Set([...config.roots.keys()]);
   const optionalRoots = new Set([...config.optionalRoots.keys()]);
   const requiredRoots = new Set(
     [...currentRoots].filter((x) => !optionalRoots.has(x)),
@@ -352,8 +349,7 @@ export const disassembleComponents = (
   components: Set<string>,
 ): [ComponentResults, string[]] => {
   const rootMap = renderRootList(repertoire, [
-    ...config.primaryRoots.keys(),
-    ...config.secondaryRoots.keys(),
+    ...config.roots.keys(),
     ...config.optionalRoots.keys(),
   ]);
   const rootList = [...rootMap.values()];

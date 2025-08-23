@@ -51,7 +51,7 @@ describe("get component scheme", () => {
   });
   const analysisConfig = focusAnalysis(config, repertoire);
   const rootList = renderRootList(repertoire, [
-    ...analysisConfig.primaryRoots,
+    ...analysisConfig.roots,
     ...analysisConfig.secondaryRoots,
   ]);
   it("can get component scheme", () => {

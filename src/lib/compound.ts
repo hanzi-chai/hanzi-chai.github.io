@@ -204,8 +204,7 @@ export const topologicalSort = (
           repertoire[x]?.glyph?.type === "basic_component" ||
           compounds.get(x) !== undefined,
       );
-      const isRoot =
-        config.primaryRoots.has(name) || config.secondaryRoots.has(name);
+      const isRoot = config.roots.has(name);
       if (wellKnown || isRoot) {
         thisLevelCompound.set(name, character as CompoundCharacter);
       }
@@ -429,24 +428,24 @@ const snow2Serializer: Serializer = (operandResults, glyph) => {
 
 const limit = (sequence: string[], maximum: number, config: AnalysisConfig) => {
   let codes = 0; // 记录整体的取码数
-  const { primaryRoots, secondaryRoots } = config;
+  const { roots } = config;
   const final: string[] = [];
   for (const x of sequence) {
     if (x === "·") {
       final.push(x);
       continue;
     }
-    const y = secondaryRoots.get(x) ?? x;
-    const length = primaryRoots.get(y)?.length ?? 1;
+    // FIXME: 这里的规则需要根据实际情况调整
+    const length = 1;
     codes += length;
-    final.push(y);
+    final.push(x);
     if (codes >= maximum) break;
   }
   return final;
 };
 
 const xkjdSerializer: Serializer = (operandResults, glyph, config) => {
-  const { primaryRoots, secondaryRoots } = config;
+  const { roots: primaryRoots } = config;
   const order =
     glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
   const sequence: string[] = [];
@@ -462,8 +461,8 @@ const xkjdSerializer: Serializer = (operandResults, glyph, config) => {
       if (index === 0) {
         let codes = 0; // 记录部分的取码数
         for (const x of part.full) {
-          const y = secondaryRoots.get(x) ?? x;
-          const length = primaryRoots.get(y)?.length ?? 1;
+          // FIXME: 这里的规则需要根据实际情况调整
+          const length = 1;
           if (codes === 1 && length > 1) {
             const equivalent: Record<string, string> = {
               土: "1",
@@ -474,7 +473,7 @@ const xkjdSerializer: Serializer = (operandResults, glyph, config) => {
               日: "4",
               贝: "5",
             };
-            sequence.push(equivalent[y] ?? "1");
+            sequence.push(equivalent[x] ?? "1");
           } else {
             sequence.push(x);
           }
@@ -572,7 +571,7 @@ export const disassembleCompounds = (
     }
   }
   for (const [char, { glyph }] of compounds.entries()) {
-    if (config.primaryRoots.has(char) || config.secondaryRoots.has(char)) {
+    if (config.roots.has(char)) {
       // 复合体本身是一个字根
       compoundResults.set(char, {
         sequence: [char],

@@ -22,7 +22,6 @@ import {
   customizeAtom,
   charactersAtom,
   mappingAtom,
-  groupingAtom,
   analysisConfigAtom,
   adaptedFrequencyAtom,
   dictionaryAtom,
@@ -63,7 +62,6 @@ const dumpAnalysisResult = (
     stat.set(length, (stat.get(length) ?? 0) + 1);
     return [char, analysis.sequence.map(display).join(" ")];
   });
-  console.log("拆分结果统计：", Object.fromEntries(stat));
   exportTSV(tsv, "拆分结果.txt");
 };
 
@@ -101,15 +99,17 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
   const mapping = useAtomValue(mappingAtom);
-  const grouping = useAtomValue(groupingAtom);
   const mappingSpace = useAtomValue(mappingSpaceAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
   const analysisConfig = useAtomValue(analysisConfigAtom);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
   const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
+    if (repertoire[k]?.name === "乍字底") {
+      console.log(mappingSpace[k]);
+    }
     if (mappingSpace[k]?.some((x) => x.value == null)) return true;
-    if (mapping[k] || grouping[k]) return false;
+    if (mapping[k]) return false;
     if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
     return true;
   });
@@ -201,20 +201,15 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         </Button>
         <Button
           onClick={() => {
-            const { dynamicCustomize } = analysisConfig.analysis;
-            const { primaryRoots, secondaryRoots, optionalRoots } =
-              analysisConfig;
+            const { dynamic_customize } = analysisConfig.analysis;
+            const { roots, optionalRoots } = analysisConfig;
             const illegal: string[] = [];
             for (const [char, customize] of Object.entries(
-              dynamicCustomize ?? {},
+              dynamic_customize ?? {},
             )) {
               for (const method of customize) {
                 const valid = method.every(
-                  (x) =>
-                    /\d+/.test(x) ||
-                    primaryRoots.has(x) ||
-                    secondaryRoots.has(x) ||
-                    optionalRoots.has(x),
+                  (x) => /\d+/.test(x) || roots.has(x) || optionalRoots.has(x),
                 );
                 if (!valid) {
                   illegal.push(char);
@@ -223,11 +218,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
               }
               const last = customize[customize.length - 1]!;
               const valid = last.every(
-                (x) =>
-                  (/\d+/.test(x) ||
-                    primaryRoots.has(x) ||
-                    secondaryRoots.has(x)) &&
-                  !optionalRoots.has(x),
+                (x) => (/\d+/.test(x) || roots.has(x)) && !optionalRoots.has(x),
               );
               if (!valid) {
                 illegal.push(char);

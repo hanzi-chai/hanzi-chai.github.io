@@ -70,7 +70,6 @@ const DynamicCustomize = ({
   initialValues: string[][];
 }) => {
   const add = useAddAtom(dynamicCustomizeAtom);
-  console.log(initialValues);
   return (
     <ProForm<{ content: { content: string[] }[] }>
       title={component}

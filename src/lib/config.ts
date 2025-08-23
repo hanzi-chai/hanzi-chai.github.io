@@ -8,7 +8,6 @@ import type {
 } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
-import type { CornerSpecifier } from "./topology";
 
 // config.info begin
 export interface Info {
@@ -51,7 +50,7 @@ export interface Analysis {
   degenerator?: Degenerator;
   selector?: Selector;
   customize?: Record<string, string[]>;
-  dynamicCustomize?: Record<string, string[][]>;
+  dynamic_customize?: Record<string, string[][]>;
   strong?: string[];
   weak?: string[];
   serializer?:
@@ -119,7 +118,6 @@ export interface MappingGeneratorRule {
   elements: string[];
   keys: string[];
 }
-[];
 
 export type Element = string;
 
@@ -127,13 +125,21 @@ export type ElementWithIndex = { element: string; index: number };
 
 export type Key = string | ElementWithIndex;
 
-export type Mapped = null | string | Key[] | { element: string };
+export type Value = null | string | Key[] | { element: string };
 
-export type Mapping = Record<Element, Exclude<Mapped, null>>;
+export function isMerge(value: Value): value is { element: string } {
+  return typeof value === "object" && value !== null && "element" in value;
+}
 
-export type ValueWithScore = { value: Mapped; score: number };
+export type Mapping = Record<Element, Exclude<Value, null>>;
 
-export type MappingSpace = Record<Element, ValueWithScore[]>;
+export interface ValueDescription {
+  value: Value;
+  score: number;
+  condition?: { element: string; op: "是" | "不是"; value: Value }[];
+}
+
+export type MappingSpace = Record<Element, ValueDescription[]>;
 
 export type Grouping = Record<Element, Element>;
 // config.form end
