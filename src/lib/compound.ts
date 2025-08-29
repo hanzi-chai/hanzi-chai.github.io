@@ -16,7 +16,7 @@ import type {
 } from "./data";
 import type { CornerSpecifier } from "./topology";
 import type { Analysis } from "./config";
-import { range, sortBy } from "lodash-es";
+import { first, range, sortBy } from "lodash-es";
 import type { BoundingBox } from "./bezier";
 import { classifier } from "./classifier";
 
@@ -526,6 +526,38 @@ const shouyouSerializer: Serializer = (operandResults, glyph, config) => {
   };
 };
 
+const feihuaSerializer: Serializer = (operandResults, glyph, config) => {
+  const order =
+    glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+  const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
+    order.findIndex((b) => b.index === i),
+  ).map((i) => operandResults[i]!);
+  const sequence: string[] = [];
+  const full = sequentialSerializer(operandResults, glyph, config).full;
+  const first = sortedOperandResults[0]!;
+  const last = sortedOperandResults.at(-1)!;
+  if (first.full.length !== 1 && last.full.length === 1) {
+    sequence.push(...last.full);
+    if (last.full.length === 1 && last.full[0] === "阝") {
+      sequence[0] = "邑";
+    }
+    for (const x of sortedOperandResults.slice(0, -1)) {
+      sequence.push(...x.full);
+    }
+  } else {
+    for (const x of sortedOperandResults) {
+      sequence.push(...x.full);
+    }
+  }
+  return {
+    sequence,
+    corners: [0, 0, 0, 0],
+    full,
+    operator: glyph.operator,
+    operandResults,
+  };
+};
+
 const serializerMap: Record<
   Exclude<Analysis["serializer"], undefined>,
   Serializer
@@ -536,6 +568,7 @@ const serializerMap: Record<
   snow2: snow2Serializer,
   xkjd: xkjdSerializer,
   shouyou: shouyouSerializer,
+  feihua: feihuaSerializer,
 };
 
 /**
