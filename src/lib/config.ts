@@ -59,7 +59,8 @@ export interface Analysis {
     | "zhenma"
     | "snow2"
     | "xkjd"
-    | "shouyou";
+    | "shouyou"
+    | "feihua";
 }
 
 export interface Degenerator {
