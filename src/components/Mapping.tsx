@@ -119,7 +119,6 @@ export const AdjustableElementGroup = ({
   const affiliates = useAffiliates(name);
   const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
   const currentElement = useAtomValue(currentElementAtom);
-  const shouldHighlight = name === currentElement;
   const mappingSpace = useAtomValue(mappingSpaceAtom);
   const isOptional = (name: string) =>
     mappingSpace[name]?.some((x) => x.value === null) ?? false;
@@ -131,7 +130,7 @@ export const AdjustableElementGroup = ({
         mouseLeaveDelay={0.3}
         content={<ElementDetail keys={code} name={name} />}
       >
-        <ElementLabelWrapper $shouldHighlight={shouldHighlight}>
+        <ElementLabelWrapper $shouldHighlight={name === currentElement}>
           <DisplayWrapper
             name={normalize(name)}
             $optional={!displayMode && isOptional(name)}
@@ -147,7 +146,7 @@ export const AdjustableElementGroup = ({
           content={<ElementDetail keys={{ element: to }} name={from} />}
         >
           <ElementLabelWrapper
-            $shouldHighlight={shouldHighlight}
+            $shouldHighlight={from === currentElement}
             style={{ fontSize: "0.85em" }}
           >
             <DisplayWrapper

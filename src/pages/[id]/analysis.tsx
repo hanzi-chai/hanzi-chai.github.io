@@ -34,6 +34,7 @@ import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
 import type { AnalysisResult, CharacterFilter } from "~/lib";
 import {
+  countOccurences,
   dynamicAnalysis,
   exportTSV,
   exportYAML,
@@ -243,6 +244,24 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
           }}
         >
           检查自定义动态拆分
+        </Button>
+        <Button
+          onClick={() => {
+            const roots = new Set<string>([
+              ...analysisConfig.roots.keys(),
+              ...analysisConfig.optionalRoots.keys(),
+            ]);
+            const result = countOccurences(repertoire, characters);
+            const sorted = Object.fromEntries(
+              [...result]
+                .filter(([k, v]) => v >= 10 !== roots.has(k))
+                .sort((a, b) => b[1] - a[1])
+                .map(([x, y]) => [display(x), y]),
+            );
+            exportYAML(sorted, "character_occurrences", 2);
+          }}
+        >
+          导出字符出现次数
         </Button>
       </Flex>
       <Row style={{ width: "80%", alignItems: "center" }}>
