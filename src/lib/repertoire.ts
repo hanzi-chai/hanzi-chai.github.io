@@ -273,6 +273,26 @@ export const analysis = (
   };
 };
 
+export const countOccurences = (
+  repertoire: Repertoire,
+  characters: string[],
+) => {
+  const counter = new Map<string, number>();
+  const count = (char: string) => {
+    counter.set(char, (counter.get(char) || 0) + 1);
+    const glyph = repertoire[char]?.glyph;
+    if (glyph === undefined) return;
+    if (glyph.type === "basic_component") return;
+    for (const operand of glyph.operandList) {
+      count(operand);
+    }
+  };
+  for (const char of characters) {
+    count(char);
+  }
+  return counter;
+};
+
 export const dynamicAnalysis = (
   repertoire: Repertoire,
   config: AnalysisConfig,
