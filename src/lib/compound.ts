@@ -204,7 +204,7 @@ export const topologicalSort = (
           repertoire[x]?.glyph?.type === "basic_component" ||
           compounds.get(x) !== undefined,
       );
-      const isRoot = config.roots.has(name);
+      const isRoot = config.roots.has(name) && !config.optionalRoots.has(name);
       if (wellKnown || isRoot) {
         thisLevelCompound.set(name, character as CompoundCharacter);
       }

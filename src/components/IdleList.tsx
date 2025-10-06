@@ -2,15 +2,18 @@ import { Button, Flex, notification, Popover, Select, Typography } from "antd";
 import { isEqual, sortBy } from "lodash-es";
 import {
   alphabetAtom,
+  analysisConfigAtom,
   currentElementAtom,
   displayAtom,
   mappingAtom,
   mappingGeneratorAtom,
   mappingSpaceAtom,
+  repertoireAtom,
   useAddAtom,
   useAtom,
   useAtomValue,
   useRemoveAtom,
+  useSetAtom,
 } from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
@@ -34,6 +37,7 @@ import {
 import CharacterSelect from "./CharacterSelect";
 import { useState } from "react";
 import ValueEditor from "./Value";
+import gf0014 from "./gf0014.yaml";
 
 export const RulesForm = ({ name }: { name: string }) => {
   const alphabet = useAtomValue(alphabetAtom);
@@ -67,8 +71,20 @@ export const RulesForm = ({ name }: { name: string }) => {
       ),
     );
   };
+  const repertoire = useAtomValue(repertoireAtom);
+  const character = repertoire[name];
   return (
     <Flex vertical gap="middle">
+      <Flex gap="middle">
+        {character?.tygf !== undefined && character.tygf > 0 && (
+          <span>
+            通规音：{character.readings.map((x) => x.pinyin).join("、")}
+          </span>
+        )}
+        {character?.gf0014_id && (
+          <span>GF0014 音：{gf0014[character.gf0014_id - 1].join(" | ")}</span>
+        )}
+      </Flex>
       {values.map(({ value, score, condition }, index) => {
         const currentCondition = condition ?? [];
         return (
@@ -321,15 +337,40 @@ export default function Rules() {
   const display = useAtomValue(displayAtom);
   const mapping = useAtomValue(mappingAtom);
   const mappingSpace = useAtomValue(mappingSpaceAtom);
+  const setMappingSpace = useSetAtom(mappingSpaceAtom);
   const addMappingSpace = useAddAtom(mappingSpaceAtom);
   const [character, setCharacter] = useState<string | undefined>(undefined);
   const alphabet = useAtomValue(alphabetAtom);
   const currentElement = useAtomValue(currentElementAtom);
+  const analysisConfig = useAtomValue(analysisConfigAtom);
+  const necessaryRoots = new Set<string>();
+  for (const root of analysisConfig.roots.keys()) {
+    if (analysisConfig.optionalRoots.has(root)) continue;
+    necessaryRoots.add(root);
+  }
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={4}>决策空间</Typography.Title>
       <Flex justify="middle" gap="middle">
         <RulesGenerator />
+        <Button
+          onClick={() => {
+            const idles = Object.entries(mappingSpace).filter(
+              ([name]) => mapping[name] === undefined,
+            );
+            const ms = structuredClone(mappingSpace);
+            for (const [name] of idles) {
+              delete ms[name];
+            }
+            const sortedIdles = sortBy(idles, ([name]) => name.codePointAt(0)!);
+            for (const [name, value] of sortedIdles) {
+              ms[name] = value;
+            }
+            setMappingSpace(ms);
+          }}
+        >
+          整理
+        </Button>
         <Button
           type="primary"
           onClick={() => {
@@ -404,6 +445,16 @@ export default function Rules() {
               </Flex>
             );
           })}
+      </Flex>
+      <Typography.Title level={4}>必选字根</Typography.Title>
+      <Flex wrap="wrap" gap="small">
+        {Array.from(necessaryRoots)
+          .sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!)
+          .map((name) => (
+            <Element key={name}>
+              <Display name={name} />
+            </Element>
+          ))}
       </Flex>
     </Flex>
   );

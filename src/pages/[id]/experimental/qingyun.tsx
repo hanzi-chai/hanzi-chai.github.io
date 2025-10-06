@@ -1,25 +1,49 @@
-import { Flex, Space, Tag, Typography } from "antd";
+import {
+  ProForm,
+  ProFormGroup,
+  ProFormList,
+  ProFormText,
+} from "@ant-design/pro-components";
+import { Button, Flex, Input, Space, Tag, Typography } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { Table } from "antd/lib";
+import { atomWithStorage } from "jotai/utils";
+import { sortBy } from "lodash-es";
 import styled from "styled-components";
 import {
   alphabetAtom,
+  analysisResultAtom,
+  charactersAtom,
   infoAtom,
-  keyboardAtom,
   mappingAtom,
+  useAtom,
   useAtomValue,
   useChaifenTitle,
+  userFrequencyAtom,
 } from "~/atoms";
 import { AdjustableElementGroup } from "~/components/Mapping";
 import { Display } from "~/components/Utils";
-import { getReversedMapping, isMerge, MappedInfo } from "~/lib";
+import {
+  ElementWithIndex,
+  exportTSV,
+  exportYAML,
+  getReversedMapping,
+  isMerge,
+  Key,
+  MappedInfo,
+  Mapping,
+} from "~/lib";
+import Element from "../element";
+import Char from "~/components/Character";
+import ValueEditor from "~/components/Value";
+import { useMemo } from "react";
 
 const PrintArea = styled.div`
   width: 210mm;
   height: 297mm;
   float: left;
 
-  padding: 10mm 10mm;
+  padding: 10mm 3mm;
   border: 1px #d3d3d3 solid;
   border-radius: 5px;
   background: white;
@@ -46,77 +70,82 @@ const Secondary = styled.div`
   gap: 1rem;
 `;
 
-const Keyboard = styled.div`
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(23, 1fr);
-  margin: 1rem 0;
-  height: 26cm;
-`;
+interface Converted {
+  字根: string[];
+  编码: string;
+  读音?: string;
+}
 
-const Box = styled.div`
-  text-align: center;
-  place-content: center;
-  border: 1px solid #d3d3d3;
-`;
+function combineShengYun(sheng: string, yun: string) {
+  let string = `${sheng.replace("声-", "")}${yun.replace("韵-", "")}`;
+  string = string
+    .replace("0", "")
+    .replace("yia", "ya")
+    .replace("yio", "yo")
+    .replace("wua", "wa")
+    .replace("wue", "we")
+    .replace("uü", "u")
+    .replace(/([jqx])ü/, "$1u")
+    .replace("ir", "i")
+    .replace("iou", "iu")
+    .replace("uei", "ui")
+    .replace("uen", "un");
+  return string;
+}
 
-function GridView() {
-  const { mapping, grouping } = useAtomValue(keyboardAtom);
-  const dama = "bpmfdtnlgkhjqxzcsrwyv";
-  const xiaoma = "aoeiu;,./_";
-  const dama_shengmu = [...dama].map((char) => ({
-    key: char,
-    elements: Object.entries(mapping)
-      .filter(([key, value]) => value == char && key.startsWith("声-"))
-      .map(([key]) => key.replace("声-", "")),
+const repr: Record<string, string> = {
+  "1": "一",
+  "2": "丨",
+  "3": "丿",
+  "4": "丶",
+  "5": "乛",
+  "6": "乚",
+};
+
+function convertMapping(mapping: Mapping) {
+  const result: Map<string, Converted> = new Map();
+  for (const [key, value] of Object.entries(mapping)) {
+    if (!/^.$/.test(key) || isMerge(value)) continue;
+    if (typeof value[0] === "string") {
+      const ref = (value[1] as ElementWithIndex).element;
+      result.set(key, {
+        字根: [repr[key] || key],
+        编码: (value[0] + mapping[ref]) as string,
+      });
+    } else {
+      const ref1 = (value[0] as ElementWithIndex).element;
+      const ref2 = (value[1] as ElementWithIndex).element;
+      let ref0 = ref2;
+      while (isMerge(mapping[ref0]!)) {
+        ref0 = (mapping[ref0] as ElementWithIndex).element;
+      }
+      result.set(key, {
+        字根: [key],
+        编码: (mapping[ref1] as string) + (mapping[ref0] as string),
+        读音: combineShengYun(ref1, ref2),
+      });
+    }
+  }
+  for (const [key, value] of Object.entries(mapping)) {
+    if (!/^.$/.test(key) || !isMerge(value)) continue;
+    let root = value.element;
+    while (isMerge(mapping[root]!)) {
+      root = (mapping[root] as ElementWithIndex).element;
+    }
+    result.get(root)!.字根.push(key);
+  }
+  return Array.from(result.values()).map(({ 字根, 编码, 读音 }) => ({
+    字根: 字根.join(""),
+    编码,
+    读音,
   }));
-  const xiaoma_yunmu = [...xiaoma].map((char) => ({
-    key: char,
-    elements: Object.entries(mapping)
-      .filter(([_, value]) => value == char)
-      .map(([key]) => key.replace("韵-", "")),
-  }));
-  return (
-    <Keyboard>
-      <Box />
-      <Box>小码</Box>
-      {[...xiaoma].map((char) => (
-        <Box key={char}>{char.toUpperCase()}</Box>
-      ))}
-      <Box>大码</Box>
-      <Box>声韵</Box>
-      {xiaoma_yunmu.map(({ key, elements }) => (
-        <Box key={key}>{elements.join(", ")}</Box>
-      ))}
-      {dama_shengmu.map(({ key, elements }) => (
-        <>
-          <Box key={key}>{key.toUpperCase()}</Box>
-          <Box key={key}>{elements.join(", ")}</Box>
-          {[...xiaoma].map((subChar) => (
-            <Box key={`${key}${subChar}`}>
-              {Object.entries(mapping)
-                .filter(([element, value]) => {
-                  if (subChar === "_") {
-                    return value === key && !element.startsWith("声-");
-                  } else {
-                    return value == key + subChar;
-                  }
-                })
-                .map(([key, value]) => (
-                  <Display name={key} />
-                ))}
-            </Box>
-          ))}
-        </>
-      ))}
-    </Keyboard>
-  );
 }
 
 function LineView() {
   const mapping = useAtomValue(mappingAtom);
   const alphabet = useAtomValue(alphabetAtom);
   const reversedMapping = getReversedMapping(mapping, alphabet);
+  const analysisResult = useAtomValue(analysisResultAtom);
   const dama = "bpmfdtnlgkhjqxzcsrwyv";
   const xiaoma = "aoeiu;,./";
   const dama_shengmu = [...dama].map((char) => ({
@@ -133,7 +162,11 @@ function LineView() {
           value == char || (isMerge(value) && mapping[value.element] === char),
       )
       .map(([key]) => key.replace("韵-", ""))
-      .filter((name) => ["m", "ng", "ueng", "io"].includes(name) === false), // 排除韵母 m 和 ng,
+      .filter(
+        (name) =>
+          ["m", "ng", "ueng", "io", "主根-1", "主根-2"].includes(name) ===
+          false,
+      ), // 排除韵母 m 和 ng,
   }));
   const list = (roots: MappedInfo[]) => (
     <Flex gap="small" wrap="wrap">
@@ -154,30 +187,32 @@ function LineView() {
       key: "key",
       render: (key, { elements }) =>
         `${key.toUpperCase()} [${elements.join(", ")}]`,
-      width: 80,
+      width: 72,
     },
     {
-      title: "笔画",
+      title: "第一主根",
       key: "elements",
       render: (_, { key }) => {
         const roots = reversedMapping
           .get(key)!
           .filter(({ name }) => /^\d$/.test(name));
+        roots.forEach((x) => (x.code = x.code[0]! as string));
         return list(roots);
       },
-      width: 80,
+      width: 72,
     },
     {
-      title: "键名字根",
+      title: "第二主根",
       key: "elements",
       render: (_, { key }) => {
         const roots = reversedMapping
           .get(key)!
           .filter(({ name }) => !name.startsWith("声-") && !/\d/.test(name))
           .filter(({ code }) => typeof code[0] === "string");
+        roots.forEach((x) => (x.code = x.code[0]! as string));
         return list(roots);
       },
-      width: 96,
+      width: 104,
     },
     {
       title: "其他字根",
@@ -194,7 +229,21 @@ function LineView() {
   return (
     <>
       <Flex align="center" style={{ padding: "8px 8px" }} gap="large">
-        <strong style={{ width: 48, flexShrink: 0 }}>韵码</strong>
+        <strong
+          style={{ width: 48, flexShrink: 0 }}
+          onClick={() => {
+            exportYAML(convertMapping(mapping), "roots", 1, false);
+            const analysis = [...analysisResult.customized]
+              .map(([key, value]) => ({
+                部件: key,
+                拆分: value.sequence.map((x) => repr[x] || x).join(""),
+              }))
+              .filter((x) => x.拆分.length > 1);
+            exportYAML(analysis, "analysis", 1, false);
+          }}
+        >
+          韵码
+        </strong>
         <Flex gap="4px 16px" wrap="wrap">
           {xiaoma_yunmu.map(({ key, elements }) => (
             <span key={key}>{`${key.toUpperCase()} [${elements.join(
@@ -213,11 +262,108 @@ function LineView() {
   );
 }
 
+const syllableAtom = atomWithStorage<Record<string, string>>("syllables", {});
+
+function SyllableForm() {
+  const mapping = useAtomValue(mappingAtom);
+  const [syllables, setSyllables] = useAtom(syllableAtom);
+  const content: { key: string; value: [string, string] }[] = [];
+  const allSyllable = new Map<string, string>(
+    Object.entries(syllables).map(
+      ([k, v]) => [k, v.slice(0, v.length - 1)] as const,
+    ),
+  );
+  const userFrequency = useAtomValue(userFrequencyAtom);
+  for (const [key, value] of Object.entries(mapping)) {
+    if (!/^.$/.test(key) || isMerge(value)) continue;
+    if (typeof value[0]! === "string") {
+      const k1 = value[0] as string;
+      if ((value[1] as ElementWithIndex).element === "主根-1") {
+        const k2 = "yphjklnm".includes(k1) ? "e" : "i";
+        allSyllable.set(key, `${k1}${k2}`);
+      } else {
+        const k2 = "yphjklnm".includes(k1) ? "a" : "o";
+        allSyllable.set(key, `${k1}${k2}`);
+      }
+    }
+  }
+  const analysisResult = useAtomValue(analysisResultAtom);
+  const characters = useAtomValue(charactersAtom);
+  for (const [key, value] of Object.entries(mapping)) {
+    if (!/^.$/.test(key)) continue;
+    if (isMerge(value)) {
+      let ref = value.element;
+      while (isMerge(mapping[ref]!)) {
+        ref = (mapping[ref] as ElementWithIndex).element;
+      }
+      allSyllable.set(key, allSyllable.get(ref) || "");
+      continue;
+    }
+    const first = value[0]!;
+    const second = value[1]!;
+    if (typeof first === "string" || typeof second === "string") {
+      continue;
+    }
+    content.push({ key, value: [first.element, second.element] });
+  }
+  return (
+    <Flex vertical style={{ width: 300, padding: 16, display: "none" }}>
+      <Button
+        onClick={() => {
+          const { componentResults, compoundResults } = analysisResult;
+          const lines: string[][] = [];
+          characters.forEach((char) => {
+            const sequence =
+              componentResults.get(char)?.sequence ??
+              compoundResults.get(char)?.sequence ??
+              [];
+            const syllables = sequence.map((x) => allSyllable.get(x) || "");
+            if (syllables.some((x) => x === undefined || x === "")) {
+              console.log(char, sequence, syllables);
+            }
+            lines.push([
+              char,
+              syllables.join(" "),
+              (userFrequency?.[char] || 0).toString(),
+            ]);
+            if (syllables.length > 4) {
+              const alt = syllables.slice(0, 3).concat([syllables.at(-1)!]);
+              lines.push([
+                char,
+                alt.join(" "),
+                (userFrequency?.[char] || 0).toString(),
+              ]);
+            }
+          });
+          exportTSV(lines, "syllables");
+        }}
+      >
+        导出
+      </Button>
+      {content.map(({ key, value }) => (
+        <Flex key={key} align="center" gap="middle" justify="center">
+          <Display name={key} />
+          <span style={{ width: 200 }}>
+            {value[0]}, {value[1]}
+          </span>
+          <Input
+            value={syllables[key] || ""}
+            onChange={(e) =>
+              setSyllables({ ...syllables, [key]: e.target.value })
+            }
+            placeholder="读音"
+          />
+        </Flex>
+      ))}
+    </Flex>
+  );
+}
+
 export default function QingYun() {
   useChaifenTitle("图示");
   const { name, author, version, description } = useAtomValue(infoAtom);
   return (
-    <div>
+    <Flex>
       <PrintArea>
         <Flex justify="center">
           <Secondary>
@@ -233,6 +379,7 @@ export default function QingYun() {
         </Flex>
         <LineView />
       </PrintArea>
-    </div>
+      <SyllableForm />
+    </Flex>
   );
 }

@@ -433,12 +433,17 @@ export const exportYAML = (
   config: object,
   filename: string,
   flowLevel: number = 4,
+  sanitize: boolean = true,
 ) => {
   const unsafeContent = dump(config, { flowLevel });
-  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `"\\u${c.codePointAt(0)?.toString(16)}"`;
-  });
-  processExport(fileContent, `${filename}.yaml`);
+  if (!sanitize) {
+    processExport(unsafeContent, `${filename}.yaml`);
+  } else {
+    const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
+      return `"\\u${c.codePointAt(0)?.toString(16)}"`;
+    });
+    processExport(fileContent, `${filename}.yaml`);
+  }
 };
 
 export const exportJSON = (data: object, filename: string) => {
