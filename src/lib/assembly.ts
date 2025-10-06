@@ -133,9 +133,10 @@ const compile = (
             // 如果没有定义指标，就是全取
             for (const [index, key] of Array.from(mapped).entries()) {
               codes.push(
-                typeof key === "string"
-                  ? { element: groupedElement, index }
-                  : key,
+                // typeof key === "string"
+                //   ? { element: groupedElement, index }
+                //   : key,
+                { element: groupedElement, index },
               );
             }
           } else {
@@ -143,9 +144,10 @@ const compile = (
             const key = mapped[index];
             if (key !== undefined) {
               codes.push(
-                typeof key === "string"
-                  ? { element: groupedElement, index }
-                  : key,
+                // typeof key === "string"
+                //   ? { element: groupedElement, index }
+                //   : key,
+                { element: groupedElement, index },
               );
             }
           }

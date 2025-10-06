@@ -28,6 +28,7 @@ import {
   algebraAtom,
   mappingTypeAtom,
   mappingSpaceAtom,
+  dynamicCustomizeAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
@@ -99,6 +100,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
+  const dynamicCustomize = useAtomValue(dynamicCustomizeAtom);
   const mapping = useAtomValue(mappingAtom);
   const mappingSpace = useAtomValue(mappingSpaceAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
@@ -115,7 +117,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
     return true;
   });
   const componentDisplay = componentsNeedAnalysis
-    .filter(([x]) => !customizedOnly || customize[x])
+    .filter(([x]) => !customizedOnly || customize[x] || dynamicCustomize[x])
     .filter(([x]) => filterFn(x))
     .map(([key, res]) => {
       return {
