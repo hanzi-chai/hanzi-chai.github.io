@@ -20,9 +20,11 @@ import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, Display, NumberInput } from "~/components/Utils";
 import {
   chars,
+  ElementWithIndex,
   exportYAML,
   MappingGeneratorRule,
   MappingSpace,
+  Value,
   ValueDescription,
 } from "~/lib";
 import Element from "./Element";
@@ -38,6 +40,7 @@ import CharacterSelect from "./CharacterSelect";
 import { useState } from "react";
 import ValueEditor from "./Value";
 import gf0014 from "./gf0014.yaml";
+import { read } from "node:fs";
 
 export const RulesForm = ({ name }: { name: string }) => {
   const alphabet = useAtomValue(alphabetAtom);
@@ -342,17 +345,145 @@ export default function Rules() {
   const [character, setCharacter] = useState<string | undefined>(undefined);
   const alphabet = useAtomValue(alphabetAtom);
   const currentElement = useAtomValue(currentElementAtom);
-  const analysisConfig = useAtomValue(analysisConfigAtom);
+  // const analysisConfig = useAtomValue(analysisConfigAtom);
   const necessaryRoots = new Set<string>();
-  for (const root of analysisConfig.roots.keys()) {
-    if (analysisConfig.optionalRoots.has(root)) continue;
-    necessaryRoots.add(root);
-  }
+  const repertoire = useAtomValue(repertoireAtom);
+  // for (const root of analysisConfig.roots.keys()) {
+  //   if (analysisConfig.optionalRoots.has(root)) continue;
+  //   necessaryRoots.add(root);
+  // }
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={4}>决策空间</Typography.Title>
       <Flex justify="middle" gap="middle">
         <RulesGenerator />
+        <Button
+          onClick={() => {
+            const message: string[] = [];
+            const allkeys = new Set(
+              Object.keys(mappingSpace)
+                .concat(Object.keys(mapping))
+                .filter((x) => /^[^\d]$/.test(x)),
+            );
+            const reverseMap = new Map<number, string>();
+            for (const [key, value] of Object.entries(repertoire)) {
+              if (value.gf0014_id) {
+                reverseMap.set(value.gf0014_id, key);
+              }
+            }
+            for (let i = 1; i <= 514; ++i) {
+              if (!reverseMap.has(i)) {
+                console.warn(`GF0014 ID ${i} not found in repertoire.`);
+                continue;
+              }
+              const key = reverseMap.get(i)!;
+              if (!allkeys.has(key)) {
+                message.push(`${i}: ${display(key)}`);
+              }
+            }
+            const getShengyun = (v: Value) => {
+              if (v === null) return;
+              if (typeof v === "string") return;
+              if (Array.isArray(v)) {
+                if (
+                  typeof v[0] === "object" &&
+                  v[0].element.startsWith("声") &&
+                  typeof v[1] === "object" &&
+                  v[1].element.startsWith("韵")
+                ) {
+                  let raw = v[0].element.slice(2) + v[1].element.slice(2);
+                  raw = raw.replace("ir", "i");
+                  raw = raw.replace("0", "");
+                  raw = raw.replace(/yi(?=[aoe])/g, "y");
+                  raw = raw.replace(/wu(?=[aoe])/g, "w");
+                  raw = raw.replace(/yuü/g, "yu");
+                  raw = raw.replace(/(?<=[jqx])ü/g, "u");
+                  raw = raw.replace(/(?<=[nl])ü/g, "v");
+                  raw = raw.replace(/ue(?=[in])/g, "u");
+                  raw = raw.replace("iou", "iu");
+                  return raw;
+                }
+              }
+            };
+            for (const key of allkeys) {
+              const values = JSON.parse(
+                JSON.stringify(mappingSpace[key] ?? []),
+              );
+              if (mapping[key] !== undefined) {
+                values.push({ value: mapping[key]!, score: 0 });
+              }
+              console.log(key);
+              if (repertoire[key]!.tygf) {
+                const readings = repertoire[key]!.readings.map((r) =>
+                  r.pinyin.slice(0, -1),
+                );
+                for (const value of values) {
+                  const shengyun = getShengyun(value.value);
+                  if (shengyun && !readings.includes(shengyun)) {
+                    message.push(
+                      `${display(key)} ${shengyun}：${readings.join(", ")}`,
+                    );
+                  } else if (
+                    !shengyun &&
+                    value.value !== null &&
+                    !(
+                      Array.isArray(value.value) &&
+                      typeof value.value[0] === "string"
+                    )
+                  ) {
+                    message.push(
+                      `${display(key)} ${JSON.stringify(
+                        value.value,
+                      )}：${readings.join(", ")}`,
+                    );
+                  }
+                }
+              } else if (repertoire[key]!.gf0014_id) {
+                const readings: string[] = [];
+                for (const raw of gf0014[
+                  repertoire[key]!.gf0014_id - 1
+                ] as string[]) {
+                  if (raw === "") continue;
+                  const list = raw.split(" ");
+                  for (const item of list) {
+                    readings.push(item.slice(0, -1));
+                  }
+                }
+                const allShengyun = new Set<string>();
+                for (const value of values) {
+                  const shengyun = getShengyun(value.value);
+                  if (shengyun) allShengyun.add(shengyun);
+                  if (shengyun && !readings.includes(shengyun)) {
+                    message.push(
+                      `${display(key)} ${shengyun}：${readings.join(", ")}`,
+                    );
+                  }
+                }
+                for (const reading of readings) {
+                  if (!allShengyun.has(reading)) {
+                    message.push(
+                      `${display(key)} 缺少 ${reading}：${readings.join(", ")}`,
+                    );
+                  }
+                }
+              } else {
+                for (const value of values) {
+                  const shengyun = getShengyun(value.value);
+                  if (shengyun) {
+                    message.push(`${display(key)} 不合法 ${shengyun}`);
+                  }
+                }
+              }
+            }
+            notification.info({
+              message: `检查完毕，共 ${message.length} 处问题`,
+              description: message.join("；"),
+              duration: 0,
+            });
+          }}
+        >
+          检查
+        </Button>
         <Button
           onClick={() => {
             const idles = Object.entries(mappingSpace).filter(
@@ -446,7 +577,7 @@ export default function Rules() {
             );
           })}
       </Flex>
-      <Typography.Title level={4}>必选字根</Typography.Title>
+      {/* <Typography.Title level={4}>必选字根</Typography.Title>
       <Flex wrap="wrap" gap="small">
         {Array.from(necessaryRoots)
           .sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!)
@@ -455,7 +586,7 @@ export default function Rules() {
               <Display name={name} />
             </Element>
           ))}
-      </Flex>
+      </Flex> */}
     </Flex>
   );
 }
