@@ -4,8 +4,15 @@ import type {
   ComponentResults,
   ComponentBasicAnalysis,
   ComponentGenuineAnalysis,
+  ComponentAnalysis,
 } from "./component";
-import { disassembleComponents, recursiveRenderComponent } from "./component";
+import {
+  computeComponent,
+  disassembleComponents,
+  getComponentScheme,
+  recursiveRenderComponent,
+  renderRootList,
+} from "./component";
 import type { CompoundResults } from "./compound";
 import {
   disassembleCompounds,
@@ -32,7 +39,7 @@ import type {
 } from "./data";
 import { range } from "d3-array";
 import { applyRules } from "./element";
-import { isValidCJKBasicChar } from "./utils";
+import { isPUA, isValidCJKBasicChar } from "./utils";
 
 export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
   for (const tag of tags) {
@@ -274,32 +281,12 @@ export const analysis = (
   };
 };
 
-export const countOccurences = (
-  repertoire: Repertoire,
-  characters: string[],
-) => {
-  const counter = new Map<string, number>();
-  const count = (char: string) => {
-    counter.set(char, (counter.get(char) || 0) + 1);
-    const glyph = repertoire[char]?.glyph;
-    if (glyph === undefined) return;
-    if (glyph.type === "basic_component") return;
-    for (const operand of glyph.operandList) {
-      count(operand);
-    }
-  };
-  for (const char of characters) {
-    count(char);
-  }
-  return counter;
-};
-
 export const dynamicAnalysis = (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],
   adaptedFrequency: Map<string, number>,
-  dictionary: [string, string][],
+  sequenceMap: Map<string, string>,
   algebra: Algebra,
 ) => {
   const { components, compounds } = getRequiredTargets(
@@ -332,10 +319,39 @@ export const dynamicAnalysis = (
     }
   }
   const sortedCompounds = topologicalSort(repertoire, compounds, config);
-  console.log(sortedCompounds.get(""));
   for (const name of segmentDynamicAnalysis.keys()) {
     segmentMap.set(name, [name]);
   }
+  const rootMap = renderRootList(repertoire, [
+    ...config.roots.keys(),
+    ...config.optionalRoots.keys(),
+  ]);
+  const classifier = mergeClassifier(config.analysis?.classifier);
+  const rootList = [...rootMap.values()];
+  const cachedGetSegment = (part: string, start: number, end?: number) => {
+    const character = repertoire[part]!;
+    const name = `${isPUA(part) ? character.name : part}.${start}-${end ?? 0}`;
+    if (segmentDynamicAnalysis.has(name)) {
+      return name;
+    }
+    const glyph = (character.glyph as BasicComponent).strokes.slice(start, end);
+    const cache = computeComponent(name, glyph);
+    console.log(
+      `Part: ${part} (${part.codePointAt(0)}) [${start}${end ? `-${end}` : ""}]`,
+    );
+    const analysis = getComponentScheme(
+      cache,
+      rootList,
+      config,
+      classifier,
+    ) as ComponentGenuineAnalysis;
+    segmentDynamicAnalysis.set(
+      name,
+      analysis.schemes.filter((x) => x.optional).map((x) => x.roots),
+    );
+    segmentMap.set(name, [name]);
+    return name;
+  };
   for (const [name, compound] of sortedCompounds) {
     const isCurrentRoots = config.roots.has(name);
     const isOptionalRoots = config.optionalRoots.has(name);
@@ -346,25 +362,42 @@ export const dynamicAnalysis = (
       continue;
     }
     const glyph = compound.glyph;
+    const componentList: string[] = [];
+    const useStrictOrder = true;
     const order =
       glyph.order ??
       glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
-    const sortedOperandList = sortBy(range(glyph.operandList.length), (i) =>
-      order.findIndex((b) => b.index === i),
-    ).map((i) => glyph.operandList[i]!);
-    const componentList: string[] = [];
-    for (const child of sortedOperandList) {
-      console.assert(segmentMap.has(child), `${child} not found`);
-      componentList.push(...segmentMap.get(child)!);
+    if (useStrictOrder) {
+      const seenIndex = new Map<number, number>();
+      for (const { index, strokes } of order) {
+        const part = glyph.operandList[index]!;
+        if (strokes === 0) {
+          if (!seenIndex.has(index)) {
+            componentList.push(...segmentMap.get(part)!);
+          } else {
+            const start = seenIndex.get(index)!;
+            const name = cachedGetSegment(part, start);
+            componentList.push(name);
+          }
+        } else {
+          const start = seenIndex.get(index) ?? 0;
+          const end = start + strokes;
+          const name = cachedGetSegment(part, start, end);
+          componentList.push(name);
+          seenIndex.set(index, end);
+        }
+      }
+    } else {
+      const sortedOperandList = sortBy(range(glyph.operandList.length), (i) =>
+        order.findIndex((b) => b.index === i),
+      ).map((i) => glyph.operandList[i]!);
+      for (const child of sortedOperandList) {
+        componentList.push(...segmentMap.get(child)!);
+      }
     }
-    // 可选字根
     if (isOptionalRoots) {
       let dynamic: string[][] = [[]];
       for (const operand of componentList) {
-        console.assert(
-          segmentDynamicAnalysis.has(operand),
-          `${operand} not found`,
-        );
         const dynamicAnalysis = segmentDynamicAnalysis.get(operand)!;
         dynamic = dynamic
           .map((x) => dynamicAnalysis.map((y) => x.concat(y)))
@@ -372,10 +405,9 @@ export const dynamicAnalysis = (
       }
       segmentDynamicAnalysis.set(name, [[name]].concat(dynamic));
       segmentMap.set(name, [name]);
-      continue;
+    } else {
+      segmentMap.set(name, componentList);
     }
-    // 非字根
-    segmentMap.set(name, componentList);
   }
   for (const [segment, methods] of segmentDynamicAnalysis) {
     const last = methods[methods.length - 1]!;
@@ -414,15 +446,37 @@ export const dynamicAnalysis = (
       拆分: segmentMap.get(x) ?? [],
     };
   });
-  // const words = dictionary.map(([word, pinyin]) => ({
-  //   词语: word,
-  //   拼音: pinyin.split(" "),
-  //   频率: adaptedFrequency.get(word) ?? 0,
-  // }));
+
+  const currentDynamicAnalysis = new Map<string, string[]>();
+  for (const [char, analysisList] of segmentDynamicAnalysis) {
+    const rand = Math.floor(Math.random() * analysisList.length);
+    const current = analysisList[rand];
+    if (current) {
+      currentDynamicAnalysis.set(char, current);
+    }
+  }
+  const mismatch = new Map<string, [string, string]>();
+  for (const { 汉字, 拆分 } of all) {
+    const seq = sequenceMap.get(汉字)!;
+    const derived = 拆分
+      .flatMap((x) => currentDynamicAnalysis.get(x)!)
+      .map((x) => rootSequence.get(x)?.join("") ?? x)
+      .join("")
+      .replace(/6/g, "5");
+    if (seq !== derived) {
+      mismatch.set(汉字, [seq, derived]);
+    }
+  }
+
+  if (mismatch.size > 0) {
+    for (const [char, [expected, actual]] of mismatch) {
+      console.log(`${char} 期望: ${expected} 实际: ${actual}`);
+    }
+  }
+
   return {
     固定拆分: all,
     动态拆分: Object.fromEntries(segmentDynamicAnalysis),
     字根笔画: Object.fromEntries(rootSequence),
-    // 词语读音频率: words,
   };
 };

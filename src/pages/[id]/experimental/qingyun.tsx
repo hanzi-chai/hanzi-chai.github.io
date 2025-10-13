@@ -1,9 +1,3 @@
-import {
-  ProForm,
-  ProFormGroup,
-  ProFormList,
-  ProFormText,
-} from "@ant-design/pro-components";
 import { Button, Flex, Input, Space, Tag, Typography } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { Table } from "antd/lib";
@@ -21,7 +15,7 @@ import {
   useChaifenTitle,
   userFrequencyAtom,
 } from "~/atoms";
-import { AdjustableElementGroup } from "~/components/Mapping";
+import { AdjustableElementGroup, getAffiliates } from "~/components/Mapping";
 import { Display } from "~/components/Utils";
 import {
   ElementWithIndex,
@@ -29,14 +23,8 @@ import {
   exportYAML,
   getReversedMapping,
   isMerge,
-  Key,
   MappedInfo,
-  Mapping,
 } from "~/lib";
-import Element from "../element";
-import Char from "~/components/Character";
-import ValueEditor from "~/components/Value";
-import { useMemo } from "react";
 
 const PrintArea = styled.div`
   width: 210mm;
@@ -71,7 +59,7 @@ const Secondary = styled.div`
 `;
 
 interface Converted {
-  字根: string[];
+  字根: string;
   编码: string;
   读音?: string;
 }
@@ -94,58 +82,18 @@ function combineShengYun(sheng: string, yun: string) {
 }
 
 const repr: Record<string, string> = {
-  "1": "一",
-  "2": "丨",
-  "3": "丿",
-  "4": "丶",
-  "5": "乛",
-  "6": "乚",
+  "1": "１",
+  "2": "２",
+  "3": "３",
+  "4": "４",
+  "5": "５",
+  "6": "６",
 };
-
-function convertMapping(mapping: Mapping) {
-  const result: Map<string, Converted> = new Map();
-  for (const [key, value] of Object.entries(mapping)) {
-    if (!/^.$/.test(key) || isMerge(value)) continue;
-    if (typeof value[0] === "string") {
-      const ref = (value[1] as ElementWithIndex).element;
-      result.set(key, {
-        字根: [repr[key] || key],
-        编码: (value[0] + mapping[ref]) as string,
-      });
-    } else {
-      const ref1 = (value[0] as ElementWithIndex).element;
-      const ref2 = (value[1] as ElementWithIndex).element;
-      let ref0 = ref2;
-      while (isMerge(mapping[ref0]!)) {
-        ref0 = (mapping[ref0] as ElementWithIndex).element;
-      }
-      result.set(key, {
-        字根: [key],
-        编码: (mapping[ref1] as string) + (mapping[ref0] as string),
-        读音: combineShengYun(ref1, ref2),
-      });
-    }
-  }
-  for (const [key, value] of Object.entries(mapping)) {
-    if (!/^.$/.test(key) || !isMerge(value)) continue;
-    let root = value.element;
-    while (isMerge(mapping[root]!)) {
-      root = (mapping[root] as ElementWithIndex).element;
-    }
-    result.get(root)!.字根.push(key);
-  }
-  return Array.from(result.values()).map(({ 字根, 编码, 读音 }) => ({
-    字根: 字根.join(""),
-    编码,
-    读音,
-  }));
-}
 
 function LineView() {
   const mapping = useAtomValue(mappingAtom);
   const alphabet = useAtomValue(alphabetAtom);
   const reversedMapping = getReversedMapping(mapping, alphabet);
-  const analysisResult = useAtomValue(analysisResultAtom);
   const dama = "bpmfdtnlgkhjqxzcsrwyv";
   const xiaoma = "aoeiu;,./";
   const dama_shengmu = [...dama].map((char) => ({
@@ -156,17 +104,18 @@ function LineView() {
   }));
   const xiaoma_yunmu = [...xiaoma].map((char) => ({
     key: char,
-    elements: Object.entries(mapping)
-      .filter(
-        ([_, value]) =>
-          value == char || (isMerge(value) && mapping[value.element] === char),
-      )
-      .map(([key]) => key.replace("韵-", ""))
-      .filter(
-        (name) =>
-          ["m", "ng", "ueng", "io", "主根-1", "主根-2"].includes(name) ===
-          false,
-      ), // 排除韵母 m 和 ng,
+    elements: sortBy(
+      Object.entries(mapping)
+        .filter(
+          ([key, value]) =>
+            value == char && !["主根-1", "主根-2"].includes(key),
+        )
+        .map(([key]) => key),
+      (x) => x.length,
+    ).flatMap((key) => [
+      key.replace("韵-", ""),
+      ...getAffiliates(key, mapping).map(({ from }) => from.replace("韵-", "")),
+    ]),
   }));
   const list = (roots: MappedInfo[]) => (
     <Flex gap="small" wrap="wrap">
@@ -229,21 +178,7 @@ function LineView() {
   return (
     <>
       <Flex align="center" style={{ padding: "8px 8px" }} gap="large">
-        <strong
-          style={{ width: 48, flexShrink: 0 }}
-          onClick={() => {
-            exportYAML(convertMapping(mapping), "roots", 1, false);
-            const analysis = [...analysisResult.customized]
-              .map(([key, value]) => ({
-                部件: key,
-                拆分: value.sequence.map((x) => repr[x] || x).join(""),
-              }))
-              .filter((x) => x.拆分.length > 1);
-            exportYAML(analysis, "analysis", 1, false);
-          }}
-        >
-          韵码
-        </strong>
+        <strong style={{ width: 48, flexShrink: 0 }}>韵码</strong>
         <Flex gap="4px 16px" wrap="wrap">
           {xiaoma_yunmu.map(({ key, elements }) => (
             <span key={key}>{`${key.toUpperCase()} [${elements.join(
@@ -262,80 +197,93 @@ function LineView() {
   );
 }
 
-const syllableAtom = atomWithStorage<Record<string, string>>("syllables", {});
+const syllableAtom = atomWithStorage<Record<string, string>>(
+  "snow_qingyun_hint",
+  {},
+);
 
 function SyllableForm() {
   const mapping = useAtomValue(mappingAtom);
   const [syllables, setSyllables] = useAtom(syllableAtom);
-  const content: { key: string; value: [string, string] }[] = [];
-  const allSyllable = new Map<string, string>(
-    Object.entries(syllables).map(
-      ([k, v]) => [k, v.slice(0, v.length - 1)] as const,
-    ),
-  );
-  const userFrequency = useAtomValue(userFrequencyAtom);
-  for (const [key, value] of Object.entries(mapping)) {
-    if (!/^.$/.test(key) || isMerge(value)) continue;
-    if (typeof value[0]! === "string") {
-      const k1 = value[0] as string;
-      if ((value[1] as ElementWithIndex).element === "主根-1") {
-        const k2 = "yphjklnm".includes(k1) ? "e" : "i";
-        allSyllable.set(key, `${k1}${k2}`);
-      } else {
-        const k2 = "yphjklnm".includes(k1) ? "a" : "o";
-        allSyllable.set(key, `${k1}${k2}`);
-      }
-    }
-  }
   const analysisResult = useAtomValue(analysisResultAtom);
   const characters = useAtomValue(charactersAtom);
+  const userFrequency = useAtomValue(userFrequencyAtom);
+
+  const content: { key: string; value: [string, string] }[] = [];
+  const result: Converted[] = [];
+  const allSyllable = new Map<string, string>();
   for (const [key, value] of Object.entries(mapping)) {
-    if (!/^.$/.test(key)) continue;
-    if (isMerge(value)) {
-      let ref = value.element;
-      while (isMerge(mapping[ref]!)) {
-        ref = (mapping[ref] as ElementWithIndex).element;
+    if (!/^.$/.test(key) || isMerge(value)) continue;
+    const affiliates = getAffiliates(key, mapping).map(({ from }) => from);
+    if (typeof value[0] === "string") {
+      let code = value[0];
+      if ((value[1] as ElementWithIndex).element === "主根-1") {
+        code += "yphjklnm".includes(code) ? "e" : "i";
+      } else {
+        code += "yphjklnm".includes(code) ? "a" : "o";
       }
-      allSyllable.set(key, allSyllable.get(ref) || "");
-      continue;
+      allSyllable.set(key, code);
+      result.push({
+        字根: [repr[key] || key, ...affiliates].join(""),
+        编码: code,
+      });
+    } else {
+      const k1 = (value[0] as ElementWithIndex).element;
+      const k2 = (value[1] as ElementWithIndex).element;
+      allSyllable.set(key, combineShengYun(k1, k2));
+      content.push({ key, value: [k1, k2] });
+      let ref0 = k2;
+      while (isMerge(mapping[ref0]!)) {
+        ref0 = (mapping[ref0] as ElementWithIndex).element;
+      }
+      result.push({
+        字根: [key, ...affiliates].join(""),
+        编码: (mapping[k1] as string) + (mapping[ref0] as string),
+        读音: syllables[key],
+      });
     }
-    const first = value[0]!;
-    const second = value[1]!;
-    if (typeof first === "string" || typeof second === "string") {
-      continue;
+    for (const child of affiliates) {
+      allSyllable.set(child, allSyllable.get(key) || "");
     }
-    content.push({ key, value: [first.element, second.element] });
   }
+  const { componentResults, compoundResults } = analysisResult;
+  const lines: string[][] = [];
+  characters.forEach((char) => {
+    const sequence =
+      componentResults.get(char)?.sequence ??
+      compoundResults.get(char)?.sequence ??
+      [];
+    const syllables = sequence.map((x) => allSyllable.get(x) || "");
+    if (syllables.some((x) => x === undefined || x === "")) {
+      console.log(char, sequence, syllables);
+    }
+    lines.push([
+      char,
+      syllables.join(" "),
+      (userFrequency?.[char] || 0).toString(),
+    ]);
+    if (syllables.length > 4) {
+      const alt = syllables.slice(0, 3).concat([syllables.at(-1)!]);
+      lines.push([
+        char,
+        alt.join(" "),
+        (userFrequency?.[char] || 0).toString(),
+      ]);
+    }
+  });
+  const analysis = [...analysisResult.customized]
+    .map(([key, value]) => ({
+      部件: key,
+      拆分: value.sequence.map((x) => repr[x] || x).join(""),
+    }))
+    .filter((x) => x.拆分.length > 1);
   return (
-    <Flex vertical style={{ width: 300, padding: 16, display: "none" }}>
+    <Flex vertical style={{ width: 300, padding: 16 }}>
       <Button
         onClick={() => {
-          const { componentResults, compoundResults } = analysisResult;
-          const lines: string[][] = [];
-          characters.forEach((char) => {
-            const sequence =
-              componentResults.get(char)?.sequence ??
-              compoundResults.get(char)?.sequence ??
-              [];
-            const syllables = sequence.map((x) => allSyllable.get(x) || "");
-            if (syllables.some((x) => x === undefined || x === "")) {
-              console.log(char, sequence, syllables);
-            }
-            lines.push([
-              char,
-              syllables.join(" "),
-              (userFrequency?.[char] || 0).toString(),
-            ]);
-            if (syllables.length > 4) {
-              const alt = syllables.slice(0, 3).concat([syllables.at(-1)!]);
-              lines.push([
-                char,
-                alt.join(" "),
-                (userFrequency?.[char] || 0).toString(),
-              ]);
-            }
-          });
           exportTSV(lines, "syllables");
+          exportYAML(result, "roots", 1, false);
+          exportYAML(analysis, "analysis", 1, false);
         }}
       >
         导出

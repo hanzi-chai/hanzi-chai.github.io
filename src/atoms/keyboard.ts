@@ -2,12 +2,10 @@ import { focusAtom } from "jotai-optics";
 import { keyboardAtom } from "./config";
 import type {
   Grouping,
-  Keyboard,
   Mapping,
   MappingGeneratorRule,
   MappingSpace,
 } from "~/lib";
-import { atom } from "jotai";
 
 export const alphabetAtom = focusAtom(keyboardAtom, (o) =>
   o.prop("alphabet").valueOr("abcdefghijklmnopqrstuvwxyz"),
