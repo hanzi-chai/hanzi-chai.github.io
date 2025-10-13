@@ -8,6 +8,7 @@ import BoldOutlined from "@ant-design/icons/BoldOutlined";
 import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
 import RiseOutlined from "@ant-design/icons/RiseOutlined";
 import NumberOutlined from "@ant-design/icons/NumberOutlined";
+
 import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import CusSpin from "~/components/CustomSpin";
@@ -19,7 +20,7 @@ import {
   primitiveRepertoireAtom,
 } from "~/atoms";
 import { examples, listToObject } from "~/lib";
-import { AppstoreOutlined, BulbOutlined } from "@ant-design/icons";
+import { AppstoreOutlined } from "@ant-design/icons";
 import { fromModel } from "~/api";
 import { getCurrentId } from "~/utils";
 

@@ -50,10 +50,7 @@ describe("get component scheme", () => {
     encoder: "形音码（米十五笔）",
   });
   const analysisConfig = focusAnalysis(config, repertoire);
-  const rootList = renderRootList(repertoire, [
-    ...analysisConfig.roots,
-    ...analysisConfig.secondaryRoots,
-  ]);
+  const rootList = renderRootList(repertoire, [...analysisConfig.roots.keys()]);
   it("can get component scheme", () => {
     const 天 = computedComponents.天!;
     const scheme = getComponentScheme(

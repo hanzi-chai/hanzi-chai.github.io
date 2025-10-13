@@ -35,7 +35,6 @@ import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
 import type { AnalysisResult, CharacterFilter } from "~/lib";
 import {
-  countOccurences,
   dynamicAnalysis,
   exportTSV,
   exportYAML,
@@ -101,6 +100,10 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const display = useAtomValue(displayAtom);
   const customize = useAtomValue(customizeAtom);
   const dynamicCustomize = useAtomValue(dynamicCustomizeAtom);
+  const allCustomizedKeys = new Set([
+    ...Object.keys(customize),
+    ...Object.keys(dynamicCustomize),
+  ]);
   const mapping = useAtomValue(mappingAtom);
   const mappingSpace = useAtomValue(mappingSpaceAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
@@ -108,9 +111,6 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
   const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
-    if (repertoire[k]?.name === "乍字底") {
-      console.log(mappingSpace[k]);
-    }
     if (mappingSpace[k]?.some((x) => x.value == null)) return true;
     if (mapping[k]) return false;
     if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
@@ -189,21 +189,6 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         </Button>
         <Button
           onClick={() => {
-            const result = dynamicAnalysis(
-              repertoire,
-              analysisConfig,
-              characters,
-              adaptedFrequency,
-              dictionary,
-              algebra,
-            );
-            exportYAML(result, "dynamic_analysis", 2);
-          }}
-        >
-          导出动态拆分
-        </Button>
-        <Button
-          onClick={() => {
             const { dynamic_customize } = analysisConfig.analysis;
             const { roots, optionalRoots } = analysisConfig;
             const illegal: string[] = [];
@@ -243,27 +228,18 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
                 message: "自定义动态拆分检查通过",
               });
             }
-          }}
-        >
-          检查自定义动态拆分
-        </Button>
-        <Button
-          onClick={() => {
-            const roots = new Set<string>([
-              ...analysisConfig.roots.keys(),
-              ...analysisConfig.optionalRoots.keys(),
-            ]);
-            const result = countOccurences(repertoire, characters);
-            const sorted = Object.fromEntries(
-              [...result]
-                .filter(([k, v]) => v >= 10 !== roots.has(k))
-                .sort((a, b) => b[1] - a[1])
-                .map(([x, y]) => [display(x), y]),
+            const result = dynamicAnalysis(
+              repertoire,
+              analysisConfig,
+              characters,
+              adaptedFrequency,
+              sequenceMap,
+              algebra,
             );
-            exportYAML(sorted, "character_occurrences", 2);
+            exportYAML(result, "dynamic_analysis", 2);
           }}
         >
-          导出字符出现次数
+          导出动态拆分
         </Button>
       </Flex>
       <Row style={{ width: "80%", alignItems: "center" }}>
@@ -281,15 +257,12 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
             title="自动拆分部件数"
             value={
               componentsNeedAnalysis.length &&
-              componentsNeedAnalysis.length - Object.keys(customize).length
+              componentsNeedAnalysis.length - allCustomizedKeys.size
             }
           />
         </Col>
         <Col span={5}>
-          <Statistic
-            title="自定义部件数"
-            value={Object.keys(customize).length}
-          />
+          <Statistic title="自定义部件数" value={allCustomizedKeys.size} />
         </Col>
         <Col span={4}>
           <Space>

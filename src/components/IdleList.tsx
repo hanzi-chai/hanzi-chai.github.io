@@ -40,7 +40,6 @@ import CharacterSelect from "./CharacterSelect";
 import { useState } from "react";
 import ValueEditor from "./Value";
 import gf0014 from "./gf0014.yaml";
-import { read } from "node:fs";
 
 export const RulesForm = ({ name }: { name: string }) => {
   const alphabet = useAtomValue(alphabetAtom);
@@ -345,13 +344,7 @@ export default function Rules() {
   const [character, setCharacter] = useState<string | undefined>(undefined);
   const alphabet = useAtomValue(alphabetAtom);
   const currentElement = useAtomValue(currentElementAtom);
-  // const analysisConfig = useAtomValue(analysisConfigAtom);
-  const necessaryRoots = new Set<string>();
   const repertoire = useAtomValue(repertoireAtom);
-  // for (const root of analysisConfig.roots.keys()) {
-  //   if (analysisConfig.optionalRoots.has(root)) continue;
-  //   necessaryRoots.add(root);
-  // }
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={4}>决策空间</Typography.Title>
@@ -412,7 +405,6 @@ export default function Rules() {
               if (mapping[key] !== undefined) {
                 values.push({ value: mapping[key]!, score: 0 });
               }
-              console.log(key);
               if (repertoire[key]!.tygf) {
                 const readings = repertoire[key]!.readings.map((r) =>
                   r.pinyin.slice(0, -1),
@@ -577,16 +569,6 @@ export default function Rules() {
             );
           })}
       </Flex>
-      {/* <Typography.Title level={4}>必选字根</Typography.Title>
-      <Flex wrap="wrap" gap="small">
-        {Array.from(necessaryRoots)
-          .sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!)
-          .map((name) => (
-            <Element key={name}>
-              <Display name={name} />
-            </Element>
-          ))}
-      </Flex> */}
     </Flex>
   );
 }

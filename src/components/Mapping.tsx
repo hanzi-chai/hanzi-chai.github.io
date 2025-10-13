@@ -47,18 +47,27 @@ import { ElementWithTooltip } from "./ElementPool";
 import { sortBy } from "lodash-es";
 import ValueEditor from "./Value";
 
-const useAffiliates = (name: string) => {
-  const mapping = useAtomValue(mappingAtom);
+const visit = (
+  parent: string,
+  name: string,
+  output: any[],
+  mapping: Mapping,
+) => {
+  output.push({ from: name, to: parent });
+  const children = Object.entries(mapping)
+    .filter(([, to]) => isMerge(to) && to.element === name)
+    .map(([x]) => x);
+  children.forEach((child) => visit(name, child, output, mapping));
+};
+
+export const getAffiliates = (name: string, mapping: Mapping) => {
   const result: { from: string; to: string }[] = [];
-  const queue = [name];
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const affiliates = Object.entries(mapping)
-      .filter(([, to]) => isMerge(to) && to.element === current)
-      .map(([x]) => x);
-    affiliates.forEach((x) => result.push({ from: x, to: current }));
-    queue.push(...affiliates);
-  }
+  // use pre-dfs to get all affiliates
+  Object.entries(mapping).forEach(([key, value]) => {
+    if (isMerge(value) && value.element === name) {
+      visit(name, key, result, mapping);
+    }
+  });
   return result;
 };
 
@@ -71,7 +80,8 @@ const ElementDetail = ({
 }) => {
   const addMapping = useAddAtom(mappingAtom);
   const removeMapping = useRemoveAtom(mappingAtom);
-  const affiliates = useAffiliates(name);
+  const mapping = useAtomValue(mappingAtom);
+  const affiliates = getAffiliates(name, mapping);
   return (
     <Flex vertical gap="middle">
       <Flex gap="small" align="center">
@@ -116,7 +126,8 @@ export const AdjustableElementGroup = ({
   code,
   displayMode,
 }: MappedInfo & { displayMode?: boolean }) => {
-  const affiliates = useAffiliates(name);
+  const mapping = useAtomValue(mappingAtom);
+  const affiliates = getAffiliates(name, mapping);
   const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
   const currentElement = useAtomValue(currentElementAtom);
   const mappingSpace = useAtomValue(mappingSpaceAtom);
