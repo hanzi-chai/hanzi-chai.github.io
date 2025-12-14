@@ -363,7 +363,7 @@ export const dynamicAnalysis = (
     }
     const glyph = compound.glyph;
     const componentList: string[] = [];
-    const useStrictOrder = true;
+    const useStrictOrder = false;
     const order =
       glyph.order ??
       glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
