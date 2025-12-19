@@ -35,9 +35,7 @@ export const focusAnalysis = (config: Config, repertoire: Repertoire) => {
     roots: new Map(
       Object.entries(config.form.mapping).filter(([x]) => repertoire[x]),
     ),
-    secondaryRoots: new Map(
-      Object.entries(config.form.grouping ?? []).filter(([x]) => repertoire[x]),
-    ),
+    optionalRoots: new Set<string>(),
   };
   return result;
 };

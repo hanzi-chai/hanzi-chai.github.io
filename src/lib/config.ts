@@ -110,13 +110,10 @@ export interface Keyboard {
   mapping: Mapping;
   mapping_space?: MappingSpace;
   mapping_generator?: MappingGeneratorRule[];
-  grouping?: Grouping;
 }
 
 export interface MappingGeneratorRule {
-  score: number;
-  position: number;
-  elements: string[];
+  name: string;
   keys: string[];
 }
 
@@ -128,21 +125,27 @@ export type Key = string | ElementWithIndex;
 
 export type Value = null | string | Key[] | { element: string };
 
-export function isMerge(value: Value): value is { element: string } {
+export type GeneratorKey = { generator: string };
+
+export type GeneralizedValue =
+  | null
+  | string
+  | (Key | GeneratorKey)[]
+  | { element: string };
+
+export function isMerge(value: GeneralizedValue): value is { element: string } {
   return typeof value === "object" && value !== null && "element" in value;
 }
 
 export type Mapping = Record<Element, Exclude<Value, null>>;
 
 export interface ValueDescription {
-  value: Value;
+  value: GeneralizedValue;
   score: number;
   condition?: { element: string; op: "是" | "不是"; value: Value }[];
 }
 
 export type MappingSpace = Record<Element, ValueDescription[]>;
-
-export type Grouping = Record<Element, Element>;
 // config.form end
 
 // config.encoder begin
@@ -257,12 +260,6 @@ export interface PartialWeights {
   levels?: LevelWeights[];
 }
 
-export interface AtomicConstraint {
-  element?: string;
-  index?: number;
-  keys?: string[];
-}
-
 interface ElementAffinityTarget {
   element: ElementWithIndex;
   affinity: number;
@@ -294,15 +291,8 @@ export interface Objective {
 
 export type PartialWeightTypes = Exclude<keyof Objective, "regularization">;
 
-export interface Constraints {
-  elements?: AtomicConstraint[];
-  indices?: AtomicConstraint[];
-  element_indices?: AtomicConstraint[];
-}
-
 export interface Optimization {
   objective: Objective;
-  constraints?: Constraints;
   metaheuristic: Solver;
 }
 

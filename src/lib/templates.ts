@@ -120,7 +120,6 @@ const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
   蓝宝石: examples.sapphire.form,
   无: {
     alphabet: "qwertyuiopasdfghjklzxcvbnm",
-    grouping: {},
     mapping: {},
   },
 };

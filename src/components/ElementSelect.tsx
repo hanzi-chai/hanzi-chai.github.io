@@ -14,10 +14,10 @@ export default function ElementSelect(
   props: ElementSelectProps & ProFormSelectProps,
 ) {
   const { customFilter, onlyRootsAndStrokes, includeOptional, ...rest } = props;
-  const { mapping, grouping, mapping_space } = useAtomValue(keyboardAtom);
+  const { mapping, mapping_space } = useAtomValue(keyboardAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  let keys = Object.keys(mapping).concat(Object.keys(grouping ?? {}));
+  let keys = Object.keys(mapping);
   if (onlyRootsAndStrokes) {
     keys = keys.filter((x) => repertoire[x] || x.match(/\d/));
   }

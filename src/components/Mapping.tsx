@@ -162,7 +162,7 @@ export const AdjustableElementGroup = ({
           >
             <DisplayWrapper
               key={from}
-              name={from}
+              name={normalize(from)}
               $optional={!displayMode && isOptional(from)}
             />
           </ElementLabelWrapper>
