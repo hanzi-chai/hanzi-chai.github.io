@@ -5,14 +5,15 @@ import {
   displayAtom,
   mappingAtom,
   sequenceAtom,
+  mappingGeneratorAtom,
 } from "~/atoms";
 import { DisplayWithSuperScript, Select } from "./Utils";
-import type { Key } from "~/lib";
+import { isMerge, type GeneratorKey, type Key } from "~/lib";
 import type { BaseOptionType } from "antd/es/select";
 
 export interface KeySelectProps {
-  value: Key;
-  onChange: (k: Key) => void;
+  value: Key | GeneratorKey;
+  onChange: (k: Key | GeneratorKey) => void;
   allowEmpty?: boolean;
   disableAlphabets?: boolean;
   disableElements?: boolean;
@@ -37,6 +38,7 @@ export default function KeySelect({
   const mapping = useAtomValue(mappingAtom);
   const referenceOptions = Object.entries(mapping).flatMap(
     ([element, mapped]) => {
+      if (isMerge(mapped)) return [];
       const length = mapped.length;
       return [...Array(length).keys()].map((index) => ({
         label: <DisplayWithSuperScript name={element} index={index} />,
@@ -45,6 +47,12 @@ export default function KeySelect({
     },
   );
   if (!disableElements) keyOptions.push(...referenceOptions);
+  const generator = useAtomValue(mappingGeneratorAtom);
+  const generatorOptions = generator.map(({ name }) => ({
+    label: name,
+    value: JSON.stringify({ generator: name }),
+  }));
+  keyOptions.push(...generatorOptions);
   const sequenceMap = useAtomValue(sequenceAtom);
   const form = useAtomValue(repertoireAtom);
   return (
@@ -56,9 +64,12 @@ export default function KeySelect({
       onChange={(raw) => onChange(JSON.parse(raw))}
       filterOption={(input, option) => {
         if (option === undefined) return false;
-        const key: Key = JSON.parse(option.value);
+        const key: Key | GeneratorKey = JSON.parse(option.value);
         if (typeof key === "string") {
           return key.includes(input);
+        }
+        if ("generator" in key) {
+          return key.generator.includes(input);
         }
         if (form[key.element] !== undefined) {
           return sequenceMap.get(key.element)?.startsWith(input) ?? false;
@@ -66,8 +77,8 @@ export default function KeySelect({
         return key.element.includes(input);
       }}
       filterSort={(a, b) => {
-        const ak: Key = JSON.parse(a.value);
-        const bk: Key = JSON.parse(b.value);
+        const ak: Key | GeneratorKey = JSON.parse(a.value);
+        const bk: Key | GeneratorKey = JSON.parse(b.value);
         if (typeof ak === "string" && typeof bk === "string") {
           return ak.localeCompare(bk);
         }
@@ -75,6 +86,15 @@ export default function KeySelect({
           return -1;
         }
         if (typeof bk === "string") {
+          return 1;
+        }
+        if ("generator" in ak && "generator" in bk) {
+          return ak.generator.localeCompare(bk.generator);
+        }
+        if ("generator" in ak) {
+          return -1;
+        }
+        if ("generator" in bk) {
           return 1;
         }
         const amapped = sequenceMap.get(ak.element) ?? "";

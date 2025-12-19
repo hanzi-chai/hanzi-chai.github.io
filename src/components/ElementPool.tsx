@@ -54,13 +54,9 @@ export const CharWithTooltip: FC<ElementProps> = ({
   currentElement,
 }) => {
   const keyboard = useAtomValue(keyboardAtom);
-  const { mapping, grouping } = keyboard;
+  const { mapping } = keyboard;
   const type =
-    x === currentElement
-      ? "primary"
-      : mapping[x] || grouping?.[x]
-        ? "link"
-        : "default";
+    x === currentElement ? "primary" : mapping[x] ? "link" : "default";
   const display = useAtomValue(displayAtom);
   const core = (
     <Char

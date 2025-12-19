@@ -18,16 +18,10 @@ import {
   Select as AntdSelect,
   Skeleton,
 } from "antd";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useRef } from "react";
-import {
-  constraintsAtom,
-  objectiveAtom,
-  alphabetAtom,
-  regularizationAtom,
-} from "~/atoms";
-import ElementSelect from "~/components/ElementSelect";
+import { objectiveAtom } from "~/atoms";
 import KeySelect from "~/components/KeySelect";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
@@ -37,14 +31,7 @@ import {
   EditorRow,
   Select,
 } from "~/components/Utils";
-import type {
-  AtomicConstraint,
-  Constraints,
-  LevelWeights,
-  PartialWeights,
-  Regularization,
-  TierWeights,
-} from "~/lib";
+import type { LevelWeights, PartialWeights, TierWeights } from "~/lib";
 
 const AtomicObjective = ({
   title,
@@ -420,145 +407,6 @@ const PartialObjective = ({
   );
 };
 
-const RegularizationComponent = () => {
-  const [regularization, set] = useAtom(regularizationAtom);
-  return (
-    <>
-      <ModalForm<Regularization>
-        title="正则化"
-        trigger={
-          <Button type="primary" style={{ marginBottom: "1rem" }}>
-            正则化
-          </Button>
-        }
-        layout="horizontal"
-        onFinish={async (values) => {
-          set(values);
-          return true;
-        }}
-        initialValues={regularization}
-      >
-        <ProFormDigit name="strength" label="强度" />
-        <Typography.Title level={3}>元素亲和力</Typography.Title>
-        <ProFormList name="element_affinities" alwaysShowItemLabel>
-          <ProFormGroup>
-            <ProForm.Item name="from" label="元素" vertical={false}>
-              {/* @ts-ignore */}
-              <KeySelect disableAlphabets />
-            </ProForm.Item>
-            <ProFormList name="to" label="目标" alwaysShowItemLabel>
-              <ProFormGroup>
-                <ProForm.Item name="element" label="元素">
-                  {/* @ts-ignore */}
-                  <KeySelect disableAlphabets />
-                </ProForm.Item>
-                <ProFormDigit name="affinity" label="亲和" />
-              </ProFormGroup>
-            </ProFormList>
-          </ProFormGroup>
-        </ProFormList>
-        <Typography.Title level={3}>按键亲和力</Typography.Title>
-        <ProFormList name="key_affinities" alwaysShowItemLabel>
-          <ProFormGroup>
-            <ProForm.Item name="from" label="元素" vertical={false}>
-              {/* @ts-ignore */}
-              <KeySelect disableAlphabets />
-            </ProForm.Item>
-            <ProFormList name="to" label="目标" alwaysShowItemLabel>
-              <ProFormGroup>
-                <ProForm.Item name="key" label="键">
-                  {/* @ts-ignore */}
-                  <KeySelect disableElements />
-                </ProForm.Item>
-                <ProFormDigit name="affinity" label="亲和" />
-              </ProFormGroup>
-            </ProFormList>
-          </ProFormGroup>
-        </ProFormList>
-      </ModalForm>
-    </>
-  );
-};
-
-const ConstraintsForm = ({
-  label,
-  type,
-}: {
-  label: string;
-  type: "elements" | "indices" | "element_indices";
-}) => {
-  const alphabet = useAtomValue(alphabetAtom);
-  const [constraints, setConstraints] = useAtom(constraintsAtom);
-  const formRef = useRef<ProFormInstance>();
-  return (
-    <ModalForm<{ items: AtomicConstraint[] }>
-      trigger={<Button>{label}</Button>}
-      layout="horizontal"
-      formRef={formRef}
-      initialValues={{ items: constraints?.[type] ?? [] }}
-      onFinish={async ({ items }) => {
-        setConstraints((prev) => ({ ...prev, [type]: items }));
-        return true;
-      }}
-    >
-      <Typography.Title level={3}>元素约束</Typography.Title>
-      <ProFormList name="items" alwaysShowItemLabel>
-        {(_, index) => (
-          <ProFormGroup>
-            {type !== "indices" && (
-              <ProForm.Item name="element" label="元素">
-                <ElementSelect />
-              </ProForm.Item>
-            )}
-            {type !== "elements" && (
-              <ProForm.Item name="index" label="码位">
-                <Select
-                  options={[0, 1, 2, 3].map((x) => ({
-                    label: `第 ${x + 1} 码`,
-                    value: x,
-                  }))}
-                />
-              </ProForm.Item>
-            )}
-            <ProFormDependency name={["keys"]}>
-              {({ keys }) => (
-                <ProFormGroup>
-                  <ProForm.Item label="限制在">
-                    <Select
-                      value={keys === undefined}
-                      options={[
-                        { label: "当前元素", value: true },
-                        { label: "指定元素", value: false },
-                      ]}
-                      onChange={(value) =>
-                        formRef.current?.setFieldValue(
-                          ["items", index, "keys"],
-                          value ? undefined : [],
-                        )
-                      }
-                    />
-                  </ProForm.Item>
-                  {keys !== undefined && (
-                    <ProForm.Item name="keys" label="按键">
-                      <AntdSelect
-                        mode="multiple"
-                        options={[...alphabet].map((x) => ({
-                          label: x,
-                          value: x,
-                        }))}
-                      />
-                    </ProForm.Item>
-                  )}
-                </ProFormGroup>
-              )}
-            </ProFormDependency>
-          </ProFormGroup>
-        )}
-      </ProFormList>
-    </ModalForm>
-  );
-};
-
 export default function Optimization() {
   return (
     <EditorRow>
@@ -568,15 +416,8 @@ export default function Optimization() {
         <PartialObjective title="一字词简码" type="characters_short" />
         <PartialObjective title="多字词全码" type="words_full" />
         <PartialObjective title="多字词简码" type="words_short" />
-        <RegularizationComponent />
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
-        <Typography.Title level={2}>优化约束</Typography.Title>
-        <Flex gap="middle" justify="center">
-          <ConstraintsForm label="元素约束" type="elements" />
-          <ConstraintsForm label="码位约束" type="indices" />
-          <ConstraintsForm label="元素码位约束" type="element_indices" />
-        </Flex>
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>优化</Typography.Title>

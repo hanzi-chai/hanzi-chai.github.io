@@ -35,6 +35,7 @@ import {
   ProFormItem,
   ProFormList,
   ProFormSelect,
+  ProFormText,
 } from "@ant-design/pro-components";
 import CharacterSelect from "./CharacterSelect";
 import { useState } from "react";
@@ -235,7 +236,7 @@ function topologicalSort(
         ins.add(value.element);
       } else {
         for (const item of value) {
-          if (typeof item === "string") continue;
+          if (typeof item === "string" || "generator" in item) continue;
           graph.get(item.element)!.add(key);
           ins.add(item.element);
         }
@@ -310,16 +311,7 @@ const RulesGenerator = () => {
     >
       <ProFormList name="rules" alwaysShowItemLabel>
         <ProFormGroup>
-          <ProFormDigit name="score" label="打分" width="xs" />
-          <ProFormDigit name="position" label="码位" width="xs" />
-          <ProFormItem name="elements" label="元素">
-            <ElementSelect
-              includeOptional
-              mode="multiple"
-              allowClear
-              style={{ minWidth: 96 }}
-            />
-          </ProFormItem>
+          <ProFormText name="name" label="名称" width="xs" />
           <ProFormSelect
             mode="multiple"
             name="keys"

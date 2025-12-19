@@ -29,15 +29,18 @@ import {
   mappingTypeAtom,
   mappingSpaceAtom,
   dynamicCustomizeAtom,
+  userFrequencyAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
-import type { AnalysisResult, CharacterFilter } from "~/lib";
+import type { AnalysisResult, CharacterFilter, ElementWithIndex } from "~/lib";
 import {
   dynamicAnalysis,
   exportTSV,
   exportYAML,
+  isMerge,
+  isPUA,
   makeCharacterFilter,
 } from "~/lib";
 import Selector from "~/components/Selector";
@@ -46,6 +49,8 @@ import CharacterQuery from "~/components/CharacterQuery";
 import { analysisResultAtom } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
 import { Display } from "~/components/Utils";
+import { getAffiliates } from "~/components/Mapping";
+import { syllableAtom } from "./experimental/qingyun";
 
 const dumpAnalysisResult = (
   characters: string[],
@@ -236,6 +241,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
               sequenceMap,
               algebra,
             );
+            result.当前拆分 = [];
             exportYAML(result, "dynamic_analysis", 2);
           }}
         >
