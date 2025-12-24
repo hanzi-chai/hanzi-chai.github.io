@@ -167,24 +167,20 @@ export const RulesForm = ({ name }: { name: string }) => {
   );
 };
 
-const RulesGenerator = () => {
+const MappingVariablesForm = () => {
   const alphabet = useAtomValue(alphabetAtom);
   const [mappingVariables, setMappingVariables] = useAtom(mappingVariablesAtom);
-  const [mappingGenerators, setMappingGenerators] = useAtom(
-    mappingGeneratorsAtom,
-  );
   const variables = Object.entries(mappingVariables).map(([name, rule]) => ({
     name,
     keys: rule.keys,
   }));
   return (
     <ModalForm
-      title="变量和生成器"
-      trigger={<Button>变量和生成器</Button>}
+      title="变量配置"
+      trigger={<Button>变量</Button>}
       layout="horizontal"
-      initialValues={{ mappingGenerators, variables }}
-      onFinish={async ({ mappingGenerators, variables }) => {
-        setMappingGenerators(mappingGenerators as MappingGeneratorRule[]);
+      initialValues={{ variables }}
+      onFinish={async ({ variables }) => {
         setMappingVariables(
           Object.fromEntries(
             variables.map((v: any) => [v.name, { keys: v.keys }]),
@@ -193,7 +189,6 @@ const RulesGenerator = () => {
         return true;
       }}
     >
-      <Typography.Title level={4}>变量</Typography.Title>
       <ProFormList name="variables" alwaysShowItemLabel>
         <ProFormGroup>
           <ProFormText name="name" label="名称" />
@@ -209,7 +204,26 @@ const RulesGenerator = () => {
           />
         </ProFormGroup>
       </ProFormList>
-      <Typography.Title level={4}>生成器</Typography.Title>
+    </ModalForm>
+  );
+};
+
+const MappingGeneratorsForm = () => {
+  const alphabet = useAtomValue(alphabetAtom);
+  const [mappingGenerators, setMappingGenerators] = useAtom(
+    mappingGeneratorsAtom,
+  );
+  return (
+    <ModalForm
+      title="生成器配置"
+      trigger={<Button>生成器</Button>}
+      layout="horizontal"
+      initialValues={{ mappingGenerators }}
+      onFinish={async ({ mappingGenerators }) => {
+        setMappingGenerators(mappingGenerators as MappingGeneratorRule[]);
+        return true;
+      }}
+    >
       <ProFormList
         name="mappingGenerators"
         alwaysShowItemLabel
@@ -230,7 +244,7 @@ const RulesGenerator = () => {
   );
 };
 
-export default function Rules() {
+export default function MappingSpace() {
   const mapping = useAtomValue(mappingAtom);
   const mappingSpace = useAtomValue(mappingSpaceAtom);
   const setMappingSpace = useSetAtom(mappingSpaceAtom);
@@ -242,7 +256,8 @@ export default function Rules() {
     <Flex vertical gap="middle">
       <Typography.Title level={3}>决策空间</Typography.Title>
       <Flex justify="middle" gap="middle">
-        <RulesGenerator />
+        <MappingVariablesForm />
+        <MappingGeneratorsForm />
         <Button
           onClick={() => {
             const idles = Object.entries(mappingSpace).filter(

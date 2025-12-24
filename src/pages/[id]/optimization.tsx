@@ -21,7 +21,7 @@ import {
 import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useRef } from "react";
-import { objectiveAtom } from "~/atoms";
+import { objectiveAtom, regularizationStrengthAtom } from "~/atoms";
 import KeySelect from "~/components/KeySelect";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
@@ -408,6 +408,9 @@ const PartialObjective = ({
 };
 
 export default function Optimization() {
+  const [regularizationStrength, setRegularizationStrength] = useAtom(
+    regularizationStrengthAtom,
+  );
   return (
     <EditorRow>
       <EditorColumn span={12}>
@@ -416,6 +419,12 @@ export default function Optimization() {
         <PartialObjective title="一字词简码" type="characters_short" />
         <PartialObjective title="多字词全码" type="words_full" />
         <PartialObjective title="多字词简码" type="words_short" />
+        <Typography.Title level={2}>正则化</Typography.Title>
+        <AtomicObjective
+          title="正则化强度"
+          value={regularizationStrength}
+          onChange={(value) => setRegularizationStrength(value)}
+        />
         <Typography.Title level={2}>优化方法</Typography.Title>
         <SolverForm />
       </EditorColumn>

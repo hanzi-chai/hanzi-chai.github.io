@@ -6,10 +6,10 @@ import {
   Form,
   Input,
   List,
+  notification,
   Popconfirm,
   Popover,
   Select,
-  Space,
   Typography,
 } from "antd";
 import { useState, memo } from "react";
@@ -28,12 +28,11 @@ import {
   keyboardAtom,
 } from "~/atoms";
 import Char from "./Character";
-import IdleList, { RulesForm } from "./IdleList";
+import MappingSpace, { RulesForm } from "./MappingSpace";
 import {
   getReversedMapping,
   isMerge,
   isPUA,
-  joinKeys,
   printableAscii,
   renderMapped,
 } from "~/lib";
@@ -87,9 +86,14 @@ const ElementDetail = ({
         <ElementWithTooltip element={name} />
         <ValueEditor
           value={keys}
-          onChange={(newValue) =>
-            addMapping(name, newValue! as NonNullable<Value>)
-          }
+          onChange={(newValue) => {
+            if (newValue === null) {
+              if (affiliates.length === 0) removeMapping(name);
+              else notification.error({ message: "无法删除有归并关系的元素" });
+            } else {
+              addMapping(name, newValue as Exclude<Value, null>);
+            }
+          }}
         />
         <DeleteButton
           onClick={() => removeMapping(name)}
@@ -270,8 +274,8 @@ const MappingHeader = () => {
   const [char, setChar] = useState<string | undefined>(undefined);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
-  const [mapping, setMapping] = useAtom(mappingAtom);
-  const { grouping } = useAtomValue(keyboardAtom);
+  const mapping = useAtomValue(mappingAtom);
+  const [keyboard, setKeyboard] = useAtom(keyboardAtom);
   const [alphabet, setAlphabet] = useAtom(alphabetAtom);
   return (
     <>
@@ -328,18 +332,25 @@ const MappingHeader = () => {
         <MappingUploader setImportResult={setImportResult} />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
-      <Button
-        type="primary"
-        onClick={() => {
-          const newMapping = { ...mapping };
-          for (const [key, value] of Object.entries(grouping)) {
-            newMapping[key] = { element: value };
-          }
-          setMapping(newMapping);
-        }}
-      >
-        迁移旧版归并元素
-      </Button>
+      {Object.keys(keyboard.grouping ?? {}).length > 0 && (
+        <Button
+          type="primary"
+          onClick={() => {
+            const newMapping = { ...mapping };
+            for (const [key, value] of Object.entries(
+              keyboard.grouping ?? {},
+            )) {
+              newMapping[key] = { element: value };
+            }
+            const newKeyboard = { ...keyboard, mapping: newMapping };
+            delete newKeyboard.grouping;
+            setKeyboard(newKeyboard);
+            notification.success({ message: "迁移完成" });
+          }}
+        >
+          当前方案中存在旧版的归并元素配置，请点击此处一键迁移
+        </Button>
+      )}
     </>
   );
 };
@@ -388,7 +399,7 @@ export default function MappingComponent() {
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />
-      <IdleList />
+      <MappingSpace />
     </Flex>
   );
 }

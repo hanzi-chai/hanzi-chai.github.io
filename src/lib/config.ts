@@ -112,7 +112,7 @@ export interface Keyboard {
   mapping_variables?: Record<string, MappingVariableRule>;
   mapping_generators?: MappingGeneratorRule[];
   // Deprecated, use mapping instead
-  grouping: Record<string, string>;
+  grouping?: Record<string, string>;
 }
 
 export interface MappingVariableRule {
@@ -273,33 +273,12 @@ export interface PartialWeights {
   levels?: LevelWeights[];
 }
 
-interface ElementAffinityTarget {
-  element: ElementWithIndex;
-  affinity: number;
-}
-
-interface KeyAffinityTarget {
-  key: string;
-  affinity: number;
-}
-
-interface AffinityList<T> {
-  from: ElementWithIndex;
-  to: T[];
-}
-
-export interface Regularization {
-  strength?: number; // default 1e-2
-  element_affinities?: AffinityList<ElementAffinityTarget>[];
-  key_affinities?: AffinityList<KeyAffinityTarget>[];
-}
-
 export interface Objective {
   characters_full?: PartialWeights;
   characters_short?: PartialWeights;
   words_full?: PartialWeights;
   words_short?: PartialWeights;
-  regularization?: Regularization;
+  regularization_strength?: number;
 }
 
 export type PartialWeightTypes = Exclude<keyof Objective, "regularization">;
