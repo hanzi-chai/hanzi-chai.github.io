@@ -3,7 +3,8 @@ import { generateSchemes } from "~/lib";
 
 describe("generate schemes", () => {
   it("works for a simple case", () => {
-    expect(generateSchemes(4, [1, 2, 4, 6, 7, 8, 12])).toEqual([
+    const roots = [1, 2, 4, 6, 7, 8, 12];
+    expect(generateSchemes(4, roots, new Set(roots))).toEqual([
       [8, 7],
       [12, 2, 1],
     ]);

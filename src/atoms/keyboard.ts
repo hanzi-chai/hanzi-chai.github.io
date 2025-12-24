@@ -1,6 +1,11 @@
 import { focusAtom } from "jotai-optics";
 import { keyboardAtom } from "./config";
-import type { Mapping, MappingGeneratorRule, MappingSpace } from "~/lib";
+import type {
+  Mapping,
+  MappingGeneratorRule,
+  MappingSpace,
+  MappingVariableRule,
+} from "~/lib";
 
 export const alphabetAtom = focusAtom(keyboardAtom, (o) =>
   o.prop("alphabet").valueOr("abcdefghijklmnopqrstuvwxyz"),
@@ -18,6 +23,12 @@ export const mappingSpaceAtom = focusAtom(keyboardAtom, (o) =>
   o.prop("mapping_space").valueOr({} as MappingSpace),
 );
 
-export const mappingGeneratorAtom = focusAtom(keyboardAtom, (o) =>
-  o.prop("mapping_generator").valueOr([] as MappingGeneratorRule[]),
+export const mappingVariablesAtom = focusAtom(keyboardAtom, (o) =>
+  o
+    .prop("mapping_variables")
+    .valueOr({} as Record<string, MappingVariableRule>),
+);
+
+export const mappingGeneratorsAtom = focusAtom(keyboardAtom, (o) =>
+  o.prop("mapping_generators").valueOr([] as MappingGeneratorRule[]),
 );

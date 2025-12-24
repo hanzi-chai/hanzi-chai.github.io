@@ -6,19 +6,17 @@ import type {
   PrimitiveCharacter,
   Repertoire,
 } from "~/lib";
-import { determine, computeComponent } from "~/lib";
+import { determine, computeComponent, listToObject } from "~/lib";
 import Pako from "pako";
+import { fromModel } from "~/api";
 
 const compressed = readFileSync("public/cache/repertoire.json.deflate");
 const decompressed = Pako.inflate(compressed, { to: "string" });
-const rawrepertoire = JSON.parse(decompressed);
+const rawrepertoire = JSON.parse(decompressed).map(
+  fromModel,
+) as PrimitiveCharacter[];
 
-export const primitiveRepertoire = Object.fromEntries(
-  (rawrepertoire as PrimitiveCharacter[]).map((x) => [
-    String.fromCodePoint(x.unicode),
-    x,
-  ]),
-);
+export const primitiveRepertoire = listToObject(rawrepertoire);
 export const repertoire = determine(primitiveRepertoire);
 export const computedComponents = Object.fromEntries(
   Object.entries(repertoire)

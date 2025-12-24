@@ -1,7 +1,6 @@
 import init, { Web } from "libchai";
 import { analysis } from "./lib/repertoire";
 import { assemble } from "./lib/assembly";
-import type { Config } from "./lib";
 import axios from "axios";
 
 export interface WorkerInput {
@@ -12,7 +11,7 @@ export interface WorkerInput {
 export type WorkerOutput =
   | { type: "success"; result: any }
   | { type: "error"; error: Error }
-  | { type: "better_solution"; config: Config; metric: string; save: boolean }
+  | { type: "better_solution"; config: string; metric: string; save: boolean }
   | { type: "progress"; steps: number; temperature: number; metric: string }
   | { type: "parameters"; t_max?: number; t_min?: number; steps?: number }
   | { type: "elapsed"; time: number }

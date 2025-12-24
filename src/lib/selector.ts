@@ -27,8 +27,7 @@ export interface Environment {
   component: ComputedComponent;
   rootMap: Map<number, string>;
   analysis: Analysis;
-  primaryRoots: Map<Element, Value>;
-  secondaryRoots: Map<Element, Element>;
+  roots: Map<Element, Value>;
 }
 
 interface Sieve<T extends Comparable> {

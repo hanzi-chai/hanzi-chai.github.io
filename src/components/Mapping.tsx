@@ -25,6 +25,7 @@ import {
   useAtom,
   currentElementAtom,
   mappingSpaceAtom,
+  keyboardAtom,
 } from "~/atoms";
 import Char from "./Character";
 import IdleList, { RulesForm } from "./IdleList";
@@ -38,8 +39,6 @@ import {
 } from "~/lib";
 import { DeleteButton, Display, Uploader } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import ElementSelect from "./ElementSelect";
-import KeySelect from "./KeySelect";
 import type { Key, MappedInfo, Mapping, Value } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
@@ -88,7 +87,9 @@ const ElementDetail = ({
         <ElementWithTooltip element={name} />
         <ValueEditor
           value={keys}
-          onChange={(newValue) => addMapping(name, newValue!)}
+          onChange={(newValue) =>
+            addMapping(name, newValue! as NonNullable<Value>)
+          }
         />
         <DeleteButton
           onClick={() => removeMapping(name)}
@@ -269,6 +270,8 @@ const MappingHeader = () => {
   const [char, setChar] = useState<string | undefined>(undefined);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
+  const [mapping, setMapping] = useAtom(mappingAtom);
+  const { grouping } = useAtomValue(keyboardAtom);
   const [alphabet, setAlphabet] = useAtom(alphabetAtom);
   return (
     <>
@@ -325,6 +328,18 @@ const MappingHeader = () => {
         <MappingUploader setImportResult={setImportResult} />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
+      <Button
+        type="primary"
+        onClick={() => {
+          const newMapping = { ...mapping };
+          for (const [key, value] of Object.entries(grouping)) {
+            newMapping[key] = { element: value };
+          }
+          setMapping(newMapping);
+        }}
+      >
+        迁移旧版归并元素
+      </Button>
     </>
   );
 };
