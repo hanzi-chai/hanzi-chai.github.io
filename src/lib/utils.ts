@@ -19,13 +19,7 @@ import type {
 } from "./data";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import {
-  isMerge,
-  type Key,
-  type Value,
-  type Mapping,
-  GeneratorKey,
-} from "./config";
+import { type Key, type Value, type Mapping, GeneralizedKey } from "./config";
 import type { IndexedElement } from "./assembly";
 
 interface Loss {
@@ -494,7 +488,7 @@ export const renderSuperScript = (element: string, index: number) => {
     : element;
 };
 
-export const joinKeys = (keys: (Key | GeneratorKey)[]) => {
+export const joinKeys = (keys: GeneralizedKey[]) => {
   return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
 };
 

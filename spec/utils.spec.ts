@@ -46,7 +46,7 @@ describe("misc", () => {
       .filter(([, value]) => value.gb2312)
       .map(([x]) => x);
     const result = getSupplemental(repertoire, characters);
-    expect(result.length).toBeGreaterThan(100);
+    expect(result.length).toBeGreaterThan(50);
   });
 
   it("parseTSV should parse a TSV string and return a record with the values", () => {

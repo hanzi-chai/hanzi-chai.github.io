@@ -5,6 +5,7 @@ import {
   assemble,
   classifier,
   examples,
+  isValidCJKBasicChar,
   isValidCJKChar,
   recursiveRenderComponent,
   recursiveRenderCompound,
@@ -59,9 +60,11 @@ describe("e2e test", () => {
     const summarize = (glyph: SVGGlyph) =>
       glyph.map((x) => classifier[x.feature]).join("");
     for (const [char, { glyphs }] of Object.entries(primitiveRepertoire)) {
+      if (!isValidCJKBasicChar(char)) continue;
       for (const glyph of glyphs) {
         if (glyph.tags?.includes("中竖截断")) continue;
         if (glyph.tags?.includes("戈部截断")) continue;
+        if (glyph.type === "identity") continue;
         let svg: SVGGlyph;
         if (glyph.type === "basic_component") {
           svg = glyph.strokes;

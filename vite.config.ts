@@ -87,6 +87,13 @@ export default defineConfig(({ mode }) => {
     },
     worker: {
       format: "es",
+      plugins: () => [wasm()],
+    },
+    server: {
+      fs: {
+        // Allow serving files from one level up to the project root
+        allow: [".."],
+      },
     },
   };
 

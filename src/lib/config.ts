@@ -109,12 +109,19 @@ export interface Keyboard {
   mapping_type?: number;
   mapping: Mapping;
   mapping_space?: MappingSpace;
-  mapping_generator?: MappingGeneratorRule[];
+  mapping_variables?: Record<string, MappingVariableRule>;
+  mapping_generators?: MappingGeneratorRule[];
+  // Deprecated, use mapping instead
+  grouping: Record<string, string>;
+}
+
+export interface MappingVariableRule {
+  keys: string[];
 }
 
 export interface MappingGeneratorRule {
-  name: string;
-  keys: string[];
+  regex: string;
+  value: ValueDescription;
 }
 
 export type Element = string;
@@ -125,12 +132,18 @@ export type Key = string | ElementWithIndex;
 
 export type Value = null | string | Key[] | { element: string };
 
-export type GeneratorKey = { generator: string };
+export type VariableKey = { variable: string };
+
+export type GeneralizedKey = Key | VariableKey | null;
+
+export function isVariableKey(key: GeneralizedKey): key is VariableKey {
+  return typeof key === "object" && key !== null && "variable" in key;
+}
 
 export type GeneralizedValue =
   | null
   | string
-  | (Key | GeneratorKey)[]
+  | GeneralizedKey[]
   | { element: string };
 
 export function isMerge(value: GeneralizedValue): value is { element: string } {

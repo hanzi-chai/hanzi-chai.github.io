@@ -1,4 +1,12 @@
-import { Button, Flex, Input, Space, Tag, Typography } from "antd";
+import {
+  Button,
+  Flex,
+  Input,
+  notification,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
 import { ColumnsType } from "antd/es/table";
 import { Table } from "antd/lib";
 import { atomWithStorage } from "jotai/utils";
@@ -12,9 +20,11 @@ import {
   analysisResultAtom,
   charactersAtom,
   customClassifierAtom,
+  displayAtom,
   dynamicCustomizeAtom,
   infoAtom,
   mappingAtom,
+  mappingSpaceAtom,
   repertoireAtom,
   sequenceAtom,
   useAtom,
@@ -34,6 +44,7 @@ import {
   isMerge,
   isPUA,
   MappedInfo,
+  Value,
 } from "~/lib";
 
 const PrintArea = styled.div`
@@ -298,6 +309,7 @@ const repr: Record<string, string> = {
 
 function SyllableForm() {
   const mapping = useAtomValue(mappingAtom);
+  const mappingSpace = useAtomValue(mappingSpaceAtom);
   const [syllables, setSyllables] = useAtom(syllableAtom);
   const content: { key: string; value: [string, string] }[] = [];
   const userFrequency = useAtomValue(userFrequencyAtom);
@@ -308,6 +320,7 @@ function SyllableForm() {
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const algebra = useAtomValue(algebraAtom);
+  const display = useAtomValue(displayAtom);
   const PUA: string[] = [];
 
   for (const [key, value] of Object.entries(mapping)) {
@@ -325,6 +338,131 @@ function SyllableForm() {
 
   return (
     <Flex vertical style={{ width: 300, padding: 16 }}>
+      <Button
+        onClick={() => {
+          const gf0014 = {} as Record<number, string[]>;
+          const message: string[] = [];
+          const allkeys = new Set(
+            Object.keys(mappingSpace)
+              .concat(Object.keys(mapping))
+              .filter((x) => /^[^\d]$/.test(x)),
+          );
+          const reverseMap = new Map<number, string>();
+          for (const [key, value] of Object.entries(repertoire)) {
+            if (value.gf0014_id) {
+              reverseMap.set(value.gf0014_id, key);
+            }
+          }
+          for (let i = 1; i <= 514; ++i) {
+            if (!reverseMap.has(i)) {
+              console.warn(`GF0014 ID ${i} not found in repertoire.`);
+              continue;
+            }
+            const key = reverseMap.get(i)!;
+            if (!allkeys.has(key)) {
+              message.push(`${i}: ${display(key)}`);
+            }
+          }
+          const getShengyun = (v: Value) => {
+            if (v === null) return;
+            if (typeof v === "string") return;
+            if (Array.isArray(v)) {
+              if (
+                typeof v[0] === "object" &&
+                v[0].element.startsWith("声") &&
+                typeof v[1] === "object" &&
+                v[1].element.startsWith("韵")
+              ) {
+                let raw = v[0].element.slice(2) + v[1].element.slice(2);
+                raw = raw.replace("ir", "i");
+                raw = raw.replace("0", "");
+                raw = raw.replace(/yi(?=[aoe])/g, "y");
+                raw = raw.replace(/wu(?=[aoe])/g, "w");
+                raw = raw.replace(/yuü/g, "yu");
+                raw = raw.replace(/(?<=[jqx])ü/g, "u");
+                raw = raw.replace(/(?<=[nl])ü/g, "v");
+                raw = raw.replace(/ue(?=[in])/g, "u");
+                raw = raw.replace("iou", "iu");
+                return raw;
+              }
+            }
+          };
+          for (const key of allkeys) {
+            const values = JSON.parse(JSON.stringify(mappingSpace[key] ?? []));
+            if (mapping[key] !== undefined) {
+              values.push({ value: mapping[key]!, score: 0 });
+            }
+            if (repertoire[key]!.tygf) {
+              const readings = repertoire[key]!.readings.map((r) =>
+                r.pinyin.slice(0, -1),
+              );
+              for (const value of values) {
+                const shengyun = getShengyun(value.value);
+                if (shengyun && !readings.includes(shengyun)) {
+                  message.push(
+                    `${display(key)} ${shengyun}：${readings.join(", ")}`,
+                  );
+                } else if (
+                  !shengyun &&
+                  value.value !== null &&
+                  !(
+                    Array.isArray(value.value) &&
+                    typeof value.value[0] === "string"
+                  )
+                ) {
+                  message.push(
+                    `${display(key)} ${JSON.stringify(
+                      value.value,
+                    )}：${readings.join(", ")}`,
+                  );
+                }
+              }
+            } else if (repertoire[key]!.gf0014_id) {
+              const readings: string[] = [];
+              for (const raw of gf0014[
+                repertoire[key]!.gf0014_id - 1
+              ] as string[]) {
+                if (raw === "") continue;
+                const list = raw.split(" ");
+                for (const item of list) {
+                  readings.push(item.slice(0, -1));
+                }
+              }
+              const allShengyun = new Set<string>();
+              for (const value of values) {
+                const shengyun = getShengyun(value.value);
+                if (shengyun) allShengyun.add(shengyun);
+                if (shengyun && !readings.includes(shengyun)) {
+                  message.push(
+                    `${display(key)} ${shengyun}：${readings.join(", ")}`,
+                  );
+                }
+              }
+              for (const reading of readings) {
+                if (!allShengyun.has(reading)) {
+                  message.push(
+                    `${display(key)} 缺少 ${reading}：${readings.join(", ")}`,
+                  );
+                }
+              }
+            } else {
+              for (const value of values) {
+                const shengyun = getShengyun(value.value);
+                if (shengyun) {
+                  message.push(`${display(key)} 不合法 ${shengyun}`);
+                }
+              }
+            }
+          }
+          notification.info({
+            message: `检查完毕，共 ${message.length} 处问题`,
+            description: message.join("；"),
+            duration: 0,
+          });
+        }}
+      >
+        检查
+      </Button>
       <Button
         onClick={() => {
           const rootsInfo: Converted[] = [];

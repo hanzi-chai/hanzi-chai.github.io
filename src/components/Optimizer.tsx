@@ -100,7 +100,7 @@ export default function Optimizer() {
                 const date = new Date();
                 switch (data.type) {
                   case "better_solution": {
-                    const config = data.config;
+                    const config: Config = load(data.config) as any;
                     config.info ??= {};
                     config.info.version = formatDate(date);
                     setBestResult(config);

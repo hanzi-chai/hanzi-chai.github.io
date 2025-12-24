@@ -1,14 +1,7 @@
 import { Flex, Select, Space } from "antd";
 import { useAtomValue } from "jotai";
 import { alphabetAtom, mappingTypeAtom } from "~/atoms";
-import {
-  GeneralizedValue,
-  GeneratorKey,
-  isMerge,
-  joinKeys,
-  Key,
-  Value,
-} from "~/lib";
+import { GeneralizedValue, isMerge, joinKeys, GeneralizedKey } from "~/lib";
 import KeySelect from "./KeySelect";
 import ElementSelect from "./ElementSelect";
 
@@ -16,8 +9,8 @@ const KeysEditor = ({
   value,
   onChange,
 }: {
-  value: string | (Key | GeneratorKey)[];
-  onChange: (newValue: string | (Key | GeneratorKey)[]) => void;
+  value: string | GeneralizedKey[];
+  onChange: (newValue: string | GeneralizedKey[]) => void;
 }) => {
   const mappingType = useAtomValue(mappingTypeAtom);
   const keys = Array.from(value);

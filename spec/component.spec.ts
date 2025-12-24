@@ -28,7 +28,7 @@ describe("pruning", () => {
   });
 
   it("generate the correct schemes for 中", () => {
-    const schemes = generateSchemes(strokes, roots);
+    const schemes = generateSchemes(strokes, roots, new Set(roots));
     expect(schemes).toHaveLength(3);
   });
 });
