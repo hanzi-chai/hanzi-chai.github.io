@@ -2,11 +2,12 @@ import { mergeClassifier, type Classifier } from "./classifier";
 import type { Config } from "./config";
 import { defaultDegenerator } from "./degenerator";
 import { defaultSelector } from "./selector";
-import snow from "../../examples/snow.yaml";
+import snow4 from "../../examples/snow4.yaml";
 import bxm from "../../examples/bxm.yaml";
 import mswb from "../../examples/mswb.yaml";
 import ziyuan from "../../examples/ziyuan.yaml";
 import jdh from "../../examples/jdh.yaml";
+import cqkm from "../../examples/cqkm.yaml";
 import shouyou from "../../examples/shouyou.yaml";
 import xkjd from "../../examples/xkjd.yaml";
 import longma from "../../examples/longma.yaml";
@@ -24,12 +25,13 @@ import type { ExampleConfig } from "./config";
 
 export type Example =
   // 音码
-  | "snow"
+  | "snow4"
   | "longma"
   // 音形
   | "jdh"
   | "shouyou"
   | "xkjd"
+  | "cqkm"
   // 形音
   | "bxm"
   | "mswb"
@@ -47,11 +49,12 @@ export type Example =
   | "zhenma";
 
 export const examples = {
-  snow,
+  snow4,
   longma,
   jdh,
   shouyou,
   xkjd,
+  cqkm,
   bxm,
   mswb,
   ziyuan,
@@ -85,6 +88,7 @@ export const keyboardTypes = [
   "简单鹤",
   "首右拼音",
   "星空键道",
+  "超强快码",
   "表形码",
   "米十五笔",
   "字源",
@@ -101,11 +105,12 @@ export const keyboardTypes = [
 ] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
 const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
-  冰雪四拼: examples.snow.form,
+  冰雪四拼: examples.snow4.form,
   龙码: examples.longma.form,
   简单鹤: examples.jdh.form,
   首右拼音: examples.shouyou.form,
   星空键道: examples.xkjd.form,
+  超强快码: examples.cqkm.form,
   表形码: examples.bxm.form,
   米十五笔: examples.mswb.form,
   字源: examples.ziyuan.form,
@@ -130,6 +135,7 @@ export const encoderTypes = [
   "音形码（简单鹤）",
   "音形码（首右拼音）",
   "音形码（星空键道）",
+  "音形码（超强快码）",
   "形音码（表形码）",
   "形音码（米十五笔）",
   "形音码（字源）",
@@ -146,11 +152,12 @@ export const encoderTypes = [
 ] as const;
 export type EncoderTypes = (typeof encoderTypes)[number];
 const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
-  "音码（冰雪四拼）": examples.snow.encoder,
+  "音码（冰雪四拼）": examples.snow4.encoder,
   "音码（龙码）": examples.longma.encoder,
   "音形码（简单鹤）": examples.jdh.encoder,
   "音形码（首右拼音）": examples.shouyou.encoder,
   "音形码（星空键道）": examples.xkjd.encoder,
+  "音形码（超强快码）": examples.cqkm.encoder,
   "形音码（表形码）": examples.bxm.encoder,
   "形音码（米十五笔）": examples.mswb.encoder,
   "形音码（字源）": examples.ziyuan.encoder,
@@ -186,7 +193,7 @@ export const createConfig = (starter: StarterType): Config => {
   }
 
   return {
-    version: "0.2",
+    version: "0.3",
     source: null,
     info: {
       name: starter.name,

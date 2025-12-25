@@ -1,9 +1,9 @@
-version: '0.2'
+version: '0.3'
 source: mswb
 info:
   name: 米十五笔
   author: 李明
-  version: '2023.05.30'
+  version: 2023.05.30
   description: http://xukt.ysepan.com/
 analysis:
   classifier:
@@ -21,7 +21,9 @@ analysis:
     斜钩: 6
     横斜钩: 6
   degenerator:
-    feature: {捺: 点, 提: 横}
+    feature:
+      捺: 点
+      提: 横
     no_cross: false
   selector:
     - 结构完整
@@ -31,102 +33,135 @@ analysis:
     - 能散不连
     - 取大优先
   customize:
-    兀: ['1', 儿]
-    "\ue093": [丷, 王]
-    "\ue016": [丷, 干]
-    "\ue064": [三, 人]
-    耂: [土, '3']
-    母: ["\ue405", '1', "\ue00d"]
-    "\ue00b": [丷, 三, 人]
-    万: [丆, '5']
-    主: ['4', 王]
-    兰: [丷, 三]
-    击: [二, 山]
-    午: ['3', 干]
-    垂: ['3', '1', 士]
-    奂: ["\ue0bc", "\ue407", 人]
-    夹: ['1', 䒑, 人]
-    未: [二, 小]
-    末: [二, 小]
-    羊: [丷, 三, '2']
-    兆: [儿, "\ue42b"]
-    必: [心, '3']
-    非: ['2', 三, '2', 三]
-    韭: ['2', 三, '2', 三, '1']
-    州: [川, "\ue448"]
-    身: ['3', 冂, 三, '3']
-    秉: ["\ue44b", "\ue431"]
-    冓: [三, "\ue001", 冂, "\ue43a"]
-    "\ue022": [三, "\ue001", 八]
-    豖: [豕, '4']
-    曲: ["\ue439", 龷]
-    "\ue0d3": ["\ue439", "\ue001", 三]
-    "\ue066": [艹, 日]
-    "\ue050": ['1', "\ue41a"]
-    "\ue083": ["\ue423", "\ue00d"]
-    乍: ["\ue078", '2', 二]
-    卅: ['1', 川]
-    丌: ['1', "\ue0e3"]
+    兀:
+      - '1'
+      - 儿
+    "\ue093":
+      - 丷
+      - 王
+    "\ue016":
+      - 丷
+      - 干
+    "\ue064":
+      - 三
+      - 人
+    耂:
+      - 土
+      - '3'
+    母:
+      - "\ue405"
+      - '1'
+      - "\ue00d"
+    "\ue00b":
+      - 丷
+      - 三
+      - 人
+    万:
+      - 丆
+      - '5'
+    主:
+      - '4'
+      - 王
+    兰:
+      - 丷
+      - 三
+    击:
+      - 二
+      - 山
+    午:
+      - '3'
+      - 干
+    垂:
+      - '3'
+      - '1'
+      - 士
+    奂:
+      - "\ue0bc"
+      - "\ue407"
+      - 人
+    夹:
+      - '1'
+      - 䒑
+      - 人
+    未:
+      - 二
+      - 小
+    末:
+      - 二
+      - 小
+    羊:
+      - 丷
+      - 三
+      - '2'
+    兆:
+      - 儿
+      - "\ue42b"
+    必:
+      - 心
+      - '3'
+    非:
+      - '2'
+      - 三
+      - '2'
+      - 三
+    韭:
+      - '2'
+      - 三
+      - '2'
+      - 三
+      - '1'
+    州:
+      - 川
+      - "\ue448"
+    身:
+      - '3'
+      - 冂
+      - 三
+      - '3'
+    秉:
+      - "\ue44b"
+      - "\ue431"
+    冓:
+      - 三
+      - "\ue001"
+      - 冂
+      - "\ue43a"
+    "\ue022":
+      - 三
+      - "\ue001"
+      - 八
+    豖:
+      - 豕
+      - '4'
+    曲:
+      - "\ue439"
+      - 龷
+    "\ue0d3":
+      - "\ue439"
+      - "\ue001"
+      - 三
+    "\ue066":
+      - 艹
+      - 日
+    "\ue050":
+      - '1'
+      - "\ue41a"
+    "\ue083":
+      - "\ue423"
+      - "\ue00d"
+    乍:
+      - "\ue078"
+      - '2'
+      - 二
+    卅:
+      - '1'
+      - 川
+    丌:
+      - '1'
+      - "\ue0e3"
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping_type: 1
-  grouping:
-    "\ue401": 力
-    "\ue432": 彐
-    "\ue431": 彐
-    "\ue446": 八
-    "\ue087": 八
-    攵: 文
-    夂: 文
-    曰: 日
-    "\ue070": 日
-    "\ue00c": 日
-    "\ue43a": 土
-    "\ue445": 小
-    "\ue442": 小
-    "\ue43d": 人
-    "\ue444": 厶
-    "\ue416": 七
-    "\ue011": 匕
-    "\ue43f": 匕
-    "\ue443": "\ue068"
-    "\ue439": 冂
-    "\ue441": 乃
-    "\ue437": 止
-    "\ue0c6": 足
-    "\ue400": 斤
-    "\ue403": 勹
-    氺: 水
-    "\ue0d9": 水
-    "\ue42b": 水
-    "\ue42c": 水
-    龵: 手
-    "\ue40b": 手
-    "\ue0d2": 月
-    "\ue08c": 用
-    "\ue44b": 禾
-    "\ue420": 豕
-    "\ue440": "\ue405"
-    "\ue0d0": 雨
-    "\ue0c8": 车
-    "\ue0d6": 几
-    朩: 木
-    "\ue012": 丬
-    龰: 止
-    "\ue044": "\ue001"
-    "\ue451": 止
-    覀: 西
-    "\ue429": 扌
-    "\ue406": 口
-    "\ue427": 勹
-    乑: 豕
-    "\ue449": 大
-    "\ue043": 大
-    "\ue447": 灬
-    車: 车
-    "\ue452": 十
-    "\ue020": "\ue0bc"
-    "\ue453": 手
   mapping:
     '1': s
     '2': e
@@ -343,22 +378,131 @@ form:
     首字母-a: a
     首字母-o: o
     首字母-e: e
+    "\ue401":
+      element: 力
+    "\ue432":
+      element: 彐
+    "\ue431":
+      element: 彐
+    "\ue446":
+      element: 八
+    "\ue087":
+      element: 八
+    攵:
+      element: 文
+    夂:
+      element: 文
+    曰:
+      element: 日
+    "\ue070":
+      element: 日
+    "\ue00c":
+      element: 日
+    "\ue43a":
+      element: 土
+    "\ue445":
+      element: 小
+    "\ue442":
+      element: 小
+    "\ue43d":
+      element: 人
+    "\ue444":
+      element: 厶
+    "\ue416":
+      element: 七
+    "\ue011":
+      element: 匕
+    "\ue43f":
+      element: 匕
+    "\ue443":
+      element: "\ue068"
+    "\ue439":
+      element: 冂
+    "\ue441":
+      element: 乃
+    "\ue437":
+      element: 止
+    "\ue0c6":
+      element: 足
+    "\ue400":
+      element: 斤
+    "\ue403":
+      element: 勹
+    氺:
+      element: 水
+    "\ue0d9":
+      element: 水
+    "\ue42b":
+      element: 水
+    "\ue42c":
+      element: 水
+    龵:
+      element: 手
+    "\ue40b":
+      element: 手
+    "\ue0d2":
+      element: 月
+    "\ue08c":
+      element: 用
+    "\ue44b":
+      element: 禾
+    "\ue420":
+      element: 豕
+    "\ue440":
+      element: "\ue405"
+    "\ue0d0":
+      element: 雨
+    "\ue0c8":
+      element: 车
+    "\ue0d6":
+      element: 几
+    朩:
+      element: 木
+    "\ue012":
+      element: 丬
+    龰:
+      element: 止
+    "\ue044":
+      element: "\ue001"
+    "\ue451":
+      element: 止
+    覀:
+      element: 西
+    "\ue429":
+      element: 扌
+    "\ue406":
+      element: 口
+    "\ue427":
+      element: 勹
+    乑:
+      element: 豕
+    "\ue449":
+      element: 大
+    "\ue043":
+      element: 大
+    "\ue447":
+      element: 灬
+    車:
+      element: 车
+    "\ue452":
+      element: 十
+    "\ue020":
+      element: "\ue0bc"
+    "\ue453":
+      element: 手
 encoder:
   max_length: 4
   auto_select_length: 4
   short_code:
     - length_equal: 1
-      schemes:
-        - { prefix: 1 }
-        - { prefix: 2 }
-        - { prefix: 3 }
+      schemes: [{prefix: 1}, {prefix: 2}, {prefix: 3}]
   rules:
     - length_equal: 2
-      formula: "AaAbBaBb"
+      formula: AaAbBaBb
     - length_equal: 3
-      formula: "AaBaCaCb"
+      formula: AaBaCaCb
     - length_in_range: [4, 10]
-      formula: "AaBaCaZa"
+      formula: AaBaCaZa
   sources:
     s0:
       object: null

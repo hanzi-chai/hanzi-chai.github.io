@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: xuma
 info:
   name: 徐码
@@ -238,123 +238,6 @@ analysis:
     - "\ue039"
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
-  grouping:
-    "\ue042": 羊
-    "\ue025": 亦
-    "\ue0a3": 巳
-    "\ue0ec": 电
-    "\ue0e0": 片
-    "\ue0e1": 爿
-    "\ue441": 乃
-    "\ue004": 丂
-    "\ue416": 七
-    "\ue059": 水
-    氺: 水
-    "\ue039": 干
-    "\ue0dc": 鹿
-    "\ue0da": 鸟
-    "\ue079": 匕
-    "\ue011": 匕
-    "\ue0d6": 几
-    "\ue0b2": 卩
-    "\ue012": 丬
-    "\ue417": 七
-    "\ue442": 小
-    "\ue43d": 人
-    "\ue451": 止
-    "\ue0d2": 月
-    "\ue102": 王
-    "\ue444": 厶
-    "\ue0c8": 车
-    "\ue404": 亻
-    "\ue44b": 禾
-    "\ue0bd": 尸
-    "\ue14c": 电
-    "\ue14e": 爿
-    䶹: 屮
-    "\ue069": 鬼
-    "\ue41f": 月
-    "\ue419": 且
-    "\ue0c9": 辛
-    "\ue003": 丰
-    "\uf006": 丌
-    覀: 西
-    "\ue0d7": 鳥
-    "\ue11e": 千
-    "\uf00a": 片
-    "\uf00b": 爿
-    "\ue10b": 月
-    "\ue157": 馬
-    "\uf00c": 米
-    "\ue424": 儿
-    "\ue80a": 衣
-    龵: 手
-    "\ue153": 虍
-    "\ue07e": "\ue0b7"
-    "\ue159": 烏
-    "\ue44f": 厶
-    "\uf005": 丱
-    "\ue06b": 尸
-    "\ue007": "\ue009"
-    㐄: "\ue411"
-    匸: 匚
-    "\ue418": 匚
-    "\ue019": 飠
-    "\ue432": "\ue431"
-    彐: "\ue431"
-    "\ue055": 冊
-    "\ue410": "\ue002"
-    "\ue106": "\ue0b7"
-    "\ue11c": 臣
-    "\ue020": "\ue0bc"
-    "\ue423": "\ue0bc"
-    冖: "\ue0bc"
-    "\ue427": "\ue0bc"
-    "\uf008": 夕
-    "\ue838": 鹿
-    "\ue452": 十
-    "\ue0e3": 八
-    "\ue0ba": 八
-    "\ue446": 八
-    "\ue088": 八
-    "\ue02d": "\ue028"
-    "\ue421": "\ue028"
-    "\ue413": 朩
-    "\ue04d": 丄
-    "\ue014": "\ue078"
-    "\ue029": "\ue078"
-    糹: 糸
-    丩: 丱
-    凵: 屮
-    "\ue02a": 勹
-    "\ue831": 勹
-    "\uebbd": 勹
-    "\ue09b": "\ue083"
-    "\uf004": "\ue083"
-    "\ue41e": "\ue077"
-    "\uebc2": "\ue077"
-    "\ue16e": "\ue0e8"
-    "\ue01f": 龴
-    "\ue434": 龴
-    廾: 艹
-    卝: 艹
-    卅: 艹
-    "\ue050": 艹
-    卌: 艹
-    "\ue443": "\ue068"
-    "\ue0d1": 夫
-    "\ue00c": 曰
-    "\ue070": 曰
-    "\ue07c": "\ue018"
-    "\ue10c": "\ue018"
-    "\ue41a": "\ue001"
-    "\ue448": "\ue42d"
-    䒑: 丷
-    "\ue440": "\ue405"
-    "\ue023": 巜
-    "\ue439": 冂
-    "\ue14f": 爫
-    "\uf01b": 乂
   mapping:
     '1': gu
     '2': ku
@@ -657,6 +540,238 @@ form:
     "\ue449": fd
     "\ue40c": vu
     父: tf
+    "\ue042":
+      element: 羊
+    "\ue025":
+      element: 亦
+    "\ue0a3":
+      element: 巳
+    "\ue0ec":
+      element: 电
+    "\ue0e0":
+      element: 片
+    "\ue0e1":
+      element: 爿
+    "\ue441":
+      element: 乃
+    "\ue004":
+      element: 丂
+    "\ue416":
+      element: 七
+    "\ue059":
+      element: 水
+    氺:
+      element: 水
+    "\ue039":
+      element: 干
+    "\ue0dc":
+      element: 鹿
+    "\ue0da":
+      element: 鸟
+    "\ue079":
+      element: 匕
+    "\ue011":
+      element: 匕
+    "\ue0d6":
+      element: 几
+    "\ue0b2":
+      element: 卩
+    "\ue012":
+      element: 丬
+    "\ue417":
+      element: 七
+    "\ue442":
+      element: 小
+    "\ue43d":
+      element: 人
+    "\ue451":
+      element: 止
+    "\ue0d2":
+      element: 月
+    "\ue102":
+      element: 王
+    "\ue444":
+      element: 厶
+    "\ue0c8":
+      element: 车
+    "\ue404":
+      element: 亻
+    "\ue44b":
+      element: 禾
+    "\ue0bd":
+      element: 尸
+    "\ue14c":
+      element: 电
+    "\ue14e":
+      element: 爿
+    䶹:
+      element: 屮
+    "\ue069":
+      element: 鬼
+    "\ue41f":
+      element: 月
+    "\ue419":
+      element: 且
+    "\ue0c9":
+      element: 辛
+    "\ue003":
+      element: 丰
+    "\uf006":
+      element: 丌
+    覀:
+      element: 西
+    "\ue0d7":
+      element: 鳥
+    "\ue11e":
+      element: 千
+    "\uf00a":
+      element: 片
+    "\uf00b":
+      element: 爿
+    "\ue10b":
+      element: 月
+    "\ue157":
+      element: 馬
+    "\uf00c":
+      element: 米
+    "\ue424":
+      element: 儿
+    "\ue80a":
+      element: 衣
+    龵:
+      element: 手
+    "\ue153":
+      element: 虍
+    "\ue07e":
+      element: "\ue0b7"
+    "\ue159":
+      element: 烏
+    "\ue44f":
+      element: 厶
+    "\uf005":
+      element: 丱
+    "\ue06b":
+      element: 尸
+    "\ue007":
+      element: "\ue009"
+    㐄:
+      element: "\ue411"
+    匸:
+      element: 匚
+    "\ue418":
+      element: 匚
+    "\ue019":
+      element: 飠
+    "\ue432":
+      element: "\ue431"
+    彐:
+      element: "\ue431"
+    "\ue055":
+      element: 冊
+    "\ue410":
+      element: "\ue002"
+    "\ue106":
+      element: "\ue0b7"
+    "\ue11c":
+      element: 臣
+    "\ue020":
+      element: "\ue0bc"
+    "\ue423":
+      element: "\ue0bc"
+    冖:
+      element: "\ue0bc"
+    "\ue427":
+      element: "\ue0bc"
+    "\uf008":
+      element: 夕
+    "\ue838":
+      element: 鹿
+    "\ue452":
+      element: 十
+    "\ue0e3":
+      element: 八
+    "\ue0ba":
+      element: 八
+    "\ue446":
+      element: 八
+    "\ue088":
+      element: 八
+    "\ue02d":
+      element: "\ue028"
+    "\ue421":
+      element: "\ue028"
+    "\ue413":
+      element: 朩
+    "\ue04d":
+      element: 丄
+    "\ue014":
+      element: "\ue078"
+    "\ue029":
+      element: "\ue078"
+    糹:
+      element: 糸
+    丩:
+      element: 丱
+    凵:
+      element: 屮
+    "\ue02a":
+      element: 勹
+    "\ue831":
+      element: 勹
+    "\uebbd":
+      element: 勹
+    "\ue09b":
+      element: "\ue083"
+    "\uf004":
+      element: "\ue083"
+    "\ue41e":
+      element: "\ue077"
+    "\uebc2":
+      element: "\ue077"
+    "\ue16e":
+      element: "\ue0e8"
+    "\ue01f":
+      element: 龴
+    "\ue434":
+      element: 龴
+    廾:
+      element: 艹
+    卝:
+      element: 艹
+    卅:
+      element: 艹
+    "\ue050":
+      element: 艹
+    卌:
+      element: 艹
+    "\ue443":
+      element: "\ue068"
+    "\ue0d1":
+      element: 夫
+    "\ue00c":
+      element: 曰
+    "\ue070":
+      element: 曰
+    "\ue07c":
+      element: "\ue018"
+    "\ue10c":
+      element: "\ue018"
+    "\ue41a":
+      element: "\ue001"
+    "\ue448":
+      element: "\ue42d"
+    䒑:
+      element: 丷
+    "\ue440":
+      element: "\ue405"
+    "\ue023":
+      element: 巜
+    "\ue439":
+      element: 冂
+    "\ue14f":
+      element: 爫
+    "\uf01b":
+      element: 乂
   mapping_type: 2
 encoder:
   max_length: 4

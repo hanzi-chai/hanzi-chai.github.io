@@ -14,8 +14,6 @@ import type {
   CompoundCharacter,
   SVGGlyphWithBox,
 } from "./data";
-import type { CornerSpecifier } from "./topology";
-import type { Analysis } from "./config";
 import { first, range, sortBy } from "lodash-es";
 import type { BoundingBox } from "./bezier";
 import { classifier } from "./classifier";
@@ -222,7 +220,6 @@ type Serializer = (
 
 const sequentialSerializer: Serializer = (operandResults, glyph) => {
   const rest = {
-    corners: [0, 0, 0, 0] as CornerSpecifier,
     operator: glyph.operator,
     operandResults,
   };
@@ -273,7 +270,6 @@ const zhenmaSerializer: Serializer = (operandResults, glyph) => {
   }
   return {
     sequence,
-    corners: [0, 0, 0, 0] as CornerSpecifier,
     full: [],
     operator: glyph.operator,
     operandResults,
@@ -299,7 +295,6 @@ const regularize = (x: PartitionResult[], direction: Operator) => {
 
 // eslint-disable-next-line complexity
 const zhangmaSerializer: Serializer = (operandResults, glyph) => {
-  const corners: CornerSpecifier = [0, 0, 0, 0];
   const sequence: string[] = [];
   const full: string[] = [];
   if (
@@ -397,7 +392,6 @@ const zhangmaSerializer: Serializer = (operandResults, glyph) => {
   // 不考虑四角
   return {
     sequence,
-    corners,
     full,
     operator: glyph.operator,
     operandResults: regularizedResults,
@@ -419,7 +413,6 @@ const snow2Serializer: Serializer = (operandResults, glyph) => {
   ];
   return {
     sequence,
-    corners: [0, 0, 0, 0],
     full: [],
     operator: glyph.operator,
     operandResults,
@@ -493,7 +486,6 @@ const xkjdSerializer: Serializer = (operandResults, glyph, config) => {
   return {
     sequence: finalSequence,
     full,
-    corners: [0, 0, 0, 0],
     operator: glyph.operator,
     operandResults,
   };
@@ -519,7 +511,6 @@ const shouyouSerializer: Serializer = (operandResults, glyph, config) => {
   }
   return {
     sequence,
-    corners: [0, 0, 0, 0],
     full,
     operator: glyph.operator,
     operandResults,
@@ -551,17 +542,45 @@ const feihuaSerializer: Serializer = (operandResults, glyph, config) => {
   }
   return {
     sequence,
-    corners: [0, 0, 0, 0],
     full,
     operator: glyph.operator,
     operandResults,
   };
 };
 
-const serializerMap: Record<
-  Exclude<Analysis["serializer"], undefined>,
-  Serializer
-> = {
+const erbiSerializer: Serializer = (operandResults, glyph, config) => {
+  const order =
+    glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+  const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
+    order.findIndex((b) => b.index === i),
+  ).map((i) => operandResults[i]!);
+  const sequence: string[] = [];
+  for (const [index, part] of sortedOperandResults.entries()) {
+    if (index === sortedOperandResults.length - 1)
+      sequence.push(...part.sequence);
+    else sequence.push(part.sequence[0]!);
+  }
+  return {
+    sequence: sequence,
+    full: sequence,
+    operator: glyph.operator,
+    operandResults,
+  };
+};
+
+export const serializerTypes = [
+  "sequential",
+  "zhangma",
+  "zhenma",
+  "snow2",
+  "xkjd",
+  "shouyou",
+  "feihua",
+  "erbi",
+] as const;
+export type SerializerType = (typeof serializerTypes)[number];
+
+export const serializerMap: Record<SerializerType, Serializer> = {
   sequential: sequentialSerializer,
   zhangma: zhangmaSerializer,
   zhenma: zhenmaSerializer,
@@ -569,6 +588,7 @@ const serializerMap: Record<
   xkjd: xkjdSerializer,
   shouyou: shouyouSerializer,
   feihua: feihuaSerializer,
+  erbi: erbiSerializer,
 };
 
 /**

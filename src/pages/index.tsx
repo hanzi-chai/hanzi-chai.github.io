@@ -86,7 +86,8 @@ export default function HomeLayout() {
     ),
   );
 
-  const { snow, jdh, shouyou, xkjd, longma, bxm, mswb, ziyuan } = examples;
+  const { snow4, jdh, shouyou, xkjd, cqkm, longma, bxm, mswb, ziyuan } =
+    examples;
   const {
     easy,
     huma,
@@ -108,12 +109,12 @@ export default function HomeLayout() {
     {
       key: "1",
       label: "音码",
-      children: [snow, longma].map(prepare),
+      children: [snow4, longma].map(prepare),
     },
     {
       key: "2",
       label: "音形",
-      children: [jdh, shouyou, xkjd].map(prepare),
+      children: [jdh, shouyou, xkjd, cqkm].map(prepare),
     },
     {
       key: "3",
@@ -173,6 +174,7 @@ export default function HomeLayout() {
                     items,
                     onClick: (menu) => {
                       setConfigs((configs) => {
+                        console.log(menu.key);
                         configs[nanoid(9)] = examples[menu.key as Example];
                       });
                     },

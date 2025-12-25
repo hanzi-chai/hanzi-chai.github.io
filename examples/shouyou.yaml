@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: shouyou
 info:
   name: 首右拼音
@@ -228,29 +228,50 @@ form:
     言: 'y'
     糸: i
     竹: f
-  grouping:
-    "\ue0c6": 足
-    "\ue43a": 土
-    亻: 人
-    忄: 心
-    扌: 手
-    灬: 火
-    "\ue0d2": 月
-    "\ue43d": 人
-    廾: 艹
-    氵: 水
-    朩: 木
-    士: 土
-    钅: 金
-    氺: 水
-    "\ue00c": 日
-    讠: 言
-    曰: 日
-    "\ue102": 王
-    "\ue09e": 竹
-    纟: 糸
-    "\ue023": 糸
-    幺: 糸
+    "\ue0c6":
+      element: 足
+    "\ue43a":
+      element: 土
+    亻:
+      element: 人
+    忄:
+      element: 心
+    扌:
+      element: 手
+    灬:
+      element: 火
+    "\ue0d2":
+      element: 月
+    "\ue43d":
+      element: 人
+    廾:
+      element: 艹
+    氵:
+      element: 水
+    朩:
+      element: 木
+    士:
+      element: 土
+    钅:
+      element: 金
+    氺:
+      element: 水
+    "\ue00c":
+      element: 日
+    讠:
+      element: 言
+    曰:
+      element: 日
+    "\ue102":
+      element: 王
+    "\ue09e":
+      element: 竹
+    纟:
+      element: 糸
+    "\ue023":
+      element: 糸
+    幺:
+      element: 糸
 encoder:
   max_length: 4
   select_keys:

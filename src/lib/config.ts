@@ -1,4 +1,5 @@
 import type { Feature } from "./classifier";
+import { serializerMap } from "./compound";
 import type {
   Compound,
   PrimitiveRepertoire,
@@ -53,14 +54,7 @@ export interface Analysis {
   dynamic_customize?: Record<string, string[][]>;
   strong?: string[];
   weak?: string[];
-  serializer?:
-    | "sequential"
-    | "zhangma"
-    | "zhenma"
-    | "snow2"
-    | "xkjd"
-    | "shouyou"
-    | "feihua";
+  serializer?: keyof typeof serializerMap;
 }
 
 export interface Degenerator {

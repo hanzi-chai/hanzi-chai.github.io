@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: easy
 info:
   name: 易码
@@ -7,95 +7,50 @@ info:
   description: 形码单字四二顶
 data:
   repertoire:
-    :
+    "\uf003":
       unicode: 61443
       tygf: 0
       gb2312: 0
       name: 㗊上
       gf0014_id: null
       readings: []
-      glyphs:
-      - type: compound
-        operator: ⿰
-        operandList:
-        - 口
-        - 口
+      glyphs: [{type: compound, operator: ⿰, operandList: [口, 口]}]
       ambiguous: false
-    :
+    "\uf000":
       unicode: 61440
       tygf: 0
       gb2312: 0
       name: 其字头无横
       gf0014_id: null
       readings: []
-      glyphs:
-      - type: derived_component
-        source: 
-        strokes:
-        - feature: reference
-          index: 0
-        - feature: reference
-          index: 1
-        - feature: reference
-          index: 2
-        - feature: reference
-          index: 3
-        - feature: reference
-          index: 4
+      glyphs: [{type: derived_component, source: "\ue414", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
       ambiguous: false
-    :
+    "\uf002":
       unicode: 61442
       tygf: 0
       gb2312: 0
       name: 囱字框省
       gf0014_id: null
       readings: []
-      glyphs:
-      - type: derived_component
-        source: 
-        strokes:
-        - feature: reference
-          index: 0
-        - feature: reference
-          index: 1
-        - feature: reference
-          index: 2
+      glyphs: [{type: derived_component, source: "\ue02d", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
       ambiguous: false
-    :
+    "\uf001":
       unicode: 61441
       tygf: 0
       gb2312: 0
       name: 乑省
       gf0014_id: null
       readings: []
-      glyphs:
-      - type: derived_component
-        source: 乑
-        strokes:
-        - feature: reference
-          index: 1
-        - feature: reference
-          index: 2
-        - feature: reference
-          index: 3
-        - feature: reference
-          index: 4
-        - feature: reference
-          index: 5
+      glyphs: [{type: derived_component, source: 乑, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
       ambiguous: false
-    :
+    "\uf004":
       unicode: 61444
       tygf: 0
       gb2312: 0
       name: 㗊下
       gf0014_id: null
       readings: []
-      glyphs:
-      - type: compound
-        operator: ⿰
-        operandList:
-        - 口
-        - 口
+      glyphs: [{type: compound, operator: ⿰, operandList: [口, 口]}]
       ambiguous: false
     䒤:
       unicode: 17572
@@ -104,534 +59,199 @@ data:
       name: null
       gf0014_id: null
       readings: []
-      glyphs:
-      - type: compound
-        operator: ⿱
-        operandList:
-        - 艹
-        - 日
+      glyphs: [{type: compound, operator: ⿱, operandList: [艹, 日]}]
       ambiguous: false
   glyph_customization:
     胤:
       type: compound
-      tags:
-      - 横向包夹
+      tags: [横向包夹]
       operator: ⿻
-      operandList:
-      - 儿
-      - 
-      order:
-      - index: 0
-        strokes: 1
-      - index: 1
-        strokes: 0
-      - index: 0
-        strokes: 1
+      operandList: [儿, "\ue99d"]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 1}]
     蕞:
       type: compound
       operator: ⿱
-      operandList:
-      - 䒤
-      - 取
+      operandList: [䒤, 取]
     亓:
       type: compound
       tags: []
       operator: ⿱
-      operandList:
-      - 一
-      - 丌
+      operandList: [一, 丌]
     兽:
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 
+      operandList: ["\ue98a", "\ue800"]
     克:
       type: basic_component
-      strokes:
-      - feature: 横
-        start:
-        - 8
-        - 17
-        curveList:
-        - command: h
-          parameterList:
-          - 84
-      - feature: 竖
-        start:
-        - 50
-        - 4
-        curveList:
-        - command: v
-          parameterList:
-          - 30
-      - feature: 竖
-        start:
-        - 21
-        - 34
-        curveList:
-        - command: v
-          parameterList:
-          - 24
-      - feature: 横折
-        start:
-        - 21
-        - 34
-        curveList:
-        - command: h
-          parameterList:
-          - 58
-        - command: v
-          parameterList:
-          - 24
-      - feature: 横
-        start:
-        - 21
-        - 58
-        curveList:
-        - command: h
-          parameterList:
-          - 58
-      - feature: 撇
-        start:
-        - 38
-        - 58
-        curveList:
-        - command: c
-          parameterList:
-          - 0
-          - 6
-          - 0
-          - 26
-          - -30
-          - 35
-      - feature: 竖弯钩
-        start:
-        - 61
-        - 58
-        curveList:
-        - command: v
-          parameterList:
-          - 35
-        - command: h
-          parameterList:
-          - 32
+      strokes: [{feature: 横, start: [8, 17], curveList: [{command: h, parameterList: [84]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [30]}]}, {feature: 竖, start: [21, 34], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [21, 34], curveList: [{command: h, parameterList: [58]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [21, 58], curveList: [{command: h, parameterList: [58]}]}, {feature: 撇, start: [38, 58], curveList: [{command: c, parameterList: [0, 6, 0, 26, -30, 35]}]}, {feature: 竖弯钩, start: [61, 58], curveList: [{command: v, parameterList: [35]}, {command: h, parameterList: [32]}]}]
     囱:
       type: compound
       operator: ⿳
-      operandList:
-      - 
-      - 夂
-      - 一
+      operandList: ["\uf002", 夂, 一]
     古:
       type: basic_component
-      strokes:
-      - feature: 横
-        start:
-        - 10
-        - 40
-        curveList:
-        - command: h
-          parameterList:
-          - 80
-      - feature: 竖
-        start:
-        - 50
-        - 15
-        curveList:
-        - command: v
-          parameterList:
-          - 45
-      - feature: 竖
-        start:
-        - 30
-        - 60
-        curveList:
-        - command: v
-          parameterList:
-          - 30
-      - feature: 横折
-        start:
-        - 30
-        - 60
-        curveList:
-        - command: h
-          parameterList:
-          - 40
-        - command: v
-          parameterList:
-          - 30
-      - feature: 横
-        start:
-        - 30
-        - 90
-        curveList:
-        - command: h
-          parameterList:
-          - 40
+      strokes: [{feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [80]}]}, {feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [45]}]}, {feature: 竖, start: [30, 60], curveList: [{command: v, parameterList: [30]}]}, {feature: 横折, start: [30, 60], curveList: [{command: h, parameterList: [40]}, {command: v, parameterList: [30]}]}, {feature: 横, start: [30, 90], curveList: [{command: h, parameterList: [40]}]}]
     囟:
       type: compound
       operator: ⿳
-      operandList:
-      - 
-      - 乂
-      - 一
+      operandList: ["\uf002", 乂, 一]
     隺:
       type: compound
-      tags:
-      - 笔画搭挂
+      tags: [笔画搭挂]
       operator: ⿻
-      operandList:
-      - 冖
-      - 隹
-    :
+      operandList: [冖, 隹]
+    "\ue0e4":
       type: compound
       operator: ⿰
-      operandList:
-      - 吅
-      - 口
+      operandList: [吅, 口]
     兕:
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 兀
+      operandList: ["\ue060", 兀]
     衮:
       type: compound
       operator: ⿳
-      operandList:
-      - 六
-      - 厶
-      - 
-    :
+      operandList: [六, 厶, "\ue0b7"]
+    "\ue964":
       type: compound
       operator: ⿺
-      operandList:
-      - 
-      - 
+      operandList: ["\ue063", "\ue811"]
     草:
       type: compound
       operator: ⿱
-      operandList:
-      - 䒤
-      - 十
+      operandList: [䒤, 十]
     熏:
       type: compound
-      tags:
-      - 中竖截断
+      tags: [中竖截断]
       operator: ⿱
-      operandList:
-      - 千
-      - 黑
-    :
+      operandList: [千, 黑]
+    "\ue9be":
       type: compound
       operator: ⿲
-      operandList:
-      - 
-      - 矢
-      - 匕
+      operandList: ["\ue079", 矢, 匕]
     昊:
       type: compound
       operator: ⿱
-      operandList:
-      - 旦
-      - 大
+      operandList: [旦, 大]
     舍:
       type: compound
       tags: []
       operator: ⿱
-      operandList:
-      - 亼
-      - 古
-    :
+      operandList: [亼, 古]
+    "\ue9e0":
       type: compound
       operator: ⿻
-      operandList:
-      - 
-      - 水
+      operandList: ["\ue421", 水]
     丢:
       type: compound
       tags: []
       operator: ⿱
-      operandList:
-      - 壬
-      - 厶
-    :
+      operandList: [壬, 厶]
+    "\ue9d0":
       type: compound
-      tags:
-      - 横向包夹
+      tags: [横向包夹]
       operator: ⿻
-      operandList:
-      - 
-      - 米
-      order:
-      - index: 0
-        strokes: 1
-      - index: 1
-        strokes: 0
-      - index: 0
-        strokes: 0
+      operandList: ["\ue0e3", 米]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
     丝:
       type: compound
       operator: ⿰
-      operandList:
-      - 纟
-      - 纟
+      operandList: [纟, 纟]
     哀:
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 
+      operandList: ["\ue006", "\ue0b7"]
     司:
       type: basic_component
-      strokes:
-      - feature: 横折钩
-        start:
-        - 12
-        - 11
-        curveList:
-        - command: h
-          parameterList:
-          - 71
-        - command: v
-          parameterList:
-          - 83
-      - feature: 横
-        start:
-        - 15
-        - 30
-        curveList:
-        - command: h
-          parameterList:
-          - 57
-      - feature: 竖
-        start:
-        - 18
-        - 49
-        curveList:
-        - command: v
-          parameterList:
-          - 25
-      - feature: 横折
-        start:
-        - 18
-        - 49
-        curveList:
-        - command: h
-          parameterList:
-          - 38
-        - command: v
-          parameterList:
-          - 25
-      - feature: 横
-        start:
-        - 18
-        - 74
-        curveList:
-        - command: h
-          parameterList:
-          - 38
+      strokes: [{feature: 横折钩, start: [12, 11], curveList: [{command: h, parameterList: [71]}, {command: v, parameterList: [83]}]}, {feature: 横, start: [15, 30], curveList: [{command: h, parameterList: [57]}]}, {feature: 竖, start: [18, 49], curveList: [{command: v, parameterList: [25]}]}, {feature: 横折, start: [18, 49], curveList: [{command: h, parameterList: [38]}, {command: v, parameterList: [25]}]}, {feature: 横, start: [18, 74], curveList: [{command: h, parameterList: [38]}]}]
     兵:
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 
+      operandList: ["\ue400", "\ue450"]
     菖:
       type: compound
       operator: ⿱
-      operandList:
-      - 䒤
-      - 日
-    :
+      operandList: [䒤, 日]
+    "\ue9f0":
       type: compound
-      tags:
-      - 笔画搭挂
+      tags: [笔画搭挂]
       operator: ⿻
-      operandList:
-      - 鱼
-      - 人
+      operandList: [鱼, 人]
     㝵:
       type: compound
       operator: ⿱
-      operandList:
-      - 旦
-      - 寸
+      operandList: [旦, 寸]
     蔓:
       type: compound
       operator: ⿱
-      operandList:
-      - 䒤
-      - 
+      operandList: [䒤, "\ue891"]
     直:
       type: basic_component
-      strokes:
-      - feature: 横
-        start:
-        - 9
-        - 16
-        curveList:
-        - command: h
-          parameterList:
-          - 82
-      - feature: 竖
-        start:
-        - 50
-        - 4
-        curveList:
-        - command: v
-          parameterList:
-          - 26
-      - feature: 竖
-        start:
-        - 23
-        - 30
-        curveList:
-        - command: v
-          parameterList:
-          - 60
-      - feature: 横折
-        start:
-        - 23
-        - 30
-        curveList:
-        - command: h
-          parameterList:
-          - 54
-        - command: v
-          parameterList:
-          - 60
-      - feature: 横
-        start:
-        - 23
-        - 45
-        curveList:
-        - command: h
-          parameterList:
-          - 54
-      - feature: 横
-        start:
-        - 23
-        - 60
-        curveList:
-        - command: h
-          parameterList:
-          - 54
-      - feature: 横
-        start:
-        - 23
-        - 74
-        curveList:
-        - command: h
-          parameterList:
-          - 54
-      - feature: 横
-        start:
-        - 6
-        - 90
-        curveList:
-        - command: h
-          parameterList:
-          - 88
+      strokes: [{feature: 横, start: [9, 16], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [26]}]}, {feature: 竖, start: [23, 30], curveList: [{command: v, parameterList: [60]}]}, {feature: 横折, start: [23, 30], curveList: [{command: h, parameterList: [54]}, {command: v, parameterList: [60]}]}, {feature: 横, start: [23, 45], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [23, 60], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [23, 74], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [6, 90], curveList: [{command: h, parameterList: [88]}]}]
     葛:
       type: compound
       operator: ⿱
-      operandList:
-      - 䒤
-      - 匃
+      operandList: [䒤, 匃]
     堇:
       type: compound
       operator: ⿱
-      operandList:
-      - 革
-      - 二
-    :
+      operandList: [革, 二]
+    "\ue819":
       type: compound
       operator: ⿳
-      operandList:
-      - 十
-      - 从
-      - 冖
-    :
+      operandList: [十, 从, 冖]
+    "\ue8f5":
       type: compound
       operator: ⿳
-      operandList:
-      - 
-      - 米
-      - 一
-    :
+      operandList: ["\ue028", 米, 一]
+    "\ue8d5":
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 冖
+      operandList: ["\ue868", 冖]
     㐫:
       type: compound
       operator: ⿶
-      operandList:
-      - 凵
-      - 文
-      order:
-      - index: 1
-        strokes: 0
-      - index: 0
-        strokes: 0
+      operandList: [凵, 文]
+      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
     元:
       type: compound
       tags: []
       operator: ⿱
-      operandList:
-      - 一
-      - 兀
+      operandList: [一, 兀]
     㗊:
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 
-    :
+      operandList: ["\uf003", "\uf004"]
+    "\ue019":
       type: compound
       operator: ⿴
-      operandList:
-      - 囗
-      - 
+      operandList: [囗, "\ue009"]
     莫:
       type: compound
       operator: ⿱
-      operandList:
-      - 䒤
-      - 大
+      operandList: [䒤, 大]
     舆:
       type: compound
       operator: ⿱
-      operandList:
-      - 
-      - 
+      operandList: ["\ue867", "\ue450"]
     章:
       type: compound
       operator: ⿱
-      operandList:
-      - 音
-      - 十
-    :
+      operandList: [音, 十]
+    "\ue8e2":
       type: compound
       operator: ⿱
-      operandList:
-      - 䒑
-      - 八
+      operandList: [䒑, 八]
     爽:
       type: compound
       operator: ⿻
-      operandList:
-      - 大
-      - 㸚
+      operandList: [大, 㸚]
   tags:
-  - 兴字底
-  - 赢字框
-  - 微字框
-  - 同字心
-  - 戈部截断
+    - 兴字底
+    - 赢字框
+    - 微字框
+    - 同字心
+    - 戈部截断
 analysis:
   classifier:
     横折钩: 7
@@ -646,107 +266,203 @@ analysis:
       捺: 点
       提: 横
   selector:
-  - 根少优先
-  - 连续笔顺
-  - 能连不交
-  - 能散不连
-  - 取大优先
+    - 根少优先
+    - 连续笔顺
+    - 能连不交
+    - 能散不连
+    - 取大优先
   customize:
-    :
-    - 䒑
-    - 夫
+    "\ue00b":
+      - 䒑
+      - 夫
     末:
-    - '1'
-    - 木
+      - '1'
+      - 木
     直:
-    - 十
-    - 
-    - '1'
+      - 十
+      - "\uf000"
+      - '1'
     丈:
-    - '1'
-    - 乂
+      - '1'
+      - 乂
     甩:
-    - 
-    - 二
-    - '6'
+      - "\ue02a"
+      - 二
+      - '6'
     卅:
-    - '1'
-    - 川
+      - '1'
+      - 川
     州:
-    - 
-    - 川
+      - "\ue42d"
+      - 川
     重:
-    - '3'
-    - 車
-    - '1'
+      - '3'
+      - 車
+      - '1'
     孑:
-    - 了
-    - '1'
+      - 了
+      - '1'
     尹:
-    - 
-    - '3'
+      - "\ue431"
+      - '3'
     夹:
-    - '1'
-    - 丷
-    - 大
+      - '1'
+      - 丷
+      - 大
     巿:
-    - '1'
-    - 巾
-    :
-    - 口
-    - '1'
-    :
-    - '3'
-    - 止
+      - '1'
+      - 巾
+    "\ue0b8":
+      - 口
+      - '1'
+    "\ue049":
+      - '3'
+      - 止
     㒸:
-    - 丷
-    - 豕
+      - 丷
+      - 豕
     果:
-    - 日
-    - 木
-    :
-    - 肀
-    - 
+      - 日
+      - 木
+    "\ue048":
+      - 肀
+      - "\ue08c"
     垂:
-    - 千
-    - 艹
-    - 二
-    :
-    - 大
-    - 丷
+      - 千
+      - 艹
+      - 二
+    "\ue082":
+      - 大
+      - 丷
     余:
-    - 亼
-    - 朩
-    :
-    - 日
-    - 十
+      - 亼
+      - 朩
+    "\ue0eb":
+      - 日
+      - 十
     事:
-    - 
-    - 肀
+      - "\ue800"
+      - 肀
     主:
-    - '4'
-    - 王
+      - '4'
+      - 王
     佥:
-    - 亼
-    - 
-    - '1'
+      - 亼
+      - "\ue42d"
+      - '1'
     隶:
-    - 
-    - 氺
+      - "\ue431"
+      - 氺
     产:
-    - 
-    - 厂
+      - "\ue054"
+      - 厂
     朿:
-    - 木
-    - 冂
+      - 木
+      - 冂
     今:
-    - 亽
-    - '5'
+      - 亽
+      - '5'
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping_type: 1
   mapping:
-    : i
+    '1': ff
+    '2': jj
+    '3': ee
+    '4': ii
+    '5': vv
+    '6':
+      element: '5'
+    '7':
+      element: '5'
+    '10':
+      element: '12'
+    '11': g
+    '12': f
+    '13': d
+    '14': s
+    '15': a
+    '16':
+      element: '15'
+    '17':
+      element: '15'
+    '20':
+      element: '22'
+    '21': h
+    '22': j
+    '23': k
+    '24': l
+    '25': m
+    '26':
+      element: '25'
+    '27':
+      element: '25'
+    '30':
+      element: '33'
+    '31': t
+    '32': r
+    '33': e
+    '34': w
+    '35': q
+    '36':
+      element: '35'
+    '37':
+      element: '35'
+    '40':
+      element: '43'
+    '41': 'y'
+    '42': u
+    '43': i
+    '44': o
+    '45': p
+    '46':
+      element: '45'
+    '47':
+      element: '45'
+    '50':
+      element: '52'
+    '51': b
+    '52': v
+    '53': c
+    '54': x
+    '55': 'n'
+    '56':
+      element: '55'
+    '57':
+      element: '55'
+    '60':
+      element: '52'
+    '61':
+      element: '51'
+    '62':
+      element: '52'
+    '63':
+      element: '53'
+    '64':
+      element: '54'
+    '65':
+      element: '55'
+    '66':
+      element: '55'
+    '67':
+      element: '55'
+    '70':
+      element: '52'
+    '71':
+      element: '51'
+    '72':
+      element: '52'
+    '73':
+      element: '53'
+    '74':
+      element: '54'
+    '75':
+      element: '55'
+    '76':
+      element: '55'
+    '77':
+      element: '55'
+    "\ue052": i
     弓: a
     宀: t
     火: o
@@ -755,8 +471,7 @@ form:
     非: g
     扌: m
     羊: j
-    : h
-    '33': e
+    "\ue055": h
     冉: d
     衣: r
     刂: b
@@ -767,8 +482,8 @@ form:
     癶: f
     儿: e
     虎: x
-    : n
-    豆: n
+    "\ue8c6": 'n'
+    豆: 'n'
     走: k
     豕: m
     攴: l
@@ -779,7 +494,7 @@ form:
     疒: r
     不: i
     丷: i
-    幺: y
+    幺: 'y'
     阝: k
     彐: g
     也: d
@@ -787,32 +502,27 @@ form:
     石: d
     金: u
     兼: x
-    '34': w
     麻: l
-    : z
-    耒: y
+    "\ue069": z
+    耒: 'y'
     面: l
-    '42': u
     糸: v
     井: u
     冖: l
-    '12': f
     上: e
     衤: d
-    '21': h
     彑: c
     疋: j
     马: d
     巾: x
     乡: f
-    '54': x
     䒤: z
     㔾: o
     囗: e
     辛: u
     隹: e
     廿: l
-    田: y
+    田: 'y'
     酉: r
     己: u
     用: p
@@ -820,51 +530,47 @@ form:
     子: w
     业: e
     弋: k
-    贝: n
-    : a
+    贝: 'n'
+    "\ue0bc": a
     人: l
-    : x
+    "\ue04a": x
     纟: i
-    民: y
+    民: 'y'
     攵: h
-    : p
+    "\ue0a0": p
     彡: h
     矢: l
     丂: z
-    '52': v
     亼: g
     耂: h
     戈: d
     文: o
-    '23': k
     瓜: a
     旦: k
     丁: o
     匕: g
     穴: b
     韦: z
-    欠: y
+    欠: 'y'
     巴: c
     皮: m
     身: l
-    竹: n
+    竹: 'n'
     丰: a
     高: d
     禺: x
     二: j
-    '43': i
-    辰: y
+    辰: 'y'
     甘: i
-    丬: y
+    丬: 'y'
     甲: g
     吅: u
-    : n
+    "\ue42d": 'n'
     厂: q
     亦: r
     页: j
     又: h
     屮: g
-    '32': r
     歺: a
     山: c
     亠: x
@@ -875,7 +581,6 @@ form:
     缶: t
     户: t
     谷: i
-    '53': c
     耳: s
     广: w
     象: r
@@ -885,7 +590,6 @@ form:
     骨: x
     壬: x
     见: w
-    '51': b
     里: z
     言: w
     彳: x
@@ -895,27 +599,23 @@ form:
     亍: h
     鬼: i
     木: p
-    '25': m
     殳: d
     亥: a
-    夫: n
+    夫: 'n'
     艹: b
     毛: q
-    : n
+    "\ue800": 'n'
     匚: b
     瓦: u
     之: c
-    : k
+    "\ue057": k
     乂: o
     乍: c
     氵: h
-    '11': g
     牛: f
-    '44': o
     未: c
     黾: g
     可: i
-    '14': s
     牙: m
     豸: k
     无: k
@@ -923,18 +623,17 @@ form:
     艮: m
     鼠: e
     㡀: z
-    '24': l
     辶: a
     生: o
     申: j
     尤: l
     手: k
-    舌: y
-    句: n
+    舌: 'y'
+    句: 'n'
     兀: j
     忄: z
     冫: q
-    甫: n
+    甫: 'n'
     爪: b
     西: g
     亡: t
@@ -942,7 +641,6 @@ form:
     聿: f
     勹: k
     水: j
-    '13': d
     卩: x
     卯: f
     丑: x
@@ -952,21 +650,20 @@ form:
     示: e
     气: u
     立: z
-    '31': t
     长: j
     五: a
     予: t
-    : d
+    "\ue916": d
     犬: x
-    : p
+    "\ue064": p
     七: c
     丩: a
     且: q
-    禾: n
-    : o
-    雨: y
+    禾: 'n'
+    "\ue078": o
+    雨: 'y'
     云: f
-    : c
+    "\ue050": c
     口: s
     米: l
     入: i
@@ -974,506 +671,496 @@ form:
     千: e
     至: l
     壴: u
-    '15': a
     虫: o
     厶: k
     戋: z
     川: w
     冂: x
-    : s
-    : k
+    "\ue067": s
+    "\ue834": k
     卵: k
     六: z
     十: w
     讠: v
     歹: w
-    : z
+    "\ue063": z
     舟: t
     白: d
     王: g
-    '55': n
     土: c
-    '2': jj
     髟: z
     斤: o
     车: a
     大: u
     四: a
-    刀: n
+    刀: 'n'
     而: o
     臼: i
     束: r
-    '5': vv
     臣: q
-    自: n
-    : v
-    三: n
+    自: 'n'
+    "\ue001": v
+    三: 'n'
     月: l
     八: t
-    '1': ff
     鬲: q
-    丆: y
+    丆: 'y'
     羽: a
-    : v
+    "\ue03c": v
     食: f
     鱼: o
     鹿: b
-    女: y
-    '35': q
-    '45': p
+    女: 'y'
     小: u
     几: u
     方: c
     干: m
-    : j
+    "\ue028": j
     黑: k
-    '22': j
-    '3': ee
     工: u
-    : l
+    "\ue824": l
     尚: q
     九: w
     兔: i
-    '4': ii
     门: v
     齿: p
     目: e
-    : n
-    '41': y
-  grouping:
-    '6': '5'
-    : 刀
-    '57': '55'
-    : 匚
-    : 虫
-    : 彐
-    : 手
-    镸: 长
-    : 兔
-    : 辛
-    䒑: 丷
-    '46': '45'
-    '60': '52'
-    爫: 爪
-    虍: 虎
-    '36': '35'
-    : 冂
-    : 聿
-    '7': '5'
-    : 臣
-    乌: 鸟
-    '75': '55'
-    覀: 西
-    : 月
-    '72': '52'
-    : 
-    : 艹
-    '66': '55'
-    : 禾
-    : 卩
-    '76': '55'
-    : 疋
-    : 甘
-    '71': '51'
-    : 艮
-    旡: 无
-    : 日
-    : 夂
-    : 十
-    : 羊
-    : 
-    习: 羽
-    : 冂
-    : 屮
-    : 力
-    : 歺
-    : 手
-    : 雨
-    : 甘
-    '62': '52'
-    '65': '55'
-    : 羊
-    : 亦
-    : 竹
-    '20': '22'
-    巜: 川
-    : 戋
-    '16': '15'
-    : 八
-    : 卜
-    '37': '35'
-    丌: 兀
-    已: 己
-    : 㐄
-    : 缶
-    龸: 尚
-    : 聿
-    : 衣
-    '64': '54'
-    朩: 木
-    : 米
-    '10': '12'
-    : 卯
-    : 
-    : 羊
-    : 冫
-    : 小
-    車: 车
-    : 戊
-    : 小
-    '50': '52'
-    : 匕
-    : 月
-    丸: 九
-    : 片
-    : 尚
-    巛: 川
-    : 丂
-    钅: 金
-    灬: 火
-    : 立
-    : 儿
-    : 几
-    : 斤
-    戉: 戊
-    : 日
-    士: 土
-    : 十
-    : 片
-    : 水
-    '77': '55'
-    : 川
-    : 八
-    : 七
-    : 
-    : 乃
-    龷: 廿
-    : 彐
-    : 小
-    : 云
-    : 厂
-    : 
-    '61': '51'
-    : 水
-    : 手
-    : 立
-    : 竹
-    犭: 犬
-    : 用
-    : 火
-    : 母
-    : 亡
-    '67': '55'
-    : 冂
-    : 尸
-    : 小
-    : 丬
-    : 
-    : 月
-    : 高
-    : 屮
-    : 乃
-    : 人
-    曰: 日
-    : 手
-    : 鸟
-    亽: 亼
-    饣: 食
-    : 匕
-    : 车
-    : 匚
-    : 小
-    凵: 冂
-    : 又
-    肀: 聿
-    : 
-    : 彡
-    爿: 片
-    : 七
-    : 尸
-    '70': '52'
-    : 水
-    龶: 丰
-    : 足
-    礻: 示
-    '17': '15'
-    龵: 手
-    '74': '54'
-    '27': '25'
-    : 冫
-    '47': '45'
-    : 井
-    龰: 疋
-    : 衣
-    : 匕
-    '56': '55'
-    罒: 四
-    : 衣
-    '30': '33'
-    : 屮
-    '63': '53'
-    牜: 牛
-    : 亻
-    : 鼠
-    廾: 艹
-    㠯: 吅
-    廴: 辶
-    : 高
-    : 亦
-    '26': '25'
-    毋: 母
-    : 丰
-    '73': '53'
-    : 牛
-    尢: 尤
-    戶: 户
-    : 皮
-    氺: 水
-    : 豕
-    '40': '43'
-    : 高
-    : 
-    : 
-    : 臼
-    : 
-    : 
-    龴: 厶
+    "\ue09b": 'n'
+    "\ue427":
+      element: 刀
+    "\ue007":
+      element: 匚
+    "\ue0c1":
+      element: 虫
+    "\ue432":
+      element: 彐
+    "\ue002":
+      element: 手
+    镸:
+      element: 长
+    "\ue010":
+      element: 兔
+    "\ue0c9":
+      element: 辛
+    䒑:
+      element: 丷
+    爫:
+      element: 爪
+    虍:
+      element: 虎
+    "\ue439":
+      element: 冂
+    "\ue06d":
+      element: 聿
+    "\ue0d5":
+      element: 臣
+    乌:
+      element: 鸟
+    覀:
+      element: 西
+    "\ue988":
+      element: 月
+    "\ue0e3":
+      element: "\ue001"
+    "\ue096":
+      element: 艹
+    "\ue44b":
+      element: 禾
+    "\ue0b2":
+      element: 卩
+    "\ue03a":
+      element: 疋
+    "\uf000":
+      element: 甘
+    "\ue01c":
+      element: 艮
+    旡:
+      element: 无
+    "\ue00c":
+      element: 日
+    "\ue034":
+      element: 夂
+    "\ue068":
+      element: 十
+    "\ue042":
+      element: 羊
+    "\ue044":
+      element: "\ue001"
+    习:
+      element: 羽
+    "\ue060":
+      element: 冂
+    "\ue092":
+      element: 屮
+    "\ue401":
+      element: 力
+    "\ue098":
+      element: 歺
+    "\ue453":
+      element: 手
+    "\ue0d0":
+      element: 雨
+    "\ue099":
+      element: 甘
+    "\ue016":
+      element: 羊
+    "\ue42e":
+      element: 亦
+    "\ue09e":
+      element: 竹
+    巜:
+      element: 川
+    "\ue03f":
+      element: 戋
+    "\ue450":
+      element: 八
+    "\ue018":
+      element: 卜
+    丌:
+      element: 兀
+    已:
+      element: 己
+    "\ue411":
+      element: 㐄
+    "\ue021":
+      element: 缶
+    龸:
+      element: 尚
+    "\ue06e":
+      element: 聿
+    "\ue422":
+      element: 衣
+    朩:
+      element: 木
+    "\ue0d8":
+      element: 米
+    "\ue8d9":
+      element: 卯
+    "\ue072":
+      element: "\ue0a0"
+    "\ue093":
+      element: 羊
+    "\ue00d":
+      element: 冫
+    "\ue06c":
+      element: 小
+    車:
+      element: 车
+    "\ue0ad":
+      element: 戊
+    "\ue442":
+      element: 小
+    "\ue44f":
+      element: 匕
+    "\ue0d2":
+      element: 月
+    丸:
+      element: 九
+    "\ue0e0":
+      element: 片
+    "\ue0c3":
+      element: 尚
+    巛:
+      element: 川
+    "\ue004":
+      element: 丂
+    钅:
+      element: 金
+    灬:
+      element: 火
+    "\ue054":
+      element: 立
+    "\ue424":
+      element: 儿
+    "\ue0d6":
+      element: 几
+    "\ue400":
+      element: 斤
+    戉:
+      element: 戊
+    "\ue070":
+      element: 日
+    士:
+      element: 土
+    "\ue413":
+      element: 十
+    "\ue0e1":
+      element: 片
+    "\uf001":
+      element: 水
+    "\ue07f":
+      element: 川
+    "\ue446":
+      element: 八
+    "\ue416":
+      element: 七
+    "\ue40c":
+      element: "\ue057"
+    "\ue05d":
+      element: 乃
+    龷:
+      element: 廿
+    "\ue431":
+      element: 彐
+    "\ue073":
+      element: 小
+    "\ue00a":
+      element: 云
+    "\ue024":
+      element: 厂
+    "\uf002":
+      element: "\ue028"
+    "\ue0d9":
+      element: 水
+    "\ue410":
+      element: 手
+    "\ue062":
+      element: 立
+    "\ue014":
+      element: 竹
+    犭:
+      element: 犬
+    "\ue08c":
+      element: 用
+    "\ue42f":
+      element: 火
+    "\ue0be":
+      element: 母
+    "\ue811":
+      element: 亡
+    "\ue02a":
+      element: 冂
+    "\ue031":
+      element: 尸
+    "\ue03e":
+      element: 小
+    "\ue012":
+      element: 丬
+    "\ue44d":
+      element: "\ue055"
+    "\ue083":
+      element: 月
+    "\ue006":
+      element: 高
+    "\ue04e":
+      element: 屮
+    "\ue441":
+      element: 乃
+    "\ue43d":
+      element: 人
+    曰:
+      element: 日
+    "\ue075":
+      element: 手
+    "\ue0da":
+      element: 鸟
+    亽:
+      element: 亼
+    饣:
+      element: 食
+    "\ue079":
+      element: 匕
+    "\ue0c8":
+      element: 车
+    "\ue009":
+      element: 匚
+    "\ue051":
+      element: 小
+    凵:
+      element: 冂
+    "\ue434":
+      element: 又
+    肀:
+      element: 聿
+    "\ue423":
+      element: "\ue0bc"
+    "\ue41e":
+      element: 彡
+    爿:
+      element: 片
+    "\ue417":
+      element: 七
+    "\ue06b":
+      element: 尸
+    "\ue059":
+      element: 水
+    龶:
+      element: 丰
+    "\ue0c6":
+      element: 足
+    礻:
+      element: 示
+    龵:
+      element: 手
+    "\ue088":
+      element: 冫
+    "\ue415":
+      element: 井
+    龰:
+      element: 疋
+    "\ue0b7":
+      element: 衣
+    "\ue011":
+      element: 匕
+    罒:
+      element: 四
+    "\ue07e":
+      element: 衣
+    "\ue065":
+      element: 屮
+    牜:
+      element: 牛
+    "\ue80e":
+      element: 亻
+    "\ue959":
+      element: 鼠
+    廾:
+      element: 艹
+    㠯:
+      element: 吅
+    廴:
+      element: 辶
+    "\ue804":
+      element: 高
+    "\ue025":
+      element: 亦
+    毋:
+      element: 母
+    "\ue000":
+      element: 丰
+    "\ue029":
+      element: 牛
+    尢:
+      element: 尤
+    戶:
+      element: 户
+    "\ue0ce":
+      element: 皮
+    氺:
+      element: 水
+    "\ue420":
+      element: 豕
+    "\ue0ac":
+      element: 高
+    "\ue089":
+      element: "\ue001"
+    "\ue40a":
+      element: "\ue050"
+    "\ue421":
+      element: 臼
+    "\ue036":
+      element: "\ue04a"
+    "\ue032":
+      element: "\ue0a0"
+    龴:
+      element: 厶
 encoder:
   max_length: 3
   select_keys:
-  - ';'
-  - '_'
+    - ;
+    - _
   auto_select_length: 2
   sources:
     s0:
       object: null
       next: s1
     s1:
-      object:
-        type: 字根
-        rootIndex: 1
+      object: {type: 字根, rootIndex: 1}
       index: 0
       next: c0
     s2:
-      object:
-        type: 字根
-        rootIndex: 2
+      object: {type: 字根, rootIndex: 2}
       index: 0
       next: c1
     s3:
-      object:
-        type: 二笔
-        rootIndex: 1
-        strokeIndex: 1
+      object: {type: 二笔, rootIndex: 1, strokeIndex: 1}
       index: 0
       next: s6
     s4:
-      object:
-        type: 二笔
-        rootIndex: 2
-        strokeIndex: 1
+      object: {type: 二笔, rootIndex: 2, strokeIndex: 1}
       index: 0
       next: null
     s5:
-      object:
-        type: 字根
-        rootIndex: -1
+      object: {type: 字根, rootIndex: -1}
       index: 0
       next: null
     s6:
-      object:
-        type: 笔画
-        rootIndex: 1
-        strokeIndex: -1
+      object: {type: 笔画, rootIndex: 1, strokeIndex: -1}
       index: 1
       next: null
   conditions:
     c0:
-      object:
-        type: 字根
-        rootIndex: 2
+      object: {type: 字根, rootIndex: 2}
       operator: 存在
       positive: s2
       negative: s3
     c1:
-      object:
-        type: 字根
-        rootIndex: 3
+      object: {type: 字根, rootIndex: 3}
       operator: 存在
       positive: s5
       negative: s4
   short_code:
     - length_equal: 1
-      schemes:
-        - { prefix: 2 }
+      schemes: [{prefix: 2}]
   rules:
-  - length_equal: 2
-    formula: AaAbBa
-  - length_equal: 3
-    formula: AaBaCa
-  - length_in_range:
-    - 4
-    - 20
-    formula: AaBaZa
+    - length_equal: 2
+      formula: AaAbBa
+    - length_equal: 3
+      formula: AaBaCa
+    - length_in_range: [4, 20]
+      formula: AaBaZa
 optimization:
   objective:
     characters_short:
-      tiers:
-      - top: 3000
-        duplication: 4.0
-        levels: []
-      duplication: 200.0
-      key_distribution: 2.0
+      tiers: [{top: 3000, duplication: 4, levels: []}]
+      duplication: 200
+      key_distribution: 2
       new_key_equivalence_modified: 0.01
       new_pair_equivalence: 0.01
-      levels:
-      - length: 2
-        frequency: -2.0
+      levels: [{length: 2, frequency: -2}]
   constraints:
     elements:
-    - element: '11'
-      keys:
-      - 'g'
-    - element: '12'
-      keys:
-      - 'f'
-    - element: '13'
-      keys:
-      - 'd'
-    - element: '14'
-      keys:
-      - 's'
-    - element: '15'
-      keys:
-      - 'a'
-    - element: '21'
-      keys:
-      - 'h'
-    - element: '22'
-      keys:
-      - 'j'
-    - element: '23'
-      keys:
-      - 'k'
-    - element: '24'
-      keys:
-      - 'l'
-    - element: '25'
-      keys:
-      - 'm'
-    - element: '31'
-      keys:
-      - 't'
-    - element: '32'
-      keys:
-      - 'r'
-    - element: '33'
-      keys:
-      - 'e'
-    - element: '34'
-      keys:
-      - 'w'
-    - element: '35'
-      keys:
-      - 'q'
-    - element: '41'
-      keys:
-      - 'y'
-    - element: '42'
-      keys:
-      - 'u'
-    - element: '43'
-      keys:
-      - 'i'
-    - element: '44'
-      keys:
-      - 'o'
-    - element: '45'
-      keys:
-      - 'p'
-    - element: '51'
-      keys:
-      - 'b'
-    - element: '52'
-      keys:
-      - 'v'
-    - element: '53'
-      keys:
-      - 'c'
-    - element: '54'
-      keys:
-      - 'x'
-    - element: '55'
-      keys:
-      - 'n'
-    - element: '1'
-      keys:
-      - 'f'
-    - element: '2'
-      keys:
-      - 'j'
-    - element: '3'
-      keys:
-      - 'e'
-    - element: '4'
-      keys:
-      - 'i'
-    - element: '5'
-      keys:
-      - 'v'
+      - {element: '11', keys: [g]}
+      - {element: '12', keys: [f]}
+      - {element: '13', keys: [d]}
+      - {element: '14', keys: [s]}
+      - {element: '15', keys: [a]}
+      - {element: '21', keys: [h]}
+      - {element: '22', keys: [j]}
+      - {element: '23', keys: [k]}
+      - {element: '24', keys: [l]}
+      - {element: '25', keys: [m]}
+      - {element: '31', keys: [t]}
+      - {element: '32', keys: [r]}
+      - {element: '33', keys: [e]}
+      - {element: '34', keys: [w]}
+      - {element: '35', keys: [q]}
+      - {element: '41', keys: ['y']}
+      - {element: '42', keys: [u]}
+      - {element: '43', keys: [i]}
+      - {element: '44', keys: [o]}
+      - {element: '45', keys: [p]}
+      - {element: '51', keys: [b]}
+      - {element: '52', keys: [v]}
+      - {element: '53', keys: [c]}
+      - {element: '54', keys: [x]}
+      - {element: '55', keys: ['n']}
+      - {element: '1', keys: [f]}
+      - {element: '2', keys: [j]}
+      - {element: '3', keys: [e]}
+      - {element: '4', keys: [i]}
+      - {element: '5', keys: [v]}
     indices:
-    - index: 1
+      - {index: 1}
     element_indices:
-    - element: 白
-      index: 0
-      keys:
-      - 'd'
-    - element: 勹
-      index: 0
-      keys:
-      - 's'
-      - 'd'
-      - 'f'
-      - 'k'
-      - 'j'
-      - 'l'
-      - 'e'
-      - 'r'
-      - 'i'
-      - 'o'
-      - 'u'
-    - element: 不
-      index: 0
-      keys:
-      - 'e'
-      - 'r'
-      - 'u'
-      - 'i'
-      - 'o'
-      - 's'
-      - 'd'
-      - 'f'
-      - 'j'
-      - 'k'
-      - 'l'
-    - element: 口
-      index: 0
-      keys:
-      - 'e'
-      - 'r'
-      - 'u'
-      - 'i'
-      - 'o'
-      - 's'
-      - 'd'
-      - 'f'
-      - 'j'
-      - 'k'
-      - 'l'
+      - {element: 白, index: 0, keys: [d]}
+      - {element: 勹, index: 0, keys: [s, d, f, k, j, l, e, r, i, o, u]}
+      - {element: 不, index: 0, keys: [e, r, u, i, o, s, d, f, j, k, l]}
+      - {element: 口, index: 0, keys: [e, r, u, i, o, s, d, f, j, k, l]}
   metaheuristic:
     algorithm: SimulatedAnnealing
     parameters:
-      t_max: 1.0
+      t_max: 1
       t_min: 0.00001
       steps: 100000000
     report_after: 0.75

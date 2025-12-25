@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: jdh
 info:
   name: 简单鹤
@@ -293,6 +293,11 @@ form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping_type: 1
   mapping:
+    '1': d
+    '2': p
+    '3': u
+    '4': h
+    '5': r
     鹤声-a: a
     鹤声-b: b
     鹤声-c: c
@@ -356,11 +361,6 @@ form:
     鹤韵-uo: o
     鹤韵-v: v
     鹤韵-ve: t
-    '1': d
-    '2': p
-    '3': u
-    '4': h
-    '5': r
     "\ue09e": 'n'
     "\ue0bc": g
     "\ue42d": h
@@ -457,91 +457,174 @@ form:
     子: a
     足: g
     㐅: 'y'
-  grouping:
-    "\ue03e": "\ue42d"
-    自: 目
-    "\ue43f": 匕
-    走: 辶
-    "\ue0c8": 车
-    牜: 牛
-    三: 二
-    "\ue0d0": 雨
-    巳: 巴
-    音: 讠
-    言: 讠
-    末: 未
-    "\ue012": 丬
-    厂: 广
-    "\ue029": 牛
-    礻: 衤
-    心: 忄
-    冖: 宀
-    龴: 厶
-    氺: 水
-    犬: 犭
-    "\ue437": 止
-    阝: 卩
-    㔾: 巴
-    死: 夕
-    "\ue0ed": 鬼
-    朩: 木
-    乂: 㐅
-    门: 冂
-    攵: 文
-    曰: 日
-    歹: 夕
-    爫: "\ue42d"
-    "\ue432": 彐
-    "\ue011": 匕
-    甘: 廿
-    可: 丁
-    夂: 文
-    少: 小
-    "\ue078": 人
-    "\ue0d6": 几
-    "\ue020": "\ue0bc"
-    "\ue055": 册
-    "\ue0c6": 足
-    戋: 戈
-    丷: 八
-    "\ue0b2": 卩
-    白: 臼
-    "\ue050": 艹
-    "\ue0d2": 月
-    "\ue43a": 土
-    龵: 手
-    已: 巴
-    己: 巴
-    "\ue43d": 人
-    千: 干
-    刂: 刀
-    廴: 辶
-    亠: 宀
-    士: 土
-    弋: 戈
-    竹: "\ue09e"
-    "\ue00c": 日
-    "\ue043": 大
-    "\ue05a": 王
-    龶: 王
-    丰: 王
-    "\ue079": 匕
-    "\ue02a": 冂
-    句: 勿
-    "\ue068": 十
-    七: 匕
-    "\ue416": 匕
-    "\ue03f": 戈
-    朱: 未
-    失: 未
-    夫: 未
-    丝: 纟
-    "\ue051": 小
-    釆: "\ue42d"
-    "\ue414": 廿
-    罒: 皿
-    "\ue06c": 小
-    覀: 西
+    "\ue03e":
+      element: "\ue42d"
+    自:
+      element: 目
+    "\ue43f":
+      element: 匕
+    走:
+      element: 辶
+    "\ue0c8":
+      element: 车
+    牜:
+      element: 牛
+    三:
+      element: 二
+    "\ue0d0":
+      element: 雨
+    巳:
+      element: 巴
+    音:
+      element: 讠
+    言:
+      element: 讠
+    末:
+      element: 未
+    "\ue012":
+      element: 丬
+    厂:
+      element: 广
+    "\ue029":
+      element: 牛
+    礻:
+      element: 衤
+    心:
+      element: 忄
+    冖:
+      element: 宀
+    龴:
+      element: 厶
+    氺:
+      element: 水
+    犬:
+      element: 犭
+    "\ue437":
+      element: 止
+    阝:
+      element: 卩
+    㔾:
+      element: 巴
+    死:
+      element: 夕
+    "\ue0ed":
+      element: 鬼
+    朩:
+      element: 木
+    乂:
+      element: 㐅
+    门:
+      element: 冂
+    攵:
+      element: 文
+    曰:
+      element: 日
+    歹:
+      element: 夕
+    爫:
+      element: "\ue42d"
+    "\ue432":
+      element: 彐
+    "\ue011":
+      element: 匕
+    甘:
+      element: 廿
+    可:
+      element: 丁
+    夂:
+      element: 文
+    少:
+      element: 小
+    "\ue078":
+      element: 人
+    "\ue0d6":
+      element: 几
+    "\ue020":
+      element: "\ue0bc"
+    "\ue055":
+      element: 册
+    "\ue0c6":
+      element: 足
+    戋:
+      element: 戈
+    丷:
+      element: 八
+    "\ue0b2":
+      element: 卩
+    白:
+      element: 臼
+    "\ue050":
+      element: 艹
+    "\ue0d2":
+      element: 月
+    "\ue43a":
+      element: 土
+    龵:
+      element: 手
+    已:
+      element: 巴
+    己:
+      element: 巴
+    "\ue43d":
+      element: 人
+    千:
+      element: 干
+    刂:
+      element: 刀
+    廴:
+      element: 辶
+    亠:
+      element: 宀
+    士:
+      element: 土
+    弋:
+      element: 戈
+    竹:
+      element: "\ue09e"
+    "\ue00c":
+      element: 日
+    "\ue043":
+      element: 大
+    "\ue05a":
+      element: 王
+    龶:
+      element: 王
+    丰:
+      element: 王
+    "\ue079":
+      element: 匕
+    "\ue02a":
+      element: 冂
+    句:
+      element: 勿
+    "\ue068":
+      element: 十
+    七:
+      element: 匕
+    "\ue416":
+      element: 匕
+    "\ue03f":
+      element: 戈
+    朱:
+      element: 未
+    失:
+      element: 未
+    夫:
+      element: 未
+    丝:
+      element: 纟
+    "\ue051":
+      element: 小
+    釆:
+      element: "\ue42d"
+    "\ue414":
+      element: 廿
+    罒:
+      element: 皿
+    "\ue06c":
+      element: 小
+    覀:
+      element: 西
 encoder:
   max_length: 4
   select_keys:
@@ -549,8 +632,7 @@ encoder:
     - ;
   short_code:
     - length_equal: 1
-      schemes:
-        - { prefix: 3 }
+      schemes: [{prefix: 3}]
   sources:
     s0:
       object: null

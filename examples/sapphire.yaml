@@ -1,7 +1,7 @@
-version: '0.2'
+version: '0.3'
 source: sapphire
 info:
-  name: 蓝宝石（第三代）
+  name: 蓝宝石
   author: 秋风
   version: 3.0.0
   description: 乱序字根、二笔补码的低重纯形字词方案
@@ -128,70 +128,42 @@ analysis:
       - "\ue445"
 form:
   alphabet: qwertyuiopasdfghjklxcvbnm
-  grouping:
-    '10': '1'
-    '20': '2'
-    '30': '3'
-    '40': '4'
-    '50': '5'
-    "\ue0c9": 辛
-    "\ue424": 儿
-    "\ue451": 止
-    "\ue008": 丁
-    "\ue070": 日
-    "\ue030": "\ue016"
-    "\ue0c8": 车
-    牜: 牛
-    朩: 木
-    "\ue446": 八
-    "\ue0c2": 舌
-    "\uf000": 黑
-    孑: 子
-    "\ue020": "\ue0bc"
-    "\ue413": 十
-    "\ue08c": 用
-    "\ue0d0": 雨
-    "\ue43d": 人
-    "\uf004": "\ue0bb"
-    "\ue401": 力
-    "\ue403": 勹
-    "\ue44b": 禾
-    "\uf005": 肀
-    "\ue0d6": 几
-    "\ue087": 八
-    "\ue011": 匕
-    "\ue439": 冂
-    "\ue102": 王
-    "\ue043": 大
-    "\ue822": 北
-    "\ue838": 鹿
-    "\ue04c": 木
   mapping:
     '1': f
     '2': j
     '3': e
     '4': i
     '5': v
+    '10':
+      element: '1'
     '11': g
     '12': f
     '13': d
     '14': s
     '15': a
+    '20':
+      element: '2'
     '21': h
     '22': j
     '23': k
     '24': l
     '25': m
+    '30':
+      element: '3'
     '31': t
     '32': r
     '33': e
     '34': w
     '35': q
+    '40':
+      element: '4'
     '41': 'y'
     '42': u
     '43': i
     '44': o
     '45': p
+    '50':
+      element: '5'
     '51': b
     '52': v
     '53': c
@@ -622,6 +594,70 @@ form:
     相: t
     "\ue039": k
     "\uf007": w
+    "\ue0c9":
+      element: 辛
+    "\ue424":
+      element: 儿
+    "\ue451":
+      element: 止
+    "\ue008":
+      element: 丁
+    "\ue070":
+      element: 日
+    "\ue030":
+      element: "\ue016"
+    "\ue0c8":
+      element: 车
+    牜:
+      element: 牛
+    朩:
+      element: 木
+    "\ue446":
+      element: 八
+    "\ue0c2":
+      element: 舌
+    "\uf000":
+      element: 黑
+    孑:
+      element: 子
+    "\ue020":
+      element: "\ue0bc"
+    "\ue413":
+      element: 十
+    "\ue08c":
+      element: 用
+    "\ue0d0":
+      element: 雨
+    "\ue43d":
+      element: 人
+    "\uf004":
+      element: "\ue0bb"
+    "\ue401":
+      element: 力
+    "\ue403":
+      element: 勹
+    "\ue44b":
+      element: 禾
+    "\uf005":
+      element: 肀
+    "\ue0d6":
+      element: 几
+    "\ue087":
+      element: 八
+    "\ue011":
+      element: 匕
+    "\ue439":
+      element: 冂
+    "\ue102":
+      element: 王
+    "\ue043":
+      element: 大
+    "\ue822":
+      element: 北
+    "\ue838":
+      element: 鹿
+    "\ue04c":
+      element: 木
 encoder:
   max_length: 4
   select_keys:

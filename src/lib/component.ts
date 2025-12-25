@@ -10,8 +10,8 @@ import type {
 import { defaultDegenerator, generateSliceBinaries } from "./degenerator";
 import { select } from "./selector";
 import { bisectLeft, bisectRight } from "d3-array";
-import type { CornerSpecifier, RenderedGlyph, Topology } from "./topology";
-import { findCorners, findTopology, renderSVGGlyph } from "./topology";
+import type { RenderedGlyph, Topology } from "./topology";
+import { findTopology, renderSVGGlyph } from "./topology";
 import { mergeClassifier, type Classifier } from "./classifier";
 import { isComponent } from "./utils";
 import type { AnalysisConfig } from "./repertoire";
@@ -128,6 +128,26 @@ export const getComponentScheme = (
       full: [component.name],
       operator: undefined,
     };
+  if (config.analysis.serializer === "erbi") {
+    const firstStroke = component.glyph[0]!;
+    const secondStroke = component.glyph[1];
+    const first = classifier[firstStroke.feature].toString();
+    const second = secondStroke
+      ? classifier[secondStroke.feature].toString()
+      : "0";
+    const sequence = [first + second];
+    if (component.glyph.length > 2) {
+      const lastStroke = component.glyph[component.glyph.length - 1]!;
+      const last = classifier[lastStroke.feature].toString();
+      sequence.push(last);
+    }
+    return {
+      strokes: component.glyph.length,
+      sequence,
+      full: sequence,
+      operator: undefined,
+    };
+  }
   const rootMap = new Map<number, string>(
     component.glyph.map((stroke, index) => {
       const binary = 1 << (component.glyph.length - 1 - index);

@@ -1,0 +1,731 @@
+version: '0.3'
+source: cqkm
+info:
+  name: 超强快码
+  author: 付东升
+  version: 9.3.0
+  description: 26 键汉字音形码输入法
+analysis:
+  classifier: {}
+  degenerator:
+    feature:
+      提: 横
+      捺: 点
+    no_cross: false
+  selector:
+    - 结构完整
+    - 根少优先
+    - 能连不交
+    - 能散不连
+    - 全符笔顺
+    - 取大优先
+  serializer: erbi
+form:
+  alphabet: qwertyuiopasdfghjklzxcvbnm
+  mapping:
+    '1': k
+    '2': d
+    '3': e
+    '4': i
+    '5': c
+    '10':
+      element: '1'
+    '11': j
+    '12': m
+    '13': h
+    '14': l
+    '15': k
+    '20':
+      element: '2'
+    '21': f
+    '22': a
+    '23': g
+    '24': s
+    '25': d
+    '30':
+      element: '3'
+    '31': r
+    '32': q
+    '33': t
+    '34': w
+    '35': e
+    '40':
+      element: '4'
+    '41': u
+    '42': p
+    '43': 'y'
+    '44': o
+    '45': i
+    '50':
+      element: '5'
+    '51': v
+    '52': 'n'
+    '53': b
+    '54': x
+    '55': c
+    首字母-b: b
+    首字母-p: p
+    首字母-m: m
+    首字母-f: f
+    首字母-d: d
+    首字母-t: t
+    首字母-n: 'n'
+    首字母-l: l
+    首字母-g: g
+    首字母-k: k
+    首字母-h: h
+    首字母-j: j
+    首字母-q: q
+    首字母-x: x
+    首字母-z: z
+    首字母-c: c
+    首字母-s: s
+    首字母-r: r
+    首字母-a: a
+    首字母-o: o
+    首字母-e: e
+    首字母-ê:
+      element: 首字母-e
+    首字母-y: 'y'
+    首字母-w: w
+    金: j
+    钅:
+      element: 金
+    木: f
+    朩:
+      element: 木
+    水: s
+    氵:
+      element: 水
+    土: l
+    士:
+      element: 土
+    日: 'n'
+    月: c
+    "\ue0d2":
+      element: 月
+    人: h
+    亻:
+      element: 人
+    口: g
+    手: u
+    扌:
+      element: 手
+    艹: a
+    彳: i
+    小: k
+    "\ue03e":
+      element: 小
+    辶: v
+    "\ue43d":
+      element: 人
+    "\ue442":
+      element: 小
+    "\ue051":
+      element: 小
+    氺:
+      element: 水
+    曰:
+      element: 日
+encoder:
+  max_length: 4
+  auto_select_length: 2
+  rules:
+    - length_equal: 2
+      formula: AaAbBaBb
+    - length_equal: 3
+      formula: AaBaCaCb
+    - length_in_range: [4, 10]
+      formula: AaBaCaZa
+  sources:
+    s0:
+      object: null
+      next: s1
+    s1:
+      object: {type: 字音, subtype: 首字母}
+      next: s2
+    s2:
+      object: {type: 字根, rootIndex: 1}
+      next: c0
+    s3:
+      object: {type: 字根, rootIndex: 2}
+      next: c1
+    s4:
+      object: {type: 字根, rootIndex: 1}
+      next: s5
+    s5:
+      object: {type: 字根, rootIndex: 1}
+      next: null
+    s6:
+      object: {type: 字根, rootIndex: 3}
+      next: null
+    s7:
+      object: {type: 字根, rootIndex: 2}
+      next: null
+  conditions:
+    c0:
+      object: {type: 字根, rootIndex: 2}
+      operator: 存在
+      positive: s3
+      negative: s4
+    c1:
+      object: {type: 字根, rootIndex: 3}
+      operator: 存在
+      positive: s6
+      negative: s7
+data:
+  character_set: minimal
+  glyph_customization:
+    亼:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue43d", 一]
+      parameters: {gap2: 10}
+    走:
+      type: compound
+      operator: ⿱
+      operandList: [土, 龰]
+      parameters: {gap2: 0}
+    足:
+      type: compound
+      operator: ⿱
+      operandList: [口, 龰]
+      parameters: {gap2: 0}
+    "\ue0c6":
+      type: compound
+      operator: ⿱
+      operandList: [口, 止]
+    隹:
+      type: compound
+      operator: ⿰
+      operandList: [亻, "\ue428"]
+      parameters: {gap2: -9}
+    元:
+      type: compound
+      operator: ⿱
+      operandList: [二, 儿]
+      parameters: {gap2: 0}
+    云:
+      type: compound
+      operator: ⿱
+      operandList: [二, 厶]
+      parameters: {gap2: 0}
+    古:
+      type: compound
+      operator: ⿱
+      operandList: [十, 口]
+      parameters: {gap2: 0}
+    石:
+      type: compound
+      operator: ⿸
+      operandList: [丆, 口]
+    示:
+      type: compound
+      operator: ⿱
+      operandList: [二, 小]
+      parameters: {gap2: 0}
+    支:
+      type: compound
+      operator: ⿱
+      operandList: [十, 又]
+      parameters: {gap2: 0}
+    少:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue442", 丿]
+    早:
+      type: compound
+      operator: ⿱
+      operandList: [日, 十]
+      parameters: {gap2: 0}
+    先:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue029", 儿]
+      parameters: {gap2: 0}
+    辛:
+      type: compound
+      operator: ⿱
+      operandList: [立, 十]
+      parameters: {gap2: 0}
+    并:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 开]
+      parameters: {gap2: 0}
+    占:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue018", 口]
+      parameters: {gap2: 0}
+    今:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue43d", "\ue0f3"]
+    令:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue43d", "\ue09f"]
+    发:
+      type: compound
+      operator: ⿸
+      operandList: ["\ue0fd", 又]
+      order: [{index: 0, strokes: 2}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    皮:
+      type: compound
+      operator: ⿸
+      operandList: ["\ue0ce", 又]
+    舌:
+      type: compound
+      operator: ⿱
+      operandList: [千, 口]
+      parameters: {gap2: 0}
+    去:
+      type: compound
+      operator: ⿱
+      operandList: [土, 厶]
+      parameters: {gap2: 0}
+    术:
+      type: compound
+      operator: ⿺
+      operandList: [木, ⼂]
+    习:
+      type: spliced_component
+      operator: ⿹
+      operandList: [㇆, 冫]
+    斗:
+      type: compound
+      operator: ⿻
+      operandList: ["\ue00d", 十]
+    奂:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", "\ue101"]
+      parameters: {gap2: 0}
+    争:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", "\ue06d"]
+      parameters: {gap2: 0}
+    免:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", "\ue100"]
+      parameters: {gap2: 0}
+    角:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", 用]
+      parameters: {gap2: 0}
+    刍:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", 彐]
+      parameters: {gap2: 0}
+    火:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 人]
+    灬:
+      type: compound
+      operator: ⿰
+      operandList: ["\ue446", "\ue446"]
+    弟:
+      type: compound
+      operator: ⿱
+      operandList: [丷, "\ue04a"]
+      parameters: {gap2: 0}
+    卑:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue069", 十]
+      parameters: {gap2: -30}
+    见:
+      type: compound
+      operator: ⿵
+      operandList: ["\ue439", "\ue424"]
+    贝:
+      type: compound
+      operator: ⿵
+      operandList: ["\ue439", 人]
+    直:
+      type: compound
+      operator: ⿱
+      operandList: [十, "\ue419"]
+      parameters: {gap2: 0}
+    父:
+      type: compound
+      operator: ⿱
+      operandList: [八, 乂]
+      parameters: {gap2: -10}
+    百:
+      type: compound
+      operator: ⿱
+      operandList: [丆, 日]
+      parameters: {gap2: 0}
+    穴:
+      type: compound
+      operator: ⿱
+      operandList: [宀, 八]
+      parameters: {gap2: 0}
+    糸:
+      type: compound
+      operator: ⿱
+      operandList: [幺, 小]
+      parameters: {gap2: -7}
+    系:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", 小]
+    页:
+      type: compound
+      operator: ⿱
+      operandList: [丆, 贝]
+      parameters: {gap2: 0}
+    司:
+      type: compound
+      tags: []
+      operator: ⿹
+      operandList: [刁, 口]
+    兑:
+      type: compound
+      tags: []
+      operator: ⿱
+      operandList: [丷, 兄]
+      parameters: {gap2: 0}
+    兄:
+      type: compound
+      operator: ⿱
+      operandList: [口, 儿]
+      parameters: {gap2: 0}
+    "\ue0c2":
+      type: compound
+      operator: ⿱
+      operandList: [干, 口]
+    犮:
+      type: compound
+      operator: ⿸
+      operandList: ["\ue0fc", 又]
+      order: [{index: 0, strokes: 2}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    关:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 天]
+      parameters: {gap2: 0}
+    卢:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue018", 尸]
+      parameters: {gap2: 0}
+    色:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", 巴]
+      parameters: {gap2: 0}
+    酋:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 酉]
+      parameters: {gap2: 0}
+    亨:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 口, 了]
+    享:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 口, 子]
+    京:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 口, 小]
+    克:
+      type: compound
+      operator: ⿱
+      operandList: [十, 兄]
+      parameters: {gap2: 0}
+    光:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue03e", 兀]
+      parameters: {gap2: 0}
+    县:
+      type: compound
+      operator: ⿱
+      operandList: [且, 厶]
+      parameters: {gap2: 0}
+    畐:
+      type: compound
+      operator: ⿳
+      operandList: [一, 口, 田]
+    鬲:
+      type: compound
+      operator: ⿳
+      operandList: [一, 口, "\ue818"]
+    兆:
+      type: compound
+      operator: ⿰
+      operandList: ["\ue193", "\ue194"]
+    亥:
+      type: compound
+      operator: ⿱
+      operandList: [亠, 人]
+    坴:
+      type: compound
+      operator: ⿳
+      operandList: [土, 八, 土]
+    夌:
+      type: compound
+      operator: ⿳
+      operandList: [土, 八, 夂]
+    赤:
+      type: compound
+      operator: ⿱
+      operandList: [土, "\ue42e"]
+      parameters: {gap2: 0}
+    高:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 口, 冋]
+    南:
+      type: compound
+      operator: ⿱
+      operandList: [十, "\ue81b"]
+    个:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue43d", 丨]
+      parameters: {gap2: -15}
+    兰:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 三]
+      tags: []
+    头:
+      type: compound
+      operator: ⿻
+      operandList: ["\ue00d", 大]
+    "\ue058":
+      type: compound
+      operator: ⿸
+      operandList: [卩, 又]
+    食:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue43d", 良]
+    言:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 二, 口]
+    豆:
+      type: compound
+      operator: ⿳
+      operandList: [一, 口, 䒑]
+    卂:
+      type: spliced_component
+      operator: ⿹
+      operandList: [㇤, 十]
+    负:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", 贝]
+      parameters: {gap2: 0}
+    首:
+      type: compound
+      tags: []
+      operator: ⿱
+      operandList: [䒑, 自]
+      parameters: {gap2: 0}
+    龟:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue020", "\ue0ec"]
+      parameters: {gap2: 0}
+    乏:
+      type: spliced_component
+      operator: ⿱
+      operandList: [㇒, 之]
+    堇:
+      type: compound
+      operator: ⿱
+      operandList: [廿, "\ue0dd"]
+      parameters: {gap2: 0}
+    玄:
+      type: spliced_component
+      operator: ⿱
+      operandList: [亠, 幺]
+    亶:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 回, 旦]
+    禀:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 回, 示]
+    睘:
+      type: compound
+      operator: ⿳
+      operandList: [罒, 口, "\ue0b7"]
+    参:
+      type: compound
+      operator: ⿳
+      operandList: [厶, 大, 彡]
+    叁:
+      type: compound
+      operator: ⿳
+      operandList: [厶, 大, 三]
+    並:
+      type: compound
+      operator: ⿱
+      operandList: [丷, 亚]
+    詹:
+      type: compound
+      operator: ⿸
+      operandList: ["\uebe3", 言]
+    戌:
+      type: compound
+      operator: ⿵
+      operandList: [戊, 一]
+      order: [{index: 0, strokes: 2}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    隺:
+      type: compound
+      operator: ⿱
+      operandList: [冖, "\ue428"]
+    幂:
+      type: compound
+      operator: ⿳
+      operandList: [冖, 日, 𫯜]
+    爵:
+      type: compound
+      operator: ⿳
+      operandList: [爫, 罒, "\ue8c8"]
+    芈:
+      type: compound
+      operator: ⿱
+      operandList: [卝, "\ue002"]
+      parameters: {gap2: -23}
+    荤:
+      type: compound
+      operator: ⿱
+      operandList: [艹, 军]
+    丢:
+      type: compound
+      operator: ⿱
+      operandList: [壬, 厶]
+      parameters: {gap2: 0}
+    兽:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue98a", 口]
+    匹:
+      type: compound
+      operator: ⿷
+      operandList: [匚, 儿]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    亓:
+      type: compound
+      operator: ⿱
+      operandList: [二, "\ue0e3"]
+      parameters: {gap2: 0}
+    圡:
+      type: compound
+      operator: ⿺
+      operandList: [土, 丶]
+    镸:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue0fa", 厶]
+      parameters: {gap2: 0}
+    "\ue016":
+      type: compound
+      operator: ⿱
+      operandList: [丷, 干]
+    "\ue864":
+      type: compound
+      operator: ⿱
+      operandList: ["\ue04f", 心]
+    "\ue0e2":
+      type: compound
+      operator: ⿲
+      operandList: ["\ue121", "\ue121", ㇂]
+    兕:
+      type: compound
+      operator: ⿱
+      operandList: [凹, 儿]
+      parameters: {gap2: 0}
+    六:
+      type: spliced_component
+      operator: ⿱
+      operandList: [亠, 八]
+    卣:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue018", 囙]
+      parameters: {gap2: 0}
+    囙:
+      type: compound
+      operator: ⿴
+      operandList: [囗, "\ue009"]
+      order: [{index: 0, strokes: 2}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    卤:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue018", 龱]
+      parameters: {gap2: 0}
+    夔:
+      type: compound
+      operator: ⿳
+      operandList: [䒑, "\uea01", "\ue989"]
+    寡:
+      type: compound
+      operator: ⿳
+      operandList: [宀, "\ue98e", 刀]
+    尜:
+      type: compound
+      operator: ⿳
+      operandList: ["\ue442", 大, 小]
+    臿:
+      type: spliced_component
+      operator: ⿱
+      operandList: [千, 臼]
+    篡:
+      type: compound
+      operator: ⿱
+      operandList: ["\uea74", 厶]
+    纂:
+      type: compound
+      operator: ⿱
+      operandList: ["\uea74", 糸]
+    攴:
+      type: compound
+      operator: ⿱
+      operandList: ["\ue018", 又]
+      parameters: {gap2: 0}
+    甯:
+      type: compound
+      operator: ⿳
+      operandList: [宀, 心, "\ue08c"]
+    畚:
+      type: compound
+      operator: ⿳
+      operandList: [厶, 大, 田]
+    瘸:
+      type: compound
+      operator: ⿸
+      operandList: [痂, ⾁]
+    甍:
+      type: compound
+      operator: ⿳
+      operandList: [艹, 罒, 瓦]
+    瞢:
+      type: compound
+      operator: ⿳
+      operandList: [艹, 罒, 目]
+    薨:
+      type: compound
+      operator: ⿳
+      operandList: [艹, 罒, 死]
+    襄:
+      type: compound
+      operator: ⿳
+      operandList: [亠, 吅, "\ue0b9"]

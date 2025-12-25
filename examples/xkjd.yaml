@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: xkjd
 info:
   name: 星空键道
@@ -160,25 +160,8 @@ analysis:
       - '2'
       - '2'
       - '1'
-  customizeCorners: {}
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
-  grouping:
-    键道韵母-ê: 键道韵母-e
-    键道韵母-n: 键道韵母-en
-    键道韵母-ng: 键道韵母-eng
-    氵: 水
-    氺: 水
-    亻: 人
-    "\ue0d2": 月
-    朩: 木
-    钅: 金
-    扌: 手
-    龵: 手
-    曰: 日
-    士: 土
-    "\ue43d": 人
-    "\ue18e": 水
   mapping:
     '1': v
     '2': i
@@ -257,6 +240,36 @@ form:
     十: uo
     土: vo
     键道韵母-m: m
+    键道韵母-ê:
+      element: 键道韵母-e
+    键道韵母-n:
+      element: 键道韵母-en
+    键道韵母-ng:
+      element: 键道韵母-eng
+    氵:
+      element: 水
+    氺:
+      element: 水
+    亻:
+      element: 人
+    "\ue0d2":
+      element: 月
+    朩:
+      element: 木
+    钅:
+      element: 金
+    扌:
+      element: 手
+    龵:
+      element: 手
+    曰:
+      element: 日
+    士:
+      element: 土
+    "\ue43d":
+      element: 人
+    "\ue18e":
+      element: 水
   mapping_type: 2
 encoder:
   max_length: 6

@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: snow
 info:
   name: 冰雪四拼
@@ -12,9 +12,6 @@ analysis:
     - 取大优先
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
-  grouping:
-    补码-补: 声调-5
-    韵头-零: 韵头-e
   mapping:
     '1': e
     '2': i
@@ -71,6 +68,10 @@ form:
     韵尾-n: o
     韵尾-ng: e
     韵尾-u: u
+    补码-补:
+      element: 声调-5
+    韵头-零:
+      element: 韵头-e
 encoder:
   max_length: 6
   auto_select_pattern: ([aeiou]$|[a-z]{4,})
@@ -212,22 +213,11 @@ optimization:
     characters_short:
       duplication: 10
       levels: [{length: 2, frequency: 0}, {length: 3, frequency: 0}]
-      tiers:
-        - top: 1000
-          levels: [{length: 2, frequency: -1}]
-        - top: 3000
-          levels: [{length: 4, frequency: 1}]
-          duplication: 10
-        - top: 5000
-          duplication: 10
-        - levels: [{length: 3, frequency: -3}]
+      tiers: [{top: 1000, levels: [{length: 2, frequency: -1}]}, {top: 3000, levels: [{length: 4, frequency: 1}], duplication: 10}, {top: 5000, duplication: 10}, {levels: [{length: 3, frequency: -3}]}]
     words_short:
       duplication: 10
       levels: [{length: 3, frequency: 0}, {length: 4, frequency: 0}, {length: 5, frequency: 0}]
-      tiers:
-        - top: 1000
-          levels: [{length: 4, frequency: 1}]
-        - levels: [{length: 3, frequency: 0}, {length: 4, frequency: 0}, {length: 5, frequency: 0}]
+      tiers: [{top: 1000, levels: [{length: 4, frequency: 1}]}, {levels: [{length: 3, frequency: 0}, {length: 4, frequency: 0}, {length: 5, frequency: 0}]}]
   metaheuristic:
     algorithm: SimulatedAnnealing
     parameters:

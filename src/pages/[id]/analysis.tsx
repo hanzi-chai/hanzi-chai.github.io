@@ -26,31 +26,28 @@ import {
   adaptedFrequencyAtom,
   dictionaryAtom,
   algebraAtom,
-  mappingTypeAtom,
   mappingSpaceAtom,
   dynamicCustomizeAtom,
-  userFrequencyAtom,
+  useAtom,
+  serializerAtom,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
-import type { AnalysisResult, CharacterFilter, ElementWithIndex } from "~/lib";
+import type { AnalysisResult, CharacterFilter } from "~/lib";
 import {
   dynamicAnalysis,
   exportTSV,
   exportYAML,
-  isMerge,
-  isPUA,
   makeCharacterFilter,
+  serializerMap,
 } from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
 import { analysisResultAtom } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
-import { Display } from "~/components/Utils";
-import { getAffiliates } from "~/components/Mapping";
-import { syllableAtom } from "./experimental/qingyun";
+import { Display, Select } from "~/components/Utils";
 
 const dumpAnalysisResult = (
   characters: string[],
@@ -73,8 +70,18 @@ const dumpAnalysisResult = (
 
 const ConfigureRules = () => {
   const [modal, setModal] = useState(0);
+  const [serializer, setSerializer] = useAtom(serializerAtom);
   return (
-    <Flex gap="middle" justify="center">
+    <Flex gap="middle" justify="center" align="center">
+      拆分风格
+      <Select
+        value={serializer}
+        onChange={setSerializer}
+        options={Object.keys(serializerMap).map((x) => ({
+          label: x,
+          value: x,
+        }))}
+      />
       <Degenerator />
       <Button onClick={() => setModal(2)}>配置拆分方式筛选规则</Button>
       <Modal

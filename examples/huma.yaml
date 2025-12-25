@@ -1,9 +1,9 @@
-version: '0.2'
+version: '0.3'
 source: huma
 info:
   name: 虎码
   author: ID;Peace B
-  version: '2024.06.17'
+  version: 2024.06.17
   description: 26 键、大字集、低重码、拥有舒适手感的高性能中文输入方案
 analysis:
   classifier:
@@ -103,207 +103,6 @@ analysis:
       - '5'
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
-  grouping:
-    "\ue003": 丰
-    龶: 丰
-    "\ue021": 缶
-    爿: 片
-    丬: 片
-    "\ue012": 片
-    "\ue0e1": 片
-    "\ue0e0": 片
-    "\ue0c2": 舌
-    㐅: 乂
-    "\ue431": 彐
-    "\ue432": 彐
-    彑: 彐
-    "\ue0b4": 彐
-    "\ue40c": "\ue057"
-    "\ue8d9": 卯
-    肀: 聿
-    "\ue06d": 聿
-    "\ue06e": 聿
-    "\ue00a": 云
-    "\uf000": 聿
-    "\ue0c1": 虫
-    "\ue42f": 火
-    "\ue430": 火
-    "\ue408": 火
-    "\ue42e": 火
-    灬: 火
-    "\ue031": 尸
-    "\ue06b": 尸
-    旡: 无
-    朩: 木
-    "\ue41e": 彡
-    冎: 骨
-    礻: 示
-    亾: 亡
-    歺: 歹
-    "\ue098": 歹
-    "\ue0ac": 高
-    "\ue006": 高
-    "\ue804": 高
-    "\ue093": 羊
-    "\ue042": 羊
-    "\ue016": 羊
-    芈: 羊
-    丷: 八
-    "\ue446": 八
-    䒑: 八
-    "\ue450": 八
-    癶: 八
-    "\ue09b": 八
-    "\ue948": 谷
-    夊: 夂
-    攴: 攵
-    忄: 心
-    "\ue051": 心
-    "\ue055": 册
-    "\ue44d": 册
-    "\ue01c": 艮
-    "\ue054": 立
-    纟: 糸
-    亽: 亼
-    侖: 仑
-    亻: 人
-    "\ue420": 豕
-    氵: 水
-    "\ue42d": 水
-    "\ue8e2": 水
-    氺: 水
-    "\ue059": 水
-    "\ue0d9": 水
-    龴: 厶
-    "\ue04d": 厶
-    毌: 毋
-    廾: 艹
-    丌: 艹
-    艸: 艹
-    龷: 廿
-    "\ue050": 卅
-    戶: 户
-    凵: 冂
-    "\ue02a": 冂
-    "\ue060": 冂
-    犭: 犬
-    "\ue007": 匚
-    "\ue009": 匚
-    "\ue068": 十
-    "\ue413": 十
-    "\ue0ad": 戊
-    戉: 戊
-    "\ue0c9": 辛
-    "\ue43d": 人
-    "\ue448": 川
-    "\ue07f": 川
-    巛: 川
-    巜: 川
-    "\ue0d6": 几
-    曰: 日
-    "\ue00c": 日
-    "\ue070": 日
-    尢: 尤
-    镸: 长
-    "\ue001": 刀
-    刂: 刀
-    "\ue044": 刀
-    "\ue0e3": 刀
-    "\ue427": 刀
-    "\ue089": 刀
-    "\ue0de": 刀
-    "\ue424": 儿
-    "\ue03f": 戈
-    "\ue421": 臼
-    "\ue0d8": 米
-    "\ue959": 鼠
-    "\ue0c6": 足
-    "\ue0d5": 臣
-    "\uf001": 井
-    耂: 老
-    "\ue099": 目
-    牜: 牛
-    "\ue029": 牛
-    饣: 食
-    "\ue416": 七
-    "\ue09e": 竹
-    "\ue014": 竹
-    "\ue434": 又
-    䶹: 屮
-    "\ue04e": 屮
-    "\ue092": 屮
-    "\ue437": 止
-    "\ue073": 止
-    龰: 止
-    "\ue401": 力
-    "\ue0c3": 尚
-    龸: 尚
-    讠: 言
-    "\ue04a": 弗
-    "\ue036": 弗
-    衤: 衣
-    "\ue0b7": 衣
-    "\ue422": 衣
-    "\ue07e": 衣
-    "\ue400": 斤
-    "\ue03a": 疋
-    "\ue091": 疋
-    "\ue0d0": 雨
-    "\ue08c": 用
-    扌: 手
-    龵: 手
-    "\uf002": 手
-    "\ue002": 手
-    "\ue410": 手
-    "\ue011": 匕
-    "\ue079": 匕
-    "\ue44f": 匕
-    "\ue411": 㐄
-    "\ue05d": 乃
-    "\ue005": 禸
-    覀: 西
-    "\ue0d2": 月
-    "\ue988": 月
-    "\ue034": 月
-    "\ue083": 月
-    "\ue088": 冫
-    "\ue00d": 冫
-    亍: 彳
-    冖: 宀
-    "\ue010": 兔
-    頁: 页
-    "\ue024": 厂
-    "\ue0bc": "\ue020"
-    "\ue423": "\ue020"
-    "\ue40e": 禾
-    "\ue0da": 鸟
-    爫: 爪
-    "\ue018": 卜
-    "\ue0c8": 车
-    車: 车
-    罒: 四
-    "\ue03e": 小
-    "\ue06c": 小
-    "\ue442": 小
-    "\ue096": 甘
-    虍: 虎
-    钅: 金
-    "\ue0cf": 金
-    "\ue0b2": 卩
-    㔾: 卩
-    㐆: 身
-    "\ue44b": 禾
-    "\ue80a": 衣
-    "\ue43a": 土
-    "\ue04c": 木
-    "\ue043": 大
-    "\ue98e": 页
-    "\uf004": 水
-    "\ue9f0": 鱼
-    "\ue838": 鹿
-    "\ue451": 止
-    "\ue102": 王
-    "\ue439": 冂
   mapping:
     '1': fi
     '2': gs
@@ -546,6 +345,406 @@ form:
     亠: zt
     羽: zv
     习: zx
+    "\ue003":
+      element: 丰
+    龶:
+      element: 丰
+    "\ue021":
+      element: 缶
+    爿:
+      element: 片
+    丬:
+      element: 片
+    "\ue012":
+      element: 片
+    "\ue0e1":
+      element: 片
+    "\ue0e0":
+      element: 片
+    "\ue0c2":
+      element: 舌
+    㐅:
+      element: 乂
+    "\ue431":
+      element: 彐
+    "\ue432":
+      element: 彐
+    彑:
+      element: 彐
+    "\ue0b4":
+      element: 彐
+    "\ue40c":
+      element: "\ue057"
+    "\ue8d9":
+      element: 卯
+    肀:
+      element: 聿
+    "\ue06d":
+      element: 聿
+    "\ue06e":
+      element: 聿
+    "\ue00a":
+      element: 云
+    "\uf000":
+      element: 聿
+    "\ue0c1":
+      element: 虫
+    "\ue42f":
+      element: 火
+    "\ue430":
+      element: 火
+    "\ue408":
+      element: 火
+    "\ue42e":
+      element: 火
+    灬:
+      element: 火
+    "\ue031":
+      element: 尸
+    "\ue06b":
+      element: 尸
+    旡:
+      element: 无
+    朩:
+      element: 木
+    "\ue41e":
+      element: 彡
+    冎:
+      element: 骨
+    礻:
+      element: 示
+    亾:
+      element: 亡
+    歺:
+      element: 歹
+    "\ue098":
+      element: 歹
+    "\ue0ac":
+      element: 高
+    "\ue006":
+      element: 高
+    "\ue804":
+      element: 高
+    "\ue093":
+      element: 羊
+    "\ue042":
+      element: 羊
+    "\ue016":
+      element: 羊
+    芈:
+      element: 羊
+    丷:
+      element: 八
+    "\ue446":
+      element: 八
+    䒑:
+      element: 八
+    "\ue450":
+      element: 八
+    癶:
+      element: 八
+    "\ue09b":
+      element: 八
+    "\ue948":
+      element: 谷
+    夊:
+      element: 夂
+    攴:
+      element: 攵
+    忄:
+      element: 心
+    "\ue051":
+      element: 心
+    "\ue055":
+      element: 册
+    "\ue44d":
+      element: 册
+    "\ue01c":
+      element: 艮
+    "\ue054":
+      element: 立
+    纟:
+      element: 糸
+    亽:
+      element: 亼
+    侖:
+      element: 仑
+    亻:
+      element: 人
+    "\ue420":
+      element: 豕
+    氵:
+      element: 水
+    "\ue42d":
+      element: 水
+    "\ue8e2":
+      element: 水
+    氺:
+      element: 水
+    "\ue059":
+      element: 水
+    "\ue0d9":
+      element: 水
+    龴:
+      element: 厶
+    "\ue04d":
+      element: 厶
+    毌:
+      element: 毋
+    廾:
+      element: 艹
+    丌:
+      element: 艹
+    艸:
+      element: 艹
+    龷:
+      element: 廿
+    "\ue050":
+      element: 卅
+    戶:
+      element: 户
+    凵:
+      element: 冂
+    "\ue02a":
+      element: 冂
+    "\ue060":
+      element: 冂
+    犭:
+      element: 犬
+    "\ue007":
+      element: 匚
+    "\ue009":
+      element: 匚
+    "\ue068":
+      element: 十
+    "\ue413":
+      element: 十
+    "\ue0ad":
+      element: 戊
+    戉:
+      element: 戊
+    "\ue0c9":
+      element: 辛
+    "\ue43d":
+      element: 人
+    "\ue448":
+      element: 川
+    "\ue07f":
+      element: 川
+    巛:
+      element: 川
+    巜:
+      element: 川
+    "\ue0d6":
+      element: 几
+    曰:
+      element: 日
+    "\ue00c":
+      element: 日
+    "\ue070":
+      element: 日
+    尢:
+      element: 尤
+    镸:
+      element: 长
+    "\ue001":
+      element: 刀
+    刂:
+      element: 刀
+    "\ue044":
+      element: 刀
+    "\ue0e3":
+      element: 刀
+    "\ue427":
+      element: 刀
+    "\ue089":
+      element: 刀
+    "\ue0de":
+      element: 刀
+    "\ue424":
+      element: 儿
+    "\ue03f":
+      element: 戈
+    "\ue421":
+      element: 臼
+    "\ue0d8":
+      element: 米
+    "\ue959":
+      element: 鼠
+    "\ue0c6":
+      element: 足
+    "\ue0d5":
+      element: 臣
+    "\uf001":
+      element: 井
+    耂:
+      element: 老
+    "\ue099":
+      element: 目
+    牜:
+      element: 牛
+    "\ue029":
+      element: 牛
+    饣:
+      element: 食
+    "\ue416":
+      element: 七
+    "\ue09e":
+      element: 竹
+    "\ue014":
+      element: 竹
+    "\ue434":
+      element: 又
+    䶹:
+      element: 屮
+    "\ue04e":
+      element: 屮
+    "\ue092":
+      element: 屮
+    "\ue437":
+      element: 止
+    "\ue073":
+      element: 止
+    龰:
+      element: 止
+    "\ue401":
+      element: 力
+    "\ue0c3":
+      element: 尚
+    龸:
+      element: 尚
+    讠:
+      element: 言
+    "\ue04a":
+      element: 弗
+    "\ue036":
+      element: 弗
+    衤:
+      element: 衣
+    "\ue0b7":
+      element: 衣
+    "\ue422":
+      element: 衣
+    "\ue07e":
+      element: 衣
+    "\ue400":
+      element: 斤
+    "\ue03a":
+      element: 疋
+    "\ue091":
+      element: 疋
+    "\ue0d0":
+      element: 雨
+    "\ue08c":
+      element: 用
+    扌:
+      element: 手
+    龵:
+      element: 手
+    "\uf002":
+      element: 手
+    "\ue002":
+      element: 手
+    "\ue410":
+      element: 手
+    "\ue011":
+      element: 匕
+    "\ue079":
+      element: 匕
+    "\ue44f":
+      element: 匕
+    "\ue411":
+      element: 㐄
+    "\ue05d":
+      element: 乃
+    "\ue005":
+      element: 禸
+    覀:
+      element: 西
+    "\ue0d2":
+      element: 月
+    "\ue988":
+      element: 月
+    "\ue034":
+      element: 月
+    "\ue083":
+      element: 月
+    "\ue088":
+      element: 冫
+    "\ue00d":
+      element: 冫
+    亍:
+      element: 彳
+    冖:
+      element: 宀
+    "\ue010":
+      element: 兔
+    頁:
+      element: 页
+    "\ue024":
+      element: 厂
+    "\ue0bc":
+      element: "\ue020"
+    "\ue423":
+      element: "\ue020"
+    "\ue40e":
+      element: 禾
+    "\ue0da":
+      element: 鸟
+    爫:
+      element: 爪
+    "\ue018":
+      element: 卜
+    "\ue0c8":
+      element: 车
+    車:
+      element: 车
+    罒:
+      element: 四
+    "\ue03e":
+      element: 小
+    "\ue06c":
+      element: 小
+    "\ue442":
+      element: 小
+    "\ue096":
+      element: 甘
+    虍:
+      element: 虎
+    钅:
+      element: 金
+    "\ue0cf":
+      element: 金
+    "\ue0b2":
+      element: 卩
+    㔾:
+      element: 卩
+    㐆:
+      element: 身
+    "\ue44b":
+      element: 禾
+    "\ue80a":
+      element: 衣
+    "\ue43a":
+      element: 土
+    "\ue04c":
+      element: 木
+    "\ue043":
+      element: 大
+    "\ue98e":
+      element: 页
+    "\uf004":
+      element: 水
+    "\ue9f0":
+      element: 鱼
+    "\ue838":
+      element: 鹿
+    "\ue451":
+      element: 止
+    "\ue102":
+      element: 王
+    "\ue439":
+      element: 冂
   mapping_type: 2
 encoder:
   max_length: 4

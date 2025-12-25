@@ -1,4 +1,4 @@
-version: '0.2'
+version: '0.3'
 source: tianma
 info:
   name: 天码
@@ -237,31 +237,6 @@ analysis:
   strong: []
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
-  grouping:
-    "\ue04c": 木
-    "\ue43d": 人
-    "\ue44b": 禾
-    "\ue439": 冂
-    "\ue41e": "\ue077"
-    "\ue043": 大
-    "\ue41f": "\ue0d2"
-    "\ueb39": 气
-    "\ue401": 力
-    "\ue452": 十
-    "\ue18c": "\ue427"
-    "\ue838": 鹿
-    "\ue171": "\ue16a"
-    "\ue445": 小
-    "\ue0c8": 车
-    "\ue102": 王
-    "\ue106": "\ue0b7"
-    龻: 䜌
-    "\ue0bf": "\ue188"
-    ⺼: "\ue10b"
-    𠚕: "\ue8d7"
-    󲰊: "\ue277"
-    𥫗: "\ue09e"
-    𦣞: "\ue0d5"
   mapping:
     '1': hv
     '2': iv
@@ -771,6 +746,54 @@ form:
     "\uf00b": uv
     "\uf00c": uv
     "\uf00d": ev
+    "\ue04c":
+      element: 木
+    "\ue43d":
+      element: 人
+    "\ue44b":
+      element: 禾
+    "\ue439":
+      element: 冂
+    "\ue41e":
+      element: "\ue077"
+    "\ue043":
+      element: 大
+    "\ue41f":
+      element: "\ue0d2"
+    "\ueb39":
+      element: 气
+    "\ue401":
+      element: 力
+    "\ue452":
+      element: 十
+    "\ue18c":
+      element: "\ue427"
+    "\ue838":
+      element: 鹿
+    "\ue171":
+      element: "\ue16a"
+    "\ue445":
+      element: 小
+    "\ue0c8":
+      element: 车
+    "\ue102":
+      element: 王
+    "\ue106":
+      element: "\ue0b7"
+    龻:
+      element: 䜌
+    "\ue0bf":
+      element: "\ue188"
+    ⺼:
+      element: "\ue10b"
+    𠚕:
+      element: "\ue8d7"
+    󲰊:
+      element: "\ue277"
+    𥫗:
+      element: "\ue09e"
+    𦣞:
+      element: "\ue0d5"
   mapping_type: 2
 encoder:
   max_length: 4
