@@ -127,7 +127,12 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
 export const Display = ({ name, ...rest }: { name: string }) => {
   const glyphMap = useAtomValue(puaGlyphAtom);
   if (!isPUA(name)) {
-    return <span {...rest}>{name}</span>;
+    return (
+      <span {...rest}>
+        {/^\d$/.test(name) ? "笔画-" : ""}
+        {name}
+      </span>
+    );
   }
   const glyph = glyphMap.get(name);
   if (glyph === undefined) {
@@ -150,7 +155,7 @@ export const DisplayWithSuperScript = ({
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
   return (
     <span>
-      {Display({ name })}
+      <Display name={name} />
       {index ? superscripts[index] : ""}
     </span>
   );

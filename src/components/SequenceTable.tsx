@@ -1,19 +1,19 @@
 import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
-  displayAtom,
   priorityShortCodesAtom,
   maxLengthAtom,
   combinedResultAtom,
-  adaptedFrequencyAtom,
 } from "~/atoms";
 import type { DictEntry, IndexedElement } from "~/lib";
-import { getPriorityMap, summarize } from "~/lib";
-import { exportTSV, renderIndexed, renderSuperScript } from "~/lib";
+import { getPriorityMap, stringify, summarize } from "~/lib";
+import { exportTSV } from "~/lib";
 import { assemblyResultAtom, encodeResultAtom } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
+import { Display, DisplayWithSuperScript } from "./Utils";
+import { ReactNode } from "react";
 
 interface MainEntry {
   key: string;
@@ -107,8 +107,19 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
     new RegExp(value as string).test(record[dataIndex]),
 });
 
+export const DisplayOptionalSuperscript = ({
+  element,
+}: { element: IndexedElement }) => {
+  if (typeof element === "string") {
+    return <Display name={element} />;
+  } else {
+    return (
+      <DisplayWithSuperScript name={element.element} index={element.index} />
+    );
+  }
+};
+
 export default function SequenceTable() {
-  const display = useAtomValue(displayAtom);
   const max_length = useAtomValue(maxLengthAtom);
   const combinedResult = useAtomValue(combinedResultAtom);
 
@@ -139,7 +150,7 @@ export default function SequenceTable() {
       }
       list.push(element);
     }
-    return list.map((x) => renderIndexed(x, display)).join(" ");
+    return JSON.stringify(list);
   };
 
   const columns: ProColumns<MainEntry>[] = [
@@ -167,7 +178,19 @@ export default function SequenceTable() {
     {
       title: "全部元素",
       key: "all",
-      render: (_, record) => hash(record),
+      render: (_, record) => {
+        const elements: ReactNode[] = [];
+        for (const i of Array(max_length).keys()) {
+          const element = record[i];
+          if (element === undefined) {
+            break;
+          }
+          elements.push(
+            <DisplayOptionalSuperscript key={i} element={element} />,
+          );
+        }
+        return <Space>{elements}</Space>;
+      },
       sorter: (a, b) => {
         const ahash = hash(a);
         const bhash = hash(b);
@@ -179,11 +202,11 @@ export default function SequenceTable() {
   ];
 
   for (const i of Array(max_length).keys()) {
-    const allValues: Record<string, { text: string }> = {};
+    const allValues: Record<string, ReactNode> = {};
     for (const { [i]: element } of dataSource) {
       if (element !== undefined) {
-        const text = renderIndexed(element, display);
-        allValues[text] = { text };
+        const text = stringify(element);
+        allValues[text] = <DisplayOptionalSuperscript element={element} />;
       }
     }
     columns.push({
@@ -194,11 +217,11 @@ export default function SequenceTable() {
         if (element === undefined) {
           return null;
         }
-        return renderIndexed(element, display);
+        return <DisplayOptionalSuperscript element={element} />;
       },
       sorter: (a, b) => {
-        const ahash = renderIndexed(a[i] ?? "", display);
-        const bhash = renderIndexed(b[i] ?? "", display);
+        const ahash = stringify(a[i] ?? "");
+        const bhash = stringify(b[i] ?? "");
         return ahash.localeCompare(bhash);
       },
       sortDirections: ["ascend", "descend"],
@@ -209,7 +232,7 @@ export default function SequenceTable() {
         if (element === undefined) {
           return false;
         }
-        return renderIndexed(element, display) === value;
+        return stringify(element) === value;
       },
       valueEnum: allValues,
       ellipsis: true,
@@ -234,7 +257,8 @@ export default function SequenceTable() {
         const rank = Math.abs(full_rank);
         return (
           <span style={{ color: full_rank > 0 ? "red" : "inherit" }}>
-            {renderSuperScript(full, rank)}
+            {full}
+            {rank > 0 ? `[${rank}]` : ""}
           </span>
         );
       },
@@ -248,7 +272,8 @@ export default function SequenceTable() {
         const rank = Math.abs(short_rank);
         return (
           <span style={{ color: short_rank > 0 ? "red" : "inherit" }}>
-            {renderSuperScript(short, rank)}
+            {short}
+            {rank > 0 ? `[${rank}]` : ""}
           </span>
         );
       },

@@ -29,14 +29,13 @@ import {
 } from "~/atoms";
 import Char from "./Character";
 import MappingSpace, { RulesForm } from "./MappingSpace";
+import { getReversedMapping, isMerge, isPUA, printableAscii } from "~/lib";
 import {
-  getReversedMapping,
-  isMerge,
-  isPUA,
-  printableAscii,
-  renderMapped,
-} from "~/lib";
-import { DeleteButton, Display, Uploader } from "./Utils";
+  DeleteButton,
+  Display,
+  DisplayWithSuperScript,
+  Uploader,
+} from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import type { Key, MappedInfo, Mapping, Value } from "~/lib";
 import styled from "styled-components";
@@ -138,6 +137,7 @@ export const AdjustableElementGroup = ({
   const mappingSpace = useAtomValue(mappingSpaceAtom);
   const isOptional = (name: string) =>
     mappingSpace[name]?.some((x) => x.value === null) ?? false;
+  const rest = code.slice(1);
   return (
     <span>
       <Popover
@@ -174,9 +174,22 @@ export const AdjustableElementGroup = ({
         </Popover>
       ))}
       {
-        /* 第二码及之后的编码 */ code.length > 1 && (
+        /* 第二码及之后的编码 */ rest.length > 0 && (
           <span style={{ fontSize: "0.85em", paddingLeft: "2px" }}>
-            {normalize(renderMapped(code.slice(1)))}
+            {typeof rest === "string"
+              ? rest
+              : rest
+                  .map((x) => {
+                    return typeof x === "string" ? (
+                      x
+                    ) : (
+                      <DisplayWithSuperScript
+                        name={x.element}
+                        index={x.index}
+                      />
+                    );
+                  })
+                  .join("")}
           </span>
         )
       }

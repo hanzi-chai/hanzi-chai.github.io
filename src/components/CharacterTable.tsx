@@ -16,7 +16,6 @@ import {
   allRepertoireAtom,
   customGlyphAtom,
   customReadingsAtom,
-  displayAtom,
   errorFeedback,
   primitiveRepertoireAtom,
   sequenceAtom,
@@ -40,7 +39,7 @@ import {
 import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/api";
-import { DeleteButton } from "./Utils";
+import { DeleteButton, Display } from "./Utils";
 import Element from "./Element";
 import * as O from "optics-ts/standalone";
 import CharacterQuery from "./CharacterQuery";
@@ -84,7 +83,6 @@ export const InlineUpdater = ({
   const char = String.fromCodePoint(unicode);
   const remote = useContext(RemoteContext);
   const userRepertoire = useAtomValue(userRepertoireAtom);
-  const display = useAtomValue(displayAtom);
   const userTags = useAtomValue(userTagsAtom);
   const addUser = useAddAtom(userRepertoireAtom);
   const add = useAddAtom(primitiveRepertoireAtom);
@@ -106,9 +104,16 @@ export const InlineUpdater = ({
         const lens = O.compose("glyphs", O.at(i));
         const primary = i === selectedIndex;
         const title =
-          x.type === "compound"
-            ? `${x.operator} ${x.operandList.map(display).join(" ")}`
-            : typenames[x.type];
+          x.type === "compound" ? (
+            <Space>
+              <span>{x.operator}</span>
+              {x.operandList.map((y) => (
+                <Display name={y} />
+              ))}
+            </Space>
+          ) : (
+            typenames[x.type]
+          );
         return (
           <Flex key={i}>
             {x.type === "compound" || x.type === "spliced_component" ? (
@@ -185,14 +190,19 @@ export const InlineCustomizer = ({
   const { unicode } = character;
   const char = String.fromCodePoint(unicode);
   const customized = customGlyph[char];
-  const display = useAtomValue(displayAtom);
   if (customized === undefined) return null;
   const title =
-    customized.type === "compound"
-      ? `${customized.operator} ${customized.operandList
-          .map(display)
-          .join(" ")}`
-      : typenames[customized.type];
+    customized.type === "compound" ||
+    customized.type === "spliced_component" ? (
+      <Space>
+        <span>{customized.operator}</span>
+        {customized.operandList.map((y, index) => (
+          <Display key={index} name={y} />
+        ))}
+      </Space>
+    ) : (
+      typenames[customized.type]
+    );
   return (
     <Flex gap="small">
       {customized.type === "compound" ||

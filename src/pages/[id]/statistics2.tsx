@@ -8,7 +8,6 @@ import {
   pairEquivalenceAtom,
   typeLabels,
   useChaifenTitle,
-  displayAtom,
 } from "~/atoms";
 import {
   ProForm,
@@ -22,9 +21,8 @@ import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
 import {
   type PartialWeightTypes,
-  renderIndexed,
   type AdaptedFrequency,
-  type Objective,
+  stringify,
 } from "~/lib";
 import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
@@ -545,7 +543,6 @@ const DuplicationDistribution = () => {
   const combined = useAtomValue(combinedResultAtom);
   const duplicationMap = new Map<string, Combined[]>();
   const pairMap = new Map<string, [string, string][]>();
-  const display = useAtomValue(displayAtom);
 
   for (const item of combined) {
     const key = item.full;
@@ -562,8 +559,8 @@ const DuplicationDistribution = () => {
         const pair: [string, string] = [first.name, second.name];
         const length = Math.max(first.sequence.length, second.sequence.length);
         for (let i = 0; i < length; i++) {
-          const k1 = renderIndexed(first.sequence[i] ?? "ε", display);
-          const k2 = renderIndexed(second.sequence[i] ?? "ε", display);
+          const k1 = stringify(first.sequence[i]);
+          const k2 = stringify(second.sequence[i]);
           if (k1 === k2) continue;
           const key = `${k1}, ${k2}`;
           const previous = pairMap.get(key) ?? [];

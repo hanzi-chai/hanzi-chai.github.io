@@ -3,7 +3,6 @@ import { sortBy } from "lodash-es";
 import {
   alphabetAtom,
   currentElementAtom,
-  displayAtom,
   mappingAtom,
   mappingGeneratorsAtom,
   mappingSpaceAtom,

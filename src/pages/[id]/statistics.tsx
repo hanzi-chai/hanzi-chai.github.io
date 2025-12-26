@@ -1,7 +1,6 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
 import {
   alphabetAtom,
-  displayAtom,
   adaptedFrequencyAtom,
   repertoireAtom,
   sequenceAtom,
@@ -17,12 +16,21 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import type { AdaptedFrequency, AnalyzerForm, AssemblyResult } from "~/lib";
-import { renderIndexed } from "~/lib";
+import type {
+  AdaptedFrequency,
+  AnalyzerForm,
+  AssemblyResult,
+  IndexedElement,
+  Key,
+} from "~/lib";
+import { stringify } from "~/lib";
 import { Suspense, useState } from "react";
 import { assemblyResultAtom } from "~/atoms";
 import type { ColumnsType } from "antd/es/table";
 import { range, sumBy } from "lodash-es";
+import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
+import { MinusButton, PlusButton } from "~/components/Utils";
+import KeySelect from "~/components/KeySelect";
 
 const numbers = [
   "零",
@@ -62,7 +70,6 @@ const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
   frequency: AdaptedFrequency,
   result: AssemblyResult,
-  display: (d: string) => string,
   maxLength: number,
   replacer: (d: string) => string = (d) => d,
 ) => {
@@ -73,7 +80,7 @@ const analyzePrimitiveDuplication = (
     const sliced = range(maxLength).map((i) =>
       analyzer.position.includes(i) ? sequence[i] : "*",
     );
-    const summary = `(${sliced.map((x) => replacer(renderIndexed(x, display))).join(", ")})`;
+    const summary = `(${sliced.map((x) => replacer(stringify(x))).join(", ")})`;
     reverseMap.set(summary, (reverseMap.get(summary) || []).concat(name));
   }
   return reverseMap;
@@ -155,12 +162,10 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(assemblyResultAtom);
   const frequency = useAtomValue(adaptedFrequencyAtom);
-  const display = useAtomValue(displayAtom);
   const reverseMap = analyzePrimitiveDuplication(
     analyzer,
     frequency,
     assemblyResult,
-    display,
     maxLength,
   );
   const alphabet = useAtomValue(alphabetAtom);
@@ -173,6 +178,26 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
       title: "元素序列",
       dataIndex: "name",
       key: "name",
+      render: (_, { name }) => {
+        const elements: IndexedElement[] = name
+          .slice(1, -1)
+          .split(", ")
+          .map((x) => {
+            if (x === "*") return x;
+            if (x.includes(".")) {
+              const [element, index] = x.split(".");
+              return { element: element!, index: parseInt(index!, 10) };
+            }
+            return x;
+          });
+        return (
+          <Space>
+            {elements.map((element, i) => (
+              <DisplayOptionalSuperscript key={i} element={element} />
+            ))}
+          </Space>
+        );
+      },
       width: 192,
     },
     {
@@ -222,13 +247,12 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(assemblyResultAtom);
   const frequency = useAtomValue(adaptedFrequencyAtom);
-  const display = useAtomValue(displayAtom);
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer, frequency);
   for (const assembly of relevant) {
     const { name, sequence } = assembly;
     sequence.forEach((x, i) => {
-      const key = renderIndexed(x, display);
+      const key = stringify(x);
       if (!reverseMap.has(key))
         reverseMap.set(
           key,
@@ -249,6 +273,15 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       title: "元素序列",
       dataIndex: "name",
       key: "name",
+      render: (_, record) => {
+        const element: IndexedElement = record.name.includes(".")
+          ? {
+              element: record.name.split(".")[0]!,
+              index: parseInt(record.name.split(".")[1]!, 10),
+            }
+          : record.name;
+        return <DisplayOptionalSuperscript element={element} />;
+      },
       width: 192,
     },
     ...range(maxLength).map((i) => ({
@@ -297,18 +330,7 @@ const MarginalFirstOrderDuplication = () => {
   const assemblyResult = useAtomValue(assemblyResultAtom);
   const frequency = useAtomValue(adaptedFrequencyAtom);
   const maxLength = useAtomValue(maxLengthAtom);
-  const display = useAtomValue(displayAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const hashedElements = new Set<string>();
-  for (const { sequence } of assemblyResult) {
-    sequence.forEach((x) => {
-      hashedElements.add(renderIndexed(x, display));
-    });
-  }
-  const allElements = [...hashedElements].sort();
-
-  const [elements, setElements] = useState(allElements.slice(0, 2));
+  const [elements, setElements] = useState([] as Key[]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
     type: "single",
     position: range(0, maxLength),
@@ -319,7 +341,6 @@ const MarginalFirstOrderDuplication = () => {
     analyzer,
     frequency,
     assemblyResult,
-    display,
     maxLength,
   );
   const szBefore = new Set<string>();
@@ -330,9 +351,8 @@ const MarginalFirstOrderDuplication = () => {
     analyzer,
     frequency,
     assemblyResult,
-    display,
     maxLength,
-    (d) => (elements.includes(d) ? "^" : d),
+    (d) => (elements.map(stringify).includes(d) ? "^" : d),
   );
   const szAfter = new Set<string>();
   rmAfter.forEach((items) => {
@@ -344,30 +364,24 @@ const MarginalFirstOrderDuplication = () => {
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
       <Flex gap="middle" align="baseline">
         <Form.Item label="合并">
-          <Select
-            value={elements}
-            onChange={setElements}
-            style={{ minWidth: 128 }}
-            mode="multiple"
-            options={allElements.map((x) => ({ label: x, value: x }))}
-            filterOption={(input, option) => {
-              if (option === undefined) return false;
-              const value = option.value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "");
-              if (repertoire[value] !== undefined) {
-                return sequenceMap.get(value)?.startsWith(input);
-              }
-              return value.includes(input);
-            }}
-            filterSort={(a, b) => {
-              return (
-                (sequenceMap.get(a.value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "")) ?? "")
-                  .length -
-                (sequenceMap.get(b.value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "")) ?? "")
-                  .length
-              );
-            }}
-          />
+          <Space>
+            {elements.map((x, i) => (
+              <KeySelect
+                value={x}
+                disableAlphabets
+                onChange={(newKey) => {
+                  const newElements = [...elements];
+                  newElements[i]! = newKey as Key;
+                  setElements(newElements);
+                }}
+              />
+            ))}
+          </Space>
         </Form.Item>
+        <PlusButton
+          onClick={() => setElements([...elements, { element: "1", index: 0 }])}
+        />
+        <MinusButton onClick={() => setElements(elements.slice(0, -1))} />
         <Typography.Paragraph>
           将增加重码：
           {[...szAfter].filter((x) => !szBefore.has(x)).join("、")}

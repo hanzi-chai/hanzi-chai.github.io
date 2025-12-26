@@ -2,7 +2,7 @@ import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useMemo, useState } from "react";
 import Element from "~/components/Element";
-import { repertoireAtom, displayAtom, primitiveRepertoireAtom } from "~/atoms";
+import { repertoireAtom, primitiveRepertoireAtom } from "~/atoms";
 import { list } from "~/api";
 import type {
   BasicComponent,
@@ -23,6 +23,7 @@ import { isEmpty } from "lodash-es";
 import { InlineUpdater } from "~/components/CharacterTable";
 import { Delete, EditGlyph, Merge } from "~/components/Action";
 import { ElementWithTooltip } from "~/components/ElementPool";
+import { Display } from "~/components/Utils";
 
 interface TreeNodeData {
   name: string;
@@ -148,14 +149,13 @@ const DegeneratorTable = () => {
   components.sort((a, b) => a.glyph.length - b.glyph.length);
   const dataSource = components.filter((cache) => cache.glyph.length >= 3);
   const toCompare = components.filter((cache) => cache.glyph.length >= 2);
-  const display = useAtomValue(displayAtom);
   const [page, setPage] = useState(1);
   const columns: ColumnsType<ComputedComponent> = [
     {
       title: "部件",
       dataIndex: "name",
       render: (_, { name }) => {
-        return display(name);
+        return <Display name={name} />;
       },
       width: 128,
     },
@@ -186,7 +186,9 @@ const DegeneratorTable = () => {
             {rootList.map(([name, slices]) => {
               return (
                 <Space key={name}>
-                  <Element>{display(name)}</Element>
+                  <Element>
+                    <Display name={name} />
+                  </Element>
                   {slices.map((x) => `(${convert(x).join(", ")})`).join(", ")}
                 </Space>
               );

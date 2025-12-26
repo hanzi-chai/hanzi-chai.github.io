@@ -104,7 +104,6 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const { componentResults, compoundResults, componentError, compoundError } =
     analysisResult;
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
-  const dictionary = useAtomValue(dictionaryAtom);
   const algebra = useAtomValue(algebraAtom);
   const characters = useAtomValue(charactersAtom);
   const [page, setPage] = useState(1);

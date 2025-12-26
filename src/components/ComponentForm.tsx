@@ -213,7 +213,7 @@ export default function ComponentForm({
   primary,
   readonly,
 }: {
-  title: string;
+  title: ReactNode;
   initialValues: BasicOrDerivedComponent;
   current: string;
   onFinish: (c: BasicOrDerivedComponent) => Promise<boolean>;
@@ -473,7 +473,7 @@ export function IdentityForm({
   primary,
   readonly,
 }: {
-  title: string;
+  title: ReactNode;
   initialValues: Identity;
   current: string;
   onFinish: (c: Identity) => Promise<boolean>;

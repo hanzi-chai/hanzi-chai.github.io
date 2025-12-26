@@ -1,14 +1,9 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
-import {
-  displayAtom,
-  repertoireAtom,
-  sequenceAtom,
-  useChaifenTitle,
-} from "~/atoms";
+import { repertoireAtom, sequenceAtom, useChaifenTitle } from "~/atoms";
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { maxLengthAtom } from "~/atoms";
-import { renderIndexed } from "~/lib";
+import { stringify } from "~/lib";
 import { Suspense, useState } from "react";
 import { assemblyResultAtom } from "~/atoms";
 import { range, sumBy } from "lodash-es";
@@ -21,15 +16,14 @@ const DuplicationMatrix = () => {
   const assemblyResult = useAtomValue(assemblyResultAtom);
   const sequenceMap = useAtomValue(sequenceAtom);
   const repertoire = useAtomValue(repertoireAtom);
-  const display = useAtomValue(displayAtom);
   const processed = assemblyResult.map((x) => {
-    const sequence = x.sequence.map((y) => renderIndexed(y, display));
+    const sequence = x.sequence.map((y) => stringify(y));
     return { sequence, name: x.name };
   });
   const hashedElements = new Set<string>();
   for (const { sequence } of assemblyResult) {
     sequence.forEach((x) => {
-      hashedElements.add(renderIndexed(x, display));
+      hashedElements.add(stringify(x));
     });
   }
   const allElements = [...hashedElements].sort();
@@ -117,7 +111,7 @@ const DuplicationMatrix = () => {
               if (option === undefined) return false;
               const value = option.value.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, "");
               if (repertoire[value] !== undefined) {
-                return sequenceMap.get(value)?.startsWith(input);
+                return sequenceMap.get(value)?.startsWith(input) ?? false;
               }
               return value.includes(input);
             }}

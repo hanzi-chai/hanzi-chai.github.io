@@ -23,6 +23,7 @@ import Element from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
 import { recursiveRenderCompound } from "~/lib";
+import { ReactNode } from "react";
 
 export const CommonForm = () => {
   const tags = useAtomValue(tagsAtom);
@@ -60,7 +61,7 @@ export default function CompoundForm({
   primary,
   readonly,
 }: {
-  title: string;
+  title: ReactNode;
   initialValues: CompoundOrSplicedComponent;
   onFinish: (c: CompoundOrSplicedComponent) => Promise<boolean>;
   noButton?: boolean;

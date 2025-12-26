@@ -468,39 +468,18 @@ export const exportTSV = (data: string[][], filename: string) => {
   processExport(fileContent, filename);
 };
 
-export const renderIndexed = (
-  element: IndexedElement | undefined,
-  display: (s: string) => string,
-) => {
+export const stringify = (element: IndexedElement | undefined) => {
   if (element === undefined) {
     return "ε";
+  } else if (typeof element === "string") {
+    return element;
+  } else {
+    return `${element.element}.${element.index}`;
   }
-  if (typeof element === "string") {
-    return display(element);
-  }
-  return renderSuperScript(display(element.element), element.index);
-};
-
-export const renderSuperScript = (element: string, index: number) => {
-  const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
-  return index
-    ? element + (superscripts[index + 1] ?? superscripts[0])
-    : element;
 };
 
 export const joinKeys = (keys: GeneralizedKey[]) => {
   return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
-};
-
-export const renderMapped = (mapped: string | Key[]) => {
-  if (typeof mapped === "string") {
-    return mapped;
-  }
-  return mapped
-    .map((x) => {
-      return typeof x === "string" ? x : renderSuperScript(x.element, x.index);
-    })
-    .join("");
 };
 
 const match = (

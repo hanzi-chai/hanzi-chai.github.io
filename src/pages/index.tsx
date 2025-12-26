@@ -75,14 +75,22 @@ const StyledListItem = styled(Link)`
 
 export default function HomeLayout() {
   useChaifenTitle("首页");
+  const isSchema = (key: string) => key.length === 9;
+  const isResource = (key: string) =>
+    key.length !== 9 && !["user", "token"].includes(key);
   const [configs, setConfigs] = useImmer(() =>
     Object.fromEntries(
       Object.entries(localStorage)
-        .filter(([key]) => key.length === 9)
+        .filter(([key]) => isSchema(key))
         .map(([key, value]) => {
           const data = JSON.parse(value) as Config;
           return [key, data];
         }),
+    ),
+  );
+  const [resources, setResources] = useImmer(() =>
+    Object.fromEntries(
+      Object.entries(localStorage).filter(([key]) => isResource(key)),
     ),
   );
 
@@ -144,9 +152,15 @@ export default function HomeLayout() {
       localStorage.setItem(id, JSON.stringify(config));
     });
     Object.keys(localStorage)
-      .filter((x) => !configs[x] && x.length === 9)
+      .filter((x) => !configs[x] && isSchema(x))
       .forEach((id) => localStorage.removeItem(id));
-  }, [configs]);
+    Object.entries(resources).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+    Object.keys(localStorage)
+      .filter((x) => !resources[x] && isResource(x))
+      .forEach((key) => localStorage.removeItem(key));
+  }, [configs, resources]);
 
   const listData = Object.entries(configs).map(([id, { info }]) => ({
     id,
@@ -165,6 +179,7 @@ export default function HomeLayout() {
           <List
             dataSource={listData}
             renderItem={ListItem}
+            header={"方案管理"}
             footer={
               <Flex justify="center" gap="middle">
                 <Starter setConfigs={setConfigs} />
@@ -195,6 +210,28 @@ export default function HomeLayout() {
                 />
               </Flex>
             }
+          />
+          <List
+            dataSource={Object.keys(resources).map((key) => ({ key }))}
+            header={"资源管理"}
+            renderItem={({ key }) => (
+              <Flex
+                align="center"
+                justify="space-between"
+                style={{ width: "100%" }}
+              >
+                <span>{key}</span>
+                <DeleteButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setResources((res) => {
+                      delete res[key];
+                      return res;
+                    });
+                  }}
+                />
+              </Flex>
+            )}
           />
         </Flex>
       </Layout.Sider>
