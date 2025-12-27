@@ -128,9 +128,10 @@ export const Display = ({ name, ...rest }: { name: string }) => {
   const glyphMap = useAtomValue(puaGlyphAtom);
   if (!isPUA(name)) {
     return (
-      <span {...rest}>
-        {/^\d$/.test(name) ? "笔画-" : ""}
-        {name}
+      <span {...rest} style={{ whiteSpace: "nowrap" }}>
+        {/^\d$/.test(name)
+          ? String.fromCodePoint(name.codePointAt(0)! + 0xff10 - 0x30)
+          : name}
       </span>
     );
   }

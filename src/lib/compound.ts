@@ -406,14 +406,19 @@ const snow2Serializer: Serializer = (operandResults, glyph) => {
   ).map((i) => operandResults[i]!);
   const first = sortedOperandResults[0]!;
   const second = sortedOperandResults[1]!;
-  const sequence = [
-    first.sequence[0]!,
-    second.sequence[0]!,
-    first.sequence.length > 1 ? "w" : "q",
-  ];
+  const marker =
+    first.full.length == 1
+      ? second.full.length == 1
+        ? "q"
+        : "e"
+      : second.full.length == 1
+        ? "w"
+        : "r";
+  const full = [first.sequence[0]!, second.sequence[0]!];
+  const sequence = [...full, marker];
   return {
     sequence,
-    full: [],
+    full,
     operator: glyph.operator,
     operandResults,
   };
@@ -626,8 +631,12 @@ export const disassembleCompounds = (
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.roots.has(char)) {
       // 复合体本身是一个字根
+      const sequence = [char];
+      if (serializerName === "snow2") {
+        sequence.push("q");
+      }
       compoundResults.set(char, {
-        sequence: [char],
+        sequence: sequence,
         full: [char],
         strokes: 0,
         operator: undefined,
