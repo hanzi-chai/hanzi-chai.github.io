@@ -40,6 +40,7 @@ import type {
 import { range } from "d3-array";
 import { applyRules } from "./element";
 import {
+  Dictionary,
   getDummyBasicComponent,
   isPUA,
   isValidCJKBasicChar,
@@ -180,7 +181,7 @@ export const getRequiredTargets = (
   const knownSet = new Set<string>(characters);
   while (queue.length) {
     const char = queue.shift()!;
-    const glyph = repertoire[char]?.glyph!;
+    const glyph = repertoire[char]!.glyph;
     if (glyph.type === "compound") {
       compounds.add(char);
       const isCurrentRoot = config.roots.has(char);
@@ -303,6 +304,14 @@ interface 动态拆分 {
     }[];
     字块: string[];
   }[];
+  多字词信息: {
+    词: string;
+    频率: number;
+    读音: {
+      拼音: string;
+      [key: string]: any;
+    }[];
+  }[];
   动态拆分: Record<string, string[][]>;
   字根笔画: Record<string, number[]>;
 }
@@ -311,8 +320,8 @@ export const dynamicAnalysis = (
   repertoire: Repertoire,
   config: AnalysisConfig,
   characters: string[],
+  dictionary: Dictionary,
   adaptedFrequency: Map<string, number>,
-  sequenceMap: Map<string, string>,
   algebra: Algebra,
 ) => {
   const { components, compounds } = getRequiredTargets(
@@ -473,9 +482,27 @@ export const dynamicAnalysis = (
       字块: segmentMap.get(x) ?? [],
     };
   });
+  const 多字词信息 = dictionary.map(([word, syllables]) => {
+    const frequency = adaptedFrequency.get(word) ?? 0;
+    const readings = syllables.split(" ").map((pinyin) => {
+      const entry: any = {
+        拼音: pinyin,
+      };
+      for (const [name, rules] of Object.entries(algebra)) {
+        entry[name] = applyRules(name, rules, pinyin);
+      }
+      return entry;
+    });
+    return {
+      词: word,
+      频率: frequency,
+      读音: readings,
+    };
+  });
 
   const result: 动态拆分 = {
     汉字信息,
+    多字词信息,
     动态拆分: Object.fromEntries(segmentDynamicAnalysis),
     字根笔画: Object.fromEntries(getRootSequence(repertoire, config)),
   };

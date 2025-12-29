@@ -38,11 +38,11 @@ const ValueDescriptionEditor = ({
   onChange: (newValue: ValueDescription | undefined) => void;
 }) => {
   const currentCondition = value.condition ?? [];
-  const updateCondition = (index: number, key: string, value: any) => {
+  const updateCondition = (index: number, key: string, update: any) => {
     onChange({
       ...value,
       condition: currentCondition.map((c, i) =>
-        i === index ? { ...c, [key]: value } : c,
+        i === index ? { ...c, [key]: update } : c,
       ),
     });
   };

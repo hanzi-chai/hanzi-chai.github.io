@@ -74,7 +74,7 @@
     "use-immer": "^0.10.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.3.10",
     "@emotion/react": "^11.14.0",
     "@jsdevtools/version-bump-prompt": "^6.1.0",
     "@mdx-js/react": "^3.1.0",
@@ -114,5 +114,7 @@
   "peerDependencies": {
     "decimal.js": "^10.5.0"
   },
-  "pre-commit": ["format"]
+  "pre-commit": [
+    "format"
+  ]
 }

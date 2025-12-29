@@ -104,6 +104,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const { componentResults, compoundResults, componentError, compoundError } =
     analysisResult;
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
+  const dictionary = useAtomValue(dictionaryAtom);
   const algebra = useAtomValue(algebraAtom);
   const characters = useAtomValue(charactersAtom);
   const [page, setPage] = useState(1);
@@ -196,7 +197,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
             dumpAnalysisResult(characters, analysisResult, display)
           }
         >
-          导出完整拆分
+          导出拆分
         </Button>
         <Button
           onClick={() => {
@@ -243,11 +244,10 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
               repertoire,
               analysisConfig,
               characters,
+              dictionary,
               adaptedFrequency,
-              sequenceMap,
               algebra,
             );
-            result.当前拆分 = [];
             exportYAML(result, "dynamic_analysis", 2);
           }}
         >

@@ -109,7 +109,9 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
 
 export const DisplayOptionalSuperscript = ({
   element,
-}: { element: IndexedElement }) => {
+}: {
+  element: IndexedElement;
+}) => {
   if (typeof element === "string") {
     return <Display name={element} />;
   } else {
