@@ -23,7 +23,7 @@ import type {
   IndexedElement,
   Key,
 } from "~/lib";
-import { stringify } from "~/lib";
+import { parseKey, stringify } from "~/lib";
 import { Suspense, useState } from "react";
 import { assemblyResultAtom } from "~/atoms";
 import type { ColumnsType } from "antd/es/table";
@@ -274,12 +274,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       dataIndex: "name",
       key: "name",
       render: (_, record) => {
-        const element: IndexedElement = record.name.includes(".")
-          ? {
-              element: record.name.split(".")[0]!,
-              index: parseInt(record.name.split(".")[1]!, 10),
-            }
-          : record.name;
+        const element: IndexedElement = parseKey(record.name)!;
         return <DisplayOptionalSuperscript element={element} />;
       },
       width: 192,

@@ -8,8 +8,9 @@ import type {
   EncodeResult,
   Metric,
   PronunciationElementTypes,
+  Value,
 } from "~/lib";
-import { applyRules, defaultAlgebra } from "~/lib";
+import { applyRules, defaultAlgebra, isMerge } from "~/lib";
 import {
   algebraAtom,
   analysisAtom,
@@ -60,9 +61,23 @@ export const analysisConfigAtom = atom(async (get) => {
       optionalRoots.add(key);
     }
   }
+  const analysis = get(analysisAtom);
+  const roots = new Map(Object.entries(mapping).filter(([x]) => repertoire[x]));
+  if (analysis.serializer === "feihua") {
+    for (const root of roots.keys()) {
+      // e43d: 全字头、e0e3: 乔字底、e0ba: 亦字底无八、e439: 见二、e431: 聿三、e020: 负字头、e078：卧人、e03e：尚字头、e42d：学字头、e07f：荒字底、e02a：周字框、e087：木无十、f001: 龰字底、e41a：三竖、e001: 两竖、e17e: 西字心
+      if (
+        !/[12345二\ue001三\ue41a口八丷\ue087宀日人\ue43d\uf001十乂亠厶冂\ue439\ue02a儿\ue17e\ue0e3\ue0ba大小\ue03e\ue442川彐\ue431\ue020\ue078\ue42d\ue07f]/.test(
+          root,
+        )
+      ) {
+        optionalRoots.add(root);
+      }
+    }
+  }
   const analysisConfig: AnalysisConfig = {
-    analysis: get(analysisAtom),
-    roots: new Map(Object.entries(mapping).filter(([x]) => repertoire[x])),
+    analysis,
+    roots,
     optionalRoots,
   };
   return analysisConfig;

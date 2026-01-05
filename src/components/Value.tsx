@@ -8,9 +8,11 @@ import ElementSelect from "./ElementSelect";
 const KeysEditor = ({
   value,
   onChange,
+  isCurrent,
 }: {
   value: string | GeneralizedKey[];
   onChange: (newValue: string | GeneralizedKey[]) => void;
+  isCurrent?: boolean;
 }) => {
   const mappingType = useAtomValue(mappingTypeAtom);
   const keys = Array.from(value);
@@ -31,6 +33,8 @@ const KeysEditor = ({
               onChange(joinKeys(newValue));
             }}
             allowEmpty={index !== 0}
+            disablePlaceholder={isCurrent}
+            disableVariables={isCurrent}
           />
         );
       })}
@@ -43,10 +47,11 @@ type ValueType = "禁用" | "键位" | "归并";
 const ValueEditor = ({
   value,
   onChange,
+  isCurrent,
 }: {
   value: GeneralizedValue;
   onChange: (newValue: GeneralizedValue) => void;
-  excludeNull?: boolean;
+  isCurrent?: boolean;
 }) => {
   const alphabet = useAtomValue(alphabetAtom);
   const currentType =
@@ -79,7 +84,7 @@ const ValueEditor = ({
           }}
         />
       ) : value !== null ? (
-        <KeysEditor value={value} onChange={onChange} />
+        <KeysEditor value={value} onChange={onChange} isCurrent={isCurrent} />
       ) : null}
     </Flex>
   );

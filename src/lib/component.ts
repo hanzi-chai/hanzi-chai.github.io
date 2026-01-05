@@ -192,7 +192,7 @@ export const getComponentScheme = (
   let sequence = best.scheme.map((n) => rootMap.get(n)!);
   return {
     sequence,
-    full: sequence,
+    full: [...sequence],
     strokes: component.glyph.length,
     map: rootMap,
     best,

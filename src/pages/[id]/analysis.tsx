@@ -117,13 +117,12 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
     ...Object.keys(dynamicCustomize),
   ]);
   const mapping = useAtomValue(mappingAtom);
-  const mappingSpace = useAtomValue(mappingSpaceAtom);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
   const analysisConfig = useAtomValue(analysisConfigAtom);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
   const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
-    if (mappingSpace[k]?.some((x) => x.value == null)) return true;
+    if (analysisConfig.optionalRoots.has(k)) return true;
     if (mapping[k]) return false;
     if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
     return true;
@@ -247,6 +246,13 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
               dictionary,
               adaptedFrequency,
               algebra,
+            );
+            exportTSV(
+              result.汉字信息.map(({ 部首, 汉字 }) => [
+                汉字,
+                repertoire[部首]?.name ?? 部首 ?? "",
+              ]),
+              "radicals.txt",
             );
             exportYAML(result, "dynamic_analysis", 2);
           }}

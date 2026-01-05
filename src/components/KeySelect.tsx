@@ -16,14 +16,24 @@ export interface KeySelectProps {
   allowEmpty?: boolean;
   disableAlphabets?: boolean;
   disableElements?: boolean;
+  disableVariables?: boolean;
+  disablePlaceholder?: boolean;
 }
 
+// 有五种可能的 key 类型：
+// 1. 字符串，表示字母表中的某个字母
+// 2. 对象 { element: string, index: number }，表示映射到某个元素的第 index 个位置
+// 3. 对象 { variable: string }，表示映射变量
+// 4. null，表示占位符
+// 5. 空字符串，表示无键位
 export default function KeySelect({
   value,
   onChange,
   allowEmpty,
   disableAlphabets,
   disableElements,
+  disableVariables,
+  disablePlaceholder,
 }: KeySelectProps) {
   const keyOptions: BaseOptionType[] = allowEmpty
     ? [{ label: "无", value: JSON.stringify("") }]
@@ -51,8 +61,9 @@ export default function KeySelect({
     label: key,
     value: JSON.stringify({ variable: key }),
   }));
-  keyOptions.push(...variableOptions);
-  keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
+  if (!disableVariables) keyOptions.push(...variableOptions);
+  if (!disablePlaceholder)
+    keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
   const sequenceMap = useAtomValue(sequenceAtom);
   const form = useAtomValue(repertoireAtom);
   return (

@@ -23,6 +23,7 @@ import {
   type PartialWeightTypes,
   type AdaptedFrequency,
   stringify,
+  parseKey,
 } from "~/lib";
 import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
@@ -30,6 +31,7 @@ import { blue } from "@ant-design/colors";
 import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
+import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
 
 const { Column, Heatmap } = await import("~/components/export/charts");
 
@@ -562,7 +564,7 @@ const DuplicationDistribution = () => {
           const k1 = stringify(first.sequence[i]);
           const k2 = stringify(second.sequence[i]);
           if (k1 === k2) continue;
-          const key = `${k1}, ${k2}`;
+          const key = `${k1} ${k2}`;
           const previous = pairMap.get(key) ?? [];
           previous.push(pair);
           pairMap.set(key, previous);
@@ -584,11 +586,22 @@ const DuplicationDistribution = () => {
       title: "键",
       dataIndex: "key",
       key: "key",
+      width: 128,
+      render: (key: string) => {
+        const [first, second] = key.split(" ").map(parseKey);
+        return (
+          <span>
+            <DisplayOptionalSuperscript element={first!} />・
+            <DisplayOptionalSuperscript element={second!} />
+          </span>
+        );
+      },
     },
     {
       title: "数量",
       dataIndex: "count",
       key: "count",
+      width: 64,
     },
     {
       title: "对象",
@@ -607,7 +620,7 @@ const DuplicationDistribution = () => {
       <Typography.Paragraph>
         重码总数：{sumBy([...duplicationMap.values()], (x) => x.length - 1)}
       </Typography.Paragraph>
-      <Table dataSource={dataSource} columns={columns} />
+      <Table dataSource={dataSource} columns={columns} size="small" />
     </>
   );
 };

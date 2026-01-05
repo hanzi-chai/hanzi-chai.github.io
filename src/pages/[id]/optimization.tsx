@@ -22,7 +22,6 @@ import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useRef } from "react";
 import { objectiveAtom, regularizationStrengthAtom } from "~/atoms";
-import KeySelect from "~/components/KeySelect";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
 import {

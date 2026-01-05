@@ -255,18 +255,16 @@ export const analysis = (
   for (const [component, sequenceList] of Object.entries(
     config.analysis?.dynamic_customize ?? {},
   )) {
-    const previousResult = componentResults.get(component);
-    if (previousResult === undefined) continue;
-    let found = false;
+    const previousResult = componentResults.get(
+      component,
+    ) as ComponentGenuineAnalysis;
     for (const sequence of sequenceList) {
       if (!sequence.every((x) => /\d/.test(x) || all.has(x))) continue;
-      const pseudoResult: ComponentBasicAnalysis = {
-        strokes: 0,
+      const pseudoResult: ComponentGenuineAnalysis = {
+        ...previousResult,
         sequence: sequence,
         full: sequence,
-        operator: undefined,
       };
-      found = true;
       customizations.set(component, pseudoResult);
       break;
     }
@@ -340,6 +338,8 @@ export const dynamicAnalysis = (
   const segmentMap = new Map<string, string[]>();
   // 动态拆分：一个字块有若干种拆分方式
   const segmentDynamicAnalysis = new Map<string, string[][]>();
+  // 部首映射：只用于飞花
+  const bushouMap = new Map<string, string>();
 
   // 处理部件作为字块的动态拆分，而字块映射是它自己
   for (const [name, analysis] of componentResults) {
@@ -391,6 +391,9 @@ export const dynamicAnalysis = (
     return name;
   };
 
+  // 只用于飞花
+  const fullSegmentMap = new Map<string, string[]>(segmentMap.entries());
+
   // 处理复合体的字块映射，如果它同时也作为字块，就处理它的动态拆分
   for (const [name, compound] of sortedCompounds) {
     const isCurrentRoots = config.roots.has(name);
@@ -399,6 +402,7 @@ export const dynamicAnalysis = (
     if (isCurrentRoots && !isOptionalRoots) {
       segmentDynamicAnalysis.set(name, [[name]]);
       segmentMap.set(name, [name]);
+      fullSegmentMap.set(name, [name]);
       continue;
     }
 
@@ -428,6 +432,73 @@ export const dynamicAnalysis = (
           seenIndex.set(index, end);
         }
       }
+    } else if (config.analysis.serializer === ("feihua" as SerializerType)) {
+      // 飞花需要处理部首
+      const sortedOperandList = sortBy(range(glyph.operandList.length), (i) =>
+        order.findIndex((b) => b.index === i),
+      ).map((i) => glyph.operandList[i]!);
+      const fullComponentList: string[] = [];
+      for (const child of sortedOperandList) {
+        fullComponentList.push(...fullSegmentMap.get(child)!);
+      }
+      fullSegmentMap.set(name, fullComponentList);
+      // 判断部首：第一个或最后一个恰好为一字根
+      const first = sortedOperandList[0]!;
+      const last = sortedOperandList.at(-1)!;
+      const firstDynamic = segmentDynamicAnalysis.get(first);
+      const lastDynamic = segmentDynamicAnalysis.get(last);
+      const res: string[] = [];
+      if (
+        /[⿴⿵⿶⿷⿸⿹⿺⿼⿽⿻]/.test(glyph.operator) &&
+        componentResults.has(glyph.operandList[0]!)
+      ) {
+        bushouMap.set(
+          name,
+          segmentDynamicAnalysis.get(glyph.operandList[0]!)![0]![0]!,
+        );
+        res.push(...glyph.operandList.slice(1));
+      } else if (
+        firstDynamic?.[0]?.length === 1 &&
+        lastDynamic?.[0]?.length === 1 &&
+        /[又]/.test(firstDynamic[0]![0]!)
+      ) {
+        bushouMap.set(name, lastDynamic[0]![0]!);
+        res.push(...sortedOperandList.slice(0, -1));
+      } else if (firstDynamic?.[0]?.length === 1) {
+        bushouMap.set(name, firstDynamic[0]![0]!);
+        res.push(...sortedOperandList.slice(1));
+      } else if (lastDynamic?.[0]?.length === 1) {
+        bushouMap.set(name, lastDynamic[0]![0]!);
+        res.push(...sortedOperandList.slice(0, -1));
+      } else {
+        const firstSegments = fullSegmentMap.get(first)!;
+        const segment = firstSegments[0]!;
+        const bushou = segmentDynamicAnalysis.get(segment)![0]![0]!;
+        bushouMap.set(name, bushou);
+        res.push(...sortedOperandList.slice(1));
+      }
+      if (res.length === 1) {
+        const only = res[0]!;
+        if (!sortedCompounds.has(only)) {
+          componentList.push(...fullSegmentMap.get(only)!.slice(0, 2));
+        } else {
+          const subglyph = sortedCompounds.get(only)!.glyph;
+          const order =
+            subglyph.order ??
+            subglyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
+          const sortedOperandList = sortBy(
+            range(subglyph.operandList.length),
+            (i) => order.findIndex((b) => b.index === i),
+          ).map((i) => subglyph.operandList[i]!);
+          for (const part of sortedOperandList) {
+            componentList.push(...fullSegmentMap.get(part)![0]!);
+          }
+        }
+      } else {
+        for (const child of res) {
+          componentList.push(fullSegmentMap.get(child)![0]!);
+        }
+      }
     } else {
       const sortedOperandList = sortBy(range(glyph.operandList.length), (i) =>
         order.findIndex((b) => b.index === i),
@@ -450,16 +521,6 @@ export const dynamicAnalysis = (
       segmentMap.set(name, componentList);
     }
   }
-  for (const [segment, methods] of segmentDynamicAnalysis) {
-    const last = methods[methods.length - 1]!;
-    if (!last.every((x) => !config.optionalRoots.has(x))) {
-      console.warn(
-        `Dynamic analysis for ${segment} ${segment.codePointAt(
-          0,
-        )} contains optional roots: ${JSON.stringify(last)}`,
-      );
-    }
-  }
   const 汉字信息 = characters.map((x) => {
     const readings = repertoire[x]?.readings ?? [];
     const frequency = adaptedFrequency.get(x) ?? 0;
@@ -475,11 +536,12 @@ export const dynamicAnalysis = (
     });
     return {
       汉字: x,
-      通规: repertoire[x]?.tygf ?? 0,
-      gb2312: repertoire[x]?.gb2312 ?? 0,
+      通规: repertoire[x]!.tygf,
+      gb2312: repertoire[x]!.gb2312,
       频率: frequency,
       读音: frequencies,
       字块: segmentMap.get(x) ?? [],
+      部首: bushouMap.get(x),
     };
   });
   const 多字词信息 = dictionary.map(([word, syllables]) => {

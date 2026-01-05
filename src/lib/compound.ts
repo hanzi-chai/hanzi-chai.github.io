@@ -17,6 +17,7 @@ import type {
 import { first, range, sortBy } from "lodash-es";
 import type { BoundingBox } from "./bezier";
 import { classifier } from "./classifier";
+import { isMerge } from "./config";
 
 export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 
@@ -529,25 +530,62 @@ const feihuaSerializer: Serializer = (operandResults, glyph, config) => {
     order.findIndex((b) => b.index === i),
   ).map((i) => operandResults[i]!);
   const sequence: string[] = [];
-  const full = sequentialSerializer(operandResults, glyph, config).full;
   const first = sortedOperandResults[0]!;
   const last = sortedOperandResults.at(-1)!;
-  if (first.full.length !== 1 && last.full.length === 1) {
-    sequence.push(...last.full);
-    if (last.full.length === 1 && last.full[0] === "阝") {
-      sequence[0] = "邑";
+  const handleResidual = (sequence: string[], parts: PartitionResult[]) => {
+    if (parts.length > 1) {
+      for (const x of parts) {
+        // @ts-ignore
+        sequence.push(...x.full2[0]!);
+      }
+    } else {
+      const part = parts[0]!;
+      if ("operandResults" in part) {
+        for (const x of part.operandResults) {
+          // @ts-ignore
+          sequence.push(...x.full2[0]!);
+        }
+      } else {
+        // @ts-ignore
+        sequence.push(...part.full2);
+      }
     }
-    for (const x of sortedOperandResults.slice(0, -1)) {
-      sequence.push(...x.full);
-    }
+  };
+  if (
+    /[⿴⿵⿶⿷⿸⿹⿺⿼⿽⿻]/.test(glyph.operator) &&
+    "strokes" in operandResults[0]!
+  ) {
+    sequence.push(operandResults[0]!.full[0]!);
+    handleResidual(sequence, operandResults.slice(1));
+  } else if (
+    first.full.length === 1 &&
+    /[又]/.test(first.full[0]!) &&
+    last.full.length === 1
+  ) {
+    sequence.push(last.full[0]!);
+    handleResidual(sequence, sortedOperandResults.slice(0, -1));
+  } else if (first.full.length !== 1 && last.full.length === 1) {
+    sequence.push(last.full[0]!);
+    handleResidual(sequence, sortedOperandResults.slice(0, -1));
   } else {
-    for (const x of sortedOperandResults) {
-      sequence.push(...x.full);
-    }
+    sequence.push(first.full[0]!);
+    handleResidual(sequence, sortedOperandResults.slice(1));
   }
+  const full = sequentialSerializer(operandResults, glyph, config).full;
+  const backups = operandResults.map((x) => x.full);
+  operandResults.forEach((part) => {
+    // @ts-ignore
+    part.full = [...part.full2];
+  });
+  const full2 = sequentialSerializer(operandResults, glyph, config).full;
+  operandResults.forEach((part, i) => {
+    // @ts-ignore
+    part.full = backups[i];
+  });
   return {
     sequence,
     full,
+    full2,
     operator: glyph.operator,
     operandResults,
   };
@@ -627,9 +665,49 @@ export const disassembleCompounds = (
       result.sequence = result.sequence.slice(0, 1);
       if (result.sequence[0] !== key) result.sequence.push("");
     }
+  } else if (serializerName === "feihua") {
+    for (const [key, result] of componentResults.entries()) {
+      if ("schemes" in result) {
+        const dc = config.analysis?.dynamic_customize ?? {};
+        const schemeList =
+          dc[key] ??
+          result.schemes.filter((x) => x.optional).map((x) => x.roots);
+        const scheme = schemeList.find((x) =>
+          x.every((r) => {
+            let value = config.roots.get(r)!;
+            while (isMerge(value)) {
+              value = config.roots.get(value.element)!;
+            }
+            return /[aoeiuv;/]/.test(value as string);
+          }),
+        )!;
+        // @ts-ignore
+        result.full2 = scheme;
+        result.sequence = scheme.slice(0, 3);
+      } else {
+        // @ts-ignore
+        result.full2 = [...result.full];
+      }
+    }
   }
   for (const [char, { glyph }] of compounds.entries()) {
     if (config.roots.has(char)) {
+      if (serializerName === "feihua") {
+        const rawOperandResults = glyph.operandList.map(getResult);
+        const operandResults = rawOperandResults as PartitionResult[];
+        const serialization = serializer(operandResults, glyph, config);
+        serialization.full = [char];
+        let value = config.roots.get(char)!;
+        while (isMerge(value)) {
+          value = config.roots.get(value.element)!;
+        }
+        if (/[aoeiuv;/]/.test(value as string)) {
+          // @ts-ignore
+          serialization.full2 = [char];
+        }
+        compoundResults.set(char, serialization);
+        continue;
+      }
       // 复合体本身是一个字根
       const sequence = [char];
       if (serializerName === "snow2") {
@@ -638,6 +716,8 @@ export const disassembleCompounds = (
       compoundResults.set(char, {
         sequence: sequence,
         full: [char],
+        // @ts-ignore
+        full2: [char],
         strokes: 0,
         operator: undefined,
       });

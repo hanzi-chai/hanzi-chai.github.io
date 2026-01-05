@@ -93,6 +93,7 @@ const ElementDetail = ({
               addMapping(name, newValue as Exclude<Value, null>);
             }
           }}
+          isCurrent
         />
         <DeleteButton
           onClick={() => removeMapping(name)}
@@ -178,18 +179,13 @@ export const AdjustableElementGroup = ({
           <span style={{ fontSize: "0.85em", paddingLeft: "2px" }}>
             {typeof rest === "string"
               ? rest
-              : rest
-                  .map((x) => {
-                    return typeof x === "string" ? (
-                      x
-                    ) : (
-                      <DisplayWithSuperScript
-                        name={x.element}
-                        index={x.index}
-                      />
-                    );
-                  })
-                  .join("")}
+              : rest.map((x) => {
+                  return typeof x === "string" ? (
+                    x
+                  ) : (
+                    <DisplayWithSuperScript name={x.element} index={x.index} />
+                  );
+                })}
           </span>
         )
       }

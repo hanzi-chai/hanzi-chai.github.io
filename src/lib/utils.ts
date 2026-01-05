@@ -478,6 +478,21 @@ export const stringify = (element: IndexedElement | undefined) => {
   }
 };
 
+export const parseKey = (key: string): IndexedElement | undefined => {
+  if (key === "ε") {
+    return undefined;
+  } else if (key.includes(".")) {
+    const [element, index_s] = key.split(".");
+    const index = Number(index_s);
+    if (Number.isNaN(index)) {
+      throw new Error(`无法解析的键：${key}`);
+    }
+    return { element: element!, index };
+  } else {
+    return key;
+  }
+};
+
 export const joinKeys = (keys: GeneralizedKey[]) => {
   return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
 };
