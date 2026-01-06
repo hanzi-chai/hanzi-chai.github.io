@@ -22,53 +22,57 @@ await init();
 
 let currentPort: MessagePort | null = null;
 
-// 优化状态
-type StatusResponse = {
-  is_running: boolean;
-  progress?: any; // 根据实际进度数据类型调整
-  error?: string; // 可选错误信息
-};
+// 优化状态响应类型
+type OptimizationStatus =
+  | { status: "idle" }
+  | { status: "running"; message: any }
+  | { status: "completed"; final_message?: any }
+  | { status: "failed"; error: string };
 
-// 轮询状态检查函数
-async function pollStatus(onProgress?: (data: any) => void): Promise<any> {
-  const maxAttempts = 1800; // 30分钟 (1800 * 1秒)
-  let attempts = 0;
-
-  while (attempts < maxAttempts) {
+// 通过 SSE 监听优化进度
+async function updateStatus(onProgress?: (data: any) => void): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const sseUrl = `/sse/status`;
+    let eventSource: EventSource;
     try {
-      const response = await axios.get("/api/status", {
-        timeout: 5000,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data: StatusResponse = response.data;
-      if (!data.is_running) return "优化已完成";
-      if (data.progress) {
-        // 如果有进度数据，调用回调函数
-        onProgress?.(data.progress);
-      }
+      eventSource = new EventSource(sseUrl);
+
+      eventSource.onopen = () => {
+        console.log("✅ SSE 已连接:", sseUrl);
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const response: OptimizationStatus = JSON.parse(event.data);
+          console.log("📩 SSE 消息:", response);
+          switch (response.status) {
+            case "idle":
+              // 空闲状态，无需处理
+              break;
+            case "running":
+              onProgress?.(response.message);
+              break;
+            case "completed":
+              eventSource.close();
+              resolve(response.final_message);
+              break;
+            case "failed":
+              eventSource.close();
+              reject(new Error(response.error));
+              break;
+          }
+        } catch (error) {
+          console.error("❌ SSE 消息解析失败:", error);
+        }
+      };
+
+      eventSource.onerror = (event) => {
+        console.error("❌ SSE 连接错误:", event);
+      };
     } catch (error) {
-      console.warn(
-        `⚠️ 状态轮询失败 (尝试 ${attempts + 1}/${maxAttempts}):`,
-        error,
-      );
-
-      // 如果是网络错误，等待更长时间后重试
-      if (
-        axios.isAxiosError(error) &&
-        (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND")
-      ) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      }
+      console.error("❌ SSE 连接失败:", error);
     }
-
-    // 等待200ms后继续轮询
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    attempts++;
-  }
-
-  throw new Error("优化超时 - 已达到最大轮询次数");
+  });
 }
 
 self.onmessage = async (event: MessageEvent<WorkerInput>) => {
@@ -91,7 +95,7 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
           data[3],
           data[4],
           data[5],
-          data[6],
+          data[6]
         );
         port.postMessage({ type: "success", result });
         break;
@@ -111,8 +115,8 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
           await apiCall("sync", data[0]);
           // 启动优化
           await apiCall("optimize", {});
-          // 开始轮询状态，并转发进度消息到主线程
-          result = await pollStatus((progressData) => {
+          // 发送进度消息到主线程
+          result = await updateStatus((progressData) => {
             if (currentPort) {
               currentPort.postMessage(progressData);
             }
