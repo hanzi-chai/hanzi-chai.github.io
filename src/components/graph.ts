@@ -1,7 +1,8 @@
 import type { Edge, Node } from "reactflow";
 import type { BinaryCondition, Condition, Source, UnaryCondition } from "~/lib";
-import { add, sum } from "../lib/mathjs";
+import { add } from "../lib/mathjs";
 import { createContext } from "react";
+import { sum } from "lodash-es";
 
 export const CacheContext = createContext<{
   sources: Record<string, Source>;

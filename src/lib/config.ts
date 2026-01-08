@@ -9,6 +9,7 @@ import type {
 } from "./data";
 import type { CodableObject } from "./element";
 import type { Example } from "./templates";
+import { type 变换器 } from "./transformer";
 
 // config.info begin
 export interface Info {
@@ -39,6 +40,7 @@ export interface Data {
   glyph_customization?: CustomGlyph;
   reading_customization?: CustomReadings;
   tags?: string[];
+  transformers?: 变换器[];
 }
 
 export type CustomGlyph = Record<string, Component | Compound | Identity>;

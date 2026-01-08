@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { repertoireAtom, sequenceAtom, sortedCharactersAtom } from "~/atoms";
 import { Display, Select } from "./Utils";
 import type { SelectProps } from "antd";
@@ -8,12 +8,13 @@ import type { ProFormSelectProps } from "@ant-design/pro-components";
 
 interface ItemSelectProps extends SelectProps {
   customFilter?: (e: [string, Character]) => boolean;
+  includeVariables?: boolean;
 }
 
 export default function CharacterSelect(
   props: ItemSelectProps & ProFormSelectProps,
 ) {
-  const { customFilter, ...rest } = props;
+  const { customFilter, includeVariables, ...rest } = props;
   const sortedCharacters = useAtomValue(sortedCharactersAtom);
   const repertoire = useAtomValue(repertoireAtom);
   const sortedRepertoire = sortedCharacters.map((x) => [x, repertoire[x]]) as [
@@ -21,11 +22,16 @@ export default function CharacterSelect(
     Character,
   ][];
   const [data, setData] = useState<SelectProps["options"]>([]);
-  const char = props.value;
+  const char: string = props.value;
   const sequenceMap = useAtomValue(sequenceAtom);
   useEffect(() => {
     const initial = char
-      ? [{ value: char, label: <Display name={char} /> }]
+      ? [
+          {
+            value: char,
+            label: char.length === 1 ? <Display name={char} /> : char,
+          },
+        ]
       : [];
     setData(initial);
   }, [props.value, char]);
@@ -45,7 +51,7 @@ export default function CharacterSelect(
               {x.codePointAt(0)?.toString(16)}
             </span>
           </span>
-        ),
+        ) as React.ReactNode,
       }))
       .filter(({ value }) => {
         return sequenceMap.get(value)?.startsWith(input);
@@ -53,6 +59,15 @@ export default function CharacterSelect(
     const minResults = allResults.filter(
       ({ value }) => sequenceMap.get(value)?.length === input.length,
     );
+    if (includeVariables) {
+      const num = parseInt(input, 10);
+      if (!isNaN(num) && num > 0) {
+        allResults.unshift({
+          value: `变量 ${num}`,
+          label: `变量 ${num}`,
+        });
+      }
+    }
     setData(allResults.slice(0, Math.max(5, minResults.length)));
   };
   const commonProps: SelectProps & ProFormSelectProps = {

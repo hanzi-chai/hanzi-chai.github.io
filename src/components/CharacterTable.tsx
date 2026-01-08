@@ -48,6 +48,7 @@ import { findGlyphIndex } from "~/lib";
 import type { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import { ElementWithTooltip } from "./ElementPool";
+import TransformersForm from "./Transformers";
 
 type Column = ColumnType<PrimitiveCharacter>;
 
@@ -488,6 +489,7 @@ export default function CharacterTable() {
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
         <TagPicker />
+        <TransformersForm />
         <Create onCreate={() => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>

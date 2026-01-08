@@ -134,6 +134,13 @@ export interface Block {
   strokes: number;
 }
 
+/**
+ * 复合体的参数
+ * gap2: 第二部分复合体和之前的间距
+ * scale2: 第二部分复合体的缩放比例
+ * gap3: 第三部分复合体和之前的间距
+ * scale3: 第三部分复合体的缩放比例
+ */
 export interface CompoundParameters {
   gap2?: number;
   scale2?: number;
@@ -157,14 +164,27 @@ export interface Compound {
   parameters?: CompoundParameters;
 }
 
+/**
+ * 全等 Identity
+ * source: 全等的源字
+ * tags: 全等的标签
+ */
 export interface Identity {
   type: "identity";
   tags?: string[];
   source: string;
 }
 
+/**
+ * 一个字形可以是复合体、部件或全等
+ */
 export type Glyph = Component | Compound | Identity;
 
+/**
+ * 字符的读音
+ * pinyin: 字符的拼音
+ * importance: 读音占总读音的比例，范围为 0 到 100
+ */
 export interface Reading {
   pinyin: string;
   importance: number;
@@ -197,6 +217,7 @@ export interface PrimitiveCharacter {
 /**
  * 字符 Character
  * 与原始字符相比，省略了 ambiguous 字段，并且将 glyphs 字段替换为唯一的一个 glyph
+ * 此时的 glyph 要么是基本部件，要么是复合体
  */
 export interface Character
   extends Omit<PrimitiveCharacter, "glyphs" | "ambiguous"> {

@@ -39,13 +39,8 @@ import type {
 } from "./data";
 import { range } from "d3-array";
 import { applyRules } from "./element";
-import {
-  Dictionary,
-  getDummyBasicComponent,
-  isPUA,
-  isValidCJKBasicChar,
-  unicodeBlockRank,
-} from "./utils";
+import { type Dictionary, getDummyBasicComponent, isPUA } from "./utils";
+import { 变换器, 应用变换器 } from "./transformer";
 
 export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
   for (const tag of tags) {
@@ -74,7 +69,9 @@ export const determine = (
   customGlyph: CustomGlyph = {},
   customReadings: CustomReadings = {},
   tags: string[] = [],
+  transformers: 变换器[] = [],
 ) => {
+  console.log("Determining repertoire with tags:", transformers);
   const determined: Repertoire = {};
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
@@ -91,7 +88,11 @@ export const determine = (
     };
     determined[name] = determined_character;
   }
-  return determined;
+  let final = determined;
+  for (const transformer of transformers) {
+    final = 应用变换器(final, transformer);
+  }
+  return final;
 };
 
 function recursiveHandleRawGlyph(

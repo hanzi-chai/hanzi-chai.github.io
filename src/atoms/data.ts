@@ -22,6 +22,7 @@ import type { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
 import { sortBy } from "lodash-es";
+import { 变换器 } from "~/lib/transformer";
 
 export const characterSetAtom = focusAtom(dataAtom, (o) =>
   o.prop("character_set").valueOr("general" as CharacterSetSpecifier),
@@ -40,6 +41,10 @@ export const customReadingsAtom = focusAtom(dataAtom, (o) =>
 customReadingsAtom.debugLabel = "config.data.customReadings";
 export const userTagsAtom = focusAtom(dataAtom, (o) =>
   o.prop("tags").valueOr([] as string[]),
+);
+
+export const transformersAtom = focusAtom(dataAtom, (o) =>
+  o.prop("transformers").valueOr([] as 变换器[]),
 );
 
 export const charactersAtom = atom((get) => {
@@ -92,7 +97,8 @@ export const repertoireAtom = atom((get) => {
   const customGlyph = get(customGlyphAtom);
   const customReadings = get(customReadingsAtom);
   const tags = get(userTagsAtom);
-  return determine(repertoire, customGlyph, customReadings, tags);
+  const transformers = get(transformersAtom);
+  return determine(repertoire, customGlyph, customReadings, tags, transformers);
 });
 
 export const puaGlyphAtom = atom((get) => {

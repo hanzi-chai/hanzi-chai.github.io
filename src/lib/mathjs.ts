@@ -18,11 +18,3 @@ export const mean = (a: N2): number => (a[0] + a[1]) / 2;
 
 export const distance = (a: N2, b: N2): number =>
   Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
-
-export const sum = (arr: number[]) => {
-  let result = 0;
-  for (let i = 0; i < arr.length; i++) {
-    result += arr[i]!;
-  }
-  return result;
-};

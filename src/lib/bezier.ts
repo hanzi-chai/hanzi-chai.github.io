@@ -28,6 +28,10 @@ interface CubicCurve {
   controls: [Point, Point, Point, Point];
 }
 
+/**
+ * 圆弧曲线
+ * 用于表示笔画「圈」
+ */
 interface ArcCurve {
   type: "arc";
   orientation: Orientation;
@@ -35,7 +39,7 @@ interface ArcCurve {
 }
 
 /**
- * Bezier 曲线，可能为一次或者三次
+ * Bezier 曲线，可能为一次、三次或圆弧
  */
 type Curve = LinearCurve | CubicCurve | ArcCurve;
 
