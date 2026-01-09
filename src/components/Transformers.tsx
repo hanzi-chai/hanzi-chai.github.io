@@ -26,7 +26,7 @@ const PatternEditor: React.FC<{
   return typeof value === "string" || isVariable(value) ? (
     <Flex vertical align="center">
       <CharacterSelect
-        style={{ width: 80 }}
+        style={{ width: 88 }}
         value={selectValue}
         onChange={(v: string) =>
           /^变量 \d+$/.test(v)
@@ -100,11 +100,11 @@ const TransformersForm = () => {
         creatorRecord={getDummyTransformer}
         alwaysShowItemLabel
       >
-        <ProFormItem label="从" name="from">
+        <ProFormItem label="查找" name="from" style={{ marginBottom: 0 }}>
           {/* @ts-ignore */}
           <PatternEditor />
         </ProFormItem>
-        <ProFormItem label="到" name="to">
+        <ProFormItem label="替换为" name="to">
           {/* @ts-ignore */}
           <PatternEditor />
         </ProFormItem>

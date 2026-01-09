@@ -16,8 +16,10 @@ import {
   allRepertoireAtom,
   customGlyphAtom,
   customReadingsAtom,
+  determinedRepertoireAtom,
   errorFeedback,
   primitiveRepertoireAtom,
+  repertoireAtom,
   sequenceAtom,
   sortedCharactersAtom,
   useAddAtom,
@@ -186,11 +188,18 @@ export const InlineCustomizer = ({
 }: {
   character: PrimitiveCharacter;
 }) => {
+  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
+  const repertoire = useAtomValue(repertoireAtom);
   const addCustomGlyph = useAddAtom(customGlyphAtom);
   const customGlyph = useAtomValue(customGlyphAtom);
   const { unicode } = character;
   const char = String.fromCodePoint(unicode);
-  const customized = customGlyph[char];
+  let customized = customGlyph[char];
+  let readonly = false;
+  if (repertoire[char] !== determinedRepertoire[char]) {
+    customized = repertoire[char]!.glyph;
+    readonly = true;
+  }
   if (customized === undefined) return null;
   const title =
     customized.type === "compound" ||
@@ -216,6 +225,7 @@ export const InlineCustomizer = ({
             return true;
           }}
           primary
+          readonly={readonly}
         />
       ) : customized.type === "basic_component" ||
         customized.type === "derived_component" ? (
@@ -228,6 +238,7 @@ export const InlineCustomizer = ({
             return true;
           }}
           primary
+          readonly={readonly}
         />
       ) : (
         <IdentityForm
@@ -239,6 +250,7 @@ export const InlineCustomizer = ({
             return true;
           }}
           primary
+          readonly={readonly}
         />
       )}
     </Flex>

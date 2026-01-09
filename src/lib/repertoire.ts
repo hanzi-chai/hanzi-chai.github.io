@@ -69,9 +69,7 @@ export const determine = (
   customGlyph: CustomGlyph = {},
   customReadings: CustomReadings = {},
   tags: string[] = [],
-  transformers: 变换器[] = [],
 ) => {
-  console.log("Determining repertoire with tags:", transformers);
   const determined: Repertoire = {};
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
@@ -88,11 +86,7 @@ export const determine = (
     };
     determined[name] = determined_character;
   }
-  let final = determined;
-  for (const transformer of transformers) {
-    final = 应用变换器(final, transformer);
-  }
-  return final;
+  return determined;
 };
 
 function recursiveHandleRawGlyph(

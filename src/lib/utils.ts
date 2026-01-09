@@ -81,7 +81,7 @@ export const unicodeBlocks: UnicodeBlock[] = [
     label: "中日韩统一表意文字扩展C",
     begin: 0x2a700,
     end: 0x2b73f,
-    count: 4154,
+    count: 4160,
   },
   {
     name: "cjk-d",
@@ -95,7 +95,7 @@ export const unicodeBlocks: UnicodeBlock[] = [
     label: "中日韩统一表意文字扩展E",
     begin: 0x2b820,
     end: 0x2ceaf,
-    count: 5762,
+    count: 5774,
   },
   {
     name: "cjk-f",
@@ -124,6 +124,13 @@ export const unicodeBlocks: UnicodeBlock[] = [
     begin: 0x2ebf0,
     end: 0x2ee5f,
     count: 622,
+  },
+  {
+    name: "cjk-j",
+    label: "中日韩统一表意文字扩展J",
+    begin: 0x323b0,
+    end: 0x3347f,
+    count: 4298,
   },
 
   // 部件
@@ -165,7 +172,7 @@ export const unicodeBlocks: UnicodeBlock[] = [
     label: "西夏文",
     begin: 0x17000,
     end: 0x187ff,
-    count: 6136,
+    count: 6144,
   },
   {
     name: "tangut-comp",
@@ -179,7 +186,14 @@ export const unicodeBlocks: UnicodeBlock[] = [
     label: "西夏文补充",
     begin: 0x18d00,
     end: 0x18d7f,
-    count: 9,
+    count: 31,
+  },
+  {
+    name: "tangut-comp-sup",
+    label: "西夏文字构件补充",
+    begin: 0x18d80,
+    end: 0x18dff,
+    count: 115,
   },
   {
     name: "khitan-small",

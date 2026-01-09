@@ -22,7 +22,7 @@ import type { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
 import { sortBy } from "lodash-es";
-import { 变换器 } from "~/lib/transformer";
+import { 变换器, 应用变换器 } from "~/lib/transformer";
 
 export const characterSetAtom = focusAtom(dataAtom, (o) =>
   o.prop("character_set").valueOr("general" as CharacterSetSpecifier),
@@ -92,13 +92,21 @@ export const displayAtom = atom((get) => {
   };
 });
 
-export const repertoireAtom = atom((get) => {
+export const determinedRepertoireAtom = atom((get) => {
   const repertoire = get(allRepertoireAtom);
   const customGlyph = get(customGlyphAtom);
   const customReadings = get(customReadingsAtom);
   const tags = get(userTagsAtom);
+  return determine(repertoire, customGlyph, customReadings, tags);
+});
+
+export const repertoireAtom = atom((get) => {
+  let determined = get(determinedRepertoireAtom);
   const transformers = get(transformersAtom);
-  return determine(repertoire, customGlyph, customReadings, tags, transformers);
+  for (const transformer of transformers) {
+    determined = 应用变换器(determined, transformer);
+  }
+  return determined;
 });
 
 export const puaGlyphAtom = atom((get) => {

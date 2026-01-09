@@ -29,7 +29,7 @@ export function isVariable(x: any): x is 结构变量 {
  * - 变量使用 varMap 中绑定的键
  * - 嵌套 pattern 递归生成子键
  */
-function 物化替换(
+function 替换(
   项: 模式 | 结构变量 | string,
   映射: 变量映射,
   输出: Repertoire,
@@ -45,7 +45,7 @@ function 物化替换(
   }
   // Pattern
   const 子键们: string[] = 项.operandList.map((op) =>
-    物化替换(op, 映射, 输出, 签名缓存, 生成计数),
+    替换(op, 映射, 输出, 签名缓存, 生成计数),
   );
   const sig = `${项.operator}:${子键们.join(",")}`;
   if (目标字符 === undefined) {
@@ -133,7 +133,7 @@ export function 应用变换器(字库: Repertoire, 变换器: 变换器): Reper
   const 生成计数 = { c: 新字符起始码位 };
 
   for (const [键, 变量映射] of 匹配集合) {
-    物化替换(变换器.to, 变量映射, 输出数据库, 签名缓存, 生成计数, 键);
+    替换(变换器.to, 变量映射, 输出数据库, 签名缓存, 生成计数, 键);
   }
 
   return 输出数据库;

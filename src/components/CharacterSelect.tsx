@@ -42,6 +42,15 @@ export default function CharacterSelect(
     }
     const allResults = sortedRepertoire
       .filter(customFilter ?? (() => true))
+      .filter(([x, v]) => {
+        const char = String.fromCodePoint(v.unicode);
+        const name = v.name ?? "";
+        return (
+          sequenceMap.get(x)?.startsWith(input) ||
+          char === input ||
+          name.includes(input)
+        );
+      })
       .map(([x]) => ({
         value: x,
         label: (
@@ -52,10 +61,7 @@ export default function CharacterSelect(
             </span>
           </span>
         ) as React.ReactNode,
-      }))
-      .filter(({ value }) => {
-        return sequenceMap.get(value)?.startsWith(input);
-      });
+      }));
     const minResults = allResults.filter(
       ({ value }) => sequenceMap.get(value)?.length === input.length,
     );
