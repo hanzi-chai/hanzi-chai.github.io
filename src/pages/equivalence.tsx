@@ -14,7 +14,7 @@ import { shuffle, range, random, mean } from "lodash-es";
 import styled from "styled-components";
 import User, { getUser } from "~/components/User";
 import { get, post } from "~/api";
-import type { EquivalenceData, Pair } from "~/lib/equivalence";
+import type { EquivalenceData, Pair } from "~/lib";
 import type { ColumnsType } from "antd/es/table";
 import { nanoid } from "nanoid";
 import { DeleteButton } from "~/components/Utils";

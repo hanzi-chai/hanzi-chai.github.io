@@ -1,7 +1,7 @@
 import { Button, Flex, Select } from "antd";
 import { useAtom } from "jotai";
 import { transformersAtom } from "~/atoms";
-import { isVariable, 变换器, 模式, 节点类型 } from "~/lib/transformer";
+import { isVariable, 变换器, 模式, 节点类型 } from "~/lib";
 import { DeleteButton, MinusButton, PlusButton } from "./Utils";
 import CharacterSelect from "./CharacterSelect";
 import { operators } from "~/lib";

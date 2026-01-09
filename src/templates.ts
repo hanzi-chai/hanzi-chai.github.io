@@ -1,27 +1,28 @@
-import { mergeClassifier, type Classifier } from "./classifier";
-import type { Config } from "./config";
-import { defaultDegenerator } from "./degenerator";
-import { defaultSelector } from "./selector";
-import snow4 from "../../examples/snow4.yaml";
-import bxm from "../../examples/bxm.yaml";
-import mswb from "../../examples/mswb.yaml";
-import ziyuan from "../../examples/ziyuan.yaml";
-import jdh from "../../examples/jdh.yaml";
-import cqkm from "../../examples/cqkm.yaml";
-import shouyou from "../../examples/shouyou.yaml";
-import xkjd from "../../examples/xkjd.yaml";
-import longma from "../../examples/longma.yaml";
-import easy from "../../examples/easy.yaml";
-import yustar from "../../examples/yustar.yaml";
-import yujoy from "../../examples/yujoy.yaml";
-import tianma from "../../examples/tianma.yaml";
-import zhengma from "../../examples/zhengma.yaml";
-import zhenma from "../../examples/zhenma.yaml";
-import zhangma from "../../examples/zhangma.yaml";
-import xuma from "../../examples/xuma.yaml";
-import huma from "../../examples/huma.yaml";
-import sapphire from "../../examples/sapphire.yaml";
-import type { ExampleConfig } from "./config";
+import { mergeClassifier, type Classifier } from "~/lib";
+import type { Config } from "~/lib";
+import { defaultDegenerator } from "~/lib";
+import { defaultSelector } from "~/lib";
+import type { ExampleConfig } from "~/lib";
+import snow4 from "../examples/snow4.yaml";
+import bxm from "../examples/bxm.yaml";
+import mswb from "../examples/mswb.yaml";
+import ziyuan from "../examples/ziyuan.yaml";
+import jdh from "../examples/jdh.yaml";
+import cqkm from "../examples/cqkm.yaml";
+import shouyou from "../examples/shouyou.yaml";
+import xkjd from "../examples/xkjd.yaml";
+import longma from "../examples/longma.yaml";
+import easy from "../examples/easy.yaml";
+import yustar from "../examples/yustar.yaml";
+import yujoy from "../examples/yujoy.yaml";
+import tianma from "../examples/tianma.yaml";
+import zhengma from "../examples/zhengma.yaml";
+import zhenma from "../examples/zhenma.yaml";
+import zhangma from "../examples/zhangma.yaml";
+import xuma from "../examples/xuma.yaml";
+import huma from "../examples/huma.yaml";
+import sapphire from "../examples/sapphire.yaml";
+
 
 export type Example =
   // 音码

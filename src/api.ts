@@ -3,7 +3,7 @@ import type {
   Compound,
   Identity,
   PrimitiveCharacter,
-} from "./lib/data";
+} from "./lib";
 
 interface Model {
   unicode: number;

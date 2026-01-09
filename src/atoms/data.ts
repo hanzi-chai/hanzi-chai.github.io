@@ -22,7 +22,7 @@ import type { CustomGlyph } from "~/lib";
 import { determine } from "~/lib";
 import { classifier } from "~/lib";
 import { sortBy } from "lodash-es";
-import { 变换器, 应用变换器 } from "~/lib/transformer";
+import { 变换器, 应用变换器 } from "~/lib";
 
 export const characterSetAtom = focusAtom(dataAtom, (o) =>
   o.prop("character_set").valueOr("general" as CharacterSetSpecifier),

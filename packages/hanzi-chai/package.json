@@ -1,0 +1,27 @@
+{
+    "name": "hanzi-chai",
+    "version": "0.1.0",
+    "description": "提取自主仓库的汉字拆分/编码核心算法包",
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "files": [
+        "dist",
+        "dist/**/*.yaml"
+    ],
+    "scripts": {
+        "prebuild": "cp -r examples dist/",
+        "build": "tsup src/index.ts --format cjs,esm",
+        "test": "vitest"
+    },
+    "dependencies": {
+        "js-yaml": "^4.1.0",
+        "lodash-es": "^4.17.21",
+        "d3-array": "^3.0.2"
+    },
+    "devDependencies": {
+        "tsup": "^6.0.0",
+        "typescript": "^5.0.0",
+        "vitest": "^0.34.0",
+        "@types/node": "^18.0.0"
+    }
+}

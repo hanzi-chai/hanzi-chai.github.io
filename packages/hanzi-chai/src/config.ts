@@ -8,7 +8,6 @@ import type {
   Identity,
 } from "./data";
 import type { CodableObject } from "./element";
-import type { Example } from "./templates";
 import { type 变换器 } from "./transformer";
 
 // config.info begin
@@ -340,7 +339,7 @@ export interface DiagramConfig {
 export interface Config {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
-  source: Example | null;
+  source: string | null;
   info?: Info;
   data?: Data;
   analysis?: Analysis;

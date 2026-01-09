@@ -19,7 +19,8 @@ import {
   fetchAsset,
   primitiveRepertoireAtom,
 } from "~/atoms";
-import { examples, listToObject } from "~/lib";
+import { listToObject } from "~/lib";
+import { examples } from "~/templates";
 import { AppstoreOutlined } from "@ant-design/icons";
 import { fromModel } from "~/api";
 import { getCurrentId } from "~/utils";

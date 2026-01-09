@@ -11,7 +11,7 @@ import type {
   SVGStroke,
 } from "~/lib";
 import { renderSVGGlyph, renderSVGStroke } from "~/lib";
-import { add, subtract } from "~/lib/mathjs";
+import { add, subtract } from "~/lib";
 
 const Box = styled.div`
   border: 1px solid black;

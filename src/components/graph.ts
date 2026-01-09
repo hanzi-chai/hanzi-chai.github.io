@@ -1,6 +1,6 @@
 import type { Edge, Node } from "reactflow";
 import type { BinaryCondition, Condition, Source, UnaryCondition } from "~/lib";
-import { add } from "../lib/mathjs";
+import { add } from "~/lib";
 import { createContext } from "react";
 import { sum } from "lodash-es";
 

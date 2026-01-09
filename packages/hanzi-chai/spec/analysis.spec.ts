@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SVGGlyph } from "~/lib";
+import type { SVGGlyph } from "../src";
 import {
   analysis,
   assemble,

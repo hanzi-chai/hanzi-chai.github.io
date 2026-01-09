@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { type Updater, useImmer } from "use-immer";
-import { type Example, examples } from "~/lib";
+import { examples, Example } from "~/templates";
 import { DeleteButton, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";

@@ -1,11 +1,11 @@
 import { Button } from "antd";
-import type { StarterType } from "~/lib";
 import {
+  StarterType,
   classifierTypes,
   createConfig,
   encoderTypes,
   keyboardTypes,
-} from "~/lib";
+} from "~/templates";
 import type { Updater } from "use-immer";
 import type { Config } from "~/lib";
 import { nanoid } from "nanoid";

@@ -1,6 +1,6 @@
 import init, { Web } from "libchai";
-import { analysis } from "./lib/repertoire";
-import { assemble } from "./lib/assembly";
+import { analysis } from "./lib";
+import { assemble } from "./lib";
 import axios from "axios";
 
 export interface WorkerInput {

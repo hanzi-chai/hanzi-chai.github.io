@@ -1,15 +1,3 @@
-export * from "./affine";
-export * from "./element";
-export * from "./bezier";
-export * from "./topology";
-export * from "./data";
-export * from "./config";
-export * from "./classifier";
-export * from "./repertoire";
-export * from "./degenerator";
-export * from "./selector";
-export * from "./assembly";
-export * from "./templates";
-export * from "./component";
-export * from "./compound";
-export * from "./utils";
+// Compatibility proxy: keep existing imports like import "~/lib" working
+// Redirect to the migrated implementation under packages/hanzi-chai
+export * from "../../packages/hanzi-chai/src/";

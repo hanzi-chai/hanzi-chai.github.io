@@ -1,6 +1,7 @@
 import { Button, Flex } from "antd";
 import { configAtom, roundTestConfig, useAtom, validateConfig } from "~/atoms";
-import { Config, examples, exportYAML } from "~/lib";
+import { Config, exportYAML } from "~/lib";
+import { examples } from "~/templates";
 import { Uploader } from "./Utils";
 import { load } from "js-yaml";
 

@@ -4,7 +4,6 @@ import type {
   Analysis,
   Data,
   EncoderConfig,
-  Example,
   DiagramConfig,
   Keyboard,
 } from "~/lib";
@@ -13,9 +12,8 @@ import {
   type Algebra,
   type Config,
   type Info,
-  defaultConfig,
-  examples,
 } from "~/lib";
+import { examples, defaultConfig, Example } from "~/templates";
 import { focusAtom } from "jotai-optics";
 import { atomWithLocation } from "jotai-location";
 
