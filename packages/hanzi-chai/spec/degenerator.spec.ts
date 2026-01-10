@@ -4,11 +4,11 @@ import {
   binaryToIndices,
   defaultDegenerator,
   generateSliceBinaries,
-} from "~/lib";
+} from "../src/main";
 import { describe, it, expect } from "vitest";
 import { create, all } from "mathjs";
 import { computedComponents } from "./mock";
-import type { RenderedGlyph } from "~/lib";
+import type { RenderedGlyph } from "../src/main";
 
 const { randomInt } = create(all!, {
   randomSeed: "a",

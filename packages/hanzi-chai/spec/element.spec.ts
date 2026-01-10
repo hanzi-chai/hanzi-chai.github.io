@@ -5,7 +5,7 @@ import {
   renderName,
   renderList,
   parseList,
-} from "../src/lib/element";
+} from "../src/main";
 
 describe("element", () => {
   it("applyRules should apply the specified rules to the given syllable", () => {

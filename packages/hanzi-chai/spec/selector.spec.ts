@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Environment, Scheme } from "~/lib";
-import { length, bias, order, crossing, attaching } from "~/lib";
-import { select } from "~/lib";
-import { computedComponents, focusAnalysis, repertoire } from "./mock";
-import { defaultConfig } from "~/lib";
+import type { Environment, Scheme } from "../src/main";
+import { length, bias, order, crossing, attaching } from "../src/main";
+import { select } from "../src/main";
+import { computedComponents, analysisConfig } from "./mock";
 
-const analysisConfig = focusAnalysis(defaultConfig, repertoire);
 const { 天 } = computedComponents as any;
 const env: Environment = {
   component: 天,

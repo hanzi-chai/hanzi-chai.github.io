@@ -1,4 +1,4 @@
-import { add } from "./mathjs";
+import { add } from "./mathjs.js";
 import type {
   Compound,
   Draw,
@@ -7,9 +7,9 @@ import type {
   SVGGlyph,
   SVGGlyphWithBox,
   SVGStroke,
-} from "./data";
+} from "./data.js";
 import { cloneDeep } from "lodash-es";
-import type { BoundingBox } from "./bezier";
+import type { BoundingBox } from "./bezier.js";
 
 class Affine {
   private xscale: number;

@@ -1,22 +1,10 @@
-import { readFileSync } from "node:fs";
 import type {
   AnalysisConfig,
   BasicComponent,
-  Config,
-  PrimitiveCharacter,
-  Repertoire,
-} from "~/lib";
-import { determine, computeComponent, listToObject } from "~/lib";
-import Pako from "pako";
-import { fromModel } from "~/api";
+} from "../src/main";
+import { determine, computeComponent, getPrimitveRepertoire } from "../src/index";
 
-const compressed = readFileSync("public/cache/repertoire.json.deflate");
-const decompressed = Pako.inflate(compressed, { to: "string" });
-const rawrepertoire = JSON.parse(decompressed).map(
-  fromModel,
-) as PrimitiveCharacter[];
-
-export const primitiveRepertoire = listToObject(rawrepertoire);
+export const primitiveRepertoire = getPrimitveRepertoire();
 export const repertoire = determine(primitiveRepertoire);
 export const computedComponents = Object.fromEntries(
   Object.entries(repertoire)
@@ -27,13 +15,8 @@ export const computedComponents = Object.fromEntries(
     }),
 );
 
-export const focusAnalysis = (config: Config, repertoire: Repertoire) => {
-  const result: AnalysisConfig = {
-    analysis: config.analysis ?? {},
-    roots: new Map(
-      Object.entries(config.form.mapping).filter(([x]) => repertoire[x]),
-    ),
-    optionalRoots: new Set<string>(),
-  };
-  return result;
+export const analysisConfig: AnalysisConfig = {
+  analysis: {},
+  roots: new Map(),
+  optionalRoots: new Set(),
 };

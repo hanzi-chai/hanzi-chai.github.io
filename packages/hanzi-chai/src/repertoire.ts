@@ -1,24 +1,24 @@
 import { isEqual, sortBy } from "lodash-es";
-import { mergeClassifier } from "./classifier";
+import { mergeClassifier } from "./classifier.js";
 import type {
   ComponentResults,
   ComponentBasicAnalysis,
   ComponentGenuineAnalysis,
   ComponentAnalysis,
-} from "./component";
+} from "./component.js";
 import {
   computeComponent,
   disassembleComponents,
   getComponentScheme,
   recursiveRenderComponent,
   renderRootList,
-} from "./component";
-import type { CompoundResults, SerializerType } from "./compound";
+} from "./component.js";
+import type { CompoundResults, SerializerType } from "./compound.js";
 import {
   disassembleCompounds,
   recursiveRenderCompound,
   topologicalSort,
-} from "./compound";
+} from "./compound.js";
 import type {
   Algebra,
   Analysis,
@@ -26,7 +26,7 @@ import type {
   CustomReadings,
   Element,
   Value,
-} from "./config";
+} from "./config.js";
 import type {
   Compound,
   Character,
@@ -36,11 +36,10 @@ import type {
   Component,
   Glyph,
   BasicComponent,
-} from "./data";
+} from "./data.js";
 import { range } from "d3-array";
-import { applyRules } from "./element";
-import { type Dictionary, getDummyBasicComponent, isPUA } from "./utils";
-import { 变换器, 应用变换器 } from "./transformer";
+import { applyRules } from "./element.js";
+import { type Dictionary, getDummyBasicComponent, isPUA } from "./utils.js";
 
 export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
   for (const tag of tags) {

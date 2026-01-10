@@ -7,6 +7,7 @@ import type {
   SVGGlyphWithBox,
 } from "~/lib";
 import {
+  characterSetFilters,
   getGlyphBoundingBox,
   isPUA,
   isValidCJKBasicChar,
@@ -48,31 +49,14 @@ export const transformersAtom = focusAtom(dataAtom, (o) =>
 );
 
 export const charactersAtom = atom((get) => {
-  const primitiveRepertoire = get(primitiveRepertoireAtom);
+  const repertoire = get(repertoireAtom);
   const characterSet = get(characterSetAtom);
   const userCharacterSet = get(userCharacterSetAtom);
   const userCharacterSetSet = new Set(userCharacterSet ?? []);
-  const filters: Record<
-    CharacterSetSpecifier,
-    (k: string, v: PrimitiveCharacter) => boolean
-  > = {
-    minimal: (_, v) => v.gb2312 > 0 && v.tygf > 0,
-    gb2312: (_, v) => v.gb2312 > 0,
-    general: (_, v) => v.tygf > 0,
-    basic: (k, v) => v.tygf > 0 || isValidCJKBasicChar(k),
-    extended: (k, v) => v.tygf > 0 || isValidCJKChar(k),
-    supplement: (k, v) =>
-      v.tygf > 0 || isValidCJKChar(k) || isValidCJKSupplement(k),
-    maximal: (k, v) => !isPUA(k),
-    custom: (k, v) => {
-      if (userCharacterSet !== undefined) return userCharacterSetSet.has(k);
-      return v.gb2312 > 0 && v.tygf > 0;
-    },
-  };
 
-  const filter = filters[characterSet];
-  const characters = Object.entries(primitiveRepertoire)
-    .filter(([k, v]) => filter(k, v))
+  const filter = characterSetFilters[characterSet];
+  const characters = Object.entries(repertoire)
+    .filter(([k, v]) => filter(k, v, userCharacterSetSet))
     .map(([k]) => k);
   return characters;
 });

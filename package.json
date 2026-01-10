@@ -18,7 +18,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "fetch": "tsx scripts/fetch.ts",
+    "fetch": "cd packages/hanzi-chai && tsx scripts/fetch.ts",
     "start": "vite --mode PAGES",
     "dev": "vite --mode PAGES",
     "preview": "vite preview --mode PAGES --outDir dist/pages",
@@ -26,9 +26,6 @@
     "lint": "npx @biomejs/biome lint ./src",
     "fix": "npx @biomejs/biome lint --fix --unsafe ./src",
     "format": "npx @biomejs/biome format --write . && git add .",
-    "test": "vitest",
-    "testui": "vitest --ui --coverage",
-    "coverage": "vitest run --coverage",
     "build:BEX": "vite build --mode BEX",
     "build:PAGES": "vite build --mode PAGES",
     "build:CF": "vite build --mode CF",
@@ -92,8 +89,6 @@
     "@types/react-dom": "^18.3.0",
     "@types/styled-components": "^5.1.34",
     "@vitejs/plugin-react-swc": "^4.2.2",
-    "@vitest/coverage-v8": "^4.0.16",
-    "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.21",
     "axios": "^1.10.0",
     "fs-extra": "^11.3.0",
@@ -108,8 +103,7 @@
     "vite": "^7.3.0",
     "vite-plugin-pages": "^0.33.2",
     "vite-plugin-wasm": "^3.5.0",
-    "vite-plugin-wasm-pack": "^0.1.12",
-    "vitest": "^4.0.16"
+    "vite-plugin-wasm-pack": "^0.1.12"
   },
   "peerDependencies": {
     "decimal.js": "^10.5.0"

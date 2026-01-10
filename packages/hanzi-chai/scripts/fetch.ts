@@ -1,16 +1,16 @@
 /**
  * 从 api.chaifen.app 获取最新的数据 JSON 文件。
  * 从 assets.chaifen.app 获取最新的数据 TXT 文件。
- * 保存到 /pubilc/cache 目录里。
+ * 保存到 src/data 目录里。
  */
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, cpSync } from "node:fs";
 import axios from "axios";
 import pako from "pako";
 
 const apiEndpoint = "https://api.chaifen.app/";
 const assetsEndpoint = "https://assets.chaifen.app/";
-const outputFolder = "public/cache/";
+const outputFolder = "src/data/";
 mkdirSync(outputFolder, { recursive: true });
 
 const repertoire = JSON.stringify(
@@ -34,3 +34,5 @@ for (const filename of [
   const response = await axios.get(url);
   writeFileSync(path, response.data);
 }
+
+cpSync(outputFolder, "../../public/cache/", { recursive: true });

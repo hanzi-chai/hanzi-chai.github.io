@@ -1,5 +1,5 @@
-import type { Algebra, Rule } from "./config";
-import type { CharacterResult } from "./assembly";
+import type { Algebra, Rule } from "./config.js";
+import type { CharacterResult } from "./assembly.js";
 
 export interface Extra {
   rootSequence: Map<string, number[]>;

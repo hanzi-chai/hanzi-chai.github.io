@@ -1,6 +1,6 @@
 /** 为了更好的性能，替代mathjs的部分函数 */
 
-import type { N2 } from "./data";
+import type { N2 } from "./data.js";
 
 export const add = (a: N2, b: N2): N2 => [a[0] + b[0], a[1] + b[1]];
 

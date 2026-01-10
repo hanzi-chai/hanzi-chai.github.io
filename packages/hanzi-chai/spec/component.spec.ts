@@ -1,19 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   classifier,
-  createConfig,
   generateSchemes,
   getComponentScheme,
   makeIntervalSum,
   recursiveRenderComponent,
   renderRootList,
-} from "~/lib";
-import type { DerivedComponent } from "~/lib";
+} from "../src/main";
+import type { DerivedComponent } from "../src/main";
 import {
   primitiveRepertoire,
   repertoire,
   computedComponents,
-  focusAnalysis,
+  analysisConfig,
 } from "./mock";
 
 describe("pruning", () => {
@@ -43,13 +42,6 @@ describe("recursive render component", () => {
 });
 
 describe("get component scheme", () => {
-  const config = createConfig({
-    name: "",
-    data: "国标五分类",
-    keyboard: "米十五笔",
-    encoder: "形音码（米十五笔）",
-  });
-  const analysisConfig = focusAnalysis(config, repertoire);
   const rootList = renderRootList(repertoire, [...analysisConfig.roots.keys()]);
   it("can get component scheme", () => {
     const 天 = computedComponents.天!;

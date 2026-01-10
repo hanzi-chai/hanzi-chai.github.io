@@ -1,17 +1,16 @@
 import { isEqual, minBy } from "lodash-es";
-import type { Point, SVGGlyph, SVGStroke } from "./data";
-import { subtract } from "./mathjs";
-import type { Curve, LinearCurve, Position } from "./bezier";
+import type { Point, SVGGlyph, SVGStroke } from "./data.js";
+import { subtract, distance } from "./mathjs.js";
+import type { Curve, LinearCurve, Position } from "./bezier.js";
 import {
   area,
-  distance,
   findCrossPoint,
   getBoundingBox,
   getIntervalOnOrientation,
   getIntervalPosition,
   isCollinear,
   makeCurve,
-} from "./bezier";
+} from "./bezier.js";
 
 interface RenderedStroke extends Pick<SVGStroke, "feature"> {
   curveList: Curve[];

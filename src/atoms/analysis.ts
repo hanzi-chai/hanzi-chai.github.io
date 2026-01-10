@@ -48,5 +48,5 @@ export const customClassifierAtom = atom((get) => {
 });
 
 export const serializerAtom = focusAtom(analysisAtom, (o) =>
-  o.prop("serializer").valueOr("sequential" as "sequential" | "c3"),
+  o.prop("serializer").valueOr("sequential" as const),
 );

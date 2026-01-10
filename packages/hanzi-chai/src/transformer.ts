@@ -1,4 +1,4 @@
-import type { Operator, Compound, Repertoire } from "./data";
+import type { Operator, Compound, Repertoire } from "./data.js";
 
 export interface 变换器 {
   from: 模式;

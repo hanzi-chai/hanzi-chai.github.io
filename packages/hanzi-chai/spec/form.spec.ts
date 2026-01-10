@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateSchemes } from "~/lib";
+import { generateSchemes } from "../src/main";
 
 describe("generate schemes", () => {
   it("works for a simple case", () => {

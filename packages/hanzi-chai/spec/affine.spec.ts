@@ -1,5 +1,5 @@
-import type { Compound, SVGGlyph, SVGGlyphWithBox } from "~/lib";
-import { affineMerge } from "~/lib";
+import type { Compound, SVGGlyph, SVGGlyphWithBox } from "../src/main";
+import { affineMerge } from "../src/main";
 import { describe, expect, it } from "vitest";
 
 describe("affine transformations", () => {

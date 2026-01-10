@@ -1,14 +1,14 @@
-import type { Feature } from "./classifier";
-import { serializerMap } from "./compound";
+import type { Feature } from "./classifier.js";
+import { serializerMap } from "./compound.js";
 import type {
   Compound,
   PrimitiveRepertoire,
   Component,
   Reading,
   Identity,
-} from "./data";
-import type { CodableObject } from "./element";
-import { type 变换器 } from "./transformer";
+} from "./data.js";
+import type { CodableObject } from "./element.js";
+import { type 变换器 } from "./transformer.js";
 
 // config.info begin
 export interface Info {

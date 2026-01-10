@@ -9,7 +9,7 @@ import {
   isComponent,
   getSupplemental,
   getRecordFromTSV,
-} from "~/lib/utils";
+} from "../src/utils";
 import { repertoire } from "./mock";
 
 describe("unicode utils", () => {

@@ -1,4 +1,4 @@
-import type { SieveName } from "./config";
+import type { SieveName } from "./config.js";
 import type {
   Repertoire,
   PrimitiveRepertoire,
@@ -6,17 +6,17 @@ import type {
   Component,
   SVGGlyphWithBox,
   Identity,
-} from "./data";
-import { defaultDegenerator, generateSliceBinaries } from "./degenerator";
-import { select } from "./selector";
+} from "./data.js";
+import { defaultDegenerator, generateSliceBinaries } from "./degenerator.js";
+import { select } from "./selector.js";
 import { bisectLeft, bisectRight } from "d3-array";
-import type { RenderedGlyph, Topology } from "./topology";
-import { findTopology, renderSVGGlyph } from "./topology";
-import { mergeClassifier, type Classifier } from "./classifier";
-import { isComponent } from "./utils";
-import type { AnalysisConfig } from "./repertoire";
-import { getGlyphBoundingBox, recursiveRenderCompound } from "./compound";
-import { affineMerge } from "./affine";
+import type { RenderedGlyph, Topology } from "./topology.js";
+import { findTopology, renderSVGGlyph } from "./topology.js";
+import { mergeClassifier, type Classifier } from "./classifier.js";
+import { isComponent } from "./utils.js";
+import type { AnalysisConfig } from "./repertoire.js";
+import { getGlyphBoundingBox, recursiveRenderCompound } from "./compound.js";
+import { affineMerge } from "./affine.js";
 
 export class InvalidGlyphError extends Error {}
 

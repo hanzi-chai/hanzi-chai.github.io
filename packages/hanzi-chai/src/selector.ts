@@ -2,13 +2,13 @@ import {
   MultipleSchemeError,
   type ComputedComponent,
   NoSchemeError,
-} from "./component";
-import type { Analysis, Element, Value, SieveName } from "./config";
-import { binaryToIndices } from "./degenerator";
-import type { CurveRelation } from "./topology";
+} from "./component.js";
+import { type Analysis, type Element, type Value, type SieveName, isMerge } from "./config.js";
+import { binaryToIndices } from "./degenerator.js";
+import type { CurveRelation } from "./topology.js";
 import { findLastKey, isEqual } from "lodash-es";
-import { sortTwoNumbers } from "./bezier";
-import type { AnalysisConfig } from "./repertoire";
+import { sortTwoNumbers } from "./bezier.js";
+import type { AnalysisConfig } from "./repertoire.js";
 
 export const defaultSelector: SieveName[] = [
   "结构完整",
@@ -130,9 +130,12 @@ export const order2: Sieve<number> = {
  */
 export const similar: Sieve<number> = {
   title: "非形近根",
-  key: (scheme, { rootMap, secondaryRoots }) => {
-    const roots = scheme.map((x) => rootMap.get(x)!);
-    return roots.filter((x) => secondaryRoots.has(x)).length;
+  key: (scheme, { rootMap, roots }) => {
+    const rootList = scheme.map((x) => rootMap.get(x)!);
+    return rootList.filter((x) => {
+      const value = roots.get(x);
+      return value && isMerge(value);
+    }).length;
   },
 };
 

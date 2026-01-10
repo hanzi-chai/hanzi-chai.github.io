@@ -1,10 +1,10 @@
 import { expect, describe, it } from "vitest";
-import type { StrokeRelation, CubicCurve, LinearCurve } from "~/lib";
-import { findTopology, curveRelation } from "~/lib";
-import { area } from "~/lib";
-import type { Draw, Point } from "~/lib";
+import type { StrokeRelation, CubicCurve, LinearCurve } from "../src/main";
+import { findTopology, curveRelation } from "../src/main";
+import { area } from "../src/main";
+import type { Draw, Point } from "../src/main";
 import { computedComponents } from "./mock";
-import { getIntervalPosition, makeCurve } from "~/lib";
+import { getIntervalPosition, makeCurve } from "../src/main";
 
 describe("interval position", () => {
   it("works for easy cases", () => {

@@ -1,5 +1,5 @@
-import type { Draw, Point, SVGStroke } from "./data";
-import { add, subtract, mean, multiply, divide, distance, dot } from "./mathjs";
+import type { Draw, Point, SVGStroke } from "./data.js";
+import { add, subtract, mean, multiply, divide, distance, dot } from "./mathjs.js";
 
 /**
  * 一段 Bezier 曲线的主要朝向
@@ -248,7 +248,6 @@ export {
   render,
   makeCurve,
   area,
-  distance,
   curveLength,
   findCrossPoint,
   isCollinear,

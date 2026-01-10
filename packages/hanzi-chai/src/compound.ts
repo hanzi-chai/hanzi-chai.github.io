@@ -1,11 +1,11 @@
-import type { AnalysisConfig } from "./repertoire";
-import { affineMerge } from "./affine";
+import type { AnalysisConfig } from "./repertoire.js";
+import { affineMerge } from "./affine.js";
 import type {
   ComponentResults,
   ComponentAnalysis,
   CommonAnalysis,
-} from "./component";
-import { InvalidGlyphError } from "./component";
+} from "./component.js";
+import { InvalidGlyphError } from "./component.js";
 import type {
   Compound,
   Repertoire,
@@ -13,11 +13,11 @@ import type {
   SVGGlyph,
   CompoundCharacter,
   SVGGlyphWithBox,
-} from "./data";
+} from "./data.js";
 import { first, range, sortBy } from "lodash-es";
-import type { BoundingBox } from "./bezier";
-import { classifier } from "./classifier";
-import { isMerge } from "./config";
+import type { BoundingBox } from "./bezier.js";
+import { classifier } from "./classifier.js";
+import { isMerge } from "./config.js";
 
 export type CompoundResults = Map<string, CompoundAnalysis | ComponentAnalysis>;
 

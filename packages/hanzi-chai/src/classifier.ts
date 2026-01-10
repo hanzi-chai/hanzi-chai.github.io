@@ -1,4 +1,4 @@
-import type { Draw } from "./data";
+import type { Draw } from "./data.js";
 
 /**
  * 笔画名称参考 Unicode 中的 CJK 笔画块（共 38 种笔画）

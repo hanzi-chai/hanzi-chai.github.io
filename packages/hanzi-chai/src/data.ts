@@ -1,5 +1,5 @@
-import type { BoundingBox } from "./bezier";
-import type { Feature } from "./classifier";
+import type { BoundingBox } from "./bezier.js";
+import type { Feature } from "./classifier.js";
 
 export type N1 = [number];
 export type N2 = [number, number];

@@ -1,16 +1,16 @@
 import { isEqual } from "lodash-es";
-import type { RenderedGlyph } from "./topology";
-import { findTopology } from "./topology";
-import type { Interval } from "./bezier";
+import type { RenderedGlyph } from "./topology.js";
+import { findTopology } from "./topology.js";
+import type { Interval } from "./bezier.js";
 import {
   curveLength,
   isBoundedBy,
   isCollinear,
   sortTwoNumbers,
-} from "./bezier";
-import type { Degenerator } from "./config";
-import type { Feature } from "./classifier";
-import type { ComputedComponent } from "./component";
+} from "./bezier.js";
+import type { Degenerator } from "./config.js";
+import type { Feature } from "./classifier.js";
+import type { ComputedComponent } from "./component.js";
 
 export const indicesToBinary = (n: number) => (indices: number[]) => {
   let binaryCode = 0;

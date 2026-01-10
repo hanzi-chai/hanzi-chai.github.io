@@ -1,5 +1,5 @@
-import type { Feature } from "./classifier";
-import { schema } from "./classifier";
+import type { Feature } from "./classifier.js";
+import { schema } from "./classifier.js";
 import type {
   DerivedComponent,
   Compound,
@@ -16,11 +16,11 @@ import type {
   SplicedComponent,
   Glyph,
   Identity,
-} from "./data";
+} from "./data.js";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import { type Key, type Value, type Mapping, GeneralizedKey } from "./config";
-import type { IndexedElement } from "./assembly";
+import { type Key, type Value, type Mapping, GeneralizedKey, CharacterSetSpecifier } from "./config.js";
+import type { IndexedElement } from "./assembly.js";
 
 interface Loss {
   ideal: number;
@@ -707,4 +707,22 @@ export const getReversedMapping = (mapping: Mapping, alphabet: string) => {
     }
   }
   return reversedMapping;
+};
+
+export const characterSetFilters: Record<
+  CharacterSetSpecifier,
+  (k: string, v: Character, s?: Set<string>) => boolean
+> = {
+  minimal: (_, v) => v.gb2312 > 0 && v.tygf > 0,
+  gb2312: (_, v) => v.gb2312 > 0,
+  general: (_, v) => v.tygf > 0,
+  basic: (k, v) => v.tygf > 0 || isValidCJKBasicChar(k),
+  extended: (k, v) => v.tygf > 0 || isValidCJKChar(k),
+  supplement: (k, v) =>
+    v.tygf > 0 || isValidCJKChar(k) || isValidCJKSupplement(k),
+  maximal: (k, v) => !isPUA(k),
+  custom: (k, v, s) => {
+    if (s !== undefined) return s.has(k);
+    return v.gb2312 > 0 && v.tygf > 0;
+  },
 };

@@ -7,14 +7,14 @@ import {
   type Op,
   type Source,
   type WordRule,
-} from "./config";
-import type { ComponentAnalysis } from "./component";
-import type { CompoundAnalysis } from "./compound";
-import type { Extra } from "./element";
-import { algebraCache, findElement } from "./element";
-import type { Repertoire } from "./data";
-import type { AnalysisResult } from "./repertoire";
-import type { Dictionary, CustomElementMap } from "./utils";
+} from "./config.js";
+import type { ComponentAnalysis } from "./component.js";
+import type { CompoundAnalysis } from "./compound.js";
+import type { Extra } from "./element.js";
+import { algebraCache, findElement } from "./element.js";
+import type { Repertoire } from "./data.js";
+import type { AnalysisResult } from "./repertoire.js";
+import type { Dictionary, CustomElementMap } from "./utils.js";
 
 export const getPriorityMap = (
   priorityShortCodes: [string, string, number][],
