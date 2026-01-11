@@ -16,7 +16,7 @@ import {
   defaultDegenerator,
   generateSliceBinaries,
 } from "~/lib";
-import { computeComponent, type ComputedComponent } from "~/lib";
+import { 部件图形, type ComputedComponent } from "~/lib";
 import { listToObject } from "~/lib";
 import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
@@ -143,12 +143,12 @@ const DegeneratorTable = () => {
   for (const [name, character] of Object.entries(repertoire)) {
     if (character.glyph?.type !== "basic_component") continue;
     const glyph = character.glyph.strokes;
-    const cache = computeComponent(name, glyph);
+    const cache = new 部件图形(name, glyph);
     components.push(cache);
   }
-  components.sort((a, b) => a.glyph.length - b.glyph.length);
-  const dataSource = components.filter((cache) => cache.glyph.length >= 3);
-  const toCompare = components.filter((cache) => cache.glyph.length >= 2);
+  components.sort((a, b) => a.getLength() - b.getLength());
+  const dataSource = components.filter((cache) => cache.getLength() >= 3);
+  const toCompare = components.filter((cache) => cache.getLength() >= 2);
   const [page, setPage] = useState(1);
   const columns: ColumnsType<ComputedComponent> = [
     {

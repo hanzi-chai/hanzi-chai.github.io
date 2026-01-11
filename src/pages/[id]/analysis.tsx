@@ -136,12 +136,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         label: <ResultSummary char={key} analysis={res} />,
         children:
           "schemes" in res ? (
-            <ResultDetail
-              char={key}
-              data={res.schemes}
-              map={res.map}
-              strokes={res.strokes}
-            />
+            <ResultDetail char={key} data={res.全部拆分方式} map={res.map} />
           ) : null,
       };
     });

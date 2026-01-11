@@ -1,5 +1,4 @@
 import type { Feature } from "./classifier.js";
-import { serializerMap } from "./compound.js";
 import type {
   Compound,
   PrimitiveRepertoire,
@@ -50,34 +49,17 @@ export type CustomReadings = Record<string, Reading[]>;
 export interface Analysis {
   classifier?: Record<Feature, number>;
   degenerator?: Degenerator;
-  selector?: Selector;
+  selector?: string[];
   customize?: Record<string, string[]>;
   dynamic_customize?: Record<string, string[][]>;
   strong?: string[];
   weak?: string[];
-  serializer?: keyof typeof serializerMap;
 }
 
 export interface Degenerator {
   feature?: Record<Feature, Feature>;
   no_cross?: boolean;
 }
-
-export type SieveName =
-  | "根少优先"
-  | "连续笔顺"
-  | "全符笔顺"
-  | "能连不交"
-  | "能散不连"
-  | "同向笔画"
-  | "取大优先"
-  | "取小优先"
-  | "结构完整"
-  | "多强字根"
-  | "少弱字根"
-  | "非形近根";
-
-export type Selector = SieveName[];
 // config.analysis end
 
 // config.algebra begin

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Environment, Scheme } from "../src/main";
+import type { Environment, 拆分方式 } from "../src/main";
 import { length, bias, order, crossing, attaching } from "../src/main";
 import { select } from "../src/main";
 import { computedComponents, analysisConfig } from "./mock";
@@ -60,7 +60,7 @@ describe("select", () => {
           ],
           rootMap,
           new Set(),
-        ) as [{ scheme: Scheme }, unknown]
+        ) as [{ scheme: 拆分方式 }, unknown]
       )[0].scheme,
     ).toEqual([8, 7]);
   });

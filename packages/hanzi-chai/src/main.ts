@@ -12,5 +12,5 @@ export * from "./assembly.js";
 export * from "./component.js";
 export * from "./compound.js";
 export * from "./utils.js";
-export * from "./mathjs.js";
+export * from "./math.js";
 export * from "./transformer.js";

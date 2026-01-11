@@ -19,8 +19,15 @@ import type {
 } from "./data.js";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import { type Key, type Value, type Mapping, GeneralizedKey, CharacterSetSpecifier } from "./config.js";
-import type { IndexedElement } from "./assembly.js";
+import {
+  type Key,
+  type Value,
+  type Mapping,
+  GeneralizedKey,
+  CharacterSetSpecifier,
+} from "./config.js";
+
+export type Result<T> = T | Error;
 
 interface Loss {
   ideal: number;
@@ -359,31 +366,6 @@ export const isComponent = (
   glyph.type === "spliced_component" ||
   glyph.type === "identity";
 
-export const getSupplemental = (repertoire: Repertoire, list: string[]) => {
-  const set = new Set(list);
-  const reverseForm: Record<string, string[]> = Object.fromEntries(
-    Object.entries(repertoire).map(([x]) => [x, []]),
-  );
-  for (const [char, { glyph }] of Object.entries(repertoire)) {
-    if (glyph?.type === "compound") {
-      glyph.operandList.forEach((x) => reverseForm[x]?.push(char));
-    }
-  }
-  const componentsNotChar = Object.entries(repertoire)
-    .filter(([, v]) => v.glyph?.type === "basic_component")
-    .map(([x]) => x)
-    .filter((x) => !set.has(x));
-  const suppList: string[] = [];
-  componentsNotChar.forEach((char) => {
-    let trial: string | undefined = char;
-    while (trial && !set.has(trial)) {
-      trial = reverseForm[trial]?.[0];
-    }
-    if (trial) suppList.push(trial);
-  });
-  return Array.from(new Set(suppList));
-};
-
 export const listToObject = <T extends { unicode: number }>(list: T[]) =>
   Object.fromEntries(list.map((x) => [String.fromCodePoint(x.unicode), x]));
 
@@ -481,6 +463,8 @@ export const exportTSV = (data: string[][], filename: string) => {
   const fileContent = data.map((x) => x.join("\t")).join("\n");
   processExport(fileContent, filename);
 };
+
+export type IndexedElement = string | { element: string; index: number };
 
 export const stringify = (element: IndexedElement | undefined) => {
   if (element === undefined) {

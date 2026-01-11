@@ -1,257 +1,369 @@
-import type { Draw, Point, SVGStroke } from "./data.js";
-import { add, subtract, mean, multiply, divide, distance, dot } from "./mathjs.js";
+import { isEqual } from "lodash-es";
+import type { Draw, Point } from "./data.js";
+import {
+  add,
+  multiply,
+  divide,
+  distance,
+  sorted,
+  subtract,
+  area,
+  isCollinear,
+} from "./math.js";
 
 /**
  * 一段 Bezier 曲线的主要朝向
  * 例如，横笔画的朝向是水平的，竖笔画的朝向是垂直的
  * 而撇和捺笔画的朝向可能是水平或垂直的，取决于它是平撇还是撇、平捺还是捺
  */
-type Orientation = "horizontal" | "vertical";
+type 朝向 = "horizontal" | "vertical";
+
+interface 相交关系 {
+  type: "交";
+}
+
+interface 相连关系 {
+  type: "连";
+  first: "前" | "中" | "后";
+  second: "前" | "中" | "后";
+}
+
+const 构造相连 = (
+  first: 相连关系["first"],
+  second: 相连关系["second"],
+): 相连关系 => ({ type: "连", first, second });
+
+interface 平行离散关系 {
+  type: "平行";
+  mainAxis: 区间关系;
+  crossAxis: 区间关系;
+}
+
+interface 垂直离散关系 {
+  type: "垂直";
+  x: 区间关系;
+  y: 区间关系;
+}
+
+type 离散关系 = 平行离散关系 | 垂直离散关系;
+type 曲线关系 = 相交关系 | 相连关系 | 离散关系;
+
+abstract class 曲线 {
+  constructor() {}
+  abstract getType(): "linear" | "cubic" | "arc";
+  abstract getOrientation(): 朝向;
+  abstract 获取起点和终点(): [Point, Point];
+  abstract evaluate(t: number): Point;
+  abstract 二分(): [曲线, 曲线];
+
+  获取区间(): [区间, 区间] {
+    const [start, end] = this.获取起点和终点();
+    const x = new 区间(start[0], end[0]);
+    const y = new 区间(start[1], end[1]);
+    return [x, y];
+  }
+
+  获取主轴和副轴区间(): [区间, 区间] {
+    const [x, y] = this.获取区间();
+    return this.getOrientation() === "horizontal" ? [x, y] : [y, x];
+  }
+
+  length(): number {
+    const [start, end] = this.获取起点和终点();
+    return distance(start, end);
+  }
+
+  isBoundedBy(xrange: 区间, yrange: 区间): boolean {
+    const [x, y] = this.获取区间();
+    return xrange.contains(x) && yrange.contains(y);
+  }
+
+  relation(c: 曲线): 曲线关系 {
+    const relation = this.计算相连关系(c);
+    if (relation !== undefined) return relation;
+    if (this.getType() === "linear" && c.getType() === "linear") {
+      return (this as any as 一次曲线).计算线性一般关系(c as 一次曲线);
+    }
+    return this.计算一般关系(c);
+  }
+
+  计算相连关系(c: 曲线): 相连关系 | undefined {
+    const [astart, aend] = this.获取起点和终点();
+    const [bstart, bend] = c.获取起点和终点();
+    if (isEqual(astart, bstart)) return 构造相连("前", "前");
+    if (isEqual(astart, bend)) return 构造相连("前", "后");
+    if (isEqual(aend, bstart)) return 构造相连("后", "前");
+    if (isEqual(aend, bend)) return 构造相连("后", "后");
+    if (this.getType() === "linear") {
+      if (isCollinear(astart, aend, bstart)) return 构造相连("中", "前");
+      if (isCollinear(astart, aend, bend)) return 构造相连("中", "后");
+    }
+    if (c.getType() === "linear") {
+      if (isCollinear(bstart, bend, astart)) return 构造相连("前", "中");
+      if (isCollinear(bstart, bend, aend)) return 构造相连("后", "中");
+    }
+  }
+
+  计算一般关系(c: 曲线): 曲线关系 {
+    const 交点 = this.寻找交点(c);
+    if (交点 === undefined) return this.计算离散关系(c);
+    const [起点, 终点] = this.获取起点和终点();
+    const [另一起点, 另一终点] = c.获取起点和终点();
+    const 相连误差 = 3;
+    if (distance(交点, 起点) < 相连误差) return 构造相连("前", "中");
+    if (distance(交点, 终点) < 相连误差) return 构造相连("后", "中");
+    if (distance(交点, 另一起点) < 相连误差) return 构造相连("中", "前");
+    if (distance(交点, 另一终点) < 相连误差) return 构造相连("中", "后");
+    return { type: "交" };
+  }
+
+  计算离散关系(c: 曲线): 离散关系 {
+    if (this.getOrientation() === c.getOrientation()) {
+      const [amain, across] = this.获取主轴和副轴区间();
+      const [bmain, bcross] = c.获取主轴和副轴区间();
+      return {
+        type: "平行",
+        mainAxis: amain.compare(bmain),
+        crossAxis: across.compare(bcross),
+      };
+    } else {
+      const [ax, ay] = this.获取区间();
+      const [bx, by] = c.获取区间();
+      return {
+        type: "垂直",
+        x: ax.compare(bx),
+        y: ay.compare(by),
+      };
+    }
+  }
+
+  /**
+   * 获取两个曲线在 t 取值上的交点
+   */
+  寻找交点(c: 曲线): Point | undefined {
+    const [astart, aend] = this.获取起点和终点();
+    const [bstart, bend] = c.获取起点和终点();
+    const [axInterval, ayInterval] = this.获取区间();
+    const [bxInterval, byInterval] = c.获取区间();
+    const xposition = axInterval.compare(bxInterval);
+    const yposition = ayInterval.compare(byInterval);
+    const disjoint = [区间关系.先于, 区间关系.后于];
+    if (disjoint.includes(xposition) || disjoint.includes(yposition))
+      return undefined;
+    const [alength, blength] = [distance(astart, aend), distance(bstart, bend)];
+    const threshold = 1;
+    if (alength < threshold && blength < threshold)
+      return divide(add(add(astart, aend), add(bstart, bend)), 4);
+    const [a_firsthalf, a_secondhalf] = this.二分();
+    const [b_firsthalf, b_secondhalf] = c.二分();
+    return (
+      a_firsthalf.寻找交点(b_firsthalf) ||
+      a_firsthalf.寻找交点(b_secondhalf) ||
+      a_secondhalf.寻找交点(b_firsthalf) ||
+      a_secondhalf.寻找交点(b_secondhalf)
+    );
+  }
+}
 
 /**
  * 一次 Bezier 曲线
  * 用于表示横、竖等笔画
  */
-interface LinearCurve {
-  type: "linear";
-  orientation: Orientation;
-  controls: [Point, Point];
+class 一次曲线 extends 曲线 {
+  private orientation: 朝向;
+  private controls: [Point, Point];
+
+  constructor(start: Point, draw: Draw) {
+    super();
+    let p1: Point;
+    switch (draw.command) {
+      case "h":
+        p1 = add(start, [draw.parameterList[0], 0]);
+        break;
+      case "v":
+        p1 = add(start, [0, draw.parameterList[0]]);
+        break;
+      default:
+        throw new Error(`Invalid command for linear curve: ${draw.command}`);
+    }
+    this.orientation = draw.command === "v" ? "vertical" : "horizontal";
+    this.controls = [start, p1];
+  }
+
+  getType() {
+    return "linear" as const;
+  }
+  getOrientation() {
+    return this.orientation;
+  }
+  二分(): [曲线, 曲线] {
+    const mid = this.evaluate(0.5);
+    const firstHalf = structuredClone(this);
+    const secondHalf = structuredClone(this);
+    firstHalf.controls[1] = mid;
+    secondHalf.controls[0] = mid;
+    return [firstHalf, secondHalf];
+  }
+  获取起点和终点(): [Point, Point] {
+    return [this.controls[0], this.controls[1]];
+  }
+  evaluate(t: number): Point {
+    return add(
+      multiply(1 - t, this.controls[0]) as Point,
+      multiply(t, this.controls[1]) as Point,
+    );
+  }
+
+  计算线性一般关系(b: 一次曲线): 曲线关系 {
+    const [astart, aend] = this.controls;
+    const [bstart, bend] = b.controls;
+    const [v, v1, v2] = [
+      subtract(aend, astart),
+      subtract(bstart, astart),
+      subtract(bend, astart),
+    ];
+    const vc = area(v, v1) * area(v, v2);
+    const [u, u1, u2] = [
+      subtract(bend, bstart),
+      subtract(astart, bstart),
+      subtract(aend, bstart),
+    ];
+    const uc = area(u, u1) * area(u, u2);
+    if (vc < 0 && uc < 0) {
+      return { type: "交" };
+    }
+    return this.计算离散关系(b);
+  }
 }
 
 /**
  * 三次 Bezier 曲线
  * 用于表示撇、捺等笔画
  */
-interface CubicCurve {
-  type: "cubic";
-  orientation: Orientation;
-  controls: [Point, Point, Point, Point];
+class 三次曲线 extends 曲线 {
+  private orientation: 朝向;
+  private controls: [Point, Point, Point, Point];
+
+  constructor(start: Point, draw: Draw) {
+    super();
+    const p1 = add(start, draw.parameterList.slice(0, 2) as Point);
+    const p2 = add(start, draw.parameterList.slice(2, 4) as Point);
+    const p3 = add(start, draw.parameterList.slice(4) as Point);
+    this.orientation = draw.command === "c" ? "vertical" : "horizontal";
+    this.controls = [start, p1, p2, p3];
+  }
+  getType() {
+    return "cubic" as const;
+  }
+  getOrientation() {
+    return this.orientation;
+  }
+  获取起点和终点(): [Point, Point] {
+    return [this.controls[0], this.controls[3]];
+  }
+  二分(): [曲线, 曲线] {
+    const [p0, p1, p2, p3] = this.controls;
+    const p01 = divide(add(p0, p1), 2);
+    const p12 = divide(add(p1, p2), 2);
+    const p23 = divide(add(p2, p3), 2);
+    const p012 = divide(add(p01, p12), 2);
+    const p123 = divide(add(p12, p23), 2);
+    const p0123 = divide(add(p012, p123), 2);
+    const firstHalf = structuredClone(this);
+    const secondHalf = structuredClone(this);
+    firstHalf.controls = [p0, p01, p012, p0123];
+    secondHalf.controls = [p0123, p123, p23, p3];
+    return [firstHalf, secondHalf];
+  }
+  evaluate(t: number) {
+    const v01 = add(
+      multiply((1 - t) ** 3, this.controls[0]),
+      multiply(3 * (1 - t) ** 2 * t, this.controls[1]),
+    );
+    const v23 = add(
+      multiply(3 * (1 - t) * t ** 2, this.controls[2]),
+      multiply(t ** 3, this.controls[3]),
+    );
+    return add(v01, v23);
+  }
 }
 
 /**
  * 圆弧曲线
  * 用于表示笔画「圈」
  */
-interface ArcCurve {
-  type: "arc";
-  orientation: Orientation;
-  controls: [Point, Point];
-}
+class 圆弧曲线 extends 曲线 {
+  private orientation: 朝向;
+  private controls: [Point, Point];
 
-/**
- * Bezier 曲线，可能为一次、三次或圆弧
- */
-type Curve = LinearCurve | CubicCurve | ArcCurve;
-
-/**
- * 渲染后的笔画
- * 这个类型和 SVGStroke 的区别是，这个类型包含了一系列 Bezier 曲线，而 SVGStroke 包含了一系列 SVG 命令
- * Bezier 曲线里每一段的起点和终点都是显式写出的，所以比较适合于计算
- */
-interface RenderedStroke {
-  feature: string;
-  curveList: Curve[];
-}
-
-export const sortTwoNumbers = (ar: [number, number]) =>
-  ar.sort((a, b) => a - b) as [number, number];
-
-const getBoundingBox = (a: Curve) =>
-  [a.controls[0], a.controls[a.controls.length - 1]] as [Point, Point];
-
-const getIntervalOnOrientation = (a: Curve): [Interval, Interval] => {
-  const start = a.controls[0];
-  const end = a.controls.at(-1)!;
-  const i1 = sortTwoNumbers([start[0], end[0]]);
-  const i2 = sortTwoNumbers([start[1], end[1]]);
-  if (a.orientation === "horizontal") {
-    return [i1, i2];
+  constructor(start: Point, draw: Draw) {
+    super();
+    this.orientation = "horizontal";
+    this.controls = [start, start];
   }
-  return [i2, i1];
-};
-
-const evaluate = (a: Curve, t: number): Point => {
-  if (a.type === "linear") {
-    return add(
-      multiply(1 - t, a.controls[0]) as Point,
-      multiply(t, a.controls[1]) as Point,
-    );
+  getType() {
+    return "arc" as const;
   }
-  if (a.type === "arc") {
+  getOrientation() {
+    return this.orientation;
+  }
+  evaluate(t: number): Point {
     return [0, 0];
   }
-  const v01 = add(
-    multiply((1 - t) ** 3, a.controls[0]),
-    multiply(3 * (1 - t) ** 2 * t, a.controls[1]),
-  );
-  const v23 = add(
-    multiply(3 * (1 - t) * t ** 2, a.controls[2]),
-    multiply(t ** 3, a.controls[3]),
-  );
-  return add(v01, v23) as Point;
-};
-
-const makeCurve = (start: Point, { command, parameterList }: Draw): Curve => {
-  if (command === "a") {
-    return {
-      type: "arc",
-      orientation: "horizontal",
-      controls: [start, start],
-    };
+  获取起点和终点(): [Point, Point] {
+    return [this.controls[0], this.controls[1]];
   }
-  if (command === "c" || command === "z") {
-    const p1 = add(start, parameterList.slice(0, 2) as Point);
-    const p2 = add(start, parameterList.slice(2, 4) as Point);
-    const p3 = add(start, parameterList.slice(4) as Point);
-    return {
-      type: "cubic",
-      orientation: command === "c" ? "vertical" : "horizontal",
-      controls: [start, p1, p2, p3],
-    };
+  二分(): [曲线, 曲线] {
+    const mid = this.evaluate(0.5);
+    const firstHalf = structuredClone(this);
+    const secondHalf = structuredClone(this);
+    firstHalf.controls[1] = mid;
+    secondHalf.controls[0] = mid;
+    return [firstHalf, secondHalf];
   }
-  let p1: Point;
-  switch (command) {
-    case "h":
-      p1 = add(start, [parameterList[0], 0]);
-      break;
-    case "v":
-      p1 = add(start, [0, parameterList[0]]);
-      break;
-  }
-  return {
-    type: "linear",
-    orientation: command === "v" ? "vertical" : "horizontal",
-    controls: [start, p1],
-  };
-};
-
-const render = ({ feature, start, curveList }: SVGStroke) => {
-  const r: RenderedStroke = { feature, curveList: [] };
-  let previousPosition = start;
-  for (const draw of curveList) {
-    const curve = makeCurve(previousPosition, draw);
-    previousPosition =
-      curve.type === "linear"
-        ? curve.controls[1]
-        : curve.type === "arc"
-          ? curve.controls[1]
-          : curve.controls[3];
-    r.curveList.push(curve);
-  }
-  return r;
-};
-
-const area = (p: Point, q: Point) => p[0] * q[1] - p[1] * q[0];
-
-type Interval = [number, number];
-
-interface BoundingBox {
-  x: Interval;
-  y: Interval;
 }
 
-type Position = -1 | -0.5 | 0 | 0.5 | 1;
-
-const getIntervalPosition = (i: Interval, j: Interval): Position => {
-  const [imin, imax] = i.sort((a, b) => a - b);
-  const [jmin, jmax] = j.sort((a, b) => a - b);
-  // totally disjoint
-  if (imax < jmin) return -1;
-  if (imin > jmax) return 1;
-  // generally smaller or larger
-  if (imin < jmin && imax < jmax) return -0.5;
-  if (imin > jmin && imax > jmax) return +0.5;
-  return 0;
+const 创建曲线 = (start: Point, draw: Draw): 曲线 => {
+  if (draw.command === "a") {
+    return new 圆弧曲线(start, draw);
+  }
+  if (draw.command === "c" || draw.command === "z") {
+    return new 三次曲线(start, draw);
+  }
+  return new 一次曲线(start, draw);
 };
 
-const findCrossPoint = (
-  a: Curve,
-  at: Interval,
-  b: Curve,
-  bt: Interval,
-): Point | undefined => {
-  const [astart, aend] = [evaluate(a, at[0]), evaluate(a, at[1])];
-  const [bstart, bend] = [evaluate(b, bt[0]), evaluate(b, bt[1])];
-  const xposition = getIntervalPosition(
-    [astart[0], aend[0]],
-    [bstart[0], bend[0]],
-  );
-  const yposition = getIntervalPosition(
-    [astart[1], aend[1]],
-    [bstart[1], bend[1]],
-  );
-  const totallyDisjoint = [-1, 1];
-  if (
-    totallyDisjoint.includes(xposition) ||
-    totallyDisjoint.includes(yposition)
-  )
-    return undefined;
-  const [alength, blength] = [distance(astart, aend), distance(bstart, bend)];
-  const threshold = 1;
-  if (alength < threshold && blength < threshold)
-    return divide(add(add(astart, aend), add(bstart, bend)), 4) as Point;
-  const [atmid, btmid] = [mean(at), mean(bt)];
-  const a_firsthalf = [at[0], atmid] as Interval;
-  const a_secondhalf = [atmid, at[1]] as Interval;
-  const b_firsthalf = [bt[0], btmid] as Interval;
-  const b_secondhalf = [btmid, bt[1]] as Interval;
-  return (
-    findCrossPoint(a, a_firsthalf, b, b_firsthalf) ||
-    findCrossPoint(a, a_firsthalf, b, b_secondhalf) ||
-    findCrossPoint(a, a_secondhalf, b, b_firsthalf) ||
-    findCrossPoint(a, a_secondhalf, b, b_secondhalf)
-  );
-};
+enum 区间关系 {
+  先于 = -1,
+  部分先于 = -0.5,
+  重叠 = 0,
+  部分后于 = 0.5,
+  后于 = 1,
+}
 
-/**
- * Determine if the point is on a given segment
- * @param from - starting point
- * @param to - end point
- * @param point - another point
- * @returns
- */
-const isCollinear = (from: Point, to: Point, point: Point) => {
-  const [u, v] = [subtract(to, point), subtract(from, point)];
-  return area(u, v) === 0 && dot(u, v) < 0;
-};
+class 区间 {
+  interval: [number, number];
 
-const curveLength = (curve: Curve) => {
-  const [start, end] = getBoundingBox(curve);
-  return distance(start, end);
-};
+  constructor(a: number, b: number) {
+    this.interval = sorted([a, b]);
+  }
+  compare(other: 区间): 区间关系 {
+    const [imin, imax] = this.interval;
+    const [jmin, jmax] = other.interval;
+    // totally disjoint
+    if (imax < jmin) return 区间关系.先于;
+    if (imin > jmax) return 区间关系.后于;
+    // generally smaller or larger
+    if (imin < jmin && imax < jmax) return 区间关系.部分先于;
+    if (imin > jmin && imax > jmax) return 区间关系.部分后于;
+    return 区间关系.重叠;
+  }
+  contains(other: 区间): boolean {
+    return (
+      this.interval[0] <= other.interval[0] &&
+      this.interval[1] >= other.interval[1]
+    );
+  }
+}
 
-const sort = (a: Interval): Interval => a.sort((a, b) => a - b);
-
-const contains = (r1: Interval, r2: Interval) => {
-  return r1[0] <= r2[0] && r1[1] >= r2[1];
-};
-
-const _isBoundedBy = (curve: Curve, xrange: Interval, yrange: Interval) => {
-  const [start, end] = getBoundingBox(curve);
-  const thisXRange = sort([start[0], end[0]]);
-  const thisYRange = sort([start[1], end[1]]);
-  return contains(xrange, thisXRange) && contains(yrange, thisYRange);
-};
-
-const isBoundedBy = (
-  stroke: RenderedStroke,
-  xrange: Interval,
-  yrange: Interval,
-) => {
-  return stroke.curveList.every((x) => _isBoundedBy(x, xrange, yrange));
-};
-
-export {
-  getBoundingBox,
-  getIntervalOnOrientation,
-  getIntervalPosition,
-  render,
-  makeCurve,
-  area,
-  curveLength,
-  findCrossPoint,
-  isCollinear,
-  isBoundedBy,
-};
-export type { LinearCurve, CubicCurve, Curve, RenderedStroke };
-export type { Interval, Position, BoundingBox };
+export { 曲线, 曲线关系, 区间, 创建曲线 };

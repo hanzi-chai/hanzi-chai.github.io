@@ -6,7 +6,7 @@ import {
   generateSliceBinaries,
 } from "../src/main";
 import { describe, it, expect } from "vitest";
-import { create, all } from "mathjs";
+import { create, all } from "math";
 import { computedComponents } from "./mock";
 import type { RenderedGlyph } from "../src/main";
 

@@ -1,5 +1,7 @@
 import {
   isMerge,
+  Mapping,
+  Value,
   type Algebra,
   type Condition,
   type EncoderConfig,
@@ -8,13 +10,13 @@ import {
   type Source,
   type WordRule,
 } from "./config.js";
-import type { ComponentAnalysis } from "./component.js";
-import type { CompoundAnalysis } from "./compound.js";
+import type { 部件分析 } from "./component.js";
+import type { 复合体分析 } from "./compound.js";
 import type { Extra } from "./element.js";
-import { algebraCache, findElement } from "./element.js";
-import type { Repertoire } from "./data.js";
+import { findElement } from "./element.js";
 import type { AnalysisResult } from "./repertoire.js";
-import type { Dictionary, CustomElementMap } from "./utils.js";
+import type { CustomElementMap, IndexedElement } from "./utils.js";
+import type { 拼音分析结果 } from "./pinyin.js";
 
 export const getPriorityMap = (
   priorityShortCodes: [string, string, number][],
@@ -49,65 +51,65 @@ const table: Record<
  * 代表了一个有字音、有字形的汉字的中间结果
  * 由拆分结果 [`ComponentResult`](#componentresult) 或 [`CompoundResult`](#compoundresult) 与字音组成
  */
-export type CharacterResult = (ComponentAnalysis | CompoundAnalysis) & {
-  char: string;
-  pinyin: string;
-  frequency: number;
-  custom: Record<string, string[]>;
+export type CharacterResult = (部件分析 | 复合体分析) & {
+  汉字: string;
+  拼写运算: Map<string, string>;
+  自定义元素: Record<string, string[]>;
 };
 
-/**
- * 给定一个条件，判断是否满足
- *
- * @param condition - 条件
- * @param result - 中间结果
- * @param config - 配置
- * @param extra - 额外信息
- * @param totalMapping - 映射
- */
-const satisfy = (
-  condition: Condition,
-  result: CharacterResult,
-  config: Algebra,
-  extra: Extra,
-  totalMapping: Record<string, string>,
-) => {
-  const { object, operator } = condition;
-  const target = findElement(object, result, config, extra);
-  const fn = table[operator];
-  if ("value" in condition) {
-    return fn(target, condition.value, totalMapping);
-  }
-  return fn(target, null, totalMapping);
-};
-
-export type IndexedElement = string | { element: string; index: number };
-export interface Assembly {
-  name: string;
-  pinyin_list: string[];
-  sequence: IndexedElement[];
-  frequency: number;
-  level?: number;
+export interface 组装 {
+  词: string;
+  拼音列表: string[];
+  元素序列: IndexedElement[];
+  频率: number;
+  简码级别?: number;
 }
-export type AssemblyResult = Assembly[];
 
-const compile = (
-  keyboard: Keyboard,
-  encoder: EncoderConfig,
-  algebra: Algebra,
-) => {
-  const { mapping } = keyboard;
-  const alphabet = keyboard.alphabet ?? "";
-  const totalMapping = {};
-  return (result: CharacterResult, data: Repertoire, extra: Extra) => {
+export type 组装结果 = 组装[];
+
+class 取码器 {
+  private totalMapping: Record<string, string> = {};
+
+  constructor(
+    private keyboard: Keyboard,
+    private encoder: EncoderConfig,
+  ) {
+    const { mapping } = keyboard;
+    for (const [element, value] of Object.entries(mapping)) {
+      this.totalMapping[element] = this.getValue(mapping, value!);
+    }
+  }
+
+  getValue(mapping: Mapping, value: Exclude<Value, null>): string {
+    if (isMerge(value)) {
+      const newValue = mapping[value.element]!;
+      return this.getValue(mapping, newValue);
+    } else if (Array.isArray(value)) {
+      const parts = [];
+      for (const part of value) {
+        if (typeof part === "string") {
+          parts.push(part);
+        } else {
+          parts.push(this.getValue(mapping, part.element)[part.index]!);
+        }
+      }
+      return parts.join("");
+    } else {
+      return value;
+    }
+  }
+
+  取码(result: CharacterResult, extra: Extra) {
+    const { mapping } = this.keyboard;
+    const alphabet = this.keyboard.alphabet ?? "";
     let node: string | null = "s0";
     const codes = [] as IndexedElement[];
     while (node) {
       if (node.startsWith("s")) {
-        const source: Source = encoder.sources[node]!;
+        const source: Source = this.encoder.sources[node]!;
         const { object, next, index } = source;
         if (node !== "s0") {
-          const element = findElement(object!, result, algebra, extra);
+          const element = findElement(object!, result, extra);
           // 检查元素或键位是否有效
           if (element === undefined) {
             node = next;
@@ -132,39 +134,48 @@ const compile = (
           if (index === undefined) {
             // 如果没有定义指标，就是全取
             for (const [index, key] of Array.from(mapped).entries()) {
-              codes.push(
-                // typeof key === "string"
-                //   ? { element: groupedElement, index }
-                //   : key,
-                { element: groupedElement, index },
-              );
+              codes.push({ element: groupedElement, index });
             }
           } else {
             // 检查指标是否有效
             const key = mapped[index];
             if (key !== undefined) {
-              codes.push(
-                // typeof key === "string"
-                //   ? { element: groupedElement, index }
-                //   : key,
-                { element: groupedElement, index },
-              );
+              codes.push({ element: groupedElement, index });
             }
           }
         }
         node = next;
       } else {
-        const condition: Condition = encoder.conditions[node]!;
-        if (satisfy(condition, result, algebra, extra, totalMapping)) {
+        const condition: Condition = this.encoder.conditions[node]!;
+        if (this.满足(condition, result, extra)) {
           node = condition.positive;
         } else {
           node = condition.negative;
         }
       }
     }
-    return codes.slice(0, encoder.max_length ?? codes.length);
-  };
-};
+    return codes.slice(0, this.encoder.max_length ?? codes.length);
+  }
+
+  /**
+   * 给定一个条件，判断是否满足
+   *
+   * @param condition - 条件
+   * @param result - 中间结果
+   * @param config - 配置
+   * @param extra - 额外信息
+   * @param totalMapping - 映射
+   */
+  满足(condition: Condition, result: CharacterResult, extra: Extra) {
+    const { object, operator } = condition;
+    const target = findElement(object, result, extra);
+    const fn = table[operator];
+    if ("value" in condition) {
+      return fn(target, condition.value, this.totalMapping);
+    }
+    return fn(target, null, this.totalMapping);
+  }
+}
 
 const signedIndex = <T>(elements: T[], index: string) => {
   const order = index.codePointAt(0)! - "a".codePointAt(0)!;
@@ -200,148 +211,156 @@ const gather = (totalElements: IndexedElement[][], rules: WordRule[]) => {
   if (matched) return result;
 };
 
-interface AssembleConfig {
+export interface AssembleConfig {
   encoder: EncoderConfig;
   keyboard: Keyboard;
   algebra: Algebra;
   priority: [string, string, number][];
 }
 
-/**
- * 给定一个拆分结果，返回所有可能的编码
- *
- * @param repertoire - 字符集
- * @param config - 配置
- * @param characters - 需要编码的汉字列表
- * @param analysisResult - 分析结果
- *
- * @returns 组装结果
- */
-export const assemble = (
-  repertoire: Repertoire,
-  config: AssembleConfig,
-  characters: string[],
-  dictionary: Dictionary,
-  adaptedFrequency: Map<string, number>,
-  analysisResult: AnalysisResult,
-  customElements: Record<string, CustomElementMap>,
-) => {
-  const { customized, compoundResults } = analysisResult;
-  const extra = { rootSequence: analysisResult.rootSequence };
-  const func = compile(config.keyboard, config.encoder, config.algebra);
-  const result: AssemblyResult = [];
-  algebraCache.clear();
-  const characterCache = new Map<string, IndexedElement[]>();
-  const customLookup = (character: string) =>
-    Object.fromEntries(
-      Object.entries(customElements).map(([name, map]) => {
-        return [name, (map[character] ?? []).map((x) => `${name}-${x}`)];
-      }),
-    );
-  // 一字词
-  for (const character of characters) {
-    const frequency = adaptedFrequency.get(character) ?? 0;
-    // TODO: 支持多个拆分结果
-    const shapeInfo =
-      customized.get(character) || compoundResults.get(character);
-    if (shapeInfo === undefined) continue;
-    const final: Assembly[] = [];
-    if (character in repertoire === false) continue;
-    const readings = [...repertoire[character]!.readings];
-    if (readings.length === 0) {
-      readings.push({ pinyin: "", importance: 100 });
+export interface 汇编器 {
+  汇编(
+    拼音分析结果: 拼音分析结果,
+    字形分析结果: AnalysisResult,
+    频率: Map<string, number>,
+  ): 组装结果;
+}
+
+export class 默认汇编器 implements 汇编器 {
+  static readonly type = "默认";
+  private config: AssembleConfig;
+  private customElements: Map<string, Record<string, string[]>>;
+
+  constructor(
+    config: AssembleConfig,
+    customElements: Record<string, CustomElementMap>,
+  ) {
+    this.config = config;
+    this.customElements = new Map();
+    for (const [name, map] of Object.entries(customElements)) {
+      for (const [character, elements] of Object.entries(map)) {
+        const existing = this.customElements.get(character) ?? {};
+        existing[name] = elements;
+        this.customElements.set(character, existing);
+      }
     }
-    for (const reading of readings) {
+  }
+
+  /**
+   * 给定一个拆分结果，返回所有可能的编码
+   *
+   * @param 拼音分析结果 - 拼音分析结果
+   * @param 字形分析结果 - 字形分析结果
+   * @param 频率 - 频率映射
+   *
+   * @returns 组装结果
+   */
+  汇编(
+    拼音分析结果: 拼音分析结果,
+    字形分析结果: AnalysisResult,
+    频率: Map<string, number>,
+  ) {
+    const { customized, compoundResults } = 字形分析结果;
+    const extra = { rootSequence: 字形分析结果.rootSequence };
+    const finder = new 取码器(this.config.keyboard, this.config.encoder);
+    const 汇编结果: 组装结果 = [];
+    const 单字元素缓存 = new Map<string, IndexedElement[]>();
+    // 用于给一字词去重
+    const indexMap = new Map<string, number[]>();
+    // 一字词
+    for (const { 词, 拼音, 拼写运算 } of 拼音分析结果.一字词) {
+      const 键 = `${词}:${拼音}`;
+      const frequency = 频率.get(键) ?? 0;
+      // TODO: 支持多个拆分结果
+      const shapeInfo = customized.get(词) || compoundResults.get(词);
+      if (shapeInfo === undefined) continue;
       const result: CharacterResult = {
-        char: character,
-        pinyin: reading.pinyin,
-        frequency: Math.round(frequency * (reading.importance / 100)),
+        汉字: 词,
+        拼写运算,
         ...shapeInfo,
-        custom: customLookup(character),
+        自定义元素: this.customElements.get(词) || {},
       };
-      const elements = func(result, repertoire, extra);
-      characterCache.set(`${character}:${reading.pinyin}`, elements);
+      const elements = finder.取码(result, extra);
+      单字元素缓存.set(键, elements);
       const summary = summarize(elements);
       let isDuplicated = false;
-      for (const previous of final) {
-        if (summarize(previous.sequence) === summary) {
-          previous.frequency += result.frequency;
-          previous.pinyin_list.push(reading.pinyin);
+      for (const previousIndex of indexMap.get(词) ?? []) {
+        const previous = 汇编结果[previousIndex]!;
+        if (summarize(previous.元素序列) === summary) {
+          previous.频率 += frequency;
+          previous.拼音列表.push(拼音);
           isDuplicated = true;
           break;
         }
       }
       if (!isDuplicated) {
-        final.push({
-          name: character,
-          sequence: elements,
-          frequency: result.frequency,
-          pinyin_list: [reading.pinyin],
+        汇编结果.push({
+          词: 词,
+          元素序列: elements,
+          频率: frequency,
+          拼音列表: [拼音],
         });
+        const list = indexMap.get(词) ?? [];
+        list.push(汇编结果.length - 1);
+        indexMap.set(词, list);
       }
     }
-    result.push(...final);
-  }
-  const rules = config.encoder.rules;
-  if (!rules) return result;
-  const knownWords = new Set();
-  // 多字词
-  for (const [word, pinyin] of dictionary) {
-    const frequency = adaptedFrequency.get(word) ?? 0;
-    const characters = Array.from(word);
-    const syllables = pinyin.split(" ");
-    let valid = true;
-    const totalElements: IndexedElement[][] = [];
-    for (const [i, character] of characters.entries()) {
-      const pinyin = syllables[i]!;
-      // 复用已有的编码
-      const hash = `${character}:${pinyin}`;
-      let elements = characterCache.get(hash);
-      if (elements !== undefined) {
+    const rules = this.config.encoder.rules;
+    if (!rules) return 汇编结果;
+    // 多字词
+    for (const { 词, 拼音, 拼写运算 } of 拼音分析结果.多字词) {
+      const 键 = `${词}:${拼音.join(" ")}`;
+      const frequency = 频率.get(键) ?? 0;
+      const characters = Array.from(词);
+      let valid = true;
+      const totalElements: IndexedElement[][] = [];
+      for (const [i, character] of characters.entries()) {
+        const pinyin = 拼音[i]!;
+        // 复用已有的编码
+        const hash = `${character}:${pinyin}`;
+        let elements = 单字元素缓存.get(hash);
+        if (elements !== undefined) {
+          totalElements.push(elements);
+          continue;
+        }
+        const shapeInfo =
+          customized.get(character) || compoundResults.get(character);
+        if (shapeInfo === undefined) {
+          valid = false;
+          break;
+        }
+        const result: CharacterResult = {
+          汉字: character,
+          拼写运算: 拼写运算[i]!,
+          ...shapeInfo,
+          自定义元素: this.customElements.get(character) || {},
+        };
+        elements = finder.取码(result, extra);
         totalElements.push(elements);
-        continue;
       }
-      const shapeInfo =
-        customized.get(character) || compoundResults.get(character);
-      if (shapeInfo === undefined) {
-        valid = false;
-        break;
-      }
-      const result: CharacterResult = {
-        char: character,
-        pinyin,
-        frequency,
-        ...shapeInfo,
-        custom: customLookup(character),
-      };
-      elements = func(result, repertoire, extra);
-      totalElements.push(elements);
+      if (!valid) continue;
+      const wordElements = gather(totalElements, rules);
+      if (wordElements === undefined) continue;
+      // 多音的多字词数量很少，所以不再计算分频比例，直接设为 100
+      汇编结果.push({
+        词: 词,
+        元素序列: wordElements,
+        频率: frequency,
+        拼音列表: [拼音.join(" ")],
+      });
     }
-    if (!valid) continue;
-    const wordElements = gather(totalElements, rules);
-    if (wordElements === undefined) continue;
-    const hash = `${word}:${summarize(wordElements)}`;
-    if (knownWords.has(hash)) continue;
-    // 多音的多字词数量很少，所以不再计算分频比例，直接设为 100
-    result.push({
-      name: word,
-      sequence: wordElements,
-      frequency,
-      pinyin_list: [pinyin],
+    const priorityMap = getPriorityMap(this.config.priority);
+    return 汇编结果.map((x) => {
+      const hash = `${x.词}-${x.拼音列表.join(",")}`;
+      const level = priorityMap.get(hash);
+      return level !== undefined ? { ...x, 简码级别: level } : x;
     });
-    knownWords.add(hash);
   }
-  const priorityMap = getPriorityMap(config.priority);
-  return result.map((x) => {
-    const hash = `${x.name}-${x.pinyin_list.join(",")}`;
-    const level = priorityMap.get(hash);
-    return level !== undefined ? { ...x, level } : x;
-  });
-};
+}
 
-export const stringifySequence = (result: AssemblyResult) => {
+export const stringifySequence = (result: 组装结果) => {
   return result.map((x) => {
-    return { ...x, sequence: summarize(x.sequence) };
+    return { ...x, sequence: summarize(x.元素序列) };
   });
 };
 

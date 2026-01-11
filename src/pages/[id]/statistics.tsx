@@ -19,7 +19,7 @@ import { maxLengthAtom } from "~/atoms";
 import type {
   AdaptedFrequency,
   AnalyzerForm,
-  AssemblyResult,
+  组装结果,
   IndexedElement,
   Key,
 } from "~/lib";
@@ -48,18 +48,18 @@ const numbers = [
 const render = (value: number) => numbers[value] || value.toString();
 
 const filterRelevant = (
-  result: AssemblyResult,
+  result: 组装结果,
   analyzer: AnalyzerForm,
   frequency: AdaptedFrequency,
 ) => {
   let relevant = result;
   if (analyzer.type === "single")
-    relevant = relevant.filter((x) => [...x.name].length === 1);
+    relevant = relevant.filter((x) => [...x.词].length === 1);
   if (analyzer.type === "multi")
-    relevant = relevant.filter((x) => [...x.name].length > 1);
+    relevant = relevant.filter((x) => [...x.词].length > 1);
   if (analyzer.top > 0) {
     relevant.sort((a, b) => {
-      return (frequency.get(b.name) ?? 0) - (frequency.get(a.name) ?? 0);
+      return (frequency.get(b.词) ?? 0) - (frequency.get(a.词) ?? 0);
     });
     relevant = relevant.slice(0, analyzer.top);
   }
@@ -69,14 +69,14 @@ const filterRelevant = (
 const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
   frequency: AdaptedFrequency,
-  result: AssemblyResult,
+  result: 组装结果,
   maxLength: number,
   replacer: (d: string) => string = (d) => d,
 ) => {
   const reverseMap = new Map<string, string[]>();
   const relevant = filterRelevant(result, analyzer, frequency);
   for (const assembly of relevant) {
-    const { name, sequence } = assembly;
+    const { 词: name, 元素序列: sequence } = assembly;
     const sliced = range(maxLength).map((i) =>
       analyzer.position.includes(i) ? sequence[i] : "*",
     );
@@ -250,7 +250,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer, frequency);
   for (const assembly of relevant) {
-    const { name, sequence } = assembly;
+    const { 词: name, 元素序列: sequence } = assembly;
     sequence.forEach((x, i) => {
       const key = stringify(x);
       if (!reverseMap.has(key))

@@ -1,4 +1,4 @@
-import { add } from "./mathjs.js";
+import { add } from "./math.js";
 import type {
   Compound,
   Draw,
@@ -9,9 +9,8 @@ import type {
   SVGStroke,
 } from "./data.js";
 import { cloneDeep } from "lodash-es";
-import type { BoundingBox } from "./bezier.js";
 
-class Affine {
+class 仿射变换 {
   private xscale: number;
   private yscale: number;
   private translate: Point;
@@ -65,32 +64,32 @@ class Affine {
   }
 }
 
-const id = new Affine(1, 1);
-const left = new Affine(0.5, 1);
-const right = new Affine(0.5, 1, [50, 0]);
-const top = new Affine(1, 0.5);
-const bottom = new Affine(1, 0.5, [0, 50]);
-const leftThird = new Affine(0.33, 1);
-const centerThird = new Affine(0.33, 1, [33, 0]);
-const rightThird = new Affine(0.33, 1, [66, 0]);
-const topThird = new Affine(1, 0.33);
-const middleThird = new Affine(1, 0.33, [0, 33]);
-const bottomThird = new Affine(1, 0.33, [0, 66]);
+const id = new 仿射变换(1, 1);
+const left = new 仿射变换(0.5, 1);
+const right = new 仿射变换(0.5, 1, [50, 0]);
+const top = new 仿射变换(1, 0.5);
+const bottom = new 仿射变换(1, 0.5, [0, 50]);
+const leftThird = new 仿射变换(0.33, 1);
+const centerThird = new 仿射变换(0.33, 1, [33, 0]);
+const rightThird = new 仿射变换(0.33, 1, [66, 0]);
+const topThird = new 仿射变换(1, 0.33);
+const middleThird = new 仿射变换(1, 0.33, [0, 33]);
+const bottomThird = new 仿射变换(1, 0.33, [0, 66]);
 
-const affineMap: Record<Operator, Affine[]> = {
+const affineMap: Record<Operator, 仿射变换[]> = {
   "⿰": [left, right],
   "⿱": [top, bottom],
   "⿲": [leftThird, centerThird, rightThird],
   "⿳": [topThird, middleThird, bottomThird],
-  "⿴": [id, new Affine(0.5, 0.5, [25, 25])],
-  "⿵": [id, new Affine(0.5, 0.5, [25, 40])],
-  "⿶": [id, new Affine(0.5, 0.5, [25, 10])],
-  "⿷": [id, new Affine(0.5, 0.5, [40, 25])],
-  "⿸": [id, new Affine(0.5, 0.5, [40, 40])],
-  "⿹": [id, new Affine(0.5, 0.5, [10, 40])],
-  "⿺": [id, new Affine(0.5, 0.5, [40, 10])],
-  "⿼": [id, new Affine(0.5, 0.5, [10, 25])],
-  "⿽": [id, new Affine(0.5, 0.5, [10, 10])],
+  "⿴": [id, new 仿射变换(0.5, 0.5, [25, 25])],
+  "⿵": [id, new 仿射变换(0.5, 0.5, [25, 40])],
+  "⿶": [id, new 仿射变换(0.5, 0.5, [25, 10])],
+  "⿷": [id, new 仿射变换(0.5, 0.5, [40, 25])],
+  "⿸": [id, new 仿射变换(0.5, 0.5, [40, 40])],
+  "⿹": [id, new 仿射变换(0.5, 0.5, [10, 40])],
+  "⿺": [id, new 仿射变换(0.5, 0.5, [40, 10])],
+  "⿼": [id, new 仿射变换(0.5, 0.5, [10, 25])],
+  "⿽": [id, new 仿射变换(0.5, 0.5, [10, 10])],
   "⿻": [id, id],
   "⿾": [id],
   "⿿": [id],
@@ -127,14 +126,14 @@ export function affineMerge(compound: Compound, glyphList: SVGGlyphWithBox[]) {
       }
       mainAxisOffset += gap;
       const increase = gap + mainAxisLength;
-      let affine: Affine;
+      let affine: 仿射变换;
       if (isLR) {
-        affine = new Affine(1, 1, [mainAxisOffset - box.x[0], 0]);
+        affine = new 仿射变换(1, 1, [mainAxisOffset - box.x[0], 0]);
         boundingBox.x[1] += increase;
         boundingBox.y[0] = Math.min(boundingBox.y[0], box.y[0]);
         boundingBox.y[1] = Math.max(boundingBox.y[1], box.y[1]);
       } else {
-        affine = new Affine(1, 1, [0, mainAxisOffset - box.y[0]]);
+        affine = new 仿射变换(1, 1, [0, mainAxisOffset - box.y[0]]);
         boundingBox.y[1] += increase;
         boundingBox.x[0] = Math.min(boundingBox.x[0], box.x[0]);
         boundingBox.x[1] = Math.max(boundingBox.x[1], box.x[1]);

@@ -1,4 +1,3 @@
-import type { Algebra, Rule } from "./config.js";
 import type { CharacterResult } from "./assembly.js";
 
 export interface Extra {
@@ -8,66 +7,6 @@ export interface Extra {
 interface Base {
   type: string;
 }
-
-export const pronunciationElementTypes = [
-  "声母",
-  "双拼声母",
-  "韵母",
-  "双拼韵母",
-  "声调",
-  "首字母",
-  "末字母",
-] as const;
-
-export type PronunciationElementTypes =
-  (typeof pronunciationElementTypes)[number];
-
-const r = String.raw;
-
-export const defaultAlgebra: Record<PronunciationElementTypes, Rule[]> = {
-  声母: [
-    { type: "xform", from: "^([bpmfdtnlgkhjqxzcsr]h?|^).+$", to: "$1" },
-    { type: "xform", from: "^$", to: "0" },
-  ],
-  韵母: [
-    // 恢复 v
-    { type: "xform", from: "^([jqxy])u", to: "$1v" },
-    // 恢复合、齐、撮口的韵母形式
-    { type: "xform", from: "yv", to: "v" },
-    { type: "xform", from: "yi?", to: "i" },
-    { type: "xform", from: "wu?", to: "u" },
-    // 恢复 iou, uei, uen
-    { type: "xform", from: "iu", to: "iou" },
-    { type: "xform", from: "u([in])", to: "ue$1" },
-    { type: "xform", from: r`^.*?([aeêiouv].*|m|ng?)\d$`, to: "$1" },
-  ],
-  双拼声母: [
-    { type: "xform", from: "^([bpmfdtnlgkhjqxzcsryw]h?|^).+$", to: "$1" },
-    { type: "xform", from: "^$", to: "0" },
-  ],
-  双拼韵母: [{ type: "xform", from: r`^.*?([aeêiouv].*|m|ng?)\d$`, to: "$1" }],
-  声调: [{ type: "xform", from: r`.+(\d)`, to: "$1" }],
-  首字母: [{ type: "xform", from: r`^(.).+`, to: "$1" }],
-  末字母: [{ type: "xform", from: r`.*(.)\d`, to: "$1" }],
-};
-
-export const applyRules = (name: string, rules: Rule[], syllable: string) => {
-  let result = syllable;
-  for (const { type, from, to } of rules) {
-    switch (type) {
-      case "xform":
-        result = result.replace(new RegExp(from), to);
-        break;
-      case "xlit":
-        result = result.replace(new RegExp(`[${from}]`), (s) => {
-          const index = from.indexOf(s);
-          return to[index] || "";
-        });
-        break;
-    }
-  }
-  return `${name}-${result}`;
-};
 
 interface This extends Base {
   type: "汉字";
@@ -84,7 +23,7 @@ interface Structure extends Base {
 
 interface Pronunciation extends Base {
   type: "字音";
-  subtype: PronunciationElementTypes;
+  subtype: string;
 }
 
 interface Root extends Base {
@@ -177,7 +116,7 @@ export const parseList = (value: (string | number)[]): CodableObject => {
     case "固定":
       return { type, key: value[1] as string };
     case "字音":
-      return { type, subtype: value[1] as PronunciationElementTypes };
+      return { type, subtype: value[1] as string };
     case "字根":
       return { type, rootIndex: value[1] as number };
     case "笔画":
@@ -208,8 +147,6 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
   return i >= 0 ? a[i - 1] : a[a.length + i];
 }
 
-export const algebraCache = new Map<string, string>();
-
 type Handler = (result: CharacterResult, extra: Extra) => string | undefined;
 
 // 张码补码
@@ -220,7 +157,7 @@ const zhangmaSupplement: Handler = (result, { rootSequence }) => {
     if (n === 7) return 5;
     return n;
   };
-  const { sequence } = result;
+  const { 字根序列: sequence } = result;
   const first = rootSequence.get(sequence[0]!)!;
   const last = rootSequence.get(sequence[sequence.length - 1]!)!;
   const firstfirst = coalesce(first[0]!);
@@ -231,16 +168,19 @@ const zhangmaSupplement: Handler = (result, { rootSequence }) => {
   }
   // 并型和左下围，首 + 末
   // 其他情况，末 + 首
-  return result.operator && /[⿰⿲⿺]/.test(result.operator)
-    ? `${firstfirst}${lastlast}`
-    : `${lastlast}${firstfirst}`;
+  if ("operator" in result) {
+    return /[⿰⿲⿺]/.test(result.结构符)
+      ? `${firstfirst}${lastlast}`
+      : `${lastlast}${firstfirst}`;
+  }
+  return `${lastlast}${firstfirst}`;
 };
 
 // 张码判断是否为准码元
 const zhangmaPseudoRoot: Handler = (result) => {
-  if (!("best" in result)) return "0";
-  const { best } = result;
-  return best.scheme.length === 2 && best.evaluation.get("能连不交")
+  if (!("当前拆分方式" in result)) return "0";
+  const { 当前拆分方式 } = result;
+  return 当前拆分方式.scheme.length === 2 && 当前拆分方式.评价.get("能连不交")
     ? "1"
     : "0";
 };
@@ -253,36 +193,27 @@ const specialElementHandlers: Record<string, Handler> = {
 export const findElement = (
   object: CodableObject,
   result: CharacterResult,
-  algebra: Algebra,
   extra: Extra,
 ) => {
-  const { pinyin, sequence } = result;
+  const { 拼写运算, 字根序列: sequence } = result;
   let root: string | undefined;
   let strokes: number[] | undefined;
-  let name: PronunciationElementTypes;
-  let hash: string;
-  let rules: Rule[];
-  let transformed: string;
+  let name: string;
   let stroke1: number | undefined;
   let stroke2: number | undefined;
   switch (object.type) {
     case "汉字":
-      return result.char;
+      return result.汉字;
     case "固定":
       return object.key;
     case "结构":
       if ("operator" in result) {
-        return result.operator;
+        return result.结构符;
       }
       return undefined;
     case "字音":
       name = object.subtype;
-      hash = `${name}:${pinyin}`;
-      if (algebraCache.has(hash)) return algebraCache.get(hash);
-      rules = defaultAlgebra[name] || algebra?.[name];
-      transformed = applyRules(name, rules, pinyin);
-      algebraCache.set(hash, transformed);
-      return transformed;
+      return 拼写运算.get(name);
     case "字根":
       return signedIndex(sequence, object.rootIndex);
     case "笔画":
@@ -306,7 +237,10 @@ export const findElement = (
       stroke2 = signedIndex(strokes, object.strokeIndex * 2);
       return [stroke1, stroke2 ?? 0].join("");
     case "自定义":
-      return signedIndex(result.custom[object.subtype] ?? [], object.rootIndex);
+      return signedIndex(
+        result.自定义元素[object.subtype] ?? [],
+        object.rootIndex,
+      );
     case "特殊":
       return specialElementHandlers[object.subtype]?.(result, extra);
   }

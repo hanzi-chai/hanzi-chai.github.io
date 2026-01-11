@@ -17,11 +17,11 @@ const DuplicationMatrix = () => {
   const sequenceMap = useAtomValue(sequenceAtom);
   const repertoire = useAtomValue(repertoireAtom);
   const processed = assemblyResult.map((x) => {
-    const sequence = x.sequence.map((y) => stringify(y));
-    return { sequence, name: x.name };
+    const sequence = x.元素序列.map((y) => stringify(y));
+    return { sequence, name: x.词 };
   });
   const hashedElements = new Set<string>();
-  for (const { sequence } of assemblyResult) {
+  for (const { 元素序列: sequence } of assemblyResult) {
     sequence.forEach((x) => {
       hashedElements.add(stringify(x));
     });

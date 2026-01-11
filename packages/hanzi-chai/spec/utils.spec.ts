@@ -7,7 +7,6 @@ import {
   getDummyDerivedComponent,
   getDummyCompound,
   isComponent,
-  getSupplemental,
   getRecordFromTSV,
 } from "../src/utils";
 import { repertoire } from "./mock";
@@ -41,13 +40,6 @@ describe("data utils", () => {
 });
 
 describe("misc", () => {
-  it("getSupplemental should return the supplemental data from the repertoire for the given list of characters", () => {
-    const characters = Object.entries(repertoire)
-      .filter(([, value]) => value.gb2312)
-      .map(([x]) => x);
-    const result = getSupplemental(repertoire, characters);
-    expect(result.length).toBeGreaterThan(50);
-  });
 
   it("parseTSV should parse a TSV string and return a record with the values", () => {
     const text = "A\t1\nB\t2\nC\t3"; // Example TSV string

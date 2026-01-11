@@ -55,18 +55,18 @@ function interpolate(color1: string, color2: string, percent: number) {
 }
 const filterType = (type: PartialWeightTypes, combined: Combined[]) => {
   const filtered = type.includes("character")
-    ? combined.filter((item) => [...item.name].length === 1)
-    : combined.filter((item) => [...item.name].length > 1);
+    ? combined.filter((item) => [...item.词].length === 1)
+    : combined.filter((item) => [...item.词].length > 1);
   return type.includes("full")
     ? filtered.map((item) => ({
-        name: item.name,
+        name: item.词,
         code: item.full,
-        importance: item.frequency,
+        importance: item.频率,
       }))
     : filtered.map((item) => ({
-        name: item.name,
+        name: item.词,
         code: item.short,
-        importance: item.frequency,
+        importance: item.频率,
       }));
 };
 
@@ -558,11 +558,11 @@ const DuplicationDistribution = () => {
     for (const [iFirst, first] of value.entries()) {
       for (const [iSecond, second] of value.entries()) {
         if (iFirst >= iSecond) continue;
-        const pair: [string, string] = [first.name, second.name];
-        const length = Math.max(first.sequence.length, second.sequence.length);
+        const pair: [string, string] = [first.词, second.词];
+        const length = Math.max(first.元素序列.length, second.元素序列.length);
         for (let i = 0; i < length; i++) {
-          const k1 = stringify(first.sequence[i]);
-          const k2 = stringify(second.sequence[i]);
+          const k1 = stringify(first.元素序列[i]);
+          const k2 = stringify(second.元素序列[i]);
           if (k1 === k2) continue;
           const key = `${k1} ${k2}`;
           const previous = pairMap.get(key) ?? [];

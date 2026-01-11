@@ -36,10 +36,10 @@ const ExportAssembly = () => {
       onClick={() => {
         const tsv: string[][] = [];
         for (const {
-          name,
-          sequence,
-          frequency: importance,
-          pinyin_list,
+          词: name,
+          元素序列: sequence,
+          频率: importance,
+          拼音列表: pinyin_list,
         } of assemblyResult) {
           const summary = summarize(sequence);
           const hash = `${name}-${pinyin_list.join(",")}`;
@@ -126,7 +126,7 @@ export default function SequenceTable() {
   const combinedResult = useAtomValue(combinedResultAtom);
 
   const dataSource = combinedResult.map(
-    ({ name, sequence, frequency, ...rest }) => {
+    ({ 词: name, 元素序列: sequence, 频率: frequency, ...rest }) => {
       const key = `${name}-${summarize(sequence)}`;
       const entry: MainEntry = {
         key,

@@ -4,7 +4,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Pako from "pako";
 import { PrimitiveCharacter, PrimitiveRepertoire, Repertoire } from "./data.js";
-import { characterSetFilters, Dictionary, Frequency, listToObject } from "./utils.js";
+import {
+  characterSetFilters,
+  Dictionary,
+  Frequency,
+  listToObject,
+} from "./utils.js";
 import { Config } from "./config.js";
 import { analysis, AnalysisConfig, determine } from "./repertoire.js";
 import { 应用变换器 } from "./transformer.js";
@@ -57,9 +62,7 @@ export function getPrimitveRepertoire(): PrimitiveRepertoire {
   const filePath = path.join(__dirname, "data", "repertoire.json.deflate");
   const compressed = readFileSync(filePath);
   const decompressed = Pako.inflate(compressed, { to: "string" });
-  const raw = JSON.parse(decompressed).map(
-    fromModel,
-  ) as PrimitiveCharacter[];
+  const raw = JSON.parse(decompressed).map(fromModel) as PrimitiveCharacter[];
   const primitiveRepertoire = listToObject(raw);
   return primitiveRepertoire;
 }
@@ -67,19 +70,27 @@ export function getPrimitveRepertoire(): PrimitiveRepertoire {
 export function getDictionary(): Dictionary {
   const filePath = path.join(__dirname, "data", "dictionary.txt");
   const raw = readFileSync(filePath, "utf-8");
-  return raw.trim().split("\n").map((line) => {
-    const [key, value] = line.split("\t");
-    return [key, value];
-  });
+  return raw
+    .trim()
+    .split("\n")
+    .map((line) => {
+      const [key, value] = line.split("\t");
+      return [key, value];
+    });
 }
 
 export function getFrequency(): Frequency {
   const filePath = path.join(__dirname, "data", "frequency.txt");
   const raw = readFileSync(filePath, "utf-8");
-  return Object.fromEntries(raw.trim().split("\n").map((line) => {
-    const [char, freq] = line.split("\t");
-    return [char, Number(freq)];
-  }));
+  return Object.fromEntries(
+    raw
+      .trim()
+      .split("\n")
+      .map((line) => {
+        const [char, freq] = line.split("\t");
+        return [char, Number(freq)];
+      }),
+  );
 }
 
 export function getRepertoire(config: Config): Repertoire {
@@ -97,7 +108,10 @@ export function getRepertoire(config: Config): Repertoire {
   return determined;
 }
 
-export function getCharacters(config: Config, repertoire: Repertoire): string[] {
+export function getCharacters(
+  config: Config,
+  repertoire: Repertoire,
+): string[] {
   const characterSet = config.data?.character_set ?? "minimal";
   const filter = characterSetFilters[characterSet];
   const characters = Object.entries(repertoire)
@@ -106,7 +120,10 @@ export function getCharacters(config: Config, repertoire: Repertoire): string[] 
   return characters;
 }
 
-export function getAnalysisConfig(config: Config, repertoire: Repertoire): AnalysisConfig {
+export function getAnalysisConfig(
+  config: Config,
+  repertoire: Repertoire,
+): AnalysisConfig {
   const mapping = config.form.mapping;
   const mappingSpace = config.form.mapping_space ?? {};
   const optionalRoots = new Set<string>();
@@ -124,18 +141,13 @@ export function getAnalysisConfig(config: Config, repertoire: Repertoire): Analy
   };
 }
 
-export function getAnalysisResult(
-  config: Config,
-  repertoire: Repertoire) {
+export function getAnalysisResult(config: Config, repertoire: Repertoire) {
   const analysisConfig = getAnalysisConfig(config, repertoire);
   const characters = getCharacters(config, repertoire);
   return analysis(repertoire, analysisConfig, characters);
 }
 
-export function getAssemblyResult(
-  config: Config,
-  repertoire: Repertoire,
-) {
+export function getAssemblyResult(config: Config, repertoire: Repertoire) {
   const characters = getCharacters(config, repertoire);
   const analysisResult = getAnalysisResult(config, repertoire);
   const assembleConfig = {
@@ -143,6 +155,14 @@ export function getAssemblyResult(
     encoder: config.encoder ?? {},
     keyboard: config.form ?? {},
     priority: config.encoder?.priority_short_codes ?? [],
-  }
-  assemble(repertoire, assembleConfig, characters, getDictionary(), new Map(Object.entries(getFrequency())), analysisResult, {});
+  };
+  assemble(
+    repertoire,
+    assembleConfig,
+    characters,
+    getDictionary(),
+    new Map(Object.entries(getFrequency())),
+    analysisResult,
+    {},
+  );
 }

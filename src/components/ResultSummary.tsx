@@ -9,7 +9,7 @@ import { Button, Flex, Form, Popover } from "antd";
 import ElementSelect from "./ElementSelect";
 import { ProForm, ProFormList } from "@ant-design/pro-components";
 import { InlineRender } from "./ComponentForm";
-import type { ComponentAnalysis, CompoundAnalysis } from "~/lib";
+import type { 部件分析, 复合体分析 } from "~/lib";
 import { CharWithTooltip, ElementWithTooltip } from "./ElementPool";
 import styled from "styled-components";
 
@@ -118,7 +118,7 @@ export default function ResultSummary({
   disableCustomize = false,
 }: {
   char: string;
-  analysis: ComponentAnalysis | CompoundAnalysis;
+  analysis: 部件分析 | 复合体分析;
   disableCustomize?: boolean;
 }) {
   const { sequence } = analysis;
@@ -178,7 +178,7 @@ export default function ResultSummary({
                   component={char}
                   initialValues={
                     dynamicCustomize[char] ??
-                    analysis.schemes
+                    analysis.全部拆分方式
                       .filter((x) => x.optional)
                       .map((x) => x.roots)
                   }

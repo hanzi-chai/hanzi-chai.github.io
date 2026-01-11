@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mean, round, sortBy, sum } from "lodash-es";
-import { erf, std } from "mathjs";
+import { erf, std } from "math";
 import { exit } from "node:process";
 import { get } from "~/api";
 import { range } from "lodash-es";

@@ -1,24 +1,8 @@
 import { isEqual, sortBy } from "lodash-es";
-import { mergeClassifier } from "./classifier.js";
-import type {
-  ComponentResults,
-  ComponentBasicAnalysis,
-  ComponentGenuineAnalysis,
-  ComponentAnalysis,
-} from "./component.js";
-import {
-  computeComponent,
-  disassembleComponents,
-  getComponentScheme,
-  recursiveRenderComponent,
-  renderRootList,
-} from "./component.js";
-import type { CompoundResults, SerializerType } from "./compound.js";
-import {
-  disassembleCompounds,
-  recursiveRenderCompound,
-  topologicalSort,
-} from "./compound.js";
+import { classifier, Classifier } from "./classifier.js";
+import type { 部件分析结果, 部件分析 } from "./component.js";
+import type { 复合体分析结果, SerializerType } from "./compound.js";
+import { 默认复合体分析器 } from "./compound.js";
 import type {
   Algebra,
   Analysis,
@@ -33,21 +17,20 @@ import type {
   Repertoire,
   PrimitiveRepertoire,
   SVGGlyph,
-  Component,
   Glyph,
   BasicComponent,
+  SVGGlyphWithBox,
+  Reading,
 } from "./data.js";
 import { range } from "d3-array";
-import { applyRules } from "./element.js";
-import { type Dictionary, getDummyBasicComponent, isPUA } from "./utils.js";
-
-export const findGlyphIndex = (glyphs: Glyph[], tags: string[]) => {
-  for (const tag of tags) {
-    const withTag = glyphs.findIndex((x) => (x.tags ?? []).includes(tag));
-    if (withTag !== -1) return withTag;
-  }
-  return 0;
-};
+import {
+  type Dictionary,
+  getDummyBasicComponent,
+  isComponent,
+  isPUA,
+} from "./utils.js";
+import { 部件图形, 默认部件分析器 } from "./component.js";
+import { affineMerge } from "./affine.js";
 
 /**
  * 将原始字符集转换为字符集
@@ -73,10 +56,20 @@ export const determine = (
   const glyphCache: Map<string, SVGGlyph> = new Map();
   for (const [name, character] of Object.entries(repertoire)) {
     const { ambiguous: _, glyphs, readings, ...rest } = character;
-    const selectedIndex = findGlyphIndex(glyphs, tags);
+    let selectedGlyph = glyphs[0];
+    for (const tag of tags) {
+      const withTag = glyphs.find((x) => (x.tags ?? []).includes(tag));
+      if (withTag !== undefined) {
+        selectedGlyph = withTag;
+        break;
+      }
+    }
     const rawglyph =
-      customGlyph[name]! ?? glyphs[selectedIndex] ?? getDummyBasicComponent();
-    const glyph = recursiveHandleRawGlyph(rawglyph, glyphCache, repertoire);
+      customGlyph[name] ?? selectedGlyph ?? getDummyBasicComponent();
+    const glyph = recursiveHandleRawGlyph(rawglyph, repertoire, glyphCache);
+    if (glyph instanceof Error) {
+      throw glyph;
+    }
     const finalReadings = customReadings[name] ?? readings;
     const determined_character: Character = {
       ...rest,
@@ -88,16 +81,121 @@ export const determine = (
   return determined;
 };
 
+export const getGlyphBoundingBox = (glyph: SVGGlyph) => {
+  let [xmin, ymin, xmax, ymax] = [
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ];
+  for (const { start, curveList } of glyph) {
+    let [x, y] = start;
+    xmin = Math.min(xmin, x);
+    ymin = Math.min(ymin, y);
+    xmax = Math.max(xmax, x);
+    ymax = Math.max(ymax, y);
+    for (const { command, parameterList } of curveList) {
+      switch (command) {
+        case "h":
+          x += parameterList[0];
+          break;
+        case "v":
+          y += parameterList[0];
+          break;
+        case "a":
+          xmin = Math.min(xmin, x - parameterList[0]);
+          xmax = Math.max(xmax, x + parameterList[0]);
+          ymax = Math.max(ymax, y + 2 * parameterList[0]);
+          break;
+        default: {
+          const [_x1, _y1, _x2, _y2, x3, y3] = parameterList;
+          x += x3;
+          y += y3;
+          break;
+        }
+      }
+      xmin = Math.min(xmin, x);
+      ymin = Math.min(ymin, y);
+      xmax = Math.max(xmax, x);
+      ymax = Math.max(ymax, y);
+    }
+  }
+  const bb: BoundingBox = { x: [xmin, xmax], y: [ymin, ymax] };
+  return bb;
+};
+
+/**
+ * 递归渲染一个部件（基本部件或者衍生部件）
+ * 如果是基本部件就直接返回，如果是衍生部件则先渲染源字的图形，然后解引用得到这个部件的图形
+ *
+ * @param component - 部件
+ * @param repertoire - 原始字符集
+ * @param glyphCache - 部件缓存
+ *
+ * @returns 部件的 SVG 图形
+ * @throws Error 无法渲染
+ */
 function recursiveHandleRawGlyph(
   glyph: Glyph,
-  glyphCache: Map<string, SVGGlyph>,
   repertoire: PrimitiveRepertoire,
-): BasicComponent | Compound {
-  if (
-    glyph.type === "derived_component" ||
-    glyph.type === "spliced_component"
-  ) {
-    const svgglyph = recursiveRenderComponent(glyph, repertoire, glyphCache);
+  glyphCache: Map<string, SVGGlyph> = new Map(),
+  depth = 0,
+): BasicComponent | Compound | Error {
+  if (depth > 100) {
+    console.error("Recursion depth exceeded", glyph);
+    return new Error();
+  }
+  if (glyph.type === "derived_component") {
+    const sourceCharacter = repertoire[glyph.source];
+    if (sourceCharacter === undefined) return new Error();
+    const sourceComponent = sourceCharacter.glyphs.find(isComponent);
+    if (sourceComponent === undefined) return new Error();
+    const sourceGlyph = recursiveHandleRawGlyph(
+      sourceComponent,
+      repertoire,
+      glyphCache,
+      depth + 1,
+    );
+    if (sourceGlyph instanceof Error || sourceGlyph.type !== "basic_component")
+      return new Error();
+    const svgglyph: SVGGlyph = [];
+    glyph.strokes.forEach((x) => {
+      if (x.feature === "reference") {
+        const sourceStroke = sourceGlyph.strokes[x.index];
+        // 允许指标越界
+        if (sourceStroke === undefined) return;
+        svgglyph.push(sourceStroke);
+      } else {
+        svgglyph.push(x);
+      }
+    });
+    return {
+      type: "basic_component",
+      tags: glyph.tags,
+      strokes: svgglyph instanceof Error ? [] : svgglyph,
+    };
+  }
+  if (glyph.type === "spliced_component") {
+    const glyphs: SVGGlyphWithBox[] = [];
+    for (const name of glyph.operandList) {
+      const sourceComponent = repertoire[name]?.glyphs?.find?.(isComponent);
+      if (sourceComponent === undefined) return new Error();
+      const sourceGlyph = recursiveHandleRawGlyph(
+        sourceComponent,
+        repertoire,
+        glyphCache,
+        depth + 1,
+      );
+      if (
+        sourceGlyph instanceof Error ||
+        sourceGlyph.type !== "basic_component"
+      )
+        return new Error();
+      const box = getGlyphBoundingBox(sourceGlyph.strokes);
+      glyphs.push({ strokes: sourceGlyph.strokes, box });
+    }
+    const asCompound = { ...glyph, type: "compound" as const };
+    const svgglyph = affineMerge(asCompound, glyphs).strokes;
     return {
       type: "basic_component",
       tags: glyph.tags,
@@ -106,8 +204,9 @@ function recursiveHandleRawGlyph(
   } else if (glyph.type === "identity") {
     return recursiveHandleRawGlyph(
       repertoire[glyph.source]!.glyphs[0]!,
-      glyphCache,
       repertoire,
+      glyphCache,
+      depth + 1,
     );
   } else {
     return glyph;
@@ -115,11 +214,11 @@ function recursiveHandleRawGlyph(
 }
 
 export interface AnalysisResult {
-  componentResults: ComponentResults;
+  componentResults: 部件分析结果;
   componentError: string[];
-  customizations: ComponentResults;
-  customized: ComponentResults;
-  compoundResults: CompoundResults;
+  customizations: 部件分析结果;
+  customized: 部件分析结果;
+  compoundResults: 复合体分析结果;
   compoundError: string[];
   rootSequence: Map<string, number[]>;
 }
@@ -128,70 +227,231 @@ export interface AnalysisConfig {
   analysis: Analysis;
   roots: Map<Element, Value>;
   optionalRoots: Set<Element>;
+  classifier: Classifier;
 }
 
-const getRootSequence = (repertoire: Repertoire, config: AnalysisConfig) => {
-  const classifier = mergeClassifier(config.analysis?.classifier);
-  const findSequence = (x: string) => {
-    if (x.match(/[0-9]+/)) {
-      return [...x].map(Number);
-    }
-    const glyph = repertoire[x]?.glyph;
-    if (glyph === undefined) {
-      return [];
-    }
-    if (glyph.type === "basic_component") {
-      return glyph.strokes.map((s) => classifier[s.feature]);
-    }
-    const sequence = recursiveRenderCompound(glyph, repertoire);
-    if (sequence instanceof Error) return [];
-    return sequence.strokes.map((s) => classifier[s.feature]);
-  };
-  const rootSequence = new Map<string, number[]>();
-  const roots = new Set([
-    ...config.roots.keys(),
-    ...config.optionalRoots.keys(),
-  ]);
-  for (const root of roots) {
-    rootSequence.set(root, findSequence(root));
-  }
-  for (const num of Object.values(classifier)) {
-    rootSequence.set(num.toString(), [num]);
-  }
-  return rootSequence;
-};
+export class 字库 {
+  private repertoire: Repertoire;
 
-/**
- * 确定需要分析的字符
- */
-export const getRequiredTargets = (
-  repertoire: Repertoire,
-  config: AnalysisConfig,
-  characters: string[],
-) => {
-  const queue = [...characters];
-  const components = new Set<string>();
-  const compounds = new Set<string>();
-  const knownSet = new Set<string>(characters);
-  while (queue.length) {
-    const char = queue.shift()!;
-    const glyph = repertoire[char]!.glyph;
-    if (glyph.type === "compound") {
-      compounds.add(char);
-      const isCurrentRoot = config.roots.has(char);
-      const isOptionalRoot = config.optionalRoots.has(char);
-      if (isCurrentRoot && !isOptionalRoot) continue;
-      glyph.operandList.forEach((x) => {
-        if (!knownSet.has(x)) {
-          knownSet.add(x);
-          queue.push(x);
+  constructor(repertoire: Repertoire) {
+    this.repertoire = repertoire;
+  }
+
+  getReadings(character: string): Reading[] | undefined {
+    return this.repertoire[character]?.readings;
+  }
+
+  getGlyph(character: string): Glyph | undefined {
+    return this.repertoire[character]?.glyph;
+  }
+
+  /**
+   * 确定需要分析的字符
+   */
+  获取待分析对象(config: AnalysisConfig, characters: string[]) {
+    const queue = [...characters];
+    const componentsWithStrokes: [string, number][] = [];
+    const knownSet = new Set<string>(characters);
+    const reverseCompoundMap = new Map<string, Set<string>>();
+    const noIncoming: string[] = [];
+    while (queue.length) {
+      const char = queue.shift()!;
+      const glyph = this.repertoire[char]!.glyph;
+      if (glyph.type === "compound") {
+        // 如果复合体是必选字根，则不继续拆分
+        const isCurrentRoot = config.roots.has(char);
+        const isOptionalRoot = config.optionalRoots.has(char);
+        if (isCurrentRoot && !isOptionalRoot) {
+          noIncoming.push(char);
+        } else {
+          glyph.operandList.forEach((x) => {
+            if (!knownSet.has(x)) {
+              knownSet.add(x);
+              queue.push(x);
+            }
+            if (!reverseCompoundMap.has(x)) {
+              reverseCompoundMap.set(x, new Set());
+            }
+            reverseCompoundMap.get(x)!.add(char);
+          });
         }
-      });
+      } else {
+        componentsWithStrokes.push([char, glyph.strokes.length]);
+        noIncoming.push(char);
+      }
+    }
+    // 对字符集进行拓扑排序，得到复合体的拆分顺序
+    const 部件列表 = sortBy(componentsWithStrokes, (x) => x[1]).map(
+      ([name, _]) => name,
+    );
+    const componentsSet = new Set(部件列表);
+    const sortedCharacters: string[] = [];
+    while (noIncoming.length) {
+      const char = noIncoming.shift()!;
+      sortedCharacters.push(char);
+      const dependents = reverseCompoundMap.get(char) ?? new Set();
+      reverseCompoundMap.delete(char);
+      for (const dependent of dependents) {
+        const operands = (this.repertoire[dependent]!.glyph as Compound)
+          .operandList;
+        if (operands.every((x) => !reverseCompoundMap.has(x))) {
+          noIncoming.push(dependent);
+        }
+      }
+    }
+    const 复合体列表 = sortedCharacters.filter((x) => !componentsSet.has(x));
+    return { 部件列表, 复合体列表 };
+  }
+
+  /**
+   * 将所有的字根都计算成 ComputedComponent
+   *
+   * @param repertoire - 字符集
+   * @param config - 配置
+   *
+   * @returns 所有计算后字根的列表
+   */
+  renderRootList(elements: string[]) {
+    const rootList: Map<string, 部件图形> = new Map();
+    for (const root of elements) {
+      const glyph = this.repertoire[root]?.glyph;
+      if (glyph === undefined) continue;
+      if (glyph.type === "basic_component") {
+        rootList.set(root, new 部件图形(root, glyph.strokes));
+      } else {
+        const rendered = this.recursiveRenderCompound(glyph, this.repertoire);
+        if (rendered instanceof Error) continue;
+        rootList.set(root, new 部件图形(root, rendered.strokes));
+      }
+    }
+    return rootList;
+  }
+
+  /**
+   * 将复合体递归渲染为 SVG 图形
+   *
+   * @param compound - 复合体
+   * @param repertoire - 原始字符集
+   *
+   * @returns SVG 图形
+   * @throws Error 无法渲染
+   */
+  recursiveRenderCompound = (
+    compound: Compound,
+    glyphCache: Map<string, SVGGlyphWithBox> = new Map(),
+  ): SVGGlyphWithBox | Error => {
+    const glyphs: SVGGlyphWithBox[] = [];
+    for (const char of compound.operandList) {
+      const glyph = this.repertoire[char]?.glyph;
+      if (glyph === undefined) return new Error();
+      if (glyph.type === "basic_component") {
+        let box = glyphCache.get(char)?.box;
+        if (box === undefined) {
+          box = getGlyphBoundingBox(glyph.strokes);
+          glyphCache.set(char, { strokes: glyph.strokes, box: box });
+        }
+        glyphs.push({ strokes: glyph.strokes, box });
+      } else {
+        const cache = glyphCache.get(char);
+        if (cache !== undefined) {
+          glyphs.push(cache);
+          continue;
+        }
+        const rendered = this.recursiveRenderCompound(glyph, glyphCache);
+        if (rendered instanceof Error) return rendered;
+        glyphs.push(rendered);
+        glyphCache.set(char, rendered);
+      }
+    }
+    return affineMerge(compound, glyphs);
+  };
+
+  /**
+   * 将复合体递归渲染为 SVG 图形
+   *
+   * @param compound - 复合体
+   * @param repertoire - 原始字符集
+   *
+   * @returns SVG 图形
+   * @throws Error 无法渲染
+   */
+  recursiveRenderStrokeSequence = (
+    compound: Compound,
+    sequenceCache: Map<string, string> = new Map(),
+  ): string | Error => {
+    const sequences: string[] = [];
+    for (const char of compound.operandList) {
+      const glyph = this.repertoire[char]?.glyph;
+      if (glyph === undefined) return new Error();
+      if (glyph.type === "basic_component") {
+        sequences.push(
+          glyph.strokes.map((x) => classifier[x.feature]).join(""),
+        );
+      } else {
+        const cache = sequenceCache.get(char);
+        if (cache !== undefined) {
+          sequences.push(cache);
+          continue;
+        }
+        const rendered = this.recursiveRenderStrokeSequence(
+          glyph,
+          sequenceCache,
+        );
+        if (rendered instanceof Error) return rendered;
+        sequences.push(rendered);
+        sequenceCache.set(char, rendered);
+      }
+    }
+    const { order } = compound;
+    if (order === undefined) {
+      return sequences.join("");
     } else {
-      components.add(char);
+      const merged: string[] = [];
+      for (const { index, strokes } of order) {
+        const seq = sequences[index];
+        if (seq === undefined) continue;
+        if (strokes === 0) {
+          merged.push(seq);
+        } else {
+          merged.push(seq.slice(0, strokes));
+          sequences[index] = seq.slice(strokes);
+        }
+      }
+      return merged.join("");
+    }
+  };
+}
+
+const prepareCustomization = (
+  config: AnalysisConfig,
+  componentResults: 部件分析结果,
+) => {
+  const customizations: 部件分析结果 = new Map();
+  const customConfig = config.analysis?.customize ?? {};
+  for (const [component, sequence] of Object.entries(customConfig)) {
+    const previousResult = componentResults.get(component);
+    if (previousResult === undefined) continue;
+    const refinedResult = { ...previousResult, sequence, full: sequence };
+    const maybeBetter = previousResult.全部拆分方式.find((x) => {
+      return isEqual(x.拆分方式, sequence);
+    });
+    if (maybeBetter !== undefined) {
+      refinedResult.当前拆分方式 = maybeBetter;
+    }
+    customizations.set(component, refinedResult);
+  }
+  const dynamicCustomConfig = config.analysis?.dynamic_customize ?? {};
+  for (const [component, sequenceList] of Object.entries(dynamicCustomConfig)) {
+    const previousResult = componentResults.get(component);
+    if (previousResult === undefined) continue;
+    for (const sequence of sequenceList) {
+      if (!sequence.every((x) => /\d/.test(x) || config.roots.has(x))) continue;
+      const refinedResult = { ...previousResult, sequence, full: sequence };
+      customizations.set(component, refinedResult);
+      break;
     }
   }
-  return { components, compounds };
+  return customizations;
 };
 
 /**
@@ -205,81 +465,34 @@ export const analysis = (
   config: AnalysisConfig,
   characters: string[],
 ): AnalysisResult => {
-  const { components, compounds } = getRequiredTargets(
-    repertoire,
-    config,
-    characters,
-  );
-  const [componentResults, componentError] = disassembleComponents(
-    repertoire,
-    config,
-    characters,
-    components,
-  );
-  const customizations: ComponentResults = new Map();
-  const customConfig = config.analysis?.customize ?? {};
-  for (const [component, sequence] of Object.entries(customConfig)) {
-    const previousResult = componentResults.get(component);
-    if (previousResult === undefined) continue;
-    if (previousResult !== undefined && "best" in previousResult) {
-      const maybeBetter = previousResult.schemes.find((x) => {
-        const list = x.scheme.map((y) => previousResult.map.get(y)!);
-        return isEqual(list, sequence);
-      });
-      if (maybeBetter !== undefined) {
-        const genuineResult: ComponentGenuineAnalysis = {
-          ...previousResult,
-          best: maybeBetter,
-          sequence: sequence,
-          full: sequence,
-        };
-        customizations.set(component, genuineResult);
-        continue;
-      }
-    }
-    const pseudoResult: ComponentBasicAnalysis = {
-      strokes: 0,
-      sequence: sequence,
-      full: sequence,
-      operator: undefined,
-    };
-    customizations.set(component, pseudoResult);
+  const 字库实例 = new 字库(repertoire);
+  const rootMap = 字库实例.renderRootList([
+    ...config.roots.keys(),
+    ...config.optionalRoots.keys(),
+  ]);
+  const { 部件列表, 复合体列表 } = 字库实例.获取待分析对象(config, characters);
+  const 部件分析器 = new 默认部件分析器(config, rootMap);
+  const 部件结果 = 部件分析器.分析(字库实例, 部件列表);
+  if (部件结果 instanceof Error) {
+    throw 部件结果;
   }
-  const all = new Set([...config.roots.keys()]);
-  for (const [component, sequenceList] of Object.entries(
-    config.analysis?.dynamic_customize ?? {},
-  )) {
-    const previousResult = componentResults.get(
-      component,
-    ) as ComponentGenuineAnalysis;
-    for (const sequence of sequenceList) {
-      if (!sequence.every((x) => /\d/.test(x) || all.has(x))) continue;
-      const pseudoResult: ComponentGenuineAnalysis = {
-        ...previousResult,
-        sequence: sequence,
-        full: sequence,
-      };
-      customizations.set(component, pseudoResult);
-      break;
-    }
+  const 部件结果定制 = prepareCustomization(config, 部件结果);
+  const 定制化部件结果 = new Map([...部件结果, ...部件结果定制]);
+  const 复合体分析器 = new 默认复合体分析器(config);
+  const 复合体结果 = 复合体分析器.分析(字库实例, 复合体列表, 定制化部件结果);
+  const 字根笔画 = new Map<string, number[]>();
+  for (const [name, component] of rootMap) {
+    字根笔画.set(
+      name,
+      component.glyph.map((x) => x.feature).map((x) => config.classifier[x]),
+    );
   }
-  const customized = new Map([...componentResults, ...customizations]);
-  const [compoundResults, compoundError] = disassembleCompounds(
-    repertoire,
-    config,
-    customized,
-    characters,
-    compounds,
-  );
-  const rootSequence = getRootSequence(repertoire, config);
   return {
     componentResults,
-    componentError,
-    customizations,
-    customized,
+    customizations: 部件结果定制,
+    customized: 定制化部件结果,
     compoundResults,
-    compoundError,
-    rootSequence,
+    rootSequence: 字根笔画,
   };
 };
 
@@ -316,6 +529,10 @@ export const dynamicAnalysis = (
   adaptedFrequency: Map<string, number>,
   algebra: Algebra,
 ) => {
+  const rootMap = renderRootList(repertoire, [
+    ...config.roots.keys(),
+    ...config.optionalRoots.keys(),
+  ]);
   const { components, compounds } = getRequiredTargets(
     repertoire,
     config,
@@ -324,8 +541,8 @@ export const dynamicAnalysis = (
   const [componentResults, componentError] = disassembleComponents(
     repertoire,
     config,
-    characters,
     components,
+    rootMap,
   );
 
   // 字块映射：把一个字表示为若干个字块
@@ -339,23 +556,16 @@ export const dynamicAnalysis = (
   for (const [name, analysis] of componentResults) {
     const maybeCustomDynamicAnalysis =
       config.analysis.dynamic_customize?.[name];
-    const dynamicAnalysis =
-      "schemes" in analysis
-        ? analysis.schemes.filter((x) => x.optional).map((x) => x.roots)
-        : [analysis.sequence];
+    const dynamicAnalysis = analysis.schemes
+      .filter((x) => x.optional)
+      .map((x) => x.roots);
     segmentDynamicAnalysis.set(
       name,
       maybeCustomDynamicAnalysis ?? dynamicAnalysis,
     );
     segmentMap.set(name, [name]);
   }
-  const sortedCompounds = topologicalSort(repertoire, compounds, config);
-  const rootMap = renderRootList(repertoire, [
-    ...config.roots.keys(),
-    ...config.optionalRoots.keys(),
-  ]);
-  const classifier = mergeClassifier(config.analysis?.classifier);
-  const rootList = [...rootMap.values()];
+  const classifier = config.classifier;
   const cachedGetSegment = (part: string, start: number, end?: number) => {
     const character = repertoire[part]!;
     const name = `${isPUA(part) ? character.name : part}.${start}-${end ?? 0}`;
@@ -367,19 +577,18 @@ export const dynamicAnalysis = (
       return name;
     }
     const glyph = (character.glyph as BasicComponent).strokes.slice(start, end);
-    const cache = computeComponent(name, glyph);
+    const cache = new 部件图形(name, glyph);
     console.log(
       `Part: ${part} (${part.codePointAt(0)}) [${start}${end ? `-${end}` : ""}]`,
     );
-    const analysis = getComponentScheme(
-      cache,
-      rootList,
+    const analysis = cache.getComponentScheme(
+      rootMap,
       config,
       classifier,
-    ) as ComponentGenuineAnalysis;
+    ) as 部件分析;
     segmentDynamicAnalysis.set(
       name,
-      analysis.schemes.filter((x) => x.optional).map((x) => x.roots),
+      analysis.全部拆分方式.filter((x) => x.可用).map((x) => x.拆分方式),
     );
     segmentMap.set(name, [name]);
     return name;
@@ -389,7 +598,8 @@ export const dynamicAnalysis = (
   const fullSegmentMap = new Map<string, string[]>(segmentMap.entries());
 
   // 处理复合体的字块映射，如果它同时也作为字块，就处理它的动态拆分
-  for (const [name, compound] of sortedCompounds) {
+  for (const name of compounds) {
+    const glyph = repertoire[name]!.glyph as Compound;
     const isCurrentRoots = config.roots.has(name);
     const isOptionalRoots = config.optionalRoots.has(name);
     // 如果复合体是必选字根，则直接视为一个字块
@@ -401,7 +611,6 @@ export const dynamicAnalysis = (
     }
 
     // 找出复合体对应的字块
-    const glyph = compound.glyph;
     const componentList: string[] = [];
     const order =
       glyph.order ??
@@ -473,10 +682,10 @@ export const dynamicAnalysis = (
       }
       if (res.length === 1) {
         const only = res[0]!;
-        if (!sortedCompounds.has(only)) {
+        if (!compounds.includes(only)) {
           componentList.push(...fullSegmentMap.get(only)!.slice(0, 2));
         } else {
-          const subglyph = sortedCompounds.get(only)!.glyph;
+          const subglyph = repertoire[only]!.glyph as Compound;
           const order =
             subglyph.order ??
             subglyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
@@ -556,11 +765,19 @@ export const dynamicAnalysis = (
     };
   });
 
+  const 字根笔画 = new Map<string, number[]>();
+  for (const [name, component] of rootMap) {
+    字根笔画.set(
+      name,
+      component.glyph.map((x) => x.feature).map((x) => classifier[x]),
+    );
+  }
+
   const result: 动态拆分 = {
     汉字信息,
     多字词信息,
     动态拆分: Object.fromEntries(segmentDynamicAnalysis),
-    字根笔画: Object.fromEntries(getRootSequence(repertoire, config)),
+    字根笔画: Object.fromEntries(字根笔画),
   };
   return result;
 };

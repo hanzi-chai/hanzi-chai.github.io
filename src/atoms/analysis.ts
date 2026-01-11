@@ -1,4 +1,4 @@
-import type { Analysis, Degenerator, Selector, Feature } from "~/lib";
+import type { Analysis, Degenerator, Feature } from "~/lib";
 import { focusAtom } from "jotai-optics";
 import { analysisAtom } from "./config";
 import { mergeClassifier } from "~/lib";
@@ -17,7 +17,7 @@ export const degeneratorNoCrossAtom = focusAtom(degeneratorAtom, (o) =>
 );
 
 export const selectorAtom = focusAtom(analysisAtom, (o) =>
-  o.prop("selector").valueOr([] as Selector),
+  o.prop("selector").valueOr([] as string[]),
 );
 
 export const strongAtom = focusAtom(analysisAtom, (o) =>
@@ -46,7 +46,3 @@ export const customClassifierAtom = atom((get) => {
   const customization = get(classifierCustomizationAtom);
   return mergeClassifier(customization);
 });
-
-export const serializerAtom = focusAtom(analysisAtom, (o) =>
-  o.prop("serializer").valueOr("sequential" as const),
-);

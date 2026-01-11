@@ -2,8 +2,8 @@ import { atom } from "jotai";
 import type {
   AnalysisConfig,
   AnalysisResult,
-  Assembly,
-  AssemblyResult,
+  组装,
+  组装结果,
   DictEntry,
   EncodeResult,
   Metric,
@@ -15,6 +15,7 @@ import {
   algebraAtom,
   analysisAtom,
   charactersAtom,
+  customClassifierAtom,
   dictionaryAtom,
   encoderAtom,
   keyboardAtom,
@@ -56,6 +57,7 @@ export const analysisConfigAtom = atom(async (get) => {
   const mapping = get(mappingAtom);
   const mappingSpace = get(mappingSpaceAtom);
   const optionalRoots = new Set<string>();
+  const classifier = get(customClassifierAtom);
   for (const [key, value] of Object.entries(mappingSpace)) {
     if (value.some((x) => x.value == null) || mapping[key] === undefined) {
       optionalRoots.add(key);
@@ -79,6 +81,7 @@ export const analysisConfigAtom = atom(async (get) => {
     analysis,
     roots,
     optionalRoots,
+    classifier,
   };
   return analysisConfig;
 });
@@ -96,7 +99,7 @@ export const analysisResultAtom = atom(async (get) => {
 
 export const assemblyResultAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
-  const algebra = get(algebraAtom);
+  const algebra = get(mergedAlgebraAtom);
   const encoder = get(encoderAtom);
   const keyboard = get(keyboardAtom);
   const characters = get(charactersAtom);
@@ -106,7 +109,7 @@ export const assemblyResultAtom = atom(async (get) => {
   const priority = get(priorityShortCodesAtom);
   const adaptedFrequency = await get(adaptedFrequencyAtom);
   const config = { algebra, encoder, keyboard, priority };
-  return await thread.spawn<AssemblyResult>("assembly", [
+  return await thread.spawn<组装结果>("assembly", [
     repertoire,
     config,
     characters,
@@ -126,7 +129,7 @@ export const encodeResultAtom = atom(async (get) => {
   ]);
 });
 
-export interface Combined extends Assembly, DictEntry {}
+export interface Combined extends 组装, DictEntry {}
 
 export const combinedResultAtom = atom(async (get) => {
   const assemblyResult = await get(assemblyResultAtom);

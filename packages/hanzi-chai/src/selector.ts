@@ -1,16 +1,12 @@
-import {
-  MultipleSchemeError,
-  type ComputedComponent,
-  NoSchemeError,
-} from "./component.js";
-import { type Analysis, type Element, type Value, type SieveName, isMerge } from "./config.js";
-import { binaryToIndices } from "./degenerator.js";
-import type { CurveRelation } from "./topology.js";
-import { findLastKey, isEqual } from "lodash-es";
-import { sortTwoNumbers } from "./bezier.js";
+import type { SchemeWithData, 部件图形 } from "./component.js";
+import { type Analysis, type Element, type Value, isMerge } from "./config.js";
 import type { AnalysisConfig } from "./repertoire.js";
+import type { 曲线关系 } from "./bezier.js";
+import { isLess } from "./math.js";
+import { isEqual } from "lodash-es";
+import { 注册表 } from "./registry.js";
 
-export const defaultSelector: SieveName[] = [
+export const defaultSelector: string[] = [
   "结构完整",
   "根少优先",
   "能连不交",
@@ -19,68 +15,55 @@ export const defaultSelector: SieveName[] = [
   "取大优先",
 ];
 
-export type Scheme = number[];
+interface 拆分字根信息 {
+  名称: string;
+  笔画索引: number[];
+  笔画二进制表示: number;
+}
 
-type Comparable = number | number[];
+export type 拆分方式 = 拆分字根信息[];
 
 export interface Environment {
-  component: ComputedComponent;
+  component: 部件图形;
   rootMap: Map<number, string>;
   analysis: Analysis;
   roots: Map<Element, Value>;
 }
 
-interface Sieve<T extends Comparable> {
-  title: SieveName;
-  key: (scheme: Scheme, environment: Environment) => T;
-  display?: (data: T) => string;
+export interface 筛选器 {
+  evaluate: (scheme: 拆分方式, environment: Environment) => number[];
 }
 
-export function isLess<T extends Comparable>(a: T, b: T) {
-  if (typeof a === "number" && typeof b === "number") {
-    return a < b;
+class 根少优先 implements 筛选器 {
+  static readonly type = "根少优先";
+  evaluate(scheme: 拆分方式) {
+    return [scheme.length];
   }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    for (const [i, v] of a.entries()) {
-      const u = b[i];
-      if (u === undefined) return false;
-      if (v < u) return true;
-      if (v > u) return false;
-    }
-    return false;
-  }
-  return false;
 }
-
-export const length: Sieve<number> = {
-  title: "根少优先",
-  key: (scheme) => scheme.length,
-};
-
-const countStrokes: (n: number) => number = (n) =>
-  n < 2 ? n : (n & 1) + countStrokes(n >>> 1);
 
 /**
  * 规则：取大优先
  *
  * 让顺序靠前的字根尽量取到更多的笔画
  */
-export const bias: Sieve<number[]> = {
-  title: "取大优先",
-  key: (scheme) => scheme.map(countStrokes).map((x) => -x),
-  display: (data: number[]) => `(${data.map((x) => -x).join(", ")})`,
-};
+class 取大优先 implements 筛选器 {
+  static readonly type = "取大优先";
+  evaluate(scheme: 拆分方式) {
+    return scheme.map((x) => -x.笔画索引.length);
+  }
+}
 
 /**
  * 规则：取小优先
  *
  * 让顺序靠前的字根尽量取到更少的笔画
  */
-export const unbias: Sieve<number[]> = {
-  title: "取小优先",
-  key: (scheme) => scheme.map(countStrokes),
-  display: (data: number[]) => `(${data.join(", ")})`,
-};
+class 取小优先 implements 筛选器 {
+  static readonly type = "取小优先";
+  evaluate(scheme: 拆分方式) {
+    return scheme.map((x) => x.笔画索引.length);
+  }
+}
 
 /**
  * 规则：全符笔顺
@@ -90,16 +73,14 @@ export const unbias: Sieve<number[]> = {
  *
  * @see https://www.yuque.com/smzm/zhengma/otb32d
  */
-export const order: Sieve<number> = {
-  title: "全符笔顺",
-  key: (scheme, { component }) => {
-    const indices = scheme.flatMap((x) =>
-      binaryToIndices(component.glyph.length)(x),
-    );
-    const isSorted = indices.slice(1).every((v, i) => indices[i]! < v);
-    return Number(!isSorted);
-  },
-};
+class 全符笔顺 implements 筛选器 {
+  static readonly type = "全符笔顺";
+  evaluate(scheme: 拆分方式) {
+    const indices = scheme.flatMap((x) => x.笔画索引);
+    const isSorted = indices.every((value, index) => value === index);
+    return [Number(!isSorted)];
+  }
+}
 
 /**
  * 规则：连续笔顺
@@ -108,18 +89,21 @@ export const order: Sieve<number> = {
  *
  * @see https://zhuyuhao.com/yuhao/docs/learn.html#符合笔顺
  */
-export const order2: Sieve<number> = {
-  title: "连续笔顺",
-  key: (scheme, { component }) => {
-    const indices = scheme.map(binaryToIndices(component.glyph.length));
+class 连续笔顺 implements 筛选器 {
+  static readonly type = "连续笔顺";
+  evaluate(scheme: 拆分方式) {
+    let unsorted = 0;
     // 如果一个字根不是由连续的笔画构成，那么称它是不连续的
-    const unSorted = indices.filter(
-      (x) => x.length - 1 !== x.at(-1)! - x[0]!,
-    ).length;
     // 让不连续的字根数量少者优先
-    return unSorted;
-  },
-};
+    for (const { 笔画索引 } of scheme) {
+      const sortedIndices = [...笔画索引].sort((a, b) => a - b);
+      if (!isEqual(笔画索引, sortedIndices)) {
+        unsorted += 1;
+      }
+    }
+    return [unsorted];
+  }
+}
 
 /**
  * 规则：非形近根
@@ -128,74 +112,71 @@ export const order2: Sieve<number> = {
  *
  * @see https://www.yuque.com/smzm/zhengma/otb32d
  */
-export const similar: Sieve<number> = {
-  title: "非形近根",
-  key: (scheme, { rootMap, roots }) => {
-    const rootList = scheme.map((x) => rootMap.get(x)!);
-    return rootList.filter((x) => {
-      const value = roots.get(x);
-      return value && isMerge(value);
-    }).length;
-  },
-};
+class 非形近根 implements 筛选器 {
+  static readonly type = "非形近根";
+  evaluate(scheme: 拆分方式, { roots }: Environment) {
+    let 形近根数量 = 0;
+    for (const { 名称 } of scheme) {
+      const value = roots.get(名称);
+      if (value && isMerge(value)) {
+        形近根数量 += 1;
+      }
+    }
+    return [形近根数量];
+  }
+}
 
 /**
  * 规则：强字根
  *
  * 尽量多使用特定的一些字根。该规则采集自郑码的文档
  */
-export const strong: Sieve<number> = {
-  title: "多强字根",
-  key: (scheme, { rootMap, analysis }) => {
-    const strong = analysis?.strong || [];
-    const roots = scheme.map((x) => rootMap.get(x)!);
-    return -roots.filter((x) => strong.includes(x)).length;
-  },
-};
+class 多强字根 implements 筛选器 {
+  static readonly type = "多强字根";
+  evaluate(scheme: 拆分方式, { analysis }: Environment) {
+    const 强字根列表 = analysis?.strong || [];
+    const count = scheme.filter((x) => 强字根列表.includes(x.名称)).length;
+    return [-count];
+  }
+}
 
 /**
  * 规则：弱字根
  *
  * 尽量避免使用特定的一些字根
  */
-export const weak: Sieve<number> = {
-  title: "少弱字根",
-  key: (scheme, { rootMap, analysis }) => {
+class 少弱字根 implements 筛选器 {
+  static readonly type = "少弱字根";
+  evaluate(scheme: 拆分方式, { analysis }: Environment) {
     const weak = analysis?.weak || [];
-    const roots = scheme.map((x) => rootMap.get(x)!);
-    return roots.filter((x) => weak.includes(x)).length;
-  },
-};
+    const count = scheme.filter((x) => weak.includes(x.名称)).length;
+    return [count];
+  }
+}
 
-const makeTopologySieve = (
-  relationType: CurveRelation["type"],
-  avoidRelationType: CurveRelation["type"][],
-  title: SieveName,
-): Sieve<number> => {
-  const key: Sieve<number>["key"] = (scheme, { component }) => {
-    const parsedScheme = scheme.map((x) =>
-      binaryToIndices(component.glyph.length)(x),
-    );
-    let totalCrosses = 0;
-    for (const [i, bi] of parsedScheme.entries()) {
-      for (const [j, bj] of parsedScheme.entries()) {
-        if (j >= i) continue;
-        let r = false;
-        let a = false;
-        for (const k of bi) {
-          for (const l of bj) {
-            const [smaller, larger] = [Math.min(k, l), Math.max(k, l)];
-            const relations = component.topology.matrix[larger]?.[smaller]!;
-            r ||= relations.some((v) => v.type === relationType);
-            a ||= relations.some((v) => avoidRelationType.includes(v.type));
-          }
+const 计算出现次数 = (
+  relationType: 曲线关系["type"],
+  avoidRelationType: 曲线关系["type"][],
+  scheme: 拆分方式,
+  component: 部件图形,
+) => {
+  let count = 0;
+  for (const [i, { 笔画索引: bi }] of scheme.entries()) {
+    for (const [j, { 笔画索引: bj }] of scheme.entries()) {
+      if (j >= i) continue;
+      let r = false;
+      let a = false;
+      for (const k of bi) {
+        for (const l of bj) {
+          const relations = component.查询拓扑关系(k, l);
+          r ||= relations.some((v) => v.type === relationType);
+          a ||= relations.some((v) => avoidRelationType.includes(v.type));
         }
-        if (!a) totalCrosses += Number(r);
       }
+      if (!a) count += Number(r);
     }
-    return totalCrosses;
-  };
-  return { key, title };
+  }
+  return count;
 };
 
 /**
@@ -203,52 +184,52 @@ const makeTopologySieve = (
  *
  * 尽量让字根不交叉。该规则采集自五笔
  */
-export const crossing = makeTopologySieve("交", [], "能连不交");
+class 能连不交 implements 筛选器 {
+  static readonly type = "能连不交";
+  evaluate(scheme: 拆分方式, { component }: Environment) {
+    const crosses = 计算出现次数("交", [], scheme, component);
+    return [crosses];
+  }
+}
 
 /**
  * 规则：能散不连
  *
  * 尽量让字根不相连。该规则采集自五笔
  */
-export const attaching = makeTopologySieve("连", ["交"], "能散不连");
+class 能散不连 implements 筛选器 {
+  static readonly type = "能散不连";
+  evaluate(scheme: 拆分方式, { component }: Environment) {
+    const connects = 计算出现次数("连", ["交"], scheme, component);
+    return [connects];
+  }
+}
 
 /**
  * 规则：同向笔画
  *
  * 尽量让方向相同的笔画包含在同一个字根里。该规则采集自五笔
  */
-export const orientation: Sieve<number> = {
-  title: "同向笔画",
-  key: (scheme, { component }) => {
-    const n = component.glyph.length;
-    const parsedScheme = scheme.map(binaryToIndices(n));
+class 同向笔画 implements 筛选器 {
+  static readonly type = "同向笔画";
+  evaluate(scheme: 拆分方式, { component }: Environment) {
     let totalCrosses = 0;
-    for (const [i, bi] of parsedScheme.entries()) {
-      for (const [j, bj] of parsedScheme.entries()) {
+    for (const [i, { 笔画索引: bi }] of scheme.entries()) {
+      for (const [j, { 笔画索引: bj }] of scheme.entries()) {
         if (j >= i) continue;
         let r = false;
         for (const k of bi) {
           for (const l of bj) {
-            const [smaller, larger] = sortTwoNumbers([k, l]);
-            const oriented = component.topology.orientedPairs.some((x) =>
-              isEqual(x, [larger, smaller]),
-            );
+            const oriented = component.具有同向笔画(k, l);
             r ||= oriented;
           }
         }
         totalCrosses += Number(r);
       }
     }
-    return totalCrosses;
-  },
-};
-
-/**
- * @param b1 - 以二进制数表示的切片
- * @param b2 - 同上
- * @returns 第一个切片是否包含第二个切片
- */
-const contains = (b1: number, b2: number) => (b1 | b2) === b1;
+    return [totalCrosses];
+  }
+}
 
 /**
  * 规则：结构完整
@@ -257,9 +238,9 @@ const contains = (b1: number, b2: number) => (b1 | b2) === b1;
  *
  * @see https://zhuyuhao.com/yuhao/docs/learn.html#结构完整
  */
-export const integrity: Sieve<number> = {
-  title: "结构完整",
-  key: (scheme, { rootMap }) => {
+class 结构完整 implements 筛选器 {
+  static readonly type = "结构完整";
+  evaluate(scheme: 拆分方式, { rootMap }: Environment) {
     const priorities = [
       "口",
       "囗",
@@ -270,101 +251,108 @@ export const integrity: Sieve<number> = {
       "\ue009" /* 假右角 */,
       "勹",
       "尸",
-      "\uE407" /* 央三 */,
+      "\ue407" /* 央三 */,
     ];
-    const shouldHave = [...rootMap]
-      .filter(([_, name]) => priorities.includes(name))
-      .map(([binary]) => binary);
-    const breaks = shouldHave.filter(
-      (x) => !scheme.some((binary) => contains(binary, x)),
-    ).length;
-    return breaks;
-  },
-};
+    let 破坏结构完整 = 0;
+    for (const [二进制表示, 名称] of rootMap) {
+      if (priorities.includes(名称)) {
+        if (
+          !scheme.some(({ 笔画二进制表示 }) =>
+            结构完整.contains(笔画二进制表示, 二进制表示),
+          )
+        ) {
+          破坏结构完整 += 1;
+        }
+      }
+    }
+    return [破坏结构完整];
+  }
 
-export const sieveMap = new Map<SieveName, Sieve<number> | Sieve<number[]>>(
-  [
-    length,
-    order,
-    order2,
-    bias,
-    unbias,
-    crossing,
-    attaching,
-    similar,
-    orientation,
-    integrity,
-    strong,
-    weak,
-  ].map((x) => [x.title, x]),
-);
+  /**
+   * @param b1 - 以二进制数表示的切片
+   * @param b2 - 同上
+   * @returns 第一个切片是否包含第二个切片
+   */
+  static contains(b1: number, b2: number) {
+    return (b1 | b2) === b1;
+  }
+}
 
 /**
  * 选择最优的拆分方案
  *
  * @param config - 配置
  * @param component - 待拆分部件
- * @param schemeList - 拆分方案列表
+ * @param 拆分方式列表 - 拆分方案列表
  * @param rootMap - 字根映射，从切片的二进制表示到字根名称的映射
  */
 export const select = (
   config: AnalysisConfig,
-  component: ComputedComponent,
-  schemeList: Scheme[],
+  component: 部件图形,
+  拆分方式列表: 拆分方式[],
   rootMap: Map<number, string>,
-  requiredRoots: Set<number>,
-) => {
+  必要字根: Set<string>,
+): SchemeWithData[] => {
   const environment: Environment = {
     component,
     rootMap,
     ...config,
   };
-  const sieveNames = config.analysis.selector ?? defaultSelector;
-  const schemeData = schemeList.map((scheme) => {
-    const evaluation: Map<SieveName, number | number[]> = new Map();
-    for (const sieveName of sieveNames) {
-      const sieve = sieveMap.get(sieveName)!;
-      const value = sieve.key(scheme, environment);
-      evaluation.set(sieve.title, value);
+  const 筛选器列表: [string, 筛选器][] = [];
+  for (const name of config.analysis.selector ?? defaultSelector) {
+    const 筛选器 = 注册表.实例().创建筛选器(name);
+    if (筛选器) {
+      筛选器列表.push([name, 筛选器]);
     }
-    return {
-      scheme,
-      roots: scheme.map((x) => rootMap.get(x)!),
-      evaluation,
-      optional: false,
-    };
+  }
+  const 拆分方式与评价列表 = 拆分方式列表.map((拆分方式) => {
+    const 评价: Map<string, number[]> = new Map();
+    for (const [name, 筛选器] of 筛选器列表) {
+      const 取值 = 筛选器.evaluate(拆分方式, environment);
+      评价.set(name, 取值);
+    }
+    return { 拆分方式, 评价, 可用: false };
   });
-  schemeData.sort((a, b) => {
-    for (const sieveName of sieveNames) {
-      const aValue = a.evaluation.get(sieveName)!;
-      const bValue = b.evaluation.get(sieveName)!;
+  拆分方式与评价列表.sort((a, b) => {
+    for (const [name, _] of 筛选器列表) {
+      const aValue = a.评价.get(name)!;
+      const bValue = b.评价.get(name)!;
       if (isLess(aValue, bValue)) return -1;
       if (isLess(bValue, aValue)) return 1;
-      continue;
     }
     return 0;
   });
-  const requiredRootsNames = Array.from(requiredRoots).map(
-    (x) => rootMap.get(x)!,
+  const 包含可选字根列表 = 拆分方式与评价列表.map((x) =>
+    x.拆分方式.map((y) => y.名称).filter((y) => !必要字根.has(y)),
   );
-  const optionalRootsData = schemeData.map((x) =>
-    x.roots.filter((y) => !requiredRootsNames.includes(y)),
-  );
-  for (const [index, data] of schemeData.entries()) {
-    data.optional = true;
-    for (let prevIndex = 0; prevIndex != index; ++prevIndex) {
-      const current = optionalRootsData[index]!;
-      const previous = optionalRootsData[prevIndex]!;
+  for (const [index, data] of 拆分方式与评价列表.entries()) {
+    data.可用 = true;
+    for (let prevIndex = 0; prevIndex !== index; ++prevIndex) {
+      const current = 包含可选字根列表[index]!;
+      const previous = 包含可选字根列表[prevIndex]!;
       if (previous.every((x) => current.includes(x))) {
-        data.optional = false;
+        data.可用 = false;
         break;
       }
     }
-    if (data.scheme.every((x) => requiredRoots.has(x) || (x & (x - 1)) === 0)) {
+    if (data.拆分方式.every((x) => 必要字根.has(x.名称))) {
       break;
     }
   }
-  // If there is no scheme, error
-  if (schemeData.length === 0) return new NoSchemeError();
-  return schemeData;
+  return 拆分方式与评价列表;
+};
+
+export {
+  根少优先,
+  取大优先,
+  取小优先,
+  全符笔顺,
+  连续笔顺,
+  非形近根,
+  多强字根,
+  少弱字根,
+  能连不交,
+  能散不连,
+  同向笔画,
+  结构完整,
 };
