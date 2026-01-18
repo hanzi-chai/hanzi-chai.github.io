@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import type {
-  AnalysisConfig,
-  AnalysisResult,
+  字形分析配置,
+  字形分析结果,
   组装,
   组装结果,
   DictEntry,
@@ -10,7 +10,7 @@ import type {
   PronunciationElementTypes,
   Value,
 } from "~/lib";
-import { applyRules, defaultAlgebra, isMerge } from "~/lib";
+import { applyRules, defaultAlgebra, isMerge, 字库 } from "~/lib";
 import {
   algebraAtom,
   analysisAtom,
@@ -77,20 +77,28 @@ export const analysisConfigAtom = atom(async (get) => {
       }
     }
   }
-  const analysisConfig: AnalysisConfig = {
-    analysis,
-    roots,
-    optionalRoots,
+  const 字库实例 = new 字库(repertoire);
+  const 全部字根 = [...config.决策.keys(), ...config.可选字根.keys()];
+  const { 字根图形映射, 字根笔画映射 } = 字库实例.生成字根映射(
+    全部字根,
     classifier,
+  );
+  const config: 字形分析配置 = {
+    分析配置: analysis,
+    决策: roots,
+    可选字根: optionalRoots,
+    分类器: classifier,
+    字根图形映射,
+    字根笔画映射,
   };
-  return analysisConfig;
+  return config;
 });
 
 export const analysisResultAtom = atom(async (get) => {
   const repertoire = get(repertoireAtom);
   const analysisConfig = await get(analysisConfigAtom);
   const characters = get(charactersAtom);
-  return await thread.spawn<AnalysisResult>("analysis", [
+  return await thread.spawn<字形分析结果>("analysis", [
     repertoire,
     analysisConfig,
     characters,
@@ -118,6 +126,28 @@ export const assemblyResultAtom = atom(async (get) => {
     analysisResult,
     customElements,
   ]);
+});
+
+export const getPriorityMap = (
+  priorityShortCodes: [string, string, number][],
+) => {
+  return new Map<string, number>(
+    priorityShortCodes.map(([word, pinyin_list, level]) => {
+      const hash = `${word}-${pinyin_list}`;
+      return [hash, level] as [string, number];
+    }),
+  );
+};
+
+export const assemblyWithPriorityAtom = atom(async (get) => {
+  const assemblyResult = await get(assemblyResultAtom);
+  const priorityShortCodes = get(priorityShortCodesAtom);
+  const priorityMap = getPriorityMap(priorityShortCodes);
+  return assemblyResult.map((x) => {
+    const hash = `${x.词}-${x.拼音列表.join(",")}`;
+    const level = priorityMap.get(hash);
+    return level !== undefined ? { ...x, 简码级别: level } : x;
+  });
 });
 
 export const encodeResultAtom = atom(async (get) => {

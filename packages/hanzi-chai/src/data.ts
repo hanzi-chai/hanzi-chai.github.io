@@ -1,4 +1,3 @@
-import type { BoundingBox } from "./bezier.js";
 import type { Feature } from "./classifier.js";
 
 export type N1 = [number];
@@ -49,11 +48,6 @@ export interface ReferenceStroke {
  * SVG 字形是一系列 SVG 笔画的列表
  */
 export type SVGGlyph = SVGStroke[];
-
-export interface SVGGlyphWithBox {
-  strokes: SVGGlyph;
-  box: BoundingBox;
-}
 
 /**
  * 广义的笔画，包括 SVG 笔画和引用笔画

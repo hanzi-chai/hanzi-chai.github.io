@@ -11,9 +11,9 @@ import {
   listToObject,
 } from "./utils.js";
 import { Config } from "./config.js";
-import { analysis, AnalysisConfig, determine } from "./repertoire.js";
-import { 应用变换器 } from "./transformer.js";
-import { assemble } from "./assembly.js";
+import { analysis, 字形分析配置, determine } from "./repertoire.js";
+import { 应用变换器 } from "./primitive.js";
+import { 组装 } from "./assembly.js";
 
 export interface Item {
   id: number;
@@ -123,7 +123,7 @@ export function getCharacters(
 export function getAnalysisConfig(
   config: Config,
   repertoire: Repertoire,
-): AnalysisConfig {
+): 字形分析配置 {
   const mapping = config.form.mapping;
   const mappingSpace = config.form.mapping_space ?? {};
   const optionalRoots = new Set<string>();
@@ -135,9 +135,9 @@ export function getAnalysisConfig(
   const analysis = config.analysis ?? {};
   const roots = new Map(Object.entries(mapping).filter(([x]) => repertoire[x]));
   return {
-    analysis,
-    roots,
-    optionalRoots,
+    分析配置: analysis,
+    字根决策: roots,
+    可选字根: optionalRoots,
   };
 }
 
@@ -156,7 +156,7 @@ export function getAssemblyResult(config: Config, repertoire: Repertoire) {
     keyboard: config.form ?? {},
     priority: config.encoder?.priority_short_codes ?? [],
   };
-  assemble(
+  组装(
     repertoire,
     assembleConfig,
     characters,

@@ -34,7 +34,7 @@ import {
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
-import type { AnalysisResult, CharacterFilter } from "~/lib";
+import type { 字形分析结果, CharacterFilter } from "~/lib";
 import {
   dynamicAnalysis,
   exportTSV,
@@ -51,7 +51,7 @@ import { Display, Select } from "~/components/Utils";
 
 const dumpAnalysisResult = (
   characters: string[],
-  a: AnalysisResult,
+  a: 字形分析结果,
   display: (s: string) => string,
 ) => {
   const { customized, compoundResults } = a;

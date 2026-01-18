@@ -5,9 +5,9 @@ import type {
   Component,
   Reading,
   Identity,
+  Operator,
 } from "./data.js";
-import type { CodableObject } from "./element.js";
-import { type 变换器 } from "./transformer.js";
+import type { 可编码对象 } from "./element.js";
 
 // config.info begin
 export interface Info {
@@ -43,6 +43,20 @@ export interface Data {
 
 export type CustomGlyph = Record<string, Component | Compound | Identity>;
 export type CustomReadings = Record<string, Reading[]>;
+export interface 变换器 {
+  from: 模式;
+  to: 模式;
+}
+
+export interface 模式 {
+  operator: Operator;
+  operandList: (string | 模式 | 结构变量)[];
+}
+
+export interface 结构变量 {
+  id: number;
+}
+
 // config.data end
 
 // config.analysis begin
@@ -54,6 +68,8 @@ export interface Analysis {
   dynamic_customize?: Record<string, string[][]>;
   strong?: string[];
   weak?: string[];
+  component_analyzer?: string;
+  compound_analyzer?: string;
 }
 
 export interface Degenerator {
@@ -152,11 +168,13 @@ export interface EncoderConfig {
   // 简码
   short_code?: ShortCodeRule[];
   priority_short_codes?: [string, string, number][];
+  // 组装器
+  assembler?: string;
 }
 
 export interface Source {
   // 起始节点不应该有一个可编码对象，所以是 null；其他情况都有值
-  object: CodableObject | null;
+  object: 可编码对象 | null;
   // 如果只取其中几码就有值，否则为 undefined
   index?: number;
   // next 是对下个节点的引用，所以是 null
@@ -178,14 +196,14 @@ export type BinaryOp = (typeof binaryOps)[number];
 export type Op = UnaryOp | BinaryOp;
 
 export interface UnaryCondition {
-  object: CodableObject;
+  object: 可编码对象;
   operator: UnaryOp;
   positive: string | null;
   negative: string | null;
 }
 
 export interface BinaryCondition {
-  object: CodableObject;
+  object: 可编码对象;
   operator: BinaryOp;
   value: string;
   positive: string | null;

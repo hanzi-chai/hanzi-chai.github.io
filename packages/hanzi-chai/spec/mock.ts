@@ -1,5 +1,5 @@
 import type {
-  AnalysisConfig,
+  字形分析配置,
   BasicComponent,
 } from "../src/main";
 import { determine, 部件图形, getPrimitveRepertoire } from "../src/index";
@@ -15,7 +15,7 @@ export const computedComponents = Object.fromEntries(
     }),
 );
 
-export const analysisConfig: AnalysisConfig = {
+export const analysisConfig: 字形分析配置 = {
   analysis: {},
   roots: new Map(),
   optionalRoots: new Set(),

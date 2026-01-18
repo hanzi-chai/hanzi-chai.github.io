@@ -1,7 +1,18 @@
-import type { CharacterResult } from "./assembly.js";
+import type { 默认汉字分析 } from "./assembly.js";
+import type {
+  Condition,
+  EncoderConfig,
+  Keyboard,
+  Mapping,
+  Op,
+  Source,
+  Value,
+} from "./config.js";
+import { isMerge } from "./config.js";
+import type { 元素索引 } from "./utils.js";
 
 export interface Extra {
-  rootSequence: Map<string, number[]>;
+  字根笔画映射: Map<string, number[]>;
 }
 
 interface Base {
@@ -15,10 +26,6 @@ interface This extends Base {
 interface Constant extends Base {
   type: "固定";
   key: string;
-}
-
-interface Structure extends Base {
-  type: "结构";
 }
 
 interface Pronunciation extends Base {
@@ -51,13 +58,12 @@ interface Custom extends Base {
 
 interface Special extends Base {
   type: "特殊";
-  subtype: string;
+  index: number;
 }
 
-export type CodableObject =
+export type 可编码对象 =
   | This
   | Constant
-  | Structure
   | Pronunciation
   | Root
   | Stroke
@@ -65,11 +71,10 @@ export type CodableObject =
   | Custom
   | Special;
 
-export const renderName = (object: CodableObject) => {
+export const 序列化 = (object: 可编码对象) => {
   switch (object.type) {
     case "汉字":
-    case "结构":
-      return object.type;
+      return "汉字";
     case "固定":
       return object.key;
     case "字音":
@@ -84,14 +89,16 @@ export const renderName = (object: CodableObject) => {
       }, ${object.strokeIndex * 2})`;
     case "自定义":
       return `${object.subtype} ${object.rootIndex}`;
-    case "特殊":
-      return object.subtype;
+    default:
+      return `${object.type} ${object.index}`;
   }
 };
 
-export const renderList = (object: CodableObject): (string | number)[] => {
+export const 转列表 = (object: 可编码对象): (string | number)[] => {
   const list = [object.type];
   switch (object.type) {
+    case "汉字":
+      return list;
     case "固定":
       return [...list, object.key];
     case "字音":
@@ -104,15 +111,16 @@ export const renderList = (object: CodableObject): (string | number)[] => {
       return [...list, object.rootIndex, object.strokeIndex];
     case "自定义":
       return [...list, object.subtype, object.rootIndex];
-    case "特殊":
-      return [...list, object.subtype];
+    default:
+      return [...list, object.index];
   }
-  return list;
 };
 
-export const parseList = (value: (string | number)[]): CodableObject => {
-  const type = value[0] as CodableObject["type"];
+export const 从列表生成 = (value: (string | number)[]): 可编码对象 => {
+  const type = value[0] as 可编码对象["type"];
   switch (type) {
+    case "汉字":
+      return { type };
     case "固定":
       return { type, key: value[1] as string };
     case "字音":
@@ -137,111 +145,184 @@ export const parseList = (value: (string | number)[]): CodableObject => {
         subtype: value[1] as string,
         rootIndex: value[2] as number,
       };
-    case "特殊":
-      return { type, subtype: value[1] as string };
+    default:
+      return { type, index: value[1] as number };
   }
-  return { type };
 };
 
 function signedIndex<T>(a: T[], i: number): T | undefined {
   return i >= 0 ? a[i - 1] : a[a.length + i];
 }
 
-type Handler = (result: CharacterResult, extra: Extra) => string | undefined;
-
-// 张码补码
-const zhangmaSupplement: Handler = (result, { rootSequence }) => {
-  // 在补码时，竖钩视为竖，横折弯钩视为折
-  const coalesce = (n: number) => {
-    if (n === 6) return 2;
-    if (n === 7) return 5;
-    return n;
+export class 取码器 {
+  private totalMapping: Record<string, string> = {};
+  private table: Record<
+    Op,
+    (
+      target: string | undefined,
+      value: string | null,
+      totalMapping: Record<string, string>,
+    ) => boolean
+  > = {
+    是: (t, v) => t === v,
+    不是: (t, v) => t !== v,
+    匹配: (t, v) => t !== undefined && new RegExp(v!).test(t),
+    不匹配: (t, v) => t !== undefined && !new RegExp(v!).test(t),
+    编码匹配: (t, v, m) => t !== undefined && new RegExp(v!).test(m[t]!),
+    编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!).test(m[t]!),
+    存在: (t) => t !== undefined,
+    不存在: (t) => t === undefined,
   };
-  const { 字根序列: sequence } = result;
-  const first = rootSequence.get(sequence[0]!)!;
-  const last = rootSequence.get(sequence[sequence.length - 1]!)!;
-  const firstfirst = coalesce(first[0]!);
-  const lastlast = coalesce(last.at(-1)!);
-  // 单笔画补码用 61 表示
-  if (sequence.length === 1 && first.length === 1) {
-    return "61";
-  }
-  // 并型和左下围，首 + 末
-  // 其他情况，末 + 首
-  if ("operator" in result) {
-    return /[⿰⿲⿺]/.test(result.结构符)
-      ? `${firstfirst}${lastlast}`
-      : `${lastlast}${firstfirst}`;
-  }
-  return `${lastlast}${firstfirst}`;
-};
 
-// 张码判断是否为准码元
-const zhangmaPseudoRoot: Handler = (result) => {
-  if (!("当前拆分方式" in result)) return "0";
-  const { 当前拆分方式 } = result;
-  return 当前拆分方式.scheme.length === 2 && 当前拆分方式.评价.get("能连不交")
-    ? "1"
-    : "0";
-};
-
-const specialElementHandlers: Record<string, Handler> = {
-  张码补码: zhangmaSupplement,
-  张码准码元: zhangmaPseudoRoot,
-};
-
-export const findElement = (
-  object: CodableObject,
-  result: CharacterResult,
-  extra: Extra,
-) => {
-  const { 拼写运算, 字根序列: sequence } = result;
-  let root: string | undefined;
-  let strokes: number[] | undefined;
-  let name: string;
-  let stroke1: number | undefined;
-  let stroke2: number | undefined;
-  switch (object.type) {
-    case "汉字":
-      return result.汉字;
-    case "固定":
-      return object.key;
-    case "结构":
-      if ("operator" in result) {
-        return result.结构符;
-      }
-      return undefined;
-    case "字音":
-      name = object.subtype;
-      return 拼写运算.get(name);
-    case "字根":
-      return signedIndex(sequence, object.rootIndex);
-    case "笔画":
-    case "二笔":
-      root = signedIndex(sequence, object.rootIndex);
-      if (root === undefined) return undefined;
-      strokes = extra.rootSequence.get(root);
-      if (strokes === undefined) {
-        if (Math.abs(object.strokeIndex) === 1) return root;
-        return undefined;
-      }
-      if (object.type === "笔画") {
-        const number = signedIndex(strokes, object.strokeIndex);
-        return number?.toString();
-      }
-      stroke1 = signedIndex(
-        strokes,
-        object.strokeIndex * 2 - Math.sign(object.strokeIndex),
-      );
-      if (stroke1 === undefined) return undefined;
-      stroke2 = signedIndex(strokes, object.strokeIndex * 2);
-      return [stroke1, stroke2 ?? 0].join("");
-    case "自定义":
-      return signedIndex(
-        result.自定义元素[object.subtype] ?? [],
-        object.rootIndex,
-      );
-    case "特殊":
-      return specialElementHandlers[object.subtype]?.(result, extra);
+  constructor(
+    private keyboard: Keyboard,
+    private encoder: EncoderConfig,
+    private extra: Extra,
+  ) {
+    const { mapping } = keyboard;
+    for (const [element, value] of Object.entries(mapping)) {
+      this.totalMapping[element] = this.getValue(mapping, value!);
+    }
   }
-};
+
+  getValue(mapping: Mapping, value: Exclude<Value, null>): string {
+    if (isMerge(value)) {
+      const newValue = mapping[value.element]!;
+      return this.getValue(mapping, newValue);
+    } else if (Array.isArray(value)) {
+      const parts = [];
+      for (const part of value) {
+        if (typeof part === "string") {
+          parts.push(part);
+        } else {
+          parts.push(this.getValue(mapping, part.element)[part.index]!);
+        }
+      }
+      return parts.join("");
+    } else {
+      return value;
+    }
+  }
+
+  编码长度(字根: string) {
+    const 键盘映射 = this.keyboard.mapping;
+    let value = 键盘映射[字根]!;
+    while (isMerge(value)) {
+      value = 键盘映射[value.element]!;
+    }
+    return value.length;
+  }
+
+  取码(汉字分析: 默认汉字分析) {
+    const 字母表 = Array.from(this.keyboard.alphabet ?? "");
+    let 节点: string | null = "s0";
+    const 元素序列: 元素索引[] = [];
+    while (节点) {
+      if (节点.startsWith("s")) {
+        const 源: Source = this.encoder.sources[节点]!;
+        const { object, next, index } = 源;
+        if (节点 === "s0") {
+          节点 = next;
+          continue;
+        }
+        const 元素 = this.寻找(object!, 汉字分析);
+        if (元素 === undefined) {
+          // 如果找不到该元素，跳过
+        } else if (字母表.includes(元素)) {
+          // 如果是固定编码，直接加入
+          元素序列.push(元素);
+        } else {
+          const 长度 = this.编码长度(元素);
+          // 如果没有定义指标，就是全取；否则检查指标是否有效并取
+          if (index === undefined) {
+            for (let i = 0; i < 长度; i++) {
+              元素序列.push({ element: 元素, index: i });
+            }
+          } else {
+            if (index < 长度 && index >= 0) {
+              元素序列.push({ element: 元素, index });
+            }
+          }
+        }
+        节点 = next;
+      } else {
+        const 条件: Condition = this.encoder.conditions[节点]!;
+        if (this.满足(条件, 汉字分析)) {
+          节点 = 条件.positive;
+        } else {
+          节点 = 条件.negative;
+        }
+      }
+    }
+    return 元素序列.slice(0, this.encoder.max_length ?? 元素序列.length);
+  }
+
+  寻找(object: 可编码对象, result: 默认汉字分析) {
+    const { 拼写运算, 字根序列 } = result;
+    let root: string | undefined;
+    let strokes: number[] | undefined;
+    let name: string;
+    let stroke1: number | undefined;
+    let stroke2: number | undefined;
+    let special: string[] | undefined;
+    switch (object.type) {
+      case "汉字":
+        return result.汉字;
+      case "固定":
+        return object.key;
+      case "字音":
+        name = object.subtype;
+        return 拼写运算.get(name);
+      case "字根":
+        return signedIndex(字根序列, object.rootIndex);
+      case "笔画":
+      case "二笔":
+        root = signedIndex(字根序列, object.rootIndex);
+        if (root === undefined) return undefined;
+        strokes = this.extra.字根笔画映射.get(root);
+        if (strokes === undefined) {
+          if (Math.abs(object.strokeIndex) === 1) return root;
+          return undefined;
+        }
+        if (object.type === "笔画") {
+          const number = signedIndex(strokes, object.strokeIndex);
+          return number?.toString();
+        }
+        stroke1 = signedIndex(
+          strokes,
+          object.strokeIndex * 2 - Math.sign(object.strokeIndex),
+        );
+        if (stroke1 === undefined) return undefined;
+        stroke2 = signedIndex(strokes, object.strokeIndex * 2);
+        return [stroke1, stroke2 ?? 0].join("");
+      case "自定义":
+        return signedIndex(
+          result.自定义元素[object.subtype] ?? [],
+          object.rootIndex,
+        );
+      default:
+        special = result[object.type as "字根序列"];
+        if (!Array.isArray(special)) return undefined;
+        return signedIndex(special, object.index);
+    }
+  }
+
+  /**
+   * 给定一个条件，判断是否满足
+   *
+   * @param condition - 条件
+   * @param result - 中间结果
+   * @param config - 配置
+   * @param extra - 额外信息
+   * @param totalMapping - 映射
+   */
+  满足(condition: Condition, result: 默认汉字分析) {
+    const { object, operator } = condition;
+    const target = this.寻找(object, result);
+    const fn = this.table[operator];
+    if ("value" in condition) {
+      return fn(target, condition.value, this.totalMapping);
+    }
+    return fn(target, null, this.totalMapping);
+  }
+}

@@ -1,6 +1,6 @@
 import type { Degenerator } from "./config.js";
 import type { Feature } from "./classifier.js";
-import { 拓扑, 笔画图形 } from "./topology.js";
+import { 拓扑, 笔画图形 } from "./bezier.js";
 
 export const defaultDegenerator: Degenerator = {
   feature: {
@@ -19,6 +19,6 @@ export const degenerate = (degenerator: Degenerator, glyph: 笔画图形[]) => {
   const featureMap = degenerator.feature ?? ({} as Record<Feature, Feature>);
   return [
     glyph.map((x) => x.feature).map((x) => featureMap[x] || x),
-    new 拓扑(glyph),
+    new 拓扑(glyph).matrix,
   ] as const;
 };

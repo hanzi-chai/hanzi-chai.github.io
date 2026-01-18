@@ -19,13 +19,14 @@ import type {
 } from "./data.js";
 import { range } from "lodash-es";
 import { dump } from "js-yaml";
-import {
-  type Key,
-  type Value,
-  type Mapping,
+import type {
+  Key,
+  Value,
+  Mapping,
   GeneralizedKey,
   CharacterSetSpecifier,
 } from "./config.js";
+import type { 组装 } from "./assembly.js";
 
 export type Result<T> = T | Error;
 
@@ -358,7 +359,7 @@ export const getDummyCompound = (operator: Operator): Compound => ({
   operandList: ["一", "一"],
 });
 
-export const isComponent = (
+export const 是部件或全等 = (
   glyph: Glyph,
 ): glyph is BasicComponent | DerivedComponent | SplicedComponent | Identity =>
   glyph.type === "basic_component" ||
@@ -464,9 +465,9 @@ export const exportTSV = (data: string[][], filename: string) => {
   processExport(fileContent, filename);
 };
 
-export type IndexedElement = string | { element: string; index: number };
+export type 元素索引 = string | { element: string; index: number };
 
-export const stringify = (element: IndexedElement | undefined) => {
+export const stringify = (element: 元素索引 | undefined) => {
   if (element === undefined) {
     return "ε";
   } else if (typeof element === "string") {
@@ -476,7 +477,7 @@ export const stringify = (element: IndexedElement | undefined) => {
   }
 };
 
-export const parseKey = (key: string): IndexedElement | undefined => {
+export const parseKey = (key: string): 元素索引 | undefined => {
   if (key === "ε") {
     return undefined;
   } else if (key.includes(".")) {
@@ -709,4 +710,33 @@ export const characterSetFilters: Record<
     if (s !== undefined) return s.has(k);
     return v.gb2312 > 0 && v.tygf > 0;
   },
+};
+
+export interface DictEntry {
+  name: string;
+  full: string;
+  full_rank: number;
+  short: string;
+  short_rank: number;
+}
+
+export type EncodeResult = DictEntry[];
+
+export const stringifySequence = (result: 组装[]) => {
+  return result.map((x) => {
+    return { ...x, sequence: summarize(x.元素序列) };
+  });
+};
+
+export const summarize = (elements: (元素索引 | undefined)[]) => {
+  return elements
+    .map((x) => {
+      if (x === undefined) return "ε";
+      if (typeof x === "string") return x;
+      if (x.index === 0) {
+        return x.element;
+      }
+      return `${x.element}.${x.index}`;
+    })
+    .join(" ");
 };

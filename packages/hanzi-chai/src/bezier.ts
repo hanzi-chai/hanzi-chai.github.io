@@ -1,5 +1,5 @@
 import { isEqual } from "lodash-es";
-import type { Draw, Point } from "./data.js";
+import type { Draw, Point, SVGStroke } from "./data.js";
 import {
   add,
   multiply,
@@ -10,6 +10,7 @@ import {
   area,
   isCollinear,
 } from "./math.js";
+import type { Feature } from "./classifier.js";
 
 /**
  * 一段 Bezier 曲线的主要朝向
@@ -49,7 +50,6 @@ type 离散关系 = 平行离散关系 | 垂直离散关系;
 type 曲线关系 = 相交关系 | 相连关系 | 离散关系;
 
 abstract class 曲线 {
-  constructor() {}
   abstract getType(): "linear" | "cubic" | "arc";
   abstract getOrientation(): 朝向;
   abstract 获取起点和终点(): [Point, Point];
@@ -296,7 +296,7 @@ class 圆弧曲线 extends 曲线 {
   private orientation: 朝向;
   private controls: [Point, Point];
 
-  constructor(start: Point, draw: Draw) {
+  constructor(start: Point, _: Draw) {
     super();
     this.orientation = "horizontal";
     this.controls = [start, start];
@@ -307,7 +307,7 @@ class 圆弧曲线 extends 曲线 {
   getOrientation() {
     return this.orientation;
   }
-  evaluate(t: number): Point {
+  evaluate(_: number): Point {
     return [0, 0];
   }
   获取起点和终点(): [Point, Point] {
@@ -364,6 +364,84 @@ class 区间 {
       this.interval[1] >= other.interval[1]
     );
   }
+  长度(): number {
+    return this.interval[1] - this.interval[0];
+  }
+  取并集(other: 区间): 区间 {
+    return new 区间(
+      Math.min(this.interval[0], other.interval[0]),
+      Math.max(this.interval[1], other.interval[1]),
+    );
+  }
 }
 
-export { 曲线, 曲线关系, 区间, 创建曲线 };
+type 笔画关系 = 曲线关系[];
+
+/**
+ * 渲染后的笔画
+ * 这个类型和 SVGStroke 的区别是，这个类型包含了一系列 Bezier 曲线，而 SVGStroke 包含了一系列 SVG 命令
+ * Bezier 曲线里每一段的起点和终点都是显式写出的，所以比较适合于计算
+ */
+class 笔画图形 {
+  feature: Feature;
+  curveList: 曲线[];
+
+  constructor({ feature, start, curveList }: SVGStroke) {
+    this.feature = feature;
+    this.curveList = [];
+    let previousPosition = start;
+    for (const draw of curveList) {
+      const curve = 创建曲线(previousPosition, draw);
+      previousPosition = curve.evaluate(1);
+      this.curveList.push(curve);
+    }
+  }
+
+  isBoundedBy(xrange: 区间, yrange: 区间): boolean {
+    return this.curveList.every((x) => x.isBoundedBy(xrange, yrange));
+  }
+
+  relation(stroke2: 笔画图形): 笔画关系 {
+    const strokeRelation: 笔画关系 = [];
+    for (const curve1 of this.curveList) {
+      for (const curve2 of stroke2.curveList) {
+        strokeRelation.push(curve1.relation(curve2));
+      }
+    }
+    return strokeRelation;
+  }
+}
+
+class 拓扑 {
+  matrix: 笔画关系[][];
+  orientedPairs: [number, number][];
+
+  constructor(renderedGlyph: 笔画图形[]) {
+    this.matrix = [];
+    this.orientedPairs = [];
+    for (const [index1, stroke1] of renderedGlyph.entries()) {
+      const row: 笔画关系[] = [];
+      for (const [index2, stroke2] of renderedGlyph.entries()) {
+        if (index1 === index2) row.push([]);
+        else row.push(stroke1.relation(stroke2));
+      }
+      this.matrix.push(row);
+    }
+    for (const [index1] of renderedGlyph.entries()) {
+      for (const [index2] of renderedGlyph.entries()) {
+        if (index2 >= index1) break;
+        const relations = this.matrix[index1]![index2]!;
+        if (relations.some((v) => v.type === "交" || v.type === "连")) continue;
+        const parallelIndex = relations.findIndex(
+          (v) => v.type === "平行" && v.mainAxis === 0,
+        );
+        if (parallelIndex !== -1) {
+          this.orientedPairs.push([index1, index2]);
+        }
+      }
+    }
+  }
+}
+
+export type { 曲线关系, 笔画关系 };
+export { 曲线, 创建曲线, 区间, 笔画图形, 拓扑 };

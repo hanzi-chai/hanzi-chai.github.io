@@ -1,7 +1,6 @@
 export * from "./affine.js";
 export * from "./element.js";
 export * from "./bezier.js";
-export * from "./topology.js";
 export * from "./data.js";
 export * from "./config.js";
 export * from "./classifier.js";
@@ -12,5 +11,4 @@ export * from "./assembly.js";
 export * from "./component.js";
 export * from "./compound.js";
 export * from "./utils.js";
-export * from "./math.js";
-export * from "./transformer.js";
+export * from "./primitive.js";

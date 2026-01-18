@@ -1,11 +1,10 @@
-import type { AssembleConfig } from "./assembly.js";
-import type { Rule } from "./config.js";
-import type { 字库 } from "./repertoire.js";
+import type { Algebra, EncoderConfig, Rule } from "./config.js";
+import type 字库 from "./repertoire.js";
 import type { Dictionary } from "./utils.js";
 
 const r = String.raw;
 
-export const defaultAlgebra: Record<string, Rule[]> = {
+const defaultAlgebra: Record<string, Rule[]> = {
   声母: [
     { type: "xform", from: "^([bpmfdtnlgkhjqxzcsr]h?|^).+$", to: "$1" },
     { type: "xform", from: "^$", to: "0" },
@@ -32,8 +31,6 @@ export const defaultAlgebra: Record<string, Rule[]> = {
   末字母: [{ type: "xform", from: r`.*(.)\d`, to: "$1" }],
 };
 
-export type 拼写运算结果 = Map<string, Map<string, string>>;
-
 interface 一字词分析 {
   词: string;
   拼音: string;
@@ -46,12 +43,12 @@ interface 多字词分析 {
   拼写运算: Map<string, string>[];
 }
 
-export interface 拼音分析结果 {
+interface 拼音分析结果 {
   一字词: 一字词分析[];
   多字词: 多字词分析[];
 }
 
-export interface 拼音分析器 {
+interface 拼音分析器 {
   分析(
     字库: 字库,
     一字词列表: string[],
@@ -60,16 +57,21 @@ export interface 拼音分析器 {
   ): 拼音分析结果;
 }
 
-export class 默认拼音分析器 implements 拼音分析器 {
+interface 拼音分析配置 {
+  编码器: EncoderConfig;
+  拼写运算: Algebra;
+}
+
+class 默认拼音分析器 implements 拼音分析器 {
   static readonly type = "默认";
   private 拼写运算: Map<string, Rule[]>;
 
-  constructor(config: AssembleConfig) {
+  constructor(config: 拼音分析配置) {
     const 拼写运算 = new Map<string, Rule[]>();
-    for (const value of Object.values(config.encoder.sources)) {
+    for (const value of Object.values(config.编码器.sources)) {
       const object = value.object;
       if (object && object.type === "字音") {
-        拼写运算.set(object.subtype, config.algebra[object.subtype] || []);
+        拼写运算.set(object.subtype, config.拼写运算[object.subtype] || []);
       }
     }
     this.拼写运算 = 拼写运算;
@@ -87,7 +89,7 @@ export class 默认拼音分析器 implements 拼音分析器 {
       }
     }
 
-    const 运算结果: 拼写运算结果 = new Map();
+    const 运算结果: Map<string, Map<string, string>> = new Map();
     for (const 音节 of 音节表) {
       const 新结果: Map<string, string> = new Map();
       for (const [名称, 规则] of this.拼写运算.entries()) {
@@ -141,3 +143,6 @@ export class 默认拼音分析器 implements 拼音分析器 {
     return `${name}-${result}`;
   }
 }
+
+export { 默认拼音分析器, defaultAlgebra };
+export type { 一字词分析, 多字词分析, 拼音分析配置, 拼音分析结果, 拼音分析器 };
