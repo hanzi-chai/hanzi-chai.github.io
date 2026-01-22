@@ -1,17 +1,10 @@
-import {
-  useAtomValue,
-  useAtom,
-  priorityShortCodesAtom,
-  maxLengthAtom,
-} from "~/atoms";
+import { useAtomValue, useAtom, 优先简码原子, 最大码长原子 } from "~/atoms";
 import { Select } from "~/components/Utils";
 import { getPriorityMap } from "~/lib";
 
 export default function PriorityShortCodeSelector({ hash }: { hash: string }) {
-  const max_length = useAtomValue(maxLengthAtom);
-  const [priorityShortCodes, setPriorityShortCodes] = useAtom(
-    priorityShortCodesAtom,
-  );
+  const max_length = useAtomValue(最大码长原子);
+  const [priorityShortCodes, setPriorityShortCodes] = useAtom(优先简码原子);
   const priorityMap = getPriorityMap(priorityShortCodes);
   const level = priorityMap.get(hash);
   return (

@@ -1,6 +1,6 @@
 import { Button, Flex, Select } from "antd";
 import { useAtom } from "jotai";
-import { transformersAtom } from "~/atoms";
+import { 变换器列表原子 } from "~/atoms";
 import { isVariable, 变换器, 模式, 节点类型 } from "~/lib";
 import { DeleteButton, MinusButton, PlusButton } from "./Utils";
 import CharacterSelect from "./CharacterSelect";
@@ -81,7 +81,7 @@ const PatternEditor: React.FC<{
 };
 
 const TransformersForm = () => {
-  const [transformers, setTransformers] = useAtom(transformersAtom);
+  const [transformers, setTransformers] = useAtom(变换器列表原子);
 
   return (
     <ModalForm

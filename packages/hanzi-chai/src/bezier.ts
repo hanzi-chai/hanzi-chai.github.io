@@ -1,16 +1,16 @@
 import { isEqual } from "lodash-es";
-import type { Draw, Point, SVGStroke } from "./data.js";
+import type { 笔画名称 } from "./classifier.js";
+import type { Draw, Point, 矢量笔画数据 } from "./data.js";
 import {
   add,
-  multiply,
-  divide,
+  area,
   distance,
+  divide,
+  isCollinear,
+  multiply,
   sorted,
   subtract,
-  area,
-  isCollinear,
 } from "./math.js";
-import type { Feature } from "./classifier.js";
 
 /**
  * 一段 Bezier 曲线的主要朝向
@@ -75,14 +75,14 @@ abstract class 曲线 {
 
   isBoundedBy(xrange: 区间, yrange: 区间): boolean {
     const [x, y] = this.获取区间();
-    return xrange.contains(x) && yrange.contains(y);
+    return xrange.包含(x) && yrange.包含(y);
   }
 
-  relation(c: 曲线): 曲线关系 {
+  计算关系(c: 曲线): 曲线关系 {
     const relation = this.计算相连关系(c);
     if (relation !== undefined) return relation;
-    if (this.getType() === "linear" && c.getType() === "linear") {
-      return (this as any as 一次曲线).计算线性一般关系(c as 一次曲线);
+    if (this instanceof 一次曲线 && c instanceof 一次曲线) {
+      return this.计算线性一般关系(c);
     }
     return this.计算一般关系(c);
   }
@@ -123,16 +123,16 @@ abstract class 曲线 {
       const [bmain, bcross] = c.获取主轴和副轴区间();
       return {
         type: "平行",
-        mainAxis: amain.compare(bmain),
-        crossAxis: across.compare(bcross),
+        mainAxis: amain.比较(bmain),
+        crossAxis: across.比较(bcross),
       };
     } else {
       const [ax, ay] = this.获取区间();
       const [bx, by] = c.获取区间();
       return {
         type: "垂直",
-        x: ax.compare(bx),
-        y: ay.compare(by),
+        x: ax.比较(bx),
+        y: ay.比较(by),
       };
     }
   }
@@ -145,8 +145,8 @@ abstract class 曲线 {
     const [bstart, bend] = c.获取起点和终点();
     const [axInterval, ayInterval] = this.获取区间();
     const [bxInterval, byInterval] = c.获取区间();
-    const xposition = axInterval.compare(bxInterval);
-    const yposition = ayInterval.compare(byInterval);
+    const xposition = axInterval.比较(bxInterval);
+    const yposition = ayInterval.比较(byInterval);
     const disjoint = [区间关系.先于, 区间关系.后于];
     if (disjoint.includes(xposition) || disjoint.includes(yposition))
       return undefined;
@@ -170,24 +170,25 @@ abstract class 曲线 {
  * 用于表示横、竖等笔画
  */
 class 一次曲线 extends 曲线 {
-  private orientation: 朝向;
-  private controls: [Point, Point];
-
-  constructor(start: Point, draw: Draw) {
+  constructor(
+    private orientation: 朝向,
+    private controls: [Point, Point],
+  ) {
     super();
+  }
+
+  static 从绘制创建(start: Point, draw: Draw) {
     let p1: Point;
     switch (draw.command) {
       case "h":
         p1 = add(start, [draw.parameterList[0], 0]);
         break;
-      case "v":
+      default:
         p1 = add(start, [0, draw.parameterList[0]]);
         break;
-      default:
-        throw new Error(`Invalid command for linear curve: ${draw.command}`);
     }
-    this.orientation = draw.command === "v" ? "vertical" : "horizontal";
-    this.controls = [start, p1];
+    const orientation = draw.command === "v" ? "vertical" : "horizontal";
+    return new 一次曲线(orientation, [start, p1]);
   }
 
   getType() {
@@ -196,10 +197,14 @@ class 一次曲线 extends 曲线 {
   getOrientation() {
     return this.orientation;
   }
+  clone(): 一次曲线 {
+    return new 一次曲线(this.orientation, structuredClone(this.controls));
+  }
+
   二分(): [曲线, 曲线] {
     const mid = this.evaluate(0.5);
-    const firstHalf = structuredClone(this);
-    const secondHalf = structuredClone(this);
+    const firstHalf = this.clone();
+    const secondHalf = this.clone();
     firstHalf.controls[1] = mid;
     secondHalf.controls[0] = mid;
     return [firstHalf, secondHalf];
@@ -241,22 +246,28 @@ class 一次曲线 extends 曲线 {
  * 用于表示撇、捺等笔画
  */
 class 三次曲线 extends 曲线 {
-  private orientation: 朝向;
-  private controls: [Point, Point, Point, Point];
-
-  constructor(start: Point, draw: Draw) {
+  constructor(
+    private orientation: 朝向,
+    private controls: [Point, Point, Point, Point],
+  ) {
     super();
+  }
+
+  static 从绘制创建(start: Point, draw: Draw) {
     const p1 = add(start, draw.parameterList.slice(0, 2) as Point);
     const p2 = add(start, draw.parameterList.slice(2, 4) as Point);
     const p3 = add(start, draw.parameterList.slice(4) as Point);
-    this.orientation = draw.command === "c" ? "vertical" : "horizontal";
-    this.controls = [start, p1, p2, p3];
+    const orientation = draw.command === "c" ? "vertical" : "horizontal";
+    return new 三次曲线(orientation, [start, p1, p2, p3]);
   }
   getType() {
     return "cubic" as const;
   }
   getOrientation() {
     return this.orientation;
+  }
+  clone(): 三次曲线 {
+    return new 三次曲线(this.orientation, structuredClone(this.controls));
   }
   获取起点和终点(): [Point, Point] {
     return [this.controls[0], this.controls[3]];
@@ -269,8 +280,8 @@ class 三次曲线 extends 曲线 {
     const p012 = divide(add(p01, p12), 2);
     const p123 = divide(add(p12, p23), 2);
     const p0123 = divide(add(p012, p123), 2);
-    const firstHalf = structuredClone(this);
-    const secondHalf = structuredClone(this);
+    const firstHalf = this.clone();
+    const secondHalf = this.clone();
     firstHalf.controls = [p0, p01, p012, p0123];
     secondHalf.controls = [p0123, p123, p23, p3];
     return [firstHalf, secondHalf];
@@ -293,14 +304,18 @@ class 三次曲线 extends 曲线 {
  * 用于表示笔画「圈」
  */
 class 圆弧曲线 extends 曲线 {
-  private orientation: 朝向;
-  private controls: [Point, Point];
-
-  constructor(start: Point, _: Draw) {
+  constructor(
+    private orientation: 朝向,
+    private controls: [Point, Point],
+  ) {
     super();
-    this.orientation = "horizontal";
-    this.controls = [start, start];
   }
+
+  static 从绘制创建(start: Point, _: Draw) {
+    const orientation = "horizontal";
+    return new 圆弧曲线(orientation, [start, start]);
+  }
+
   getType() {
     return "arc" as const;
   }
@@ -325,12 +340,12 @@ class 圆弧曲线 extends 曲线 {
 
 const 创建曲线 = (start: Point, draw: Draw): 曲线 => {
   if (draw.command === "a") {
-    return new 圆弧曲线(start, draw);
+    return 圆弧曲线.从绘制创建(start, draw);
   }
   if (draw.command === "c" || draw.command === "z") {
-    return new 三次曲线(start, draw);
+    return 三次曲线.从绘制创建(start, draw);
   }
-  return new 一次曲线(start, draw);
+  return 一次曲线.从绘制创建(start, draw);
 };
 
 enum 区间关系 {
@@ -342,36 +357,43 @@ enum 区间关系 {
 }
 
 class 区间 {
-  interval: [number, number];
+  private start: number;
+  private end: number;
 
   constructor(a: number, b: number) {
-    this.interval = sorted([a, b]);
+    [this.start, this.end] = sorted([a, b]);
   }
-  compare(other: 区间): 区间关系 {
-    const [imin, imax] = this.interval;
-    const [jmin, jmax] = other.interval;
+  比较(other: 区间): 区间关系 {
     // totally disjoint
-    if (imax < jmin) return 区间关系.先于;
-    if (imin > jmax) return 区间关系.后于;
+    if (this.end < other.start) return 区间关系.先于;
+    if (this.start > other.end) return 区间关系.后于;
     // generally smaller or larger
-    if (imin < jmin && imax < jmax) return 区间关系.部分先于;
-    if (imin > jmin && imax > jmax) return 区间关系.部分后于;
+    if (this.start < other.start && this.end < other.end)
+      return 区间关系.部分先于;
+    if (this.start > other.start && this.end > other.end)
+      return 区间关系.部分后于;
     return 区间关系.重叠;
   }
-  contains(other: 区间): boolean {
-    return (
-      this.interval[0] <= other.interval[0] &&
-      this.interval[1] >= other.interval[1]
-    );
+  包含(other: 区间): boolean {
+    return this.start <= other.start && this.end >= other.end;
   }
   长度(): number {
-    return this.interval[1] - this.interval[0];
+    return this.end - this.start;
   }
   取并集(other: 区间): 区间 {
     return new 区间(
-      Math.min(this.interval[0], other.interval[0]),
-      Math.max(this.interval[1], other.interval[1]),
+      Math.min(this.start, other.start),
+      Math.max(this.end, other.end),
     );
+  }
+  起点(): number {
+    return this.start;
+  }
+  终点(): number {
+    return this.end;
+  }
+  延长(amount: number) {
+    this.end += amount;
   }
 }
 
@@ -383,10 +405,10 @@ type 笔画关系 = 曲线关系[];
  * Bezier 曲线里每一段的起点和终点都是显式写出的，所以比较适合于计算
  */
 class 笔画图形 {
-  feature: Feature;
+  feature: 笔画名称;
   curveList: 曲线[];
 
-  constructor({ feature, start, curveList }: SVGStroke) {
+  constructor({ feature, start, curveList }: 矢量笔画数据) {
     this.feature = feature;
     this.curveList = [];
     let previousPosition = start;
@@ -405,7 +427,7 @@ class 笔画图形 {
     const strokeRelation: 笔画关系 = [];
     for (const curve1 of this.curveList) {
       for (const curve2 of stroke2.curveList) {
-        strokeRelation.push(curve1.relation(curve2));
+        strokeRelation.push(curve1.计算关系(curve2));
       }
     }
     return strokeRelation;
@@ -443,5 +465,5 @@ class 拓扑 {
   }
 }
 
+export { 创建曲线, 区间, 拓扑, 曲线, 一次曲线, 三次曲线, 圆弧曲线, 笔画图形 };
 export type { 曲线关系, 笔画关系 };
-export { 曲线, 创建曲线, 区间, 笔画图形, 拓扑 };

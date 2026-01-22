@@ -3,7 +3,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
-import { charactersAtom, configAtom, repertoireAtom } from "~/atoms";
+import { charactersAtom, configAtom, 如字库原子 } from "~/atoms";
 import { encodeResultAtom } from "~/atoms";
 import { Select, Uploader } from "~/components/Utils";
 import type { DictEntry } from "~/lib";
@@ -17,7 +17,7 @@ interface DictEntryWithReference extends DictEntry {
 
 export default function Debugger() {
   const config = useAtomValue(configAtom);
-  const repertoire = useAtomValue(repertoireAtom);
+  const repertoire = useAtomValue(如字库原子);
   const characters = useAtomValue(charactersAtom);
   const [code] = useAtomValue(encodeResultAtom);
   const referenceAtom = useMemo(

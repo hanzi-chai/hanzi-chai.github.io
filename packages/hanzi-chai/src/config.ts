@@ -1,16 +1,16 @@
-import type { Feature } from "./classifier.js";
+import type { 笔画名称 } from "./classifier.js";
 import type {
-  Compound,
-  PrimitiveRepertoire,
-  Component,
-  Reading,
-  Identity,
-  Operator,
+  全等数据,
+  原始字库数据,
+  复合体数据,
+  结构表示符,
+  读音数据,
+  部件数据,
 } from "./data.js";
-import type { 可编码对象 } from "./element.js";
+import type { 取码对象 } from "./element.js";
 
 // config.info begin
-export interface Info {
+export interface 基本信息 {
   name?: string;
   author?: string;
   version?: string;
@@ -20,7 +20,7 @@ export interface Info {
 
 // config.data begin
 
-export const characterSetSpecifiers = [
+export const 字集指示列表 = [
   "minimal",
   "gb2312",
   "general",
@@ -30,26 +30,26 @@ export const characterSetSpecifiers = [
   "maximal",
   "custom",
 ] as const;
-export type CharacterSetSpecifier = (typeof characterSetSpecifiers)[number];
+export type 字集指示 = (typeof 字集指示列表)[number];
 
-export interface Data {
-  character_set?: CharacterSetSpecifier;
-  repertoire?: PrimitiveRepertoire;
-  glyph_customization?: CustomGlyph;
-  reading_customization?: CustomReadings;
+export interface 数据配置 {
+  character_set?: 字集指示;
+  repertoire?: 原始字库数据;
+  glyph_customization?: 字形自定义;
+  reading_customization?: 读音自定义;
   tags?: string[];
   transformers?: 变换器[];
 }
 
-export type CustomGlyph = Record<string, Component | Compound | Identity>;
-export type CustomReadings = Record<string, Reading[]>;
+export type 字形自定义 = Record<string, 部件数据 | 复合体数据 | 全等数据>;
+export type 读音自定义 = Record<string, 读音数据[]>;
 export interface 变换器 {
   from: 模式;
   to: 模式;
 }
 
 export interface 模式 {
-  operator: Operator;
+  operator: 结构表示符;
   operandList: (string | 模式 | 结构变量)[];
 }
 
@@ -60,9 +60,9 @@ export interface 结构变量 {
 // config.data end
 
 // config.analysis begin
-export interface Analysis {
-  classifier?: Record<Feature, number>;
-  degenerator?: Degenerator;
+export interface 分析配置 {
+  classifier?: Record<笔画名称, number>;
+  degenerator?: 退化配置;
   selector?: string[];
   customize?: Record<string, string[]>;
   dynamic_customize?: Record<string, string[][]>;
@@ -72,24 +72,24 @@ export interface Analysis {
   compound_analyzer?: string;
 }
 
-export interface Degenerator {
-  feature?: Record<Feature, Feature>;
+export interface 退化配置 {
+  feature?: Record<笔画名称, 笔画名称>;
   no_cross?: boolean;
 }
 // config.analysis end
 
 // config.algebra begin
-export type Algebra = Record<string, Rule[]>;
+export type 拼写运算 = 运算规则[];
 
-export type Rule = Transformation | Transliteration;
+export type 运算规则 = 变换 | 转写;
 
-interface Transformation {
+interface 变换 {
   type: "xform";
   from: string;
   to: string;
 }
 
-interface Transliteration {
+interface 转写 {
   type: "xlit";
   from: string;
   to: string;
@@ -97,91 +97,87 @@ interface Transliteration {
 // config.algebra end
 
 // config.form begin
-export interface Keyboard {
+export interface 键盘配置 {
   alphabet?: string;
   mapping_type?: number;
-  mapping: Mapping;
-  mapping_space?: MappingSpace;
-  mapping_variables?: Record<string, MappingVariableRule>;
-  mapping_generators?: MappingGeneratorRule[];
+  mapping: 决策;
+  mapping_space?: 决策空间;
+  mapping_variables?: Record<string, 变量规则>;
+  mapping_generators?: 决策生成器规则[];
   // Deprecated, use mapping instead
   grouping?: Record<string, string>;
 }
 
-export interface MappingVariableRule {
+export interface 变量规则 {
   keys: string[];
 }
 
-export interface MappingGeneratorRule {
+export interface 决策生成器规则 {
   regex: string;
-  value: ValueDescription;
+  value: 安排描述;
 }
 
-export type Element = string;
+export type 元素 = string;
 
-export type ElementWithIndex = { element: string; index: number };
+export type 元素位 = { element: string; index: number };
 
-export type Key = string | ElementWithIndex;
+export type 码位 = string | 元素位;
 
-export type Value = null | string | Key[] | { element: string };
+export type 安排 = null | string | 码位[] | { element: string };
 
-export type VariableKey = { variable: string };
+export type 变量安排 = { variable: string };
 
-export type GeneralizedKey = Key | VariableKey | null;
+export type 广义码位 = 码位 | 变量安排 | null;
 
-export function isVariableKey(key: GeneralizedKey): key is VariableKey {
+export function 是变量(key: 广义码位): key is 变量安排 {
   return typeof key === "object" && key !== null && "variable" in key;
 }
 
-export type GeneralizedValue =
-  | null
-  | string
-  | GeneralizedKey[]
-  | { element: string };
+export type 广义安排 = null | string | 广义码位[] | { element: string };
 
-export function isMerge(value: GeneralizedValue): value is { element: string } {
+export function 是归并(value: 广义安排): value is { element: string } {
   return typeof value === "object" && value !== null && "element" in value;
 }
 
-export type Mapping = Record<Element, Exclude<Value, null>>;
+export type 决策 = Record<元素, Exclude<安排, null>>;
 
-export interface ValueDescription {
-  value: GeneralizedValue;
+export interface 安排描述 {
+  value: 广义安排;
   score: number;
-  condition?: { element: string; op: "是" | "不是"; value: Value }[];
+  condition?: { element: string; op: "是" | "不是"; value: 安排 }[];
 }
 
-export type MappingSpace = Record<Element, ValueDescription[]>;
+export type 决策空间 = Record<元素, 安排描述[]>;
 // config.form end
 
 // config.encoder begin
-export interface EncoderConfig {
+export interface 编码配置 {
   max_length: number;
   select_keys?: string[];
   auto_select_length?: number;
   auto_select_pattern?: string;
   // 一字词全码
-  sources: Record<string, Source>;
-  conditions: Record<string, Condition>;
+  sources: Record<string, 源节点配置>;
+  conditions: Record<string, 条件节点配置>;
   // 多字词全码
-  rules?: WordRule[];
+  rules?: 构词规则[];
   // 简码
-  short_code?: ShortCodeRule[];
+  short_code?: 简码规则[];
   priority_short_codes?: [string, string, number][];
   // 组装器
   assembler?: string;
 }
 
-export interface Source {
+export interface 源节点配置 {
   // 起始节点不应该有一个可编码对象，所以是 null；其他情况都有值
-  object: 可编码对象 | null;
+  object: 取码对象 | null;
   // 如果只取其中几码就有值，否则为 undefined
   index?: number;
   // next 是对下个节点的引用，所以是 null
   next: string | null;
 }
 
-export const binaryOps = [
+export const 二元运算符列表 = [
   "是",
   "不是",
   "匹配",
@@ -189,30 +185,32 @@ export const binaryOps = [
   "编码匹配",
   "编码不匹配",
 ] as const;
-export const unaryOps = ["存在", "不存在"] as const;
-export const ops = (unaryOps as readonly Op[]).concat(...binaryOps);
-export type UnaryOp = (typeof unaryOps)[number];
-export type BinaryOp = (typeof binaryOps)[number];
-export type Op = UnaryOp | BinaryOp;
+export const 一元运算符列表 = ["存在", "不存在"] as const;
+export const 运算符列表 = (一元运算符列表 as readonly 运算符[]).concat(
+  ...二元运算符列表,
+);
+export type 一元运算符 = (typeof 一元运算符列表)[number];
+export type 二元运算符 = (typeof 二元运算符列表)[number];
+export type 运算符 = 一元运算符 | 二元运算符;
 
-export interface UnaryCondition {
-  object: 可编码对象;
-  operator: UnaryOp;
+export interface 一元条件配置 {
+  object: 取码对象;
+  operator: 一元运算符;
   positive: string | null;
   negative: string | null;
 }
 
-export interface BinaryCondition {
-  object: 可编码对象;
-  operator: BinaryOp;
+export interface 二元条件配置 {
+  object: 取码对象;
+  operator: 二元运算符;
   value: string;
   positive: string | null;
   negative: string | null;
 }
 
-export type Condition = UnaryCondition | BinaryCondition;
+export type 条件节点配置 = 一元条件配置 | 二元条件配置;
 
-type LengthSpecifier =
+type 长度限定 =
   | { length_equal: number }
   | { length_in_range: [number, number] };
 
@@ -221,11 +219,11 @@ export const wordLengthArray = [...Array(9).keys()].map((x) => ({
   value: x + 1,
 }));
 
-export type WordRule = { formula: string } & LengthSpecifier;
+export type 构词规则 = { formula: string } & 长度限定;
 
-export type ShortCodeRule = { schemes: ShortCodeScheme[] } & LengthSpecifier;
+export type 简码规则 = { schemes: 简码模式[] } & 长度限定;
 
-export interface ShortCodeScheme {
+export interface 简码模式 {
   prefix: number;
   count?: number;
   select_keys?: string[];
@@ -233,21 +231,21 @@ export interface ShortCodeScheme {
 // config.encoder end
 
 // config.optimization begin
-export interface LevelWeights {
+export interface 码长权重 {
   length: number;
   frequency: number;
 }
 
-export type FingeringWeights = (number | null)[];
+export type 指法权重 = (number | null)[];
 
-export interface TierWeights {
+export interface 层级权重 {
   top?: number;
   duplication?: number;
-  levels?: LevelWeights[];
-  fingering?: FingeringWeights;
+  levels?: 码长权重[];
+  fingering?: 指法权重;
 }
 
-export const fingeringLabels = [
+export const 用指标签列表 = [
   "同手",
   "大跨",
   "小跨",
@@ -258,39 +256,39 @@ export const fingeringLabels = [
   "备用",
 ];
 
-export interface PartialWeights {
-  tiers?: TierWeights[];
+export interface 部分权重 {
+  tiers?: 层级权重[];
   duplication?: number;
   key_distribution?: number;
   pair_equivalence?: number;
   extended_pair_equivalence?: number;
-  fingering?: FingeringWeights;
-  levels?: LevelWeights[];
+  fingering?: 指法权重;
+  levels?: 码长权重[];
 }
 
-export interface Objective {
-  characters_full?: PartialWeights;
-  characters_short?: PartialWeights;
-  words_full?: PartialWeights;
-  words_short?: PartialWeights;
+export interface 目标 {
+  characters_full?: 部分权重;
+  characters_short?: 部分权重;
+  words_full?: 部分权重;
+  words_short?: 部分权重;
   regularization_strength?: number;
 }
 
-export type PartialWeightTypes = Exclude<keyof Objective, "regularization">;
+export type 部分目标类型 = Exclude<keyof 目标, "regularization_strength">;
 
-export interface Optimization {
-  objective: Objective;
-  metaheuristic: Solver;
+export interface 优化配置 {
+  objective: 目标;
+  metaheuristic: 求解器配置;
 }
 
-export const defaultOptimization: Optimization = {
+export const defaultOptimization: 优化配置 = {
   objective: {},
   metaheuristic: {
     algorithm: "SimulatedAnnealing",
   },
 };
 
-export interface Solver {
+export interface 求解器配置 {
   algorithm: "SimulatedAnnealing";
   parameters?: {
     t_max: number;
@@ -309,7 +307,7 @@ export interface Solver {
 
 // config.diagram begin
 
-export type BoxConfig = {
+export type 区块配置 = {
   style?: string;
 } & (
   | {
@@ -325,29 +323,29 @@ export type BoxConfig = {
     }
 );
 
-export interface DiagramConfig {
+export interface 图示配置 {
   layout: {
     keys: string[];
   }[];
-  contents: BoxConfig[];
+  contents: 区块配置[];
   row_style?: string;
   cell_style?: string;
 }
 
 // config.diagram end
 
-export interface Config {
+export interface 配置 {
   version?: string;
   // 有值表示它是从示例创建的，无值表示它是从模板创建的
   source: string | null;
-  info?: Info;
-  data?: Data;
-  analysis?: Analysis;
-  algebra?: Algebra;
-  form: Keyboard;
-  encoder: EncoderConfig;
-  optimization?: Optimization;
-  diagram?: DiagramConfig;
+  info?: 基本信息;
+  data?: 数据配置;
+  analysis?: 分析配置;
+  algebra?: Record<string, 拼写运算>;
+  form: 键盘配置;
+  encoder: 编码配置;
+  optimization?: 优化配置;
+  diagram?: 图示配置;
 }
 
-export type ExampleConfig = Required<Config>;
+export type 示例配置 = Required<配置>;

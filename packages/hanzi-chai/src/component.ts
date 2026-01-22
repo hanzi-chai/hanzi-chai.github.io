@@ -1,30 +1,32 @@
-import type { Degenerator } from "./config.js";
-import type { SVGGlyph, BasicComponent, Operator } from "./data.js";
-import { defaultDegenerator } from "./degenerator.js";
+import { bisectLeft, bisectRight } from "d3-array";
+import { isEqual, range } from "lodash-es";
+import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
+import type { 分类器, 笔画名称 } from "./classifier.js";
+import type { 退化配置 } from "./config.js";
+import type { 基本部件数据, 矢量图形数据, 结构表示符 } from "./data.js";
+import { isCollinear, isLess, sorted } from "./math.js";
+import { getRegistry } from "./registry.js";
+import type { 基本分析, 字形分析配置 } from "./repertoire.js";
 import {
-  defaultSelector,
+  默认筛选器列表,
+  type 拆分方式,
   type 拆分环境,
   type 筛选器,
-  type 拆分方式,
 } from "./selector.js";
-import { bisectLeft, bisectRight } from "d3-array";
-import type { Feature, Classifier } from "./classifier.js";
-import type { 基本分析, 字形分析配置 } from "./repertoire.js";
-import { isEqual, range } from "lodash-es";
-import { isCollinear, isLess, sorted } from "./math.js";
-import { 拓扑, 笔画图形 } from "./bezier.js";
-import { 区间 } from "./bezier.js";
-import type { Result } from "./utils.js";
-import 注册表 from "./registry.js";
+import { default_err, ok, type Result } from "./utils.js";
 
-const strokeFeatureEqual = (
-  degenerator: Degenerator,
-  s1: Feature,
-  s2: Feature,
-) => {
-  const feature = degenerator.feature ?? ({} as Record<Feature, Feature>);
-  const d1 = feature[s1] ?? s1;
-  const d2 = feature[s2] ?? s2;
+export const defaultDegenerator: 退化配置 = {
+  feature: {
+    提: "横",
+    捺: "点",
+  } as Record<笔画名称, 笔画名称>,
+  no_cross: false,
+};
+
+const 笔画名称等价 = (退化器: 退化配置, s1: 笔画名称, s2: 笔画名称) => {
+  const 合并 = 退化器.feature ?? ({} as Record<笔画名称, 笔画名称>);
+  const d1 = 合并[s1] ?? s1;
+  const d2 = 合并[s2] ?? s2;
   return d1 === d2;
 };
 
@@ -35,50 +37,55 @@ const strokeFeatureEqual = (
  * 再基于参数曲线计算拓扑
  */
 class 部件图形 {
-  name: string;
-  private glyph: 笔画图形[];
-  private topology: 拓扑;
+  名称: string;
+  private 笔画列表: 笔画图形[];
+  private 拓扑: 拓扑;
 
-  constructor(name: string, glyph: SVGGlyph) {
-    this.name = name;
-    this.glyph = glyph.map((x) => new 笔画图形(x));
-    this.topology = new 拓扑(this.glyph);
+  constructor(name: string, glyph: 矢量图形数据) {
+    this.名称 = name;
+    this.笔画列表 = glyph.map((x) => new 笔画图形(x));
+    this.拓扑 = new 拓扑(this.笔画列表);
+  }
+
+  _笔画列表() {
+    return this.笔画列表;
+  }
+
+  _拓扑() {
+    return this.拓扑;
   }
 
   笔画数() {
-    return this.glyph.length;
+    return this.笔画列表.length;
   }
 
-  计算笔画序列(classifier: Classifier) {
-    return this.glyph.map((stroke) => classifier[stroke.feature]);
+  计算笔画序列(classifier: 分类器) {
+    return this.笔画列表.map((stroke) => classifier[stroke.feature]);
   }
 
   查询拓扑关系(i: number, j: number) {
     if (i <= j) {
-      return this.topology.matrix[j][i];
+      return this.拓扑.matrix[j]?.[i];
     } else {
-      return this.topology.matrix[i][j];
+      return this.拓扑.matrix[i]?.[j];
     }
   }
 
   具有同向笔画(i: number, j: number) {
     const [smaller, larger] = sorted([i, j]);
-    return this.topology.orientedPairs.some((x) =>
-      isEqual(x, [larger, smaller]),
-    );
+    return this.拓扑.orientedPairs.some((x) => isEqual(x, [larger, smaller]));
   }
 
   /**
    * 给定一个部件和一个字根，找出这个部件所有包含这个字根的方式
    * 如果部件不包含这个字根，就返回空列表
    *
-   * @param config - 配置
-   * @param component - 待拆分部件
    * @param root - 字根
+   * @param degenerator - 退化器
    */
-  生成二进制切片列表(root: 部件图形, degenerator: Degenerator) {
-    const { glyph: cglyph, topology: ctopology } = this;
-    const { glyph: rglyph, topology: rtopology } = root;
+  生成二进制切片列表(root: 部件图形, degenerator: 退化配置) {
+    const { 笔画列表: cglyph, 拓扑: ctopology } = this;
+    const { 笔画列表: rglyph, 拓扑: rtopology } = root;
     if (cglyph.length < rglyph.length) return [];
     let queue = [[]] as number[][];
     for (const [rIndex, rStroke] of rglyph.entries()) {
@@ -88,9 +95,7 @@ class 部件图形 {
         const indexList = queue.shift()!;
         const start = indexList.length ? indexList.at(-1)! + 1 : 0;
         for (const [cIndex, cStroke] of cglyph.slice(start, end).entries()) {
-          if (
-            !strokeFeatureEqual(degenerator, cStroke.feature, rStroke.feature)
-          )
+          if (!笔画名称等价(degenerator, cStroke.feature, rStroke.feature))
             continue;
           const realIndex = cIndex + start;
           const cStrokeTopology = ctopology.matrix[realIndex]?.filter((_, i) =>
@@ -117,7 +122,7 @@ class 部件图形 {
     }
     return queue
       .filter((x) => this.验证特殊字根(root, x))
-      .map(this.索引转二进制);
+      .map(this.索引转二进制.bind(this));
   }
 
   /**
@@ -125,6 +130,7 @@ class 部件图形 {
    *
    * @param 全部字根二进制列表 - 部件包含的字根列表，其中每个字根用二进制表示
    * @param 必要字根二进制集合 - 部件必须包含的字根列表，其中每个字根用二进制表示
+   * @param 二进制字根映射 - 从二进制表示到字根名称的映射
    *
    * 函数通过递归的方式，每次选取剩余部分的第一笔，然后在字根列表中找到包含这个笔画的所有字根
    * 将这些可能性与此前已经拆分的部分组合，得到新的拆分方案
@@ -209,46 +215,45 @@ class 部件图形 {
    * 对于一些特殊的字根，一般性的字根认同规则可能不足以区分它们，需要特殊处理
    * 这里判断了待拆分部件中的某些笔画究竟是不是这个字根
    *
-   * @param component - 待拆分部件
    * @param root - 字根
    * @param indices - 笔画索引列表
    */
   验证特殊字根(root: 部件图形, indices: number[]) {
-    if (["土", "士"].includes(root.name)) {
+    if (["土", "士"].includes(root.名称)) {
       const [i1, _, i3] = indices as [number, number, number];
-      const upperHeng = this.glyph[i1]!.curveList[0]!;
-      const lowerHeng = this.glyph[i3]!.curveList[0]!;
+      const upperHeng = this.笔画列表[i1]!.curveList[0]!;
+      const lowerHeng = this.笔画列表[i3]!.curveList[0]!;
       const lowerIsLonger = upperHeng.length() < lowerHeng.length();
-      return root.name === "土" ? lowerIsLonger : !lowerIsLonger;
+      return root.名称 === "土" ? lowerIsLonger : !lowerIsLonger;
     }
-    if (["未", "末"].includes(root.name)) {
+    if (["未", "末"].includes(root.名称)) {
       const [i1, i2] = indices as [number, number];
-      const upperHeng = this.glyph[i1]!.curveList[0]!;
-      const lowerHeng = this.glyph[i2]!.curveList[0]!;
+      const upperHeng = this.笔画列表[i1]!.curveList[0]!;
+      const lowerHeng = this.笔画列表[i2]!.curveList[0]!;
       const lowerIsLonger = upperHeng.length() < lowerHeng.length();
-      return root.name === "未" ? lowerIsLonger : !lowerIsLonger;
+      return root.名称 === "未" ? lowerIsLonger : !lowerIsLonger;
     }
-    if (["口", "囗"].includes(root.name)) {
-      if (["囗", "\ue02d"].includes(this.name)) {
-        return root.name === "囗";
+    if (["口", "囗"].includes(root.名称)) {
+      if (["囗", "\ue02d"].includes(this.名称)) {
+        return root.名称 === "囗";
       }
       const [i1, _, i3] = indices as [number, number, number];
-      const upperLeft = this.glyph[i1]!.curveList[0]!.evaluate(0);
-      const lowerRight = this.glyph[i3]!.curveList[0]!.evaluate(1);
+      const upperLeft = this.笔画列表[i1]!.curveList[0]!.evaluate(0);
+      const lowerRight = this.笔画列表[i3]!.curveList[0]!.evaluate(1);
       const xrange = new 区间(upperLeft[0], lowerRight[0]);
       const yrange = new 区间(upperLeft[1], lowerRight[1]);
-      const otherStrokes = this.glyph.filter(
+      const otherStrokes = this.笔画列表.filter(
         (_, index) => !indices.includes(index),
       );
       const containsStroke = otherStrokes.some((stroke) =>
         stroke.isBoundedBy(xrange, yrange),
       );
-      return root.name === "囗" ? containsStroke : !containsStroke;
+      return root.名称 === "囗" ? containsStroke : !containsStroke;
     }
-    if (["\ue087" /* 木无十 */, "\ue43d" /* 全字头 */].includes(root.name)) {
+    if (["\ue087" /* 木无十 */, "\ue43d" /* 全字头 */].includes(root.名称)) {
       const [i1] = indices as [number];
-      const attachPoint = this.glyph[i1]!.curveList[0]!.evaluate(0);
-      const otherStrokes = this.glyph.filter(
+      const attachPoint = this.笔画列表[i1]!.curveList[0]!.evaluate(0);
+      const otherStrokes = this.笔画列表.filter(
         (_, index) => !indices.includes(index),
       );
       const otherCurves = otherStrokes.flatMap((s) => s.curveList);
@@ -257,7 +262,7 @@ class 部件图形 {
           x.getType() === "linear" &&
           isCollinear(x.evaluate(0), x.evaluate(1), attachPoint),
       );
-      return root.name === "\ue087"
+      return root.名称 === "\ue087"
         ? pieAndNaIsSeparated
         : !pieAndNaIsSeparated;
     }
@@ -266,36 +271,31 @@ class 部件图形 {
 
   生成二进制字根映射(
     字根图形映射: Map<string, 部件图形>,
-    退化配置: Degenerator,
-    分类器: Classifier,
+    退化配置: 退化配置,
+    分类器: 分类器,
   ) {
     const 二进制字根映射 = new Map<number, string>(
-      this.glyph.map((stroke, index) => {
+      this.笔画列表.map((stroke, index) => {
         const 二进制数 = 1 << (this.笔画数() - 1 - index);
         return [二进制数, 分类器[stroke.feature].toString()];
       }),
     );
     for (const 字根图形 of 字根图形映射.values()) {
       const 二进制列表 = this.生成二进制切片列表(字根图形, 退化配置);
-      二进制列表.map((二进制数) => 二进制字根映射.set(二进制数, 字根图形.name));
+      二进制列表.map((二进制数) => 二进制字根映射.set(二进制数, 字根图形.名称));
     }
     return 二进制字根映射;
   }
 
   /**
    * 通过自动拆分算法，给定字根列表，对部件进行拆分
-   * @param component - 部件
-   * @param rootData - 字根列表
-   * @param 配置 - 配置
-   * @param classifier - 笔画分类器
-   *
    * 如果拆分唯一，则返回拆分结果；否则返回错误
    *
-   * @returns 拆分结果
-   * @throws Error 无拆分方案
-   * @throws Error 多个拆分方案
+   * @param 配置 - 拆分配置
+   *
+   * @returns 拆分结果或错误
    */
-  给出部件分析(配置: 字形分析配置): 默认部件分析 | Error {
+  给出部件分析(配置: 字形分析配置): Result<默认部件分析, Error> {
     const 当前字根 = new Set([...配置.字根决策.keys()]);
     const 可选字根 = new Set([...配置.可选字根.keys()]);
     const 必要字根 = new Set([...当前字根].filter((x) => !可选字根.has(x)));
@@ -324,53 +324,49 @@ class 部件图形 {
       必要字根二进制集合,
       二进制字根映射,
     );
-    if (拆分方式列表.length === 0) {
-      return new Error();
-    }
     const 全部拆分方式 = this.选择(
       配置,
       拆分方式列表,
       二进制字根映射,
       必要字根,
     );
-    if (全部拆分方式 instanceof Error) {
-      return 全部拆分方式;
-    }
     const 当前拆分方式 = 全部拆分方式.find((x) =>
       x.拆分方式.every((y) => 当前字根.has(y.名称)),
     )!;
+    if (当前拆分方式 === undefined) {
+      return default_err("无法找到符合当前字根集合的拆分方式");
+    }
     const 字根序列 = 当前拆分方式.拆分方式.map((x) => x.名称);
-    return {
+    return ok({
       字根序列,
       部件图形: this,
       字根笔画映射: 字根笔画索引映射,
       当前拆分方式,
       全部拆分方式,
-    };
+    });
   }
 
   /**
    * 选择最优的拆分方案
    *
-   * @param config - 配置
-   * @param component - 待拆分部件
+   * @param 配置 - 配置
    * @param 拆分方式列表 - 拆分方案列表
-   * @param rootMap - 字根映射，从切片的二进制表示到字根名称的映射
+   * @param 二进制字根映射 - 字根映射，从切片的二进制表示到字根名称的映射
    */
   选择(
-    config: 字形分析配置,
+    配置: 字形分析配置,
     拆分方式列表: 拆分方式[],
-    rootMap: Map<number, string>,
+    二进制字根映射: Map<number, string>,
     必要字根: Set<string>,
   ): 拆分方式与评价[] {
     const environment: 拆分环境 = {
       部件图形: this,
-      二进制字根映射: rootMap,
-      ...config,
+      二进制字根映射,
+      ...配置,
     };
     const 筛选器列表: [string, 筛选器][] = [];
-    for (const name of config.分析配置.selector ?? defaultSelector) {
-      const 筛选器 = 注册表.实例().创建筛选器(name);
+    for (const name of 配置.分析配置.selector ?? 默认筛选器列表) {
+      const 筛选器 = getRegistry().创建筛选器(name);
       if (筛选器) {
         筛选器列表.push([name, 筛选器]);
       }
@@ -395,17 +391,17 @@ class 部件图形 {
     const 包含可选字根列表 = 拆分方式与评价列表.map((x) =>
       x.拆分方式.map((y) => y.名称).filter((y) => !必要字根.has(y)),
     );
-    for (const [index, data] of 拆分方式与评价列表.entries()) {
-      data.可用 = true;
+    for (const [index, 拆分方式与评价] of 拆分方式与评价列表.entries()) {
+      拆分方式与评价.可用 = true;
       for (let prevIndex = 0; prevIndex !== index; ++prevIndex) {
         const current = 包含可选字根列表[index]!;
         const previous = 包含可选字根列表[prevIndex]!;
         if (previous.every((x) => current.includes(x))) {
-          data.可用 = false;
+          拆分方式与评价.可用 = false;
           break;
         }
       }
-      if (data.拆分方式.every((x) => 必要字根.has(x.名称))) {
+      if (拆分方式与评价.拆分方式.every((x) => 必要字根.has(x.名称))) {
         break;
       }
     }
@@ -426,7 +422,7 @@ interface 部件分析器<部件分析 extends 基本分析 = 基本分析> {
    * @param 名称 - 部件名称
    * @param 部件 - 部件数据
    */
-  分析(名称: string, 部件: BasicComponent): Result<部件分析>;
+  分析(名称: string, 部件: 基本部件数据): Result<部件分析, Error>;
 }
 
 /**
@@ -444,7 +440,7 @@ class 默认部件分析器 implements 部件分析器<默认部件分析> {
   static readonly type = "默认";
   constructor(private 配置: 字形分析配置) {}
 
-  分析(名称: string, 部件: BasicComponent) {
+  分析(名称: string, 部件: 基本部件数据) {
     const 图形 =
       this.配置.字根图形映射.get(名称) ?? new 部件图形(名称, 部件.strokes);
     return 图形.给出部件分析(this.配置);
@@ -455,11 +451,14 @@ class 二笔部件分析器 implements 部件分析器<基本分析> {
   static readonly type = "二笔";
   constructor(private 配置: 字形分析配置) {}
 
-  分析(名称: string, 部件: BasicComponent) {
-    if (this.配置.字根决策.has(名称)) return { 字根序列: [名称] };
+  分析(名称: string, 部件: 基本部件数据) {
+    if (this.配置.字根决策.has(名称)) return ok({ 字根序列: [名称] });
     const 笔画分类器 = this.配置.分类器;
     const 笔画列表 = 部件.strokes;
-    const 第一笔 = 笔画列表[0]!;
+    const 第一笔 = 笔画列表[0];
+    if (!第一笔) {
+      return default_err("部件没有笔画，无法进行二笔分析");
+    }
     const 第二笔 = 笔画列表[1];
     const 第一笔类别 = 笔画分类器[第一笔.feature].toString();
     const 第二笔类别 = 第二笔 ? 笔画分类器[第二笔.feature].toString() : "0";
@@ -469,14 +468,14 @@ class 二笔部件分析器 implements 部件分析器<基本分析> {
       const 末笔类别 = 笔画分类器[末笔.feature].toString();
       结果.字根序列.push(末笔类别);
     }
-    return 结果;
+    return ok(结果);
   }
 }
 
 function 计算张码补码(
   字根序列: string[],
   字根笔画映射: Map<string, number[]>,
-  结构符?: Operator,
+  结构符?: 结构表示符,
 ) {
   // 在补码时，竖钩视为竖，横折弯钩视为折
   const coalesce = [0, 1, 2, 3, 4, 5, 2, 5];
@@ -507,33 +506,34 @@ class 张码部件分析器 implements 部件分析器<张码部件分析> {
   static readonly type = "张码";
   constructor(private 配置: 字形分析配置) {}
 
-  分析(名称: string, 部件: BasicComponent) {
+  分析(名称: string, 部件: 基本部件数据) {
     const 图形 =
       this.配置.字根图形映射.get(名称) ?? new 部件图形(名称, 部件.strokes);
-    const 基本分析 = 图形.给出部件分析(this.配置);
-    if (基本分析 instanceof Error) return 基本分析;
+    const 基本分析或错误 = 图形.给出部件分析(this.配置);
+    if (!基本分析或错误.ok) return 基本分析或错误;
+    const 基本分析 = 基本分析或错误.value;
     const 补码 = 计算张码补码(基本分析.字根序列, this.配置.字根笔画映射);
     const 存在相交 = 基本分析.当前拆分方式.评价.get("能连不交")?.[0];
     const 为准码元 =
       基本分析.当前拆分方式.拆分方式.length === 2 && 存在相交 && 存在相交 > 0
         ? "true"
         : "false";
-    return {
+    return ok({
       ...基本分析,
       补码: [补码] as [string],
       为准码元: [为准码元] as ["true" | "false"],
-    };
+    });
   }
 }
 
-export type { 拆分方式与评价, 部件分析器, 默认部件分析, 张码部件分析 };
 export {
-  部件图形,
-  默认部件分析器,
   二笔部件分析器,
   张码部件分析器,
   计算张码补码,
+  部件图形,
+  默认部件分析器,
 };
+export type { 张码部件分析, 拆分方式与评价, 部件分析器, 默认部件分析 };
 
 // if (serializerName === "xkjd") {
 //   for (const [_, result] of componentResults.entries()) {

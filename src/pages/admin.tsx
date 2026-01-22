@@ -4,7 +4,7 @@ import { listToObject } from "~/lib";
 import { Layout } from "antd";
 import { list, listAll } from "~/api";
 import CharacterTable from "~/components/CharacterTable";
-import { primitiveRepertoireAtom, useChaifenTitle, useSetAtom } from "~/atoms";
+import { 原始字库数据原子, useChaifenTitle, useSetAtom } from "~/atoms";
 
 const checkIDsInData = (data: PrimitiveCharacter[]) => {
   const reverseGF3001Map = new Map<
@@ -39,7 +39,7 @@ const checkIDsInData = (data: PrimitiveCharacter[]) => {
 
 export default function AdminLayout() {
   useChaifenTitle("管理");
-  const load = useSetAtom(primitiveRepertoireAtom);
+  const load = useSetAtom(原始字库数据原子);
   useEffect(() => {
     list().then((data) => {
       if ("err" in data) return;

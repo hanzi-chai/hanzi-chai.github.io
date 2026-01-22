@@ -5,10 +5,10 @@ import Char from "./Character";
 import { Button, Flex, Modal, Pagination, Tooltip, Typography } from "antd";
 import {
   useAtomValue,
-  repertoireAtom,
-  sequenceAtom,
+  如字库原子,
+  如笔顺映射原子,
   displayAtom,
-  keyboardAtom,
+  键盘原子,
 } from "~/atoms";
 import { isPUA, makeFilter } from "~/lib";
 import StrokeSearch from "./CharacterSearch";
@@ -53,7 +53,7 @@ export const CharWithTooltip: FC<ElementProps> = ({
   setElement,
   currentElement,
 }) => {
-  const keyboard = useAtomValue(keyboardAtom);
+  const keyboard = useAtomValue(键盘原子);
   const { mapping } = keyboard;
   const type =
     x === currentElement ? "primary" : mapping[x] ? "link" : "default";
@@ -82,8 +82,8 @@ export default function ElementPool({
   const [page, setPage] = useState(1);
   const pageSize = 100;
   const [sequence, setSequence] = useState("");
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const determinedRepertoire = useAtomValue(repertoireAtom);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const determinedRepertoire = useAtomValue(如字库原子);
   const filter = makeFilter(sequence, determinedRepertoire, sequenceMap);
   const filtered = name === "字根" ? content.filter(filter) : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);

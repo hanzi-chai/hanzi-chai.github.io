@@ -11,7 +11,7 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { thread, metaheuristicAtom, inputAtom } from "~/atoms";
+import { thread, 求解器原子, 前端输入原子 } from "~/atoms";
 import { exportYAML, formatDate, type Metric } from "~/lib";
 import type { WorkerOutput } from "~/worker";
 import { dump, load } from "js-yaml";
@@ -68,7 +68,7 @@ const Schedule = ({
 };
 
 export default function Optimizer() {
-  const metaheuristic = useAtomValue(metaheuristicAtom);
+  const metaheuristic = useAtomValue(求解器原子);
   const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
   const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
   const [bestMetric, setBestMetric] = useState("");
@@ -79,7 +79,7 @@ export default function Optimizer() {
   const [autoParams, setAutoParams] =
     useState<Partial<Solver["parameters"]>>(undefined);
   const params = metaheuristic.parameters ?? autoParams;
-  const input = useAtomValue(inputAtom);
+  const input = useAtomValue(前端输入原子);
   return (
     <>
       <Button

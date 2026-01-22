@@ -3,11 +3,11 @@ import { useState } from "react";
 import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";
 import {
-  algebraAtom,
+  拼写运算自定义原子,
   currentElementAtom,
-  customClassifierAtom,
+  分类器原子,
   processedCustomElementsAtom,
-  sortedCharactersAtom,
+  如排序汉字原子,
   useAtom,
   useAtomValue,
   useRemoveAtom,
@@ -15,7 +15,7 @@ import {
 import Algebra from "./Algebra";
 import type { PronunciationElementTypes } from "~/lib";
 import { operators } from "~/lib";
-import { phonemeEnumerationAtom } from "~/atoms";
+import { 拼音元素枚举原子 } from "~/atoms";
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import ElementCounter from "./ElementCounter";
 
@@ -28,8 +28,8 @@ const AlgebraEditor = ({
   defaultType: PronunciationElementTypes;
   setType: (s: PronunciationElementTypes) => void;
 }) => {
-  const algebra = useAtomValue(algebraAtom);
-  const removeAlgebra = useRemoveAtom(algebraAtom);
+  const algebra = useAtomValue(拼写运算自定义原子);
+  const removeAlgebra = useRemoveAtom(拼写运算自定义原子);
   return (
     <Flex justify="center" gap="middle">
       <Algebra title="新建元素类型" />
@@ -79,10 +79,10 @@ const pronunciationElementsDescription = (
 type PrimaryTypes = "shape" | "pronunciation" | "custom";
 
 const useAllElements = () => {
-  const customizedClassifier = useAtomValue(customClassifierAtom);
-  const pronunciationElements = useAtomValue(phonemeEnumerationAtom);
+  const customizedClassifier = useAtomValue(分类器原子);
+  const pronunciationElements = useAtomValue(拼音元素枚举原子);
   const customElements = useAtomValue(processedCustomElementsAtom);
-  const sortedCharacters = useAtomValue(sortedCharactersAtom);
+  const sortedCharacters = useAtomValue(如排序汉字原子);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);

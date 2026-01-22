@@ -9,7 +9,7 @@ import type { Draw } from "./data.js";
  * https://en.wikipedia.org/wiki/CJK_Strokes_(Unicode_block)
  * 分类参考 GF2001-2001 给出的笔画分类规范，将笔画分为 5 类，用数字表示
  */
-const classifier = {
+const 默认分类器 = {
   横: 1,
   提: 1,
   竖: 2,
@@ -57,13 +57,13 @@ const classifier = {
  * 给定方案配置文件中的不完整的分类器，将其与默认的分类器合并
  * 得到一个完整的分类器
  */
-const mergeClassifier = (partialClassifier?: Record<Feature, number>) => {
-  return { ...classifier, ...(partialClassifier ?? {}) };
+const 合并分类器 = (部分分类器?: Record<笔画名称, number>) => {
+  return { ...默认分类器, ...(部分分类器 ?? {}) };
 };
 
-type Feature = keyof typeof classifier;
+type 笔画名称 = keyof typeof 默认分类器;
 
-type Classifier = typeof classifier;
+type 分类器 = typeof 默认分类器;
 
 /**
  * 特定类型的笔画在数据库中的表示所包含的 SVG 命令的类别和数量是固定的
@@ -71,7 +71,7 @@ type Classifier = typeof classifier;
  * 另外，平撇、平点、平捺的命令是 z，这个不是规范的 SVG 命令，只是为了和撇、点、捺的 c 区分
  * z 和 c 的实际效果是一样的
  */
-const schema: Record<Feature, Draw["command"][]> = {
+const 笔画表示方式: Record<笔画名称, Draw["command"][]> = {
   横: ["h"],
   提: ["h"], // 美化：提
   竖: ["v"],
@@ -115,5 +115,5 @@ const schema: Record<Feature, Draw["command"][]> = {
   特殊笔画: ["c"],
 };
 
-export { classifier, mergeClassifier, schema };
-export type { Classifier, Feature };
+export { 默认分类器, 合并分类器, 笔画表示方式 };
+export type { 分类器, 笔画名称 };

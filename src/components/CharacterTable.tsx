@@ -1,5 +1,4 @@
 import { useContext, useRef, useState } from "react";
-import { isPUA, makeCharacterFilter, unicodeBlock, unicodeBlocks } from "~/lib";
 import {
   Checkbox,
   Flex,
@@ -12,22 +11,19 @@ import {
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
-  RemoteContext,
-  allRepertoireAtom,
-  customGlyphAtom,
-  customReadingsAtom,
+  原始字库原子,
+  字形自定义原子,
+  读音自定义原子,
   determinedRepertoireAtom,
-  errorFeedback,
-  primitiveRepertoireAtom,
-  repertoireAtom,
-  sequenceAtom,
-  sortedCharactersAtom,
+  原始字库数据原子,
+  如字库原子,
+  如笔顺映射原子,
+  如排序汉字原子,
   useAddAtom,
   useAtomValue,
-  userRepertoireAtom,
-  userTagsAtom,
+  用户原始字库数据原子,
+  用户标签列表原子,
 } from "~/atoms";
-import type { CharacterFilter, PrimitiveCharacter, Reading } from "~/lib";
 import {
   EditGlyph,
   Create,
@@ -46,15 +42,16 @@ import Element from "./Element";
 import * as O from "optics-ts/standalone";
 import CharacterQuery from "./CharacterQuery";
 import TagPicker from "./TagPicker";
-import { findGlyphIndex } from "~/lib";
 import type { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import { ElementWithTooltip } from "./ElementPool";
 import TransformersForm from "./Transformers";
+import { 原始汉字数据, 读音数据 } from "~/lib";
+import { errorFeedback, RemoteContext } from "~/utils";
 
-type Column = ColumnType<PrimitiveCharacter>;
+type Column = ColumnType<原始汉字数据>;
 
-function ReadingList({ readings }: { readings: Reading[] }) {
+function ReadingList({ readings }: { readings: 读音数据[] }) {
   return (
     <Space>
       {readings.map((reading, index) => {
@@ -77,20 +74,16 @@ const typenames = {
   identity: "全等",
 };
 
-export const InlineUpdater = ({
-  character,
-}: {
-  character: PrimitiveCharacter;
-}) => {
+export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) => {
   const { glyphs, unicode } = character;
   const char = String.fromCodePoint(unicode);
   const remote = useContext(RemoteContext);
-  const userRepertoire = useAtomValue(userRepertoireAtom);
-  const userTags = useAtomValue(userTagsAtom);
-  const addUser = useAddAtom(userRepertoireAtom);
-  const add = useAddAtom(primitiveRepertoireAtom);
+  const userRepertoire = useAtomValue(用户原始字库数据原子);
+  const userTags = useAtomValue(用户标签列表原子);
+  const addUser = useAddAtom(用户原始字库数据原子);
+  const add = useAddAtom(原始字库数据原子);
   const selectedIndex = findGlyphIndex(glyphs, userTags);
-  const inlineUpdate = async (newCharacter: PrimitiveCharacter) => {
+  const inlineUpdate = async (newCharacter: 原始汉字数据) => {
     if (userRepertoire[char] !== undefined) {
       addUser(char, newCharacter);
       return true;
@@ -110,8 +103,8 @@ export const InlineUpdater = ({
           x.type === "compound" ? (
             <Space>
               <span>{x.operator}</span>
-              {x.operandList.map((y) => (
-                <Display name={y} />
+              {x.operandList.map((y, i) => (
+                <Display key={i} name={y} />
               ))}
             </Space>
           ) : (
@@ -189,9 +182,9 @@ export const InlineCustomizer = ({
   character: PrimitiveCharacter;
 }) => {
   const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const addCustomGlyph = useAddAtom(customGlyphAtom);
-  const customGlyph = useAtomValue(customGlyphAtom);
+  const repertoire = useAtomValue(如字库原子);
+  const addCustomGlyph = useAddAtom(字形自定义原子);
+  const customGlyph = useAtomValue(字形自定义原子);
   const { unicode } = character;
   const char = String.fromCodePoint(unicode);
   let customized = customGlyph[char];
@@ -258,16 +251,16 @@ export const InlineCustomizer = ({
 };
 
 export default function CharacterTable() {
-  const primitiveRepertoire = useAtomValue(primitiveRepertoireAtom);
-  const allRepertoire = useAtomValue(allRepertoireAtom);
-  const userRepertoire = useAtomValue(userRepertoireAtom);
-  const sortedCharacters = useAtomValue(sortedCharactersAtom);
+  const primitiveRepertoire = useAtomValue(原始字库数据原子);
+  const allRepertoire = useAtomValue(原始字库原子);
+  const userRepertoire = useAtomValue(用户原始字库数据原子);
+  const sortedCharacters = useAtomValue(如排序汉字原子);
   const sortedRepertoire = sortedCharacters
     .filter((x) => primitiveRepertoire[x] !== undefined)
     .map((x) => [x, primitiveRepertoire[x]]) as [string, PrimitiveCharacter][];
-  const customGlyph = useAtomValue(customGlyphAtom);
-  const customReadings = useAtomValue(customReadingsAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
+  const customGlyph = useAtomValue(字形自定义原子);
+  const customReadings = useAtomValue(读音自定义原子);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
   const [page, setPage] = useState(1);
   const [filterProps, setFilterProps] = useState<CharacterFilter>({});
   const remote = useContext(RemoteContext);

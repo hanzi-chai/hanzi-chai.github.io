@@ -1,10 +1,10 @@
 import { useAtomValue } from "jotai";
 import {
-  alphabetAtom,
-  repertoireAtom,
-  mappingAtom,
-  sequenceAtom,
-  mappingVariablesAtom,
+  字母表原子,
+  如字库原子,
+  决策原子,
+  如笔顺映射原子,
+  变量规则映射原子,
 } from "~/atoms";
 import { DisplayWithSuperScript, Select } from "./Utils";
 import { isMerge, GeneralizedKey, isVariableKey } from "~/lib";
@@ -38,13 +38,13 @@ export default function KeySelect({
   const keyOptions: BaseOptionType[] = allowEmpty
     ? [{ label: "无", value: JSON.stringify("") }]
     : [];
-  const alphabet = useAtomValue(alphabetAtom);
+  const alphabet = useAtomValue(字母表原子);
   const alphabetOptions = Array.from(alphabet).map((x) => ({
     label: x,
     value: JSON.stringify(x),
   }));
   if (!disableAlphabets) keyOptions.push(...alphabetOptions);
-  const mapping = useAtomValue(mappingAtom);
+  const mapping = useAtomValue(决策原子);
   const referenceOptions = Object.entries(mapping).flatMap(
     ([element, mapped]) => {
       if (isMerge(mapped)) return [];
@@ -56,7 +56,7 @@ export default function KeySelect({
     },
   );
   if (!disableElements) keyOptions.push(...referenceOptions);
-  const variables = useAtomValue(mappingVariablesAtom);
+  const variables = useAtomValue(变量规则映射原子);
   const variableOptions = Object.keys(variables).map((key) => ({
     label: key,
     value: JSON.stringify({ variable: key }),
@@ -64,8 +64,8 @@ export default function KeySelect({
   if (!disableVariables) keyOptions.push(...variableOptions);
   if (!disablePlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const form = useAtomValue(repertoireAtom);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const form = useAtomValue(如字库原子);
   return (
     <Select
       showSearch

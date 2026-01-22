@@ -2,7 +2,7 @@ import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useMemo, useState } from "react";
 import Element from "~/components/Element";
-import { repertoireAtom, primitiveRepertoireAtom } from "~/atoms";
+import { 如字库原子, 原始字库数据原子 } from "~/atoms";
 import { list } from "~/api";
 import type {
   BasicComponent,
@@ -116,7 +116,7 @@ const Tree = ({ data, level }: { data: TreeNodeData; level: number }) => {
 };
 
 const ComponentsTreeView = () => {
-  const repertoire = useAtomValue(primitiveRepertoireAtom);
+  const repertoire = useAtomValue(原始字库数据原子);
   const loading = isEmpty(repertoire);
   const treeData = useMemo(() => treeify(repertoire), [repertoire]);
   if (loading) return null;
@@ -137,7 +137,7 @@ const ComponentsTreeView = () => {
 };
 
 const DegeneratorTable = () => {
-  const repertoire = useAtomValue(repertoireAtom);
+  const repertoire = useAtomValue(如字库原子);
   const loading = isEmpty(repertoire);
   const components: ComputedComponent[] = [];
   for (const [name, character] of Object.entries(repertoire)) {
@@ -221,7 +221,7 @@ const DegeneratorTable = () => {
 };
 
 export default function Algorithm() {
-  const setForm = useSetAtom(primitiveRepertoireAtom);
+  const setForm = useSetAtom(原始字库数据原子);
 
   useEffect(() => {
     list().then((data) => {

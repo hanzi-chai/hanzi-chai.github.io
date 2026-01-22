@@ -8,11 +8,11 @@ import {
 } from "@ant-design/pro-components";
 import { Form, Switch } from "antd";
 import { useRef } from "react";
-import { metaheuristicAtom, useAtom } from "~/atoms";
+import { 求解器原子, useAtom } from "~/atoms";
 import type { Solver } from "~/lib";
 
 export default function SolverForm() {
-  const [metaheuristic, setMetaheuristic] = useAtom(metaheuristicAtom);
+  const [metaheuristic, setMetaheuristic] = useAtom(求解器原子);
   const formRef = useRef<ProFormInstance>();
   const defaultParams = {
     t_max: 1.0,

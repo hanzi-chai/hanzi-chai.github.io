@@ -10,7 +10,7 @@ import ReactFlow, {
   addEdge,
   ReactFlowProvider,
 } from "reactflow";
-import { useAtom, sourcesAtom, conditionsAtom } from "~/atoms";
+import { useAtom, 源映射原子, 条件映射原子 } from "~/atoms";
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
 import type { Condition, Source } from "~/lib";
@@ -59,8 +59,8 @@ function EncoderGraph({
   setOpen: (open: boolean) => void;
 }) {
   const { fitView } = useReactFlow<SourceData | ConditionData>();
-  const [sources, setSources] = useAtom(sourcesAtom);
-  const [conditions, setConditions] = useAtom(conditionsAtom);
+  const [sources, setSources] = useAtom(源映射原子);
+  const [conditions, setConditions] = useAtom(条件映射原子);
   const [cachedSources, setCachedSources] = useState(sources);
   const [cachedConditions, setCachedConditions] = useState(conditions);
   const [initialNodes, initialEdges] = initializeGraph(

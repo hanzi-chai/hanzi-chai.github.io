@@ -1,13 +1,13 @@
 import { useAtomValue } from "jotai";
-import React, { useEffect, useState } from "react";
-import { repertoireAtom, sequenceAtom, sortedCharactersAtom } from "~/atoms";
+import { useEffect, useState } from "react";
+import { 如字库原子, 如笔顺映射原子, 如排序汉字原子 } from "~/atoms";
 import { Display, Select } from "./Utils";
 import type { SelectProps } from "antd";
-import type { Character } from "~/lib";
 import type { ProFormSelectProps } from "@ant-design/pro-components";
+import type { 汉字数据 } from "~/lib";
 
 interface ItemSelectProps extends SelectProps {
-  customFilter?: (e: [string, Character]) => boolean;
+  customFilter?: (e: [string, 汉字数据]) => boolean;
   includeVariables?: boolean;
 }
 
@@ -15,15 +15,11 @@ export default function CharacterSelect(
   props: ItemSelectProps & ProFormSelectProps,
 ) {
   const { customFilter, includeVariables, ...rest } = props;
-  const sortedCharacters = useAtomValue(sortedCharactersAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const sortedRepertoire = sortedCharacters.map((x) => [x, repertoire[x]]) as [
-    string,
-    Character,
-  ][];
+  const sortedCharacters = useAtomValue(如排序汉字原子);
+  const repertoire = useAtomValue(如字库原子);
   const [data, setData] = useState<SelectProps["options"]>([]);
   const char: string = props.value;
-  const sequenceMap = useAtomValue(sequenceAtom);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
   useEffect(() => {
     const initial = char
       ? [
@@ -35,6 +31,13 @@ export default function CharacterSelect(
       : [];
     setData(initial);
   }, [props.value, char]);
+  if (!sortedCharacters.ok || !repertoire.ok || !sequenceMap.ok) {
+    return null;
+  }
+  const sortedRepertoire = sortedCharacters.value.map((x) => [
+    x,
+    repertoire.value.get()[x],
+  ]) as [string, 汉字数据][];
   const onSearch = (input: string) => {
     if (input.length === 0) {
       setData([]);
@@ -46,7 +49,7 @@ export default function CharacterSelect(
         const char = String.fromCodePoint(v.unicode);
         const name = v.name ?? "";
         return (
-          sequenceMap.get(x)?.startsWith(input) ||
+          sequenceMap.value.get(x)?.startsWith(input) ||
           char === input ||
           name.includes(input)
         );
@@ -63,11 +66,11 @@ export default function CharacterSelect(
         ) as React.ReactNode,
       }));
     const minResults = allResults.filter(
-      ({ value }) => sequenceMap.get(value)?.length === input.length,
+      ({ value }) => sequenceMap.value.get(value)?.length === input.length,
     );
     if (includeVariables) {
       const num = parseInt(input, 10);
-      if (!isNaN(num) && num > 0) {
+      if (!Number.isNaN(num) && num > 0) {
         allResults.unshift({
           value: `变量 ${num}`,
           label: `变量 ${num}`,

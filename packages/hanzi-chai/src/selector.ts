@@ -1,9 +1,9 @@
-import type { 部件图形 } from "./component.js";
-import { type Analysis, type Element, type Value, isMerge } from "./config.js";
-import type { 曲线关系 } from "./bezier.js";
 import { isEqual } from "lodash-es";
+import type { 曲线关系 } from "./bezier.js";
+import type { 部件图形 } from "./component.js";
+import { type 分析配置, type 元素, type 安排, 是归并 } from "./config.js";
 
-const defaultSelector: string[] = [
+const 默认筛选器列表: string[] = [
   "结构完整",
   "根少优先",
   "能连不交",
@@ -23,8 +23,8 @@ type 拆分方式 = 拆分字根信息[];
 interface 拆分环境 {
   部件图形: 部件图形;
   二进制字根映射: Map<number, string>;
-  分析配置: Analysis;
-  字根决策: Map<Element, Value>;
+  分析配置: 分析配置;
+  字根决策: Map<元素, 安排>;
 }
 
 interface 筛选器 {
@@ -115,7 +115,7 @@ class 非形近根 implements 筛选器 {
     let 形近根数量 = 0;
     for (const { 名称 } of scheme) {
       const value = roots.get(名称);
-      if (value && isMerge(value)) {
+      if (value && 是归并(value)) {
         形近根数量 += 1;
       }
     }
@@ -166,6 +166,7 @@ const 计算出现次数 = (
       for (const k of bi) {
         for (const l of bj) {
           const relations = component.查询拓扑关系(k, l);
+          if (!relations) continue;
           r ||= relations.some((v) => v.type === relationType);
           a ||= relations.some((v) => avoidRelationType.includes(v.type));
         }
@@ -276,18 +277,18 @@ class 结构完整 implements 筛选器 {
 }
 
 export {
-  根少优先,
+  全符笔顺,
   取大优先,
   取小优先,
-  全符笔顺,
-  连续笔顺,
-  非形近根,
+  同向笔画,
   多强字根,
   少弱字根,
-  能连不交,
-  能散不连,
-  同向笔画,
+  根少优先,
   结构完整,
-  defaultSelector,
+  能散不连,
+  能连不交,
+  连续笔顺,
+  非形近根,
+  默认筛选器列表,
 };
-export type { 筛选器, 拆分环境, 拆分方式 };
+export type { 拆分方式, 拆分环境, 筛选器 };

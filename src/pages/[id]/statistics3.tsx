@@ -1,11 +1,11 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
-import { repertoireAtom, sequenceAtom, useChaifenTitle } from "~/atoms";
+import { 如字库原子, 如笔顺映射原子, useChaifenTitle } from "~/atoms";
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { maxLengthAtom } from "~/atoms";
-import { stringify } from "~/lib";
+import { 最大码长原子 } from "~/atoms";
+import { 序列化 } from "~/lib";
 import { Suspense, useState } from "react";
-import { assemblyResultAtom } from "~/atoms";
+import { 如组装结果原子 } from "~/atoms";
 import { range, sumBy } from "lodash-es";
 import type { HeatmapConfig } from "@ant-design/charts";
 import { Heatmap } from "@ant-design/charts";
@@ -13,17 +13,17 @@ import { blue } from "@ant-design/colors";
 import "~/components/charts.css";
 
 const DuplicationMatrix = () => {
-  const assemblyResult = useAtomValue(assemblyResultAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const repertoire = useAtomValue(repertoireAtom);
+  const assemblyResult = useAtomValue(如组装结果原子);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const repertoire = useAtomValue(如字库原子);
   const processed = assemblyResult.map((x) => {
-    const sequence = x.元素序列.map((y) => stringify(y));
+    const sequence = x.元素序列.map((y) => 序列化(y));
     return { sequence, name: x.词 };
   });
   const hashedElements = new Set<string>();
   for (const { 元素序列: sequence } of assemblyResult) {
     sequence.forEach((x) => {
-      hashedElements.add(stringify(x));
+      hashedElements.add(序列化(x));
     });
   }
   const allElements = [...hashedElements].sort();
@@ -133,7 +133,7 @@ const DuplicationMatrix = () => {
 
 export default function Statistics3() {
   useChaifenTitle("统计");
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={2}>离散性分析</Typography.Title>

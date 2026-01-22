@@ -3,28 +3,28 @@ import {
   type Atom,
   type SetStateAction,
   type WritableAtom,
-  characterSetAtom,
+  字集指示原子,
   charactersAtom,
-  defaultDictionaryAtom,
-  frequencyAtom,
-  infoAtom,
-  keyDistributionAtom,
-  pairEquivalenceAtom,
+  默认词典原子,
+  默认频率原子,
+  基本信息原子,
+  默认键位分布原子,
+  默认双键当量原子,
   useAtom,
   useAtomValue,
   useChaifenTitle,
-  userCharacterSetAtom,
+  用户字集指示原子,
 } from "~/atoms";
 import {
   type CharacterSetSpecifier,
-  type Dictionary,
-  type Distribution,
-  type Equivalence,
+  type 词典,
+  type 键位分布目标,
+  type 当量映射,
   type Info,
   characterSetSpecifiers,
   exportTSV,
-  getDictFromTSV,
-  getDistributionFromTSV,
+  解析词典,
+  解析键位分布目标,
 } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
@@ -34,28 +34,26 @@ import {
 } from "@ant-design/pro-components";
 import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
 import {
-  userFrequencyAtom,
-  userKeyDistributionAtom,
-  userPairEquivalenceAtom,
-  userDictionaryAtom,
-  customElementsAtom,
+  用户频率原子,
+  用户键位分布原子,
+  用户双键当量原子,
+  用户词典原子,
+  自定义元素原子,
 } from "~/atoms";
-import { getRecordFromTSV } from "~/lib";
+import { 解析频率映射 } from "~/lib";
 import { useEffect, useState } from "react";
 
-const getTSVFromRecord = (record: Equivalence) =>
+const getTSVFromRecord = (record: 当量映射) =>
   Object.entries(record).map(([k, v]) => [k, v.toString()]);
 
-const getTSVFromDistribution = (distribution: Distribution) => {
+const getTSVFromDistribution = (distribution: 键位分布目标) => {
   return Object.entries(distribution).map(([k, v]) => {
     const { ideal, lt_penalty, gt_penalty } = v;
     return [k, ideal.toString(), lt_penalty.toString(), gt_penalty.toString()];
   });
 };
 
-function AssetUploader<
-  V extends Equivalence | Distribution | Dictionary | string[],
->({
+function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({
   atom,
   defaultAtom,
   title,
@@ -103,7 +101,7 @@ function AssetUploader<
 }
 
 const CustomElementUploader = () => {
-  const [customElements, setCustomElements] = useAtom(customElementsAtom);
+  const [customElements, setCustomElements] = useAtom(自定义元素原子);
   const [name, setName] = useState("");
   return (
     <Flex vertical gap="middle">
@@ -161,7 +159,7 @@ const CustomElementUploader = () => {
 };
 
 const ConfigInfo = () => {
-  const [info, setInfo] = useAtom(infoAtom);
+  const [info, setInfo] = useAtom(基本信息原子);
   const [form] = ProForm.useForm<Info>();
   useEffect(() => {
     form.setFieldsValue(info);
@@ -190,7 +188,7 @@ const ConfigInfo = () => {
 
 export default function Index() {
   useChaifenTitle("基本信息");
-  const [characterSet, setCharacterSet] = useAtom(characterSetAtom);
+  const [characterSet, setCharacterSet] = useAtom(字集指示原子);
   const specifierNames: Record<CharacterSetSpecifier, string> = {
     minimal: "极简",
     gb2312: "GB2312",
@@ -259,23 +257,23 @@ export default function Index() {
         <AssetUploader
           title="词频"
           description="系统默认采用的词频来自 10 亿社交媒体语料的统计结果，包含了一字词和多字词。您可以在此处自定义词频。"
-          atom={userFrequencyAtom}
-          defaultAtom={frequencyAtom}
-          parser={getRecordFromTSV}
+          atom={用户频率原子}
+          defaultAtom={默认频率原子}
+          parser={解析频率映射}
           dumper={getTSVFromRecord}
         />
         <AssetUploader
           title="词库"
           description="系统默认采用的多字词为「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词编码。您可以在此处自定义词库，词库需要包含带调拼音。"
-          atom={userDictionaryAtom as any}
-          defaultAtom={defaultDictionaryAtom}
-          parser={getDictFromTSV}
+          atom={用户词典原子 as any}
+          defaultAtom={默认词典原子}
+          parser={解析词典}
           dumper={(dict) => dict}
         />
         <AssetUploader
           title="字集"
           description="您可以上传自定义字集并在字集中选取「自定义」来使用自己的字集。"
-          atom={userCharacterSetAtom}
+          atom={用户字集指示原子}
           defaultAtom={charactersAtom}
           parser={(text) =>
             text
@@ -288,17 +286,17 @@ export default function Index() {
         <AssetUploader
           title="当量"
           description="系统默认采用的双键速度当量来自陈一凡的论文。您可以在此处自定义当量。"
-          atom={userPairEquivalenceAtom}
-          defaultAtom={pairEquivalenceAtom}
-          parser={getRecordFromTSV}
+          atom={用户双键当量原子}
+          defaultAtom={默认双键当量原子}
+          parser={解析频率映射}
           dumper={getTSVFromRecord}
         />
         <AssetUploader
           title="用指分布"
           description="系统默认采用的理想用指分布是我拍脑袋想出来的。您可以在此处自定义用指分布。"
-          atom={userKeyDistributionAtom}
-          defaultAtom={keyDistributionAtom}
-          parser={getDistributionFromTSV}
+          atom={用户键位分布原子}
+          defaultAtom={默认键位分布原子}
+          parser={解析键位分布目标}
           dumper={getTSVFromDistribution}
         />
         <Typography.Title level={2}>自定义元素</Typography.Title>

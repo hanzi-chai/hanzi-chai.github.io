@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import {
-  classifierCustomizationAtom,
-  customClassifierAtom,
+  分类器自定义原子,
+  分类器原子,
   useAddAtom,
   useAtomValue,
 } from "~/atoms";
@@ -54,8 +54,8 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 };
 
 export default function Classifier() {
-  const classifier = useAtomValue(customClassifierAtom);
-  const add = useAddAtom(classifierCustomizationAtom);
+  const classifier = useAtomValue(分类器原子);
+  const add = useAddAtom(分类器自定义原子);
   const [categories, setCategories] = useState(
     Math.max(...Object.values(classifier)),
   );

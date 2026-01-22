@@ -1,6 +1,4 @@
 import { Form } from "antd";
-import type { CharacterFilter } from "~/lib";
-import { operators } from "~/lib";
 import {
   ProFormDigit,
   ProFormSelect,
@@ -8,16 +6,18 @@ import {
   QueryFilter,
 } from "@ant-design/pro-components";
 import { useAtomValue } from "jotai";
-import { tagsAtom } from "~/atoms";
+import { 全部标签原子 } from "~/atoms";
 import CharacterSelect from "./CharacterSelect";
 import { debounce } from "lodash-es";
+import type { CharacterFilter } from "~/utils";
+import { 结构表示符列表 } from "~/lib";
 
 interface StrokeSearchProps {
   setFilter: (s: CharacterFilter) => void;
 }
 
 export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
-  const tags = useAtomValue(tagsAtom);
+  const tags = useAtomValue(全部标签原子);
   const debounced = debounce(setFilter, 500);
   return (
     <QueryFilter<CharacterFilter>
@@ -37,7 +37,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
       <ProFormSelect
         label="包含结构"
         name="operator"
-        options={operators.map((x) => ({ label: x, value: x }))}
+        options={结构表示符列表.map((x) => ({ label: x, value: x }))}
       />
       <Form.Item label="包含部分" name="part">
         <CharacterSelect allowClear={true} />

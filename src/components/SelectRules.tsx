@@ -1,8 +1,8 @@
 import { Button } from "antd";
 import { useAtom, useAtomValue } from "jotai";
-import { alphabetAtom, encoderAtom } from "~/atoms";
+import { 字母表原子, 编码配置原子 } from "~/atoms";
 import type { EncoderConfig } from "~/lib";
-import { printableAscii, wordLengthArray } from "~/lib";
+import { 可打印字符列表, wordLengthArray } from "~/lib";
 import {
   ModalForm,
   ProFormGroup,
@@ -11,9 +11,9 @@ import {
 } from "@ant-design/pro-components";
 
 export default function SelectRules() {
-  const [encoder, setEncoder] = useAtom(encoderAtom);
-  const alphabet = useAtomValue(alphabetAtom);
-  const allowedSelectKeys = printableAscii.filter((x) => !alphabet.includes(x));
+  const [encoder, setEncoder] = useAtom(编码配置原子);
+  const alphabet = useAtomValue(字母表原子);
+  const allowedSelectKeys = 可打印字符列表.filter((x) => !alphabet.includes(x));
   return (
     <ModalForm<EncoderConfig>
       trigger={<Button>配置选择规则</Button>}

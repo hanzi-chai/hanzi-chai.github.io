@@ -17,12 +17,7 @@ import type { ColumnsType } from "antd/es/table";
 import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { isEqual, sample, sortBy } from "lodash-es";
-import {
-  charactersAtom,
-  degeneratorAtom,
-  mappingAtom,
-  repertoireAtom,
-} from "~/atoms";
+import { charactersAtom, 退化配置原子, 决策原子, 如字库原子 } from "~/atoms";
 import Element from "~/components/Element";
 import ElementSelect from "~/components/ElementSelect";
 import { Display } from "~/components/Utils";
@@ -69,9 +64,9 @@ function 构建字根树(map: Map<string, string | undefined>): TreeNode {
 }
 
 export const parentMapAtom = atom((get) => {
-  const mapping = get(mappingAtom);
-  const repertoire = get(repertoireAtom);
-  const degenerator = get(degeneratorAtom);
+  const mapping = get(决策原子);
+  const repertoire = get(如字库原子);
+  const degenerator = get(退化配置原子);
   const degeneratorMap = new Map<string, string>();
 
   for (const element of Object.keys(mapping)) {
@@ -118,7 +113,7 @@ export const treeAtom = atom((get) => {
 });
 
 export const 精简映射原子 = atom((get) => {
-  const mapping = get(mappingAtom);
+  const mapping = get(决策原子);
   const parentMap = get(parentMapAtom);
   const newMapping: Mapping = {};
   for (const [key, value] of Object.entries(mapping)) {
@@ -286,8 +281,8 @@ const 双编码编辑器 = () => {
 };
 
 export default function Misc() {
-  const repertoire = useAtomValue(repertoireAtom);
-  const degenerator = useAtomValue(degeneratorAtom);
+  const repertoire = useAtomValue(如字库原子);
+  const degenerator = useAtomValue(退化配置原子);
   const characters = useAtomValue(charactersAtom);
   const components = getComponentCounts(repertoire, characters);
   let 最大字根数 = 0;

@@ -16,20 +16,20 @@ import { useState, memo } from "react";
 import {
   useAtomValue,
   useSetAtom,
-  repertoireAtom,
-  alphabetAtom,
-  mappingTypeAtom,
-  mappingAtom,
+  如字库原子,
+  字母表原子,
+  编码类型原子,
+  决策原子,
   useAddAtom,
   useRemoveAtom,
   useAtom,
   currentElementAtom,
-  mappingSpaceAtom,
-  keyboardAtom,
+  决策空间原子,
+  键盘原子,
 } from "~/atoms";
 import Char from "./Character";
 import MappingSpace, { RulesForm } from "./MappingSpace";
-import { getReversedMapping, isMerge, isPUA, printableAscii } from "~/lib";
+import { getReversedMapping, isMerge, isPUA, 可打印字符列表 } from "~/lib";
 import {
   DeleteButton,
   Display,
@@ -37,7 +37,7 @@ import {
   Uploader,
 } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import type { Key, MappedInfo, Mapping, Value } from "~/lib";
+import type { Key, 首码分组, Mapping, Value } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
 import { ElementWithTooltip } from "./ElementPool";
@@ -75,9 +75,9 @@ const ElementDetail = ({
   keys: Exclude<Value, null>;
   name: string;
 }) => {
-  const addMapping = useAddAtom(mappingAtom);
-  const removeMapping = useRemoveAtom(mappingAtom);
-  const mapping = useAtomValue(mappingAtom);
+  const addMapping = useAddAtom(决策原子);
+  const removeMapping = useRemoveAtom(决策原子);
+  const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   return (
     <Flex vertical gap="middle">
@@ -130,12 +130,12 @@ export const AdjustableElementGroup = ({
   name,
   code,
   displayMode,
-}: MappedInfo & { displayMode?: boolean }) => {
-  const mapping = useAtomValue(mappingAtom);
+}: 首码分组 & { displayMode?: boolean }) => {
+  const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
   const currentElement = useAtomValue(currentElementAtom);
-  const mappingSpace = useAtomValue(mappingSpaceAtom);
+  const mappingSpace = useAtomValue(决策空间原子);
   const isOptional = (name: string) =>
     mappingSpace[name]?.some((x) => x.value === null) ?? false;
   const rest = code.slice(1);
@@ -233,10 +233,10 @@ const MappingUploader = ({
 }: {
   setImportResult: (a: any) => void;
 }) => {
-  const repertoire = useAtomValue(repertoireAtom);
-  const setMapping = useSetAtom(mappingAtom);
-  const mappingType = useAtomValue(mappingTypeAtom);
-  const alphabet = useAtomValue(alphabetAtom);
+  const repertoire = useAtomValue(如字库原子);
+  const setMapping = useSetAtom(决策原子);
+  const mappingType = useAtomValue(编码类型原子);
+  const alphabet = useAtomValue(字母表原子);
   return (
     <Uploader
       action={(result) => {
@@ -282,10 +282,10 @@ const MappingHeader = () => {
   const [order, setOrder] = useState("");
   const [char, setChar] = useState<string | undefined>(undefined);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [mappingType, setMappingType] = useAtom(mappingTypeAtom);
-  const mapping = useAtomValue(mappingAtom);
-  const [keyboard, setKeyboard] = useAtom(keyboardAtom);
-  const [alphabet, setAlphabet] = useAtom(alphabetAtom);
+  const [mappingType, setMappingType] = useAtom(编码类型原子);
+  const mapping = useAtomValue(决策原子);
+  const [keyboard, setKeyboard] = useAtom(键盘原子);
+  const [alphabet, setAlphabet] = useAtom(字母表原子);
   return (
     <>
       <Typography.Title level={3}>键盘映射</Typography.Title>
@@ -307,7 +307,7 @@ const MappingHeader = () => {
             style={{ width: 64 }}
             value={char}
             onChange={setChar}
-            options={printableAscii
+            options={可打印字符列表
               .filter((x) => !alphabet.includes(x))
               .map((v) => ({
                 label: v,
@@ -365,8 +365,8 @@ const MappingHeader = () => {
 };
 
 const MappingRow = memo(
-  ({ symbol, elements }: { symbol: string; elements: MappedInfo[] }) => {
-    const [alphabet, setAlphabet] = useAtom(alphabetAtom);
+  ({ symbol, elements }: { symbol: string; elements: 首码分组[] }) => {
+    const [alphabet, setAlphabet] = useAtom(字母表原子);
     return (
       <Flex style={{ borderTop: "1px solid #aaa" }}>
         <Button
@@ -395,8 +395,8 @@ const MappingRow = memo(
 );
 
 export default function MappingComponent() {
-  const mapping = useAtomValue(mappingAtom);
-  const alphabet = useAtomValue(alphabetAtom);
+  const mapping = useAtomValue(决策原子);
+  const alphabet = useAtomValue(字母表原子);
   const reversedMapping = getReversedMapping(mapping, alphabet);
 
   return (
@@ -404,7 +404,7 @@ export default function MappingComponent() {
       <MappingHeader />
       <List
         dataSource={[...reversedMapping]}
-        renderItem={([key, roots]: [string, MappedInfo[]]) => (
+        renderItem={([key, roots]: [string, 首码分组[]]) => (
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />

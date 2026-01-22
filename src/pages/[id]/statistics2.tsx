@@ -1,11 +1,11 @@
 import { Flex, Skeleton, Table } from "antd";
 import type { Combined } from "~/atoms";
 import {
-  alphabetAtom,
+  字母表原子,
   combinedResultAtom,
   adaptedFrequencyAtom,
-  meaningfulTypesAtom,
-  pairEquivalenceAtom,
+  默认目标类型原子,
+  默认双键当量原子,
   typeLabels,
   useChaifenTitle,
 } from "~/atoms";
@@ -18,13 +18,8 @@ import {
 } from "@ant-design/pro-components";
 import { Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { maxLengthAtom } from "~/atoms";
-import {
-  type PartialWeightTypes,
-  type AdaptedFrequency,
-  stringify,
-  parseKey,
-} from "~/lib";
+import { 最大码长原子 } from "~/atoms";
+import { type 部分目标类型, type 频率映射, 序列化, 反序列化 } from "~/lib";
 import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
 import { blue } from "@ant-design/colors";
@@ -53,7 +48,7 @@ function interpolate(color1: string, color2: string, percent: number) {
   // Convert the interpolated RGB values back to a hex color
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
-const filterType = (type: PartialWeightTypes, combined: Combined[]) => {
+const filterType = (type: 部分目标类型, combined: Combined[]) => {
   const filtered = type.includes("character")
     ? combined.filter((item) => [...item.词].length === 1)
     : combined.filter((item) => [...item.词].length > 1);
@@ -71,7 +66,7 @@ const filterType = (type: PartialWeightTypes, combined: Combined[]) => {
 };
 
 interface DistributionConfig {
-  type: PartialWeightTypes;
+  type: 部分目标类型;
   index: number[];
   dynamic: boolean;
 }
@@ -81,7 +76,7 @@ type DistributionResult = Map<string, { count: number; items: string[] }>;
 const count = (
   data: { name: string; code: string; importance: number }[],
   alphabet: string,
-  frequency: AdaptedFrequency,
+  frequency: 频率映射,
   config: DistributionConfig,
   multiple?: boolean,
 ) => {
@@ -131,7 +126,7 @@ const count = (
 const countFingering = (
   data: { name: string; code: string; importance: number }[],
   alphabet: string,
-  frequency: AdaptedFrequency,
+  frequency: 频率映射,
   config: DistributionConfig,
 ) => {
   const result: DistributionResult = new Map();
@@ -255,8 +250,8 @@ const DistributionForm = ({
   config: DistributionConfig;
   setConfig: (s: DistributionConfig) => void;
 }) => {
-  const types = useAtomValue(meaningfulTypesAtom);
-  const maxLength = useAtomValue(maxLengthAtom);
+  const types = useAtomValue(默认目标类型原子);
+  const maxLength = useAtomValue(最大码长原子);
   const options1d = range(maxLength).map((d) => ({
     label: `第 ${d + 1} 码`,
     value: d,
@@ -307,10 +302,10 @@ const DistributionForm = ({
 };
 
 const UnaryDistribution = () => {
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   const combined = useAtomValue(combinedResultAtom);
-  const alphabet = useAtomValue(alphabetAtom);
-  const types = useAtomValue(meaningfulTypesAtom);
+  const alphabet = useAtomValue(字母表原子);
+  const types = useAtomValue(默认目标类型原子);
   const init: DistributionConfig = {
     type: types[0]!,
     index: range(0, maxLength),
@@ -354,7 +349,7 @@ const MatrixHeatMap = ({
   dynamic: boolean;
   isFingering?: boolean;
 }) => {
-  const pairEquivalence = useAtomValue(pairEquivalenceAtom);
+  const pairEquivalence = useAtomValue(默认双键当量原子);
   const data = [...result]
     .sort((a, b) => customCompare(a[0], b[0]))
     .map(([key, value]) => {
@@ -417,8 +412,8 @@ const MatrixHeatMap = ({
 
 const BinaryDistribution = () => {
   const combined = useAtomValue(combinedResultAtom);
-  const types = useAtomValue(meaningfulTypesAtom);
-  const alphabet = useAtomValue(alphabetAtom);
+  const types = useAtomValue(默认目标类型原子);
+  const alphabet = useAtomValue(字母表原子);
   const init: DistributionConfig = {
     type: types[0]!,
     index: [0, 1],
@@ -449,7 +444,7 @@ const EquivalenceColumns = ({
   result: DistributionResult;
   dynamic: boolean;
 }) => {
-  const pairEquivalence = useAtomValue(pairEquivalenceAtom);
+  const pairEquivalence = useAtomValue(默认双键当量原子);
   const eqMap = new Map<number, number>();
   [...result].forEach(([key, { count }]) => {
     const equivalence = pairEquivalence[key] ?? 0;
@@ -504,15 +499,15 @@ const EquivalenceColumns = ({
 
 const FingeringDistribution = () => {
   const combined = useAtomValue(combinedResultAtom);
-  const types = useAtomValue(meaningfulTypesAtom);
-  const maxLength = useAtomValue(maxLengthAtom);
+  const types = useAtomValue(默认目标类型原子);
+  const maxLength = useAtomValue(最大码长原子);
   const init: DistributionConfig = {
     type: types[0]!,
     index: range(0, maxLength - 1),
     dynamic: false,
   };
   const [config, setConfig] = useState(init);
-  const alphabet = useAtomValue(alphabetAtom);
+  const alphabet = useAtomValue(字母表原子);
   const data = filterType(config.type, combined);
   const frequency = useAtomValue(adaptedFrequencyAtom);
   const result = countFingering(data, alphabet, frequency, config);
@@ -561,8 +556,8 @@ const DuplicationDistribution = () => {
         const pair: [string, string] = [first.词, second.词];
         const length = Math.max(first.元素序列.length, second.元素序列.length);
         for (let i = 0; i < length; i++) {
-          const k1 = stringify(first.元素序列[i]);
-          const k2 = stringify(second.元素序列[i]);
+          const k1 = 序列化(first.元素序列[i]);
+          const k2 = 序列化(second.元素序列[i]);
           if (k1 === k2) continue;
           const key = `${k1} ${k2}`;
           const previous = pairMap.get(key) ?? [];
@@ -588,7 +583,7 @@ const DuplicationDistribution = () => {
       key: "key",
       width: 128,
       render: (key: string) => {
-        const [first, second] = key.split(" ").map(parseKey);
+        const [first, second] = key.split(" ").map(反序列化);
         return (
           <span>
             <DisplayOptionalSuperscript element={first!} />・

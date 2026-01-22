@@ -15,7 +15,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { SieveName } from "~/lib";
-import { useAtom, selectorAtom, useAppendAtom, useExcludeAtom } from "~/atoms";
+import {
+  useAtom,
+  过滤器列表原子,
+  useAppendAtom,
+  useExcludeAtom,
+} from "~/atoms";
 
 import { Button, Dropdown, Flex, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
@@ -35,7 +40,7 @@ const SortableItem = ({
     transform: CSS.Transform.toString(transform),
     transition,
   };
-  const excludeSelector = useExcludeAtom(selectorAtom);
+  const excludeSelector = useExcludeAtom(过滤器列表原子);
   return (
     <Flex key={sieve} justify="space-evenly">
       <Button ref={setNodeRef} style={style} {...attributes} {...listeners}>
@@ -54,8 +59,8 @@ export default function Selector() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-  const [selector, setSelector] = useAtom(selectorAtom);
-  const appendSelector = useAppendAtom(selectorAtom);
+  const [selector, setSelector] = useAtom(过滤器列表原子);
+  const appendSelector = useAppendAtom(过滤器列表原子);
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;

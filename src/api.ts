@@ -1,11 +1,6 @@
-import type {
-  Component,
-  Compound,
-  Identity,
-  PrimitiveCharacter,
-} from "./lib";
+import type { 原始汉字数据, 字形数据 } from "./lib";
 
-interface Model {
+interface 原始汉字模型 {
   unicode: number;
   tygf: 0 | 1 | 2 | 3;
   gb2312: 0 | 1 | 2;
@@ -19,7 +14,7 @@ interface Model {
 
 export const endpoint = "https://api.chaifen.app/";
 
-export interface Err {
+export interface 后端错误 {
   err: string;
   msg: string;
 }
@@ -41,7 +36,7 @@ const template =
       headers: getHeader(),
       body: payload && JSON.stringify(payload),
     }).then((res) => res.json());
-    return response as R | Err;
+    return response as R | 后端错误;
   };
 
 export const get = template("GET");
@@ -62,7 +57,7 @@ const glyphForward = (c: any) => {
   }
 };
 
-const glyphReverse = (c: Component | Compound | Identity) => {
+const glyphReverse = (c: 字形数据) => {
   if (c.type === "basic_component") {
     return c;
   } else if (c.type === "derived_component" || c.type === "identity") {
@@ -72,7 +67,7 @@ const glyphReverse = (c: Component | Compound | Identity) => {
   }
 };
 
-export function fromModel(model: Model): PrimitiveCharacter {
+export function 从模型构建(model: 原始汉字模型): 原始汉字数据 {
   return {
     ...model,
     readings: JSON.parse(model.readings),
@@ -81,7 +76,7 @@ export function fromModel(model: Model): PrimitiveCharacter {
   };
 }
 
-export function toModel(character: PrimitiveCharacter): Model {
+export function 转模型(character: 原始汉字数据): 原始汉字模型 {
   return {
     ...character,
     readings: JSON.stringify(character.readings),
@@ -103,17 +98,17 @@ interface DataList<T> {
 }
 
 export const listAll = () =>
-  get<Model[], undefined>("repertoire/all").then((data) => {
+  get<原始汉字模型[], undefined>("repertoire/all").then((data) => {
     if ("err" in data) return data;
-    return data.map(fromModel);
+    return data.map(从模型构建);
   });
 
 export const list = async () => {
-  const pages: Promise<DataList<Model> | Err>[] = [];
-  const results: Model[] = [];
+  const pages: Promise<DataList<原始汉字模型> | 后端错误>[] = [];
+  const results: 原始汉字模型[] = [];
   for (let page = 1; page < 9; ++page) {
     const size = 16384;
-    const res = get<DataList<Model>, undefined>(
+    const res = get<DataList<原始汉字模型>, undefined>(
       `repertoire?page=${page}&size=${size}`,
     );
     pages.push(res);
@@ -123,20 +118,20 @@ export const list = async () => {
     if ("err" in result) return result;
     results.push(...result.items);
   }
-  return results.map(fromModel);
+  return results.map(从模型构建);
 };
 
 export const remoteCreateWithoutUnicode = (payload: PUA) =>
   post<number, PUA>("repertoire", payload);
 
-export const remoteCreate = (payload: PrimitiveCharacter) =>
-  post<number, Model>(`repertoire/${payload.unicode}`, toModel(payload));
+export const remoteCreate = (payload: 原始汉字数据) =>
+  post<number, 原始汉字模型>(`repertoire/${payload.unicode}`, 转模型(payload));
 
-export const remoteUpdate = (payload: PrimitiveCharacter) =>
-  put<boolean, Model>(`repertoire/${payload.unicode}`, toModel(payload));
+export const remoteUpdate = (payload: 原始汉字数据) =>
+  put<boolean, 原始汉字模型>(`repertoire/${payload.unicode}`, 转模型(payload));
 
-export const remoteBatchUpdate = (payload: PrimitiveCharacter[]) =>
-  put<boolean, Model[]>(`repertoire/batch`, payload.map(toModel));
+export const remoteBatchUpdate = (payload: 原始汉字数据[]) =>
+  put<boolean, 原始汉字模型[]>(`repertoire/batch`, payload.map(转模型));
 
 export const remoteRemove = (unicode: number) =>
   del<boolean, undefined>(`repertoire/${unicode}`);

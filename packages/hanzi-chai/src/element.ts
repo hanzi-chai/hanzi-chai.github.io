@@ -1,77 +1,76 @@
 import type { 默认汉字分析 } from "./assembly.js";
 import type {
-  Condition,
-  EncoderConfig,
-  Keyboard,
-  Mapping,
-  Op,
-  Source,
-  Value,
+  条件节点配置,
+  编码配置,
+  键盘配置,
+  运算符,
+  源节点配置,
+  码位,
 } from "./config.js";
-import { isMerge } from "./config.js";
-import type { 元素索引 } from "./utils.js";
+import { 是归并 } from "./config.js";
+import { 展开决策 } from "./utils.js";
 
 export interface Extra {
   字根笔画映射: Map<string, number[]>;
 }
 
-interface Base {
+interface 基本 {
   type: string;
 }
 
-interface This extends Base {
+interface 汉字自身 extends 基本 {
   type: "汉字";
 }
 
-interface Constant extends Base {
+interface 固定取码 extends 基本 {
   type: "固定";
   key: string;
 }
 
-interface Pronunciation extends Base {
+interface 字音取码 extends 基本 {
   type: "字音";
   subtype: string;
 }
 
-interface Root extends Base {
+interface 字根取码 extends 基本 {
   type: "字根";
   rootIndex: number;
 }
 
-interface Stroke extends Base {
+interface 字根笔画取码 extends 基本 {
   type: "笔画";
   rootIndex: number;
   strokeIndex: number;
 }
 
-interface StrokePair extends Base {
+interface 字根二笔取码 extends 基本 {
   type: "二笔";
   rootIndex: number;
   strokeIndex: number;
 }
 
-interface Custom extends Base {
+interface 自定义取码 extends 基本 {
   type: "自定义";
   subtype: string;
   rootIndex: number;
 }
 
-interface Special extends Base {
+interface 特殊取码 extends 基本 {
   type: "特殊";
   index: number;
 }
 
-export type 可编码对象 =
-  | This
-  | Constant
-  | Pronunciation
-  | Root
-  | Stroke
-  | StrokePair
-  | Custom
-  | Special;
+export type 取码对象 =
+  | 汉字自身
+  | 固定取码
+  | 字音取码
+  | 字根取码
+  | 字根笔画取码
+  | 字根二笔取码
+  | 自定义取码
+  | 特殊取码;
 
-export const 序列化 = (object: 可编码对象) => {
+export const 摘要 = (object: 取码对象) => {
   switch (object.type) {
     case "汉字":
       return "汉字";
@@ -94,7 +93,7 @@ export const 序列化 = (object: 可编码对象) => {
   }
 };
 
-export const 转列表 = (object: 可编码对象): (string | number)[] => {
+export const 转列表 = (object: 取码对象): (string | number)[] => {
   const list = [object.type];
   switch (object.type) {
     case "汉字":
@@ -116,8 +115,8 @@ export const 转列表 = (object: 可编码对象): (string | number)[] => {
   }
 };
 
-export const 从列表生成 = (value: (string | number)[]): 可编码对象 => {
-  const type = value[0] as 可编码对象["type"];
+export const 从列表生成 = (value: (string | number)[]): 取码对象 => {
+  const type = value[0] as 取码对象["type"];
   switch (type) {
     case "汉字":
       return { type };
@@ -155,59 +154,42 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
 }
 
 export class 取码器 {
-  private totalMapping: Record<string, string> = {};
-  private table: Record<
-    Op,
+  private 最终映射: Map<string, string>;
+  private 谓词表: Record<
+    运算符,
     (
       target: string | undefined,
       value: string | null,
-      totalMapping: Record<string, string>,
+      totalMapping: Map<string, string>,
     ) => boolean
   > = {
     是: (t, v) => t === v,
     不是: (t, v) => t !== v,
     匹配: (t, v) => t !== undefined && new RegExp(v!).test(t),
     不匹配: (t, v) => t !== undefined && !new RegExp(v!).test(t),
-    编码匹配: (t, v, m) => t !== undefined && new RegExp(v!).test(m[t]!),
-    编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!).test(m[t]!),
+    编码匹配: (t, v, m) => t !== undefined && new RegExp(v!).test(m.get(t)!),
+    编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!).test(m.get(t)!),
     存在: (t) => t !== undefined,
     不存在: (t) => t === undefined,
   };
 
   constructor(
-    private keyboard: Keyboard,
-    private encoder: EncoderConfig,
+    private keyboard: 键盘配置,
+    private encoder: 编码配置,
     private extra: Extra,
   ) {
     const { mapping } = keyboard;
-    for (const [element, value] of Object.entries(mapping)) {
-      this.totalMapping[element] = this.getValue(mapping, value!);
+    const expanded = 展开决策(mapping);
+    if (!expanded.ok) {
+      throw new Error(`键盘映射展开失败: ${expanded.error}`);
     }
-  }
-
-  getValue(mapping: Mapping, value: Exclude<Value, null>): string {
-    if (isMerge(value)) {
-      const newValue = mapping[value.element]!;
-      return this.getValue(mapping, newValue);
-    } else if (Array.isArray(value)) {
-      const parts = [];
-      for (const part of value) {
-        if (typeof part === "string") {
-          parts.push(part);
-        } else {
-          parts.push(this.getValue(mapping, part.element)[part.index]!);
-        }
-      }
-      return parts.join("");
-    } else {
-      return value;
-    }
+    this.最终映射 = expanded.value;
   }
 
   编码长度(字根: string) {
     const 键盘映射 = this.keyboard.mapping;
     let value = 键盘映射[字根]!;
-    while (isMerge(value)) {
+    while (是归并(value)) {
       value = 键盘映射[value.element]!;
     }
     return value.length;
@@ -216,10 +198,10 @@ export class 取码器 {
   取码(汉字分析: 默认汉字分析) {
     const 字母表 = Array.from(this.keyboard.alphabet ?? "");
     let 节点: string | null = "s0";
-    const 元素序列: 元素索引[] = [];
+    const 码位序列: 码位[] = [];
     while (节点) {
       if (节点.startsWith("s")) {
-        const 源: Source = this.encoder.sources[节点]!;
+        const 源: 源节点配置 = this.encoder.sources[节点]!;
         const { object, next, index } = 源;
         if (节点 === "s0") {
           节点 = next;
@@ -230,23 +212,23 @@ export class 取码器 {
           // 如果找不到该元素，跳过
         } else if (字母表.includes(元素)) {
           // 如果是固定编码，直接加入
-          元素序列.push(元素);
+          码位序列.push(元素);
         } else {
           const 长度 = this.编码长度(元素);
           // 如果没有定义指标，就是全取；否则检查指标是否有效并取
           if (index === undefined) {
             for (let i = 0; i < 长度; i++) {
-              元素序列.push({ element: 元素, index: i });
+              码位序列.push({ element: 元素, index: i });
             }
           } else {
             if (index < 长度 && index >= 0) {
-              元素序列.push({ element: 元素, index });
+              码位序列.push({ element: 元素, index });
             }
           }
         }
         节点 = next;
       } else {
-        const 条件: Condition = this.encoder.conditions[节点]!;
+        const 条件: 条件节点配置 = this.encoder.conditions[节点]!;
         if (this.满足(条件, 汉字分析)) {
           节点 = 条件.positive;
         } else {
@@ -254,10 +236,10 @@ export class 取码器 {
         }
       }
     }
-    return 元素序列.slice(0, this.encoder.max_length ?? 元素序列.length);
+    return 码位序列.slice(0, this.encoder.max_length ?? 码位序列.length);
   }
 
-  寻找(object: 可编码对象, result: 默认汉字分析) {
+  寻找(object: 取码对象, result: 默认汉字分析) {
     const { 拼写运算, 字根序列 } = result;
     let root: string | undefined;
     let strokes: number[] | undefined;
@@ -316,13 +298,13 @@ export class 取码器 {
    * @param extra - 额外信息
    * @param totalMapping - 映射
    */
-  满足(condition: Condition, result: 默认汉字分析) {
+  满足(condition: 条件节点配置, result: 默认汉字分析) {
     const { object, operator } = condition;
     const target = this.寻找(object, result);
-    const fn = this.table[operator];
+    const fn = this.谓词表[operator];
     if ("value" in condition) {
-      return fn(target, condition.value, this.totalMapping);
+      return fn(target, condition.value, this.最终映射);
     }
-    return fn(target, null, this.totalMapping);
+    return fn(target, null, this.最终映射);
   }
 }

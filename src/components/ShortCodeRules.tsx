@@ -2,7 +2,7 @@ import { Button, Flex, Form } from "antd";
 import type { ShortCodeRule } from "~/lib";
 import { wordLengthArray } from "~/lib";
 import { useAtom } from "~/atoms";
-import { shortCodeConfigAtom } from "~/atoms";
+import { 简码配置原子 } from "~/atoms";
 import {
   ModalForm,
   ProFormCascader,
@@ -29,7 +29,7 @@ const defaultRules: ShortCodeRule[] = [
 ];
 
 export default function ShortCodeRules() {
-  const [shortCodeConfig, setShortCodeConfig] = useAtom(shortCodeConfigAtom);
+  const [shortCodeConfig, setShortCodeConfig] = useAtom(简码配置原子);
   const wordLengthArray2D = wordLengthArray
     .slice(0, wordLengthArray.length - 1)
     .map((x) => ({

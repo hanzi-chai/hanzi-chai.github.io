@@ -14,23 +14,23 @@ import { sortBy } from "lodash-es";
 import styled from "styled-components";
 import {
   adaptedFrequencyAtom,
-  algebraAtom,
-  alphabetAtom,
-  analysisConfigAtom,
-  analysisResultAtom,
+  拼写运算自定义原子,
+  字母表原子,
+  如字形分析配置原子,
+  如字形分析结果原子,
   charactersAtom,
-  customClassifierAtom,
+  分类器原子,
   displayAtom,
-  dynamicCustomizeAtom,
-  infoAtom,
-  mappingAtom,
-  mappingSpaceAtom,
-  repertoireAtom,
-  sequenceAtom,
+  动态自定义拆分原子,
+  基本信息原子,
+  决策原子,
+  决策空间原子,
+  如字库原子,
+  如笔顺映射原子,
   useAtom,
   useAtomValue,
   useChaifenTitle,
-  userFrequencyAtom,
+  用户频率原子,
 } from "~/atoms";
 import { AdjustableElementGroup, getAffiliates } from "~/components/Mapping";
 import { Display } from "~/components/Utils";
@@ -43,7 +43,7 @@ import {
   getReversedMapping,
   isMerge,
   isPUA,
-  MappedInfo,
+  首码分组,
   Value,
 } from "~/lib";
 
@@ -81,8 +81,8 @@ const Secondary = styled.div`
 `;
 
 function RootTable() {
-  const mapping = useAtomValue(mappingAtom);
-  const alphabet = useAtomValue(alphabetAtom);
+  const mapping = useAtomValue(决策原子);
+  const alphabet = useAtomValue(字母表原子);
   const reversedMapping = getReversedMapping(mapping, alphabet);
   const dama = "bpmfdtnlgkhjqxzcsrwyv";
   const xiaoma = "aoeiu;,./";
@@ -107,7 +107,7 @@ function RootTable() {
       ...getAffiliates(key, mapping).map(({ from }) => from.replace("韵-", "")),
     ]),
   }));
-  const list = (roots: MappedInfo[]) => (
+  const list = (roots: 首码分组[]) => (
     <Flex gap="small" wrap="wrap">
       {roots.map(({ name, code }) => (
         <AdjustableElementGroup
@@ -195,11 +195,11 @@ text-align: center;
 `;
 
 function AnalysisTable() {
-  const analysisResult = useAtomValue(analysisResultAtom);
-  const classifier = useAtomValue(customClassifierAtom);
-  const mapping = useAtomValue(mappingAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const dynamicCustomize = useAtomValue(dynamicCustomizeAtom);
+  const analysisResult = useAtomValue(如字形分析结果原子);
+  const classifier = useAtomValue(分类器原子);
+  const mapping = useAtomValue(决策原子);
+  const repertoire = useAtomValue(如字库原子);
+  const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const { componentResults } = analysisResult;
   const index = [...Array(6).keys()].map((_) => new Map<number, string[]>());
   const getSequence = (name: string) =>
@@ -308,18 +308,18 @@ const repr: Record<string, string> = {
 };
 
 function SyllableForm() {
-  const mapping = useAtomValue(mappingAtom);
-  const mappingSpace = useAtomValue(mappingSpaceAtom);
+  const mapping = useAtomValue(决策原子);
+  const mappingSpace = useAtomValue(决策空间原子);
   const [syllables, setSyllables] = useAtom(syllableAtom);
   const content: { key: string; value: [string, string] }[] = [];
-  const userFrequency = useAtomValue(userFrequencyAtom);
-  const repertoire = useAtomValue(repertoireAtom);
-  const analysisConfig = useAtomValue(analysisConfigAtom);
+  const userFrequency = useAtomValue(用户频率原子);
+  const repertoire = useAtomValue(如字库原子);
+  const analysisConfig = useAtomValue(如字形分析配置原子);
   const characters = useAtomValue(charactersAtom);
-  const analysisResult = useAtomValue(analysisResultAtom);
+  const analysisResult = useAtomValue(如字形分析结果原子);
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const algebra = useAtomValue(algebraAtom);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const algebra = useAtomValue(拼写运算自定义原子);
   const display = useAtomValue(displayAtom);
   const PUA: string[] = [];
 
@@ -591,7 +591,7 @@ function SyllableForm() {
 
 export default function QingYun() {
   useChaifenTitle("图示");
-  const { name, author, version, description } = useAtomValue(infoAtom);
+  const { name, author, version, description } = useAtomValue(基本信息原子);
   return (
     <Flex>
       <PrintArea>

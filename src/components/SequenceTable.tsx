@@ -1,14 +1,14 @@
 import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
-  priorityShortCodesAtom,
-  maxLengthAtom,
+  优先简码原子,
+  最大码长原子,
   combinedResultAtom,
 } from "~/atoms";
 import type { DictEntry, IndexedElement } from "~/lib";
-import { getPriorityMap, stringify, summarize } from "~/lib";
+import { getPriorityMap, 序列化, summarize } from "~/lib";
 import { exportTSV } from "~/lib";
-import { assemblyResultAtom, encodeResultAtom } from "~/atoms";
+import { 如组装结果原子, encodeResultAtom } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
@@ -28,8 +28,8 @@ interface MainEntry {
 }
 
 const ExportAssembly = () => {
-  const assemblyResult = useAtomValue(assemblyResultAtom);
-  const priorityShortCodes = useAtomValue(priorityShortCodesAtom);
+  const assemblyResult = useAtomValue(如组装结果原子);
+  const priorityShortCodes = useAtomValue(优先简码原子);
   const priorityMap = getPriorityMap(priorityShortCodes);
   return (
     <Button
@@ -122,7 +122,7 @@ export const DisplayOptionalSuperscript = ({
 };
 
 export default function SequenceTable() {
-  const max_length = useAtomValue(maxLengthAtom);
+  const max_length = useAtomValue(最大码长原子);
   const combinedResult = useAtomValue(combinedResultAtom);
 
   const dataSource = combinedResult.map(
@@ -207,7 +207,7 @@ export default function SequenceTable() {
     const allValues: Record<string, ReactNode> = {};
     for (const { [i]: element } of dataSource) {
       if (element !== undefined) {
-        const text = stringify(element);
+        const text = 序列化(element);
         allValues[text] = <DisplayOptionalSuperscript element={element} />;
       }
     }
@@ -222,8 +222,8 @@ export default function SequenceTable() {
         return <DisplayOptionalSuperscript element={element} />;
       },
       sorter: (a, b) => {
-        const ahash = stringify(a[i] ?? "");
-        const bhash = stringify(b[i] ?? "");
+        const ahash = 序列化(a[i] ?? "");
+        const bhash = 序列化(b[i] ?? "");
         return ahash.localeCompare(bhash);
       },
       sortDirections: ["ascend", "descend"],
@@ -234,7 +234,7 @@ export default function SequenceTable() {
         if (element === undefined) {
           return false;
         }
-        return stringify(element) === value;
+        return 序列化(element) === value;
       },
       valueEnum: allValues,
       ellipsis: true,

@@ -1,89 +1,74 @@
-import {
-  degenerate as _degenerate,
-  indicesToBinary,
-  binaryToIndices,
-  defaultDegenerator,
-  generateSliceBinaries,
-} from "../src/main";
 import { describe, it, expect } from "vitest";
-import { create, all } from "math";
-import { computedComponents } from "./mock";
-import type { RenderedGlyph } from "../src/main";
+import { defaultDegenerator } from "../src/main";
+import { 获取数据 } from ".";
 
-const { randomInt } = create(all!, {
-  randomSeed: "a",
-});
-
-const degenerate = (glyph: RenderedGlyph) =>
-  _degenerate(defaultDegenerator, glyph);
+const { 部件图形库 } = 获取数据();
 
 describe("二进制数和索引的相互转换", () => {
-  it("works on 5-stroke simple case", () => {
-    expect(indicesToBinary(5)([0, 1, 3])).toBe(26);
+  const 术 = 部件图形库.术!;
+  const 垂 = 部件图形库.垂!;
+  it("五个笔画的部件上将索引转二进制", () => {
+    expect(术.索引转二进制([0, 1, 3])).toBe(26);
   });
-  it("works on 5-stroke simple case", () => {
-    expect(binaryToIndices(5)(19)).toEqual([0, 3, 4]);
+  it("五个笔画的部件上将二进制转索引", () => {
+    expect(术.二进制转索引(19)).toEqual([0, 3, 4]);
   });
-  it("should be consistent", () => {
-    const n = 10;
-    const [i2b, b2i] = [indicesToBinary(n), binaryToIndices(n)];
-    const numbers = [...Array(100).keys()].map(() =>
-      randomInt(0, 1 << (n - 1)),
-    );
+  it("确保一致性", () => {
+    const n = 垂.笔画数();
+    const numbers = [...Array(1 << (n - 1)).keys()];
     for (const i of numbers) {
-      expect(i2b(b2i(i))).toBe(i);
+      expect(垂.索引转二进制(垂.二进制转索引(i))).toBe(i);
     }
   });
 });
 
 describe("退化函数：特殊情况", () => {
   it("should find multiple occurence of a root", () => {
-    const { 丰, 十 } = computedComponents;
-    expect(generateSliceBinaries(defaultDegenerator, 丰!, 十!)).toEqual([
+    const { 丰, 十 } = 部件图形库;
+    expect(丰!.生成二进制切片列表(十!, defaultDegenerator)).toEqual([
       9, 5, 3,
     ]);
   });
 
   it("区分「土」和「士」", () => {
-    const { 土, 士, 王, 壬 } = computedComponents;
-    expect(generateSliceBinaries(defaultDegenerator, 王!, 土!)).toEqual([7]);
-    expect(generateSliceBinaries(defaultDegenerator, 王!, 士!)).toEqual([]);
-    expect(generateSliceBinaries(defaultDegenerator, 壬!, 土!)).toEqual([]);
-    expect(generateSliceBinaries(defaultDegenerator, 壬!, 士!)).toEqual([7]);
+    const { 土, 士, 王, 壬 } = 部件图形库;
+    expect(王!.生成二进制切片列表(土!, defaultDegenerator)).toEqual([7]);
+    expect(王!.生成二进制切片列表(士!, defaultDegenerator)).toEqual([]);
+    expect(壬!.生成二进制切片列表(土!, defaultDegenerator)).toEqual([]);
+    expect(壬!.生成二进制切片列表(士!, defaultDegenerator)).toEqual([7]);
   });
 
   it("区分「未」和「末」", () => {
-    const { 未, 末, 朱, 耒 } = computedComponents;
-    expect(generateSliceBinaries(defaultDegenerator, 朱!, 未!)).toEqual([31]);
-    expect(generateSliceBinaries(defaultDegenerator, 耒!, 未!)).toEqual([
+    const { 未, 末, 朱, 耒 } = 部件图形库;
+    expect(朱!.生成二进制切片列表(未!, defaultDegenerator)).toEqual([31]);
+    expect(耒!.生成二进制切片列表(未!, defaultDegenerator)).toEqual([
       47, 31,
     ]);
-    expect(generateSliceBinaries(defaultDegenerator, 朱!, 末!)).toEqual([]);
-    expect(generateSliceBinaries(defaultDegenerator, 耒!, 末!)).toEqual([]);
+    expect(朱!.生成二进制切片列表(末!, defaultDegenerator)).toEqual([]);
+    expect(耒!.生成二进制切片列表(末!, defaultDegenerator)).toEqual([]);
   });
 
   it("区分「口」和「囗」", () => {
-    const { 口, 囗, 中, 日 } = computedComponents;
-    expect(generateSliceBinaries(defaultDegenerator, 中!, 口!)).toEqual([14]);
-    expect(generateSliceBinaries(defaultDegenerator, 中!, 囗!)).toEqual([]);
-    expect(generateSliceBinaries(defaultDegenerator, 日!, 口!)).toEqual([]);
-    expect(generateSliceBinaries(defaultDegenerator, 日!, 囗!)).toEqual([13]);
+    const { 口, 囗, 中, 日 } = 部件图形库;
+    expect(中!.生成二进制切片列表(口!, defaultDegenerator)).toEqual([14]);
+    expect(中!.生成二进制切片列表(囗!, defaultDegenerator)).toEqual([]);
+    expect(日!.生成二进制切片列表(口!, defaultDegenerator)).toEqual([]);
+    expect(日!.生成二进制切片列表(囗!, defaultDegenerator)).toEqual([13]);
   });
 
   it("区分「木无十」和「全字头」", () => {
-    const 木无十 = computedComponents["\ue087"]!;
-    const 全字头 = computedComponents["\ue43d"]!;
-    const { 朱 } = computedComponents;
-    expect(generateSliceBinaries(defaultDegenerator, 朱!, 木无十)).toEqual([3]);
-    expect(generateSliceBinaries(defaultDegenerator, 朱!, 全字头)).toEqual([]);
+    const 木无十 = 部件图形库["\ue087"]!;
+    const 全字头 = 部件图形库["\ue43d"]!;
+    const { 朱 } = 部件图形库;
+    expect(朱!.生成二进制切片列表(木无十!, defaultDegenerator)).toEqual([3]);
+    expect(朱!.生成二进制切片列表(全字头!, defaultDegenerator)).toEqual([]);
   });
 });
 
 const 包含 = (字根名: string, 部件名: string, indices: number[]) => {
-  const 字根 = computedComponents[字根名]!;
-  const 部件 = computedComponents[部件名]!;
-  const 切片 = 部件.glyph.filter((_, i) => indices.includes(i));
-  expect(degenerate(切片)).toEqual(degenerate(字根.glyph));
+  const 字根 = 部件图形库[字根名]!;
+  const 部件 = 部件图形库[部件名]!;
+  expect(部件.生成二进制切片列表(字根, defaultDegenerator)).toContain(部件.索引转二进制(indices));
 };
 
 interface 切片来源 {

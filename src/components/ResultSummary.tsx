@@ -1,9 +1,9 @@
 import {
   useAtomValue,
   useAddAtom,
-  customizeAtom,
+  自定义拆分原子,
   useRemoveAtom,
-  dynamicCustomizeAtom,
+  动态自定义拆分原子,
 } from "~/atoms";
 import { Button, Flex, Form, Popover } from "antd";
 import ElementSelect from "./ElementSelect";
@@ -20,7 +20,7 @@ const Customize = ({
   component: string;
   initialValues: string[];
 }) => {
-  const add = useAddAtom(customizeAtom);
+  const add = useAddAtom(自定义拆分原子);
   return (
     <ProForm<{ content: string[] }>
       title={component}
@@ -69,7 +69,7 @@ const DynamicCustomize = ({
   component: string;
   initialValues: string[][];
 }) => {
-  const add = useAddAtom(dynamicCustomizeAtom);
+  const add = useAddAtom(动态自定义拆分原子);
   return (
     <ProForm<{ content: { content: string[] }[] }>
       title={component}
@@ -122,10 +122,10 @@ export default function ResultSummary({
   disableCustomize?: boolean;
 }) {
   const { sequence } = analysis;
-  const customize = useAtomValue(customizeAtom);
-  const dynamicCustomize = useAtomValue(dynamicCustomizeAtom);
-  const remove = useRemoveAtom(customizeAtom);
-  const removeDynamic = useRemoveAtom(dynamicCustomizeAtom);
+  const customize = useAtomValue(自定义拆分原子);
+  const dynamicCustomize = useAtomValue(动态自定义拆分原子);
+  const remove = useRemoveAtom(自定义拆分原子);
+  const removeDynamic = useRemoveAtom(动态自定义拆分原子);
   const overrideRootSeries = customize[char];
   const overrideDynamicSeries = dynamicCustomize[char];
   return (

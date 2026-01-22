@@ -18,7 +18,7 @@ import {
 } from "@ant-design/pro-components";
 import { InlineRender, StaticList } from "./ComponentForm";
 import { useAtomValue } from "jotai";
-import { repertoireAtom, tagsAtom } from "~/atoms";
+import { 如字库原子, 全部标签原子 } from "~/atoms";
 import Element from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
@@ -26,7 +26,7 @@ import { recursiveRenderCompound } from "~/lib";
 import { ReactNode } from "react";
 
 export const CommonForm = () => {
-  const tags = useAtomValue(tagsAtom);
+  const tags = useAtomValue(全部标签原子);
   return (
     <Flex align="flex-start" gap="large">
       <ProFormSelect
@@ -68,7 +68,7 @@ export default function CompoundForm({
   primary?: boolean;
   readonly?: boolean;
 }) {
-  const repertoire = useAtomValue(repertoireAtom);
+  const repertoire = useAtomValue(如字库原子);
   const [form] = Form.useForm<Compound>();
   const list: string[] = useWatch("operandList", form);
   const trigger = noButton ? (

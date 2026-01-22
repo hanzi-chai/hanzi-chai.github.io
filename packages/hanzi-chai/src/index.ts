@@ -3,17 +3,20 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Pako from "pako";
-import { PrimitiveCharacter, PrimitiveRepertoire, Repertoire } from "./data.js";
+import type { 原始汉字数据, 原始字库数据 } from "./data.js";
 import {
-  characterSetFilters,
-  Dictionary,
-  Frequency,
+  type 词典,
+  type 频率映射,
   listToObject,
+  解析词典,
+  解析频率映射,
+  读取表格,
 } from "./utils.js";
-import { Config } from "./config.js";
-import { analysis, 字形分析配置, determine } from "./repertoire.js";
-import { 应用变换器 } from "./primitive.js";
-import { 组装 } from "./assembly.js";
+import type { 配置 } from "./config.js";
+import 原始字库 from "./primitive.js";
+import 字库 from "./repertoire.js";
+import { assemble, type 组装配置 } from "./assembly.js";
+import { load } from "js-yaml";
 
 export interface Item {
   id: number;
@@ -49,7 +52,7 @@ const glyphForward = (c: any) => {
   }
 };
 
-export function fromModel(model: Model): PrimitiveCharacter {
+export function fromModel(model: Model): 原始汉字数据 {
   return {
     ...model,
     readings: JSON.parse(model.readings),
@@ -58,111 +61,85 @@ export function fromModel(model: Model): PrimitiveCharacter {
   };
 }
 
-export function getPrimitveRepertoire(): PrimitiveRepertoire {
-  const filePath = path.join(__dirname, "data", "repertoire.json.deflate");
-  const compressed = readFileSync(filePath);
-  const decompressed = Pako.inflate(compressed, { to: "string" });
-  const raw = JSON.parse(decompressed).map(fromModel) as PrimitiveCharacter[];
-  const primitiveRepertoire = listToObject(raw);
-  return primitiveRepertoire;
+export function 读取配置(路径: string): 配置 {
+  const 内容 = readFileSync(路径, "utf-8");
+  return load(内容) as 配置;
 }
 
-export function getDictionary(): Dictionary {
-  const filePath = path.join(__dirname, "data", "dictionary.txt");
-  const raw = readFileSync(filePath, "utf-8");
-  return raw
-    .trim()
-    .split("\n")
-    .map((line) => {
-      const [key, value] = line.split("\t");
-      return [key, value];
-    });
+export function 获取原始字库(自定义字库: 原始字库数据 = {}): 原始字库 {
+  const 路径 = path.join(__dirname, "data", "repertoire.json.deflate");
+  const 内容 = Pako.inflate(readFileSync(路径), { to: "string" });
+  const raw = JSON.parse(内容).map(fromModel) as 原始汉字数据[];
+  const 原始字库数据 = listToObject(raw);
+  return new 原始字库(原始字库数据, 自定义字库);
 }
 
-export function getFrequency(): Frequency {
-  const filePath = path.join(__dirname, "data", "frequency.txt");
-  const raw = readFileSync(filePath, "utf-8");
-  return Object.fromEntries(
-    raw
-      .trim()
-      .split("\n")
-      .map((line) => {
-        const [char, freq] = line.split("\t");
-        return [char, Number(freq)];
-      }),
-  );
+export function 获取词典(): 词典 {
+  const 路径 = path.join(__dirname, "data", "dictionary.txt");
+  const tsv = 读取表格(readFileSync(路径, "utf-8"));
+  return 解析词典(tsv);
 }
 
-export function getRepertoire(config: Config): Repertoire {
-  const primitiveRepertoire = getPrimitveRepertoire();
-  const userRepertoire = config.data?.repertoire ?? {};
-  const allRepertoire = { ...primitiveRepertoire, ...userRepertoire };
-  const customGlyph = config.data?.glyph_customization ?? {};
-  const customReadings = config.data?.reading_customization ?? {};
-  const tags = config.data?.tags ?? [];
-  let determined = determine(allRepertoire, customGlyph, customReadings, tags);
+export function 获取频率映射(): 频率映射 {
+  const 路径 = path.join(__dirname, "data", "frequency.txt");
+  const tsv = 读取表格(readFileSync(路径, "utf-8"));
+  return 解析频率映射(tsv);
+}
+
+export function 获取字库(config: 配置): 字库 {
+  const 用户原始字库数据 = config.data?.repertoire ?? {};
+  const 原始字库 = 获取原始字库(用户原始字库数据);
+  const 自定义字形 = config.data?.glyph_customization ?? {};
+  const 自定义字音 = config.data?.reading_customization ?? {};
+  const 标签列表 = config.data?.tags ?? [];
+  const 字库或错误 = 原始字库.确定(自定义字形, 自定义字音, 标签列表);
+  if (!字库或错误.ok) {
+    throw new Error(`字库确定失败: ${字库或错误.error}`);
+  }
+  let 字库 = 字库或错误.value;
   const transformers = config.data?.transformers ?? [];
   for (const transformer of transformers) {
-    determined = 应用变换器(determined, transformer);
+    字库 = 字库.应用变换器(transformer);
   }
-  return determined;
+  return 字库;
 }
 
-export function getCharacters(
-  config: Config,
-  repertoire: Repertoire,
-): string[] {
-  const characterSet = config.data?.character_set ?? "minimal";
-  const filter = characterSetFilters[characterSet];
-  const characters = Object.entries(repertoire)
-    .filter(([k, v]) => filter(k, v))
-    .map(([k]) => k);
-  return characters;
-}
-
-export function getAnalysisConfig(
-  config: Config,
-  repertoire: Repertoire,
-): 字形分析配置 {
-  const mapping = config.form.mapping;
-  const mappingSpace = config.form.mapping_space ?? {};
-  const optionalRoots = new Set<string>();
-  for (const [key, value] of Object.entries(mappingSpace)) {
-    if (value.some((x) => x.value == null) || mapping[key] === undefined) {
-      optionalRoots.add(key);
-    }
-  }
-  const analysis = config.analysis ?? {};
-  const roots = new Map(Object.entries(mapping).filter(([x]) => repertoire[x]));
-  return {
-    分析配置: analysis,
-    字根决策: roots,
-    可选字根: optionalRoots,
-  };
-}
-
-export function getAnalysisResult(config: Config, repertoire: Repertoire) {
-  const analysisConfig = getAnalysisConfig(config, repertoire);
-  const characters = getCharacters(config, repertoire);
-  return analysis(repertoire, analysisConfig, characters);
-}
-
-export function getAssemblyResult(config: Config, repertoire: Repertoire) {
-  const characters = getCharacters(config, repertoire);
-  const analysisResult = getAnalysisResult(config, repertoire);
-  const assembleConfig = {
-    algebra: config.algebra ?? {},
-    encoder: config.encoder ?? {},
-    keyboard: config.form ?? {},
-    priority: config.encoder?.priority_short_codes ?? [],
-  };
-  组装(
-    repertoire,
-    assembleConfig,
-    characters,
-    getDictionary(),
-    new Map(Object.entries(getFrequency())),
-    analysisResult,
-    {},
+export function 获取拆分结果(config: 配置, repertoire: 字库) {
+  const analysisConfig = repertoire.准备字形分析配置(
+    config.analysis ?? {},
+    config.form.mapping,
+    config.form.mapping_space ?? {},
   );
+  if (!analysisConfig.ok) {
+    throw new Error(`字形分析配置无效: ${analysisConfig.error}`);
+  }
+  const characters = repertoire.过滤(config.data?.character_set ?? "general");
+  return repertoire.拆分(analysisConfig.value, characters);
+}
+
+export function 获取组装结果(config: 配置, repertoire: 字库) {
+  const analysisResult = 获取拆分结果(config, repertoire);
+  if (!analysisResult.ok) {
+    throw new Error(`字形分析失败: ${analysisResult.error}`);
+  }
+  const characters = repertoire.过滤(config.data?.character_set ?? "general");
+  const pinyinResult = repertoire.拼音分析(
+    config.encoder ?? {},
+    config.algebra,
+    characters,
+    获取词典(),
+  );
+  const assembleConfig: 组装配置 = {
+    编码器: config.encoder ?? {},
+    键盘: config.form,
+    自定义元素映射: new Map(),
+    额外信息: { 字根笔画映射: new Map() },
+  };
+  const res = assemble(
+    assembleConfig,
+    pinyinResult,
+    analysisResult.value,
+    获取频率映射(),
+  );
+  return res;
 }

@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { keyboardAtom, repertoireAtom, sequenceAtom } from "~/atoms";
+import { 键盘原子, 如字库原子, 如笔顺映射原子 } from "~/atoms";
 import { Select, Display } from "./Utils";
 import type { SelectProps } from "antd";
 import type { ProFormSelectProps } from "@ant-design/pro-components";
@@ -14,9 +14,9 @@ export default function ElementSelect(
   props: ElementSelectProps & ProFormSelectProps,
 ) {
   const { customFilter, onlyRootsAndStrokes, includeOptional, ...rest } = props;
-  const { mapping, mapping_space } = useAtomValue(keyboardAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const repertoire = useAtomValue(repertoireAtom);
+  const { mapping, mapping_space } = useAtomValue(键盘原子);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const repertoire = useAtomValue(如字库原子);
   let keys = Object.keys(mapping);
   if (onlyRootsAndStrokes) {
     keys = keys.filter((x) => repertoire[x] || x.match(/\d/));

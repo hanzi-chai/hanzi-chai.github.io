@@ -1,5 +1,5 @@
 import { Form, Space, Button } from "antd";
-import { useAtom, wordRulesAtom } from "~/atoms";
+import { useAtom, 构词配置原子 } from "~/atoms";
 import type { WordRule } from "~/lib";
 import { wordLengthArray } from "~/lib";
 import {
@@ -19,7 +19,7 @@ const defaultRules: WordRule[] = [
 ];
 
 export default function MultipleRules() {
-  const [wordRules, setWordRules] = useAtom(wordRulesAtom);
+  const [wordRules, setWordRules] = useAtom(构词配置原子);
   const [form] = Form.useForm<{ rules: WordRule[] }>();
   const wordLengthArray2D = wordLengthArray
     .slice(0, wordLengthArray.length - 1)

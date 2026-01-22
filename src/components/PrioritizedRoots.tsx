@@ -1,11 +1,11 @@
 import { Button, Flex, Space, Typography } from "antd";
 import {
   useAtomValue,
-  analysisAtom,
+  分析配置原子,
   useExcludeAtom,
-  strongAtom,
+  强字根原子,
   useAppendAtom,
-  weakAtom,
+  弱字根原子,
 } from "~/atoms";
 import Element from "./Element";
 import { useState } from "react";
@@ -17,10 +17,10 @@ export default function PrioritizedRoots({
 }: {
   variant: "strong" | "weak";
 }) {
-  const analysis = useAtomValue(analysisAtom);
+  const analysis = useAtomValue(分析配置原子);
   const list = analysis ? analysis[variant] : [];
   const [current, setCurrent] = useState<string | undefined>(undefined);
-  const atom = variant === "strong" ? strongAtom : weakAtom;
+  const atom = variant === "strong" ? 强字根原子 : 弱字根原子;
   const exclude = useExcludeAtom(atom);
   const append = useAppendAtom(atom);
   return (

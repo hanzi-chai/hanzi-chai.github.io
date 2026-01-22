@@ -1,9 +1,9 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
 import {
-  alphabetAtom,
+  字母表原子,
   adaptedFrequencyAtom,
-  repertoireAtom,
-  sequenceAtom,
+  如字库原子,
+  如笔顺映射原子,
   useChaifenTitle,
 } from "~/atoms";
 import {
@@ -15,17 +15,17 @@ import {
 } from "@ant-design/pro-components";
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { maxLengthAtom } from "~/atoms";
+import { 最大码长原子 } from "~/atoms";
 import type {
-  AdaptedFrequency,
+  频率映射,
   AnalyzerForm,
   组装结果,
   IndexedElement,
   Key,
 } from "~/lib";
-import { parseKey, stringify } from "~/lib";
+import { 反序列化, 序列化 } from "~/lib";
 import { Suspense, useState } from "react";
-import { assemblyResultAtom } from "~/atoms";
+import { 如组装结果原子 } from "~/atoms";
 import type { ColumnsType } from "antd/es/table";
 import { range, sumBy } from "lodash-es";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
@@ -50,7 +50,7 @@ const render = (value: number) => numbers[value] || value.toString();
 const filterRelevant = (
   result: 组装结果,
   analyzer: AnalyzerForm,
-  frequency: AdaptedFrequency,
+  frequency: 频率映射,
 ) => {
   let relevant = result;
   if (analyzer.type === "single")
@@ -68,7 +68,7 @@ const filterRelevant = (
 
 const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
-  frequency: AdaptedFrequency,
+  frequency: 频率映射,
   result: 组装结果,
   maxLength: number,
   replacer: (d: string) => string = (d) => d,
@@ -80,7 +80,7 @@ const analyzePrimitiveDuplication = (
     const sliced = range(maxLength).map((i) =>
       analyzer.position.includes(i) ? sequence[i] : "*",
     );
-    const summary = `(${sliced.map((x) => replacer(stringify(x))).join(", ")})`;
+    const summary = `(${sliced.map((x) => replacer(序列化(x))).join(", ")})`;
     reverseMap.set(summary, (reverseMap.get(summary) || []).concat(name));
   }
   return reverseMap;
@@ -99,7 +99,7 @@ const AnalyzerConfig = ({
   setAnalyzer: (a: AnalyzerForm) => void;
 }) => {
   const [form] = Form.useForm<AnalyzerForm>();
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   return (
     <ProForm<AnalyzerForm>
       form={form}
@@ -158,9 +158,9 @@ const AnalyzerConfig = ({
 };
 
 const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
-  const assemblyResult = useAtomValue(assemblyResultAtom);
+  const assemblyResult = useAtomValue(如组装结果原子);
   const frequency = useAtomValue(adaptedFrequencyAtom);
   const reverseMap = analyzePrimitiveDuplication(
     analyzer,
@@ -168,7 +168,7 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
     assemblyResult,
     maxLength,
   );
-  const alphabet = useAtomValue(alphabetAtom);
+  const alphabet = useAtomValue(字母表原子);
   const dataSource = [...reverseMap]
     .sort((a, b) => b[1].length - a[1].length)
     .map(([name, items]) => ({ name, items }));
@@ -243,16 +243,16 @@ interface UnaryDensity {
 }
 
 const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
-  const assemblyResult = useAtomValue(assemblyResultAtom);
+  const assemblyResult = useAtomValue(如组装结果原子);
   const frequency = useAtomValue(adaptedFrequencyAtom);
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer, frequency);
   for (const assembly of relevant) {
     const { 词: name, 元素序列: sequence } = assembly;
     sequence.forEach((x, i) => {
-      const key = stringify(x);
+      const key = 序列化(x);
       if (!reverseMap.has(key))
         reverseMap.set(
           key,
@@ -274,7 +274,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       dataIndex: "name",
       key: "name",
       render: (_, record) => {
-        const element: IndexedElement = parseKey(record.name)!;
+        const element: IndexedElement = 反序列化(record.name)!;
         return <DisplayOptionalSuperscript element={element} />;
       },
       width: 192,
@@ -322,9 +322,9 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 };
 
 const MarginalFirstOrderDuplication = () => {
-  const assemblyResult = useAtomValue(assemblyResultAtom);
+  const assemblyResult = useAtomValue(如组装结果原子);
   const frequency = useAtomValue(adaptedFrequencyAtom);
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   const [elements, setElements] = useState([] as Key[]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
     type: "single",
@@ -347,7 +347,7 @@ const MarginalFirstOrderDuplication = () => {
     frequency,
     assemblyResult,
     maxLength,
-    (d) => (elements.map(stringify).includes(d) ? "^" : d),
+    (d) => (elements.map(序列化).includes(d) ? "^" : d),
   );
   const szAfter = new Set<string>();
   rmAfter.forEach((items) => {
@@ -388,7 +388,7 @@ const MarginalFirstOrderDuplication = () => {
 
 export default function Statistics() {
   useChaifenTitle("统计");
-  const maxLength = useAtomValue(maxLengthAtom);
+  const maxLength = useAtomValue(最大码长原子);
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={2}>离散性分析</Typography.Title>

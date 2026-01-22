@@ -1,33 +1,29 @@
-import type { Compound, SVGGlyph, SVGGlyphWithBox } from "../src/main";
-import { affineMerge } from "../src/main";
+import type { 复合体数据, 矢量图形数据 } from "../src/main";
+import { 图形盒子 } from "../src/main";
 import { describe, expect, it } from "vitest";
 
-describe("affine transformations", () => {
-  it("should merge the components correctly", () => {
-    const compound: Compound = {
+describe("仿射变换", () => {
+  it("合并部件", () => {
+    const 复合体: 复合体数据 = {
       type: "compound",
       operator: "⿰",
-      operandList: ["A", "B"],
+      operandList: ["甲", "乙"],
     };
-    const A: SVGGlyph = [
+    const 甲 = 图形盒子.从笔画列表构建([
       {
         feature: "横",
         start: [20, 50],
         curveList: [{ command: "h", parameterList: [60] }],
       },
-    ];
-    const B: SVGGlyph = [
+    ]);
+    const 乙 = 图形盒子.从笔画列表构建([
       {
         feature: "竖",
         start: [50, 10],
         curveList: [{ command: "v", parameterList: [80] }],
       },
-    ];
-    const glyphList: SVGGlyphWithBox[] = [
-      { strokes: A, box: { x: [20, 80], y: [50, 50] } },
-      { strokes: B, box: { x: [50, 50], y: [10, 90] } },
-    ];
-    const expected: SVGGlyph = [
+    ]);
+    const 合并后: 矢量图形数据 = [
       {
         feature: "横",
         start: [20, 50],
@@ -40,46 +36,42 @@ describe("affine transformations", () => {
       },
     ];
 
-    expect(affineMerge(compound, glyphList).strokes).toEqual(expected);
+    expect(图形盒子.仿射合并(复合体, [甲, 乙]).获取笔画列表()).toEqual(合并后);
   });
 
-  it("should merge the components with order info correctly", () => {
-    const compound: Compound = {
+  it("合并带有笔顺信息的部件", () => {
+    const 复合体: 复合体数据 = {
       type: "compound",
       operator: "⿴",
-      operandList: ["A", "B"],
+      operandList: ["甲", "乙"],
       order: [
         { index: 1, strokes: 1 },
         { index: 0, strokes: 0 },
       ],
     };
-    const A: SVGGlyph = [
+    const 甲 = 图形盒子.从笔画列表构建([
       {
         feature: "撇",
         start: [50, 10],
         curveList: [{ command: "c", parameterList: [0, -20, 0, -40, 10, -60] }],
       },
-    ];
-    const B: SVGGlyph = [
+    ]);
+    const 乙 = 图形盒子.从笔画列表构建([
       {
         feature: "平点",
         start: [50, 10],
         curveList: [{ command: "z", parameterList: [20, 0, 30, 0, 40, 10] }],
       },
-    ];
-    const glyphList: SVGGlyphWithBox[] = [
-      { strokes: A, box: { x: [0, 100], y: [0, 100] } },
-      { strokes: B, box: { x: [0, 100], y: [0, 100] } },
-    ];
-    const expected: SVGGlyph = [
+    ]);
+    const 合并后: 矢量图形数据 = [
       {
         feature: "平点",
         start: [50, 30],
         curveList: [{ command: "z", parameterList: [10, 0, 15, 0, 20, 5] }],
       },
-      ...A,
+      ...甲.获取笔画列表(),
     ];
 
-    expect(affineMerge(compound, glyphList).strokes).toEqual(expected);
+    expect(图形盒子.仿射合并(复合体, [甲, 乙]).获取笔画列表()).toEqual(合并后);
   });
 });

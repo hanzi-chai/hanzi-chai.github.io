@@ -1,48 +1,48 @@
 import { describe, it, expect } from "vitest";
 import {
-  isValidCJKChar,
-  isPUA,
   chars,
-  getDummyBasicComponent,
-  getDummyDerivedComponent,
-  getDummyCompound,
-  isComponent,
-  getRecordFromTSV,
+  是部件或全等,
+  模拟基本部件,
+  模拟复合体,
+  模拟拼接部件,
+  模拟衍生部件,
+  解析频率映射,
 } from "../src/utils";
-import { repertoire } from "./mock";
+import { 是基本区汉字, 是私用区 } from "../src/unicode";
 
-describe("unicode utils", () => {
-  it("isValidCJKChar should return true if the character is a valid CJK character", () => {
+describe("Unicode 方法", () => {
+  it("基本区汉字判断", () => {
     const char = "字"; // Example CJK character
-    expect(isValidCJKChar(char)).toBeTruthy();
+    expect(是基本区汉字(char)).toBeTruthy();
   });
 
-  it("isPUA should return true if the character is a PUA character", () => {
+  it("私用区判断", () => {
     const char = ""; // Example PUA character
-    expect(isPUA(char)).toBeTruthy();
+    expect(是私用区(char)).toBeTruthy();
   });
 
-  it("chars should return an array of characters from a string", () => {
+  it("字符计数", () => {
     const s = "𠃌"; // CJK-B
     expect(chars(s)).toBe(1);
   });
 });
 
-describe("data utils", () => {
-  it("getDummyBasicComponent should return a dummy BasicComponent object", () => {
-    const bc = getDummyBasicComponent();
-    const dc = getDummyDerivedComponent();
-    const c = getDummyCompound("⿰");
-    expect(isComponent(bc)).toBeTruthy();
-    expect(isComponent(dc)).toBeTruthy();
-    expect(isComponent(c)).toBeFalsy();
+describe("数据工具", () => {
+  it("模拟", () => {
+    const bc = 模拟基本部件();
+    const dc = 模拟衍生部件();
+    const sc = 模拟拼接部件();
+    const c = 模拟复合体("⿰");
+    expect(是部件或全等(bc)).toBeTruthy();
+    expect(是部件或全等(dc)).toBeTruthy();
+    expect(是部件或全等(sc)).toBeTruthy();
+    expect(是部件或全等(c)).toBeFalsy();
   });
 });
 
-describe("misc", () => {
-
-  it("parseTSV should parse a TSV string and return a record with the values", () => {
-    const text = "A\t1\nB\t2\nC\t3"; // Example TSV string
-    expect(getRecordFromTSV(text)).toEqual({ A: 1, B: 2, C: 3 });
+describe("其他", () => {
+  it("解析频率映射", () => {
+    const text = [["的", "de5", "100"]]; // Example TSV string
+    expect(解析频率映射(text)).toEqual(new Map([["的:de5", 100]]));
   });
 });

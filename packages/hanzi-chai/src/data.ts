@@ -1,4 +1,4 @@
-import type { Feature } from "./classifier.js";
+import type { 笔画名称 } from "./classifier.js";
 
 export type N1 = [number];
 export type N2 = [number, number];
@@ -29,8 +29,8 @@ export type Point = N2;
  * start: 笔画的起点
  * curveList: 笔画的命令列表
  */
-export interface SVGStroke {
-  feature: Feature;
+export interface 矢量笔画数据 {
+  feature: 笔画名称;
   start: Point;
   curveList: Draw[];
 }
@@ -39,7 +39,7 @@ export interface SVGStroke {
  * 引用笔画
  * index: 源字中笔画的索引
  */
-export interface ReferenceStroke {
+export interface 引用笔画数据 {
   feature: "reference";
   index: number;
 }
@@ -47,22 +47,22 @@ export interface ReferenceStroke {
 /**
  * SVG 字形是一系列 SVG 笔画的列表
  */
-export type SVGGlyph = SVGStroke[];
+export type 矢量图形数据 = 矢量笔画数据[];
 
 /**
  * 广义的笔画，包括 SVG 笔画和引用笔画
  */
-export type Stroke = SVGStroke | ReferenceStroke;
+export type 笔画数据 = 矢量笔画数据 | 引用笔画数据;
 
 /**
  * 基本部件 BasicComponent
  * tags: 部件的标签
  * strokes: 部件包含的 SVG 笔画
  */
-export interface BasicComponent {
+export interface 基本部件数据 {
   type: "basic_component";
   tags?: string[];
-  strokes: SVGStroke[];
+  strokes: 矢量笔画数据[];
 }
 
 /**
@@ -73,27 +73,27 @@ export interface BasicComponent {
  *
  * 引用的笔画的内容需要在渲染时从源字中获取
  */
-export interface DerivedComponent {
+export interface 衍生部件数据 {
   type: "derived_component";
   tags?: string[];
   source: string;
-  strokes: Stroke[];
+  strokes: 笔画数据[];
 }
 
 /**
  * 拼接部件 SplicedComponent
  * 与复合体相同，但作为部件使用
  */
-export interface SplicedComponent extends Omit<Compound, "type"> {
+export interface 拼接部件数据 extends Omit<复合体数据, "type"> {
   type: "spliced_component";
 }
 
 /**
  * 部件，包括基本部件和派生部件
  */
-export type Component = BasicComponent | DerivedComponent | SplicedComponent;
+export type 部件数据 = 基本部件数据 | 衍生部件数据 | 拼接部件数据;
 
-export const operators = [
+export const 结构表示符列表 = [
   "⿰",
   "⿱",
   "⿲",
@@ -118,12 +118,14 @@ export const operators = [
  * 符合 Unicode 中的 Ideography Description Characters
  * 参见 https://en.wikipedia.org/wiki/Ideographic_Description_Characters_(Unicode_block)
  */
-export type Operator = (typeof operators)[number];
+export type 结构表示符 = (typeof 结构表示符列表)[number];
 
 /**
- * 一个笔画块
+ * 笔画块
+ * index: 部分的索引
+ * strokes: 笔画块包含的笔画数，0 表示该笔画块包含所有剩余的笔画
  */
-export interface Block {
+export interface 笔画块 {
   index: number;
   strokes: number;
 }
@@ -135,7 +137,7 @@ export interface Block {
  * gap3: 第三部分复合体和之前的间距
  * scale3: 第三部分复合体的缩放比例
  */
-export interface CompoundParameters {
+export interface 复合体参数 {
   gap2?: number;
   scale2?: number;
   gap3?: number;
@@ -149,13 +151,13 @@ export interface CompoundParameters {
  * tags: 复合体的标签
  * order: 笔画块的顺序
  */
-export interface Compound {
+export interface 复合体数据 {
   type: "compound";
-  operator: Operator;
+  operator: 结构表示符;
   operandList: string[];
   tags?: string[];
-  order?: Block[];
-  parameters?: CompoundParameters;
+  order?: 笔画块[];
+  parameters?: 复合体参数;
 }
 
 /**
@@ -163,7 +165,7 @@ export interface Compound {
  * source: 全等的源字
  * tags: 全等的标签
  */
-export interface Identity {
+export interface 全等数据 {
   type: "identity";
   tags?: string[];
   source: string;
@@ -172,14 +174,14 @@ export interface Identity {
 /**
  * 一个字形可以是复合体、部件或全等
  */
-export type Glyph = Component | Compound | Identity;
+export type 字形数据 = 部件数据 | 复合体数据 | 全等数据;
 
 /**
  * 字符的读音
  * pinyin: 字符的拼音
  * importance: 读音占总读音的比例，范围为 0 到 100
  */
-export interface Reading {
+export interface 读音数据 {
   pinyin: string;
   importance: number;
 }
@@ -196,15 +198,15 @@ export interface Reading {
  * glyphs: 字符的字形列表，其中每一个有可能是基本部件、派生部件或复合体
  * ambiguous: 字符是否有分部歧义
  */
-export interface PrimitiveCharacter {
+export interface 原始汉字数据 {
   unicode: number;
   tygf: 0 | 1 | 2 | 3;
   gb2312: 0 | 1 | 2;
   name: string | null;
   gf0014_id: number | null;
   gf3001_id: number | null;
-  readings: Reading[];
-  glyphs: Glyph[];
+  readings: 读音数据[];
+  glyphs: 字形数据[];
   ambiguous: boolean;
 }
 
@@ -213,21 +215,20 @@ export interface PrimitiveCharacter {
  * 与原始字符相比，省略了 ambiguous 字段，并且将 glyphs 字段替换为唯一的一个 glyph
  * 此时的 glyph 要么是基本部件，要么是复合体
  */
-export interface Character
-  extends Omit<PrimitiveCharacter, "glyphs" | "ambiguous"> {
-  glyph: BasicComponent | Compound;
+export interface 汉字数据 extends Omit<原始汉字数据, "glyphs" | "ambiguous"> {
+  glyph: 基本部件数据 | 复合体数据;
 }
 
-export interface ComponentCharacter extends Character {
-  glyph: BasicComponent;
+export interface 部件汉字数据 extends 汉字数据 {
+  glyph: 基本部件数据;
 }
 
-export interface CompoundCharacter extends Character {
-  glyph: Compound;
+export interface 复合体汉字数据 extends 汉字数据 {
+  glyph: 复合体数据;
 }
 
-/** 原始字符集，为字符名称到原始字符的映射 */
-export type PrimitiveRepertoire = Record<string, PrimitiveCharacter>;
+/** 原始字库数据，为字符名称到原始字符的映射 */
+export type 原始字库数据 = Record<string, 原始汉字数据>;
 
-/** 字符集，为字符名称到字符的映射 */
-export type Repertoire = Record<string, Character>;
+/** 字库数据，为字符名称到字符的映射 */
+export type 字库数据 = Record<string, 汉字数据>;

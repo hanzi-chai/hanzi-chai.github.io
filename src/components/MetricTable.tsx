@@ -1,11 +1,40 @@
 import "@antv/s2-react/dist/s2-react.min.css";
 import { useAtomValue } from "jotai";
-import { encodeResultAtom, meaningfulTypesAtom, typeLabels } from "~/atoms";
-import type { Objective, PartialWeightTypes } from "~/lib";
+import { encodeResultAtom, 默认目标类型原子, typeLabels } from "~/atoms";
+import type { Objective, 部分目标类型 } from "~/lib";
 import { fingeringLabels, type PartialMetric } from "~/lib";
 import { Flex } from "antd";
 import { Select } from "./Utils";
 import { useState } from "react";
+
+interface LevelMetric {
+  length: number;
+  frequency: number;
+}
+
+interface TierMetric {
+  top?: number;
+  duplication?: number;
+  levels?: LevelMetric[];
+  fingering?: (number | undefined)[];
+}
+
+export interface PartialMetric {
+  tiers?: TierMetric[];
+  duplication?: number;
+  key_distribution?: number;
+  pair_equivalence?: number;
+  extended_pair_equivalence?: number;
+  fingering?: (number | undefined)[];
+  levels?: LevelMetric[];
+}
+
+export interface Metric {
+  characters_full?: PartialMetric;
+  characters_short?: PartialMetric;
+  words_full?: PartialMetric;
+  words_short?: PartialMetric;
+}
 
 const { SheetComponent } = await import("~/components/export/s2react");
 
@@ -77,8 +106,8 @@ const preprocess = (partialMetric: PartialMetric) => {
 
 export default function MetricTable() {
   const [_, evaluateResult] = useAtomValue(encodeResultAtom);
-  const types = useAtomValue(meaningfulTypesAtom);
-  const [type, setType] = useState<PartialWeightTypes>(types[0]!);
+  const types = useAtomValue(默认目标类型原子);
+  const [type, setType] = useState<部分目标类型>(types[0]!);
   const data = preprocess(evaluateResult[type]!);
   return (
     <>

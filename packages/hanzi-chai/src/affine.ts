@@ -1,11 +1,11 @@
 import { add } from "./math.js";
 import type {
-  Compound,
+  复合体数据,
   Draw,
-  Operator,
+  结构表示符,
   Point,
-  SVGGlyph,
-  SVGStroke,
+  矢量图形数据,
+  矢量笔画数据,
 } from "./data.js";
 import { cloneDeep } from "lodash-es";
 import { 区间 } from "./bezier.js";
@@ -22,7 +22,7 @@ class 仿射变换 {
   static topThird = new 仿射变换(1, 0.33);
   static middleThird = new 仿射变换(1, 0.33, [0, 33]);
   static bottomThird = new 仿射变换(1, 0.33, [0, 66]);
-  static 查找表: Record<Operator, 仿射变换[]> = {
+  static 查找表: Record<结构表示符, 仿射变换[]> = {
     "⿰": [仿射变换.left, 仿射变换.right],
     "⿱": [仿射变换.top, 仿射变换.bottom],
     "⿲": [仿射变换.leftThird, 仿射变换.centerThird, 仿射变换.rightThird],
@@ -67,7 +67,7 @@ class 仿射变换 {
     return 新动作;
   }
 
-  public 变换笔画(笔画: SVGStroke): SVGStroke {
+  public 变换笔画(笔画: 矢量笔画数据): 矢量笔画数据 {
     const [x, y] = 笔画.start;
     const start = add(
       [x * this.横向缩放, y * this.纵向缩放] as Point,
@@ -81,19 +81,23 @@ class 仿射变换 {
     return 新笔画;
   }
 
-  public 变换笔画列表(glyph: SVGGlyph): SVGGlyph {
+  public 变换笔画列表(glyph: 矢量图形数据): 矢量图形数据 {
     return glyph.map((x) => this.变换笔画(x));
   }
 }
 
 class 图形盒子 {
   constructor(
-    private 笔画列表: SVGStroke[],
+    private 笔画列表: 矢量笔画数据[],
     private 横向区间: 区间,
     private 纵向区间: 区间,
   ) {}
 
-  static 从笔画列表构建(笔画列表: SVGStroke[]) {
+  获取笔画列表() {
+    return this.笔画列表;
+  }
+
+  static 从笔画列表构建(笔画列表: 矢量笔画数据[]) {
     let [xmin, ymin, xmax, ymax] = [
       Number.POSITIVE_INFINITY,
       Number.POSITIVE_INFINITY,
@@ -143,47 +147,45 @@ class 图形盒子 {
    * @param 部分列表 - 各部分渲染后的 SVG 图形
    * @returns 合并后的 SVG 图形
    */
-  static 仿射合并(复合体: Compound, 部分列表: 图形盒子[]) {
+  static 仿射合并(复合体: 复合体数据, 部分列表: 图形盒子[]) {
     const { operator, order, parameters } = 复合体;
-    const 变换后图形列表: SVGGlyph[] = [];
-    let 新横向边界 = new 区间(0, 100);
-    let 新纵向边界 = new 区间(0, 100);
+    const 变换后图形列表: 矢量图形数据[] = [];
+    let 新横向区间 = new 区间(0, 100);
+    let 新纵向区间 = new 区间(0, 100);
     if (["⿰", "⿲", "⿱", "⿳"].includes(operator)) {
       // 上下、上中下、左右、左中右，直接拼接
-      let 主轴起点 = 0;
       const 是左右结构 = ["⿰", "⿲"].includes(operator);
       for (const [
         index,
         { 笔画列表, 横向区间, 纵向区间 },
       ] of 部分列表.entries()) {
-        const 主轴长度 = 是左右结构 ? 横向区间.长度() : 纵向区间.长度();
         if (index === 0) {
           变换后图形列表.push(structuredClone(笔画列表));
-          新横向边界 = structuredClone(横向区间);
-          新纵向边界 = structuredClone(纵向区间);
-          主轴起点 = 是左右结构 ? 横向区间.interval[1] : 纵向区间.interval[1];
+          新横向区间 = new 区间(横向区间.起点(), 横向区间.终点());
+          新纵向区间 = new 区间(纵向区间.起点(), 纵向区间.终点());
           continue;
         }
-        let gap = 20;
+        let 间隔 = 20;
         if (index === 1 && parameters?.gap2 !== undefined) {
-          gap = parameters.gap2;
+          间隔 = parameters.gap2;
         } else if (index === 2 && parameters?.gap3 !== undefined) {
-          gap = parameters.gap3;
+          间隔 = parameters.gap3;
         }
-        主轴起点 += gap;
-        const increase = gap + 主轴长度;
+        const 主轴长度 = 是左右结构 ? 横向区间.长度() : 纵向区间.长度();
+        const 区间增加 = 间隔 + 主轴长度;
         let 变换: 仿射变换;
         if (是左右结构) {
-          变换 = new 仿射变换(1, 1, [主轴起点 - 横向区间.interval[0], 0]);
-          新横向边界.interval[1] += increase;
-          新纵向边界 = 新纵向边界.取并集(纵向区间);
+          const 横向平移 = 新横向区间.终点() + 间隔 - 横向区间.起点();
+          变换 = new 仿射变换(1, 1, [横向平移, 0]);
+          新横向区间.延长(区间增加);
+          新纵向区间 = 新纵向区间.取并集(纵向区间);
         } else {
-          变换 = new 仿射变换(1, 1, [0, 主轴起点 - 纵向区间.interval[0]]);
-          新纵向边界.interval[1] += increase;
-          新横向边界 = 新横向边界.取并集(横向区间);
+          const 纵向平移 = 新纵向区间.终点() + 间隔 - 纵向区间.起点();
+          变换 = new 仿射变换(1, 1, [0, 纵向平移]);
+          新纵向区间.延长(区间增加);
+          新横向区间 = 新横向区间.取并集(横向区间);
         }
         变换后图形列表.push(变换.变换笔画列表(笔画列表));
-        主轴起点 += 主轴长度;
       }
     } else {
       // 包围或结构，暂时还没有优化拼接的算法，用原来的仿射变换算法
@@ -192,22 +194,22 @@ class 图形盒子 {
         变换后图形列表.push(变换后图形);
       }
     }
-    const 合并图形: SVGGlyph = [];
+    const 合并图形: 矢量图形数据 = [];
     if (order === undefined) {
       合并图形.push(...变换后图形列表.flat());
     } else {
       for (const { index, strokes } of order) {
-        const glyph = 变换后图形列表[index];
-        if (glyph === undefined) continue;
+        const 笔画列表 = 变换后图形列表[index];
+        if (笔画列表 === undefined) continue;
         if (strokes === 0) {
-          合并图形.push(...glyph);
+          合并图形.push(...笔画列表);
         } else {
-          合并图形.push(...glyph.slice(0, strokes));
-          变换后图形列表[index] = glyph.slice(strokes);
+          合并图形.push(...笔画列表.slice(0, strokes));
+          变换后图形列表[index] = 笔画列表.slice(strokes);
         }
       }
     }
-    return new 图形盒子(合并图形, 新横向边界, 新纵向边界);
+    return new 图形盒子(合并图形, 新横向区间, 新纵向区间);
   }
 }
 

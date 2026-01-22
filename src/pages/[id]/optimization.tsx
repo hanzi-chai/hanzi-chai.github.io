@@ -21,7 +21,7 @@ import {
 import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { Suspense, useMemo, useRef } from "react";
-import { objectiveAtom, regularizationStrengthAtom } from "~/atoms";
+import { 目标原子, 正则化强度原子 } from "~/atoms";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
 import {
@@ -270,7 +270,7 @@ const PartialObjective = ({
   type: "characters_full" | "characters_short" | "words_full" | "words_short";
 }) => {
   const partialObjectiveAtom = useMemo(
-    () => focusAtom(objectiveAtom, (o) => o.prop(type)),
+    () => focusAtom(目标原子, (o) => o.prop(type)),
     [type],
   );
   const tiersAtom = useMemo(
@@ -408,7 +408,7 @@ const PartialObjective = ({
 
 export default function Optimization() {
   const [regularizationStrength, setRegularizationStrength] = useAtom(
-    regularizationStrengthAtom,
+    正则化强度原子,
   );
   return (
     <EditorRow>

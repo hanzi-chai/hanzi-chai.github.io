@@ -1,12 +1,12 @@
 import { Button, Flex, Popover, Select, Typography } from "antd";
 import { sortBy } from "lodash-es";
 import {
-  alphabetAtom,
+  字母表原子,
   currentElementAtom,
-  mappingAtom,
-  mappingGeneratorsAtom,
-  mappingSpaceAtom,
-  mappingVariablesAtom,
+  决策原子,
+  决策生成器配置原子,
+  决策空间原子,
+  变量规则映射原子,
   useAddAtom,
   useAtom,
   useAtomValue,
@@ -117,10 +117,10 @@ const ValueDescriptionEditor = ({
 };
 
 export const RulesForm = ({ name }: { name: string }) => {
-  const alphabet = useAtomValue(alphabetAtom);
-  const mappingSpace = useAtomValue(mappingSpaceAtom);
-  const addMappingSpace = useAddAtom(mappingSpaceAtom);
-  const removeMappingSpace = useRemoveAtom(mappingSpaceAtom);
+  const alphabet = useAtomValue(字母表原子);
+  const mappingSpace = useAtomValue(决策空间原子);
+  const addMappingSpace = useAddAtom(决策空间原子);
+  const removeMappingSpace = useRemoveAtom(决策空间原子);
   const values = mappingSpace[name] ?? [];
   const creators = {
     禁用: () => ({ value: null, score: 0 }),
@@ -167,8 +167,8 @@ export const RulesForm = ({ name }: { name: string }) => {
 };
 
 const MappingVariablesForm = () => {
-  const alphabet = useAtomValue(alphabetAtom);
-  const [mappingVariables, setMappingVariables] = useAtom(mappingVariablesAtom);
+  const alphabet = useAtomValue(字母表原子);
+  const [mappingVariables, setMappingVariables] = useAtom(变量规则映射原子);
   const variables = Object.entries(mappingVariables).map(([name, rule]) => ({
     name,
     keys: rule.keys,
@@ -208,10 +208,8 @@ const MappingVariablesForm = () => {
 };
 
 const MappingGeneratorsForm = () => {
-  const alphabet = useAtomValue(alphabetAtom);
-  const [mappingGenerators, setMappingGenerators] = useAtom(
-    mappingGeneratorsAtom,
-  );
+  const alphabet = useAtomValue(字母表原子);
+  const [mappingGenerators, setMappingGenerators] = useAtom(决策生成器配置原子);
   return (
     <ModalForm
       title="生成器配置"
@@ -244,12 +242,12 @@ const MappingGeneratorsForm = () => {
 };
 
 export default function MappingSpace() {
-  const mapping = useAtomValue(mappingAtom);
-  const mappingSpace = useAtomValue(mappingSpaceAtom);
-  const setMappingSpace = useSetAtom(mappingSpaceAtom);
-  const addMappingSpace = useAddAtom(mappingSpaceAtom);
+  const mapping = useAtomValue(决策原子);
+  const mappingSpace = useAtomValue(决策空间原子);
+  const setMappingSpace = useSetAtom(决策空间原子);
+  const addMappingSpace = useAddAtom(决策空间原子);
   const [character, setCharacter] = useState<string | undefined>(undefined);
-  const alphabet = useAtomValue(alphabetAtom);
+  const alphabet = useAtomValue(字母表原子);
   const currentElement = useAtomValue(currentElementAtom);
   return (
     <Flex vertical gap="middle">

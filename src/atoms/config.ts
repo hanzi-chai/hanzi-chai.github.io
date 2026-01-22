@@ -1,21 +1,19 @@
 import { atom } from "jotai";
+import { atomWithLocation } from "jotai-location";
+import { focusAtom } from "jotai-optics";
 import { atomFamily, atomWithStorage } from "jotai/utils";
-import type {
-  Analysis,
-  Data,
-  EncoderConfig,
-  DiagramConfig,
-  Keyboard,
-} from "~/lib";
 import {
   defaultOptimization,
-  type Algebra,
-  type Config,
-  type Info,
+  type 分析配置,
+  type 图示配置,
+  type 基本信息,
+  type 拼写运算,
+  type 数据配置,
+  type 编码配置,
+  type 配置,
+  type 键盘配置,
 } from "~/lib";
-import { examples, defaultConfig, Example } from "~/templates";
-import { focusAtom } from "jotai-optics";
-import { atomWithLocation } from "jotai-location";
+import { defaultConfig, examples, type Example } from "~/templates";
 
 const locationAtom = atomWithLocation();
 
@@ -27,44 +25,42 @@ export const idAtom = atom((get) => {
 });
 
 const configStorage = atomFamily((id: string) =>
-  atomWithStorage<Config>(id, examples[id as Example] ?? defaultConfig),
+  atomWithStorage<配置>(id, examples[id as Example] ?? defaultConfig),
 );
 
 export const configAtom = atom(
   (get) => get(configStorage(get(idAtom))),
-  (get, set, value: Config) => set(configStorage(get(idAtom)), value),
+  (get, set, value: 配置) => set(configStorage(get(idAtom)), value),
 );
-configAtom.debugLabel = "config";
 
-export const infoAtom = focusAtom(configAtom, (o) =>
-  o.prop("info").valueOr({} as Info),
+export const 基本信息原子 = focusAtom(configAtom, (o) =>
+  o.prop("info").valueOr({} as 基本信息),
 );
-infoAtom.debugLabel = "config.info";
-export const dataAtom = focusAtom(configAtom, (o) =>
-  o.prop("data").valueOr({} as Data),
+
+export const 数据配置原子 = focusAtom(configAtom, (o) =>
+  o.prop("data").valueOr({} as 数据配置),
 );
-dataAtom.debugLabel = "config.data";
-export const analysisAtom = focusAtom(configAtom, (o) =>
-  o.prop("analysis").valueOr({} as Analysis),
+
+export const 分析配置原子 = focusAtom(configAtom, (o) =>
+  o.prop("analysis").valueOr({} as 分析配置),
 );
-analysisAtom.debugLabel = "config.analysis";
-export const algebraAtom = focusAtom(configAtom, (o) =>
-  o.prop("algebra").valueOr({} as Algebra),
+
+export const 拼写运算自定义原子 = focusAtom(configAtom, (o) =>
+  o.prop("algebra").valueOr({} as Record<string, 拼写运算>),
 );
-algebraAtom.debugLabel = "config.algebra";
-export const keyboardAtom = focusAtom(configAtom, (o) =>
-  o.prop("form").valueOr({} as Keyboard),
+
+export const 键盘原子 = focusAtom(configAtom, (o) =>
+  o.prop("form").valueOr({} as 键盘配置),
 );
-keyboardAtom.debugLabel = "config.keyboards";
-export const encoderAtom = focusAtom(configAtom, (o) =>
-  o.prop("encoder").valueOr({} as EncoderConfig),
+
+export const 编码配置原子 = focusAtom(configAtom, (o) =>
+  o.prop("encoder").valueOr({} as 编码配置),
 );
-encoderAtom.debugLabel = "config.encoder";
-export const optimAtom = focusAtom(configAtom, (o) =>
+
+export const 优化配置原子 = focusAtom(configAtom, (o) =>
   o.prop("optimization").valueOr(defaultOptimization),
 );
-optimAtom.debugLabel = "config.optimization";
-export const diagramAtom = focusAtom(configAtom, (o) =>
-  o.prop("diagram").valueOr({ layout: [], contents: [] } as DiagramConfig),
+
+export const 图示配置原子 = focusAtom(configAtom, (o) =>
+  o.prop("diagram").valueOr({ layout: [], contents: [] } as 图示配置),
 );
-diagramAtom.debugLabel = "config.diagram";

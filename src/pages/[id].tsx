@@ -13,16 +13,16 @@ import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import CusSpin from "~/components/CustomSpin";
 import {
-  infoAtom,
+  基本信息原子,
   useSetAtom,
   useAtomValue,
-  fetchAsset,
-  primitiveRepertoireAtom,
+  拉取资源,
+  原始字库数据原子,
 } from "~/atoms";
 import { listToObject } from "~/lib";
 import { examples } from "~/templates";
 import { AppstoreOutlined } from "@ant-design/icons";
-import { fromModel } from "~/api";
+import { 从模型构建 } from "~/api";
 import { getCurrentId } from "~/utils";
 
 const items: MenuProps["items"] = [
@@ -39,7 +39,7 @@ const items: MenuProps["items"] = [
 ];
 
 const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
-  const info = useAtomValue(infoAtom);
+  const info = useAtomValue(基本信息原子);
   return (
     <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
       <div>{info?.name ?? "未命名"}</div>
@@ -137,15 +137,7 @@ function EditorLayout() {
 }
 
 export default function Contextualized() {
-  let id = getCurrentId();
-  const setRepertoire = useSetAtom(primitiveRepertoireAtom);
-
-  useEffect(() => {
-    fetchAsset("repertoire.json.deflate").then((value) =>
-      setRepertoire(listToObject(value.map(fromModel))),
-    );
-  }, [setRepertoire]);
-
+  const id = getCurrentId();
   if (!(id in localStorage || id in examples)) {
     return <Empty description="无方案数据" />;
   }

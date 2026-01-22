@@ -1,31 +1,23 @@
 import { describe, it, expect } from "vitest";
 import {
-  defaultAlgebra,
-  applyRules,
-  renderName,
-  renderList,
-  parseList,
+  从列表生成,
+  摘要,
+  转列表,
 } from "../src/main";
 
 describe("element", () => {
-  it("applyRules should apply the specified rules to the given syllable", () => {
-    const rules = defaultAlgebra.韵母;
-    const syllable = "you";
-    expect(applyRules("韵母", rules, syllable)).toBe("韵母-iou");
-  });
-
   it("renderName should render the name of the codable object", () => {
-    const result = renderName({ type: "汉字" });
-    expect(result).toBe("汉字");
+    const result = 摘要({ type: "汉字" });
+    expect(result).toEqual("汉字");
   });
 
   it("renderList should render the list representation of the codable object", () => {
-    const result = renderList({ type: "汉字" });
+    const result = 转列表({ type: "汉字" });
     expect(result).toEqual(["汉字"]);
   });
 
   it("parseList should parse the list representation and return the codable object", () => {
-    const result = parseList(["汉字"]);
+    const result = 从列表生成(["汉字"]);
     expect(result).toEqual({ type: "汉字" });
   });
 

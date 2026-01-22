@@ -1,6 +1,6 @@
 import { Col, Row, Statistic, Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { mappingAtom } from "~/atoms";
+import { 决策原子 } from "~/atoms";
 import { isMerge } from "~/lib";
 
 interface Count {
@@ -59,7 +59,7 @@ const ElementSubCounter = ({
 };
 
 export default function ElementCounter() {
-  const mapping = useAtomValue(mappingAtom);
+  const mapping = useAtomValue(决策原子);
   const elements = Object.keys(mapping);
   const mainElements = elements.filter((e) => !isMerge(mapping[e]!));
   const mainCount = countElementByCategory(mainElements);

@@ -17,7 +17,7 @@ import type {
 import type { Feature } from "~/lib";
 import { getDummySVGStroke, getGlyphBoundingBox, schema } from "~/lib";
 import { getDummyReferenceStroke, isComponent } from "~/lib";
-import { allRepertoireAtom, useAtomValue } from "~/atoms";
+import { 原始字库原子, useAtomValue } from "~/atoms";
 import CharacterSelect from "./CharacterSelect";
 import type {
   ProFormInstance,
@@ -221,7 +221,7 @@ export default function ComponentForm({
   primary?: boolean;
   readonly?: boolean;
 }) {
-  const repertoire = useAtomValue(allRepertoireAtom);
+  const repertoire = useAtomValue(原始字库原子);
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (

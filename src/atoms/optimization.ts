@@ -1,16 +1,12 @@
 import { focusAtom } from "jotai-optics";
-import { optimAtom } from ".";
+import { 优化配置原子 } from ".";
 
-export const objectiveAtom = focusAtom(optimAtom, (o) => o.prop("objective"));
-objectiveAtom.debugLabel = "optimization.objective";
+export const 目标原子 = focusAtom(优化配置原子, (o) => o.prop("objective"));
 
-export const metaheuristicAtom = focusAtom(optimAtom, (o) =>
+export const 求解器原子 = focusAtom(优化配置原子, (o) =>
   o.prop("metaheuristic"),
 );
-metaheuristicAtom.debugLabel = "optimization.metaheuristic";
 
-export const regularizationStrengthAtom = focusAtom(objectiveAtom, (o) =>
+export const 正则化强度原子 = focusAtom(目标原子, (o) =>
   o.prop("regularization_strength"),
 );
-regularizationStrengthAtom.debugLabel =
-  "optimization.objective.regularization_strength";

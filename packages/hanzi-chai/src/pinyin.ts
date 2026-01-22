@@ -1,10 +1,8 @@
-import type { Algebra, EncoderConfig, Rule } from "./config.js";
-import type 字库 from "./repertoire.js";
-import type { Dictionary } from "./utils.js";
+import type { 拼写运算, 运算规则 } from "./config.js";
 
 const r = String.raw;
 
-const defaultAlgebra: Record<string, Rule[]> = {
+const 拼写运算查找表: Record<string, 拼写运算> = {
   声母: [
     { type: "xform", from: "^([bpmfdtnlgkhjqxzcsr]h?|^).+$", to: "$1" },
     { type: "xform", from: "^$", to: "0" },
@@ -31,118 +29,63 @@ const defaultAlgebra: Record<string, Rule[]> = {
   末字母: [{ type: "xform", from: r`.*(.)\d`, to: "$1" }],
 };
 
-interface 一字词分析 {
-  词: string;
-  拼音: string;
-  拼写运算: Map<string, string>;
+function 合并拼写运算(自定义?: Record<string, 拼写运算>) {
+  const 查找表 = new Map<string, 拼写运算>();
+  const 合并 = { ...拼写运算查找表, ...(自定义 ?? {}) };
+  for (const [名称, 规则列表] of Object.entries(合并)) {
+    查找表.set(名称, 规则列表);
+  }
+  return 查找表;
 }
 
-interface 多字词分析 {
-  词: string;
-  拼音: string[];
-  拼写运算: Map<string, string>[];
-}
-
-interface 拼音分析结果 {
-  一字词: 一字词分析[];
-  多字词: 多字词分析[];
-}
+type 拼音元素映射 = Map<string, string>;
 
 interface 拼音分析器 {
-  分析(
-    字库: 字库,
-    一字词列表: string[],
-    多字词列表: Dictionary,
-    频率: Map<string, number>,
-  ): 拼音分析结果;
+  分析(词: string, 拼音: string[]): 拼音元素映射[];
 }
 
-interface 拼音分析配置 {
-  编码器: EncoderConfig;
-  拼写运算: Algebra;
-}
+type 拼音分析配置 = Map<string, 拼写运算>;
 
 class 默认拼音分析器 implements 拼音分析器 {
   static readonly type = "默认";
-  private 拼写运算: Map<string, Rule[]>;
+  private 音节表缓存: Map<string, 拼音元素映射> = new Map();
+  constructor(private 拼写运算映射: Map<string, 拼写运算>) {}
 
-  constructor(config: 拼音分析配置) {
-    const 拼写运算 = new Map<string, Rule[]>();
-    for (const value of Object.values(config.编码器.sources)) {
-      const object = value.object;
-      if (object && object.type === "字音") {
-        拼写运算.set(object.subtype, config.拼写运算[object.subtype] || []);
+  分析(_词: string, 拼音: string[]) {
+    const 元素映射列表: 拼音元素映射[] = [];
+    for (const 音节 of 拼音) {
+      let 音节结果 = this.音节表缓存.get(音节);
+      if (!音节结果) {
+        音节结果 = new Map<string, string>();
+        for (const [名称, 规则列表] of this.拼写运算映射.entries()) {
+          const 变换后 = 默认拼音分析器.应用规则列表(名称, 规则列表, 音节);
+          音节结果.set(名称, 变换后);
+        }
+        this.音节表缓存.set(音节, 音节结果);
       }
+      元素映射列表.push(音节结果);
     }
-    this.拼写运算 = 拼写运算;
+    return 元素映射列表;
   }
 
-  分析(字库: 字库, 一字词列表: string[], 多字词列表: Dictionary) {
-    const 音节表 = new Set<string>("");
-    for (const char of 一字词列表) {
-      const readings = 字库.getReadings(char);
-      readings?.map((x) => 音节表.add(x.pinyin));
-    }
-    for (const [, pinyin] of 多字词列表) {
-      for (const syllable of pinyin.split(" ")) {
-        音节表.add(syllable);
-      }
-    }
-
-    const 运算结果: Map<string, Map<string, string>> = new Map();
-    for (const 音节 of 音节表) {
-      const 新结果: Map<string, string> = new Map();
-      for (const [名称, 规则] of this.拼写运算.entries()) {
-        const 变换后 = 默认拼音分析器.applyRules(名称, 规则, 音节);
-        新结果.set(名称, 变换后);
-      }
-      运算结果.set(音节, 新结果);
-    }
-
-    const 一字词: 一字词分析[] = [];
-    for (const char of 一字词列表) {
-      const readings = 字库.getReadings(char) ?? [];
-      if (readings.length === 0) {
-        readings.push({ pinyin: "", importance: 100 });
-      }
-      for (const { pinyin } of readings) {
-        const 拼写运算 = 运算结果.get(pinyin)!;
-        一字词.push({ 词: char, 拼音: pinyin, 拼写运算 });
-      }
-    }
-
-    const 多字词: 多字词分析[] = [];
-    for (const [word, pinyin] of 多字词列表) {
-      const syllables = pinyin.split(" ");
-      const 拼写运算: Map<string, string>[] = [];
-      for (const syllable of syllables) {
-        const result = 运算结果.get(syllable)!;
-        拼写运算.push(result);
-      }
-      多字词.push({ 词: word, 拼音: syllables, 拼写运算 });
-    }
-
-    return { 一字词, 多字词 };
-  }
-
-  static applyRules(name: string, rules: Rule[], syllable: string) {
-    let result = syllable;
-    for (const { type, from, to } of rules) {
+  static 应用规则列表(名称: string, 规则列表: 运算规则[], 音节: string) {
+    let 结果 = 音节;
+    for (const { type, from, to } of 规则列表) {
       switch (type) {
         case "xform":
-          result = result.replace(new RegExp(from), to);
+          结果 = 结果.replace(new RegExp(from), to);
           break;
         case "xlit":
-          result = result.replace(new RegExp(`[${from}]`), (s) => {
+          结果 = 结果.replace(new RegExp(`[${from}]`), (s) => {
             const index = from.indexOf(s);
             return to[index] || "";
           });
           break;
       }
     }
-    return `${name}-${result}`;
+    return `${名称}-${结果}`;
   }
 }
 
-export { 默认拼音分析器, defaultAlgebra };
-export type { 一字词分析, 多字词分析, 拼音分析配置, 拼音分析结果, 拼音分析器 };
+export { 默认拼音分析器, 拼写运算查找表, 合并拼写运算 };
+export type { 拼音分析配置, 拼音分析器 };

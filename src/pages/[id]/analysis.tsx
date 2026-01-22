@@ -15,19 +15,19 @@ import {
 } from "antd";
 import {
   useAtomValue,
-  sequenceAtom,
+  如笔顺映射原子,
   displayAtom,
-  repertoireAtom,
+  如字库原子,
   useChaifenTitle,
-  customizeAtom,
+  自定义拆分原子,
   charactersAtom,
-  mappingAtom,
-  analysisConfigAtom,
+  决策原子,
+  如字形分析配置原子,
   adaptedFrequencyAtom,
-  dictionaryAtom,
-  algebraAtom,
-  mappingSpaceAtom,
-  dynamicCustomizeAtom,
+  词典原子,
+  拼写运算自定义原子,
+  决策空间原子,
+  动态自定义拆分原子,
   useAtom,
   serializerAtom,
 } from "~/atoms";
@@ -45,7 +45,7 @@ import {
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
-import { analysisResultAtom } from "~/atoms";
+import { 如字形分析结果原子 } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
 import { Display, Select } from "~/components/Utils";
 
@@ -98,27 +98,27 @@ const ConfigureRules = () => {
 
 const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const [step, setStep] = useState(0 as 0 | 1);
-  const repertoire = useAtomValue(repertoireAtom);
-  const sequenceMap = useAtomValue(sequenceAtom);
-  const analysisResult = useAtomValue(analysisResultAtom);
+  const repertoire = useAtomValue(如字库原子);
+  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const analysisResult = useAtomValue(如字形分析结果原子);
   const { componentResults, compoundResults, componentError, compoundError } =
     analysisResult;
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
-  const dictionary = useAtomValue(dictionaryAtom);
-  const algebra = useAtomValue(algebraAtom);
+  const dictionary = useAtomValue(词典原子);
+  const algebra = useAtomValue(拼写运算自定义原子);
   const characters = useAtomValue(charactersAtom);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(displayAtom);
-  const customize = useAtomValue(customizeAtom);
-  const dynamicCustomize = useAtomValue(dynamicCustomizeAtom);
+  const customize = useAtomValue(自定义拆分原子);
+  const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const allCustomizedKeys = new Set([
     ...Object.keys(customize),
     ...Object.keys(dynamicCustomize),
   ]);
-  const mapping = useAtomValue(mappingAtom);
+  const mapping = useAtomValue(决策原子);
   const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
-  const analysisConfig = useAtomValue(analysisConfigAtom);
+  const analysisConfig = useAtomValue(如字形分析配置原子);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
   const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {

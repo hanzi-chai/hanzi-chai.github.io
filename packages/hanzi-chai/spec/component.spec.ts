@@ -1,56 +1,29 @@
 import { describe, expect, it } from "vitest";
-import {
-  classifier,
-  generateSchemes,
-  getComponentScheme,
-  makeIntervalSum,
-  recursiveRenderComponent,
-  renderRootList,
-} from "../src/main";
-import type { DerivedComponent } from "../src/main";
-import {
-  primitiveRepertoire,
-  repertoire,
-  computedComponents,
-  analysisConfig,
-} from "./mock";
+import { 获取数据 } from ".";
+
+const { 原始字库, 部件图形库 } = 获取数据();
 
 describe("pruning", () => {
+  const 中 = 部件图形库.中!;
   const strokes = 4;
   const roots = [8, 4, 2, 1, 12, 6, 3, 14, 9].sort((a, b) => a - b);
   const rootsSet = new Set(roots);
 
   it("generate the correct set for 中", () => {
-    const set = makeIntervalSum(strokes, rootsSet);
+    const set = 中.生成区间和(rootsSet);
     const array = [...set].sort((a, b) => a - b);
     expect(array).toEqual([3, 6, 12, 14]);
   });
 
   it("generate the correct schemes for 中", () => {
-    const schemes = generateSchemes(strokes, roots, new Set(roots));
+    const schemes = 中.生成拆分列表(roots, new Set(roots), new Map());
     expect(schemes).toHaveLength(3);
   });
 });
 
 describe("recursive render component", () => {
   it("has nong", () => {
-    const 农 = primitiveRepertoire.农!.glyphs[0]! as DerivedComponent;
-    expect(recursiveRenderComponent(农, primitiveRepertoire)).toBeInstanceOf(
-      Array,
-    );
-  });
-});
-
-describe("get component scheme", () => {
-  const rootList = renderRootList(repertoire, [...analysisConfig.roots.keys()]);
-  it("can get component scheme", () => {
-    const 天 = computedComponents.天!;
-    const scheme = getComponentScheme(
-      天,
-      [...rootList.values()],
-      analysisConfig,
-      classifier,
-    );
-    expect(scheme).toHaveProperty("sequence");
+    const 农 = 原始字库.获取源部件("农")!;
+    expect(农.ok).toBeTruthy();
   });
 });

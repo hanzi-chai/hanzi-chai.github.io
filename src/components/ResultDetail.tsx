@@ -1,7 +1,12 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Element from "./Element";
-import { customizeAtom, selectorAtom, useAddAtom, useAtomValue } from "~/atoms";
+import {
+  自定义拆分原子,
+  过滤器列表原子,
+  useAddAtom,
+  useAtomValue,
+} from "~/atoms";
 import { sieveMap } from "~/lib";
 import type { SchemeWithData } from "~/lib";
 import { Display } from "./Utils";
@@ -15,8 +20,8 @@ export default function ResultDetail({
   data: SchemeWithData[];
   map: Map<string, number[][]>;
 }) {
-  const selector = useAtomValue(selectorAtom);
-  const addCustomization = useAddAtom(customizeAtom);
+  const selector = useAtomValue(过滤器列表原子);
+  const addCustomization = useAddAtom(自定义拆分原子);
 
   const columns: ColumnsType<SchemeWithData> = [
     {

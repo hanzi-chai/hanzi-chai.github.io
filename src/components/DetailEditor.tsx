@@ -2,12 +2,12 @@ import { Panel } from "reactflow";
 import styled from "styled-components";
 import { Cascader, Flex, Form, Typography } from "antd";
 import type { CodableObject, Condition, Source, UnaryOp } from "~/lib";
-import { parseList, defaultAlgebra, renderList } from "~/lib";
+import { parseList, 拼写运算查找表, renderList } from "~/lib";
 import { Select } from "./Utils";
 import { ops, unaryOps } from "~/lib";
 import TextArea from "antd/es/input/TextArea";
-import { useAtomValue, keyboardAtom, algebraAtom } from "~/atoms";
-import { customElementsAtom } from "~/atoms";
+import { useAtomValue, 键盘原子, 拼写运算自定义原子 } from "~/atoms";
+import { 自定义元素原子 } from "~/atoms";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -36,9 +36,9 @@ export default function DetailEditor({
   data: Source | Condition | undefined;
   setData: (data: Source | Condition) => void;
 }) {
-  const { alphabet } = useAtomValue(keyboardAtom);
-  const algebra = useAtomValue(algebraAtom);
-  const customElements = useAtomValue(customElementsAtom);
+  const { alphabet } = useAtomValue(键盘原子);
+  const algebra = useAtomValue(拼写运算自定义原子);
+  const customElements = useAtomValue(自定义元素原子);
   if (data === undefined) return null;
   const genericIndices = [...Array(10).keys()].flatMap((x) => [
     x + 1,
@@ -48,7 +48,7 @@ export default function DetailEditor({
     {
       value: "字音",
       label: "字音",
-      children: [...Object.keys(defaultAlgebra), ...Object.keys(algebra)].map(
+      children: [...Object.keys(拼写运算查找表), ...Object.keys(algebra)].map(
         (v) => ({
           value: v,
           label: v,

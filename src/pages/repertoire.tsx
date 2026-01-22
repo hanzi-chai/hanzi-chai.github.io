@@ -1,13 +1,13 @@
 import { Flex, Layout, Table, Typography } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { Suspense, useEffect } from "react";
-import { fromModel } from "~/api";
-import { fetchAsset, primitiveRepertoireAtom, useAtom } from "~/atoms";
+import { 从模型构建 } from "~/api";
+import { 拉取资源, 原始字库数据原子, useAtom } from "~/atoms";
 import CustomSpin from "~/components/CustomSpin";
 import { listToObject, UnicodeBlock, unicodeBlocks } from "~/lib";
 
 export default function Repertoire() {
-  const [repertoire, setRepertoire] = useAtom(primitiveRepertoireAtom);
+  const [repertoire, setRepertoire] = useAtom(原始字库数据原子);
   const unicodes = Object.keys(repertoire).map((key) => key.codePointAt(0)!);
   for (const unicode of unicodes) {
     let identified = false;
@@ -22,8 +22,8 @@ export default function Repertoire() {
   }
 
   useEffect(() => {
-    fetchAsset("repertoire.json.deflate").then((value) =>
-      setRepertoire(listToObject(value.map(fromModel))),
+    拉取资源("repertoire.json.deflate").then((value) =>
+      setRepertoire(listToObject(value.map(从模型构建))),
     );
   }, [setRepertoire]);
 

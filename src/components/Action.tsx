@@ -7,47 +7,47 @@ import {
   Popconfirm,
   Popover,
 } from "antd";
+import type { MenuProps } from "antd/lib";
+import { isInteger } from "lodash-es";
+import * as O from "optics-ts/standalone";
 import type { ForwardedRef } from "react";
 import { forwardRef, useContext, useState } from "react";
 import {
+  remoteBatchUpdate,
   remoteCreate,
   remoteCreateWithoutUnicode,
-  remoteUpdate,
   remoteRemove,
-  remoteBatchUpdate,
+  remoteUpdate,
 } from "~/api";
+import {
+  useAddAtom,
+  useAtom,
+  useAtomValue,
+  useRemoveAtom,
+  下一个可用的码位原子,
+  原始字库数据原子,
+  字形自定义原子,
+  用户原始字库数据原子,
+  读音自定义原子,
+} from "~/atoms";
 import { DeleteButton, NumberInput, Select } from "~/components/Utils";
-import type { Glyph, PrimitiveRepertoire, Reading } from "~/lib";
 import {
   chars,
-  getDummyCompound,
-  getDummyDerivedComponent,
-  getDummyBasicComponent,
-  getDummySplicedComponent,
-  isPUA,
+  创建原始汉字数据,
+  type 原始字库数据,
+  type 原始汉字数据,
+  type 字形数据,
+  模拟基本部件,
+  模拟复合体,
+  模拟拼接部件,
+  模拟衍生部件,
+  type 读音数据,
 } from "~/lib";
-import {
-  useAtomValue,
-  repertoireAtom,
-  nextUnicodeAtom,
-  useAddAtom,
-  useRemoveAtom,
-  userRepertoireAtom,
-  primitiveRepertoireAtom,
-  customGlyphAtom,
-  errorFeedback,
-  RemoteContext,
-  customReadingsAtom,
-  useAtom,
-} from "~/atoms";
-import type { PrimitiveCharacter, Compound, Component } from "~/lib";
+import { errorFeedback, RemoteContext } from "~/utils";
+import CharacterSelect from "./CharacterSelect";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
-import type { MenuProps } from "antd/lib";
-import * as O from "optics-ts/standalone";
 import ReadingForm from "./ReadingForm";
-import { isInteger } from "lodash-es";
-import CharacterSelect from "./CharacterSelect";
 
 interface CreateProps {
   charOrName: string;
@@ -68,34 +68,18 @@ export const Create = forwardRef(
 );
 
 function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
-  const addUser = useAddAtom(userRepertoireAtom);
-  const add = useAddAtom(primitiveRepertoireAtom);
+  const addUser = useAddAtom(用户原始字库数据原子);
+  const add = useAddAtom(原始字库数据原子);
   const remote = useContext(RemoteContext);
-  const nextUnicode = useAtomValue(nextUnicodeAtom);
-  const determinedRepertoire = useAtomValue(repertoireAtom);
+  const nextUnicode = useAtomValue(下一个可用的码位原子);
+  const 原始字库数据 = useAtomValue(原始字库数据原子);
   const options = [
     { label: "部件", value: "component" },
     { label: "复合体", value: "compound" },
   ];
   const handle = async ({ charOrName, type }: CreateProps) => {
-    const base: Omit<PrimitiveCharacter, "unicode" | "name"> = {
-      tygf: 0 as const,
-      gb2312: 0 as const,
-      gf0014_id: null,
-      gf3001_id: null,
-      readings: [],
-      glyphs: [
-        type === "component"
-          ? getDummyDerivedComponent()
-          : getDummyCompound("⿰"),
-      ],
-      ambiguous: false,
-    };
+    const glyph = type === "component" ? 模拟衍生部件() : 模拟复合体("⿰");
     if (chars(charOrName) > 1) {
-      const raw: Omit<PrimitiveCharacter, "unicode"> = {
-        ...base,
-        name: charOrName,
-      };
       let char: string;
       if (remote) {
         const unicode = await remoteCreateWithoutUnicode({
@@ -103,21 +87,26 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
           name: charOrName,
         });
         if (errorFeedback(unicode)) return;
-        const value: PrimitiveCharacter = { unicode, ...raw };
+        const value: 原始汉字数据 = 创建原始汉字数据(
+          unicode,
+          [glyph],
+          charOrName,
+        );
         char = String.fromCodePoint(unicode);
         add(char, value);
       } else {
-        const value: PrimitiveCharacter = { unicode: nextUnicode, ...raw };
+        const value: 原始汉字数据 = 创建原始汉字数据(
+          nextUnicode,
+          [glyph],
+          charOrName,
+        );
         char = String.fromCodePoint(nextUnicode);
         addUser(char, value);
       }
       return char;
     }
-    const character: PrimitiveCharacter = {
-      unicode: charOrName.codePointAt(0)!,
-      name: null,
-      ...base,
-    };
+    const unicode = charOrName.codePointAt(0)!;
+    const character: 原始汉字数据 = 创建原始汉字数据(unicode, [glyph]);
     if (remote) {
       const res = await remoteCreate(character);
       if (errorFeedback(res)) return;
@@ -140,9 +129,9 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
         rules={[
           {
             required: true,
-            validator: (_, value) => {
+            validator: (_, value: string) => {
               if (!value) return Promise.reject(new Error("不能为空"));
-              if (determinedRepertoire[value as string] !== undefined)
+              if (原始字库数据[value] !== undefined)
                 return Promise.reject(new Error("字符已存在"));
               return Promise.resolve();
             },
@@ -170,7 +159,7 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
 const planMerge = (
   oldUnicode: number,
   newUnicode: number,
-  repertoire: PrimitiveRepertoire,
+  repertoire: 原始字库数据,
 ) => {
   const before = String.fromCodePoint(oldUnicode);
   const after = String.fromCodePoint(newUnicode);
@@ -181,9 +170,9 @@ const planMerge = (
     }
     return s;
   };
-  const payload: PrimitiveRepertoire = {};
+  const payload: 原始字库数据 = {};
   for (const [key, value] of Object.entries(repertoire)) {
-    let o = { changed: false };
+    const o = { changed: false };
     const newValue = structuredClone(value);
     newValue.glyphs.forEach((x) => {
       if (x.type === "derived_component" || x.type === "identity") {
@@ -202,7 +191,7 @@ const planMerge = (
 export const Merge = ({ unicode }: { unicode: number }) => {
   const [newName, setNewName] = useState("");
   const remote = useContext(RemoteContext);
-  const [repertoire, setRepertoire] = useAtom(primitiveRepertoireAtom);
+  const [repertoire, setRepertoire] = useAtom(原始字库数据原子);
   return (
     <Popconfirm
       title="输入笔画搜索"
@@ -210,7 +199,7 @@ export const Merge = ({ unicode }: { unicode: number }) => {
       onConfirm={async () => {
         // 改变 Unicode，需要联动更新
         const newUnicode = newName.codePointAt(0)!;
-        const payload: PrimitiveRepertoire = planMerge(
+        const payload: 原始字库数据 = planMerge(
           unicode,
           newUnicode,
           repertoire,
@@ -235,8 +224,8 @@ export const Rename = ({
 }) => {
   const [newName, setNewName] = useState("");
   const remote = useContext(RemoteContext);
-  const repertoire = useAtomValue(primitiveRepertoireAtom);
-  const update = useAddAtom(primitiveRepertoireAtom);
+  const repertoire = useAtomValue(原始字库数据原子);
+  const update = useAddAtom(原始字库数据原子);
   return (
     <Popconfirm
       title="新字形名称"
@@ -251,7 +240,7 @@ export const Rename = ({
         // 改变别名，不需要联动更新
         const character = repertoire[cname];
         if (!character) return;
-        const newCharacter: PrimitiveCharacter = {
+        const newCharacter: 原始汉字数据 = {
           ...character,
           name: newName,
         };
@@ -279,8 +268,8 @@ export const EditGF = ({
 }) => {
   const [id, setId] = useState(0);
   const remote = useContext(RemoteContext);
-  const repertoire = useAtomValue(primitiveRepertoireAtom);
-  const update = useAddAtom(primitiveRepertoireAtom);
+  const repertoire = useAtomValue(原始字库数据原子);
+  const update = useAddAtom(原始字库数据原子);
   const name = String.fromCodePoint(unicode);
   return (
     <Popconfirm
@@ -294,7 +283,7 @@ export const EditGF = ({
         if (!valid) return;
         const character = repertoire[name];
         if (!character) return;
-        const newCharacter: PrimitiveCharacter = {
+        const newCharacter: 原始汉字数据 = {
           ...character,
           [type]: id === 0 ? null : id,
         };
@@ -313,9 +302,9 @@ export const EditGF = ({
 
 export const Delete = ({ unicode }: { unicode: number }) => {
   const remote = useContext(RemoteContext);
-  const userRepertoire = useAtomValue(userRepertoireAtom);
-  const remove = useRemoveAtom(primitiveRepertoireAtom);
-  const removeUser = useRemoveAtom(userRepertoireAtom);
+  const userRepertoire = useAtomValue(用户原始字库数据原子);
+  const remove = useRemoveAtom(原始字库数据原子);
+  const removeUser = useRemoveAtom(用户原始字库数据原子);
   const char = String.fromCodePoint(unicode);
   return (
     <DeleteButton
@@ -334,17 +323,17 @@ export const Delete = ({ unicode }: { unicode: number }) => {
   );
 };
 
-export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
+export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
   const remote = useContext(RemoteContext);
-  const repertoire = useAtomValue(primitiveRepertoireAtom);
-  const add = useAddAtom(primitiveRepertoireAtom);
-  const addUser = useAddAtom(userRepertoireAtom);
-  const customGlyph = useAtomValue(customGlyphAtom);
-  const addCustomization = useAddAtom(customGlyphAtom);
-  const removeCustomization = useRemoveAtom(customGlyphAtom);
+  const repertoire = useAtomValue(原始字库数据原子);
+  const add = useAddAtom(原始字库数据原子);
+  const addUser = useAddAtom(用户原始字库数据原子);
+  const customGlyph = useAtomValue(字形自定义原子);
+  const addCustomization = useAddAtom(字形自定义原子);
+  const removeCustomization = useRemoveAtom(字形自定义原子);
   const name = String.fromCodePoint(character.unicode);
   const isCustomization = !remote && repertoire[name] !== undefined;
-  const onFinish = async (component: Glyph) => {
+  const onFinish = async (component: 字形数据) => {
     if (isCustomization) {
       addCustomization(name, component);
       return true;
@@ -371,7 +360,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       label: (
         <ComponentForm
           title="添加自定义衍生部件"
-          initialValues={getDummyDerivedComponent()}
+          initialValues={模拟衍生部件()}
           current={name}
           onFinish={onFinish}
           noButton
@@ -383,7 +372,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       label: (
         <CompoundForm
           title="添加自定义拼接部件"
-          initialValues={getDummySplicedComponent()}
+          initialValues={模拟拼接部件()}
           onFinish={onFinish}
           noButton
         />
@@ -394,7 +383,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       label: (
         <CompoundForm
           title="添加自定义复合体"
-          initialValues={getDummyCompound("⿰")}
+          initialValues={模拟复合体("⿰")}
           onFinish={onFinish}
           noButton
         />
@@ -407,7 +396,7 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
       label: (
         <ComponentForm
           title="添加自定义基本部件"
-          initialValues={getDummyBasicComponent()}
+          initialValues={模拟基本部件()}
           current={name}
           onFinish={onFinish}
           noButton
@@ -450,22 +439,18 @@ export const EditGlyph = ({ character }: { character: PrimitiveCharacter }) => {
   );
 };
 
-export const EditReading = ({
-  character,
-}: {
-  character: PrimitiveCharacter;
-}) => {
+export const EditReading = ({ character }: { character: 原始汉字数据 }) => {
   const remote = useContext(RemoteContext);
-  const add = useAddAtom(primitiveRepertoireAtom);
-  const addUser = useAddAtom(userRepertoireAtom);
-  const repertoire = useAtomValue(primitiveRepertoireAtom);
-  const customReadings = useAtomValue(customReadingsAtom);
-  const addCustomReading = useAddAtom(customReadingsAtom);
-  const removeCustomReading = useRemoveAtom(customReadingsAtom);
+  const add = useAddAtom(原始字库数据原子);
+  const addUser = useAddAtom(用户原始字库数据原子);
+  const repertoire = useAtomValue(原始字库数据原子);
+  const customReadings = useAtomValue(读音自定义原子);
+  const addCustomReading = useAddAtom(读音自定义原子);
+  const removeCustomReading = useRemoveAtom(读音自定义原子);
   const name = String.fromCodePoint(character.unicode);
   const readings = customReadings[name] ?? character.readings;
   const isCustomization = !remote && repertoire[name] !== undefined;
-  const onFinish = async ({ readings }: { readings: Reading[] }) => {
+  const onFinish = async ({ readings }: { readings: 读音数据[] }) => {
     if (isCustomization) {
       addCustomReading(name, readings);
       return true;
@@ -513,10 +498,10 @@ export const QuickPatchAmbiguous = ({
   record,
 }: {
   checked: boolean;
-  record: PrimitiveCharacter;
+  record: 原始汉字数据;
 }) => {
   const remote = useContext(RemoteContext);
-  const add = useAddAtom(primitiveRepertoireAtom);
+  const add = useAddAtom(原始字库数据原子);
   return (
     <Checkbox
       checked={checked}

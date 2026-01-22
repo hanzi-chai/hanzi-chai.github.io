@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef, useReducer } from "react";
+import React, { useState } from "react";
 import * as A from "antd";
-import * as atoms from "~/atoms";
 
 //#region ChangelogDrawer default component
 export type ChangelogDrawerProps = {};

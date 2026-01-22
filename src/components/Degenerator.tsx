@@ -1,5 +1,5 @@
 import { Button } from "antd";
-import { degeneratorAtom, useAtom } from "~/atoms";
+import { 退化配置原子, useAtom } from "~/atoms";
 import type { Feature } from "~/lib";
 import { classifier } from "~/lib";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@ant-design/pro-components";
 
 export default function Degenerator() {
-  const [degenerator, setDegenerator] = useAtom(degeneratorAtom);
+  const [degenerator, setDegenerator] = useAtom(退化配置原子);
   const initialValue = {
     no_cross: degenerator.no_cross,
     feature: Object.entries(degenerator.feature ?? {}).map(([from, to]) => ({

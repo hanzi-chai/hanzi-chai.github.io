@@ -6,14 +6,14 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Form, Space, notification } from "antd";
-import type { Rule } from "~/lib";
-import { algebraAtom, useAddAtom } from "~/atoms";
-import { defaultAlgebra } from "~/lib";
+import type { 运算规则 } from "~/lib";
+import { 拼写运算自定义原子, useAddAtom } from "~/atoms";
+import { 拼写运算查找表 } from "~/lib";
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 
 interface AlgebraForm {
   name: string;
-  rules: Rule[];
+  rules: 运算规则[];
 }
 
 export default function Algebra({
@@ -26,7 +26,7 @@ export default function Algebra({
   disabled?: boolean;
 }) {
   const [form] = Form.useForm<AlgebraForm>();
-  const addAlgebra = useAddAtom(algebraAtom);
+  const addAlgebra = useAddAtom(拼写运算自定义原子);
   return (
     <ModalForm<AlgebraForm>
       title={title}
@@ -55,7 +55,7 @@ export default function Algebra({
       />
       <Space>
         载入拼写运算预设：
-        {Object.entries(defaultAlgebra).map(([name, rules]) => {
+        {Object.entries(拼写运算查找表).map(([name, rules]) => {
           return (
             <Button
               key={name}

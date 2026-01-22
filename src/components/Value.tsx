@@ -1,7 +1,7 @@
 import { Flex, Select, Space } from "antd";
 import { useAtomValue } from "jotai";
-import { alphabetAtom, mappingTypeAtom } from "~/atoms";
-import { GeneralizedValue, isMerge, joinKeys, GeneralizedKey } from "~/lib";
+import { 字母表原子, 编码类型原子 } from "~/atoms";
+import { GeneralizedValue, isMerge, 合并字符串, GeneralizedKey } from "~/lib";
 import KeySelect from "./KeySelect";
 import ElementSelect from "./ElementSelect";
 
@@ -14,7 +14,7 @@ const KeysEditor = ({
   onChange: (newValue: string | GeneralizedKey[]) => void;
   isCurrent?: boolean;
 }) => {
-  const mappingType = useAtomValue(mappingTypeAtom);
+  const mappingType = useAtomValue(编码类型原子);
   const keys = Array.from(value);
   while (keys.length < (mappingType ?? 1)) {
     keys.push("");
@@ -30,7 +30,7 @@ const KeysEditor = ({
               const newValue = keys.map((v, i) => {
                 return i === index ? event : v;
               });
-              onChange(joinKeys(newValue));
+              onChange(合并字符串(newValue));
             }}
             allowEmpty={index !== 0}
             disablePlaceholder={isCurrent}
@@ -53,7 +53,7 @@ const ValueEditor = ({
   onChange: (newValue: GeneralizedValue) => void;
   isCurrent?: boolean;
 }) => {
-  const alphabet = useAtomValue(alphabetAtom);
+  const alphabet = useAtomValue(字母表原子);
   const currentType =
     value === null ? "禁用" : isMerge(value) ? "归并" : "键位";
   return (

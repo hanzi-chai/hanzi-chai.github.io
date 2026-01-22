@@ -3,21 +3,21 @@ import { Button, Flex } from "antd";
 import {
   useAtomValue,
   useAddAtom,
-  mappingAtom,
-  alphabetAtom,
-  mappingTypeAtom,
+  决策原子,
+  字母表原子,
+  编码类型原子,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 import type { Key } from "~/lib";
-import { joinKeys } from "~/lib";
+import { 合并字符串 } from "~/lib";
 
 export default function ElementAdder({ element }: { element?: string }) {
-  const alphabet = useAtomValue(alphabetAtom);
-  const mapping_type = useAtomValue(mappingTypeAtom);
+  const alphabet = useAtomValue(字母表原子);
+  const mapping_type = useAtomValue(编码类型原子);
   const [main, setMain] = useState<string | undefined>(undefined);
   const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
-  const addMapping = useAddAtom(mappingAtom);
+  const addMapping = useAddAtom(决策原子);
   return (
     <>
       <Flex justify="center" align="center" gap="small">
@@ -43,7 +43,7 @@ export default function ElementAdder({ element }: { element?: string }) {
           disabled={element === undefined}
           onClick={() => {
             const slice = keys.slice(0, mapping_type ?? 1);
-            addMapping(element!, joinKeys(slice));
+            addMapping(element!, 合并字符串(slice));
           }}
         >
           添加

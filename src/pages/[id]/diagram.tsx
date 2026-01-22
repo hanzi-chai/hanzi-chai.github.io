@@ -12,10 +12,10 @@ import { debounce } from "lodash-es";
 import type { ReactNode } from "react";
 import styled from "styled-components";
 import {
-  alphabetAtom,
-  infoAtom,
-  mappingAtom,
-  diagramAtom,
+  字母表原子,
+  基本信息原子,
+  决策原子,
+  图示配置原子,
   useAtom,
   useAtomValue,
   useChaifenTitle,
@@ -53,9 +53,9 @@ const KeyboardArea = styled.div`
 `;
 
 const Keyboard = () => {
-  const diagram = useAtomValue(diagramAtom);
-  const mapping = useAtomValue(mappingAtom);
-  const alphabet = useAtomValue(alphabetAtom);
+  const diagram = useAtomValue(图示配置原子);
+  const mapping = useAtomValue(决策原子);
+  const alphabet = useAtomValue(字母表原子);
   const { contents, layout } = diagram;
   const reversedMapping = getReversedMapping(mapping, alphabet);
   const processedConents = contents.map((content) => {
@@ -153,8 +153,8 @@ const withDefaultStyles = (diagram: DiagramConfig): DiagramConfig => {
 };
 
 const Sidebar = () => {
-  const [diagram, setSchematic] = useAtom(diagramAtom);
-  const alphabet = useAtomValue(alphabetAtom);
+  const [diagram, setSchematic] = useAtom(图示配置原子);
+  const alphabet = useAtomValue(字母表原子);
   const debounced = debounce(setSchematic, 500);
   return (
     <SidebarWrapper>
@@ -243,9 +243,9 @@ const default_cell_style =
 
 export default function Schematic() {
   useChaifenTitle("图示");
-  const diagram = useAtomValue(diagramAtom);
+  const diagram = useAtomValue(图示配置原子);
   const { row_style, cell_style, contents } = diagram;
-  const { name, author, version, description } = useAtomValue(infoAtom);
+  const { name, author, version, description } = useAtomValue(基本信息原子);
   const final_row_style = row_style ?? default_row_style;
   const final_cell_style = cell_style ?? default_cell_style;
   return (
