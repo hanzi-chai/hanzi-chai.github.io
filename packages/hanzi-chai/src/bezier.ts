@@ -1,6 +1,6 @@
 import { isEqual } from "lodash-es";
 import type { 笔画名称 } from "./classifier.js";
-import type { Draw, Point, 矢量笔画数据 } from "./data.js";
+import type { 绘制, 向量, 矢量笔画数据 } from "./data.js";
 import {
   add,
   area,
@@ -52,8 +52,8 @@ type 曲线关系 = 相交关系 | 相连关系 | 离散关系;
 abstract class 曲线 {
   abstract getType(): "linear" | "cubic" | "arc";
   abstract getOrientation(): 朝向;
-  abstract 获取起点和终点(): [Point, Point];
-  abstract evaluate(t: number): Point;
+  abstract 获取起点和终点(): [向量, 向量];
+  abstract evaluate(t: number): 向量;
   abstract 二分(): [曲线, 曲线];
 
   获取区间(): [区间, 区间] {
@@ -140,7 +140,7 @@ abstract class 曲线 {
   /**
    * 获取两个曲线在 t 取值上的交点
    */
-  寻找交点(c: 曲线): Point | undefined {
+  寻找交点(c: 曲线): 向量 | undefined {
     const [astart, aend] = this.获取起点和终点();
     const [bstart, bend] = c.获取起点和终点();
     const [axInterval, ayInterval] = this.获取区间();
@@ -172,13 +172,13 @@ abstract class 曲线 {
 class 一次曲线 extends 曲线 {
   constructor(
     private orientation: 朝向,
-    private controls: [Point, Point],
+    private controls: [向量, 向量],
   ) {
     super();
   }
 
-  static 从绘制创建(start: Point, draw: Draw) {
-    let p1: Point;
+  static 从绘制创建(start: 向量, draw: 绘制) {
+    let p1: 向量;
     switch (draw.command) {
       case "h":
         p1 = add(start, [draw.parameterList[0], 0]);
@@ -209,13 +209,13 @@ class 一次曲线 extends 曲线 {
     secondHalf.controls[0] = mid;
     return [firstHalf, secondHalf];
   }
-  获取起点和终点(): [Point, Point] {
+  获取起点和终点(): [向量, 向量] {
     return [this.controls[0], this.controls[1]];
   }
-  evaluate(t: number): Point {
+  evaluate(t: number): 向量 {
     return add(
-      multiply(1 - t, this.controls[0]) as Point,
-      multiply(t, this.controls[1]) as Point,
+      multiply(1 - t, this.controls[0]) as 向量,
+      multiply(t, this.controls[1]) as 向量,
     );
   }
 
@@ -248,15 +248,15 @@ class 一次曲线 extends 曲线 {
 class 三次曲线 extends 曲线 {
   constructor(
     private orientation: 朝向,
-    private controls: [Point, Point, Point, Point],
+    private controls: [向量, 向量, 向量, 向量],
   ) {
     super();
   }
 
-  static 从绘制创建(start: Point, draw: Draw) {
-    const p1 = add(start, draw.parameterList.slice(0, 2) as Point);
-    const p2 = add(start, draw.parameterList.slice(2, 4) as Point);
-    const p3 = add(start, draw.parameterList.slice(4) as Point);
+  static 从绘制创建(start: 向量, draw: 绘制) {
+    const p1 = add(start, draw.parameterList.slice(0, 2) as 向量);
+    const p2 = add(start, draw.parameterList.slice(2, 4) as 向量);
+    const p3 = add(start, draw.parameterList.slice(4) as 向量);
     const orientation = draw.command === "c" ? "vertical" : "horizontal";
     return new 三次曲线(orientation, [start, p1, p2, p3]);
   }
@@ -269,7 +269,7 @@ class 三次曲线 extends 曲线 {
   clone(): 三次曲线 {
     return new 三次曲线(this.orientation, structuredClone(this.controls));
   }
-  获取起点和终点(): [Point, Point] {
+  获取起点和终点(): [向量, 向量] {
     return [this.controls[0], this.controls[3]];
   }
   二分(): [曲线, 曲线] {
@@ -306,12 +306,12 @@ class 三次曲线 extends 曲线 {
 class 圆弧曲线 extends 曲线 {
   constructor(
     private orientation: 朝向,
-    private controls: [Point, Point],
+    private controls: [向量, 向量],
   ) {
     super();
   }
 
-  static 从绘制创建(start: Point, _: Draw) {
+  static 从绘制创建(start: 向量, _: 绘制) {
     const orientation = "horizontal";
     return new 圆弧曲线(orientation, [start, start]);
   }
@@ -322,10 +322,10 @@ class 圆弧曲线 extends 曲线 {
   getOrientation() {
     return this.orientation;
   }
-  evaluate(_: number): Point {
+  evaluate(_: number): 向量 {
     return [0, 0];
   }
-  获取起点和终点(): [Point, Point] {
+  获取起点和终点(): [向量, 向量] {
     return [this.controls[0], this.controls[1]];
   }
   二分(): [曲线, 曲线] {
@@ -338,7 +338,7 @@ class 圆弧曲线 extends 曲线 {
   }
 }
 
-const 创建曲线 = (start: Point, draw: Draw): 曲线 => {
+const 创建曲线 = (start: 向量, draw: 绘制): 曲线 => {
   if (draw.command === "a") {
     return 圆弧曲线.从绘制创建(start, draw);
   }

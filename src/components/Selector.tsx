@@ -1,4 +1,3 @@
-import { sieveMap } from "~/lib";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   DndContext,
@@ -14,7 +13,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { SieveName } from "~/lib";
 import {
   useAtom,
   过滤器列表原子,
@@ -25,14 +23,9 @@ import {
 import { Button, Dropdown, Flex, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import PrioritizedRoots from "./PrioritizedRoots";
+import { getRegistry } from "~/lib";
 
-const SortableItem = ({
-  sieve,
-  index,
-}: {
-  sieve: SieveName;
-  index: number;
-}) => {
+const SortableItem = ({ sieve, index }: { sieve: string; index: number }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: sieve });
 
@@ -65,11 +58,12 @@ export default function Selector() {
     const { active, over } = event;
     if (!over) return;
     if (active.id !== over.id) {
-      const oldIndex = selector.indexOf(active.id as SieveName);
-      const newIndex = selector.indexOf(over.id as SieveName);
+      const oldIndex = selector.indexOf(active.id as string);
+      const newIndex = selector.indexOf(over.id as string);
       setSelector(arrayMove(selector, oldIndex, newIndex));
     }
   }
+  const 注册表 = getRegistry();
 
   return (
     <Flex vertical gap="small">
@@ -83,9 +77,9 @@ export default function Selector() {
       </DndContext>
       <Flex justify="center">
         <Dropdown
-          disabled={selector.length === [...sieveMap.keys()].length}
+          disabled={selector.length === 注册表.筛选器映射.size}
           menu={{
-            items: ([...sieveMap.keys()] as SieveName[])
+            items: [...注册表.筛选器映射.keys()]
               .filter((x) => !selector.includes(x))
               .map((sieve) => ({
                 key: sieve,

@@ -1,7 +1,8 @@
-import type { WritableAtom } from "jotai";
+import type { Atom, WritableAtom } from "jotai";
 import { useAtomValue, useSetAtom } from "jotai";
 import * as O from "optics-ts/standalone";
 import type { SetStateAction } from "react";
+import { Result } from "~/lib";
 
 export * from "jotai";
 export * from "./analysis";
@@ -66,4 +67,14 @@ export function useListAtom<E>(
     useExcludeAtom(atom),
     useModifyAtom(atom),
   ] as const;
+}
+
+export function useAtomValueUnwrapped<T, E>(
+  atom: Atom<Result<T, E>> | Atom<Promise<Result<T, E>>>,
+): T {
+  const result = useAtomValue(atom);
+  if (!result.ok) {
+    throw result.error;
+  }
+  return result.value;
 }

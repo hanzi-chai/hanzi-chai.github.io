@@ -18,9 +18,9 @@ import {
   字母表原子,
   如字形分析配置原子,
   如字形分析结果原子,
-  charactersAtom,
+  汉字集合原子,
   分类器原子,
-  displayAtom,
+  别名显示原子,
   动态自定义拆分原子,
   基本信息原子,
   决策原子,
@@ -315,12 +315,12 @@ function SyllableForm() {
   const userFrequency = useAtomValue(用户频率原子);
   const repertoire = useAtomValue(如字库原子);
   const analysisConfig = useAtomValue(如字形分析配置原子);
-  const characters = useAtomValue(charactersAtom);
+  const characters = useAtomValue(汉字集合原子);
   const analysisResult = useAtomValue(如字形分析结果原子);
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
   const sequenceMap = useAtomValue(如笔顺映射原子);
   const algebra = useAtomValue(拼写运算自定义原子);
-  const display = useAtomValue(displayAtom);
+  const display = useAtomValue(别名显示原子);
   const PUA: string[] = [];
 
   for (const [key, value] of Object.entries(mapping)) {

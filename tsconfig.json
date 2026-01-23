@@ -30,6 +30,6 @@
       "@types/mdx"
     ]
   },
-  "include": ["src", "packages/hanzi-chai/scripts", "packages/hanzi-chai/spec"],
+  "include": ["src", "scripts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

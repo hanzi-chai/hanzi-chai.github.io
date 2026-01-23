@@ -1,9 +1,9 @@
 import { add } from "./math.js";
 import type {
   复合体数据,
-  Draw,
+  绘制,
   结构表示符,
-  Point,
+  向量,
   矢量图形数据,
   矢量笔画数据,
 } from "./data.js";
@@ -44,11 +44,11 @@ class 仿射变换 {
   public constructor(
     private 横向缩放: number,
     private 纵向缩放: number,
-    private 平移: Point = [0, 0],
+    private 平移: 向量 = [0, 0],
   ) {}
 
-  public 变换线段(动作: Draw): Draw {
-    const 新动作: Draw = cloneDeep(动作);
+  public 变换线段(动作: 绘制): 绘制 {
+    const 新动作: 绘制 = cloneDeep(动作);
     switch (新动作.command) {
       case "h":
         新动作.parameterList[0] *= this.横向缩放;
@@ -70,7 +70,7 @@ class 仿射变换 {
   public 变换笔画(笔画: 矢量笔画数据): 矢量笔画数据 {
     const [x, y] = 笔画.start;
     const start = add(
-      [x * this.横向缩放, y * this.纵向缩放] as Point,
+      [x * this.横向缩放, y * this.纵向缩放] as 向量,
       this.平移,
     );
     const 新笔画 = {
@@ -88,13 +88,30 @@ class 仿射变换 {
 
 class 图形盒子 {
   constructor(
-    private 笔画列表: 矢量笔画数据[],
-    private 横向区间: 区间,
-    private 纵向区间: 区间,
+    private 笔画列表: 矢量笔画数据[] = [],
+    private 横向区间: 区间 = new 区间(0, 100),
+    private 纵向区间: 区间 = new 区间(0, 100),
   ) {}
 
   获取笔画列表() {
     return this.笔画列表;
+  }
+
+  determineWidthAndViewBox(displayMode: boolean) {
+    const strokeWidthPercentage = displayMode ? 0.01 : 0.07;
+    const xMin = this.横向区间.起点();
+    const xMax = this.横向区间.终点();
+    const yMin = this.纵向区间.起点();
+    const yMax = this.纵向区间.终点();
+    const padding = 10;
+    const xSpan = xMax - xMin + 2 * padding;
+    const ySpan = yMax - yMin + 2 * padding;
+    const maxSpan = Math.max(xSpan, ySpan);
+    const xMinFinal = (xMax + xMin) / 2 - maxSpan / 2;
+    const yMinFinal = (yMax + yMin) / 2 - maxSpan / 2;
+    const viewBox = `${xMinFinal} ${yMinFinal} ${maxSpan} ${maxSpan}`;
+    const strokeWidth = maxSpan * strokeWidthPercentage;
+    return { strokeWidth, viewBox };
   }
 
   static 从笔画列表构建(笔画列表: 矢量笔画数据[]) {

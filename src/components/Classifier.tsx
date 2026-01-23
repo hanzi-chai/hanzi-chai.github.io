@@ -11,7 +11,7 @@ import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import { blue } from "@ant-design/colors";
-import type { Feature } from "~/lib";
+import type { 笔画名称 } from "~/lib";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -74,7 +74,7 @@ export default function Classifier() {
       onDragEnd={(event) => {
         const { active, over } = event;
         if (over) {
-          add(active.id as Feature, over.id as number);
+          add(active.id as 笔画名称, over.id as number);
         }
       }}
     >

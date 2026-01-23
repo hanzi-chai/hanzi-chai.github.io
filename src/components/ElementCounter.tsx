@@ -1,7 +1,7 @@
 import { Col, Row, Statistic, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 决策原子 } from "~/atoms";
-import { isMerge } from "~/lib";
+import { 是归并 } from "~/lib";
 
 interface Count {
   笔画: number;
@@ -61,7 +61,10 @@ const ElementSubCounter = ({
 export default function ElementCounter() {
   const mapping = useAtomValue(决策原子);
   const elements = Object.keys(mapping);
-  const mainElements = elements.filter((e) => !isMerge(mapping[e]!));
+  const mainElements: string[] = [];
+  for (const [element, value] of Object.entries(mapping)) {
+    if (!是归并(value)) mainElements.push(element);
+  }
   const mainCount = countElementByCategory(mainElements);
   const count = countElementByCategory(elements);
   return (

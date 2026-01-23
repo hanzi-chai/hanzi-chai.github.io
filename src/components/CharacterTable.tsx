@@ -13,8 +13,7 @@ import Table from "antd/es/table";
 import {
   原始字库原子,
   字形自定义原子,
-  读音自定义原子,
-  determinedRepertoireAtom,
+  如确定字库原子,
   原始字库数据原子,
   如字库原子,
   如笔顺映射原子,
@@ -23,6 +22,7 @@ import {
   useAtomValue,
   用户原始字库数据原子,
   用户标签列表原子,
+  useAtomValueUnwrapped,
 } from "~/atoms";
 import {
   EditGlyph,
@@ -30,7 +30,6 @@ import {
   Delete,
   Merge,
   QuickPatchAmbiguous,
-  EditReading,
   EditGF,
   Rename,
 } from "~/components/Action";
@@ -46,26 +45,16 @@ import type { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import { ElementWithTooltip } from "./ElementPool";
 import TransformersForm from "./Transformers";
-import { 原始汉字数据, 读音数据 } from "~/lib";
-import { errorFeedback, RemoteContext } from "~/utils";
+import type { 原始汉字数据 } from "~/lib";
+import {
+  CharacterFilter,
+  errorFeedback,
+  RemoteContext,
+  字符过滤器,
+} from "~/utils";
+import { 区块列表, 是私用区, 查询区块 } from "~/lib";
 
 type Column = ColumnType<原始汉字数据>;
-
-function ReadingList({ readings }: { readings: 读音数据[] }) {
-  return (
-    <Space>
-      {readings.map((reading, index) => {
-        const core = <Element key={index}>{reading.pinyin}</Element>;
-        if (readings.length === 1) return core;
-        return (
-          <Tooltip key={index} title={`${reading.importance}%`}>
-            {core}
-          </Tooltip>
-        );
-      })}
-    </Space>
-  );
-}
 
 const typenames = {
   basic_component: "基本部件",
@@ -81,8 +70,11 @@ export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) 
   const userRepertoire = useAtomValue(用户原始字库数据原子);
   const userTags = useAtomValue(用户标签列表原子);
   const addUser = useAddAtom(用户原始字库数据原子);
-  const add = useAddAtom(原始字库数据原子);
-  const selectedIndex = findGlyphIndex(glyphs, userTags);
+  const add = useAddAtom(原始字库数据原子 as any);
+  let selectedIndex = glyphs.findIndex((x) =>
+    x.tags?.some((t) => userTags.includes(t)),
+  );
+  if (selectedIndex === -1) selectedIndex = 0;
   const inlineUpdate = async (newCharacter: 原始汉字数据) => {
     if (userRepertoire[char] !== undefined) {
       addUser(char, newCharacter);
@@ -179,18 +171,18 @@ export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) 
 export const InlineCustomizer = ({
   character,
 }: {
-  character: PrimitiveCharacter;
+  character: 原始汉字数据;
 }) => {
-  const determinedRepertoire = useAtomValue(determinedRepertoireAtom);
-  const repertoire = useAtomValue(如字库原子);
+  const determinedRepertoire = useAtomValueUnwrapped(如确定字库原子);
+  const repertoire = useAtomValueUnwrapped(如字库原子);
   const addCustomGlyph = useAddAtom(字形自定义原子);
   const customGlyph = useAtomValue(字形自定义原子);
   const { unicode } = character;
   const char = String.fromCodePoint(unicode);
   let customized = customGlyph[char];
   let readonly = false;
-  if (repertoire[char] !== determinedRepertoire[char]) {
-    customized = repertoire[char]!.glyph;
+  if (repertoire.get()[char] !== determinedRepertoire.get()[char]) {
+    customized = repertoire.get()[char]!.glyph;
     readonly = true;
   }
   if (customized === undefined) return null;
@@ -252,23 +244,23 @@ export const InlineCustomizer = ({
 
 export default function CharacterTable() {
   const primitiveRepertoire = useAtomValue(原始字库数据原子);
+  console.log(primitiveRepertoire);
   const allRepertoire = useAtomValue(原始字库原子);
   const userRepertoire = useAtomValue(用户原始字库数据原子);
-  const sortedCharacters = useAtomValue(如排序汉字原子);
+  const sortedCharacters = useAtomValueUnwrapped(如排序汉字原子);
   const sortedRepertoire = sortedCharacters
     .filter((x) => primitiveRepertoire[x] !== undefined)
-    .map((x) => [x, primitiveRepertoire[x]]) as [string, PrimitiveCharacter][];
+    .map((x) => [x, primitiveRepertoire[x]]) as [string, 原始汉字数据][];
   const customGlyph = useAtomValue(字形自定义原子);
-  const customReadings = useAtomValue(读音自定义原子);
-  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const [page, setPage] = useState(1);
   const [filterProps, setFilterProps] = useState<CharacterFilter>({});
   const remote = useContext(RemoteContext);
-  const filter = makeCharacterFilter(filterProps, allRepertoire, sequenceMap);
+  const filter = new 字符过滤器(filterProps);
 
   const dataSource = Object.entries(userRepertoire)
     .concat(sortedRepertoire)
-    .filter(([x]) => filter(x))
+    .filter(([x, v]) => filter.过滤(x, v, sequenceMap.get(x) ?? ""))
     .map(([, glyph]) => glyph);
 
   const unicodeColumn: Column = {
@@ -281,13 +273,13 @@ export default function CharacterTable() {
         <Flex align="center" gap="small">
           <ElementWithTooltip element={char} />
           {hex}
-          {isPUA(char) && <Rename unicode={unicode} name={name} />}
+          {是私用区(char) && <Rename unicode={unicode} name={name} />}
         </Flex>
       );
     },
-    filters: unicodeBlocks.map((x) => ({ text: x.label, value: x.name })),
+    filters: 区块列表.map((x) => ({ text: x.label, value: x.name })),
     onFilter: (value, record) => {
-      return unicodeBlock(record.unicode) === value;
+      return 查询区块(record.unicode) === value;
     },
     sorter: (a, b) => a.unicode - b.unicode,
     sortDirections: ["ascend", "descend"],
@@ -323,12 +315,6 @@ export default function CharacterTable() {
       { text: "否", value: 0 },
     ],
     onFilter: (value, record) => value === record.gb2312,
-  };
-
-  const readings: Column = {
-    title: "系统字音",
-    dataIndex: "readings",
-    render: (_, record) => <ReadingList readings={record.readings} />,
   };
 
   const gf0014: Column = {
@@ -377,17 +363,6 @@ export default function CharacterTable() {
     },
   };
 
-  const customReadingsColumn: Column = {
-    title: "自定义字音",
-    render: (_, character) => {
-      const maybeReadings =
-        customReadings[String.fromCodePoint(character.unicode)];
-      if (maybeReadings === undefined) return null;
-      return <ReadingList readings={maybeReadings} />;
-    },
-    width: 128,
-  };
-
   const customGlyphColumn: Column = {
     title: "自定义字形",
     render: (_, character) => <InlineCustomizer character={character} />,
@@ -414,7 +389,6 @@ export default function CharacterTable() {
     render: (_, record) => (
       <Space>
         <EditGlyph character={record} />
-        <EditReading character={record} />
         <Merge unicode={record.unicode} />
         <Delete unicode={record.unicode} />
       </Space>
@@ -426,9 +400,7 @@ export default function CharacterTable() {
     onFilter: (value, record) => {
       const char = String.fromCodePoint(record.unicode);
       const customized =
-        userRepertoire[char] !== undefined ||
-        customGlyph[char] !== undefined ||
-        customReadings[char] !== undefined;
+        userRepertoire[char] !== undefined || customGlyph[char] !== undefined;
       return value === 1 ? customized : !customized;
     },
   };
@@ -464,7 +436,6 @@ export default function CharacterTable() {
     unicodeColumn,
     tygfColumn,
     gb2312,
-    readings,
     glyphs,
     gf3001,
     gf0014,
@@ -473,15 +444,13 @@ export default function CharacterTable() {
   ];
   const userColumns = [
     unicodeColumn,
-    readings,
     glyphs,
-    customReadingsColumn,
     customGlyphColumn,
     operations,
     gb2312,
     ambiguous,
   ];
-  const columns: ColumnsType<PrimitiveCharacter> = remote
+  const columns: ColumnsType<原始汉字数据> = remote
     ? adminColumns
     : userColumns;
   return (
@@ -498,7 +467,7 @@ export default function CharacterTable() {
         <Create onCreate={() => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>
-        <Table<PrimitiveCharacter>
+        <Table<原始汉字数据>
           dataSource={dataSource}
           columns={columns}
           size="small"

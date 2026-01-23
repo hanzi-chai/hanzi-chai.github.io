@@ -7,22 +7,22 @@
 import { writeFileSync, mkdirSync, cpSync } from "node:fs";
 import axios from "axios";
 import pako from "pako";
+import { 从模型构建, type 原始汉字模型 } from "~/api"
+import { listToObject } from "~/lib";
 
 const apiEndpoint = "https://api.chaifen.app/";
 const assetsEndpoint = "https://assets.chaifen.app/";
-const outputFolder = "src/data/";
+const outputFolder = "packages/hanzi-chai/src/data/";
 mkdirSync(outputFolder, { recursive: true });
 
-const repertoire = JSON.stringify(
-  await fetch(`${apiEndpoint}repertoire/all`).then((res) => res.json()),
-);
+const models: 原始汉字模型[] = await fetch(`${apiEndpoint}repertoire/all`).then((res) => res.json());
+const repertoire = listToObject(models.map(从模型构建));
 
 // Compress the repertoire data
-const output = pako.deflate(repertoire);
+const output = pako.deflate(JSON.stringify(repertoire));
 writeFileSync(`${outputFolder}repertoire.json.deflate`, output);
 
 for (const filename of [
-  "frequency",
   "dictionary",
   "key_distribution",
   "pair_equivalence",
@@ -35,4 +35,4 @@ for (const filename of [
   writeFileSync(path, response.data);
 }
 
-cpSync(outputFolder, "../../public/cache/", { recursive: true });
+cpSync(outputFolder, "public/cache/", { recursive: true });

@@ -1,12 +1,9 @@
-import { useEffect } from "react";
-import type { PrimitiveCharacter } from "~/lib";
-import { listToObject } from "~/lib";
+import { 原始汉字数据 } from "~/lib";
 import { Layout } from "antd";
-import { list, listAll } from "~/api";
 import CharacterTable from "~/components/CharacterTable";
-import { 原始字库数据原子, useChaifenTitle, useSetAtom } from "~/atoms";
+import { useChaifenTitle } from "~/utils";
 
-const checkIDsInData = (data: PrimitiveCharacter[]) => {
+const checkIDsInData = (data: 原始汉字数据[]) => {
   const reverseGF3001Map = new Map<
     number,
     { unicode: number; name: string | null }[]
@@ -39,13 +36,6 @@ const checkIDsInData = (data: PrimitiveCharacter[]) => {
 
 export default function AdminLayout() {
   useChaifenTitle("管理");
-  const load = useSetAtom(原始字库数据原子);
-  useEffect(() => {
-    list().then((data) => {
-      if ("err" in data) return;
-      load(listToObject(data));
-    });
-  }, [load]);
 
   return (
     <Layout style={{ height: "100%" }}>

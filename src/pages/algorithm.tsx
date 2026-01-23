@@ -4,13 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Element from "~/components/Element";
 import { 如字库原子, 原始字库数据原子 } from "~/atoms";
 import { list } from "~/api";
-import type {
-  BasicComponent,
-  DerivedComponent,
-  PrimitiveCharacter,
-  PrimitiveRepertoire,
-  SplicedComponent,
-} from "~/lib";
 import {
   binaryToIndices,
   defaultDegenerator,

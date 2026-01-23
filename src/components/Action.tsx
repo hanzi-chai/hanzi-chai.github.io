@@ -28,7 +28,6 @@ import {
   原始字库数据原子,
   字形自定义原子,
   用户原始字库数据原子,
-  读音自定义原子,
 } from "~/atoms";
 import { DeleteButton, NumberInput, Select } from "~/components/Utils";
 import {
@@ -41,13 +40,11 @@ import {
   模拟复合体,
   模拟拼接部件,
   模拟衍生部件,
-  type 读音数据,
 } from "~/lib";
 import { errorFeedback, RemoteContext } from "~/utils";
 import CharacterSelect from "./CharacterSelect";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
-import ReadingForm from "./ReadingForm";
 
 interface CreateProps {
   charOrName: string;
@@ -435,60 +432,6 @@ export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
   return (
     <Dropdown menu={{ items }}>
       <Button>{`${isCustomization ? "自定义" : "编辑"}字形`}</Button>
-    </Dropdown>
-  );
-};
-
-export const EditReading = ({ character }: { character: 原始汉字数据 }) => {
-  const remote = useContext(RemoteContext);
-  const add = useAddAtom(原始字库数据原子);
-  const addUser = useAddAtom(用户原始字库数据原子);
-  const repertoire = useAtomValue(原始字库数据原子);
-  const customReadings = useAtomValue(读音自定义原子);
-  const addCustomReading = useAddAtom(读音自定义原子);
-  const removeCustomReading = useRemoveAtom(读音自定义原子);
-  const name = String.fromCodePoint(character.unicode);
-  const readings = customReadings[name] ?? character.readings;
-  const isCustomization = !remote && repertoire[name] !== undefined;
-  const onFinish = async ({ readings }: { readings: 读音数据[] }) => {
-    if (isCustomization) {
-      addCustomReading(name, readings);
-      return true;
-    }
-    const newCharacter = { ...character, readings };
-    if (remote) {
-      const res = await remoteUpdate(newCharacter);
-      if (!errorFeedback(res)) {
-        add(name, newCharacter);
-        return true;
-      }
-      return false;
-    }
-    addUser(name, newCharacter);
-    return true;
-  };
-  const items: MenuProps["items"] = [
-    {
-      key: -1,
-      label: (
-        <ReadingForm
-          title="编辑字音"
-          initialValues={readings}
-          onFinish={onFinish}
-        />
-      ),
-    },
-  ];
-  if (isCustomization && customReadings[name] !== undefined) {
-    items.push({
-      key: -2,
-      label: <span>取消自定义字音</span>,
-      onClick: () => removeCustomReading(name),
-    });
-  }
-  return (
-    <Dropdown menu={{ items }}>
-      <Button>{`${isCustomization ? "自定义" : "编辑"}字音`}</Button>
     </Dropdown>
   );
 };

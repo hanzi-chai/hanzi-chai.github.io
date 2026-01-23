@@ -3,28 +3,22 @@ import {
   type Atom,
   type SetStateAction,
   type WritableAtom,
-  字集指示原子,
-  charactersAtom,
   默认词典原子,
-  默认频率原子,
   基本信息原子,
   默认键位分布原子,
   默认双键当量原子,
   useAtom,
   useAtomValue,
-  useChaifenTitle,
-  用户字集指示原子,
 } from "~/atoms";
 import {
-  type CharacterSetSpecifier,
   type 词典,
   type 键位分布目标,
   type 当量映射,
-  type Info,
-  characterSetSpecifiers,
-  exportTSV,
   解析词典,
   解析键位分布目标,
+  基本信息,
+  读取表格,
+  解析当量,
 } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
@@ -34,17 +28,24 @@ import {
 } from "@ant-design/pro-components";
 import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
 import {
-  用户频率原子,
   用户键位分布原子,
   用户双键当量原子,
   用户词典原子,
   自定义元素原子,
 } from "~/atoms";
-import { 解析频率映射 } from "~/lib";
 import { useEffect, useState } from "react";
+import { exportTSV, useChaifenTitle } from "~/utils";
 
 const getTSVFromRecord = (record: 当量映射) =>
   Object.entries(record).map(([k, v]) => [k, v.toString()]);
+
+const getTSVFromDict = (dict: 词典) => {
+  return dict.map(({ 词, 拼音, 频率 }) => [
+    词,
+    拼音.join(" "),
+    频率.toString(),
+  ]);
+};
 
 const getTSVFromDistribution = (distribution: 键位分布目标) => {
   return Object.entries(distribution).map(([k, v]) => {
@@ -62,14 +63,14 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
   dumper,
 }: {
   atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
-  defaultAtom?: Atom<Promise<V>> | Atom<V>;
+  defaultAtom: Atom<Promise<V>> | Atom<V>;
   title: string;
   description: string;
-  parser: (text: string) => V;
+  parser: (tsv: string[][]) => V;
   dumper?: (value: V) => string[][];
 }) {
   const [value, setValue] = useAtom(atom);
-  const defaultValue = defaultAtom ? useAtomValue(defaultAtom) : undefined;
+  const defaultValue = useAtomValue(defaultAtom);
   return (
     <>
       <Flex align="baseline" gap="middle">
@@ -82,7 +83,13 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
             下载预置
           </Button>
         )}
-        <Uploader type="txt" action={(text) => setValue(parser(text))} />
+        <Uploader
+          type="txt"
+          action={(text) => {
+            const tsv = 读取表格(text);
+            setValue(parser(tsv));
+          }}
+        />
         <Button
           disabled={value === undefined}
           onClick={() => setValue(undefined)}
@@ -144,11 +151,11 @@ const CustomElementUploader = () => {
           disabled={name === ""}
           action={(text) => {
             const lines = text.trim().split("\n");
-            const map: Record<string, string[]> = {};
+            const map: Map<string, string[]> = new Map();
             for (const line of lines) {
               const [key, values] = line.trim().split("\t");
               if (key === undefined || values === undefined) continue;
-              map[key] = values.trim().split(" ");
+              map.set(key, values.trim().split(" "));
             }
             setCustomElements({ ...customElements, [name]: map });
           }}
@@ -160,14 +167,14 @@ const CustomElementUploader = () => {
 
 const ConfigInfo = () => {
   const [info, setInfo] = useAtom(基本信息原子);
-  const [form] = ProForm.useForm<Info>();
+  const [form] = ProForm.useForm<基本信息>();
   useEffect(() => {
     form.setFieldsValue(info);
   }, [info]);
   return (
     <>
       <Typography.Title level={3}>基本信息</Typography.Title>
-      <ProForm<Info>
+      <ProForm<基本信息>
         form={form}
         layout="horizontal"
         labelCol={{ span: 6 }}
@@ -188,17 +195,6 @@ const ConfigInfo = () => {
 
 export default function Index() {
   useChaifenTitle("基本信息");
-  const [characterSet, setCharacterSet] = useAtom(字集指示原子);
-  const specifierNames: Record<CharacterSetSpecifier, string> = {
-    minimal: "极简",
-    gb2312: "GB2312",
-    general: "通用",
-    basic: "基本",
-    extended: "扩展",
-    supplement: "补充",
-    maximal: "全部",
-    custom: "自定义",
-  };
   return (
     <EditorRow>
       <EditorColumn span={12}>
@@ -208,14 +204,6 @@ export default function Index() {
         <ConfigInfo />
         <Flex align="baseline" justify="space-between">
           <Typography.Title level={3}>字集</Typography.Title>
-          <Select
-            options={characterSetSpecifiers.map((x) => ({
-              label: specifierNames[x],
-              value: x,
-            }))}
-            value={characterSet}
-            onChange={setCharacterSet}
-          />
         </Flex>
         <Typography.Paragraph>
           字集是系统所处理的字符集合，您可以选择通用、基本或扩展三者之一。字集越大，您的方案能输入的字符就越多，但是在拆分时要考虑的字形种类也就更多。建议您从通用字集开始，根据实际需要逐步扩展。
@@ -255,40 +243,19 @@ export default function Index() {
           分隔的值（TSV）。您也可以先下载系统内置的这些资料，在此基础上编辑后上传。
         </Typography.Paragraph>
         <AssetUploader
-          title="词频"
-          description="系统默认采用的词频来自 10 亿社交媒体语料的统计结果，包含了一字词和多字词。您可以在此处自定义词频。"
-          atom={用户频率原子}
-          defaultAtom={默认频率原子}
-          parser={解析频率映射}
-          dumper={getTSVFromRecord}
-        />
-        <AssetUploader
           title="词库"
           description="系统默认采用的多字词为「冰雪拼音」输入方案词库中词频前六万的多字词，并给每个词加注了带调拼音，能够推导出各种不同的输入方案的词编码。您可以在此处自定义词库，词库需要包含带调拼音。"
           atom={用户词典原子 as any}
           defaultAtom={默认词典原子}
           parser={解析词典}
-          dumper={(dict) => dict}
-        />
-        <AssetUploader
-          title="字集"
-          description="您可以上传自定义字集并在字集中选取「自定义」来使用自己的字集。"
-          atom={用户字集指示原子}
-          defaultAtom={charactersAtom}
-          parser={(text) =>
-            text
-              .trim()
-              .split("\n")
-              .map((x) => x.trim())
-          }
-          dumper={(set) => set.map((x) => [x])}
+          dumper={getTSVFromDict}
         />
         <AssetUploader
           title="当量"
           description="系统默认采用的双键速度当量来自陈一凡的论文。您可以在此处自定义当量。"
           atom={用户双键当量原子}
           defaultAtom={默认双键当量原子}
-          parser={解析频率映射}
+          parser={解析当量}
           dumper={getTSVFromRecord}
         />
         <AssetUploader

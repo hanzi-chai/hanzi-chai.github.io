@@ -1,5 +1,5 @@
 import { Button, Flex, Form } from "antd";
-import type { ShortCodeRule } from "~/lib";
+import type { 简码规则 } from "~/lib";
 import { wordLengthArray } from "~/lib";
 import { useAtom } from "~/atoms";
 import { 简码配置原子 } from "~/atoms";
@@ -13,7 +13,7 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 
-const defaultRules: ShortCodeRule[] = [
+const defaultRules: 简码规则[] = [
   {
     length_equal: 1,
     schemes: [
@@ -36,7 +36,7 @@ export default function ShortCodeRules() {
       ...x,
       children: wordLengthArray.filter((y) => y.value > x.value),
     }));
-  const [form] = Form.useForm<{ short_code: ShortCodeRule[] }>();
+  const [form] = Form.useForm<{ short_code: 简码规则[] }>();
   return (
     <ModalForm
       layout="horizontal"

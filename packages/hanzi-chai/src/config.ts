@@ -4,7 +4,6 @@ import type {
   原始字库数据,
   复合体数据,
   结构表示符,
-  读音数据,
   部件数据,
 } from "./data.js";
 import type { 取码对象 } from "./element.js";
@@ -36,13 +35,11 @@ export interface 数据配置 {
   character_set?: 字集指示;
   repertoire?: 原始字库数据;
   glyph_customization?: 字形自定义;
-  reading_customization?: 读音自定义;
   tags?: string[];
   transformers?: 变换器[];
 }
 
 export type 字形自定义 = Record<string, 部件数据 | 复合体数据 | 全等数据>;
-export type 读音自定义 = Record<string, 读音数据[]>;
 export interface 变换器 {
   from: 模式;
   to: 模式;
@@ -50,8 +47,10 @@ export interface 变换器 {
 
 export interface 模式 {
   operator: 结构表示符;
-  operandList: (string | 模式 | 结构变量)[];
+  operandList: 节点[];
 }
+
+export type 节点 = 模式 | 结构变量 | string;
 
 export interface 结构变量 {
   id: number;
@@ -125,6 +124,8 @@ export type 码位 = string | 元素位;
 
 export type 安排 = null | string | 码位[] | { element: string };
 
+export type 非空安排 = Exclude<安排, null>;
+
 export type 变量安排 = { variable: string };
 
 export type 广义码位 = 码位 | 变量安排 | null;
@@ -139,7 +140,7 @@ export function 是归并(value: 广义安排): value is { element: string } {
   return typeof value === "object" && value !== null && "element" in value;
 }
 
-export type 决策 = Record<元素, Exclude<安排, null>>;
+export type 决策 = Record<元素, 非空安排>;
 
 export interface 安排描述 {
   value: 广义安排;
@@ -151,6 +152,13 @@ export type 决策空间 = Record<元素, 安排描述[]>;
 // config.form end
 
 // config.encoder begin
+
+export interface 优先简码 {
+  词: string;
+  拼音来源列表: string[][];
+  级别: number;
+}
+
 export interface 编码配置 {
   max_length: number;
   select_keys?: string[];
@@ -163,7 +171,7 @@ export interface 编码配置 {
   rules?: 构词规则[];
   // 简码
   short_code?: 简码规则[];
-  priority_short_codes?: [string, string, number][];
+  short_code_list?: 优先简码[];
   // 组装器
   assembler?: string;
 }
@@ -245,7 +253,7 @@ export interface 层级权重 {
   fingering?: 指法权重;
 }
 
-export const 用指标签列表 = [
+export const 指法标签列表 = [
   "同手",
   "大跨",
   "小跨",

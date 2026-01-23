@@ -9,7 +9,6 @@ import {
   Tag,
   Typography,
 } from "antd";
-import type { Config, ExampleConfig, Info } from "~/lib";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
@@ -18,11 +17,12 @@ import { examples, Example } from "~/templates";
 import { DeleteButton, Uploader } from "~/components/Utils";
 import { load } from "js-yaml";
 import Starter from "~/components/Starter";
-import { useChaifenTitle, validateConfig } from "~/atoms";
 import type { MenuProps } from "antd/lib";
 import styled from "styled-components";
 import Changelog from "~/components/changelog/ChangelogDrawer";
 import User from "~/components/User";
+import { 基本信息, 示例配置, 配置 } from "~/lib";
+import { useChaifenTitle, validateConfig } from "~/utils";
 
 const ListItem = ({
   id,
@@ -30,8 +30,8 @@ const ListItem = ({
   setConfigs,
 }: {
   id: string;
-  info: Info;
-  setConfigs: Updater<Record<string, Config>>;
+  info: 基本信息;
+  setConfigs: Updater<Record<string, 配置>>;
 }) => {
   return (
     <Flex align="center" justify="space-between" style={{ width: "100%" }}>
@@ -83,7 +83,7 @@ export default function HomeLayout() {
       Object.entries(localStorage)
         .filter(([key]) => isSchema(key))
         .map(([key, value]) => {
-          const data = JSON.parse(value) as Config;
+          const data = JSON.parse(value) as 配置;
           return [key, data];
         }),
     ),
@@ -108,7 +108,7 @@ export default function HomeLayout() {
     zhengma,
     zhenma,
   } = examples;
-  const prepare = (x: ExampleConfig) => ({
+  const prepare = (x: 示例配置) => ({
     key: x.source!,
     label: x.info.name,
   });
@@ -153,13 +153,13 @@ export default function HomeLayout() {
     });
     Object.keys(localStorage)
       .filter((x) => !configs[x] && isSchema(x))
-      .forEach((id) => localStorage.removeItem(id));
+      .map((id) => localStorage.removeItem(id));
     Object.entries(resources).forEach(([key, value]) => {
       localStorage.setItem(key, value);
     });
     Object.keys(localStorage)
       .filter((x) => !resources[x] && isResource(x))
-      .forEach((key) => localStorage.removeItem(key));
+      .map((key) => localStorage.removeItem(key));
   }, [configs, resources]);
 
   const listData = Object.entries(configs).map(([id, { info }]) => ({
@@ -189,7 +189,6 @@ export default function HomeLayout() {
                     items,
                     onClick: (menu) => {
                       setConfigs((configs) => {
-                        console.log(menu.key);
                         configs[nanoid(9)] = examples[menu.key as Example];
                       });
                     },
@@ -200,11 +199,11 @@ export default function HomeLayout() {
                 <Uploader
                   type="yaml"
                   action={async (s) => {
-                    const config = load(s) as Config;
+                    const config = load(s) as 配置;
                     const valid = await validateConfig(config);
                     // if (!valid) return;
                     setConfigs((configs) => {
-                      configs[nanoid(9)] = load(s) as Config;
+                      configs[nanoid(9)] = load(s) as 配置;
                     });
                   }}
                 />

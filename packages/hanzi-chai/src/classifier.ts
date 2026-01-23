@@ -1,4 +1,4 @@
-import type { Draw } from "./data.js";
+import type { 绘制 } from "./data.js";
 
 /**
  * 笔画名称参考 Unicode 中的 CJK 笔画块（共 38 种笔画）
@@ -71,7 +71,7 @@ type 分类器 = typeof 默认分类器;
  * 另外，平撇、平点、平捺的命令是 z，这个不是规范的 SVG 命令，只是为了和撇、点、捺的 c 区分
  * z 和 c 的实际效果是一样的
  */
-const 笔画表示方式: Record<笔画名称, Draw["command"][]> = {
+const 笔画表示方式: Record<笔画名称, 绘制["command"][]> = {
   横: ["h"],
   提: ["h"], // 美化：提
   竖: ["v"],

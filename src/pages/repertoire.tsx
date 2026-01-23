@@ -1,17 +1,16 @@
 import { Flex, Layout, Table, Typography } from "antd";
 import { ColumnsType } from "antd/es/table";
+import { 区块, 区块列表 } from "~/lib";
 import { Suspense, useEffect } from "react";
-import { 从模型构建 } from "~/api";
-import { 拉取资源, 原始字库数据原子, useAtom } from "~/atoms";
+import { 拉取资源, 原始字库数据原子, useAtom, useAtomValue } from "~/atoms";
 import CustomSpin from "~/components/CustomSpin";
-import { listToObject, UnicodeBlock, unicodeBlocks } from "~/lib";
 
 export default function Repertoire() {
-  const [repertoire, setRepertoire] = useAtom(原始字库数据原子);
+  const repertoire = useAtomValue(原始字库数据原子);
   const unicodes = Object.keys(repertoire).map((key) => key.codePointAt(0)!);
   for (const unicode of unicodes) {
     let identified = false;
-    for (const block of unicodeBlocks) {
+    for (const block of 区块列表) {
       if (unicode >= block.begin && unicode <= block.end) {
         identified = true;
       }
@@ -21,13 +20,7 @@ export default function Repertoire() {
     }
   }
 
-  useEffect(() => {
-    拉取资源("repertoire.json.deflate").then((value) =>
-      setRepertoire(listToObject(value.map(从模型构建))),
-    );
-  }, [setRepertoire]);
-
-  const columns: ColumnsType<UnicodeBlock> = [
+  const columns: ColumnsType<区块> = [
     {
       title: "名称",
       dataIndex: "label",
@@ -70,7 +63,7 @@ export default function Repertoire() {
           <Typography.Title>自动拆分系统收字情况</Typography.Title>
           <Table
             columns={columns}
-            dataSource={unicodeBlocks}
+            dataSource={区块列表}
             rowKey="name"
             pagination={{ pageSize: 50 }}
           />

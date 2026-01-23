@@ -18,10 +18,11 @@ import {
   图示配置原子,
   useAtom,
   useAtomValue,
-  useChaifenTitle,
-  serializerAtom,
+  按首码分组决策原子,
+  useAtomValueUnwrapped,
 } from "~/atoms";
-import { getReversedMapping, type BoxConfig, type DiagramConfig } from "~/lib";
+import { 图示配置, 区块配置 } from "~/lib";
+import { useChaifenTitle } from "~/utils";
 
 const PrintArea = styled.div`
   width: 297mm;
@@ -57,7 +58,7 @@ const Keyboard = () => {
   const mapping = useAtomValue(决策原子);
   const alphabet = useAtomValue(字母表原子);
   const { contents, layout } = diagram;
-  const reversedMapping = getReversedMapping(mapping, alphabet);
+  const reversedMapping = useAtomValueUnwrapped(按首码分组决策原子);
   const processedConents = contents.map((content) => {
     if (content.type === "element") {
       let match: RegExp | undefined;
@@ -143,7 +144,7 @@ const SidebarWrapper = styled.aside`
   }
 `;
 
-const withDefaultStyles = (diagram: DiagramConfig): DiagramConfig => {
+const withDefaultStyles = (diagram: 图示配置) => {
   const { row_style, cell_style } = diagram;
   return {
     ...diagram,
@@ -163,7 +164,7 @@ const Sidebar = () => {
           打印图示
         </Button>
       </div>
-      <ProForm<DiagramConfig>
+      <ProForm<图示配置>
         initialValues={withDefaultStyles(diagram)}
         layout="horizontal"
         onValuesChange={async (_, values) => {
@@ -185,7 +186,7 @@ const Sidebar = () => {
           copyIconProps={false}
         >
           <ProFormGroup>
-            <ProFormSelect<BoxConfig["type"]>
+            <ProFormSelect<区块配置["type"]>
               name="type"
               label="类型"
               options={[

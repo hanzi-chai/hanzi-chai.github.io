@@ -1,19 +1,22 @@
 import { atom } from "jotai";
 import type { 字形分析结果, 组装, 码位, 原始字库数据 } from "~/lib";
 import {
-  拼写运算查找表,
   展开决策,
   是归并,
   默认拼音分析器,
   ok,
   图形盒子,
   默认分类器,
+  解析当量,
+  合并拼写运算,
+  识别符,
+  原始字库,
+  是私用区,
 } from "~/lib";
 import {
   拼写运算自定义原子,
   字母表原子,
   分析配置原子,
-  字集指示原子,
   编码配置原子,
   键盘原子,
   决策原子,
@@ -22,33 +25,17 @@ import {
   优先简码原子,
   用户原始字库数据原子,
   字形自定义原子,
-  读音自定义原子,
   用户标签列表原子,
   变换器列表原子,
 } from ".";
 import { atomWithStorage } from "jotai/utils";
-import type {
-  自定义元素映射,
-  词典,
-  键位分布目标,
-  当量映射,
-  频率映射,
-} from "~/lib";
+import type { 自定义元素映射, 词典, 键位分布目标, 当量映射 } from "~/lib";
 import { MiniDb } from "jotai-minidb";
-import {
-  listToObject,
-  解析词典,
-  解析键位分布目标,
-  解析频率映射,
-  读取表格,
-} from "~/lib";
-import { configAtom } from "./config";
+import { 解析词典, 解析键位分布目标, 读取表格 } from "~/lib";
+import { 配置原子 } from "./config";
 import pako from "pako";
-import { 从模型构建 } from "~/api";
 import { type DictEntry, type EncodeResult, thread } from "~/utils";
 import type { Metric } from "~/components/MetricTable";
-import { 字集过滤查找表, 是私用区 } from "packages/hanzi-chai/src/unicode";
-import 原始字库 from "packages/hanzi-chai/src/primitive";
 import { sortBy } from "lodash-es";
 
 const 资源缓存: Record<string, string> = {};
@@ -91,37 +78,15 @@ async function 处理压缩文件(filename: string, response: Response) {
 
 // 服务器资源
 
-export const 原始字库数据初始化原子 = atom(async () => {
+export const 原始字库数据原子 = atom(async () => {
   const content = await 拉取资源("repertoire.json.deflate");
-  const json = JSON.parse(content) as any[];
-  return listToObject(json.map(从模型构建));
+  const data: 原始字库数据 = JSON.parse(content);
+  return data;
 });
-
-export const 原始字库数据原子 = atom<原始字库数据>({});
-
-原始字库数据原子.onMount = (setAtom) => {
-  let cancelled = false;
-  (async () => {
-    const content = await 拉取资源("repertoire.json.deflate");
-    const json = JSON.parse(content) as any[];
-    const data = listToObject(json.map(从模型构建));
-    if (!cancelled) {
-      setAtom(data);
-    }
-  })();
-  return () => {
-    cancelled = true;
-  };
-};
 
 export const 默认词典原子 = atom(async () => {
   const content = await 拉取资源("dictionary.txt");
   return 解析词典(读取表格(content));
-});
-
-export const 默认频率原子 = atom(async () => {
-  const content = await 拉取资源("frequency.txt");
-  return 解析频率映射(读取表格(content));
 });
 
 export const 默认键位分布原子 = atom(async () => {
@@ -131,21 +96,11 @@ export const 默认键位分布原子 = atom(async () => {
 
 export const 默认双键当量原子 = atom(async () => {
   const content = await 拉取资源("pair_equivalence.txt");
-  return 解析频率映射(读取表格(content));
+  return 解析当量(读取表格(content));
 });
 
 // 用户数据存储
 const db = new MiniDb<词典>();
-
-export const 用户字集指示原子 = atomWithStorage<string[] | undefined>(
-  "user_character_set",
-  undefined,
-);
-
-export const 用户频率原子 = atomWithStorage<频率映射 | undefined>(
-  "user_frequency",
-  undefined,
-);
 
 export const 用户词典原子 = db.item("user_dictionary");
 
@@ -164,10 +119,6 @@ export const 自定义元素原子 = atomWithStorage<Record<string, 自定义元
   {},
 );
 
-export const 频率原子 = atom(async (get) => {
-  return get(用户频率原子) ?? (await get(默认频率原子));
-});
-
 export const 词典原子 = atom(async (get) => {
   return get(用户词典原子) ?? (await get(默认词典原子));
 });
@@ -184,7 +135,7 @@ export const processedCustomElementsAtom = atom((get) => {
 });
 
 export const 前端输入原子 = atom(async (get) => {
-  const 配置 = get(configAtom);
+  const 配置 = get(配置原子);
   const 词列表 = await get(如组装结果原子);
   return {
     配置,
@@ -219,29 +170,30 @@ export const 按首码分组决策原子 = atom((get) => {
       reversedMapping.get(first)?.push({ name, code });
     }
   }
-  return reversedMapping;
+  return ok(reversedMapping);
 });
 
 const mergedAlgebraAtom = atom((get) => {
   const algebra = get(拼写运算自定义原子);
-  return { ...algebra, ...拼写运算查找表 };
+  return 合并拼写运算(algebra);
 });
 
 export const 拼音元素枚举原子 = atom(async (get) => {
-  const 如字库 = await get(如字库原子);
-  if (!如字库.ok) return 如字库;
-  const 字库 = 如字库.value;
-  const syllables = [
-    ...new Set(
-      Object.values(字库.get()).flatMap((x) => x.readings.map((y) => y.pinyin)),
-    ),
-  ];
+  const 词典 = await get(词典原子);
+  const syllables = new Set<string>();
+  for (const { 拼音 } of Object.values(词典)) {
+    for (const s of 拼音) {
+      syllables.add(s);
+    }
+  }
   const 合并拼写运算原子 = Object.entries(get(mergedAlgebraAtom));
   const content: Map<string, string[]> = new Map(
     合并拼写运算原子.map(([name, rules]) => {
       const list = [
         ...new Set(
-          syllables.map((s) => 默认拼音分析器.应用规则列表(name, rules, s)),
+          Array.from(syllables).map((s) =>
+            默认拼音分析器.应用规则列表(name, rules, s),
+          ),
         ),
       ].sort();
       return [name, list];
@@ -265,12 +217,13 @@ export const 如字形分析结果原子 = atom(async (get) => {
   const repertoire = await get(如字库原子);
   if (!repertoire.ok) return repertoire;
   const analysisConfig = await get(如字形分析配置原子);
-  const characters = get(charactersAtom);
-  return await thread.spawn<字形分析结果>("analysis", [
-    repertoire,
+  const characters = get(汉字集合原子);
+  const result = await thread.spawn<字形分析结果>("analysis", [
+    repertoire.value.get(),
     analysisConfig,
     characters,
   ]);
+  return ok(result);
 });
 
 export const 如组装结果原子 = atom(async (get) => {
@@ -278,47 +231,43 @@ export const 如组装结果原子 = atom(async (get) => {
   const algebra = get(mergedAlgebraAtom);
   const encoder = get(编码配置原子);
   const keyboard = get(键盘原子);
-  const characters = get(charactersAtom);
+  const characters = get(汉字集合原子);
   const dictionary = await get(词典原子);
   const analysisResult = await get(如字形分析结果原子);
   const customElements = get(自定义元素原子);
   const priority = get(优先简码原子);
-  const adaptedFrequency = await get(频率原子);
   const config = { algebra, encoder, keyboard, priority };
   return await thread.spawn<组装[]>("assembly", [
     repertoire,
     config,
     characters,
     dictionary,
-    adaptedFrequency,
     analysisResult,
     customElements,
   ]);
 });
 
-export const getPriorityMap = (
-  priorityShortCodes: [string, string, number][],
-) => {
-  return new Map<string, number>(
-    priorityShortCodes.map(([word, pinyin_list, level]) => {
-      const hash = `${word}-${pinyin_list}`;
-      return [hash, level] as [string, number];
-    }),
-  );
-};
+export const 优先简码映射原子 = atom((get) => {
+  const 优先简码列表 = get(优先简码原子);
+  const map = new Map<string, number>();
+  for (const { 词, 拼音来源列表, 级别 } of 优先简码列表) {
+    const hash = 识别符(词, 拼音来源列表);
+    map.set(hash, 级别);
+  }
+  return map;
+});
 
-export const assemblyWithPriorityAtom = atom(async (get) => {
+export const 如组装结果与优先简码原子 = atom(async (get) => {
   const assemblyResult = await get(如组装结果原子);
-  const priorityShortCodes = get(优先简码原子);
-  const priorityMap = getPriorityMap(priorityShortCodes);
+  const priorityMap = get(优先简码映射原子);
   return assemblyResult.map((x) => {
-    const hash = `${x.词}-${x.拼音列表.join(",")}`;
+    const hash = 识别符(x.词, x.拼音来源列表);
     const level = priorityMap.get(hash);
-    return level !== undefined ? { ...x, 简码级别: level } : x;
+    return { ...x, 简码级别: level };
   });
 });
 
-export const encodeResultAtom = atom(async (get) => {
+export const 编码结果原子 = atom(async (get) => {
   const objective = get(默认目标原子);
   const input = await get(前端输入原子);
   return await thread.spawn<[EncodeResult, Metric]>("encode", [
@@ -329,9 +278,9 @@ export const encodeResultAtom = atom(async (get) => {
 
 export interface Combined extends 组装, DictEntry {}
 
-export const combinedResultAtom = atom(async (get) => {
+export const 联合结果原子 = atom(async (get) => {
   const assemblyResult = await get(如组装结果原子);
-  const [encodeResult] = await get(encodeResultAtom);
+  const [encodeResult] = await get(编码结果原子);
   const combined: Combined[] = assemblyResult.map((x, i) => ({
     ...x,
     ...encodeResult[i]!,
@@ -339,16 +288,14 @@ export const combinedResultAtom = atom(async (get) => {
   return combined;
 });
 
-export const charactersAtom = atom((get) => {
-  const repertoire = get(如字库原子);
-  const characterSet = get(字集指示原子);
-  const userCharacterSet = get(用户字集指示原子);
-  const userCharacterSetSet = new Set(userCharacterSet ?? []);
-
-  const filter = 字集过滤查找表[characterSet];
-  const characters = Object.entries(repertoire)
-    .filter(([k, v]) => filter(k, v, userCharacterSetSet))
-    .map(([k]) => k);
+export const 汉字集合原子 = atom(async (get) => {
+  const dictionary = await get(词典原子);
+  const characters = new Set<string>();
+  for (const { 词 } of Object.values(dictionary)) {
+    for (const char of Array.from(词)) {
+      characters.add(char);
+    }
+  }
   return characters;
 });
 
@@ -358,7 +305,7 @@ export const 原始字库原子 = atom(async (get) => {
   return new 原始字库(repertoire, userRepertoire);
 });
 
-export const displayAtom = atom(async (get) => {
+export const 别名显示原子 = atom(async (get) => {
   const repertoire = await get(原始字库原子);
   return (char: string) => {
     if (!是私用区(char)) return char;
@@ -367,16 +314,15 @@ export const displayAtom = atom(async (get) => {
   };
 });
 
-export const determinedRepertoireAtom = atom(async (get) => {
+export const 如确定字库原子 = atom(async (get) => {
   const repertoire = await get(原始字库原子);
   const customGlyph = get(字形自定义原子);
-  const customReadings = get(读音自定义原子);
   const tags = get(用户标签列表原子);
-  return repertoire.确定(customGlyph, customReadings, tags);
+  return repertoire.确定(customGlyph, tags);
 });
 
 export const 如字库原子 = atom(async (get) => {
-  const determined = await get(determinedRepertoireAtom);
+  const determined = await get(如确定字库原子);
   if (!determined.ok) return determined;
   const transformers = get(变换器列表原子);
   let result = determined.value;
@@ -461,3 +407,5 @@ export const 下一个可用的码位原子 = atom((get) => {
   }
   return 0xffff;
 });
+
+export const 当前元素原子 = atom<string | undefined>(undefined);

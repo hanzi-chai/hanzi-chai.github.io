@@ -40,6 +40,7 @@ export * from "./primitive.js";
 export * from "./registry.js";
 export * from "./repertoire.js";
 export * from "./selector.js";
+export * from "./unicode.js";
 export * from "./utils.js";
 
 export function 注册内置组件() {

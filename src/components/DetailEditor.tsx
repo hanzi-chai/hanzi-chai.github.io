@@ -1,12 +1,20 @@
 import { Panel } from "reactflow";
 import styled from "styled-components";
 import { Cascader, Flex, Form, Typography } from "antd";
-import type { CodableObject, Condition, Source, UnaryOp } from "~/lib";
-import { parseList, 拼写运算查找表, renderList } from "~/lib";
+import {
+  type 一元运算符,
+  一元运算符列表,
+  从列表生成,
+  type 取码对象,
+  拼写运算查找表,
+  type 条件节点配置,
+  type 源节点配置,
+  转列表,
+  运算符列表,
+} from "~/lib";
 import { Select } from "./Utils";
-import { ops, unaryOps } from "~/lib";
 import TextArea from "antd/es/input/TextArea";
-import { useAtomValue, 键盘原子, 拼写运算自定义原子 } from "~/atoms";
+import { useAtomValue, 拼写运算自定义原子, 字母表原子 } from "~/atoms";
 import { 自定义元素原子 } from "~/atoms";
 
 const Background = styled(Flex)`
@@ -33,10 +41,10 @@ export default function DetailEditor({
   setData,
 }: {
   selected: string;
-  data: Source | Condition | undefined;
-  setData: (data: Source | Condition) => void;
+  data: 源节点配置 | 条件节点配置 | undefined;
+  setData: (data: 源节点配置 | 条件节点配置) => void;
 }) {
-  const { alphabet } = useAtomValue(键盘原子);
+  const alphabet = useAtomValue(字母表原子);
   const algebra = useAtomValue(拼写运算自定义原子);
   const customElements = useAtomValue(自定义元素原子);
   if (data === undefined) return null;
@@ -137,10 +145,10 @@ export default function DetailEditor({
         <Item label="取码">
           <Cascader
             style={{ width: "128px" }}
-            value={renderList(data.object!)}
+            value={转列表(data.object!)}
             options={options}
             onChange={(event) => {
-              const object = parseList(event) as CodableObject;
+              const object = 从列表生成(event) as 取码对象;
               setData({ ...data, object });
             }}
           />
@@ -168,13 +176,13 @@ export default function DetailEditor({
               <Select
                 style={{ width: "128px" }}
                 value={data.operator}
-                options={ops.map((v) => ({
+                options={运算符列表.map((v) => ({
                   label: v,
                   value: v,
                 }))}
                 onChange={(event) => {
-                  if (unaryOps.includes(event as UnaryOp)) {
-                    setData({ ...data, operator: event as UnaryOp });
+                  if (一元运算符列表.includes(event as 一元运算符)) {
+                    setData({ ...data, operator: event as 一元运算符 });
                   } else {
                     setData({
                       ...data,

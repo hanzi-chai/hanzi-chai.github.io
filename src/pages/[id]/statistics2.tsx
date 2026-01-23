@@ -2,12 +2,10 @@ import { Flex, Skeleton, Table } from "antd";
 import type { Combined } from "~/atoms";
 import {
   字母表原子,
-  combinedResultAtom,
-  adaptedFrequencyAtom,
+  联合结果原子,
   默认目标类型原子,
   默认双键当量原子,
-  typeLabels,
-  useChaifenTitle,
+  部分目标类型名称映射,
 } from "~/atoms";
 import {
   ProForm,
@@ -27,6 +25,7 @@ import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
+import { useChaifenTitle } from "~/utils";
 
 const { Column, Heatmap } = await import("~/components/export/charts");
 
@@ -76,7 +75,6 @@ type DistributionResult = Map<string, { count: number; items: string[] }>;
 const count = (
   data: { name: string; code: string; importance: number }[],
   alphabet: string,
-  frequency: 频率映射,
   config: DistributionConfig,
   multiple?: boolean,
 ) => {
@@ -94,9 +92,7 @@ const count = (
   }
   for (const item of data) {
     const keys = config.index.map((i) => item.code[i]);
-    const value = config.dynamic
-      ? (frequency.get(item.name) ?? 0) * item.importance
-      : 1;
+    const value = 1;
     if (multiple) {
       keys.forEach((k) => {
         if (!k) return;
@@ -126,7 +122,6 @@ const count = (
 const countFingering = (
   data: { name: string; code: string; importance: number }[],
   alphabet: string,
-  frequency: 频率映射,
   config: DistributionConfig,
 ) => {
   const result: DistributionResult = new Map();
@@ -139,9 +134,7 @@ const countFingering = (
     for (const i of config.index) {
       const string = item.code.slice(i, i + 2);
       if (string.length < 2) continue;
-      const value = config.dynamic
-        ? (frequency.get(item.name) ?? 0) * item.importance
-        : 1;
+      const value = 1;
       const previous = result.get(string) ?? { count: 0, items: [] };
       previous.count += value;
       previous.items.push(item.name);
@@ -277,7 +270,10 @@ const DistributionForm = ({
         <ProFormSelect
           name="type"
           label="类型"
-          options={types.map((x) => ({ label: typeLabels[x], value: x }))}
+          options={types.map((x) => ({
+            label: 部分目标类型名称映射[x],
+            value: x,
+          }))}
         />
         {multiple ? (
           <ProFormSelect
@@ -303,7 +299,7 @@ const DistributionForm = ({
 
 const UnaryDistribution = () => {
   const maxLength = useAtomValue(最大码长原子);
-  const combined = useAtomValue(combinedResultAtom);
+  const combined = useAtomValue(联合结果原子);
   const alphabet = useAtomValue(字母表原子);
   const types = useAtomValue(默认目标类型原子);
   const init: DistributionConfig = {
@@ -313,8 +309,7 @@ const UnaryDistribution = () => {
   };
   const [config, setConfig] = useState(init);
   const data = filterType(config.type, combined);
-  const frequency = useAtomValue(adaptedFrequencyAtom);
-  const result = count(data, alphabet, frequency, config, true);
+  const result = count(data, alphabet, config, true);
 
   return (
     <>
@@ -357,7 +352,7 @@ const MatrixHeatMap = ({
       return {
         first: x!,
         second: y!,
-        equivalence: pairEquivalence[key] ?? 0,
+        equivalence: pairEquivalence.get(key) ?? 0,
         ...value,
       };
     });
@@ -411,7 +406,7 @@ const MatrixHeatMap = ({
 };
 
 const BinaryDistribution = () => {
-  const combined = useAtomValue(combinedResultAtom);
+  const combined = useAtomValue(联合结果原子);
   const types = useAtomValue(默认目标类型原子);
   const alphabet = useAtomValue(字母表原子);
   const init: DistributionConfig = {
@@ -421,8 +416,7 @@ const BinaryDistribution = () => {
   };
   const [config, setConfig] = useState(init);
   const data = filterType(config.type, combined);
-  const frequency = useAtomValue(adaptedFrequencyAtom);
-  const result = count(data, alphabet, frequency, config);
+  const result = count(data, alphabet, config);
 
   return (
     <>
@@ -447,7 +441,7 @@ const EquivalenceColumns = ({
   const pairEquivalence = useAtomValue(默认双键当量原子);
   const eqMap = new Map<number, number>();
   [...result].forEach(([key, { count }]) => {
-    const equivalence = pairEquivalence[key] ?? 0;
+    const equivalence = pairEquivalence.get(key) ?? 0;
     eqMap.set(equivalence, (eqMap.get(equivalence) ?? 0) + count);
   });
   const data = [...eqMap]
@@ -498,7 +492,7 @@ const EquivalenceColumns = ({
 };
 
 const FingeringDistribution = () => {
-  const combined = useAtomValue(combinedResultAtom);
+  const combined = useAtomValue(联合结果原子);
   const types = useAtomValue(默认目标类型原子);
   const maxLength = useAtomValue(最大码长原子);
   const init: DistributionConfig = {
@@ -509,8 +503,7 @@ const FingeringDistribution = () => {
   const [config, setConfig] = useState(init);
   const alphabet = useAtomValue(字母表原子);
   const data = filterType(config.type, combined);
-  const frequency = useAtomValue(adaptedFrequencyAtom);
-  const result = countFingering(data, alphabet, frequency, config);
+  const result = countFingering(data, alphabet, config);
   return (
     <>
       <Flex align="baseline" gap="large">
@@ -537,7 +530,7 @@ interface DuplicationDistributionEntry {
 }
 
 const DuplicationDistribution = () => {
-  const combined = useAtomValue(combinedResultAtom);
+  const combined = useAtomValue(联合结果原子);
   const duplicationMap = new Map<string, Combined[]>();
   const pairMap = new Map<string, [string, string][]>();
 
@@ -584,10 +577,11 @@ const DuplicationDistribution = () => {
       width: 128,
       render: (key: string) => {
         const [first, second] = key.split(" ").map(反序列化);
+        if (!first?.ok || !second?.ok) return key;
         return (
           <span>
-            <DisplayOptionalSuperscript element={first!} />・
-            <DisplayOptionalSuperscript element={second!} />
+            <DisplayOptionalSuperscript element={first.value!} />・
+            <DisplayOptionalSuperscript element={second.value!} />
           </span>
         );
       },

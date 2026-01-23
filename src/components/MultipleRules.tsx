@@ -1,7 +1,6 @@
 import { Form, Space, Button } from "antd";
 import { useAtom, 构词配置原子 } from "~/atoms";
-import type { WordRule } from "~/lib";
-import { wordLengthArray } from "~/lib";
+import { wordLengthArray, type 构词规则 } from "~/lib";
 import {
   ModalForm,
   ProFormCascader,
@@ -12,7 +11,7 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 
-const defaultRules: WordRule[] = [
+const defaultRules: 构词规则[] = [
   { length_equal: 2, formula: "AaAbBaBb" },
   { length_equal: 3, formula: "AaBaCaCb" },
   { length_in_range: [4, 10], formula: "AaBaCaZa" },
@@ -20,7 +19,7 @@ const defaultRules: WordRule[] = [
 
 export default function MultipleRules() {
   const [wordRules, setWordRules] = useAtom(构词配置原子);
-  const [form] = Form.useForm<{ rules: WordRule[] }>();
+  const [form] = Form.useForm<{ rules: 构词规则[] }>();
   const wordLengthArray2D = wordLengthArray
     .slice(0, wordLengthArray.length - 1)
     .map((x) => ({
@@ -32,7 +31,7 @@ export default function MultipleRules() {
       ? Promise.resolve()
       : Promise.reject(new Error("规则格式错误"));
   return (
-    <ModalForm<{ rules: WordRule[] }>
+    <ModalForm<{ rules: 构词规则[] }>
       form={form}
       initialValues={{ rules: wordRules }}
       title="多字词全码"

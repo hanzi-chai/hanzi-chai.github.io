@@ -16,68 +16,74 @@ import {
 import {
   useAtomValue,
   如笔顺映射原子,
-  displayAtom,
+  别名显示原子,
   如字库原子,
-  useChaifenTitle,
   自定义拆分原子,
-  charactersAtom,
+  汉字集合原子,
   决策原子,
   如字形分析配置原子,
-  adaptedFrequencyAtom,
   词典原子,
   拼写运算自定义原子,
   决策空间原子,
   动态自定义拆分原子,
   useAtom,
-  serializerAtom,
+  部件分析器原子,
+  复合体分析器原子,
+  useAtomValueUnwrapped,
 } from "~/atoms";
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
-import type { 字形分析结果, CharacterFilter } from "~/lib";
-import {
-  dynamicAnalysis,
-  exportTSV,
-  exportYAML,
-  makeCharacterFilter,
-  serializerMap,
-} from "~/lib";
+import { getRegistry, 基本分析, 默认部件分析, type 字形分析结果 } from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
 import { 如字形分析结果原子 } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
 import { Display, Select } from "~/components/Utils";
+import {
+  CharacterFilter,
+  exportTSV,
+  useChaifenTitle,
+  字符过滤器,
+} from "~/utils";
 
 const dumpAnalysisResult = (
-  characters: string[],
+  characters: Set<string>,
   a: 字形分析结果,
   display: (s: string) => string,
 ) => {
-  const { customized, compoundResults } = a;
-  const stat = new Map<number, number>();
-  const tsv = characters.map((char) => {
-    const analysis = customized.get(char) ?? compoundResults.get(char);
+  const { 部件分析结果, 复合体分析结果 } = a;
+  const tsv = [...characters].map((char) => {
+    const analysis = 部件分析结果.get(char) ?? 复合体分析结果.get(char);
     if (!analysis) {
       return [char, ""];
     }
-    const length = Math.min(analysis.sequence.length, 5);
-    stat.set(length, (stat.get(length) ?? 0) + 1);
-    return [char, analysis.sequence.map(display).join(" ")];
+    return [char, analysis.字根序列.map(display).join(" ")];
   });
   exportTSV(tsv, "拆分结果.txt");
 };
 
 const ConfigureRules = () => {
   const [modal, setModal] = useState(0);
-  const [serializer, setSerializer] = useAtom(serializerAtom);
+  const [部件分析器, 设置部件分析器] = useAtom(部件分析器原子);
+  const [复合体分析器, 设置复合体分析器] = useAtom(复合体分析器原子);
+  const 注册表 = getRegistry();
   return (
     <Flex gap="middle" justify="center" align="center">
       拆分风格
       <Select
-        value={serializer}
-        onChange={setSerializer}
-        options={Object.keys(serializerMap).map((x) => ({
+        value={部件分析器}
+        onChange={设置部件分析器}
+        options={[...注册表.部件分析器映射.keys()].map((x) => ({
+          label: x,
+          value: x,
+        }))}
+      />
+      <Select
+        value={复合体分析器}
+        onChange={设置复合体分析器}
+        options={[...注册表.复合体分析器映射.keys()].map((x) => ({
           label: x,
           value: x,
         }))}
@@ -98,18 +104,16 @@ const ConfigureRules = () => {
 
 const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const [step, setStep] = useState(0 as 0 | 1);
-  const repertoire = useAtomValue(如字库原子);
-  const sequenceMap = useAtomValue(如笔顺映射原子);
-  const analysisResult = useAtomValue(如字形分析结果原子);
-  const { componentResults, compoundResults, componentError, compoundError } =
-    analysisResult;
-  const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);
+  const repertoire = useAtomValueUnwrapped(如字库原子);
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const analysisResult = useAtomValueUnwrapped(如字形分析结果原子);
+  const { 部件分析结果, 复合体分析结果 } = analysisResult;
   const dictionary = useAtomValue(词典原子);
   const algebra = useAtomValue(拼写运算自定义原子);
-  const characters = useAtomValue(charactersAtom);
+  const characters = useAtomValue(汉字集合原子);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const display = useAtomValue(displayAtom);
+  const display = useAtomValue(别名显示原子);
   const customize = useAtomValue(自定义拆分原子);
   const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const allCustomizedKeys = new Set([
@@ -117,31 +121,40 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
     ...Object.keys(dynamicCustomize),
   ]);
   const mapping = useAtomValue(决策原子);
-  const filterFn = makeCharacterFilter(filter, repertoire, sequenceMap);
-  const analysisConfig = useAtomValue(如字形分析配置原子);
+  const filterFn = new 字符过滤器(filter);
+  const analysisConfig = useAtomValueUnwrapped(如字形分析配置原子);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
-  const componentsNeedAnalysis = [...componentResults].filter(([k, v]) => {
-    if (analysisConfig.optionalRoots.has(k)) return true;
+  const componentsNeedAnalysis = [...部件分析结果].filter(([k, v]) => {
+    if (analysisConfig.可选字根.has(k)) return true;
     if (mapping[k]) return false;
-    if (v.sequence.length === 1 && /\d+/.test(v.sequence[0]!)) return false;
+    if (v.字根序列.length === 1 && /\d+/.test(v.字根序列[0]!)) return false;
     return true;
   });
   const componentDisplay = componentsNeedAnalysis
     .filter(([x]) => !customizedOnly || customize[x] || dynamicCustomize[x])
-    .filter(([x]) => filterFn(x))
+    .filter(([x]) =>
+      filterFn.过滤(x, repertoire.get()[x]!, sequenceMap.get(x) ?? ""),
+    )
     .map(([key, res]) => {
+      const r = res as 默认部件分析 | 基本分析;
       return {
         key,
         label: <ResultSummary char={key} analysis={res} />,
         children:
-          "schemes" in res ? (
-            <ResultDetail char={key} data={res.全部拆分方式} map={res.map} />
+          "全部拆分方式" in r ? (
+            <ResultDetail
+              char={key}
+              data={r.全部拆分方式}
+              map={r.字根笔画映射}
+            />
           ) : null,
       };
     });
-  const compoundDisplay = [...compoundResults]
-    .filter(([x]) => filterFn(x))
+  const compoundDisplay = [...复合体分析结果]
+    .filter(([x]) =>
+      filterFn.过滤(x, repertoire.get()[x]!, sequenceMap.get(x) ?? ""),
+    )
     .map(([key, res]) => {
       return {
         key,
@@ -152,31 +165,6 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const displays = [componentDisplay, compoundDisplay] as const;
   return (
     <>
-      {componentError.length + compoundError.length > 0 ? (
-        <Alert
-          message="有些部件或复合体拆分时出错，请检查"
-          description={
-            <>
-              <p>
-                部件：
-                {componentError.map((x, i) => (
-                  <Display key={i} name={x} />
-                ))}
-              </p>
-              <p>
-                复合体：
-                {compoundError.map((x, i) => (
-                  <Display key={i} name={x} />
-                ))}
-                `
-              </p>
-            </>
-          }
-          type="warning"
-          showIcon
-          closable
-        />
-      ) : null}
       <Flex>
         <Radio.Group
           value={step}
@@ -193,71 +181,10 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
         >
           导出拆分
         </Button>
-        <Button
-          onClick={() => {
-            const { dynamic_customize } = analysisConfig.analysis;
-            const { roots, optionalRoots } = analysisConfig;
-            const illegal: string[] = [];
-            for (const [char, customize] of Object.entries(
-              dynamic_customize ?? {},
-            )) {
-              for (const method of customize) {
-                const valid = method.every(
-                  (x) => /\d+/.test(x) || roots.has(x) || optionalRoots.has(x),
-                );
-                if (!valid) {
-                  illegal.push(char);
-                  break;
-                }
-              }
-              const last = customize[customize.length - 1]!;
-              const valid = last.every(
-                (x) => (/\d+/.test(x) || roots.has(x)) && !optionalRoots.has(x),
-              );
-              if (!valid) {
-                illegal.push(char);
-              }
-            }
-            if (illegal.length > 0) {
-              notification.error({
-                message: "这些字的最后一个拆分并非全部由必要字根构成",
-                description: (
-                  <span>
-                    {illegal.map((x) => (
-                      <Display key={x} name={x} />
-                    ))}
-                  </span>
-                ),
-              });
-            } else {
-              notification.success({
-                message: "自定义动态拆分检查通过",
-              });
-            }
-            const result = dynamicAnalysis(
-              repertoire,
-              analysisConfig,
-              characters,
-              dictionary,
-              adaptedFrequency,
-              algebra,
-            );
-            exportTSV(
-              result.汉字信息.map(({ 部首, 汉字 }) => [
-                汉字,
-                repertoire[部首]?.name ?? 部首 ?? "",
-              ]),
-              "radicals.txt",
-            );
-            exportYAML(result, "dynamic_analysis", 2);
-          }}
-        >
-          导出动态拆分
-        </Button>
       </Flex>
       <Row style={{ width: "80%", alignItems: "center" }}>
         <Col span={5}>
-          <Statistic title="总部件数" value={componentResults.size} />
+          <Statistic title="总部件数" value={部件分析结果.size} />
         </Col>
         <Col span={5}>
           <Statistic

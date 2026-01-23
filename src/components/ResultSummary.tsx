@@ -9,9 +9,9 @@ import { Button, Flex, Form, Popover } from "antd";
 import ElementSelect from "./ElementSelect";
 import { ProForm, ProFormList } from "@ant-design/pro-components";
 import { InlineRender } from "./ComponentForm";
-import type { 部件分析, 复合体分析 } from "~/lib";
 import { CharWithTooltip, ElementWithTooltip } from "./ElementPool";
 import styled from "styled-components";
+import { 基本分析, 默认部件分析 } from "~/lib";
 
 const Customize = ({
   component,
@@ -118,10 +118,10 @@ export default function ResultSummary({
   disableCustomize = false,
 }: {
   char: string;
-  analysis: 部件分析 | 复合体分析;
+  analysis: 基本分析 | 默认部件分析;
   disableCustomize?: boolean;
 }) {
-  const { sequence } = analysis;
+  const { 字根序列 } = analysis;
   const customize = useAtomValue(自定义拆分原子);
   const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const remove = useRemoveAtom(自定义拆分原子);
@@ -132,7 +132,7 @@ export default function ResultSummary({
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
         <CharWithTooltip element={char} />
-        {sequence.map((x, index) => {
+        {字根序列.map((x, index) => {
           return (
             <Flex key={index} align="center">
               <ElementWithTooltip element={x} />
@@ -169,7 +169,7 @@ export default function ResultSummary({
           {overrideDynamicSeries && (
             <Button onClick={() => removeDynamic(char)}>取消动态</Button>
           )}
-          {"schemes" in analysis && (
+          {"全部拆分方式" in analysis && (
             <Popover
               title="自定义动态拆分"
               trigger="click"
@@ -179,8 +179,8 @@ export default function ResultSummary({
                   initialValues={
                     dynamicCustomize[char] ??
                     analysis.全部拆分方式
-                      .filter((x) => x.optional)
-                      .map((x) => x.roots)
+                      .filter((x) => x.可用)
+                      .map((x) => x.拆分方式.map((y) => y.名称))
                   }
                 />
               }
@@ -193,7 +193,7 @@ export default function ResultSummary({
             content={
               <Customize
                 component={char}
-                initialValues={overrideRootSeries ?? sequence}
+                initialValues={overrideRootSeries ?? 字根序列}
               />
             }
           >

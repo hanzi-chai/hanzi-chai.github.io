@@ -1,6 +1,5 @@
 import init, { Web } from "libchai";
-import { analysis } from "./lib";
-import { assemble } from "./lib";
+import { assemble, 字库 } from "./lib";
 import axios from "axios";
 
 export interface WorkerInput {
@@ -84,7 +83,7 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
   try {
     switch (event.data.type) {
       case "analysis":
-        result = analysis(data[0], data[1], data[2]);
+        result = new 字库(data[0]).拆分(data[1], data[2]);
         port.postMessage({ type: "success", result });
         break;
       case "assembly":

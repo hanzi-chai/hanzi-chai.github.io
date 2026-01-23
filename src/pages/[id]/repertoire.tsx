@@ -1,6 +1,6 @@
 import { Flex } from "antd";
-import { RemoteContext, useChaifenTitle } from "~/atoms";
 import CharacterTable from "~/components/CharacterTable";
+import { RemoteContext, useChaifenTitle } from "~/utils";
 
 export default function Repertoire() {
   useChaifenTitle("数据");

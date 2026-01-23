@@ -7,16 +7,16 @@ import {
   useAtomValue,
   如字库原子,
   如笔顺映射原子,
-  displayAtom,
+  别名显示原子,
   键盘原子,
 } from "~/atoms";
-import { isPUA, makeFilter } from "~/lib";
 import StrokeSearch from "./CharacterSearch";
 import type { ShapeElementTypes } from "./ElementPicker";
-import type { PronunciationElementTypes } from "~/lib";
 import Classifier from "./Classifier";
 import { Display } from "./Utils";
 import Element from "./Element";
+import { 是私用区 } from "~/lib";
+import { makeFilter } from "~/utils";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -28,7 +28,7 @@ interface PoolProps {
   element?: string;
   setElement: (s: string | undefined) => void;
   content: string[];
-  name: ShapeElementTypes | PronunciationElementTypes | string;
+  name: ShapeElementTypes | string;
 }
 
 interface ElementProps {
@@ -38,13 +38,13 @@ interface ElementProps {
 }
 
 export const ElementWithTooltip = ({ element }: { element: string }) => {
-  const display = useAtomValue(displayAtom);
+  const display = useAtomValue(别名显示原子);
   const core = (
     <Element>
       <Display name={element} />
     </Element>
   );
-  if (!isPUA(element)) return core;
+  if (!是私用区(element)) return core;
   return <Tooltip title={display(element)}>{core}</Tooltip>;
 };
 
@@ -57,7 +57,7 @@ export const CharWithTooltip: FC<ElementProps> = ({
   const { mapping } = keyboard;
   const type =
     x === currentElement ? "primary" : mapping[x] ? "link" : "default";
-  const display = useAtomValue(displayAtom);
+  const display = useAtomValue(别名显示原子);
   const core = (
     <Char
       onClick={() => setElement?.(x === currentElement ? undefined : x)}
@@ -67,7 +67,7 @@ export const CharWithTooltip: FC<ElementProps> = ({
     </Char>
   );
   const codepoint = x.codePointAt(0)!.toString(16);
-  const title = isPUA(x) ? `${display(x)} ${codepoint}` : codepoint;
+  const title = 是私用区(x) ? `${display(x)} ${codepoint}` : codepoint;
   return <Tooltip title={title}>{core}</Tooltip>;
 };
 
@@ -84,10 +84,12 @@ export default function ElementPool({
   const [sequence, setSequence] = useState("");
   const sequenceMap = useAtomValue(如笔顺映射原子);
   const determinedRepertoire = useAtomValue(如字库原子);
-  const filter = makeFilter(sequence, determinedRepertoire, sequenceMap);
+  const [isOpen, setOpen] = useState(false);
+  if (!determinedRepertoire.ok) return null;
+  if (!sequenceMap.ok) return null;
+  const filter = makeFilter(sequence, determinedRepertoire, sequenceMap.value);
   const filtered = name === "字根" ? content.filter(filter) : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const [isOpen, setOpen] = useState(false);
   return (
     <Flex vertical gap="middle" align="center">
       {name === "字根" && <StrokeSearch setSequence={setSequence} />}

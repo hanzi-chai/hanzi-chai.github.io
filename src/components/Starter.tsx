@@ -7,7 +7,7 @@ import {
   keyboardTypes,
 } from "~/templates";
 import type { Updater } from "use-immer";
-import type { Config } from "~/lib";
+import type { 配置 } from "~/lib";
 import { nanoid } from "nanoid";
 import {
   ModalForm,
@@ -18,7 +18,7 @@ import {
 export default function Starter({
   setConfigs,
 }: {
-  setConfigs: Updater<Record<string, Config>>;
+  setConfigs: Updater<Record<string, 配置>>;
 }) {
   const required = [{ required: true }];
   const makeOptions = (types: readonly string[]) =>

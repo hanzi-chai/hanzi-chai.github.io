@@ -1,10 +1,9 @@
 import { Button, Flex, Select } from "antd";
 import { useAtom } from "jotai";
 import { 变换器列表原子 } from "~/atoms";
-import { isVariable, 变换器, 模式, 节点类型 } from "~/lib";
-import { DeleteButton, MinusButton, PlusButton } from "./Utils";
+import { 变换器, 结构变量, 结构表示符列表, 节点 } from "~/lib";
+import { MinusButton, PlusButton } from "./Utils";
 import CharacterSelect from "./CharacterSelect";
-import { operators } from "~/lib";
 import {
   ModalForm,
   ProFormItem,
@@ -18,20 +17,22 @@ const getDummyTransformer = (): 变换器 => {
   };
 };
 
+const isVariable = (node: 节点): node is 结构变量 => {
+  return typeof node === "object" && node !== null && "id" in node;
+};
+
 const PatternEditor: React.FC<{
-  value: 节点类型;
-  onChange: (newValue: 节点类型) => void;
+  value: 节点;
+  onChange: (newValue: 节点) => void;
 }> = ({ value, onChange }) => {
-  const selectValue = isVariable(value) ? `变量 ${value.id}` : value;
+  const selectValue = isVariable(value) ? JSON.stringify(value) : value;
   return typeof value === "string" || isVariable(value) ? (
     <Flex vertical align="center">
       <CharacterSelect
         style={{ width: 88 }}
         value={selectValue}
         onChange={(v: string) =>
-          /^变量 \d+$/.test(v)
-            ? onChange({ id: parseInt(v.split(" ")[1]!, 10) })
-            : onChange(v as 节点类型)
+          onChange(v.startsWith("{") ? (JSON.parse(v) as 结构变量) : v)
         }
         includeVariables
       />
@@ -42,7 +43,7 @@ const PatternEditor: React.FC<{
       <Flex vertical align="center">
         <Select
           style={{ width: 64 }}
-          options={operators.map((op) => ({ label: op, value: op }))}
+          options={结构表示符列表.map((op) => ({ label: op, value: op }))}
           value={value.operator}
           onChange={(newOp) =>
             onChange({

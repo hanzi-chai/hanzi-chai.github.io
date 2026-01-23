@@ -23,13 +23,16 @@ import {
   useAddAtom,
   useRemoveAtom,
   useAtom,
-  currentElementAtom,
   决策空间原子,
   键盘原子,
+  type 首码分组,
+  useAtomValueUnwrapped,
+  按首码分组决策原子,
+  当前元素原子,
 } from "~/atoms";
 import Char from "./Character";
 import MappingSpace, { RulesForm } from "./MappingSpace";
-import { getReversedMapping, isMerge, isPUA, 可打印字符列表 } from "~/lib";
+import { 决策, 可打印字符列表, 安排, 是归并, 非空安排 } from "~/lib";
 import {
   DeleteButton,
   Display,
@@ -37,44 +40,33 @@ import {
   Uploader,
 } from "./Utils";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import type { Key, 首码分组, Mapping, Value } from "~/lib";
 import styled from "styled-components";
 import { blue } from "@ant-design/colors";
 import { ElementWithTooltip } from "./ElementPool";
 import { sortBy } from "lodash-es";
 import ValueEditor from "./Value";
+import { 是私用区 } from "~/lib";
 
-const visit = (
-  parent: string,
-  name: string,
-  output: any[],
-  mapping: Mapping,
-) => {
+const visit = (parent: string, name: string, output: any[], mapping: 决策) => {
   output.push({ from: name, to: parent });
   const children = Object.entries(mapping)
-    .filter(([, to]) => isMerge(to) && to.element === name)
+    .filter(([, to]) => 是归并(to) && to.element === name)
     .map(([x]) => x);
-  children.forEach((child) => visit(name, child, output, mapping));
+  children.map((child) => visit(name, child, output, mapping));
 };
 
-export const getAffiliates = (name: string, mapping: Mapping) => {
+export const getAffiliates = (name: string, mapping: 决策) => {
   const result: { from: string; to: string }[] = [];
   // use pre-dfs to get all affiliates
   Object.entries(mapping).forEach(([key, value]) => {
-    if (isMerge(value) && value.element === name) {
+    if (是归并(value) && value.element === name) {
       visit(name, key, result, mapping);
     }
   });
   return result;
 };
 
-const ElementDetail = ({
-  keys,
-  name,
-}: {
-  keys: Exclude<Value, null>;
-  name: string;
-}) => {
+const ElementDetail = ({ keys, name }: { keys: 非空安排; name: string }) => {
   const addMapping = useAddAtom(决策原子);
   const removeMapping = useRemoveAtom(决策原子);
   const mapping = useAtomValue(决策原子);
@@ -90,7 +82,7 @@ const ElementDetail = ({
               if (affiliates.length === 0) removeMapping(name);
               else notification.error({ message: "无法删除有归并关系的元素" });
             } else {
-              addMapping(name, newValue as Exclude<Value, null>);
+              addMapping(name, newValue);
             }
           }}
           isCurrent
@@ -134,7 +126,7 @@ export const AdjustableElementGroup = ({
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
-  const currentElement = useAtomValue(currentElementAtom);
+  const currentElement = useAtomValue(当前元素原子);
   const mappingSpace = useAtomValue(决策空间原子);
   const isOptional = (name: string) =>
     mappingSpace[name]?.some((x) => x.value === null) ?? false;
@@ -179,11 +171,15 @@ export const AdjustableElementGroup = ({
           <span style={{ fontSize: "0.85em", paddingLeft: "2px" }}>
             {typeof rest === "string"
               ? rest
-              : rest.map((x) => {
+              : rest.map((x, i) => {
                   return typeof x === "string" ? (
                     x
                   ) : (
-                    <DisplayWithSuperScript name={x.element} index={x.index} />
+                    <DisplayWithSuperScript
+                      key={i}
+                      name={x.element}
+                      index={x.index}
+                    />
                   );
                 })}
           </span>
@@ -233,7 +229,7 @@ const MappingUploader = ({
 }: {
   setImportResult: (a: any) => void;
 }) => {
-  const repertoire = useAtomValue(如字库原子);
+  const repertoire = useAtomValueUnwrapped(如字库原子);
   const setMapping = useSetAtom(决策原子);
   const mappingType = useAtomValue(编码类型原子);
   const alphabet = useAtomValue(字母表原子);
@@ -250,8 +246,8 @@ const MappingUploader = ({
         for (const line of tsv) {
           const [key, value] = line;
           if (key === undefined || value === undefined) continue;
-          const glyph = repertoire[key]?.glyph;
-          if (glyph === undefined || isPUA(key)) {
+          const glyph = repertoire.查询字形(key);
+          if (glyph === undefined || 是私用区(key)) {
             unknownKeys.push(key);
             continue;
           }
@@ -397,7 +393,7 @@ const MappingRow = memo(
 export default function MappingComponent() {
   const mapping = useAtomValue(决策原子);
   const alphabet = useAtomValue(字母表原子);
-  const reversedMapping = getReversedMapping(mapping, alphabet);
+  const reversedMapping = useAtomValueUnwrapped(按首码分组决策原子);
 
   return (
     <Flex vertical>

@@ -1,7 +1,7 @@
 import { Flex, Skeleton } from "antd";
 import { Suspense } from "react";
-import { useChaifenTitle } from "~/atoms";
 import Debugger from "~/components/Debugger";
+import { useChaifenTitle } from "~/utils";
 
 export default function Assembly() {
   useChaifenTitle("编码");

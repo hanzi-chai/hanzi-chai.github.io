@@ -9,14 +9,13 @@ import {
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import type { Key } from "~/lib";
-import { 合并字符串 } from "~/lib";
+import { 合并字符串, 码位 } from "~/lib";
 
 export default function ElementAdder({ element }: { element?: string }) {
   const alphabet = useAtomValue(字母表原子);
   const mapping_type = useAtomValue(编码类型原子);
   const [main, setMain] = useState<string | undefined>(undefined);
-  const [keys, setKeys] = useState<Key[]>([alphabet[0]!, "", "", ""]);
+  const [keys, setKeys] = useState<码位[]>([alphabet[0]!, "", "", ""]);
   const addMapping = useAddAtom(决策原子);
   return (
     <>

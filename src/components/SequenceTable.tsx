@@ -1,36 +1,33 @@
 import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
-  优先简码原子,
+  如组装结果与优先简码原子,
   最大码长原子,
-  combinedResultAtom,
+  联合结果原子,
 } from "~/atoms";
-import type { DictEntry, IndexedElement } from "~/lib";
-import { getPriorityMap, 序列化, summarize } from "~/lib";
-import { exportTSV } from "~/lib";
-import { 如组装结果原子, encodeResultAtom } from "~/atoms";
+import { 序列化, type 码位 } from "~/lib";
+import { 编码结果原子 } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import { type DictEntry, exportTSV } from "~/utils";
 
 interface MainEntry {
   key: string;
   name: string;
-  pinyin_list: string[];
+  pinyin_list: string[][];
   frequency: number;
   full: string;
   full_rank: number;
   short: string;
   short_rank: number;
-  [n: number]: IndexedElement;
+  [n: number]: 码位;
 }
 
 const ExportAssembly = () => {
-  const assemblyResult = useAtomValue(如组装结果原子);
-  const priorityShortCodes = useAtomValue(优先简码原子);
-  const priorityMap = getPriorityMap(priorityShortCodes);
+  const assemblyResult = useAtomValue(如组装结果与优先简码原子);
   return (
     <Button
       onClick={() => {
@@ -39,13 +36,11 @@ const ExportAssembly = () => {
           词: name,
           元素序列: sequence,
           频率: importance,
-          拼音列表: pinyin_list,
+          简码级别,
         } of assemblyResult) {
-          const summary = summarize(sequence);
-          const hash = `${name}-${pinyin_list.join(",")}`;
-          const level = priorityMap.get(hash);
-          if (level !== undefined) {
-            tsv.push([name, summary, String(importance), String(level)]);
+          const summary = sequence.map(序列化).join("");
+          if (简码级别 !== undefined) {
+            tsv.push([name, summary, String(importance), String(简码级别)]);
           } else {
             tsv.push([name, summary, String(importance)]);
           }
@@ -59,7 +54,7 @@ const ExportAssembly = () => {
 };
 
 const ExportCode = () => {
-  const [code] = useAtomValue(encodeResultAtom);
+  const [code] = useAtomValue(编码结果原子);
   const flatten = (x: DictEntry) => [
     x.name,
     x.full,
@@ -107,11 +102,7 @@ const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
     new RegExp(value as string).test(record[dataIndex]),
 });
 
-export const DisplayOptionalSuperscript = ({
-  element,
-}: {
-  element: IndexedElement;
-}) => {
+export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => {
   if (typeof element === "string") {
     return <Display name={element} />;
   } else {
@@ -123,16 +114,16 @@ export const DisplayOptionalSuperscript = ({
 
 export default function SequenceTable() {
   const max_length = useAtomValue(最大码长原子);
-  const combinedResult = useAtomValue(combinedResultAtom);
+  const combinedResult = useAtomValue(联合结果原子);
 
   const dataSource = combinedResult.map(
     ({ 词: name, 元素序列: sequence, 频率: frequency, ...rest }) => {
-      const key = `${name}-${summarize(sequence)}`;
+      const key = `${name}-${sequence.map(序列化).join("")}`;
       const entry: MainEntry = {
         key,
         frequency,
-        name,
         ...rest,
+        pinyin_list: rest.拼音来源列表,
       };
       for (const [i, element] of sequence.entries()) {
         entry[i] = element;
@@ -144,7 +135,7 @@ export default function SequenceTable() {
   dataSource.sort((a, b) => b.frequency - a.frequency);
 
   const hash = (record: MainEntry) => {
-    const list: IndexedElement[] = [];
+    const list: 码位[] = [];
     for (const i of Array(max_length).keys()) {
       const element = record[i];
       if (element === undefined) {
@@ -247,8 +238,12 @@ export default function SequenceTable() {
       key: "action",
       width: 128,
       render: (_, record) => {
-        const hash = `${record.name}-${record.pinyin_list.join(",")}`;
-        return <ProrityShortCodeSelector hash={hash} />;
+        return (
+          <ProrityShortCodeSelector
+            词={record.name}
+            拼音来源列表={record.pinyin_list}
+          />
+        );
       },
     },
     {

@@ -1,19 +1,24 @@
 import type { Edge, Node } from "reactflow";
-import type { BinaryCondition, Condition, Source, UnaryCondition } from "~/lib";
+import type {
+  一元条件配置,
+  二元条件配置,
+  条件节点配置,
+  源节点配置,
+} from "~/lib";
 import { add } from "~/lib";
 import { createContext } from "react";
 import { sum } from "lodash-es";
 
 export const CacheContext = createContext<{
-  sources: Record<string, Source>;
-  setSources: (sources: Record<string, Source>) => void;
-  conditions: Record<string, Condition>;
-  setConditions: (conditions: Record<string, Condition>) => void;
+  sources: Record<string, 源节点配置>;
+  setSources: (sources: Record<string, 源节点配置>) => void;
+  conditions: Record<string, 条件节点配置>;
+  setConditions: (conditions: Record<string, 条件节点配置>) => void;
   selected: string | undefined;
   setSelected: (selected: string | undefined) => void;
 }>({} as any);
 
-export type SourceData = Omit<Source, "next">;
+export type SourceData = Omit<源节点配置, "next">;
 
 export type SNode = Node<SourceData>;
 
@@ -28,8 +33,8 @@ export const makeSourceNode = (data: SourceData, id: string): SNode => ({
 });
 
 export type ConditionData =
-  | Omit<UnaryCondition, "positive" | "negative">
-  | Omit<BinaryCondition, "positive" | "negative">;
+  | Omit<一元条件配置, "positive" | "negative">
+  | Omit<二元条件配置, "positive" | "negative">;
 
 export type CNode = Node<ConditionData>;
 

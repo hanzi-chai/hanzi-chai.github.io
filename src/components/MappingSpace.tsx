@@ -2,11 +2,11 @@ import { Button, Flex, Popover, Select, Typography } from "antd";
 import { sortBy } from "lodash-es";
 import {
   字母表原子,
-  currentElementAtom,
   决策原子,
   决策生成器配置原子,
   决策空间原子,
   变量规则映射原子,
+  当前元素原子,
   useAddAtom,
   useAtom,
   useAtomValue,
@@ -16,7 +16,6 @@ import {
 import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, Display, NumberInput } from "~/components/Utils";
-import { MappingGeneratorRule, ValueDescription } from "~/lib";
 import Element from "./Element";
 import {
   ModalForm,
@@ -29,13 +28,14 @@ import {
 import CharacterSelect from "./CharacterSelect";
 import { useState } from "react";
 import ValueEditor from "./Value";
+import { 决策生成器规则, 安排描述 } from "~/lib";
 
 const ValueDescriptionEditor = ({
   value,
   onChange,
 }: {
-  value: ValueDescription;
-  onChange: (newValue: ValueDescription | undefined) => void;
+  value: 安排描述;
+  onChange: (newValue: 安排描述 | undefined) => void;
 }) => {
   const currentCondition = value.condition ?? [];
   const updateCondition = (index: number, key: string, update: any) => {
@@ -217,7 +217,7 @@ const MappingGeneratorsForm = () => {
       layout="horizontal"
       initialValues={{ mappingGenerators }}
       onFinish={async ({ mappingGenerators }) => {
-        setMappingGenerators(mappingGenerators as MappingGeneratorRule[]);
+        setMappingGenerators(mappingGenerators as 决策生成器规则[]);
         return true;
       }}
     >
@@ -248,7 +248,7 @@ export default function MappingSpace() {
   const addMappingSpace = useAddAtom(决策空间原子);
   const [character, setCharacter] = useState<string | undefined>(undefined);
   const alphabet = useAtomValue(字母表原子);
-  const currentElement = useAtomValue(currentElementAtom);
+  const currentElement = useAtomValue(当前元素原子);
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={3}>决策空间</Typography.Title>

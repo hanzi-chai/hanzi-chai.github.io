@@ -13,9 +13,9 @@ import type { MouseEventHandler } from "react";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import { isPUA } from "~/lib";
 import { StrokesView } from "./GlyphView";
-import { 如私用区图形原子, useAtomValue } from "~/atoms";
+import { 如私用区图形原子, useAtomValue, useAtomValueUnwrapped } from "~/atoms";
+import { 是私用区 } from "~/lib";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -125,8 +125,8 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
 };
 
 export const Display = ({ name, ...rest }: { name: string }) => {
-  const glyphMap = useAtomValue(如私用区图形原子);
-  if (!isPUA(name)) {
+  const glyphMap = useAtomValueUnwrapped(如私用区图形原子);
+  if (!是私用区(name)) {
     return (
       <span {...rest} style={{ whiteSpace: "nowrap" }}>
         {/^\d$/.test(name)

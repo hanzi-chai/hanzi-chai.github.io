@@ -9,7 +9,7 @@ import {
 } from "./config.js";
 import { type Extra, 取码器 } from "./element.js";
 import type { 基本分析, 字形分析结果, 拼音分析结果 } from "./repertoire.js";
-import { 序列化 } from "./utils.js";
+import { chars, 序列化 } from "./utils.js";
 import { getRegistry } from "./registry.js";
 
 /**
@@ -24,7 +24,7 @@ type 默认汉字分析 = (默认部件分析 | 基本分析) & {
 
 interface 组装 {
   词: string;
-  拼音列表: string[];
+  拼音来源列表: string[][];
   元素序列: 码位[];
   频率: number;
 }
@@ -206,7 +206,6 @@ const assemble = (
   配置: 组装配置,
   拼音分析结果: 拼音分析结果,
   字形分析结果: 字形分析结果,
-  频率映射: Map<string, number>,
 ) => {
   const 组装结果: 组装[] = [];
   const 组装器 = getRegistry().创建组装器(
@@ -215,36 +214,27 @@ const assemble = (
   )!;
   const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
   // 一字词
-  for (const { 词, 拼音, 元素映射: 拼写运算 } of 拼音分析结果.一字词) {
-    const 键 = `${词}:${拼音}`;
-    const 频率 = 频率映射.get(键) ?? 0;
-    const 字形分析 = 部件分析结果.get(词) ?? 复合体分析结果.get(词);
-    const 元素序列 = 组装器.一字词组装(词, 字形分析!, 拼写运算);
-    组装结果.push({ 词, 元素序列, 频率, 拼音列表: [拼音] });
-  }
-  if (!配置.编码器.rules) return 组装结果;
-  // 多字词
-  for (const {
-    词,
-    拼音: 拼音列表,
-    元素映射: 拼写运算,
-  } of 拼音分析结果.多字词) {
-    const 键 = `${词}:${拼音列表.join(" ")}`;
-    const 频率 = 频率映射.get(键) ?? 0;
-    const 字形分析列表: 基本分析[] = [];
-    let valid = true;
-    for (const 汉字 of Array.from(词)) {
-      const 字形分析 = 部件分析结果.get(汉字) ?? 复合体分析结果.get(汉字);
-      if (!字形分析) {
-        valid = false;
-        break;
-      } else {
-        字形分析列表.push(字形分析);
+  for (const { 词, 拼音, 频率, 元素映射 } of 拼音分析结果) {
+    let 元素序列: 码位[] = [];
+    if (chars(词) === 1) {
+      const 字形分析 = 部件分析结果.get(词) ?? 复合体分析结果.get(词);
+      元素序列 = 组装器.一字词组装(词, 字形分析!, 元素映射[0]!);
+    } else {
+      const 字形分析列表: 基本分析[] = [];
+      let valid = true;
+      for (const 汉字 of Array.from(词)) {
+        const 字形分析 = 部件分析结果.get(汉字) ?? 复合体分析结果.get(汉字);
+        if (!字形分析) {
+          valid = false;
+          break;
+        } else {
+          字形分析列表.push(字形分析);
+        }
       }
+      if (!valid) continue;
+      元素序列 = 组装器.多字词组装(词, 字形分析列表, 元素映射)!;
     }
-    if (!valid) continue;
-    const 元素序列 = 组装器.多字词组装(词, 字形分析列表, 拼写运算)!;
-    组装结果.push({ 词, 元素序列, 频率, 拼音列表: [拼音列表.join(" ")] });
+    组装结果.push({ 词, 元素序列, 频率, 拼音来源列表: [拼音] });
   }
   const 去重后组装结果: 组装[] = [];
   const 索引映射 = new Map<string, number>();
@@ -254,7 +244,7 @@ const assemble = (
     if (索引 !== undefined) {
       const 上一个组装 = 去重后组装结果[索引]!;
       上一个组装.频率 += 组装.频率;
-      上一个组装.拼音列表.push(...组装.拼音列表);
+      上一个组装.拼音来源列表.push(...组装.拼音来源列表);
     } else {
       索引映射.set(hash, 去重后组装结果.length);
       去重后组装结果.push(组装);

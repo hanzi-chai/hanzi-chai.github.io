@@ -1,8 +1,7 @@
 import "@antv/s2-react/dist/s2-react.min.css";
 import { useAtomValue } from "jotai";
-import { encodeResultAtom, 默认目标类型原子, typeLabels } from "~/atoms";
-import type { Objective, 部分目标类型 } from "~/lib";
-import { fingeringLabels, type PartialMetric } from "~/lib";
+import { 编码结果原子, 默认目标类型原子, 部分目标类型名称映射 } from "~/atoms";
+import { 指法标签列表, type 部分目标类型 } from "~/lib";
 import { Flex } from "antd";
 import { Select } from "./Utils";
 import { useState } from "react";
@@ -70,7 +69,7 @@ const preprocess = (partialMetric: PartialMetric) => {
       result.push({
         tier,
         type: "手感",
-        subtype: fingeringLabels[index],
+        subtype: 指法标签列表[index],
         value,
       });
     }
@@ -97,7 +96,7 @@ const preprocess = (partialMetric: PartialMetric) => {
     result.push({
       tier: "加权",
       type: "手感",
-      subtype: fingeringLabels[index],
+      subtype: 指法标签列表[index],
       value,
     });
   }
@@ -105,7 +104,7 @@ const preprocess = (partialMetric: PartialMetric) => {
 };
 
 export default function MetricTable() {
-  const [_, evaluateResult] = useAtomValue(encodeResultAtom);
+  const [_, evaluateResult] = useAtomValue(编码结果原子);
   const types = useAtomValue(默认目标类型原子);
   const [type, setType] = useState<部分目标类型>(types[0]!);
   const data = preprocess(evaluateResult[type]!);
@@ -115,7 +114,10 @@ export default function MetricTable() {
         <Select
           value={type}
           onChange={setType}
-          options={types.map((x) => ({ label: typeLabels[x], value: x }))}
+          options={types.map((x) => ({
+            label: 部分目标类型名称映射[x],
+            value: x,
+          }))}
         />
       </Flex>
       <SheetComponent

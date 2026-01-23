@@ -1,8 +1,4 @@
-import { mergeClassifier, type Classifier } from "~/lib";
-import type { Config } from "~/lib";
-import { defaultDegenerator } from "~/lib";
-import { defaultSelector } from "~/lib";
-import type { ExampleConfig } from "~/lib";
+import { defaultDegenerator, 分类器, 合并分类器, 示例配置, 编码配置, 配置, 键盘配置, 默认筛选器列表 } from "~/lib";
 import snow4 from "../examples/snow4.yaml";
 import bxm from "../examples/bxm.yaml";
 import mswb from "../examples/mswb.yaml";
@@ -69,7 +65,7 @@ export const examples = {
   zhangma,
   zhengma,
   zhenma,
-} as Record<Example, ExampleConfig>;
+} as Record<Example, 示例配置>;
 
 export const classifierTypes = [
   "国标五分类",
@@ -77,8 +73,8 @@ export const classifierTypes = [
   "郑码七分类",
 ] as const;
 export type ClassifierType = (typeof classifierTypes)[number];
-const classifierMap: Record<ClassifierType, Classifier> = {
-  国标五分类: {} as Classifier,
+const classifierMap: Record<ClassifierType, 分类器> = {
+  国标五分类: {} as 分类器,
   表形码六分类: examples.mswb.analysis.classifier!,
   郑码七分类: examples.zhengma.analysis.classifier!,
 };
@@ -105,7 +101,7 @@ export const keyboardTypes = [
   "无",
 ] as const;
 export type KeyboardTypes = (typeof keyboardTypes)[number];
-const keyboardMap: Record<KeyboardTypes, Config["form"]> = {
+const keyboardMap: Record<KeyboardTypes, 键盘配置> = {
   冰雪四拼: examples.snow4.form,
   龙码: examples.longma.form,
   简单鹤: examples.jdh.form,
@@ -152,7 +148,7 @@ export const encoderTypes = [
   "双编形码（天码）",
 ] as const;
 export type EncoderTypes = (typeof encoderTypes)[number];
-const encoderMap: Record<EncoderTypes, Config["encoder"]> = {
+const encoderMap: Record<EncoderTypes, 编码配置> = {
   "音码（冰雪四拼）": examples.snow4.encoder,
   "音码（龙码）": examples.longma.encoder,
   "音形码（简单鹤）": examples.jdh.encoder,
@@ -181,12 +177,12 @@ export interface StarterType {
   encoder: EncoderTypes;
 }
 
-export const createConfig = (starter: StarterType): Config => {
+export const createConfig = (starter: StarterType): 配置 => {
   const form = keyboardMap[starter.keyboard];
   const classifier = classifierMap[starter.data];
 
   // 确保笔画都在 mapping 里
-  for (const value of Object.values(mergeClassifier(classifier))) {
+  for (const value of Object.values(合并分类器(classifier))) {
     const element = value.toString();
     if (!form.mapping[element]) {
       form.mapping[element] = form.alphabet?.[0]!;
@@ -205,7 +201,7 @@ export const createConfig = (starter: StarterType): Config => {
     analysis: {
       classifier,
       degenerator: defaultDegenerator,
-      selector: defaultSelector,
+      selector: 默认筛选器列表,
     },
     form,
     encoder: encoderMap[starter.encoder],

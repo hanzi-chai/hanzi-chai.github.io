@@ -1,6 +1,7 @@
 import { focusAtom } from "jotai-optics";
 import { atom, 编码配置原子 } from ".";
 import type {
+  优先简码,
   构词规则,
   目标,
   码长权重,
@@ -35,7 +36,7 @@ export const 构词配置原子 = focusAtom(编码配置原子, (o) =>
 );
 
 export const 优先简码原子 = focusAtom(编码配置原子, (o) =>
-  o.prop("priority_short_codes").valueOr([] as [string, string, number][]),
+  o.prop("short_code_list").valueOr([] as 优先简码[]),
 );
 
 export const 源映射原子 = focusAtom(编码配置原子, (o) => o.prop("sources"));
@@ -105,7 +106,7 @@ export const 默认目标类型原子 = atom((get) => {
   return Object.keys(objective) as 部分目标类型[];
 });
 
-export const typeLabels: Record<部分目标类型, string> = {
+export const 部分目标类型名称映射: Record<部分目标类型, string> = {
   characters_full: "一字全码",
   characters_short: "一字简码",
   words_full: "多字全码",

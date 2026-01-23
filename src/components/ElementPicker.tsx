@@ -4,7 +4,6 @@ import ElementAdder from "./ElementAdder";
 import ElementPool from "./ElementPool";
 import {
   拼写运算自定义原子,
-  currentElementAtom,
   分类器原子,
   processedCustomElementsAtom,
   如排序汉字原子,
@@ -13,20 +12,19 @@ import {
   useRemoveAtom,
 } from "~/atoms";
 import Algebra from "./Algebra";
-import type { PronunciationElementTypes } from "~/lib";
-import { operators } from "~/lib";
-import { 拼音元素枚举原子 } from "~/atoms";
+import { 拼音元素枚举原子, 当前元素原子 } from "~/atoms";
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import ElementCounter from "./ElementCounter";
+import { 结构表示符列表 } from "~/lib";
 
 const AlgebraEditor = ({
   type,
   defaultType,
   setType,
 }: {
-  type: PronunciationElementTypes;
-  defaultType: PronunciationElementTypes;
-  setType: (s: PronunciationElementTypes) => void;
+  type: string;
+  defaultType: string;
+  setType: (s: string) => void;
 }) => {
   const algebra = useAtomValue(拼写运算自定义原子);
   const removeAlgebra = useRemoveAtom(拼写运算自定义原子);
@@ -83,6 +81,7 @@ const useAllElements = () => {
   const pronunciationElements = useAtomValue(拼音元素枚举原子);
   const customElements = useAtomValue(processedCustomElementsAtom);
   const sortedCharacters = useAtomValue(如排序汉字原子);
+  const 排序汉字 = sortedCharacters.ok ? sortedCharacters.value : [];
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
@@ -90,10 +89,10 @@ const useAllElements = () => {
     ["0"].concat(allStrokes).map((y) => x + y),
   );
   const shapeElements: Map<ShapeElementTypes, string[]> = new Map([
-    ["字根", sortedCharacters],
+    ["字根", 排序汉字],
     ["笔画", allStrokes],
     ["二笔", allErbi],
-    ["结构", [...operators]],
+    ["结构", [...结构表示符列表]],
   ]);
   const elements: Record<PrimaryTypes, Map<string, string[]>> = {
     shape: shapeElements,
@@ -104,7 +103,7 @@ const useAllElements = () => {
 };
 
 export default function ElementPicker() {
-  const [element, setElement] = useAtom(currentElementAtom);
+  const [element, setElement] = useAtom(当前元素原子);
   const [types, setTypes] = useState<[string, string]>(["shape", "字根"]);
   const elements = useAllElements();
   const { shape, pronunciation, custom } = elements;
@@ -153,7 +152,7 @@ export default function ElementPicker() {
       </Flex>
       {primary === "pronunciation" && (
         <AlgebraEditor
-          type={secondary as PronunciationElementTypes}
+          type={secondary}
           defaultType="声母"
           setType={(s) => setTypes(["pronunciation", s])}
         />

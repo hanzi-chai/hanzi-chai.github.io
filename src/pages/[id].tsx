@@ -12,17 +12,9 @@ import NumberOutlined from "@ant-design/icons/NumberOutlined";
 import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import CusSpin from "~/components/CustomSpin";
-import {
-  基本信息原子,
-  useSetAtom,
-  useAtomValue,
-  拉取资源,
-  原始字库数据原子,
-} from "~/atoms";
-import { listToObject } from "~/lib";
+import { 基本信息原子, useAtomValue } from "~/atoms";
 import { examples } from "~/templates";
 import { AppstoreOutlined } from "@ant-design/icons";
-import { 从模型构建 } from "~/api";
 import { getCurrentId } from "~/utils";
 
 const items: MenuProps["items"] = [

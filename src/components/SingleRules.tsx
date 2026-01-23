@@ -13,7 +13,6 @@ import ReactFlow, {
 import { useAtom, 源映射原子, 条件映射原子 } from "~/atoms";
 import "reactflow/dist/style.css";
 import { SourceNode, ConditionNode } from "./Node";
-import type { Condition, Source } from "~/lib";
 import type { SourceData, ConditionData } from "./graph";
 import {
   makeSourceNode,
@@ -24,10 +23,11 @@ import {
 } from "./graph";
 import DetailEditor from "./DetailEditor";
 import { Button, Modal } from "antd";
+import { 条件节点配置, 源节点配置 } from "~/lib";
 
 const initializeGraph = (
-  sources: Record<string, Source>,
-  conditions: Record<string, Condition>,
+  sources: Record<string, 源节点配置>,
+  conditions: Record<string, 条件节点配置>,
 ) => {
   const sourceNodes = Object.entries(sources).map(([id, data]) =>
     makeSourceNode(data, id),

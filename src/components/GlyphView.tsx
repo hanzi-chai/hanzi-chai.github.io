@@ -1,17 +1,8 @@
 import type React from "react";
 import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import styled from "styled-components";
-import type {
-  BoundingBox,
-  Draw,
-  Feature,
-  N6,
-  Point,
-  SVGGlyphWithBox,
-  SVGStroke,
-} from "~/lib";
-import { renderSVGGlyph, renderSVGStroke } from "~/lib";
-import { add, subtract } from "~/lib";
+import type { Draw, N6, Point, 图形盒子, 矢量笔画数据, 笔画名称 } from "~/lib";
+import { add, subtract, 笔画图形, 部件图形 } from "~/lib";
 
 const Box = styled.div`
   border: 1px solid black;
@@ -32,7 +23,7 @@ const drawLength = ({ command, parameterList }: Draw) => {
   return Math.sqrt(x3 * x3 + y3 * y3);
 };
 
-const processPath = ({ start, feature, curveList }: SVGStroke) => {
+const processPath = ({ start, feature, curveList }: 矢量笔画数据) => {
   const svgCommands: string[] = [`M${start.join(" ")}`];
   for (const [index, { command, parameterList }] of curveList.entries()) {
     let svgCommand: string;
@@ -51,8 +42,8 @@ const processPath = ({ start, feature, curveList }: SVGStroke) => {
     }
     svgCommands.push(svgCommand);
   }
-  const type1Gou: Feature[] = ["横钩"]; // 左下
-  const type2Gou: Feature[] = [
+  const type1Gou: 笔画名称[] = ["横钩"]; // 左下
+  const type2Gou: 笔画名称[] = [
     "竖钩",
     "横折钩",
     "竖折折钩",
@@ -60,7 +51,7 @@ const processPath = ({ start, feature, curveList }: SVGStroke) => {
     "弯钩",
     "横撇弯钩",
   ]; // 左上
-  const type3Gou: Feature[] = ["斜钩", "横斜钩", "竖弯钩", "横折弯钩", "撇钩"]; // 上
+  const type3Gou: 笔画名称[] = ["斜钩", "横斜钩", "竖弯钩", "横折弯钩", "撇钩"]; // 上
   const referenceLength = drawLength(curveList.at(-1)!);
   const gouLength = 5 + referenceLength * 0.25;
   if (type1Gou.includes(feature)) {
@@ -74,8 +65,8 @@ const processPath = ({ start, feature, curveList }: SVGStroke) => {
 };
 
 interface StrokesViewProps {
-  glyph: SVGGlyphWithBox;
-  setGlyph?: (glyph: SVGStroke[]) => void;
+  glyph: 图形盒子;
+  setGlyph?: (glyph: 矢量笔画数据[]) => void;
   displayMode?: boolean;
 }
 
@@ -103,7 +94,7 @@ const Circle: React.FC<{
 };
 
 interface ControlProps {
-  stroke: SVGStroke;
+  stroke: 矢量笔画数据;
   strokeIndex: number;
   setIndex: (i: PointIndex) => void;
 }
@@ -183,14 +174,14 @@ const Rectangles = ({
   stroke,
   strokeWidth,
 }: {
-  stroke: SVGStroke;
+  stroke: 矢量笔画数据;
   strokeWidth: number;
 }) => {
-  const { curveList } = renderSVGStroke(stroke);
+  const { curveList } = new 笔画图形(stroke);
   const firstCommand = stroke.curveList[0]?.command;
   const lastCommand = stroke.curveList.at(-1)?.command;
-  const firstCurve = curveList[0]!;
-  const lastCurve = curveList.at(-1)!;
+  const [firstCurveStart, _] = curveList[0]!.获取起点和终点();
+  const [__, lastCurveEnd] = curveList.at(-1)!.获取起点和终点();
   const shouldDrawFist =
     (firstCommand === "h" || firstCommand === "v") &&
     !stroke.feature.endsWith("提");
@@ -202,8 +193,8 @@ const Rectangles = ({
       {shouldDrawFist && (
         <rect
           fill="currentColor"
-          x={firstCurve.controls[0][0] - strokeWidth / 2}
-          y={firstCurve.controls[0][1] - strokeWidth / 2}
+          x={firstCurveStart[0] - strokeWidth / 2}
+          y={firstCurveStart[1] - strokeWidth / 2}
           width={strokeWidth}
           height={strokeWidth}
         />
@@ -211,8 +202,8 @@ const Rectangles = ({
       {shouldDrawLast && (
         <rect
           fill="currentColor"
-          x={lastCurve.controls.at(-1)![0] - strokeWidth / 2}
-          y={lastCurve.controls.at(-1)![1] - strokeWidth / 2}
+          x={lastCurveEnd[0] - strokeWidth / 2}
+          y={lastCurveEnd[1] - strokeWidth / 2}
           width={strokeWidth}
           height={strokeWidth}
         />
@@ -221,28 +212,10 @@ const Rectangles = ({
   );
 };
 
-const determineWidthAndViewBox = (box: BoundingBox, displayMode: boolean) => {
-  const strokeWidthPercentage = displayMode ? 0.01 : 0.07;
-  const {
-    x: [xMin, xMax],
-    y: [yMin, yMax],
-  } = box;
-  const padding = 10;
-  const xSpan = xMax - xMin + 2 * padding;
-  const ySpan = yMax - yMin + 2 * padding;
-  const maxSpan = Math.max(xSpan, ySpan);
-  const xMinFinal = (xMax + xMin) / 2 - maxSpan / 2;
-  const yMinFinal = (yMax + yMin) / 2 - maxSpan / 2;
-  const viewBox = `${xMinFinal} ${yMinFinal} ${maxSpan} ${maxSpan}`;
-  const strokeWidth = maxSpan * strokeWidthPercentage;
-  return { strokeWidth, viewBox };
-};
-
 const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [index, setIndex] = useState<PointIndex | null>(null);
-  const { strokes, box } = glyph;
-  const renderedGlyph = renderSVGGlyph(strokes);
+  const renderedGlyph = new 部件图形("", glyph.获取笔画列表())._笔画列表();
 
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -256,14 +229,14 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       );
       const x = Math.round(transformedPoint.x);
       const y = Math.round(transformedPoint.y);
-      const newGlyph = structuredClone(strokes);
+      const newGlyph = structuredClone(glyph.获取笔画列表());
       const { strokeIndex, curveIndex, controlIndex } = index;
       if (curveIndex === -1) {
         newGlyph[strokeIndex]!.start = [x, y];
       } else {
-        const curve = newGlyph[strokeIndex]?.curveList[curveIndex]!;
+        const curve = newGlyph[strokeIndex]!.curveList[curveIndex]!;
         const renderedCurve =
-          renderedGlyph[strokeIndex]?.curveList[curveIndex]!;
+          renderedGlyph[strokeIndex]!.curveList[curveIndex]!;
         const previous = renderedCurve.controls[controlIndex]!;
         const diff = subtract([x, y], previous);
         if (curve.command === "h" || curve.command === "v") {
@@ -276,7 +249,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
 
       setGlyph?.(newGlyph);
     },
-    [index, strokes, renderedGlyph, setGlyph],
+    [index, renderedGlyph, setGlyph],
   );
 
   const onMouseUp = () => {
@@ -291,12 +264,13 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [setGlyph, index, strokes, onMouseMove]);
+  }, [setGlyph, index, onMouseMove]);
 
-  const { strokeWidth, viewBox } = determineWidthAndViewBox(
-    box,
+  const { strokeWidth, viewBox } = glyph.determineWidthAndViewBox(
     displayMode ?? false,
   );
+
+  const strokes = glyph.获取笔画列表();
 
   return (
     <svg

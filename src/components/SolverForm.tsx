@@ -9,7 +9,7 @@ import {
 import { Form, Switch } from "antd";
 import { useRef } from "react";
 import { 求解器原子, useAtom } from "~/atoms";
-import type { Solver } from "~/lib";
+import type { 求解器配置 } from "~/lib";
 
 export default function SolverForm() {
   const [metaheuristic, setMetaheuristic] = useAtom(求解器原子);
@@ -19,13 +19,13 @@ export default function SolverForm() {
     t_min: 1.0e-6,
     steps: 10000,
   };
-  const defaultSerachMethod: NonNullable<Solver["search_method"]> = {
+  const defaultSerachMethod: NonNullable<求解器配置["search_method"]> = {
     random_move: 0.9,
     random_swap: 0.09,
     random_full_key_swap: 0.01,
   };
   return (
-    <ProForm<Solver>
+    <ProForm<求解器配置>
       title="求解算法"
       formRef={formRef}
       initialValues={metaheuristic}

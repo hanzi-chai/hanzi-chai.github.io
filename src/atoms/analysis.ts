@@ -45,3 +45,11 @@ export const 分类器原子 = atom((get) => {
   const customization = get(分类器自定义原子);
   return 合并分类器(customization);
 });
+
+export const 部件分析器原子 = focusAtom(分析配置原子, (o) =>
+  o.prop("component_analyzer").valueOr("默认"),
+);
+
+export const 复合体分析器原子 = focusAtom(分析配置原子, (o) =>
+  o.prop("compound_analyzer").valueOr("默认"),
+);

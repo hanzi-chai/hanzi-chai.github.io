@@ -5,11 +5,10 @@ import { Handle, Position } from "reactflow";
 import styled from "styled-components";
 import type { SourceData, ConditionData } from "./graph";
 import { CacheContext, renderType } from "./graph";
-import type { Condition, Source } from "~/lib";
-import { renderName } from "~/lib";
 import { blue } from "@ant-design/colors";
 import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
 import { sortBy } from "lodash-es";
+import { 摘要, 条件节点配置, 源节点配置 } from "~/lib";
 
 const SourceButton = styled(Button)`
   width: 64px;
@@ -64,7 +63,10 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       label,
       onClick: () => {
         const newId = getNewId(sources, "s");
-        const defaultSource: Source = { object: { type: "汉字" }, next: null };
+        const defaultSource: 源节点配置 = {
+          object: { type: "汉字" },
+          next: null,
+        };
         const newSources = sortObject({ ...sources, [newId]: defaultSource });
         const newConditions = { ...conditions };
         if (etype === undefined) {
@@ -89,7 +91,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       onClick: () => {
         const newId = getNewId(conditions, "c");
         const newSources = { ...sources };
-        const defaultCondition: Condition = {
+        const defaultCondition: 条件节点配置 = {
           object: { type: "汉字" },
           operator: "存在",
           positive: null,
@@ -176,9 +178,7 @@ const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
     <>
       <ContextMenu id={id}>
         <SourceButton type={id === "s0" ? "primary" : "default"}>
-          {data.object
-            ? renderName(data.object) + renderIndex(data.index)
-            : "开始"}
+          {data.object ? 摘要(data.object) + renderIndex(data.index) : "开始"}
         </SourceButton>
       </ContextMenu>
       {id !== "s0" && <Handle type="target" position={Position.Top} />}
@@ -192,7 +192,7 @@ const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
     <>
       <ContextMenu id={id}>
         <ConditionButton type="dashed">
-          {`${renderName(data.object)}: ${data.operator}?`}
+          {`${摘要(data.object)}: ${data.operator}?`}
         </ConditionButton>
       </ContextMenu>
       <Handle type="target" position={Position.Top} />

@@ -1,10 +1,9 @@
 import type { 原始汉字数据, 字形数据 } from "./lib";
 
-interface 原始汉字模型 {
+export interface 原始汉字模型 {
   unicode: number;
   tygf: 0 | 1 | 2 | 3;
   gb2312: 0 | 1 | 2;
-  readings: string;
   glyphs: string;
   name: string | null;
   gf0014_id: number | null;
@@ -70,7 +69,6 @@ const glyphReverse = (c: 字形数据) => {
 export function 从模型构建(model: 原始汉字模型): 原始汉字数据 {
   return {
     ...model,
-    readings: JSON.parse(model.readings),
     glyphs: JSON.parse(model.glyphs).map(glyphForward),
     ambiguous: model.ambiguous === 1,
   };
@@ -79,7 +77,6 @@ export function 从模型构建(model: 原始汉字模型): 原始汉字数据 {
 export function 转模型(character: 原始汉字数据): 原始汉字模型 {
   return {
     ...character,
-    readings: JSON.stringify(character.readings),
     glyphs: JSON.stringify(character.glyphs.map(glyphReverse)),
     ambiguous: +character.ambiguous as 0 | 1,
   };

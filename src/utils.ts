@@ -1,3 +1,14 @@
+import type { 原始汉字数据, 字库数据, 汉字数据, 结构表示符, 配置 } from "~/lib";
+import useTitle from "ahooks/es/useTitle";
+import init, { validate } from "libchai";
+import { notification } from "antd";
+import type { 后端错误 } from "~/api";
+import { createContext } from "react";
+import { isEqual, range } from "lodash-es";
+import { diff } from "deep-object-diff";
+import { dump, load } from "js-yaml";
+import type { WorkerOutput } from "~/worker";
+
 export const useHashRouter = import.meta.env.MODE !== "CF";
 
 export function getCurrentId(): string {
@@ -9,21 +20,9 @@ export function getCurrentId(): string {
 
 export const basePath = useHashRouter ? "/#/" : "/";
 
-import type { Config } from "~/lib";
-import useTitle from "ahooks/es/useTitle";
-import init, { validate } from "libchai";
-import { notification } from "antd";
-import type { 后端错误 } from "~/api";
-import { createContext } from "react";
-import { isEqual } from "lodash-es";
-import { diff } from "deep-object-diff";
-import { load } from "js-yaml";
-import type { WorkerOutput } from "~/worker";
-import { atom } from "jotai";
-
 export const RemoteContext = createContext(true);
 
-export async function validateConfig(config: Config) {
+export async function validateConfig(config: 配置) {
   await init();
   try {
     validate(config);
@@ -41,7 +40,7 @@ export async function validateConfig(config: Config) {
   }
 }
 
-export async function roundTestConfig(config: Config) {
+export async function roundTestConfig(config: 配置) {
   await init();
   try {
     const rustConfig = load(validate(config)) as object;
@@ -124,9 +123,6 @@ export class Thread {
 
 export const thread = new Thread();
 
-export const currentElementAtom = atom<string | undefined>(undefined);
-
-
 const processExport = (content: string, filename: string) => {
   const blob = new Blob([content], { type: "text/plain" });
   const a = document.createElement("a");
@@ -197,31 +193,26 @@ const match = (character: 原始汉字数据 | 汉字数据, input: CharacterFil
   return isTagMatched && isOperatorMatched && isPartMatched;
 };
 
-export const makeCharacterFilter = (
-  input: CharacterFilter,
-  repertoire: 字库数据 | 原始字库数据,
-  sequenceMap: Map<string, string>,
-) => {
-  let sequenceRegex: RegExp | undefined;
-  try {
-    if (input.sequence) {
-      sequenceRegex = new RegExp(input.sequence);
+export class 字符过滤器 {
+  private sequenceRegex: RegExp | undefined;
+  constructor(private 过滤条件: CharacterFilter) {
+    if (过滤条件.sequence) {
+      try {
+        this.sequenceRegex = new RegExp(过滤条件.sequence);
+      } catch { }
     }
-  } catch {}
-  return (name: string) => {
-    const character = repertoire[name];
-    if (character === undefined) return false;
-    const sequence = sequenceMap.get(name) ?? "";
-    const isNameMatched = ((character.name ?? "") + name).includes(
-      input.name ?? "",
-    );
-    const isSequenceMatched = sequenceRegex?.test(sequence) ?? true;
+  }
+
+  过滤(name: string, 汉字: 汉字数据 | 原始汉字数据, 笔画序列: string) {
+    const nameToMatch = this.过滤条件.name ?? "";
+    const isNameMatched = (汉字.name ?? "").includes(nameToMatch) || name.includes(nameToMatch);
+    const isSequenceMatched = this.sequenceRegex?.test(笔画序列) ?? true;
     const isUnicodeMatched =
-      input.unicode === undefined || input.unicode === name.codePointAt(0);
-    const isMatched = match(character, input);
+      this.过滤条件.unicode === undefined || this.过滤条件.unicode === name.codePointAt(0);
+    const isMatched = match(汉字, this.过滤条件);
     return isNameMatched && isSequenceMatched && isUnicodeMatched && isMatched;
-  };
-};
+  }
+}
 
 export interface CharacterFilter {
   name?: string;
@@ -234,14 +225,14 @@ export interface CharacterFilter {
 
 export const makeFilter =
   (input: string, form: 字库数据, sequence: Map<string, string>) =>
-  (char: string) => {
-    if ((sequence.get(char)?.length ?? 0) <= 1) return false;
-    const name = form[char]?.name ?? "";
-    const seq = sequence.get(char) ?? "";
-    return (
-      name.includes(input) || char.includes(input) || seq.startsWith(input)
-    );
-  };
+    (char: string) => {
+      if ((sequence.get(char)?.length ?? 0) <= 1) return false;
+      const name = form[char]?.name ?? "";
+      const seq = sequence.get(char) ?? "";
+      return (
+        name.includes(input) || char.includes(input) || seq.startsWith(input)
+      );
+    };
 
 export interface AnalyzerForm {
   type: "single" | "multi" | "all";
@@ -269,7 +260,6 @@ export interface DictEntry {
 export type EncodeResult = DictEntry[];
 
 export const formatDate = (date: Date) => {
-  return `${
-    date.getMonth() + 1
-  }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  return `${date.getMonth() + 1
+    }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 };

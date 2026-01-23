@@ -11,19 +11,18 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { thread, 求解器原子, 前端输入原子 } from "~/atoms";
-import { exportYAML, formatDate, type Metric } from "~/lib";
+import { 求解器原子, 前端输入原子 } from "~/atoms";
 import type { WorkerOutput } from "~/worker";
-import { dump, load } from "js-yaml";
-import type { Config, Solver } from "~/lib";
+import { load } from "js-yaml";
 import { nanoid } from "nanoid";
-import { basePath } from "~/utils";
+import { basePath, exportYAML, formatDate, thread } from "~/utils";
+import { 求解器配置, 配置 } from "~/lib";
 
 const Schedule = ({
   params,
   progress,
 }: {
-  params: Partial<Solver["parameters"]>;
+  params: Partial<求解器配置["parameters"]>;
   progress?: { temperature: number; steps: number };
 }) => {
   return (
@@ -69,15 +68,15 @@ const Schedule = ({
 
 export default function Optimizer() {
   const metaheuristic = useAtomValue(求解器原子);
-  const [result, setResult] = useState<{ date: Date; config: Config }[]>([]);
-  const [bestResult, setBestResult] = useState<Config | undefined>(undefined);
+  const [result, setResult] = useState<{ date: Date; config: 配置 }[]>([]);
+  const [bestResult, setBestResult] = useState<配置 | undefined>(undefined);
   const [bestMetric, setBestMetric] = useState("");
   const [optimizing, setOptimizing] = useState(false);
   const [progress, setProgress] = useState<
     { steps: number; temperature: number } | undefined
   >(undefined);
   const [autoParams, setAutoParams] =
-    useState<Partial<Solver["parameters"]>>(undefined);
+    useState<Partial<求解器配置["parameters"]>>(undefined);
   const params = metaheuristic.parameters ?? autoParams;
   const input = useAtomValue(前端输入原子);
   return (
@@ -100,7 +99,7 @@ export default function Optimizer() {
                 const date = new Date();
                 switch (data.type) {
                   case "better_solution": {
-                    const config: Config = load(data.config) as any;
+                    const config: 配置 = load(data.config) as any;
                     config.info ??= {};
                     config.info.version = formatDate(date);
                     setBestResult(config);

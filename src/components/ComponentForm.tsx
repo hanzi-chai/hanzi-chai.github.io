@@ -3,20 +3,6 @@ import { Button, Dropdown, Flex, Form } from "antd";
 import { EditorColumn, EditorRow } from "./Utils";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef } from "react";
-import type {
-  BasicComponent,
-  Character,
-  Component,
-  DerivedComponent,
-  Identity,
-  SplicedComponent,
-  Stroke,
-  SVGGlyphWithBox,
-  SVGStroke,
-} from "~/lib";
-import type { Feature } from "~/lib";
-import { getDummySVGStroke, getGlyphBoundingBox, schema } from "~/lib";
-import { getDummyReferenceStroke, isComponent } from "~/lib";
 import { 原始字库原子, useAtomValue } from "~/atoms";
 import CharacterSelect from "./CharacterSelect";
 import type {
@@ -34,7 +20,6 @@ import {
 import styled from "styled-components";
 import { CommonForm } from "./CompoundForm";
 import Element from "./Element";
-import { recursiveRenderComponent } from "~/lib";
 import { Box, StrokesView } from "./GlyphView";
 import type { BaseOptionType } from "antd/es/select";
 import {
@@ -42,6 +27,23 @@ import {
   ArrowUpOutlined,
   CameraOutlined,
 } from "@ant-design/icons";
+import {
+  区间,
+  图形盒子,
+  是基本或衍生部件,
+  模拟引用笔画,
+  模拟矢量笔画,
+  笔画表示方式,
+} from "~/lib";
+import type {
+  全等数据,
+  基本部件数据,
+  汉字数据,
+  矢量笔画数据,
+  笔画名称,
+  笔画数据,
+  衍生部件数据,
+} from "~/lib";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={56} name={name} fieldProps={{ min: -100 }} />
@@ -97,7 +99,7 @@ export function StaticList<T>(props: ProFormListProps<T>) {
   );
 }
 
-const strokeOptions = Object.keys(schema).map((x) => ({
+const strokeOptions = Object.keys(笔画表示方式).map((x) => ({
   key: x,
   value: x,
   label: x,
@@ -126,16 +128,14 @@ const StrokeForm = ({
   return (
     <>
       <ProFormGroup size="small">
-        <ProFormSelect<Feature | "reference">
+        <ProFormSelect<笔画名称 | "reference">
           name="feature"
           options={[referenceOption].concat(classifiedStrokeOptions)}
           disabled
           allowClear={false}
           onChange={(value) => {
             const newStroke =
-              value === "reference"
-                ? getDummyReferenceStroke()
-                : getDummySVGStroke(value);
+              value === "reference" ? 模拟引用笔画() : 模拟矢量笔画(value);
             formRef.current?.setFieldValue(["strokes", meta.name], newStroke);
           }}
         />
@@ -202,7 +202,7 @@ const StrokeForm = ({
   );
 };
 
-type BasicOrDerivedComponent = Exclude<Component, SplicedComponent>;
+type 基本或衍生部件 = 基本部件数据 | 衍生部件数据;
 
 export default function ComponentForm({
   title,
@@ -214,33 +214,35 @@ export default function ComponentForm({
   readonly,
 }: {
   title: ReactNode;
-  initialValues: BasicOrDerivedComponent;
+  initialValues: 基本或衍生部件;
   current: string;
-  onFinish: (c: BasicOrDerivedComponent) => Promise<boolean>;
+  onFinish: (c: 基本或衍生部件) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
 }) {
-  const repertoire = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(原始字库原子);
+  const repertoire = 原始字库._get();
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
     <Element type={primary ? "default" : "text"}>{title}</Element>
   );
-  const isValidSource = ([name]: [string, Character]) => {
-    let component: Component | undefined =
-      repertoire[name]?.glyphs.find(isComponent);
+  const isValidSource = ([name]: [string, 汉字数据]) => {
+    let component: 基本或衍生部件 | undefined = repertoire[name]?.glyphs.find(
+      是基本或衍生部件,
+    );
     if (component === undefined) return false;
     while (component?.type === "derived_component") {
       const source: string = component.source;
       if (source === current) return false;
-      component = repertoire[source]?.glyphs.find(isComponent);
+      component = repertoire[source]?.glyphs.find(是基本或衍生部件);
     }
     return true;
   };
   const formRef = useRef<ProFormInstance>();
   return (
-    <ModalForm<BasicOrDerivedComponent>
+    <ModalForm<基本或衍生部件>
       title={title}
       layout="horizontal"
       omitNil={true}
@@ -259,27 +261,17 @@ export default function ComponentForm({
           <Box>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
-                const component = props as BasicOrDerivedComponent;
-                const rendered =
-                  component?.type !== undefined
-                    ? recursiveRenderComponent(component, repertoire)
-                    : new Error();
-                const defaultGlyph: SVGGlyphWithBox = {
-                  strokes: [],
-                  box: { x: [0, 100], y: [0, 100] },
-                };
+                const component = props as 基本或衍生部件;
+                const rendered = 原始字库.递归渲染原始字形(component);
+                let glyph = new 图形盒子();
+                if (rendered.ok && rendered.value.type === "basic_component") {
+                  glyph = 图形盒子.从笔画列表构建(rendered.value.strokes);
+                }
                 return (
                   <StrokesView
                     displayMode
-                    glyph={
-                      rendered instanceof Error
-                        ? defaultGlyph
-                        : {
-                            strokes: rendered,
-                            box: getGlyphBoundingBox(rendered),
-                          }
-                    }
-                    setGlyph={(g: SVGStroke[]) => {
+                    glyph={glyph}
+                    setGlyph={(g: 矢量笔画数据[]) => {
                       const projection = component.strokes.map((x, index) =>
                         x.feature === "reference" ? x : g[index]!,
                       );
@@ -353,19 +345,17 @@ export default function ComponentForm({
                           key="camera"
                           style={{ marginLeft: "5px" }}
                           onClick={() => {
-                            const component = formRef.current?.getFieldsValue();
+                            const component: 基本或衍生部件 =
+                              formRef.current?.getFieldsValue();
                             const rendered =
-                              component?.type !== undefined
-                                ? recursiveRenderComponent(
-                                    component,
-                                    repertoire,
-                                  )
-                                : new Error();
-                            if (rendered instanceof Error) return;
-                            const strokes: Stroke[] =
+                              原始字库.递归渲染原始字形(component);
+                            if (!rendered.ok) return;
+                            if (rendered.value.type !== "basic_component")
+                              return;
+                            const strokes: 笔画数据[] =
                               formRef.current?.getFieldValue("strokes") ?? [];
                             const vectorized = structuredClone(
-                              rendered[field.name],
+                              rendered.value.strokes[field.name],
                             );
                             if (!vectorized) return;
                             strokes[field.name] = vectorized;
@@ -388,9 +378,7 @@ export default function ComponentForm({
                       menu={{
                         items: classifiedStrokeOptions as MenuProps["items"],
                         onClick: (item) => {
-                          const newStroke = getDummySVGStroke(
-                            item.key as Feature,
-                          );
+                          const newStroke = 模拟矢量笔画(item.key as 笔画名称);
                           formRef.current?.setFieldValue(
                             "strokes",
                             formRef.current
@@ -409,7 +397,7 @@ export default function ComponentForm({
                           "strokes",
                           formRef.current
                             ?.getFieldValue("strokes")
-                            ?.concat(getDummyReferenceStroke()),
+                            ?.concat(模拟引用笔画()),
                         )
                       }
                     >
@@ -418,7 +406,7 @@ export default function ComponentForm({
                     <Button
                       disabled={typeof source !== "string"}
                       onClick={() => {
-                        const component: DerivedComponent =
+                        const component: 衍生部件数据 =
                           formRef.current?.getFieldsValue();
                         const notReady = component.strokes.some(
                           (x) => x.feature === "reference",
@@ -427,10 +415,10 @@ export default function ComponentForm({
                           alert("请先删除笔画引用");
                           return;
                         }
-                        const newComponent: BasicComponent = {
+                        const newComponent: 基本部件数据 = {
                           type: "basic_component",
                           tags: component.tags,
-                          strokes: component.strokes as SVGStroke[],
+                          strokes: component.strokes as 矢量笔画数据[],
                         };
                         formRef.current?.setFieldsValue(newComponent);
                       }}
@@ -440,13 +428,13 @@ export default function ComponentForm({
                     <Button
                       disabled={typeof source === "string"}
                       onClick={() => {
-                        const component: BasicComponent =
+                        const component: 衍生部件数据 =
                           formRef.current?.getFieldsValue();
-                        const newComponent: DerivedComponent = {
+                        const newComponent: 衍生部件数据 = {
                           type: "derived_component",
                           source: "一",
                           tags: component.tags,
-                          strokes: component.strokes as SVGStroke[],
+                          strokes: component.strokes,
                         };
                         formRef.current?.setFieldsValue(newComponent);
                       }}
@@ -474,9 +462,9 @@ export function IdentityForm({
   readonly,
 }: {
   title: ReactNode;
-  initialValues: Identity;
+  initialValues: 全等数据;
   current: string;
-  onFinish: (c: Identity) => Promise<boolean>;
+  onFinish: (c: 全等数据) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
@@ -487,7 +475,7 @@ export function IdentityForm({
     <Element type={primary ? "default" : "text"}>{title}</Element>
   );
   return (
-    <ModalForm<Identity>
+    <ModalForm<全等数据>
       title={title}
       layout="horizontal"
       omitNil={true}

@@ -1,11 +1,5 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
-import {
-  字母表原子,
-  adaptedFrequencyAtom,
-  如字库原子,
-  如笔顺映射原子,
-  useChaifenTitle,
-} from "~/atoms";
+import { 字母表原子 } from "~/atoms";
 import {
   ProForm,
   ProFormDependency,
@@ -16,13 +10,7 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 最大码长原子 } from "~/atoms";
-import type {
-  频率映射,
-  AnalyzerForm,
-  组装结果,
-  IndexedElement,
-  Key,
-} from "~/lib";
+import type { 码位, 组装, 频率映射 } from "~/lib";
 import { 反序列化, 序列化 } from "~/lib";
 import { Suspense, useState } from "react";
 import { 如组装结果原子 } from "~/atoms";
@@ -31,6 +19,7 @@ import { range, sumBy } from "lodash-es";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
 import { MinusButton, PlusButton } from "~/components/Utils";
 import KeySelect from "~/components/KeySelect";
+import { AnalyzerForm, useChaifenTitle } from "~/utils";
 
 const numbers = [
   "零",
@@ -47,20 +36,13 @@ const numbers = [
 ];
 const render = (value: number) => numbers[value] || value.toString();
 
-const filterRelevant = (
-  result: 组装结果,
-  analyzer: AnalyzerForm,
-  frequency: 频率映射,
-) => {
+const filterRelevant = (result: 组装[], analyzer: AnalyzerForm) => {
   let relevant = result;
   if (analyzer.type === "single")
     relevant = relevant.filter((x) => [...x.词].length === 1);
   if (analyzer.type === "multi")
     relevant = relevant.filter((x) => [...x.词].length > 1);
   if (analyzer.top > 0) {
-    relevant.sort((a, b) => {
-      return (frequency.get(b.词) ?? 0) - (frequency.get(a.词) ?? 0);
-    });
     relevant = relevant.slice(0, analyzer.top);
   }
   return relevant;
@@ -68,13 +50,12 @@ const filterRelevant = (
 
 const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
-  frequency: 频率映射,
-  result: 组装结果,
+  result: 组装[],
   maxLength: number,
   replacer: (d: string) => string = (d) => d,
 ) => {
   const reverseMap = new Map<string, string[]>();
-  const relevant = filterRelevant(result, analyzer, frequency);
+  const relevant = filterRelevant(result, analyzer);
   for (const assembly of relevant) {
     const { 词: name, 元素序列: sequence } = assembly;
     const sliced = range(maxLength).map((i) =>
@@ -161,10 +142,8 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(如组装结果原子);
-  const frequency = useAtomValue(adaptedFrequencyAtom);
   const reverseMap = analyzePrimitiveDuplication(
     analyzer,
-    frequency,
     assemblyResult,
     maxLength,
   );
@@ -179,7 +158,7 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
       dataIndex: "name",
       key: "name",
       render: (_, { name }) => {
-        const elements: IndexedElement[] = name
+        const elements: 码位[] = name
           .slice(1, -1)
           .split(", ")
           .map((x) => {
@@ -246,9 +225,8 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValue(如组装结果原子);
-  const frequency = useAtomValue(adaptedFrequencyAtom);
   const reverseMap = new Map<string, Set<string>[]>();
-  const relevant = filterRelevant(assemblyResult, analyzer, frequency);
+  const relevant = filterRelevant(assemblyResult, analyzer);
   for (const assembly of relevant) {
     const { 词: name, 元素序列: sequence } = assembly;
     sequence.forEach((x, i) => {
@@ -274,8 +252,9 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       dataIndex: "name",
       key: "name",
       render: (_, record) => {
-        const element: IndexedElement = 反序列化(record.name)!;
-        return <DisplayOptionalSuperscript element={element} />;
+        const element = 反序列化(record.name)!;
+        if (!element.ok) return record.name;
+        return <DisplayOptionalSuperscript element={element.value!} />;
       },
       width: 192,
     },
@@ -323,9 +302,8 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 
 const MarginalFirstOrderDuplication = () => {
   const assemblyResult = useAtomValue(如组装结果原子);
-  const frequency = useAtomValue(adaptedFrequencyAtom);
   const maxLength = useAtomValue(最大码长原子);
-  const [elements, setElements] = useState([] as Key[]);
+  const [elements, setElements] = useState([] as 码位[]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
     type: "single",
     position: range(0, maxLength),
@@ -334,24 +312,22 @@ const MarginalFirstOrderDuplication = () => {
 
   const rmBefore = analyzePrimitiveDuplication(
     analyzer,
-    frequency,
     assemblyResult,
     maxLength,
   );
   const szBefore = new Set<string>();
   rmBefore.forEach((items) => {
-    if (items.length > 1) items.forEach((x) => szBefore.add(x));
+    if (items.length > 1) items.map((x) => szBefore.add(x));
   });
   const rmAfter = analyzePrimitiveDuplication(
     analyzer,
-    frequency,
     assemblyResult,
     maxLength,
     (d) => (elements.map(序列化).includes(d) ? "^" : d),
   );
   const szAfter = new Set<string>();
   rmAfter.forEach((items) => {
-    if (items.length > 1) items.forEach((x) => szAfter.add(x));
+    if (items.length > 1) items.map((x) => szAfter.add(x));
   });
   return (
     <>
@@ -362,11 +338,12 @@ const MarginalFirstOrderDuplication = () => {
           <Space>
             {elements.map((x, i) => (
               <KeySelect
+                key={i}
                 value={x}
                 disableAlphabets
                 onChange={(newKey) => {
                   const newElements = [...elements];
-                  newElements[i]! = newKey as Key;
+                  newElements[i]! = newKey as 码位;
                   setElements(newElements);
                 }}
               />

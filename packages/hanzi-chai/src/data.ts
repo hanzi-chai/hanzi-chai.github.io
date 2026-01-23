@@ -10,7 +10,7 @@ export type N6 = [number, number, number, number, number, number];
  * h, v, c 的含义参见 SVG 规范
  * z 和 c 的含义相同，但是只用于表示平撇、平点、平捺，这是为了区分
  */
-export type Draw =
+export type 绘制 =
   | {
       command: "h" | "v";
       parameterList: N1;
@@ -21,7 +21,7 @@ export type Draw =
     }
   | { command: "a"; parameterList: N1 };
 
-export type Point = N2;
+export type 向量 = N2;
 
 /**
  * SVG 笔画
@@ -31,8 +31,8 @@ export type Point = N2;
  */
 export interface 矢量笔画数据 {
   feature: 笔画名称;
-  start: Point;
-  curveList: Draw[];
+  start: 向量;
+  curveList: 绘制[];
 }
 
 /**
@@ -177,16 +177,6 @@ export interface 全等数据 {
 export type 字形数据 = 部件数据 | 复合体数据 | 全等数据;
 
 /**
- * 字符的读音
- * pinyin: 字符的拼音
- * importance: 读音占总读音的比例，范围为 0 到 100
- */
-export interface 读音数据 {
-  pinyin: string;
-  importance: number;
-}
-
-/**
  * 原始字符 PrimitiveCharacter
  * unicode: 字符的 Unicode 编码
  * tygf: 字符在通用规范汉字集中的类型，0 为不存在，1 为一级字，2 为二级字，3 为三级字
@@ -194,7 +184,6 @@ export interface 读音数据 {
  * name: 字符的别名（当字符是 PUA 时，这个别名会用来在界面上渲染）
  * gf0014_id: 字符在 GF0014-2009 中的编号
  * gf3001_id: 字符在 GF3001-1997 中的编号
- * readings: 字符的读音列表
  * glyphs: 字符的字形列表，其中每一个有可能是基本部件、派生部件或复合体
  * ambiguous: 字符是否有分部歧义
  */
@@ -205,7 +194,6 @@ export interface 原始汉字数据 {
   name: string | null;
   gf0014_id: number | null;
   gf3001_id: number | null;
-  readings: 读音数据[];
   glyphs: 字形数据[];
   ambiguous: boolean;
 }

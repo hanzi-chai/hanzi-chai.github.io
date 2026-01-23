@@ -1,7 +1,5 @@
 import { Button } from "antd";
 import { 退化配置原子, useAtom } from "~/atoms";
-import type { Feature } from "~/lib";
-import { classifier } from "~/lib";
 import {
   ModalForm,
   ProFormGroup,
@@ -9,6 +7,7 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
+import { 笔画名称, 默认分类器 } from "~/lib";
 
 export default function Degenerator() {
   const [degenerator, setDegenerator] = useAtom(退化配置原子);
@@ -19,18 +18,21 @@ export default function Degenerator() {
       to,
     })),
   };
-  const options = Object.keys(classifier).map((feature) => ({
+  const options = Object.keys(默认分类器).map((feature) => ({
     label: feature,
     value: feature,
   }));
   return (
-    <ModalForm<{ no_cross: boolean; feature: { from: Feature; to: Feature }[] }>
+    <ModalForm<{
+      no_cross: boolean;
+      feature: { from: 笔画名称; to: 笔画名称 }[];
+    }>
       trigger={<Button>配置字根认同规则</Button>}
       title="字根认同"
       initialValues={initialValue}
       layout="horizontal"
       onFinish={async (values) => {
-        const acc = {} as Record<Feature, Feature>;
+        const acc = {} as Record<笔画名称, 笔画名称>;
         values.feature.forEach(({ from, to }) => {
           acc[from] = to;
         });

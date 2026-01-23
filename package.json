@@ -18,7 +18,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "fetch": "cd packages/hanzi-chai && tsx scripts/fetch.ts",
+    "fetch": "tsx scripts/fetch.ts",
     "start": "vite --mode PAGES",
     "dev": "vite --mode PAGES",
     "preview": "vite preview --mode PAGES --outDir dist/pages",

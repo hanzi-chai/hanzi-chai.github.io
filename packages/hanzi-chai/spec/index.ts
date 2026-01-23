@@ -1,11 +1,10 @@
 import { 部件图形 } from "../src/component";
-import { 注册内置组件, 获取原始字库, 获取词典, 获取频率映射 } from "../src/index";
+import { 注册内置组件, 获取原始字库, 获取词典 } from "../src/index";
 
 export const 获取数据 = () => {
   注册内置组件();
   const 原始字库 = 获取原始字库();
   const 词典 = 获取词典();
-  const 频率映射 = 获取频率映射();
   const 字库实例 = 原始字库.确定();
   if (!字库实例.ok) {
     console.error(字库实例.error);
@@ -23,6 +22,5 @@ export const 获取数据 = () => {
     字库: 字库实例.value,
     部件图形库,
     词典,
-    频率映射,
   }
 }

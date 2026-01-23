@@ -1,13 +1,4 @@
 import {
-  ModalForm,
-  ProForm,
-  ProFormDependency,
-  ProFormDigit,
-  ProFormGroup,
-  type ProFormInstance,
-  ProFormList,
-} from "@ant-design/pro-components";
-import {
   Button,
   Dropdown,
   Flex,
@@ -30,7 +21,7 @@ import {
   EditorRow,
   Select,
 } from "~/components/Utils";
-import type { LevelWeights, PartialWeights, TierWeights } from "~/lib";
+import { 层级权重, 码长权重, 部分权重, 部分目标类型 } from "~/lib";
 
 const AtomicObjective = ({
   title,
@@ -127,7 +118,7 @@ const ListObjective = ({
   );
 };
 
-const defaultTier: TierWeights = {
+const defaultTier: 层级权重 = {
   duplication: 1,
 };
 
@@ -136,8 +127,8 @@ const LevelObjective = ({
   update,
   remove,
 }: {
-  level: LevelWeights;
-  update: (l: LevelWeights) => void;
+  level: 码长权重;
+  update: (l: 码长权重) => void;
   remove: () => void;
 }) => {
   return (
@@ -176,8 +167,8 @@ const TierObjective = ({
   update,
   remove,
 }: {
-  tier: TierWeights;
-  update: (t: TierWeights) => void;
+  tier: 层级权重;
+  update: (t: 层级权重) => void;
   remove: () => void;
 }) => {
   const levels = tier.levels ?? [];
@@ -279,7 +270,7 @@ const PartialObjective = ({
         o
           .valueOr({ tiers: undefined })
           .prop("tiers")
-          .valueOr([] as TierWeights[]),
+          .valueOr([] as 层级权重[]),
       ),
     [partialObjectiveAtom],
   );
@@ -289,7 +280,7 @@ const PartialObjective = ({
         o
           .valueOr({ levels: undefined })
           .prop("levels")
-          .valueOr([] as LevelWeights[]),
+          .valueOr([] as 码长权重[]),
       ),
     [partialObjectiveAtom],
   );
@@ -304,13 +295,13 @@ const PartialObjective = ({
     pair_equivalence,
     extended_pair_equivalence,
   } = currentPart;
-  const update = (type: keyof PartialWeights, value: number | undefined) => {
+  const update = (type: keyof 部分权重, value: number | undefined) => {
     setPartialObjective({ ...currentPart, [type]: value });
   };
-  const updateTiersAt = (index: number, value: TierWeights) => {
+  const updateTiersAt = (index: number, value: 层级权重) => {
     setTiers(tiers.map((x, i) => (i === index ? value : x)));
   };
-  const updateLevelsAt = (index: number, value: LevelWeights) => {
+  const updateLevelsAt = (index: number, value: 码长权重) => {
     setLevels(levels.map((x, i) => (i === index ? value : x)));
   };
   return (

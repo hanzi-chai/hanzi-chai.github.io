@@ -17,9 +17,12 @@ export default function ElementSelect(
   const { mapping, mapping_space } = useAtomValue(键盘原子);
   const sequenceMap = useAtomValue(如笔顺映射原子);
   const repertoire = useAtomValue(如字库原子);
+  if (!repertoire.ok || !sequenceMap.ok) {
+    return null;
+  }
   let keys = Object.keys(mapping);
   if (onlyRootsAndStrokes) {
-    keys = keys.filter((x) => repertoire[x] || x.match(/\d/));
+    keys = keys.filter((x) => repertoire.value.get()[x] || x.match(/\d/));
   }
   if (includeOptional) {
     for (const key of Object.keys(mapping_space ?? {})) {
@@ -43,7 +46,7 @@ export default function ElementSelect(
       filterOption={(input, option) => {
         if (option === undefined) return false;
         const value = option.value;
-        const sequence = sequenceMap.get(value);
+        const sequence = sequenceMap.value.get(value);
         if (sequence !== undefined) {
           return sequence.startsWith(input);
         }
@@ -51,8 +54,8 @@ export default function ElementSelect(
       }}
       filterSort={(a, b) => {
         return (
-          (sequenceMap.get(a.value) ?? "").length -
-          (sequenceMap.get(b.value) ?? "").length
+          (sequenceMap.value.get(a.value) ?? "").length -
+          (sequenceMap.value.get(b.value) ?? "").length
         );
       }}
     />

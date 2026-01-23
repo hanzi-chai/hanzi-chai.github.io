@@ -4,10 +4,10 @@ import SingleRules from "~/components/SingleRules";
 import MultipleRules from "~/components/MultipleRules";
 import SequenceTable from "~/components/SequenceTable";
 import ShortCodeRules from "~/components/ShortCodeRules";
-import { useChaifenTitle } from "~/atoms";
 import SelectRules from "~/components/SelectRules";
 import MetricTable from "~/components/MetricTable";
 import { ErrorBoundary } from "~/components/Error";
+import { useChaifenTitle } from "~/utils";
 
 const ConfigureRules = () => {
   return (

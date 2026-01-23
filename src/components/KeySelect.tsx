@@ -7,12 +7,12 @@ import {
   变量规则映射原子,
 } from "~/atoms";
 import { DisplayWithSuperScript, Select } from "./Utils";
-import { isMerge, GeneralizedKey, isVariableKey } from "~/lib";
 import type { BaseOptionType } from "antd/es/select";
+import { 广义码位, 是变量, 是归并 } from "~/lib";
 
 export interface KeySelectProps {
-  value: GeneralizedKey;
-  onChange: (k: GeneralizedKey) => void;
+  value: 广义码位;
+  onChange: (k: 广义码位) => void;
   allowEmpty?: boolean;
   disableAlphabets?: boolean;
   disableElements?: boolean;
@@ -47,7 +47,7 @@ export default function KeySelect({
   const mapping = useAtomValue(决策原子);
   const referenceOptions = Object.entries(mapping).flatMap(
     ([element, mapped]) => {
-      if (isMerge(mapped)) return [];
+      if (是归并(mapped)) return [];
       const length = mapped.length;
       return [...Array(length).keys()].map((index) => ({
         label: <DisplayWithSuperScript name={element} index={index} />,
@@ -66,6 +66,9 @@ export default function KeySelect({
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
   const sequenceMap = useAtomValue(如笔顺映射原子);
   const form = useAtomValue(如字库原子);
+  if (!sequenceMap.ok || !form.ok) {
+    return null;
+  }
   return (
     <Select
       showSearch
@@ -76,7 +79,7 @@ export default function KeySelect({
       onChange={(raw) => onChange(JSON.parse(raw))}
       filterOption={(input, option) => {
         if (option === undefined) return false;
-        const key: GeneralizedKey = JSON.parse(option.value);
+        const key: 广义码位 = JSON.parse(option.value);
         if (typeof key === "string") {
           return key.includes(input);
         }
@@ -86,21 +89,21 @@ export default function KeySelect({
         if ("variable" in key) {
           return key.variable.includes(input);
         }
-        if (form[key.element] !== undefined) {
-          return sequenceMap.get(key.element)?.startsWith(input) ?? false;
+        if (form.value.get()[key.element] !== undefined) {
+          return sequenceMap.value.get(key.element)?.startsWith(input) ?? false;
         }
         return key.element.includes(input);
       }}
       filterSort={(a, b) => {
-        const ak: GeneralizedKey = JSON.parse(a.value);
-        const bk: GeneralizedKey = JSON.parse(b.value);
+        const ak: 广义码位 = JSON.parse(a.value);
+        const bk: 广义码位 = JSON.parse(b.value);
         if (ak === null) return -1;
         if (bk === null) return 1;
-        if (isVariableKey(ak) && isVariableKey(bk)) {
+        if (是变量(ak) && 是变量(bk)) {
           return ak.variable.localeCompare(bk.variable);
         }
-        if (isVariableKey(ak)) return -1;
-        if (isVariableKey(bk)) return 1;
+        if (是变量(ak)) return -1;
+        if (是变量(bk)) return 1;
         if (typeof ak === "string" && typeof bk === "string") {
           return ak.localeCompare(bk);
         }
@@ -110,8 +113,8 @@ export default function KeySelect({
         if (typeof bk === "string") {
           return 1;
         }
-        const amapped = sequenceMap.get(ak.element) ?? "";
-        const bmapped = sequenceMap.get(bk.element) ?? "";
+        const amapped = sequenceMap.value.get(ak.element) ?? "";
+        const bmapped = sequenceMap.value.get(bk.element) ?? "";
         return amapped.localeCompare(bmapped);
       }}
     />

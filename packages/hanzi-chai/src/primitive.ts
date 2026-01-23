@@ -1,5 +1,5 @@
 import { 图形盒子 } from "./affine.js";
-import type { 字形自定义, 读音自定义 } from "./config.js";
+import type { 字形自定义 } from "./config.js";
 import type {
   原始字库数据,
   基本部件数据,
@@ -8,7 +8,7 @@ import type {
   汉字数据,
   矢量图形数据,
 } from "./data.js";
-import 字库 from "./repertoire.js";
+import { 字库 } from "./repertoire.js";
 import {
   模拟基本部件,
   是部件或全等,
@@ -42,13 +42,12 @@ class 原始字库 {
    */
   确定(
     自定义字形: 字形自定义 = {},
-    自定义字音: 读音自定义 = {},
     标签列表: string[] = [],
   ): Result<字库, Error> {
     const 确定字库 = new 字库();
     const 字形缓存: Map<string, 矢量图形数据> = new Map();
     for (const [汉字名, 汉字] of Object.entries(this.字库)) {
-      const { ambiguous: _, glyphs, readings, ...rest } = 汉字;
+      const { ambiguous: _, glyphs, ...rest } = 汉字;
       let 选定字形 = glyphs[0];
       for (const 标签 of 标签列表) {
         const 含标签字形 = glyphs.find((x) => (x.tags ?? []).includes(标签));
@@ -60,11 +59,9 @@ class 原始字库 {
       const 原始字形 = 自定义字形[汉字名] ?? 选定字形 ?? 模拟基本部件();
       const 字形 = this.递归渲染原始字形(原始字形, 字形缓存, [汉字名]);
       if (!字形.ok) return 字形;
-      const 最终读音 = 自定义字音[汉字名] ?? readings;
       const 确定汉字: 汉字数据 = {
         ...rest,
         glyph: 字形.value,
-        readings: 最终读音,
       };
       确定字库.添加(汉字名, 确定汉字);
     }
@@ -153,4 +150,4 @@ class 原始字库 {
   }
 }
 
-export default 原始字库;
+export { 原始字库 };

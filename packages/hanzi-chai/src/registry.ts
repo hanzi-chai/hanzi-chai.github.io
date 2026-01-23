@@ -28,11 +28,11 @@ type 输入 = {
  * 注册表单例，管理各类组件的注册与创建
  */
 class 注册表 {
-  private 部件分析器映射: Map<string, 部件分析构造器> = new Map();
-  private 复合体分析器映射: Map<string, 复合体分析构造器> = new Map();
-  private 拼音分析器映射: Map<string, 拼音分析构造器> = new Map();
-  private 组装器映射: Map<string, 组装器构造器> = new Map();
-  private 筛选器映射: Map<string, 筛选器构造器> = new Map();
+  部件分析器映射: Map<string, 部件分析构造器> = new Map();
+  复合体分析器映射: Map<string, 复合体分析构造器> = new Map();
+  拼音分析器映射: Map<string, 拼音分析构造器> = new Map();
+  组装器映射: Map<string, 组装器构造器> = new Map();
+  筛选器映射: Map<string, 筛选器构造器> = new Map();
 
   constructor({
     部件分析器列表,
@@ -128,4 +128,4 @@ export function resetRegistryForTests() {
   单例 = undefined;
 }
 
-export default 注册表;
+export { 注册表 };

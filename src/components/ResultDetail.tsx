@@ -7,9 +7,8 @@ import {
   useAddAtom,
   useAtomValue,
 } from "~/atoms";
-import { sieveMap } from "~/lib";
-import type { SchemeWithData } from "~/lib";
 import { Display } from "./Utils";
+import { 拆分方式与评价 } from "~/lib";
 
 export default function ResultDetail({
   char,
@@ -17,42 +16,44 @@ export default function ResultDetail({
   map,
 }: {
   char: string;
-  data: SchemeWithData[];
+  data: 拆分方式与评价[];
   map: Map<string, number[][]>;
 }) {
   const selector = useAtomValue(过滤器列表原子);
   const addCustomization = useAddAtom(自定义拆分原子);
 
-  const columns: ColumnsType<SchemeWithData> = [
+  const columns: ColumnsType<拆分方式与评价> = [
     {
       title: "拆分方式",
       dataIndex: "sequence",
       key: "sequence",
-      render: (_, { roots, optional }) => (
+      render: (_, { 拆分方式, 可用 }) => (
         <Space>
-          {roots.map((root, index) => (
+          {拆分方式.map(({ 名称 }, index) => (
             <Element key={index}>
-              <Display name={root} />
+              <Display name={名称} />
             </Element>
           ))}
-          {optional && <span>［备选］</span>}
+          {可用 && <span>［备选］</span>}
         </Space>
       ),
     },
   ];
 
-  for (const sieve of selector) {
-    const { display } = sieveMap.get(sieve)!;
+  const keys: string[] = [];
+  for (const { 评价 } of data) {
+    for (const key of 评价.keys()) {
+      if (!keys.includes(key)) {
+        keys.push(key);
+      }
+    }
+  }
+  for (const key of keys) {
     columns.push({
-      title: sieve,
-      key: sieve,
-      render: (_, { evaluation }) => {
-        const value = evaluation.get(sieve);
-        return (
-          <span>
-            {display && value ? display(value as number & number[]) : value}
-          </span>
-        );
+      title: key,
+      key,
+      render: (_, { 评价 }) => {
+        return <span>{评价.get(key)?.join(", ")}</span>;
       },
     });
   }
@@ -60,8 +61,17 @@ export default function ResultDetail({
   columns.push({
     title: "操作",
     key: "operations",
-    render: (_, { roots }) => (
-      <Button onClick={() => addCustomization(char, roots)}>采用</Button>
+    render: (_, { 拆分方式 }) => (
+      <Button
+        onClick={() =>
+          addCustomization(
+            char,
+            拆分方式.map((x) => x.名称),
+          )
+        }
+      >
+        采用
+      </Button>
     ),
   });
 

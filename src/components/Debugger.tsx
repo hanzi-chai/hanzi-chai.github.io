@@ -3,11 +3,10 @@ import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
-import { charactersAtom, configAtom, 如字库原子 } from "~/atoms";
-import { encodeResultAtom } from "~/atoms";
+import { 汉字集合原子, 配置原子, 如字库原子 } from "~/atoms";
+import { 编码结果原子 } from "~/atoms";
 import { Select, Uploader } from "~/components/Utils";
-import type { DictEntry } from "~/lib";
-import { getSupplemental } from "~/lib";
+import type { DictEntry } from "~/utils";
 
 interface DictEntryWithReference extends DictEntry {
   reference: string[];
@@ -16,14 +15,14 @@ interface DictEntryWithReference extends DictEntry {
 }
 
 export default function Debugger() {
-  const config = useAtomValue(configAtom);
+  const config = useAtomValue(配置原子);
   const repertoire = useAtomValue(如字库原子);
-  const characters = useAtomValue(charactersAtom);
-  const [code] = useAtomValue(encodeResultAtom);
+  const characters = useAtomValue(汉字集合原子);
+  const [code] = useAtomValue(编码结果原子);
   const referenceAtom = useMemo(
     () =>
       atomWithStorage<Record<string, string[]>>(
-        `reference_${config.info.name}`,
+        `reference_${config.info?.name ?? "default"}`,
         {},
       ),
     [config.info?.name],
@@ -34,10 +33,16 @@ export default function Debugger() {
   const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as const;
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   type FilterOption = (typeof filterOptions)[number];
-  const supplemental = getSupplemental(repertoire, characters);
+
+  if (!repertoire.ok) {
+    throw new Error("Repertoire not loaded");
+  }
+  const 字库 = repertoire.value;
+  const { 部件列表 } = 字库.获取待分析对象(characters);
+  const 汉字集合 = new Set(characters);
   const filterMap: Record<FilterOption, (p: string) => boolean> = {
-    成字部件: (char) => repertoire[char]?.glyph?.type === "basic_component",
-    非成字部件: (char) => supplemental.includes(char),
+    成字部件: (char) => 部件列表.has(char) && 汉字集合.has(char),
+    非成字部件: (char) => 部件列表.has(char) && !汉字集合.has(char),
     所有汉字: () => true,
   };
   const filterFn = filterMap[filterOption];

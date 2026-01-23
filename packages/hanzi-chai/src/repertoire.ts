@@ -22,11 +22,17 @@ import type {
   字库数据,
   字形数据,
   汉字数据,
-  读音数据,
 } from "./data.js";
 import { getRegistry } from "./registry.js";
-import { chars, default_err, ok, type 词典, type Result } from "./utils.js";
-import { 合并拼写运算, type 拼音分析配置 } from "./pinyin.js";
+import {
+  chars,
+  default_err,
+  ok,
+  type 词典,
+  type Result,
+  词典条目,
+} from "./utils.js";
+import { 合并拼写运算 } from "./pinyin.js";
 import { 字集过滤查找表 } from "./unicode.js";
 
 // 变量映射：variable id -> 绑定的子树 key
@@ -36,23 +42,11 @@ interface 基本分析 {
   字根序列: string[];
 }
 
-interface 一字词分析 {
-  词: string;
-  拼音: string;
-  元素映射: Map<string, string>;
-}
-
-interface 多字词分析 {
-  词: string;
-  拼音: string[];
+interface 拼音分析 extends 词典条目 {
   元素映射: Map<string, string>[];
 }
 
-interface 拼音分析结果 {
-  一字词: 一字词分析[];
-  多字词: 多字词分析[];
-}
-
+type 拼音分析结果 = 拼音分析[];
 interface 字形分析结果<
   部件分析 extends 基本分析 = 基本分析,
   复合体分析 extends 基本分析 = 基本分析,
@@ -82,10 +76,6 @@ class 字库 {
 
   get() {
     return this.repertoire;
-  }
-
-  查询读音(character: string): 读音数据[] | undefined {
-    return this.repertoire[character]?.readings;
   }
 
   查询字形(character: string): 字形数据 | undefined {
@@ -391,7 +381,6 @@ class 字库 {
       gf3001_id: null,
       name: null,
       glyph: 复合体,
-      readings: [],
     });
     return ok(字符);
   }
@@ -423,8 +412,7 @@ class 字库 {
   拼音分析(
     编码器: 编码配置,
     拼写运算自定义: Record<string, 拼写运算> | undefined,
-    一字词列表: string[],
-    多字词列表: 词典,
+    词典: 词典,
   ) {
     const 全部拼写运算 = 合并拼写运算(拼写运算自定义);
     const 拼写运算查找表 = new Map<string, 拼写运算>();
@@ -438,25 +426,13 @@ class 字库 {
       }
     }
     const 拼音分析器 = getRegistry().创建拼音分析器("默认", 拼写运算查找表)!;
-    const 一字词: 一字词分析[] = [];
-    for (const char of 一字词列表) {
-      const readings = this.查询读音(char) ?? [];
-      if (readings.length === 0) {
-        readings.push({ pinyin: "", importance: 100 });
-      }
-      for (const { pinyin } of readings) {
-        const 拼写运算 = 拼音分析器.分析(char, [pinyin])[0]!;
-        一字词.push({ 词: char, 拼音: pinyin, 元素映射: 拼写运算 });
-      }
-    }
-
-    const 多字词: 多字词分析[] = [];
-    for (const { 词, 拼音 } of 多字词列表) {
+    const 拼音分析结果: 拼音分析[] = [];
+    for (const { 词, 拼音, 频率 } of 词典) {
       const 元素映射 = 拼音分析器.分析(词, 拼音)!;
-      多字词.push({ 词, 拼音, 元素映射: 元素映射 });
+      拼音分析结果.push({ 词, 拼音, 频率, 元素映射: 元素映射 });
     }
 
-    return { 一字词, 多字词 };
+    return 拼音分析结果;
   }
 
   /**
@@ -820,4 +796,4 @@ function 生成定制<T extends 基本分析 | 默认部件分析>(
 // };
 
 export type { 基本分析, 字形分析结果, 拼音分析结果, 字形分析配置 };
-export default 字库;
+export { 字库 };

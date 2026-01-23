@@ -17,7 +17,7 @@ import type { ColumnsType } from "antd/es/table";
 import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { isEqual, sample, sortBy } from "lodash-es";
-import { charactersAtom, 退化配置原子, 决策原子, 如字库原子 } from "~/atoms";
+import { 汉字集合原子, 退化配置原子, 决策原子, 如字库原子 } from "~/atoms";
 import Element from "~/components/Element";
 import ElementSelect from "~/components/ElementSelect";
 import { Display } from "~/components/Utils";
@@ -283,7 +283,7 @@ const 双编码编辑器 = () => {
 export default function Misc() {
   const repertoire = useAtomValue(如字库原子);
   const degenerator = useAtomValue(退化配置原子);
-  const characters = useAtomValue(charactersAtom);
+  const characters = useAtomValue(汉字集合原子);
   const components = getComponentCounts(repertoire, characters);
   let 最大字根数 = 0;
   const degeneratedMap = new Map<

@@ -1,11 +1,4 @@
 import { Button, Flex, Form } from "antd";
-import type {
-  Compound,
-  Operator,
-  SplicedComponent,
-  SVGGlyphWithBox,
-} from "~/lib";
-import { operators } from "~/lib";
 import { useWatch } from "antd/es/form/Form";
 import CharacterSelect from "./CharacterSelect";
 import {
@@ -22,8 +15,14 @@ import { 如字库原子, 全部标签原子 } from "~/atoms";
 import Element from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
-import { recursiveRenderCompound } from "~/lib";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import {
+  图形盒子,
+  type 复合体数据,
+  type 拼接部件数据,
+  type 结构表示符,
+  结构表示符列表,
+} from "~/lib";
 
 export const CommonForm = () => {
   const tags = useAtomValue(全部标签原子);
@@ -51,7 +50,7 @@ export const CommonForm = () => {
   );
 };
 
-type CompoundOrSplicedComponent = Compound | SplicedComponent;
+type 拼接部件或复合体 = 拼接部件数据 | 复合体数据;
 
 export default function CompoundForm({
   title,
@@ -62,14 +61,14 @@ export default function CompoundForm({
   readonly,
 }: {
   title: ReactNode;
-  initialValues: CompoundOrSplicedComponent;
-  onFinish: (c: CompoundOrSplicedComponent) => Promise<boolean>;
+  initialValues: 拼接部件或复合体;
+  onFinish: (c: 拼接部件或复合体) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
 }) {
   const repertoire = useAtomValue(如字库原子);
-  const [form] = Form.useForm<Compound>();
+  const [form] = Form.useForm<拼接部件或复合体>();
   const list: string[] = useWatch("operandList", form);
   const trigger = noButton ? (
     <span>{title}</span>
@@ -77,7 +76,7 @@ export default function CompoundForm({
     <Element type={primary ? "default" : "text"}>{title}</Element>
   );
   return (
-    <ModalForm<Compound>
+    <ModalForm<拼接部件或复合体>
       form={form}
       title={title}
       layout="horizontal"
@@ -97,21 +96,16 @@ export default function CompoundForm({
               name={["type", "operator", "operandList", "parameters"]}
             >
               {(props) => {
-                const component = props as Compound;
-                const rendered =
-                  component?.type !== undefined
-                    ? recursiveRenderCompound(component, repertoire)
-                    : new Error();
-                const defaultGlyph: SVGGlyphWithBox = {
-                  strokes: [],
-                  box: { x: [0, 100], y: [0, 100] },
-                };
-                return (
-                  <StrokesView
-                    displayMode
-                    glyph={rendered instanceof Error ? defaultGlyph : rendered}
-                  />
-                );
+                const compound = props as 复合体数据;
+                let glyph = new 图形盒子();
+                if (repertoire.ok) {
+                  const 字库 = repertoire.value;
+                  const rendered = 字库.递归渲染复合体(compound);
+                  if (rendered.ok) {
+                    glyph = rendered.value;
+                  }
+                }
+                return <StrokesView displayMode glyph={glyph} />;
               }}
             </ProFormDependency>
           </Box>
@@ -122,7 +116,7 @@ export default function CompoundForm({
             <ProFormSelect
               label="结构"
               name="operator"
-              onChange={(value: Operator) => {
+              onChange={(value: 结构表示符) => {
                 const newLength =
                   value === "⿲" || value === "⿳"
                     ? 3
@@ -132,7 +126,7 @@ export default function CompoundForm({
                 const newList = list.concat("一").slice(0, newLength);
                 form.setFieldValue("operandList", newList);
               }}
-              options={operators.map((x) => ({ value: x, label: x }))}
+              options={结构表示符列表.map((x) => ({ value: x, label: x }))}
               style={{ width: "96px" }}
               allowClear={false}
             />

@@ -1,7 +1,7 @@
 import { Flex, Select, Space } from "antd";
 import { useAtomValue } from "jotai";
 import { 字母表原子, 编码类型原子 } from "~/atoms";
-import { GeneralizedValue, isMerge, 合并字符串, GeneralizedKey } from "~/lib";
+import { 合并字符串, 广义安排, 广义码位, 是归并 } from "~/lib";
 import KeySelect from "./KeySelect";
 import ElementSelect from "./ElementSelect";
 
@@ -10,8 +10,8 @@ const KeysEditor = ({
   onChange,
   isCurrent,
 }: {
-  value: string | GeneralizedKey[];
-  onChange: (newValue: string | GeneralizedKey[]) => void;
+  value: string | 广义码位[];
+  onChange: (newValue: string | 广义码位[]) => void;
   isCurrent?: boolean;
 }) => {
   const mappingType = useAtomValue(编码类型原子);
@@ -49,13 +49,12 @@ const ValueEditor = ({
   onChange,
   isCurrent,
 }: {
-  value: GeneralizedValue;
-  onChange: (newValue: GeneralizedValue) => void;
+  value: 广义安排;
+  onChange: (newValue: 广义安排) => void;
   isCurrent?: boolean;
 }) => {
   const alphabet = useAtomValue(字母表原子);
-  const currentType =
-    value === null ? "禁用" : isMerge(value) ? "归并" : "键位";
+  const currentType = value === null ? "禁用" : 是归并(value) ? "归并" : "键位";
   return (
     <Flex gap="small">
       <Select<ValueType>
@@ -75,7 +74,7 @@ const ValueEditor = ({
           { label: "归并", value: "归并" },
         ]}
       />
-      {isMerge(value) ? (
+      {是归并(value) ? (
         <ElementSelect
           includeOptional
           value={value.element}
