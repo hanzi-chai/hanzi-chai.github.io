@@ -10,7 +10,7 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 最大码长原子 } from "~/atoms";
-import type { 码位, 组装, 频率映射 } from "~/lib";
+import type { 码位, 组装条目, 频率映射 } from "~/lib";
 import { 反序列化, 序列化 } from "~/lib";
 import { Suspense, useState } from "react";
 import { 如组装结果原子 } from "~/atoms";
@@ -36,7 +36,7 @@ const numbers = [
 ];
 const render = (value: number) => numbers[value] || value.toString();
 
-const filterRelevant = (result: 组装[], analyzer: AnalyzerForm) => {
+const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
   let relevant = result;
   if (analyzer.type === "single")
     relevant = relevant.filter((x) => [...x.词].length === 1);
@@ -50,7 +50,7 @@ const filterRelevant = (result: 组装[], analyzer: AnalyzerForm) => {
 
 const analyzePrimitiveDuplication = (
   analyzer: AnalyzerForm,
-  result: 组装[],
+  result: 组装条目[],
   maxLength: number,
   replacer: (d: string) => string = (d) => d,
 ) => {

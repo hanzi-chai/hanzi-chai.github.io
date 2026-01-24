@@ -1,10 +1,8 @@
 import {
-  Alert,
   Button,
   Col,
   Flex,
   Modal,
-  notification,
   Pagination,
   Radio,
   Row,
@@ -21,10 +19,6 @@ import {
   自定义拆分原子,
   汉字集合原子,
   决策原子,
-  如字形分析配置原子,
-  词典原子,
-  拼写运算自定义原子,
-  决策空间原子,
   动态自定义拆分原子,
   useAtom,
   部件分析器原子,
@@ -34,15 +28,20 @@ import {
 import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
-import { getRegistry, 基本分析, 默认部件分析, type 字形分析结果 } from "~/lib";
+import {
+  getRegistry,
+  type 基本分析,
+  type 默认部件分析,
+  type 字形分析结果,
+} from "~/lib";
 import Selector from "~/components/Selector";
 import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
 import { 如字形分析结果原子 } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
-import { Display, Select } from "~/components/Utils";
+import { Select } from "~/components/Utils";
 import {
-  CharacterFilter,
+  type 字符过滤器参数,
   exportTSV,
   useChaifenTitle,
   字符过滤器,
@@ -69,9 +68,10 @@ const ConfigureRules = () => {
   const [部件分析器, 设置部件分析器] = useAtom(部件分析器原子);
   const [复合体分析器, 设置复合体分析器] = useAtom(复合体分析器原子);
   const 注册表 = getRegistry();
+
   return (
     <Flex gap="middle" justify="center" align="center">
-      拆分风格
+      部件分析器：
       <Select
         value={部件分析器}
         onChange={设置部件分析器}
@@ -80,6 +80,7 @@ const ConfigureRules = () => {
           value: x,
         }))}
       />
+      复合体分析器：
       <Select
         value={复合体分析器}
         onChange={设置复合体分析器}
@@ -102,14 +103,12 @@ const ConfigureRules = () => {
   );
 };
 
-const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
+const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const analysisResult = useAtomValueUnwrapped(如字形分析结果原子);
-  const { 部件分析结果, 复合体分析结果 } = analysisResult;
-  const dictionary = useAtomValue(词典原子);
-  const algebra = useAtomValue(拼写运算自定义原子);
+  const { 原始部件分析结果, 部件分析结果, 复合体分析结果 } = analysisResult;
   const characters = useAtomValue(汉字集合原子);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -122,11 +121,9 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   ]);
   const mapping = useAtomValue(决策原子);
   const filterFn = new 字符过滤器(filter);
-  const analysisConfig = useAtomValueUnwrapped(如字形分析配置原子);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
-  const componentsNeedAnalysis = [...部件分析结果].filter(([k, v]) => {
-    if (analysisConfig.可选字根.has(k)) return true;
+  const componentsNeedAnalysis = [...原始部件分析结果].filter(([k, v]) => {
     if (mapping[k]) return false;
     if (v.字根序列.length === 1 && /\d+/.test(v.字根序列[0]!)) return false;
     return true;
@@ -134,7 +131,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
   const componentDisplay = componentsNeedAnalysis
     .filter(([x]) => !customizedOnly || customize[x] || dynamicCustomize[x])
     .filter(([x]) =>
-      filterFn.过滤(x, repertoire.get()[x]!, sequenceMap.get(x) ?? ""),
+      filterFn.过滤(x, repertoire._get()[x]!, sequenceMap.get(x) ?? ""),
     )
     .map(([key, res]) => {
       const r = res as 默认部件分析 | 基本分析;
@@ -153,7 +150,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
     });
   const compoundDisplay = [...复合体分析结果]
     .filter(([x]) =>
-      filterFn.过滤(x, repertoire.get()[x]!, sequenceMap.get(x) ?? ""),
+      filterFn.过滤(x, repertoire._get()[x]!, sequenceMap.get(x) ?? ""),
     )
     .map(([key, res]) => {
       return {
@@ -235,7 +232,7 @@ const AnalysisResults = ({ filter }: { filter: CharacterFilter }) => {
 
 export default function Analysis() {
   useChaifenTitle("拆分");
-  const [filter, setFilter] = useState<CharacterFilter>({});
+  const [filter, setFilter] = useState<字符过滤器参数>({});
 
   return (
     <Flex vertical align="center" gap="middle" style={{ padding: "0 2rem" }}>

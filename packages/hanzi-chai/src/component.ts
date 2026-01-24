@@ -5,7 +5,6 @@ import type { 分类器, 笔画名称 } from "./classifier.js";
 import type { 退化配置 } from "./config.js";
 import type { 基本部件数据, 矢量图形数据, 结构表示符 } from "./data.js";
 import { isCollinear, isLess, sorted } from "./math.js";
-import { getRegistry } from "./registry.js";
 import type { 基本分析, 字形分析配置 } from "./repertoire.js";
 import {
   默认筛选器列表,
@@ -14,6 +13,7 @@ import {
   type 筛选器,
 } from "./selector.js";
 import { default_err, ok, type Result } from "./utils.js";
+import { getRegistry } from "./main.js";
 
 export const defaultDegenerator: 退化配置 = {
   feature: {
@@ -526,14 +526,73 @@ class 张码部件分析器 implements 部件分析器<张码部件分析> {
   }
 }
 
+interface 逸码部件分析 extends 基本分析 {
+  余一字根序列: string[];
+  笔画序列: string[];
+}
+
+class 逸码部件分析器 implements 部件分析器<逸码部件分析> {
+  static readonly type = "逸码";
+  constructor(private 配置: 字形分析配置) {}
+
+  限制字根数量(拆分方式: 拆分方式, n: number, 图形: 部件图形) {
+    const 新拆分方式 = 拆分方式.slice(0, n);
+    let 补笔画: number[];
+    if (拆分方式.length <= n) {
+      补笔画 = 拆分方式.at(-1)!.笔画索引;
+    } else {
+      const 全部笔画 = range(图形.笔画数());
+      const 已用笔画 = new Set(拆分方式.slice(0, n).flatMap((x) => x.笔画索引));
+      const 未用笔画 = 全部笔画.filter((x) => !已用笔画.has(x));
+      补笔画 = 未用笔画;
+    }
+    for (const 笔画 of 补笔画) {
+      const 名称 = this.配置.分类器[图形._笔画列表()[笔画]!.feature].toString();
+      const 笔画二进制表示 = 1 << (图形.笔画数() - 1 - 笔画);
+      新拆分方式.push({
+        名称: `${名称}0`,
+        笔画索引: [笔画],
+        笔画二进制表示,
+      });
+    }
+    return 新拆分方式;
+  }
+
+  分析(名称: string, 部件: 基本部件数据) {
+    const 图形 =
+      this.配置.字根图形映射.get(名称) ?? new 部件图形(名称, 部件.strokes);
+    const 可选分析 = 图形.给出部件分析(this.配置);
+    if (!可选分析.ok) return 可选分析;
+    const 分析 = 可选分析.value;
+    const 拆分方式 = 分析.当前拆分方式.拆分方式;
+    const 余二拆分方式 = this.限制字根数量(拆分方式, 2, 图形);
+    const 余一拆分方式 = this.限制字根数量(拆分方式, 1, 图形);
+    const 笔画拆分方式 = this.限制字根数量(拆分方式, 0, 图形);
+    const result = {
+      ...分析,
+      字根序列: 余二拆分方式.map((x) => x.名称),
+      余一字根序列: 余一拆分方式.map((x) => x.名称),
+      笔画序列: 笔画拆分方式.map((x) => x.名称),
+    };
+    return ok(result);
+  }
+}
+
 export {
   二笔部件分析器,
   张码部件分析器,
+  逸码部件分析器,
   计算张码补码,
   部件图形,
   默认部件分析器,
 };
-export type { 张码部件分析, 拆分方式与评价, 部件分析器, 默认部件分析 };
+export type {
+  张码部件分析,
+  逸码部件分析,
+  拆分方式与评价,
+  部件分析器,
+  默认部件分析,
+};
 
 // if (serializerName === "xkjd") {
 //   for (const [_, result] of componentResults.entries()) {

@@ -94,7 +94,8 @@ class 连续笔顺 implements 筛选器 {
     // 让不连续的字根数量少者优先
     for (const { 笔画索引 } of scheme) {
       const sortedIndices = [...笔画索引].sort((a, b) => a - b);
-      if (!isEqual(笔画索引, sortedIndices)) {
+      const diff = (sortedIndices.at(-1) ?? 0) - (sortedIndices[0] ?? 0);
+      if (sortedIndices.length !== diff + 1) {
         unsorted += 1;
       }
     }

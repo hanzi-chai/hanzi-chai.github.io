@@ -11,7 +11,7 @@ import {
 } from "@ant-design/pro-components";
 import { InlineRender, StaticList } from "./ComponentForm";
 import { useAtomValue } from "jotai";
-import { 如字库原子, 全部标签原子 } from "~/atoms";
+import { 如字库原子, 全部标签原子, useAtomValueUnwrapped } from "~/atoms";
 import Element from "./Element";
 import { EditorColumn, EditorRow } from "./Utils";
 import { Box, StrokesView } from "./GlyphView";
@@ -67,7 +67,7 @@ export default function CompoundForm({
   primary?: boolean;
   readonly?: boolean;
 }) {
-  const repertoire = useAtomValue(如字库原子);
+  const repertoire = useAtomValueUnwrapped(如字库原子);
   const [form] = Form.useForm<拼接部件或复合体>();
   const list: string[] = useWatch("operandList", form);
   const trigger = noButton ? (
@@ -98,12 +98,9 @@ export default function CompoundForm({
               {(props) => {
                 const compound = props as 复合体数据;
                 let glyph = new 图形盒子();
-                if (repertoire.ok) {
-                  const 字库 = repertoire.value;
-                  const rendered = 字库.递归渲染复合体(compound);
-                  if (rendered.ok) {
-                    glyph = rendered.value;
-                  }
+                const rendered = repertoire.递归渲染复合体(compound);
+                if (rendered.ok) {
+                  glyph = rendered.value;
                 }
                 return <StrokesView displayMode glyph={glyph} />;
               }}

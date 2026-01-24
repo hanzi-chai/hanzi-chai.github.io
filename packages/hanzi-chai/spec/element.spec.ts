@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  从列表生成,
-  摘要,
-  转列表,
-} from "../src/main";
+import { 从列表生成, 摘要, 转列表 } from "../src/index.js";
 
 describe("element", () => {
   it("renderName should render the name of the codable object", () => {

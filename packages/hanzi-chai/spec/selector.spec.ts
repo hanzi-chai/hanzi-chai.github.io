@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { 全符笔顺, 取大优先, 根少优先, 能散不连, 能连不交, type 拆分方式, type 拆分环境 } from "../src/main";
-import { 获取数据 } from ".";
+import { 全符笔顺, 取大优先, 根少优先, 能散不连, 能连不交, type 拆分方式, type 拆分环境 } from "../src/index.js";
+import { 获取数据 } from "./index.js";
 
 const { 字库, 部件图形库 } = 获取数据();
 const 字形分析配置 = 字库.准备字形分析配置({}, { "1": "f", "二": "d", "人": "s", "大": "a" }, {});

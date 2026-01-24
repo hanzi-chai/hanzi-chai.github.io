@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { 合并拼写运算, 默认拼音分析器 } from "~/lib";
+import { 合并拼写运算, 默认拼音分析器 } from "../src/index.js";
 
 describe("拼音分析", () => {
   const 查找表 = 合并拼写运算();

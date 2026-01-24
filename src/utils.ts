@@ -1,4 +1,4 @@
-import type { 原始汉字数据, 字库数据, 汉字数据, 结构表示符, 配置 } from "~/lib";
+import type { 原始汉字数据, 字库数据, 字形数据, 汉字数据, 结构表示符, 配置 } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -90,7 +90,7 @@ export function useChaifenTitle(title: string) {
 export class Thread {
   public worker: Worker;
   public constructor() {
-    this.worker = new Worker(new URL("../worker.ts", import.meta.url), {
+    this.worker = new Worker(new URL("worker.ts", import.meta.url), {
       type: "module",
     });
   }
@@ -163,39 +163,9 @@ export const exportTSV = (data: string[][], filename: string) => {
   processExport(fileContent, filename);
 };
 
-const match = (character: 原始汉字数据 | 汉字数据, input: CharacterFilter) => {
-  const { tag, operator, part } = input;
-  if ("glyphs" in character) {
-    const isTagMatched =
-      tag === undefined || character.glyphs.some((x) => x.tags?.includes(tag));
-    const isOperatorMatched =
-      operator === undefined ||
-      character.glyphs.some(
-        (x) => "operator" in x && x.operator.includes(operator),
-      );
-    const isPartMatched =
-      part === undefined ||
-      character.glyphs.some(
-        (x) => "operandList" in x && x.operandList.includes(part),
-      );
-    return isTagMatched && isOperatorMatched && isPartMatched;
-  }
-  const isTagMatched =
-    tag === undefined || character.glyph?.tags?.includes(tag);
-  const isOperatorMatched =
-    operator === undefined ||
-    (character.glyph?.type === "compound" &&
-      character.glyph.operator.includes(operator));
-  const isPartMatched =
-    part === undefined ||
-    (character.glyph?.type === "compound" &&
-      character.glyph.operandList.includes(part));
-  return isTagMatched && isOperatorMatched && isPartMatched;
-};
-
 export class 字符过滤器 {
   private sequenceRegex: RegExp | undefined;
-  constructor(private 过滤条件: CharacterFilter) {
+  constructor(private 过滤条件: 字符过滤器参数) {
     if (过滤条件.sequence) {
       try {
         this.sequenceRegex = new RegExp(过滤条件.sequence);
@@ -203,18 +173,41 @@ export class 字符过滤器 {
     }
   }
 
-  过滤(name: string, 汉字: 汉字数据 | 原始汉字数据, 笔画序列: string) {
-    const nameToMatch = this.过滤条件.name ?? "";
-    const isNameMatched = (汉字.name ?? "").includes(nameToMatch) || name.includes(nameToMatch);
-    const isSequenceMatched = this.sequenceRegex?.test(笔画序列) ?? true;
-    const isUnicodeMatched =
-      this.过滤条件.unicode === undefined || this.过滤条件.unicode === name.codePointAt(0);
-    const isMatched = match(汉字, this.过滤条件);
-    return isNameMatched && isSequenceMatched && isUnicodeMatched && isMatched;
+  过滤(汉字: string, 数据: 汉字数据 | 原始汉字数据, 笔画序列: string) {
+    let result = true;
+    const { name, unicode } = this.过滤条件;
+    if (name) {
+      result &&= (数据.name ?? "").includes(name) || 汉字.includes(name);
+    }
+    if (this.sequenceRegex) {
+      result &&= this.sequenceRegex.test(笔画序列);
+    }
+    if (unicode) {
+      result &&= unicode === 汉字.codePointAt(0);
+    }
+    if ("glyphs" in 数据) {
+      result &&= 数据.glyphs.some((glyph) => this.匹配字形(glyph));
+    } else if ("glyph" in 数据) {
+      result &&= this.匹配字形(数据.glyph);
+    }
+    return result;
   }
+
+  匹配字形(glyph: 字形数据) {
+    const { tag, operator, part } = this.过滤条件;
+    let result = true;
+    if (tag) result &&= (glyph.tags ?? []).includes(tag);
+    if (operator) {
+      result &&= glyph.type === "compound" && glyph.operator === operator;
+    }
+    if (part) {
+      result &&= glyph.type === "compound" && glyph.operandList.includes(part);
+    }
+    return result;
+  };
 }
 
-export interface CharacterFilter {
+export interface 字符过滤器参数 {
   name?: string;
   sequence?: string;
   unicode?: number;
@@ -222,17 +215,6 @@ export interface CharacterFilter {
   part?: string;
   operator?: 结构表示符;
 }
-
-export const makeFilter =
-  (input: string, form: 字库数据, sequence: Map<string, string>) =>
-    (char: string) => {
-      if ((sequence.get(char)?.length ?? 0) <= 1) return false;
-      const name = form[char]?.name ?? "";
-      const seq = sequence.get(char) ?? "";
-      return (
-        name.includes(input) || char.includes(input) || seq.startsWith(input)
-      );
-    };
 
 export interface AnalyzerForm {
   type: "single" | "multi" | "all";
@@ -249,15 +231,15 @@ export const makeDefaultAnalyzer = (maxLength: number) => {
   return form;
 };
 
-export interface DictEntry {
-  name: string;
-  full: string;
-  full_rank: number;
-  short: string;
-  short_rank: number;
+export interface 编码条目 {
+  词: string;
+  全码: string;
+  全码排名: number;
+  简码: string;
+  简码排名: number;
 }
 
-export type EncodeResult = DictEntry[];
+export type 编码结果 = 编码条目[];
 
 export const formatDate = (date: Date) => {
   return `${date.getMonth() + 1

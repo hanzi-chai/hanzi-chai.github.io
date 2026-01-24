@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { defaultDegenerator } from "../src/main";
-import { 获取数据 } from ".";
+import { defaultDegenerator } from "../src/index.js";
+import { 获取数据 } from "./index.js";
 
 const { 部件图形库 } = 获取数据();
 

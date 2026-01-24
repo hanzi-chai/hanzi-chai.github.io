@@ -74,7 +74,6 @@ const treeify = (repertoire: PrimitiveRepertoire) => {
       }
     }
   }
-  console.log("剩余的", components);
   return treeData;
 };
 

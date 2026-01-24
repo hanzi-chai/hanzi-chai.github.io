@@ -119,8 +119,8 @@ const DisplayWrapper = styled(Display)<{ $optional: boolean }>`
 `;
 
 export const AdjustableElementGroup = ({
-  name,
-  code,
+  名称: name,
+  安排: code,
   displayMode,
 }: 首码分组 & { displayMode?: boolean }) => {
   const mapping = useAtomValue(决策原子);
@@ -381,8 +381,8 @@ const MappingRow = memo(
         />
         <Char>{symbol}</Char>
         <Flex align="center" wrap="wrap" gap="small">
-          {elements.map(({ name, code }) => (
-            <AdjustableElementGroup key={name} name={name} code={code} />
+          {elements.map(({ 名称: name, 安排: code }) => (
+            <AdjustableElementGroup key={name} 名称={name} 安排={code} />
           ))}
         </Flex>
       </Flex>

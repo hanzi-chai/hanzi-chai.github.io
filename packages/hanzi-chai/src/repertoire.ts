@@ -11,10 +11,8 @@ import type {
   变换器,
   字集指示,
   安排,
-  拼写运算,
   模式,
   结构变量,
-  编码配置,
 } from "./config.js";
 import type {
   基本部件数据,
@@ -23,17 +21,9 @@ import type {
   字形数据,
   汉字数据,
 } from "./data.js";
-import { getRegistry } from "./registry.js";
-import {
-  chars,
-  default_err,
-  ok,
-  type 词典,
-  type Result,
-  词典条目,
-} from "./utils.js";
-import { 合并拼写运算 } from "./pinyin.js";
+import { chars, default_err, hex, ok, type Result } from "./utils.js";
 import { 字集过滤查找表 } from "./unicode.js";
+import { getRegistry } from "./main.js";
 
 // 变量映射：variable id -> 绑定的子树 key
 type 变量映射 = Map<number, string>;
@@ -42,11 +32,6 @@ interface 基本分析 {
   字根序列: string[];
 }
 
-interface 拼音分析 extends 词典条目 {
-  元素映射: Map<string, string>[];
-}
-
-type 拼音分析结果 = 拼音分析[];
 interface 字形分析结果<
   部件分析 extends 基本分析 = 基本分析,
   复合体分析 extends 基本分析 = 基本分析,
@@ -56,6 +41,12 @@ interface 字形分析结果<
   部件分析结果: Map<string, 部件分析>;
   复合体分析结果: Map<string, 复合体分析>;
   字根笔画映射: Map<string, number[]>;
+}
+
+interface 字形分析基本配置 {
+  分析配置: 分析配置;
+  决策: 决策;
+  决策空间: 决策空间;
 }
 
 interface 字形分析配置 {
@@ -74,7 +65,7 @@ class 字库 {
     this.repertoire = repertoire;
   }
 
-  get() {
+  _get() {
     return this.repertoire;
   }
 
@@ -142,7 +133,7 @@ class 字库 {
   /**
    * 确定需要分析的字符
    */
-  获取待分析对象(汉字列表: string[]) {
+  获取待分析对象(汉字列表: Set<string>) {
     const 汉字队列 = [...汉字列表];
     const 部件与名称列表: [string, 基本部件数据][] = [];
     const 已知有用汉字 = new Set(汉字列表);
@@ -276,7 +267,8 @@ class 字库 {
     const sequences: string[] = [];
     for (const char of compound.operandList) {
       const glyph = this.repertoire[char]?.glyph;
-      if (glyph === undefined) return default_err(`无法找到字形数据: ${char}`);
+      if (glyph === undefined)
+        return default_err(`无法找到字形数据: ${char}（U+${hex(char)}）`);
       if (glyph.type === "basic_component") {
         sequences.push(
           glyph.strokes.map((x) => 默认分类器[x.feature]).join(""),
@@ -398,6 +390,9 @@ class 字库 {
       }
       const 变量映射: 变量映射 = new Map();
       if (this.模式匹配(字符, 变换器.from, 变量映射)) {
+        console.log(
+          `变换器匹配: ${字符} -> ${[...变量映射.entries()].map(([k, v]) => `v${k}=${v}`).join(", ")}`,
+        );
         匹配集合.set(字符, 变量映射);
       }
     }
@@ -409,60 +404,41 @@ class 字库 {
     return 输出数据库;
   }
 
-  拼音分析(
-    编码器: 编码配置,
-    拼写运算自定义: Record<string, 拼写运算> | undefined,
-    词典: 词典,
-  ) {
-    const 全部拼写运算 = 合并拼写运算(拼写运算自定义);
-    const 拼写运算查找表 = new Map<string, 拼写运算>();
-    for (const value of Object.values(编码器.sources)) {
-      const object = value.object;
-      if (object && object.type === "字音") {
-        拼写运算查找表.set(
-          object.subtype,
-          全部拼写运算.get(object.subtype) || [],
-        );
-      }
-    }
-    const 拼音分析器 = getRegistry().创建拼音分析器("默认", 拼写运算查找表)!;
-    const 拼音分析结果: 拼音分析[] = [];
-    for (const { 词, 拼音, 频率 } of 词典) {
-      const 元素映射 = 拼音分析器.分析(词, 拼音)!;
-      拼音分析结果.push({ 词, 拼音, 频率, 元素映射: 元素映射 });
-    }
-
-    return 拼音分析结果;
-  }
-
   /**
    * 对整个字符集中的字符进行拆分
    *
    * @param repertoire - 字符集
    * @param config - 配置
    */
-  拆分(config: 字形分析配置, 汉字列表: string[]): Result<字形分析结果, Error> {
-    const { 部件列表, 复合体列表 } = this.获取待分析对象(汉字列表);
+  拆分(
+    base: 字形分析基本配置,
+    汉字集合: Set<string>,
+  ): Result<字形分析结果, Error> {
+    const { 分析配置, 决策, 决策空间 } = base;
+    const config = this.准备字形分析配置(分析配置, 决策, 决策空间);
+    if (!config.ok) return config;
+    const configValue = config.value;
+    const { 部件列表, 复合体列表 } = this.获取待分析对象(汉字集合);
     const 部件分析器 = getRegistry().创建部件分析器(
-      config.分析配置?.component_analyzer || "默认",
-      config,
+      configValue.分析配置?.component_analyzer || "默认",
+      configValue,
     )!;
-    const 原始部件分析结果 = new Map<string, 基本分析>();
+    const 原始部件分析结果 = new Map<string, 基本分析 | 默认部件分析>();
     for (const [部件名称, 部件字形] of 部件列表) {
       const 分析 = 部件分析器.分析(部件名称, 部件字形);
       if (!分析.ok) return 分析;
       原始部件分析结果.set(部件名称, 分析.value);
     }
-    const 部件分析结果定制 = 生成定制(config, 原始部件分析结果);
+    const 部件分析结果定制 = 生成定制(configValue, 原始部件分析结果);
     const 部件分析结果 = new Map([...原始部件分析结果, ...部件分析结果定制]);
     const 复合体分析器 = getRegistry().创建复合体分析器(
-      config.分析配置?.compound_analyzer || "默认",
-      config,
+      configValue.分析配置?.compound_analyzer || "默认",
+      configValue,
     )!;
-    const 复合体分析结果 = new Map();
+    const 复合体分析结果 = new Map<string, 基本分析>();
     for (const [复合体名称, 复合体字形] of 复合体列表) {
       const 部分分析列表 = 复合体字形.operandList.map((部分) => {
-        return 部件分析结果.get(部分) || 复合体分析结果.get(部分);
+        return 部件分析结果.get(部分) || 复合体分析结果.get(部分)!;
       });
       const 分析 = 复合体分析器.分析(复合体名称, 复合体字形, 部分分析列表);
       if (!分析.ok) return 分析;
@@ -473,7 +449,7 @@ class 字库 {
       部件分析结果定制,
       部件分析结果,
       复合体分析结果,
-      字根笔画映射: config.字根笔画映射,
+      字根笔画映射: configValue.字根笔画映射,
     });
   }
 }
@@ -795,5 +771,5 @@ function 生成定制<T extends 基本分析 | 默认部件分析>(
 //   return result;
 // };
 
-export type { 基本分析, 字形分析结果, 拼音分析结果, 字形分析配置 };
+export type { 基本分析, 字形分析结果, 字形分析配置 };
 export { 字库 };

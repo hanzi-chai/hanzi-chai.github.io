@@ -16,7 +16,7 @@ import {
   adaptedFrequencyAtom,
   拼写运算自定义原子,
   字母表原子,
-  如字形分析配置原子,
+  字形分析配置原子,
   如字形分析结果原子,
   汉字集合原子,
   分类器原子,
@@ -113,8 +113,8 @@ function RootTable() {
         <AdjustableElementGroup
           displayMode
           key={name}
-          name={name}
-          code={code}
+          名称={name}
+          安排={code}
         />
       ))}
     </Flex>
@@ -314,7 +314,7 @@ function SyllableForm() {
   const content: { key: string; value: [string, string] }[] = [];
   const userFrequency = useAtomValue(用户频率原子);
   const repertoire = useAtomValue(如字库原子);
-  const analysisConfig = useAtomValue(如字形分析配置原子);
+  const analysisConfig = useAtomValue(字形分析配置原子);
   const characters = useAtomValue(汉字集合原子);
   const analysisResult = useAtomValue(如字形分析结果原子);
   const adaptedFrequency = useAtomValue(adaptedFrequencyAtom);

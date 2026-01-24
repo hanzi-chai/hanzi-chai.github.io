@@ -5,8 +5,8 @@ import {
   type WritableAtom,
   默认词典原子,
   基本信息原子,
-  默认键位分布原子,
-  默认双键当量原子,
+  默认键位分布目标原子,
+  默认当量原子,
   useAtom,
   useAtomValue,
 } from "~/atoms";
@@ -18,7 +18,8 @@ import {
   解析键位分布目标,
   基本信息,
   读取表格,
-  解析当量,
+  解析自定义元素,
+  解析当量映射,
 } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
@@ -26,12 +27,12 @@ import {
   ProFormText,
   ProFormTextArea,
 } from "@ant-design/pro-components";
-import { EditorColumn, EditorRow, Select, Uploader } from "~/components/Utils";
+import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
 import {
   用户键位分布原子,
   用户双键当量原子,
   用户词典原子,
-  自定义元素原子,
+  自定义元素集合原子,
 } from "~/atoms";
 import { useEffect, useState } from "react";
 import { exportTSV, useChaifenTitle } from "~/utils";
@@ -108,7 +109,7 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
 }
 
 const CustomElementUploader = () => {
-  const [customElements, setCustomElements] = useAtom(自定义元素原子);
+  const [customElements, setCustomElements] = useAtom(自定义元素集合原子);
   const [name, setName] = useState("");
   return (
     <Flex vertical gap="middle">
@@ -150,14 +151,9 @@ const CustomElementUploader = () => {
           type="txt"
           disabled={name === ""}
           action={(text) => {
-            const lines = text.trim().split("\n");
-            const map: Map<string, string[]> = new Map();
-            for (const line of lines) {
-              const [key, values] = line.trim().split("\t");
-              if (key === undefined || values === undefined) continue;
-              map.set(key, values.trim().split(" "));
-            }
-            setCustomElements({ ...customElements, [name]: map });
+            const tsv = 读取表格(text);
+            const 自定义元素 = 解析自定义元素(tsv);
+            setCustomElements({ ...customElements, [name]: 自定义元素 });
           }}
         />
       </Flex>
@@ -254,15 +250,15 @@ export default function Index() {
           title="当量"
           description="系统默认采用的双键速度当量来自陈一凡的论文。您可以在此处自定义当量。"
           atom={用户双键当量原子}
-          defaultAtom={默认双键当量原子}
-          parser={解析当量}
+          defaultAtom={默认当量原子}
+          parser={解析当量映射}
           dumper={getTSVFromRecord}
         />
         <AssetUploader
           title="用指分布"
           description="系统默认采用的理想用指分布是我拍脑袋想出来的。您可以在此处自定义用指分布。"
           atom={用户键位分布原子}
-          defaultAtom={默认键位分布原子}
+          defaultAtom={默认键位分布目标原子}
           parser={解析键位分布目标}
           dumper={getTSVFromDistribution}
         />

@@ -1,10 +1,10 @@
 import { Flex, Skeleton, Table } from "antd";
-import type { Combined } from "~/atoms";
+import type { 联合条目 } from "~/atoms";
 import {
   字母表原子,
   联合结果原子,
   默认目标类型原子,
-  默认双键当量原子,
+  默认当量原子,
   部分目标类型名称映射,
 } from "~/atoms";
 import {
@@ -47,19 +47,19 @@ function interpolate(color1: string, color2: string, percent: number) {
   // Convert the interpolated RGB values back to a hex color
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
-const filterType = (type: 部分目标类型, combined: Combined[]) => {
+const filterType = (type: 部分目标类型, combined: 联合条目[]) => {
   const filtered = type.includes("character")
     ? combined.filter((item) => [...item.词].length === 1)
     : combined.filter((item) => [...item.词].length > 1);
   return type.includes("full")
     ? filtered.map((item) => ({
         name: item.词,
-        code: item.full,
+        code: item.全码,
         importance: item.频率,
       }))
     : filtered.map((item) => ({
         name: item.词,
-        code: item.short,
+        code: item.简码,
         importance: item.频率,
       }));
 };
@@ -344,7 +344,7 @@ const MatrixHeatMap = ({
   dynamic: boolean;
   isFingering?: boolean;
 }) => {
-  const pairEquivalence = useAtomValue(默认双键当量原子);
+  const pairEquivalence = useAtomValue(默认当量原子);
   const data = [...result]
     .sort((a, b) => customCompare(a[0], b[0]))
     .map(([key, value]) => {
@@ -438,7 +438,7 @@ const EquivalenceColumns = ({
   result: DistributionResult;
   dynamic: boolean;
 }) => {
-  const pairEquivalence = useAtomValue(默认双键当量原子);
+  const pairEquivalence = useAtomValue(默认当量原子);
   const eqMap = new Map<number, number>();
   [...result].forEach(([key, { count }]) => {
     const equivalence = pairEquivalence.get(key) ?? 0;
@@ -531,7 +531,7 @@ interface DuplicationDistributionEntry {
 
 const DuplicationDistribution = () => {
   const combined = useAtomValue(联合结果原子);
-  const duplicationMap = new Map<string, Combined[]>();
+  const duplicationMap = new Map<string, 联合条目[]>();
   const pairMap = new Map<string, [string, string][]>();
 
   for (const item of combined) {

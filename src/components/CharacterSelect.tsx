@@ -1,6 +1,9 @@
-import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { 如字库原子, 如笔顺映射原子, 如排序汉字原子 } from "~/atoms";
+import {
+  如笔顺映射原子,
+  如排序字库数据原子,
+  useAtomValueUnwrapped,
+} from "~/atoms";
 import { Display, Select } from "./Utils";
 import type { SelectProps } from "antd";
 import type { ProFormSelectProps } from "@ant-design/pro-components";
@@ -11,45 +14,42 @@ interface ItemSelectProps extends SelectProps {
   includeVariables?: boolean;
 }
 
+function getLabel(value: string | { id: number }) {
+  if (typeof value === "string") {
+    return <Display name={value} />;
+  } else {
+    return `变量 ${value.id}`;
+  }
+}
+
 export default function CharacterSelect(
   props: ItemSelectProps & ProFormSelectProps,
 ) {
   const { customFilter, includeVariables, ...rest } = props;
-  const sortedCharacters = useAtomValue(如排序汉字原子);
-  const repertoire = useAtomValue(如字库原子);
+  const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
   const [data, setData] = useState<SelectProps["options"]>([]);
-  const char: string = props.value;
-  const sequenceMap = useAtomValue(如笔顺映射原子);
+  const value: string = props.value;
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   useEffect(() => {
-    const initial = char
-      ? [
-          {
-            value: char,
-            label: char.length === 1 ? <Display name={char} /> : char,
-          },
-        ]
-      : [];
+    let label: React.ReactNode = <Display name={value} />;
+    if (/^\{.+\}$/.test(value)) {
+      label = getLabel(JSON.parse(value));
+    }
+    const initial = [{ value, label }];
     setData(initial);
-  }, [props.value, char]);
-  if (!sortedCharacters.ok || !repertoire.ok || !sequenceMap.ok) {
-    return null;
-  }
-  const sortedRepertoire = sortedCharacters.value.map((x) => [
-    x,
-    repertoire.value.get()[x],
-  ]) as [string, 汉字数据][];
+  }, [value]);
   const onSearch = (input: string) => {
     if (input.length === 0) {
       setData([]);
       return;
     }
-    const allResults = sortedRepertoire
+    const allResults = Object.entries(sortedCharacters)
       .filter(customFilter ?? (() => true))
       .filter(([x, v]) => {
         const char = String.fromCodePoint(v.unicode);
         const name = v.name ?? "";
         return (
-          sequenceMap.value.get(x)?.startsWith(input) ||
+          sequenceMap.get(x)?.startsWith(input) ||
           char === input ||
           name.includes(input)
         );
@@ -65,19 +65,20 @@ export default function CharacterSelect(
           </span>
         ) as React.ReactNode,
       }));
-    const minResults = allResults.filter(
-      ({ value }) => sequenceMap.value.get(value)?.length === input.length,
-    );
+    let minResults = allResults.filter(
+      ({ value }) => sequenceMap.get(value)?.length === input.length,
+    ).length;
     if (includeVariables) {
       const num = parseInt(input, 10);
       if (!Number.isNaN(num) && num > 0) {
         allResults.unshift({
-          value: `变量 ${num}`,
-          label: `变量 ${num}`,
+          value: JSON.stringify({ id: num }),
+          label: getLabel({ id: num }),
         });
+        minResults += 1;
       }
     }
-    setData(allResults.slice(0, Math.max(5, minResults.length)));
+    setData(allResults.slice(0, Math.max(5, minResults)));
   };
   const commonProps: SelectProps & ProFormSelectProps = {
     showSearch: true,

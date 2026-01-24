@@ -1,6 +1,11 @@
 import "@antv/s2-react/dist/s2-react.min.css";
 import { useAtomValue } from "jotai";
-import { 编码结果原子, 默认目标类型原子, 部分目标类型名称映射 } from "~/atoms";
+import {
+  如编码结果原子,
+  默认目标类型原子,
+  部分目标类型名称映射,
+  useAtomValueUnwrapped,
+} from "~/atoms";
 import { 指法标签列表, type 部分目标类型 } from "~/lib";
 import { Flex } from "antd";
 import { Select } from "./Utils";
@@ -104,7 +109,7 @@ const preprocess = (partialMetric: PartialMetric) => {
 };
 
 export default function MetricTable() {
-  const [_, evaluateResult] = useAtomValue(编码结果原子);
+  const [_, evaluateResult] = useAtomValueUnwrapped(如编码结果原子);
   const types = useAtomValue(默认目标类型原子);
   const [type, setType] = useState<部分目标类型>(types[0]!);
   const data = preprocess(evaluateResult[type]!);

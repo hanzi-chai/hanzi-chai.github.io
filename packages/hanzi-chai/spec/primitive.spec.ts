@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "fs";
-import { 矢量图形数据, 默认分类器 } from "~/lib";
-import { 获取数据 } from ".";
-import { 是基本区汉字 } from "../src/unicode";
+import { 矢量图形数据, 默认分类器, 是基本区汉字 } from "../src/index.js";
+import { 获取数据 } from "./index.js";
 
 const { 字库, 原始字库 } = 获取数据();
 

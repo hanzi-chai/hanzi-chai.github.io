@@ -2,6 +2,7 @@ import { 图形盒子 } from "./affine.js";
 import type { 字形自定义 } from "./config.js";
 import type {
   原始字库数据,
+  原始汉字数据,
   基本部件数据,
   复合体数据,
   字形数据,
@@ -18,13 +19,14 @@ import {
 } from "./utils.js";
 
 class 原始字库 {
-  constructor(
-    private 字库: 原始字库数据,
-    private 自定义字库: 原始字库数据 = {},
-  ) {}
+  constructor(private 字库: 原始字库数据) {}
 
   _get(): 原始字库数据 {
-    return { ...this.字库, ...this.自定义字库 };
+    return this.字库;
+  }
+
+  查询(汉字: string): 原始汉字数据 | undefined {
+    return this.字库[汉字];
   }
 
   /**

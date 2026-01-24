@@ -9,6 +9,7 @@ import {
   如笔顺映射原子,
   别名显示原子,
   键盘原子,
+  useAtomValueUnwrapped,
 } from "~/atoms";
 import StrokeSearch from "./CharacterSearch";
 import type { ShapeElementTypes } from "./ElementPicker";
@@ -16,7 +17,7 @@ import Classifier from "./Classifier";
 import { Display } from "./Utils";
 import Element from "./Element";
 import { 是私用区 } from "~/lib";
-import { makeFilter } from "~/utils";
+import { 字符过滤器 } from "~/utils";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -81,18 +82,27 @@ export default function ElementPool({
 }: PoolProps) {
   const [page, setPage] = useState(1);
   const pageSize = 100;
-  const [sequence, setSequence] = useState("");
-  const sequenceMap = useAtomValue(如笔顺映射原子);
-  const determinedRepertoire = useAtomValue(如字库原子);
+  const [input, setInput] = useState("");
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const determinedRepertoire = useAtomValueUnwrapped(如字库原子);
   const [isOpen, setOpen] = useState(false);
-  if (!determinedRepertoire.ok) return null;
-  if (!sequenceMap.ok) return null;
-  const filter = makeFilter(sequence, determinedRepertoire, sequenceMap.value);
-  const filtered = name === "字根" ? content.filter(filter) : content;
+  const 笔顺过滤 = new 字符过滤器({ sequence: input });
+  const 直接过滤 = new 字符过滤器({ name: input });
+  const filtered =
+    name === "字根"
+      ? content.filter((char) => {
+          const seq = sequenceMap.get(char);
+          const data = determinedRepertoire._get()[char];
+          if (!seq || !data) return false;
+          return (
+            笔顺过滤.过滤(char, data, seq) || 直接过滤.过滤(char, data, seq)
+          );
+        })
+      : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
   return (
     <Flex vertical gap="middle" align="center">
-      {name === "字根" && <StrokeSearch setSequence={setSequence} />}
+      {name === "字根" && <StrokeSearch setSequence={setInput} />}
       {name === "笔画" && (
         <>
           <Typography.Text>
@@ -119,14 +129,14 @@ export default function ElementPool({
           />
         ))}
       </Content>
-      {content.length > pageSize && (
+      {filtered.length > pageSize && (
         <MyPagination
           current={page}
           onChange={(page) => {
             setPage(page);
           }}
           showSizeChanger={false}
-          total={content.length}
+          total={filtered.length}
           pageSize={pageSize}
         />
       )}

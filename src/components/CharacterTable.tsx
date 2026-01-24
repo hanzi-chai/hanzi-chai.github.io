@@ -17,7 +17,7 @@ import {
   原始字库数据原子,
   如字库原子,
   如笔顺映射原子,
-  如排序汉字原子,
+  如排序字库数据原子,
   useAddAtom,
   useAtomValue,
   用户原始字库数据原子,
@@ -47,7 +47,7 @@ import { ElementWithTooltip } from "./ElementPool";
 import TransformersForm from "./Transformers";
 import type { 原始汉字数据 } from "~/lib";
 import {
-  CharacterFilter,
+  字符过滤器参数,
   errorFeedback,
   RemoteContext,
   字符过滤器,
@@ -181,8 +181,8 @@ export const InlineCustomizer = ({
   const char = String.fromCodePoint(unicode);
   let customized = customGlyph[char];
   let readonly = false;
-  if (repertoire.get()[char] !== determinedRepertoire.get()[char]) {
-    customized = repertoire.get()[char]!.glyph;
+  if (repertoire._get()[char] !== determinedRepertoire._get()[char]) {
+    customized = repertoire._get()[char]!.glyph;
     readonly = true;
   }
   if (customized === undefined) return null;
@@ -244,24 +244,23 @@ export const InlineCustomizer = ({
 
 export default function CharacterTable() {
   const primitiveRepertoire = useAtomValue(原始字库数据原子);
-  console.log(primitiveRepertoire);
-  const allRepertoire = useAtomValue(原始字库原子);
   const userRepertoire = useAtomValue(用户原始字库数据原子);
-  const sortedCharacters = useAtomValueUnwrapped(如排序汉字原子);
-  const sortedRepertoire = sortedCharacters
-    .filter((x) => primitiveRepertoire[x] !== undefined)
-    .map((x) => [x, primitiveRepertoire[x]]) as [string, 原始汉字数据][];
+  const sortedRepertoire = useAtomValueUnwrapped(如排序字库数据原子);
   const customGlyph = useAtomValue(字形自定义原子);
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const [page, setPage] = useState(1);
-  const [filterProps, setFilterProps] = useState<CharacterFilter>({});
+  const [filterProps, setFilterProps] = useState<字符过滤器参数>({});
   const remote = useContext(RemoteContext);
   const filter = new 字符过滤器(filterProps);
 
-  const dataSource = Object.entries(userRepertoire)
-    .concat(sortedRepertoire)
-    .filter(([x, v]) => filter.过滤(x, v, sequenceMap.get(x) ?? ""))
-    .map(([, glyph]) => glyph);
+  const dataSource: 原始汉字数据[] = [];
+  for (const 字符 of Object.keys(sortedRepertoire)) {
+    const data = userRepertoire[字符] ?? primitiveRepertoire[字符];
+    if (!data) continue;
+    if (filter.过滤(字符, data, sequenceMap.get(字符) ?? "")) {
+      dataSource.push(data);
+    }
+  }
 
   const unicodeColumn: Column = {
     title: "Unicode",

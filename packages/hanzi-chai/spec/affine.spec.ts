@@ -1,5 +1,5 @@
-import type { 复合体数据, 矢量图形数据 } from "../src/main";
-import { 图形盒子 } from "../src/main";
+import type { 复合体数据, 矢量图形数据 } from "../src/main.js";
+import { 图形盒子 } from "../src/main.js";
 import { describe, expect, it } from "vitest";
 
 describe("仿射变换", () => {

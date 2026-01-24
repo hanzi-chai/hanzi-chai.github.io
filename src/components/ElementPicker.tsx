@@ -5,14 +5,15 @@ import ElementPool from "./ElementPool";
 import {
   拼写运算自定义原子,
   分类器原子,
-  processedCustomElementsAtom,
-  如排序汉字原子,
+  自定义元素映射原子,
+  如排序字库数据原子,
   useAtom,
   useAtomValue,
   useRemoveAtom,
+  useAtomValueUnwrapped,
 } from "~/atoms";
 import Algebra from "./Algebra";
-import { 拼音元素枚举原子, 当前元素原子 } from "~/atoms";
+import { 拼音元素枚举映射原子, 当前元素原子 } from "~/atoms";
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import ElementCounter from "./ElementCounter";
 import { 结构表示符列表 } from "~/lib";
@@ -78,10 +79,10 @@ type PrimaryTypes = "shape" | "pronunciation" | "custom";
 
 const useAllElements = () => {
   const customizedClassifier = useAtomValue(分类器原子);
-  const pronunciationElements = useAtomValue(拼音元素枚举原子);
-  const customElements = useAtomValue(processedCustomElementsAtom);
-  const sortedCharacters = useAtomValue(如排序汉字原子);
-  const 排序汉字 = sortedCharacters.ok ? sortedCharacters.value : [];
+  const pronunciationElements = useAtomValue(拼音元素枚举映射原子);
+  const customElements = useAtomValue(自定义元素映射原子);
+  const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
+  const 排序汉字 = Object.keys(sortedCharacters);
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);

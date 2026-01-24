@@ -1,5 +1,11 @@
 import { useAtomValue } from "jotai";
-import { 键盘原子, 如字库原子, 如笔顺映射原子 } from "~/atoms";
+import {
+  如字库原子,
+  如笔顺映射原子,
+  useAtomValueUnwrapped,
+  决策原子,
+  决策空间原子,
+} from "~/atoms";
 import { Select, Display } from "./Utils";
 import type { SelectProps } from "antd";
 import type { ProFormSelectProps } from "@ant-design/pro-components";
@@ -14,15 +20,13 @@ export default function ElementSelect(
   props: ElementSelectProps & ProFormSelectProps,
 ) {
   const { customFilter, onlyRootsAndStrokes, includeOptional, ...rest } = props;
-  const { mapping, mapping_space } = useAtomValue(键盘原子);
-  const sequenceMap = useAtomValue(如笔顺映射原子);
-  const repertoire = useAtomValue(如字库原子);
-  if (!repertoire.ok || !sequenceMap.ok) {
-    return null;
-  }
+  const mapping = useAtomValue(决策原子);
+  const mapping_space = useAtomValue(决策空间原子);
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const repertoire = useAtomValueUnwrapped(如字库原子);
   let keys = Object.keys(mapping);
   if (onlyRootsAndStrokes) {
-    keys = keys.filter((x) => repertoire.value.get()[x] || x.match(/\d/));
+    keys = keys.filter((x) => repertoire._get()[x] || x.match(/\d/));
   }
   if (includeOptional) {
     for (const key of Object.keys(mapping_space ?? {})) {
@@ -46,7 +50,7 @@ export default function ElementSelect(
       filterOption={(input, option) => {
         if (option === undefined) return false;
         const value = option.value;
-        const sequence = sequenceMap.value.get(value);
+        const sequence = sequenceMap.get(value);
         if (sequence !== undefined) {
           return sequence.startsWith(input);
         }
@@ -54,8 +58,8 @@ export default function ElementSelect(
       }}
       filterSort={(a, b) => {
         return (
-          (sequenceMap.value.get(a.value) ?? "").length -
-          (sequenceMap.value.get(b.value) ?? "").length
+          (sequenceMap.get(a.value) ?? "").length -
+          (sequenceMap.get(b.value) ?? "").length
         );
       }}
     />

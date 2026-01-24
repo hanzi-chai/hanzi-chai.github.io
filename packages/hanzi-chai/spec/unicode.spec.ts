@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { 获取数据 } from ".";
-import { 字集指示 } from "~/lib";
+import { 获取数据 } from "./index.js";
+import { 字集指示 } from "../src/index.js";
 
 const { 字库 } = 获取数据();
 

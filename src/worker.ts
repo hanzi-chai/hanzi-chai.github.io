@@ -1,5 +1,5 @@
 import init, { Web } from "libchai";
-import { assemble, 字库 } from "./lib";
+import { 组装, 字库 } from "./lib";
 import axios from "axios";
 
 export interface WorkerInput {
@@ -87,15 +87,7 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
         port.postMessage({ type: "success", result });
         break;
       case "assembly":
-        result = assemble(
-          data[0],
-          data[1],
-          data[2],
-          data[3],
-          data[4],
-          data[5],
-          data[6]
-        );
+        result = 组装(data[0], data[1], data[2]);
         port.postMessage({ type: "success", result });
         break;
       case "encode":

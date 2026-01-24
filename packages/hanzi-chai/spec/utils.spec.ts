@@ -6,9 +6,10 @@ import {
   模拟复合体,
   模拟拼接部件,
   模拟衍生部件,
-  解析频率映射,
-} from "../src/utils";
-import { 是基本区汉字, 是私用区 } from "../src/unicode";
+  是基本区汉字,
+  是私用区,
+  解析词典
+} from "../src/index.js";
 
 describe("Unicode 方法", () => {
   it("基本区汉字判断", () => {
@@ -41,8 +42,8 @@ describe("数据工具", () => {
 });
 
 describe("其他", () => {
-  it("解析频率映射", () => {
-    const text = [["的", "de5", "100"]]; // Example TSV string
-    expect(解析频率映射(text)).toEqual(new Map([["的:de5", 100]]));
+  it("解析词典", () => {
+    const text = [["的", "de5", "100"]]; // Example TSV
+    expect(解析词典(text)).toEqual([{ 词: "的", 拼音: ["de5"], 频率: 100 }]);
   });
 });

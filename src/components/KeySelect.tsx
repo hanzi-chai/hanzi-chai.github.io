@@ -5,6 +5,7 @@ import {
   决策原子,
   如笔顺映射原子,
   变量规则映射原子,
+  useAtomValueUnwrapped,
 } from "~/atoms";
 import { DisplayWithSuperScript, Select } from "./Utils";
 import type { BaseOptionType } from "antd/es/select";
@@ -64,11 +65,8 @@ export default function KeySelect({
   if (!disableVariables) keyOptions.push(...variableOptions);
   if (!disablePlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
-  const sequenceMap = useAtomValue(如笔顺映射原子);
-  const form = useAtomValue(如字库原子);
-  if (!sequenceMap.ok || !form.ok) {
-    return null;
-  }
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const form = useAtomValueUnwrapped(如字库原子);
   return (
     <Select
       showSearch
@@ -89,8 +87,8 @@ export default function KeySelect({
         if ("variable" in key) {
           return key.variable.includes(input);
         }
-        if (form.value.get()[key.element] !== undefined) {
-          return sequenceMap.value.get(key.element)?.startsWith(input) ?? false;
+        if (form._get()[key.element] !== undefined) {
+          return sequenceMap.get(key.element)?.startsWith(input) ?? false;
         }
         return key.element.includes(input);
       }}
@@ -113,8 +111,8 @@ export default function KeySelect({
         if (typeof bk === "string") {
           return 1;
         }
-        const amapped = sequenceMap.value.get(ak.element) ?? "";
-        const bmapped = sequenceMap.value.get(bk.element) ?? "";
+        const amapped = sequenceMap.get(ak.element) ?? "";
+        const bmapped = sequenceMap.get(bk.element) ?? "";
         return amapped.localeCompare(bmapped);
       }}
     />

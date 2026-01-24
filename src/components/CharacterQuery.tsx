@@ -9,18 +9,18 @@ import { useAtomValue } from "jotai";
 import { 全部标签原子 } from "~/atoms";
 import CharacterSelect from "./CharacterSelect";
 import { debounce } from "lodash-es";
-import type { CharacterFilter } from "~/utils";
+import type { 字符过滤器参数 } from "~/utils";
 import { 结构表示符列表 } from "~/lib";
 
 interface StrokeSearchProps {
-  setFilter: (s: CharacterFilter) => void;
+  setFilter: (s: 字符过滤器参数) => void;
 }
 
 export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
   const tags = useAtomValue(全部标签原子);
   const debounced = debounce(setFilter, 500);
   return (
-    <QueryFilter<CharacterFilter>
+    <QueryFilter<字符过滤器参数>
       onValuesChange={async (_, values) => debounced(values)}
       submitter={false}
       style={{ maxWidth: 1080 }}

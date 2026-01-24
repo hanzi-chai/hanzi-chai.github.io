@@ -1,8 +1,7 @@
 import { expect, describe, it } from "vitest";
-import { area, 区间 } from "../src/main";
-import type { Draw, Point, Tuple, 笔画关系 } from "../src/main";
-import { 一次曲线, 三次曲线, } from "../src/main";
-import { 获取数据 } from ".";
+import { 一次曲线, 三次曲线, area, 区间 } from "../src/index.js";
+import type { 绘制, 向量, Tuple, 笔画关系 } from "../src/index.js";
+import { 获取数据 } from "./index.js";
 
 const { 部件图形库 } = 获取数据();
 
@@ -142,10 +141,10 @@ describe("面积计算", () => {
 });
 
 describe("工厂函数", () => {
-  const p0 = [12, 34] as Point;
-  const d1: Draw = { command: "c", parameterList: [5, 8, 23, 15, 49, 33] };
-  const d2: Draw = { command: "h", parameterList: [10] };
-  const d3: Draw = { command: "v", parameterList: [20] };
+  const p0 = [12, 34] as 向量;
+  const d1: 绘制 = { command: "c", parameterList: [5, 8, 23, 15, 49, 33] };
+  const d2: 绘制 = { command: "h", parameterList: [10] };
+  const d3: 绘制 = { command: "v", parameterList: [20] };
   it("makes cubic curves", () => {
     expect(三次曲线.从绘制创建(p0, d1).evaluate(1)).toEqual([61, 67]);
   });

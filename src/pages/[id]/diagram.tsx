@@ -100,7 +100,7 @@ const Keyboard = () => {
                   const mapped = reversedMapping.get(key);
                   if (mapped) {
                     // 还没有处理双编码的情况
-                    for (const { name, code } of mapped) {
+                    for (const { 名称: name, 安排: code } of mapped) {
                       if (value.match && !value.match.test(name)) {
                         continue;
                       }

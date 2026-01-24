@@ -1,48 +1,38 @@
 import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
+  useAtomValueUnwrapped,
   如组装结果与优先简码原子,
   最大码长原子,
+  type 联合条目,
   联合结果原子,
 } from "~/atoms";
-import { 序列化, type 码位 } from "~/lib";
-import { 编码结果原子 } from "~/atoms";
+import { 序列化, 总序列化, 识别符, type 码位 } from "~/lib";
+import { 如编码结果原子 } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
 import type { ReactNode } from "react";
-import { type DictEntry, exportTSV } from "~/utils";
-
-interface MainEntry {
-  key: string;
-  name: string;
-  pinyin_list: string[][];
-  frequency: number;
-  full: string;
-  full_rank: number;
-  short: string;
-  short_rank: number;
-  [n: number]: 码位;
-}
+import { exportTSV } from "~/utils";
 
 const ExportAssembly = () => {
-  const assemblyResult = useAtomValue(如组装结果与优先简码原子);
+  const 组装结果 = useAtomValueUnwrapped(如组装结果与优先简码原子);
   return (
     <Button
       onClick={() => {
         const tsv: string[][] = [];
-        for (const {
-          词: name,
-          元素序列: sequence,
-          频率: importance,
-          简码级别,
-        } of assemblyResult) {
-          const summary = sequence.map(序列化).join("");
-          if (简码级别 !== undefined) {
-            tsv.push([name, summary, String(importance), String(简码级别)]);
+        for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
+          const 元素序列字符串 = 总序列化(元素序列);
+          if (简码长度 !== undefined) {
+            tsv.push([
+              词,
+              元素序列字符串,
+              频率.toString(),
+              简码长度.toString(),
+            ]);
           } else {
-            tsv.push([name, summary, String(importance)]);
+            tsv.push([词, 元素序列字符串, 频率.toString()]);
           }
         }
         exportTSV(tsv, "elements.txt");
@@ -54,19 +44,21 @@ const ExportAssembly = () => {
 };
 
 const ExportCode = () => {
-  const [code] = useAtomValue(编码结果原子);
-  const flatten = (x: DictEntry) => [
-    x.name,
-    x.full,
-    x.full_rank.toString(),
-    x.short,
-    x.short_rank.toString(),
-  ];
+  const [code] = useAtomValueUnwrapped(如编码结果原子);
   return (
     <Button
-      disabled={code === null}
       onClick={() => {
-        exportTSV(code?.map(flatten), "code.txt");
+        const tsv: string[][] = [];
+        for (const x of code) {
+          tsv.push([
+            x.词,
+            x.全码,
+            x.全码排名.toString(),
+            x.简码,
+            x.简码排名.toString(),
+          ]);
+        }
+        exportTSV(tsv, "code.txt");
       }}
     >
       导出码表
@@ -74,9 +66,9 @@ const ExportCode = () => {
   );
 };
 
-type DataIndex = "name" | "full" | "short";
-
-const getColumnSearchProps = (dataIndex: DataIndex): ProColumns<MainEntry> => ({
+const getColumnSearchProps = (
+  dataIndex: "词" | "全码" | "简码",
+): ProColumns<联合条目> => ({
   filterDropdown: ({
     setSelectedKeys,
     selectedKeys,
@@ -114,79 +106,52 @@ export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => 
 
 export default function SequenceTable() {
   const max_length = useAtomValue(最大码长原子);
-  const combinedResult = useAtomValue(联合结果原子);
+  const 联合结果 = useAtomValueUnwrapped(联合结果原子);
 
-  const dataSource = combinedResult.map(
-    ({ 词: name, 元素序列: sequence, 频率: frequency, ...rest }) => {
-      const key = `${name}-${sequence.map(序列化).join("")}`;
-      const entry: MainEntry = {
-        key,
-        frequency,
-        ...rest,
-        pinyin_list: rest.拼音来源列表,
-      };
-      for (const [i, element] of sequence.entries()) {
-        entry[i] = element;
-      }
-      return entry;
-    },
-  );
+  const dataSource = 联合结果.map((x) => ({
+    ...x,
+    key: 识别符(x.词, x.拼音来源列表),
+  }));
 
-  dataSource.sort((a, b) => b.frequency - a.frequency);
+  dataSource.sort((a, b) => b.频率 - a.频率);
 
-  const hash = (record: MainEntry) => {
-    const list: 码位[] = [];
-    for (const i of Array(max_length).keys()) {
-      const element = record[i];
-      if (element === undefined) {
-        break;
-      }
-      list.push(element);
-    }
-    return JSON.stringify(list);
-  };
-
-  const columns: ProColumns<MainEntry>[] = [
+  const columns: ProColumns<联合条目>[] = [
     {
       title: "名称",
-      dataIndex: "name",
-      sorter: (a, b) => a.name.codePointAt(0)! - b.name.codePointAt(0)!,
+      dataIndex: "词",
       sortDirections: ["ascend", "descend"],
       width: 96,
-      ...getColumnSearchProps("name"),
+      ...getColumnSearchProps("词"),
     },
     {
       title: "频率",
-      dataIndex: "frequency",
-      sorter: (a, b) => a.frequency - b.frequency,
+      dataIndex: "频率",
+      sorter: (a, b) => a.频率 - b.频率,
       sortDirections: ["ascend", "descend"],
       width: 96,
     },
     {
       title: "拼音",
-      dataIndex: "pinyin_list",
-      render: (_, record) => record.pinyin_list.join(", "),
+      dataIndex: "拼音来源列表",
+      render: (_, record) =>
+        record.拼音来源列表.map((x) => x.join(" ")).join(", "),
       width: 128,
     },
     {
       title: "全部元素",
       key: "all",
       render: (_, record) => {
-        const elements: ReactNode[] = [];
-        for (const i of Array(max_length).keys()) {
-          const element = record[i];
-          if (element === undefined) {
-            break;
-          }
-          elements.push(
-            <DisplayOptionalSuperscript key={i} element={element} />,
-          );
-        }
-        return <Space>{elements}</Space>;
+        return (
+          <Space>
+            {record.元素序列.map((element, index) => (
+              <DisplayOptionalSuperscript key={index} element={element} />
+            ))}
+          </Space>
+        );
       },
       sorter: (a, b) => {
-        const ahash = hash(a);
-        const bhash = hash(b);
+        const ahash = 总序列化(a.元素序列);
+        const bhash = 总序列化(b.元素序列);
         return ahash.localeCompare(bhash);
       },
       width: 128,
@@ -196,7 +161,8 @@ export default function SequenceTable() {
 
   for (const i of Array(max_length).keys()) {
     const allValues: Record<string, ReactNode> = {};
-    for (const { [i]: element } of dataSource) {
+    for (const { 元素序列 } of dataSource) {
+      const element = 元素序列[i];
       if (element !== undefined) {
         const text = 序列化(element);
         allValues[text] = <DisplayOptionalSuperscript element={element} />;
@@ -204,24 +170,22 @@ export default function SequenceTable() {
     }
     columns.push({
       title: `元素 ${i + 1}`,
-      dataIndex: i,
       render: (_, record) => {
-        const element = record[i];
-        if (element === undefined) {
-          return null;
-        }
-        return <DisplayOptionalSuperscript element={element} />;
+        const element = record.元素序列[i];
+        return element ? (
+          <DisplayOptionalSuperscript element={element} />
+        ) : null;
       },
       sorter: (a, b) => {
-        const ahash = 序列化(a[i] ?? "");
-        const bhash = 序列化(b[i] ?? "");
+        const ahash = 序列化(a.元素序列[i] ?? "");
+        const bhash = 序列化(b.元素序列[i] ?? "");
         return ahash.localeCompare(bhash);
       },
       sortDirections: ["ascend", "descend"],
       width: 96,
       filters: true,
       onFilter: (value, record) => {
-        const element = record[i];
+        const element = record.元素序列[i];
         if (element === undefined) {
           return false;
         }
@@ -240,8 +204,8 @@ export default function SequenceTable() {
       render: (_, record) => {
         return (
           <ProrityShortCodeSelector
-            词={record.name}
-            拼音来源列表={record.pinyin_list}
+            词={record.词}
+            拼音来源列表={record.拼音来源列表}
           />
         );
       },
@@ -250,38 +214,38 @@ export default function SequenceTable() {
       title: "全码",
       width: 96,
       render: (_, record) => {
-        const { full, full_rank } = record;
-        const rank = Math.abs(full_rank);
+        const { 全码, 全码排名 } = record;
+        const rank = Math.abs(全码排名);
         return (
-          <span style={{ color: full_rank > 0 ? "red" : "inherit" }}>
-            {full}
+          <span style={{ color: 全码排名 > 0 ? "red" : "inherit" }}>
+            {全码}
             {rank > 0 ? `[${rank}]` : ""}
           </span>
         );
       },
-      ...getColumnSearchProps("full"),
+      ...getColumnSearchProps("全码"),
     },
     {
       title: "简码",
       width: 96,
       render: (_, record) => {
-        const { short, short_rank } = record;
-        const rank = Math.abs(short_rank);
+        const { 简码, 简码排名 } = record;
+        const rank = Math.abs(简码排名);
         return (
-          <span style={{ color: short_rank > 0 ? "red" : "inherit" }}>
-            {short}
+          <span style={{ color: 简码排名 > 0 ? "red" : "inherit" }}>
+            {简码}
             {rank > 0 ? `[${rank}]` : ""}
           </span>
         );
       },
-      ...getColumnSearchProps("short"),
+      ...getColumnSearchProps("简码"),
     },
   );
 
   const toolbar = [<ExportAssembly key={1} />, <ExportCode key={3} />];
 
   return (
-    <ProTable<MainEntry>
+    <ProTable<联合条目>
       virtual
       scroll={{ y: 1080 }}
       columns={columns}

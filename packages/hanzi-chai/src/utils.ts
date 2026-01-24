@@ -132,9 +132,9 @@ export const 创建原始汉字数据 = (
 
 // 输入输出便利函数
 interface 键位频率目标 {
-  ideal: number;
-  lt_penalty: number;
-  gt_penalty: number;
+  理想值: number;
+  低于惩罚: number;
+  高于惩罚: number;
 }
 
 export type 词典条目 = { 词: string; 拼音: string[]; 频率: number };
@@ -142,7 +142,6 @@ export type 词典 = 词典条目[];
 export type 频率映射 = Map<string, number>;
 export type 键位分布目标 = Map<string, 键位频率目标>;
 export type 当量映射 = Map<string, number>;
-export type 自定义元素映射 = Map<string, string[]>;
 
 export const 可打印字符列表 = range(33, 127).map((x) =>
   String.fromCodePoint(x),
@@ -182,12 +181,16 @@ export function 解析键位分布目标(tsv: string[][]): 键位分布目标 {
       Number.isNaN(gt_penalty)
     )
       continue;
-    data.set(char, { ideal, lt_penalty, gt_penalty });
+    data.set(char, {
+      理想值: ideal,
+      低于惩罚: lt_penalty,
+      高于惩罚: gt_penalty,
+    });
   }
   return data;
 }
 
-export function 解析当量(tsv: string[][]): 当量映射 {
+export function 解析当量映射(tsv: string[][]): 当量映射 {
   const data: 当量映射 = new Map();
   for (const [char, value_s] of tsv) {
     if (char === undefined || value_s === undefined) continue;
@@ -215,6 +218,15 @@ export function 解析词典(tsv: string[][]): 词典 {
   return result;
 }
 
+export function 解析自定义元素(tsv: string[][]): Record<string, string[]> {
+  const result: Record<string, string[]> = {};
+  for (const [key, values_s] of tsv) {
+    if (key === undefined || values_s === undefined) continue;
+    result[key] = values_s.split(" ");
+  }
+  return result;
+}
+
 export const 序列化 = (key?: 码位) => {
   if (key === undefined) {
     return "ε";
@@ -223,6 +235,10 @@ export const 序列化 = (key?: 码位) => {
   } else {
     return `${key.element}.${key.index}`;
   }
+};
+
+export const 总序列化 = (keys: (码位 | undefined)[]) => {
+  return keys.map(序列化).join(" ");
 };
 
 export const 反序列化 = (key: string): Result<码位 | undefined, Error> => {
@@ -282,3 +298,20 @@ export const 识别符 = (词: string, 拼音来源列表: string[][]) => {
   const 拼音列表 = 拼音来源列表.map((list) => list.join(" "));
   return `${词}-${拼音列表.join(",")}`;
 };
+
+export type 自定义分析 = Record<string, string[]>;
+
+export type 自定义分析映射 = Map<string, 自定义分析>;
+
+export function 获取汉字集合(词典: 词典): Set<string> {
+  const 汉字集合 = new Set<string>();
+  for (const { 词 } of 词典) {
+    for (const 汉字 of Array.from(词)) {
+      汉字集合.add(汉字);
+    }
+  }
+  return 汉字集合;
+}
+
+export const hex = (汉字: string) =>
+  汉字.codePointAt(0)!.toString(16).toUpperCase();

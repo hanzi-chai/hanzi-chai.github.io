@@ -15,7 +15,7 @@ import {
 import { Select } from "./Utils";
 import TextArea from "antd/es/input/TextArea";
 import { useAtomValue, 拼写运算自定义原子, 字母表原子 } from "~/atoms";
-import { 自定义元素原子 } from "~/atoms";
+import { 自定义元素集合原子 } from "~/atoms";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -46,7 +46,7 @@ export default function DetailEditor({
 }) {
   const alphabet = useAtomValue(字母表原子);
   const algebra = useAtomValue(拼写运算自定义原子);
-  const customElements = useAtomValue(自定义元素原子);
+  const customElements = useAtomValue(自定义元素集合原子);
   if (data === undefined) return null;
   const genericIndices = [...Array(10).keys()].flatMap((x) => [
     x + 1,

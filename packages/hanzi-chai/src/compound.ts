@@ -1,6 +1,7 @@
 import { range, sortBy } from "lodash-es";
 import {
   计算张码补码,
+  type 逸码部件分析,
   type 张码部件分析,
   type 默认部件分析,
 } from "./component.js";
@@ -376,9 +377,40 @@ class 张码复合体分析器 implements 复合体分析器<张码部件分析,
   }
 }
 
+class 逸码复合体分析器 implements 复合体分析器<逸码部件分析, 逸码部件分析> {
+  static readonly type = "逸码";
+  constructor(private 配置: 字形分析配置) {}
+
+  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 逸码部件分析[]) {
+    if (this.配置.字根决策.has(名称)) {
+      const 笔画序列 = (this.配置.字根笔画映射.get(名称) ?? []).map((x) =>
+        x.toString(),
+      );
+      return ok({ 字根序列: [名称], 余一字根序列: [名称], 笔画序列 });
+    }
+    const 字根序列: string[] = [];
+    const 余一字根序列: string[] = [];
+    const 笔画序列: string[] = [];
+    const 排序部分结果 = 按首笔排序(部分分析列表, 复合体);
+    for (const 部分 of 排序部分结果) {
+      // 0
+      笔画序列.push(...部分.笔画序列);
+      // 1
+      if (余一字根序列.length === 0) 余一字根序列.push(...部分.字根序列);
+      else 余一字根序列.push(...部分.笔画序列);
+      // 2
+      if (字根序列.length === 0) 字根序列.push(...部分.字根序列);
+      else if (部分.字根序列.length === 1) 字根序列.push(...部分.余一字根序列);
+      else 字根序列.push(...部分.笔画序列);
+    }
+    return ok({ 字根序列, 余一字根序列, 笔画序列 });
+  }
+}
+
 export {
   二笔复合体分析器,
   张码复合体分析器,
+  逸码复合体分析器,
   星空键道复合体分析器,
   真码复合体分析器,
   首右复合体分析器,

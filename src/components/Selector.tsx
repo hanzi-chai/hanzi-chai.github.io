@@ -18,6 +18,7 @@ import {
   过滤器列表原子,
   useAppendAtom,
   useExcludeAtom,
+  useAtomValue,
 } from "~/atoms";
 
 import { Button, Dropdown, Flex, Typography } from "antd";
@@ -63,6 +64,7 @@ export default function Selector() {
       setSelector(arrayMove(selector, oldIndex, newIndex));
     }
   }
+
   const 注册表 = getRegistry();
 
   return (

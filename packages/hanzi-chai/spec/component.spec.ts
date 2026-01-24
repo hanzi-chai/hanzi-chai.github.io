@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { 获取数据 } from ".";
+import { 获取数据 } from "./index.js";
 
 const { 原始字库, 部件图形库 } = 获取数据();
 
