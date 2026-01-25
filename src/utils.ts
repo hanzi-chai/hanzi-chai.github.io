@@ -43,7 +43,7 @@ export async function validateConfig(config: 配置) {
 export async function roundTestConfig(config: 配置) {
   await init();
   try {
-    const rustConfig = load(validate(config)) as object;
+    const rustConfig = validate(config) as object;
     if (isEqual(config, rustConfig)) {
       notification.success({
         message: "配置环行成功",
@@ -59,6 +59,7 @@ export async function roundTestConfig(config: 配置) {
     });
     console.log("config", config);
     console.log("rustConfig", rustConfig);
+    exportYAML(rustConfig, "round-tested-config");
     return false;
   } catch (e) {
     notification.error({

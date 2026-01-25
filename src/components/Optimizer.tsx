@@ -11,7 +11,7 @@ import {
 } from "antd";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { 求解器原子, 如前端输入原子 } from "~/atoms";
+import { 求解器原子, 如前端输入原子, useAtomValueUnwrapped } from "~/atoms";
 import type { WorkerOutput } from "~/worker";
 import { load } from "js-yaml";
 import { nanoid } from "nanoid";
@@ -78,7 +78,7 @@ export default function Optimizer() {
   const [autoParams, setAutoParams] =
     useState<Partial<求解器配置["parameters"]>>(undefined);
   const params = metaheuristic.parameters ?? autoParams;
-  const input = useAtomValue(如前端输入原子);
+  const input = useAtomValueUnwrapped(如前端输入原子);
   return (
     <>
       <Button

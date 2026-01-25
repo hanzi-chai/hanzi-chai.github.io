@@ -3,11 +3,10 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   如组装结果与优先简码原子,
+  如组装结果原子,
   最大码长原子,
-  type 联合条目,
-  联合结果原子,
 } from "~/atoms";
-import { 序列化, 总序列化, 识别符, type 码位 } from "~/lib";
+import { 序列化, 总序列化, 识别符, type 码位, type 组装条目 } from "~/lib";
 import { 如编码结果原子 } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
@@ -15,6 +14,7 @@ import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
 import type { ReactNode } from "react";
 import { exportTSV } from "~/utils";
+import { 编码渲染 } from "./ProrityShortCodeSelector";
 
 const ExportAssembly = () => {
   const 组装结果 = useAtomValueUnwrapped(如组装结果与优先简码原子);
@@ -66,9 +66,7 @@ const ExportCode = () => {
   );
 };
 
-const getColumnSearchProps = (
-  dataIndex: "词" | "全码" | "简码",
-): ProColumns<联合条目> => ({
+const getColumnSearchProps = (dataIndex: "词"): ProColumns<组装条目> => ({
   filterDropdown: ({
     setSelectedKeys,
     selectedKeys,
@@ -105,17 +103,18 @@ export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => 
 };
 
 export default function SequenceTable() {
-  const max_length = useAtomValue(最大码长原子);
-  const 联合结果 = useAtomValueUnwrapped(联合结果原子);
+  const 最大码长 = useAtomValue(最大码长原子);
+  const 组装结果 = useAtomValueUnwrapped(如组装结果原子);
 
-  const dataSource = 联合结果.map((x) => ({
+  const dataSource = 组装结果.map((x, i) => ({
     ...x,
     key: 识别符(x.词, x.拼音来源列表),
+    originalIndex: i,
   }));
 
   dataSource.sort((a, b) => b.频率 - a.频率);
 
-  const columns: ProColumns<联合条目>[] = [
+  const columns: ProColumns<组装条目>[] = [
     {
       title: "名称",
       dataIndex: "词",
@@ -159,7 +158,7 @@ export default function SequenceTable() {
     },
   ];
 
-  for (const i of Array(max_length).keys()) {
+  for (const i of Array(最大码长).keys()) {
     const allValues: Record<string, ReactNode> = {};
     for (const { 元素序列 } of dataSource) {
       const element = 元素序列[i];
@@ -213,39 +212,25 @@ export default function SequenceTable() {
     {
       title: "全码",
       width: 96,
-      render: (_, record) => {
-        const { 全码, 全码排名 } = record;
-        const rank = Math.abs(全码排名);
-        return (
-          <span style={{ color: 全码排名 > 0 ? "red" : "inherit" }}>
-            {全码}
-            {rank > 0 ? `[${rank}]` : ""}
-          </span>
-        );
-      },
-      ...getColumnSearchProps("全码"),
+      render: (_, record) => (
+        <编码渲染 index={record.originalIndex} type="全码" />
+      ),
+      // ...getColumnSearchProps("全码"),
     },
     {
       title: "简码",
       width: 96,
-      render: (_, record) => {
-        const { 简码, 简码排名 } = record;
-        const rank = Math.abs(简码排名);
-        return (
-          <span style={{ color: 简码排名 > 0 ? "red" : "inherit" }}>
-            {简码}
-            {rank > 0 ? `[${rank}]` : ""}
-          </span>
-        );
-      },
-      ...getColumnSearchProps("简码"),
+      render: (_, record) => (
+        <编码渲染 index={record.originalIndex} type="简码" />
+      ),
+      // ...getColumnSearchProps("简码"),
     },
   );
 
   const toolbar = [<ExportAssembly key={1} />, <ExportCode key={3} />];
 
   return (
-    <ProTable<联合条目>
+    <ProTable<组装条目>
       virtual
       scroll={{ y: 1080 }}
       columns={columns}

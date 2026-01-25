@@ -2,6 +2,8 @@ import type { 默认部件分析 } from "./component.js";
 import type { 星空键道复合体分析 } from "./compound.js";
 import {
   是归并,
+  条件节点配置,
+  源节点配置,
   type 构词规则,
   type 码位,
   type 编码配置,
@@ -77,7 +79,11 @@ class 组词器 {
 }
 
 interface 组装配置 {
-  编码配置: 编码配置;
+  源映射: Record<string, 源节点配置>;
+  条件映射: Record<string, 条件节点配置>;
+  构词规则列表: 构词规则[];
+  最大码长: number;
+  组装器?: string;
   键盘配置: 键盘配置;
   自定义分析映射: 自定义分析映射;
   额外信息: 额外信息;
@@ -107,7 +113,7 @@ abstract class 按规则构词<
 {
   private 组词器: 组词器;
   constructor(配置: 组装配置) {
-    this.组词器 = new 组词器(配置.编码配置.rules || []);
+    this.组词器 = new 组词器(配置.构词规则列表);
   }
 
   abstract 一字词组装(
@@ -136,7 +142,9 @@ class 默认组装器 extends 按规则构词 {
     super(配置);
     this.取码器 = new 取码器(
       this.配置.键盘配置,
-      this.配置.编码配置,
+      this.配置.源映射,
+      this.配置.条件映射,
+      this.配置.最大码长,
       this.配置.额外信息,
     );
   }
@@ -208,7 +216,7 @@ const 组装 = (
 ) => {
   const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
   const 组装结果: 组装条目[] = [];
-  const 组装器 = getRegistry().创建组装器(配置.编码配置.assembler || "默认", {
+  const 组装器 = getRegistry().创建组装器(配置.组装器 || "默认", {
     ...配置,
     额外信息: { 字根笔画映射: 字形分析结果.字根笔画映射 },
   })!;

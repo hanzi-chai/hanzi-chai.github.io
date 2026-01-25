@@ -29,10 +29,12 @@ import {
   useAtomValueUnwrapped,
   按首码分组决策原子,
   当前元素原子,
+  平铺决策原子,
+  别名显示原子,
 } from "~/atoms";
 import Char from "./Character";
 import MappingSpace, { RulesForm } from "./MappingSpace";
-import { 决策, 可打印字符列表, 安排, 是归并, 非空安排 } from "~/lib";
+import { hex, 决策, 可打印字符列表, 安排, 是归并, 非空安排 } from "~/lib";
 import {
   DeleteButton,
   Display,
@@ -46,6 +48,7 @@ import { ElementWithTooltip } from "./ElementPool";
 import { sortBy } from "lodash-es";
 import ValueEditor from "./Value";
 import { 是私用区 } from "~/lib";
+import { exportTSV } from "~/utils";
 
 const visit = (parent: string, name: string, output: any[], mapping: 决策) => {
   output.push({ from: name, to: parent });
@@ -71,6 +74,11 @@ const ElementDetail = ({ keys, name }: { keys: 非空安排; name: string }) => 
   const removeMapping = useRemoveAtom(决策原子);
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
+  const alphabet = useAtomValue(字母表原子);
+
+  const [otherWay, setOtherWay] = useState<非空安排>(
+    是归并(keys) ? alphabet[0]! : { element: "1" },
+  );
   return (
     <Flex vertical gap="middle">
       <Flex gap="small" align="center">
@@ -82,7 +90,7 @@ const ElementDetail = ({ keys, name }: { keys: 非空安排; name: string }) => 
               if (affiliates.length === 0) removeMapping(name);
               else notification.error({ message: "无法删除有归并关系的元素" });
             } else {
-              addMapping(name, newValue);
+              addMapping(name, newValue as 非空安排);
             }
           }}
           isCurrent
@@ -91,6 +99,17 @@ const ElementDetail = ({ keys, name }: { keys: 非空安排; name: string }) => 
           onClick={() => removeMapping(name)}
           disabled={affiliates.length > 0}
         />
+      </Flex>
+      <Flex align="center" gap="small">
+        或改为：
+        <ValueEditor
+          value={otherWay}
+          onChange={(newValue) => {
+            setOtherWay(newValue as 非空安排);
+          }}
+          isCurrent
+        />
+        <Button onClick={() => addMapping(name, otherWay)}>确定</Button>
       </Flex>
       <Divider size="small" />
       <RulesForm name={name} />
@@ -274,6 +293,36 @@ const MappingUploader = ({
   );
 };
 
+const MappingExporter = () => {
+  const flatMapping = useAtomValueUnwrapped(平铺决策原子);
+  return (
+    <Button onClick={() => exportTSV([...flatMapping], "键盘映射.txt")}>
+      导出键盘映射
+    </Button>
+  );
+};
+
+const PUAExporter = () => {
+  const mapping = useAtomValue(决策原子);
+  const display = useAtomValue(别名显示原子);
+  return (
+    <Button
+      onClick={() => {
+        const output: string[][] = [];
+        for (const key of Object.keys(mapping)) {
+          if (是私用区(key)) {
+            output.push([key, `U+${hex(key)}`, display(key)]);
+          }
+        }
+        const sorted = sortBy(output, (x) => x[0]!.codePointAt(0));
+        exportTSV(sorted, "PUA 映射.txt");
+      }}
+    >
+      导出 PUA 映射
+    </Button>
+  );
+};
+
 const MappingHeader = () => {
   const [order, setOrder] = useState("");
   const [char, setChar] = useState<string | undefined>(undefined);
@@ -286,31 +335,29 @@ const MappingHeader = () => {
     <>
       <Typography.Title level={3}>键盘映射</Typography.Title>
       <Flex justify="center" align="baseline" gap="small">
-        <Form.Item label="编码类型">
-          <Select
-            value={mappingType}
-            onChange={(event) => setMappingType(event)}
-            options={[
-              { label: "单编码", value: 1 },
-              { label: "双编码", value: 2 },
-              { label: "三编码", value: 3 },
-              { label: "四编码", value: 4 },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item label="添加按键">
-          <Select
-            style={{ width: 64 }}
-            value={char}
-            onChange={setChar}
-            options={可打印字符列表
-              .filter((x) => !alphabet.includes(x))
-              .map((v) => ({
-                label: v,
-                value: v,
-              }))}
-          />
-        </Form.Item>
+        编码类型：
+        <Select
+          value={mappingType}
+          onChange={(event) => setMappingType(event)}
+          options={[
+            { label: "单编码", value: 1 },
+            { label: "双编码", value: 2 },
+            { label: "三编码", value: 3 },
+            { label: "四编码", value: 4 },
+          ]}
+        />
+        添加按键：
+        <Select
+          style={{ width: 64 }}
+          value={char}
+          onChange={setChar}
+          options={可打印字符列表
+            .filter((x) => !alphabet.includes(x))
+            .map((v) => ({
+              label: v,
+              value: v,
+            }))}
+        />
         <Button
           type="primary"
           disabled={char === undefined}
@@ -334,7 +381,11 @@ const MappingHeader = () => {
         >
           <Button>自定义排列顺序</Button>
         </Popconfirm>
+      </Flex>
+      <Flex justify="center" align="baseline" gap="small">
         <MappingUploader setImportResult={setImportResult} />
+        <MappingExporter />
+        <PUAExporter />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
       {Object.keys(keyboard.grouping ?? {}).length > 0 && (
@@ -391,12 +442,10 @@ const MappingRow = memo(
 );
 
 export default function MappingComponent() {
-  const mapping = useAtomValue(决策原子);
-  const alphabet = useAtomValue(字母表原子);
   const reversedMapping = useAtomValueUnwrapped(按首码分组决策原子);
 
   return (
-    <Flex vertical>
+    <Flex vertical gap="small">
       <MappingHeader />
       <List
         dataSource={[...reversedMapping]}

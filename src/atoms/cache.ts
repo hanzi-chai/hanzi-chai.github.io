@@ -11,6 +11,7 @@ import type {
   当量映射,
   码位,
   组装条目,
+  组装配置,
   自定义分析,
   词典,
   键位分布目标,
@@ -43,10 +44,15 @@ import {
   分析配置原子,
   变换器列表原子,
   字形自定义原子,
+  字母表原子,
   拼写运算自定义原子,
+  最大码长原子,
+  条件映射原子,
+  构词配置原子,
+  源映射原子,
   用户原始字库数据原子,
   用户标签列表原子,
-  编码配置原子,
+  组装器原子,
   键盘原子,
   默认目标原子,
 } from ".";
@@ -278,15 +284,14 @@ export interface 首码分组 {
 export const 按首码分组决策原子 = atom((get) => {
   const 决策 = get(决策原子);
   const 平铺决策 = get(平铺决策原子);
+  const 字母表 = get(字母表原子);
   if (!平铺决策.ok) return 平铺决策;
-  const 分组决策 = new Map<string, 首码分组[]>();
+  const 分组决策 = new Map<string, 首码分组[]>([...字母表].map((x) => [x, []]));
   for (const [名称, 安排] of Object.entries(决策)) {
     if (!是归并(安排)) {
       const 首码 = 平铺决策.value.get(名称)?.[0];
       if (首码 === undefined) return default_err(`无法找到名称 ${名称} 的首码`);
-      const 列表 = 分组决策.get(首码) ?? [];
-      列表.push({ 名称, 安排 });
-      分组决策.set(首码, 列表);
+      分组决策.get(首码)?.push({ 名称, 安排 });
     }
   }
   return ok(分组决策);
@@ -337,10 +342,10 @@ export const 如字形分析结果原子 = atom(async (get) => {
 });
 
 export const 拼音分析结果原子 = atom(async (get) => {
-  const 编码配置 = get(编码配置原子);
+  const 源映射 = get(源映射原子);
   const 拼写运算查找表 = get(拼写运算查找表原子);
   const 词典 = await get(词典原子);
-  return 分析拼音(编码配置, 拼写运算查找表, 词典);
+  return 分析拼音(源映射, 拼写运算查找表, 词典);
 });
 
 export const 如组装结果原子 = atom(async (get) => {
@@ -348,11 +353,14 @@ export const 如组装结果原子 = atom(async (get) => {
   const 如字形分析结果 = await get(如字形分析结果原子);
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
-  const 编码配置 = get(编码配置原子);
   const 键盘配置 = get(键盘原子);
   const 自定义元素映射 = get(自定义元素映射原子);
-  const config = {
-    编码配置: 编码配置,
+  const config: Omit<组装配置, "额外信息"> = {
+    源映射: get(源映射原子),
+    条件映射: get(条件映射原子),
+    组装器: get(组装器原子),
+    构词规则列表: get(构词配置原子),
+    最大码长: get(最大码长原子),
     键盘配置: 键盘配置,
     自定义分析映射: 自定义元素映射,
   };
@@ -367,9 +375,9 @@ export const 如组装结果原子 = atom(async (get) => {
 export const 优先简码映射原子 = atom((get) => {
   const 优先简码列表 = get(优先简码原子);
   const map = new Map<string, number>();
-  for (const { 词, 拼音来源列表, 级别 } of 优先简码列表) {
-    const hash = 识别符(词, 拼音来源列表);
-    map.set(hash, 级别);
+  for (const { word, sources, level } of 优先简码列表) {
+    const hash = 识别符(word, sources);
+    map.set(hash, level);
   }
   return map;
 });

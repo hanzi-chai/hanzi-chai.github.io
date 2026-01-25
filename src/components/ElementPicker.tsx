@@ -11,12 +11,14 @@ import {
   useAtomValue,
   useRemoveAtom,
   useAtomValueUnwrapped,
+  自定义元素集合原子,
+  如笔顺映射原子,
 } from "~/atoms";
 import Algebra from "./Algebra";
 import { 拼音元素枚举映射原子, 当前元素原子 } from "~/atoms";
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import ElementCounter from "./ElementCounter";
-import { 结构表示符列表 } from "~/lib";
+import { 查询区块, 结构表示符列表 } from "~/lib";
 
 const AlgebraEditor = ({
   type,
@@ -80,9 +82,12 @@ type PrimaryTypes = "shape" | "pronunciation" | "custom";
 const useAllElements = () => {
   const customizedClassifier = useAtomValue(分类器原子);
   const pronunciationElements = useAtomValue(拼音元素枚举映射原子);
-  const customElements = useAtomValue(自定义元素映射原子);
+  const customElements = useAtomValue(自定义元素集合原子);
   const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
-  const 排序汉字 = Object.keys(sortedCharacters);
+  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const 排序汉字 = Object.keys(sortedCharacters)
+    .filter((k) => sequenceMap.get(k)?.length !== 1)
+    .filter((k) => 查询区块(k.codePointAt(0) ?? 0) !== "kangxi");
   const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
     .sort()
     .map(String);
@@ -95,10 +100,15 @@ const useAllElements = () => {
     ["二笔", allErbi],
     ["结构", [...结构表示符列表]],
   ]);
+  const custom: Map<string, string[]> = new Map();
+  for (const [key, value] of Object.entries(customElements)) {
+    const s = new Set(Object.values(value).flat());
+    custom.set(key, Array.from(s).sort());
+  }
   const elements: Record<PrimaryTypes, Map<string, string[]>> = {
     shape: shapeElements,
     pronunciation: pronunciationElements,
-    custom: customElements,
+    custom: custom,
   };
   return elements;
 };

@@ -3,7 +3,7 @@ import { atom, 编码配置原子 } from ".";
 import type {
   优先简码,
   构词规则,
-  目标,
+  目标配置,
   码长权重,
   简码规则,
   部分权重,
@@ -43,6 +43,10 @@ export const 源映射原子 = focusAtom(编码配置原子, (o) => o.prop("sour
 
 export const 条件映射原子 = focusAtom(编码配置原子, (o) =>
   o.prop("conditions"),
+);
+
+export const 组装器原子 = focusAtom(编码配置原子, (o) =>
+  o.prop("assembler").valueOr("默认"),
 );
 
 const isMulti = (s: 简码规则) => {
@@ -86,7 +90,7 @@ export const 默认目标原子 = atom((get) => {
       makeTier(x, levelWeights),
     ),
   };
-  const objective: 目标 = {
+  const objective: 目标配置 = {
     characters_full: p1,
   };
   if (wordRules.length > 0) {

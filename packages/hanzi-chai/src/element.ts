@@ -1,7 +1,6 @@
 import type { 默认汉字分析 } from "./assembly.js";
 import type {
   条件节点配置,
-  编码配置,
   键盘配置,
   运算符,
   源节点配置,
@@ -175,7 +174,9 @@ export class 取码器 {
 
   constructor(
     private keyboard: 键盘配置,
-    private encoder: 编码配置,
+    private sources: Record<string, 源节点配置>,
+    private conditions: Record<string, 条件节点配置>,
+    private max_length: number,
     private extra: Extra,
   ) {
     const { mapping } = keyboard;
@@ -201,7 +202,7 @@ export class 取码器 {
     const 码位序列: 码位[] = [];
     while (节点) {
       if (节点.startsWith("s")) {
-        const 源: 源节点配置 = this.encoder.sources[节点]!;
+        const 源: 源节点配置 = this.sources[节点]!;
         const { object, next, index } = 源;
         if (节点 === "s0") {
           节点 = next;
@@ -228,7 +229,7 @@ export class 取码器 {
         }
         节点 = next;
       } else {
-        const 条件: 条件节点配置 = this.encoder.conditions[节点]!;
+        const 条件: 条件节点配置 = this.conditions[节点]!;
         if (this.满足(条件, 汉字分析)) {
           节点 = 条件.positive;
         } else {
@@ -236,7 +237,7 @@ export class 取码器 {
         }
       }
     }
-    return 码位序列.slice(0, this.encoder.max_length ?? 码位序列.length);
+    return 码位序列.slice(0, this.max_length ?? 码位序列.length);
   }
 
   寻找(object: 取码对象, result: 默认汉字分析) {

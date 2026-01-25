@@ -73,6 +73,7 @@ const ValueEditor = ({
           { label: "键位", value: "键位" },
           { label: "归并", value: "归并" },
         ]}
+        disabled={isCurrent}
       />
       {是归并(value) ? (
         <ElementSelect

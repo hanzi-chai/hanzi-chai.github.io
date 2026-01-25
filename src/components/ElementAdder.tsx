@@ -30,10 +30,12 @@ export default function ElementAdder({ element }: { element?: string }) {
               onChange={(event) =>
                 setKeys((keys) =>
                   keys.map((v, i) => {
-                    return i === index ? event : v;
+                    return i === index ? (event as 码位) : v;
                   }),
                 )
               }
+              disablePlaceholder
+              disableVariables
             />
           );
         })}

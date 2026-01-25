@@ -153,9 +153,9 @@ export type 决策空间 = Record<元素, 安排描述[]>;
 // config.encoder begin
 
 export interface 优先简码 {
-  词: string;
-  拼音来源列表: string[][];
-  级别: number;
+  word: string;
+  sources: string[][];
+  level: number;
 }
 
 export interface 编码配置 {
@@ -273,7 +273,7 @@ export interface 部分权重 {
   levels?: 码长权重[];
 }
 
-export interface 目标 {
+export interface 目标配置 {
   characters_full?: 部分权重;
   characters_short?: 部分权重;
   words_full?: 部分权重;
@@ -281,10 +281,10 @@ export interface 目标 {
   regularization_strength?: number;
 }
 
-export type 部分目标类型 = Exclude<keyof 目标, "regularization_strength">;
+export type 部分目标类型 = Exclude<keyof 目标配置, "regularization_strength">;
 
 export interface 优化配置 {
-  objective: 目标;
+  objective: 目标配置;
   metaheuristic: 求解器配置;
 }
 
