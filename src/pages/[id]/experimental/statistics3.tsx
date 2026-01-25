@@ -1,5 +1,5 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
-import { 如字库原子, 如笔顺映射原子, useChaifenTitle } from "~/atoms";
+import { 如字库原子, 如笔顺映射原子 } from "~/atoms";
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 最大码长原子 } from "~/atoms";

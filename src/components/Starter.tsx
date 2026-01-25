@@ -6,7 +6,6 @@ import {
   encoderTypes,
   keyboardTypes,
 } from "~/templates";
-import type { Updater } from "use-immer";
 import type { 配置 } from "~/lib";
 import { nanoid } from "nanoid";
 import {
@@ -16,9 +15,9 @@ import {
 } from "@ant-design/pro-components";
 
 export default function Starter({
-  setConfigs,
+  addConfig,
 }: {
-  setConfigs: Updater<Record<string, 配置>>;
+  addConfig: (id: string, config: 配置) => void;
 }) {
   const required = [{ required: true }];
   const makeOptions = (types: readonly string[]) =>
@@ -30,10 +29,8 @@ export default function Starter({
       title="方案模板"
       onFinish={async (values) => {
         const config = createConfig(values);
-        setConfigs((configs) => {
-          configs[nanoid(9)] = config;
-          return undefined;
-        });
+        const id = nanoid(9);
+        addConfig(id, config);
         return true;
       }}
     >

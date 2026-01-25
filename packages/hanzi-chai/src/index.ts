@@ -47,14 +47,14 @@ export function 获取词典(路径?: string): 词典 {
 }
 
 export function 获取键位分布目标(路径?: string): 键位分布目标 {
-  const 默认路径 = path.join(__dirname, "data", "key_distribution.txt");
+  const 默认路径 = path.join(__dirname, "data", "distribution.txt");
   const 内容 = readFileSync(路径 ?? 默认路径, "utf-8");
   const tsv = 读取表格(内容);
   return 解析键位分布目标(tsv);
 }
 
 export function 获取当量映射(路径?: string) {
-  const 默认路径 = path.join(__dirname, "data", "pair_equivalence.txt");
+  const 默认路径 = path.join(__dirname, "data", "equivalence.txt");
   const 内容 = readFileSync(路径 ?? 默认路径, "utf-8");
   const tsv = 读取表格(内容);
   return 解析当量映射(tsv);
@@ -104,7 +104,7 @@ export function 获取字形分析结果(config: 配置, repertoire: 字库, 词
 export function 获取拼音分析结果(config: 配置, 词典: 词典) {
   const 编码配置 = config.encoder ?? {};
   const 拼写运算查找表 = 合并拼写运算(config.algebra);
-  return 分析拼音(编码配置, 拼写运算查找表, 词典);
+  return 分析拼音(编码配置.sources, 拼写运算查找表, 词典);
 }
 
 export function 获取组装结果(
@@ -114,7 +114,11 @@ export function 获取组装结果(
   自定义分析结果: 自定义分析映射 = new Map(),
 ) {
   const assembleConfig: Omit<组装配置, "额外信息"> = {
-    编码配置: config.encoder ?? {},
+    最大码长: config.encoder.max_length,
+    源映射: config.encoder.sources,
+    条件映射: config.encoder.conditions,
+    构词规则列表: config.encoder.rules ?? [],
+    组装器: config.encoder.assembler,
     键盘配置: config.form,
     自定义分析映射: 自定义分析结果,
   };

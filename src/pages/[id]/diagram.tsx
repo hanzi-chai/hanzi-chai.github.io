@@ -21,7 +21,7 @@ import {
   按首码分组决策原子,
   useAtomValueUnwrapped,
 } from "~/atoms";
-import { 图示配置, 区块配置 } from "~/lib";
+import { 图示配置, 区块配置, 读取表格 } from "~/lib";
 import { useChaifenTitle } from "~/utils";
 
 const PrintArea = styled.div`
@@ -71,14 +71,11 @@ const Keyboard = () => {
     }
     if (content.type === "custom") {
       const customMap: Map<string, string> = new Map();
-      content.mapping
-        ?.trim()
-        .split("\n")
-        .forEach((line) => {
-          const [key, value] = line.split("\t");
-          if (!key || !value) return;
-          customMap.set(key, value);
-        });
+      const tsv = 读取表格(content.mapping ?? "");
+      for (const [key, value] of tsv) {
+        if (!key || !value) continue;
+        customMap.set(key, value);
+      }
       return { ...content, mapping: customMap };
     }
     return content;

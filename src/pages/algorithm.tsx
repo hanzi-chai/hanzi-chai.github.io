@@ -1,34 +1,32 @@
 import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useEffect, useMemo, useState } from "react";
-import Element from "~/components/Element";
-import { 如字库原子, 原始字库数据原子 } from "~/atoms";
-import { list } from "~/api";
-import {
-  binaryToIndices,
-  defaultDegenerator,
-  generateSliceBinaries,
-} from "~/lib";
-import { 部件图形, type ComputedComponent } from "~/lib";
-import { listToObject } from "~/lib";
-import { useSetAtom, useAtomValue } from "~/atoms";
 import { isEmpty } from "lodash-es";
+import { useMemo, useState } from "react";
+import { useAtomValue, 原始字库数据原子, 如字库原子 } from "~/atoms";
+import { EditGlyph } from "~/components/Action";
 import { InlineUpdater } from "~/components/CharacterTable";
-import { Delete, EditGlyph, Merge } from "~/components/Action";
+import Element from "~/components/Element";
 import { ElementWithTooltip } from "~/components/ElementPool";
 import { Display } from "~/components/Utils";
+import {
+  defaultDegenerator,
+  type 原始字库数据,
+  type 原始汉字数据,
+  部件图形,
+  type 部件数据,
+} from "~/lib";
 
 interface TreeNodeData {
   name: string;
-  character: PrimitiveCharacter;
+  character: 原始汉字数据;
   children: TreeNodeData[];
 }
 
-const treeify = (repertoire: PrimitiveRepertoire) => {
+const treeify = (repertoire: 原始字库数据) => {
   const components: {
     name: string;
-    glyph: BasicComponent | DerivedComponent | SplicedComponent;
-    character: PrimitiveCharacter;
+    glyph: 部件数据;
+    character: 原始汉字数据;
   }[] = [];
   for (const [name, character] of Object.entries(repertoire)) {
     const glyph = character.glyphs.find(
@@ -82,7 +80,7 @@ const TreeNode = ({
   character,
 }: {
   name: string;
-  character: PrimitiveCharacter;
+  character: 原始汉字数据;
 }) => {
   return (
     <Flex align="center">
@@ -131,23 +129,23 @@ const ComponentsTreeView = () => {
 const DegeneratorTable = () => {
   const repertoire = useAtomValue(如字库原子);
   const loading = isEmpty(repertoire);
-  const components: ComputedComponent[] = [];
+  const components: 部件图形[] = [];
   for (const [name, character] of Object.entries(repertoire)) {
     if (character.glyph?.type !== "basic_component") continue;
     const glyph = character.glyph.strokes;
     const cache = new 部件图形(name, glyph);
     components.push(cache);
   }
-  components.sort((a, b) => a.getLength() - b.getLength());
-  const dataSource = components.filter((cache) => cache.getLength() >= 3);
-  const toCompare = components.filter((cache) => cache.getLength() >= 2);
+  components.sort((a, b) => a.笔画数() - b.笔画数());
+  const dataSource = components.filter((cache) => cache.笔画数() >= 3);
+  const toCompare = components.filter((cache) => cache.笔画数() >= 2);
   const [page, setPage] = useState(1);
-  const columns: ColumnsType<ComputedComponent> = [
+  const columns: ColumnsType<部件图形> = [
     {
       title: "部件",
       dataIndex: "name",
-      render: (_, { name }) => {
-        return <Display name={name} />;
+      render: (_, { 名称 }) => {
+        return <Display name={名称} />;
       },
       width: 128,
     },
@@ -157,14 +155,10 @@ const DegeneratorTable = () => {
       render: (_, record) => {
         const rootMap = new Map<string, number[]>();
         for (const another of toCompare) {
-          if (another.name === record.name) continue;
-          const slices = generateSliceBinaries(
-            defaultDegenerator,
-            record,
-            another,
-          );
+          if (another.名称 === record.名称) continue;
+          const slices = record.生成二进制切片列表(another, defaultDegenerator);
           if (slices.length) {
-            rootMap.set(another.name, slices);
+            rootMap.set(another.名称, slices);
           }
         }
         const rootList = [...rootMap].sort((a, b) => {
@@ -172,7 +166,6 @@ const DegeneratorTable = () => {
           const [, bslices] = b;
           return bslices[0]! - aslices[0]!;
         });
-        const convert = binaryToIndices(record.glyph.length);
         return (
           <Flex gap="middle" wrap="wrap">
             {rootList.map(([name, slices]) => {
@@ -181,7 +174,9 @@ const DegeneratorTable = () => {
                   <Element>
                     <Display name={name} />
                   </Element>
-                  {slices.map((x) => `(${convert(x).join(", ")})`).join(", ")}
+                  {slices
+                    .map((x) => `(${record.二进制转索引(x).join(", ")})`)
+                    .join(", ")}
                 </Space>
               );
             })}
@@ -213,15 +208,6 @@ const DegeneratorTable = () => {
 };
 
 export default function Algorithm() {
-  const setForm = useSetAtom(原始字库数据原子);
-
-  useEffect(() => {
-    list().then((data) => {
-      if ("err" in data) return;
-      setForm(listToObject(data));
-    });
-  }, [setForm]);
-
   return (
     <Layout style={{ height: "100%", overflowY: "auto" }}>
       <Layout.Content

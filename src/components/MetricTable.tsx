@@ -28,7 +28,6 @@ export interface PartialMetric {
   duplication?: number;
   key_distribution?: number;
   pair_equivalence?: number;
-  extended_pair_equivalence?: number;
   fingering?: (number | undefined)[];
   levels?: LevelMetric[];
 }

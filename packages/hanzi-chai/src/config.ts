@@ -268,7 +268,6 @@ export interface 部分权重 {
   duplication?: number;
   key_distribution?: number;
   pair_equivalence?: number;
-  extended_pair_equivalence?: number;
   fingering?: 指法权重;
   levels?: 码长权重[];
 }

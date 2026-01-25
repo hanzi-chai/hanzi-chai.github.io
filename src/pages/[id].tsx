@@ -1,5 +1,14 @@
-import { Suspense, useEffect, useState } from "react";
-import { Button, Flex, Layout, Menu, Avatar, Tooltip, Empty } from "antd";
+import { Suspense, useState } from "react";
+import {
+  Button,
+  Flex,
+  Layout,
+  Menu,
+  Avatar,
+  Tooltip,
+  Empty,
+  Typography,
+} from "antd";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
 import SettingOutlined from "@ant-design/icons/SettingOutlined";
@@ -10,12 +19,13 @@ import RiseOutlined from "@ant-design/icons/RiseOutlined";
 import NumberOutlined from "@ant-design/icons/NumberOutlined";
 
 import type { MenuProps } from "antd";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import CusSpin from "~/components/CustomSpin";
 import { 基本信息原子, useAtomValue } from "~/atoms";
 import { examples } from "~/templates";
 import { AppstoreOutlined } from "@ant-design/icons";
 import { getCurrentId } from "~/utils";
+import ConfigManager from "~/components/ConfigManager";
 
 const items: MenuProps["items"] = [
   { label: "基本", key: "", icon: <MailOutlined /> },
@@ -33,8 +43,22 @@ const items: MenuProps["items"] = [
 const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const info = useAtomValue(基本信息原子);
   return (
-    <Layout.Header style={{ paddingLeft: isCollapsed ? "68px" : "170px" }}>
-      <div>{info?.name ?? "未命名"}</div>
+    <Layout.Header
+      style={{
+        paddingLeft: isCollapsed ? "68px" : "170px",
+        height: 48,
+        placeContent: "center",
+      }}
+    >
+      <Flex justify="space-between" align="center">
+        <Typography.Title
+          level={2}
+          style={{ margin: 0, fontWeight: "normal", fontSize: "1.25rem" }}
+        >
+          {info?.name ?? "未命名"}
+        </Typography.Title>
+        <ConfigManager />
+      </Flex>
     </Layout.Header>
   );
 };

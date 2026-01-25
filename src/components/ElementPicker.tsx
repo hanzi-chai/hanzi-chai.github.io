@@ -5,14 +5,13 @@ import ElementPool from "./ElementPool";
 import {
   拼写运算自定义原子,
   分类器原子,
-  自定义元素映射原子,
   如排序字库数据原子,
   useAtom,
   useAtomValue,
   useRemoveAtom,
   useAtomValueUnwrapped,
-  自定义元素集合原子,
   如笔顺映射原子,
+  自定义分析数据库,
 } from "~/atoms";
 import Algebra from "./Algebra";
 import { 拼音元素枚举映射原子, 当前元素原子 } from "~/atoms";
@@ -82,7 +81,7 @@ type PrimaryTypes = "shape" | "pronunciation" | "custom";
 const useAllElements = () => {
   const customizedClassifier = useAtomValue(分类器原子);
   const pronunciationElements = useAtomValue(拼音元素枚举映射原子);
-  const customElements = useAtomValue(自定义元素集合原子);
+  const customElements = useAtomValue(自定义分析数据库.entries);
   const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const 排序汉字 = Object.keys(sortedCharacters)
@@ -101,7 +100,7 @@ const useAllElements = () => {
     ["结构", [...结构表示符列表]],
   ]);
   const custom: Map<string, string[]> = new Map();
-  for (const [key, value] of Object.entries(customElements)) {
+  for (const [key, value] of customElements) {
     const s = new Set(Object.values(value).flat());
     custom.set(key, Array.from(s).sort());
   }

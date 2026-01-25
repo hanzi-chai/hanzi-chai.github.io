@@ -5,7 +5,7 @@
 import { Result } from "antd";
 import ConfigManager from "./ConfigManager";
 import React from "react";
-import { useRouteError } from "react-router-dom";
+import { useRouteError } from "react-router";
 
 function BacsErrorResult() {
   return (

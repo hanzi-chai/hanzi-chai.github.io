@@ -190,6 +190,19 @@ export function 解析键位分布目标(tsv: string[][]): 键位分布目标 {
   return data;
 }
 
+export const 序列化键位频率目标 = (target: 键位分布目标): string[][] => {
+  const result: string[][] = [];
+  for (const [char, { 理想值, 低于惩罚, 高于惩罚 }] of target) {
+    result.push([
+      char,
+      理想值.toString(),
+      低于惩罚.toString(),
+      高于惩罚.toString(),
+    ]);
+  }
+  return result;
+};
+
 export function 解析当量映射(tsv: string[][]): 当量映射 {
   const data: 当量映射 = new Map();
   for (const [char, value_s] of tsv) {
@@ -200,6 +213,14 @@ export function 解析当量映射(tsv: string[][]): 当量映射 {
   }
   return data;
 }
+
+export const 序列化当量映射 = (mapping: 当量映射): string[][] => {
+  const result: string[][] = [];
+  for (const [char, value] of mapping) {
+    result.push([char, value.toString()]);
+  }
+  return result;
+};
 
 export function 解析词典(tsv: string[][]): 词典 {
   const result: 词典 = [];
@@ -218,11 +239,33 @@ export function 解析词典(tsv: string[][]): 词典 {
   return result;
 }
 
+export function 序列化词典(词典: 词典): string[][] {
+  const result: string[][] = [];
+  for (const { 词, 拼音, 频率 } of 词典) {
+    result.push([词, 拼音.join(" "), 频率.toString()]);
+  }
+  return result;
+}
+
 export function 解析自定义元素(tsv: string[][]): Record<string, string[]> {
   const result: Record<string, string[]> = {};
   for (const [key, values_s] of tsv) {
     if (key === undefined || values_s === undefined) continue;
     result[key] = values_s.split(" ");
+  }
+  return result;
+}
+
+export interface 码表条目 {
+  词: string;
+  编码: string;
+}
+
+export function 解析码表(tsv: string[][]): 码表条目[] {
+  const result: 码表条目[] = [];
+  for (const [word, code] of tsv) {
+    if (word === undefined || code === undefined) continue;
+    result.push({ 词: word, 编码: code });
   }
   return result;
 }

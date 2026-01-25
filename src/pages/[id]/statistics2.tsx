@@ -6,6 +6,7 @@ import {
   默认目标类型原子,
   默认当量原子,
   部分目标类型名称映射,
+  useAtomValueUnwrapped,
 } from "~/atoms";
 import {
   ProForm,
@@ -299,7 +300,7 @@ const DistributionForm = ({
 
 const UnaryDistribution = () => {
   const maxLength = useAtomValue(最大码长原子);
-  const combined = useAtomValue(联合结果原子);
+  const combined = useAtomValueUnwrapped(联合结果原子);
   const alphabet = useAtomValue(字母表原子);
   const types = useAtomValue(默认目标类型原子);
   const init: DistributionConfig = {
@@ -406,7 +407,7 @@ const MatrixHeatMap = ({
 };
 
 const BinaryDistribution = () => {
-  const combined = useAtomValue(联合结果原子);
+  const combined = useAtomValueUnwrapped(联合结果原子);
   const types = useAtomValue(默认目标类型原子);
   const alphabet = useAtomValue(字母表原子);
   const init: DistributionConfig = {
@@ -492,7 +493,7 @@ const EquivalenceColumns = ({
 };
 
 const FingeringDistribution = () => {
-  const combined = useAtomValue(联合结果原子);
+  const combined = useAtomValueUnwrapped(联合结果原子);
   const types = useAtomValue(默认目标类型原子);
   const maxLength = useAtomValue(最大码长原子);
   const init: DistributionConfig = {
@@ -530,12 +531,12 @@ interface DuplicationDistributionEntry {
 }
 
 const DuplicationDistribution = () => {
-  const combined = useAtomValue(联合结果原子);
+  const combined = useAtomValueUnwrapped(联合结果原子);
   const duplicationMap = new Map<string, 联合条目[]>();
   const pairMap = new Map<string, [string, string][]>();
 
   for (const item of combined) {
-    const key = item.full;
+    const key = item.全码;
     const previous = duplicationMap.get(key) ?? [];
     previous.push(item);
     duplicationMap.set(key, previous);

@@ -1,5 +1,3 @@
-import type { PropsWithChildren, SetStateAction } from "react";
-import { useEffect, useState } from "react";
 import {
   Button,
   Flex,
@@ -10,15 +8,27 @@ import {
   Table,
   Typography,
 } from "antd";
-import { shuffle, range, random, mean } from "lodash-es";
-import styled from "styled-components";
-import User, { getUser } from "~/components/User";
-import { get, post } from "~/api";
-import type { EquivalenceData, Pair } from "~/lib";
 import type { ColumnsType } from "antd/es/table";
+import { mean, random, range, shuffle } from "lodash-es";
 import { nanoid } from "nanoid";
+import type { PropsWithChildren, SetStateAction } from "react";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { get, post } from "~/api";
+import User, { getUser } from "~/components/User";
 import { DeleteButton } from "~/components/Utils";
-import { exportJSON } from "~/lib";
+import { exportJSON } from "~/utils";
+
+interface Pair {
+  initial: number;
+  final: number;
+}
+
+interface EquivalenceData {
+  user: string;
+  model: keyof typeof models;
+  data: { initial: number; final: number; time: number }[];
+}
 
 interface RankingData {
   user: string;
@@ -27,7 +37,7 @@ interface RankingData {
 }
 
 function Ranking({ model }: { model: keyof typeof models }) {
-  const columns: ColumnsType = [
+  const columns: ColumnsType<RankingData> = [
     {
       title: "用户",
       dataIndex: "user",
@@ -529,7 +539,7 @@ const Equivalence = () => {
             };
           });
           const payload: EquivalenceData = {
-            user: user?.id,
+            user: user!.id,
             model,
             data,
           };

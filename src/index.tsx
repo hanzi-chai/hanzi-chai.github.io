@@ -5,7 +5,7 @@ import {
   createBrowserRouter,
   createHashRouter,
   RouterProvider,
-} from "react-router-dom";
+} from "react-router";
 import { ConfigProvider } from "antd";
 import CusSpin from "~/components/CustomSpin";
 import ErrorResult from "./components/Error";

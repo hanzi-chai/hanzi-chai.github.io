@@ -1,5 +1,5 @@
 import { Flex, Popover, Select, Skeleton, Table } from "antd";
-import { 字母表原子 } from "~/atoms";
+import { useAtomValueUnwrapped, 字母表原子 } from "~/atoms";
 import {
   ProForm,
   ProFormDependency,
@@ -10,12 +10,12 @@ import {
 import { Form, Space, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 最大码长原子 } from "~/atoms";
-import type { 码位, 组装条目, 频率映射 } from "~/lib";
+import type { 码位, 组装条目 } from "~/lib";
 import { 反序列化, 序列化 } from "~/lib";
 import { Suspense, useState } from "react";
 import { 如组装结果原子 } from "~/atoms";
 import type { ColumnsType } from "antd/es/table";
-import { range, sumBy } from "lodash-es";
+import { isEqual, range, sumBy } from "lodash-es";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
 import { MinusButton, PlusButton } from "~/components/Utils";
 import KeySelect from "~/components/KeySelect";
@@ -48,23 +48,23 @@ const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
   return relevant;
 };
 
-const analyzePrimitiveDuplication = (
-  analyzer: AnalyzerForm,
+const 分析原始重码 = (
+  分析配置: AnalyzerForm,
   result: 组装条目[],
   maxLength: number,
-  replacer: (d: string) => string = (d) => d,
+  replacer: (d: 码位 | undefined) => 码位 | undefined = (d) => d,
 ) => {
-  const reverseMap = new Map<string, string[]>();
-  const relevant = filterRelevant(result, analyzer);
-  for (const assembly of relevant) {
+  const 反向映射 = new Map<string, string[]>();
+  const 相关结果 = filterRelevant(result, 分析配置);
+  for (const assembly of 相关结果) {
     const { 词: name, 元素序列: sequence } = assembly;
     const sliced = range(maxLength).map((i) =>
-      analyzer.position.includes(i) ? sequence[i] : "*",
+      分析配置.position.includes(i) ? sequence[i] : "*",
     );
-    const summary = `(${sliced.map((x) => replacer(序列化(x))).join(", ")})`;
-    reverseMap.set(summary, (reverseMap.get(summary) || []).concat(name));
+    const summary = JSON.stringify(sliced.map(replacer));
+    反向映射.set(summary, (反向映射.get(summary) || []).concat(name));
   }
-  return reverseMap;
+  return 反向映射;
 };
 
 interface Density {
@@ -141,12 +141,8 @@ const AnalyzerConfig = ({
 const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
-  const assemblyResult = useAtomValue(如组装结果原子);
-  const reverseMap = analyzePrimitiveDuplication(
-    analyzer,
-    assemblyResult,
-    maxLength,
-  );
+  const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
+  const reverseMap = 分析原始重码(analyzer, assemblyResult, maxLength);
   const alphabet = useAtomValue(字母表原子);
   const dataSource = [...reverseMap]
     .sort((a, b) => b[1].length - a[1].length)
@@ -158,21 +154,11 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
       dataIndex: "name",
       key: "name",
       render: (_, { name }) => {
-        const elements: 码位[] = name
-          .slice(1, -1)
-          .split(", ")
-          .map((x) => {
-            if (x === "*") return x;
-            if (x.includes(".")) {
-              const [element, index] = x.split(".");
-              return { element: element!, index: parseInt(index!, 10) };
-            }
-            return x;
-          });
+        const elements: (码位 | undefined)[] = JSON.parse(name);
         return (
           <Space>
             {elements.map((element, i) => (
-              <DisplayOptionalSuperscript key={i} element={element} />
+              <DisplayOptionalSuperscript key={i} element={element ?? "ε"} />
             ))}
           </Space>
         );
@@ -224,7 +210,7 @@ interface UnaryDensity {
 const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
-  const assemblyResult = useAtomValue(如组装结果原子);
+  const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer);
   for (const assembly of relevant) {
@@ -301,7 +287,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 };
 
 const MarginalFirstOrderDuplication = () => {
-  const assemblyResult = useAtomValue(如组装结果原子);
+  const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
   const maxLength = useAtomValue(最大码长原子);
   const [elements, setElements] = useState([] as 码位[]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
@@ -310,20 +296,13 @@ const MarginalFirstOrderDuplication = () => {
     top: 0,
   });
 
-  const rmBefore = analyzePrimitiveDuplication(
-    analyzer,
-    assemblyResult,
-    maxLength,
-  );
+  const rmBefore = 分析原始重码(analyzer, assemblyResult, maxLength);
   const szBefore = new Set<string>();
   rmBefore.forEach((items) => {
     if (items.length > 1) items.map((x) => szBefore.add(x));
   });
-  const rmAfter = analyzePrimitiveDuplication(
-    analyzer,
-    assemblyResult,
-    maxLength,
-    (d) => (elements.map(序列化).includes(d) ? "^" : d),
+  const rmAfter = 分析原始重码(analyzer, assemblyResult, maxLength, (d) =>
+    elements.some((x) => isEqual(x, d)) ? "^" : d,
   );
   const szAfter = new Set<string>();
   rmAfter.forEach((items) => {

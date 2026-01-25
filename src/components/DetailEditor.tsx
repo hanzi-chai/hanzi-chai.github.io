@@ -14,8 +14,12 @@ import {
 } from "~/lib";
 import { Select } from "./Utils";
 import TextArea from "antd/es/input/TextArea";
-import { useAtomValue, 拼写运算自定义原子, 字母表原子 } from "~/atoms";
-import { 自定义元素集合原子 } from "~/atoms";
+import {
+  useAtomValue,
+  拼写运算自定义原子,
+  字母表原子,
+  自定义分析数据库,
+} from "~/atoms";
 
 const Background = styled(Flex)`
   width: 240px;
@@ -46,7 +50,7 @@ export default function DetailEditor({
 }) {
   const alphabet = useAtomValue(字母表原子);
   const algebra = useAtomValue(拼写运算自定义原子);
-  const customElements = useAtomValue(自定义元素集合原子);
+  const customElements = useAtomValue(自定义分析数据库.keys);
   if (data === undefined) return null;
   const genericIndices = [...Array(10).keys()].flatMap((x) => [
     x + 1,
@@ -116,7 +120,7 @@ export default function DetailEditor({
     {
       value: "自定义",
       label: "自定义",
-      children: Object.keys(customElements).map((v) => ({
+      children: customElements.map((v) => ({
         value: v,
         label: v,
         children: genericIndices.map((v) => {
@@ -158,9 +162,9 @@ export default function DetailEditor({
             <Select
               style={{ width: "128px" }}
               value={data.index}
-              options={[-1, 0, 1, 2].map((v) => ({
+              options={[-1, 0, 1, 2, 3].map((v) => ({
                 value: v,
-                label: v === -1 ? "全取" : (v + 1).toString(),
+                label: v === -1 ? "全取" : `第 ${(v + 1).toString()} 码`,
               }))}
               onChange={(event) => {
                 event === -1

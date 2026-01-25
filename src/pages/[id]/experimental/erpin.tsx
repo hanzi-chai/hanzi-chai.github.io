@@ -21,16 +21,6 @@ import { 汉字集合原子, 退化配置原子, 决策原子, 如字库原子 }
 import Element from "~/components/Element";
 import ElementSelect from "~/components/ElementSelect";
 import { Display } from "~/components/Utils";
-import {
-  type BasicComponent,
-  classifier,
-  degenerate,
-  exportYAML,
-  type Feature,
-  type Mapping,
-  renderSVGGlyph,
-  type Repertoire,
-} from "~/lib";
 
 export interface TreeNode {
   字根: string;

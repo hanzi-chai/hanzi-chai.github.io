@@ -1,4 +1,4 @@
-import { Button, Flex, Input, Space } from "antd";
+import { Button, Flex, Input, Space, Table } from "antd";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
@@ -9,12 +9,12 @@ import {
 import { 序列化, 总序列化, 识别符, type 码位, type 组装条目 } from "~/lib";
 import { 如编码结果原子 } from "~/atoms";
 import type { ProColumns } from "@ant-design/pro-components";
-import { ProTable } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
 import type { ReactNode } from "react";
 import { exportTSV } from "~/utils";
 import { 编码渲染 } from "./ProrityShortCodeSelector";
+import type { ColumnsType } from "antd/es/table";
 
 const ExportAssembly = () => {
   const 组装结果 = useAtomValueUnwrapped(如组装结果与优先简码原子);
@@ -114,13 +114,12 @@ export default function SequenceTable() {
 
   dataSource.sort((a, b) => b.频率 - a.频率);
 
-  const columns: ProColumns<组装条目>[] = [
+  const columns: ColumnsType<组装条目> = [
     {
       title: "名称",
       dataIndex: "词",
       sortDirections: ["ascend", "descend"],
       width: 96,
-      ...getColumnSearchProps("词"),
     },
     {
       title: "频率",
@@ -182,7 +181,6 @@ export default function SequenceTable() {
       },
       sortDirections: ["ascend", "descend"],
       width: 96,
-      filters: true,
       onFilter: (value, record) => {
         const element = record.元素序列[i];
         if (element === undefined) {
@@ -190,7 +188,6 @@ export default function SequenceTable() {
         }
         return 序列化(element) === value;
       },
-      valueEnum: allValues,
       ellipsis: true,
     });
   }
@@ -227,18 +224,19 @@ export default function SequenceTable() {
     },
   );
 
-  const toolbar = [<ExportAssembly key={1} />, <ExportCode key={3} />];
-
   return (
-    <ProTable<组装条目>
-      virtual
-      scroll={{ y: 1080 }}
-      columns={columns}
-      dataSource={dataSource}
-      pagination={false}
-      search={false}
-      defaultSize="small"
-      toolBarRender={() => toolbar}
-    />
+    <>
+      <Flex justify="end" gap="small">
+        <ExportAssembly />
+        <ExportCode />
+      </Flex>
+      <Table<组装条目>
+        scroll={{ y: 1080 }}
+        columns={columns}
+        dataSource={dataSource}
+        size="small"
+        pagination={{ pageSize: 100 }}
+      />
+    </>
   );
 }

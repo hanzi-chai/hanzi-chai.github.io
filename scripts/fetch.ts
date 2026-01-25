@@ -24,8 +24,8 @@ writeFileSync(`${outputFolder}repertoire.json.deflate`, output);
 
 for (const filename of [
   "dictionary",
-  "key_distribution",
-  "pair_equivalence",
+  "distribution",
+  "equivalence",
   "tygf",
   "cjk",
 ]) {

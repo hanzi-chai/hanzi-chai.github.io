@@ -1,7 +1,6 @@
-import { Button, Flex, Input, Space, Typography, Upload } from "antd";
+import { Button, Flex, Input, Typography } from "antd";
 import {
   type Atom,
-  type SetStateAction,
   type WritableAtom,
   默认词典原子,
   基本信息原子,
@@ -9,6 +8,7 @@ import {
   默认当量原子,
   useAtom,
   useAtomValue,
+  useSetAtom,
 } from "~/atoms";
 import {
   type 词典,
@@ -16,10 +16,13 @@ import {
   type 当量映射,
   解析词典,
   解析键位分布目标,
-  基本信息,
+  type 基本信息,
   读取表格,
   解析自定义元素,
   解析当量映射,
+  序列化词典,
+  序列化当量映射,
+  序列化键位频率目标,
 } from "~/lib";
 import ConfigManager from "~/components/ConfigManager";
 import {
@@ -29,31 +32,13 @@ import {
 } from "@ant-design/pro-components";
 import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
 import {
-  用户键位分布原子,
-  用户双键当量原子,
+  用户键位分布目标原子,
+  用户当量映射原子,
   用户词典原子,
-  自定义元素集合原子,
+  自定义分析数据库,
 } from "~/atoms";
 import { useEffect, useState } from "react";
 import { exportTSV, useChaifenTitle } from "~/utils";
-
-const getTSVFromRecord = (record: 当量映射) =>
-  Object.entries(record).map(([k, v]) => [k, v.toString()]);
-
-const getTSVFromDict = (dict: 词典) => {
-  return dict.map(({ 词, 拼音, 频率 }) => [
-    词,
-    拼音.join(" "),
-    频率.toString(),
-  ]);
-};
-
-const getTSVFromDistribution = (distribution: 键位分布目标) => {
-  return Object.entries(distribution).map(([k, v]) => {
-    const { ideal, lt_penalty, gt_penalty } = v;
-    return [k, ideal.toString(), lt_penalty.toString(), gt_penalty.toString()];
-  });
-};
 
 function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({
   atom,
@@ -64,7 +49,7 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
   parser,
   dumper,
 }: {
-  atom: WritableAtom<V | undefined, [SetStateAction<V | undefined>], void>;
+  atom: WritableAtom<V | undefined, any, any>;
   defaultAtom: Atom<Promise<V>> | Atom<V>;
   title: string;
   format: string;
@@ -88,10 +73,7 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
         )}
         <Uploader
           type="txt"
-          action={(text) => {
-            const tsv = 读取表格(text);
-            setValue(parser(tsv));
-          }}
+          action={(text) => setValue(parser(读取表格(text)))}
         />
         <Button
           disabled={value === undefined}
@@ -114,11 +96,13 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
 }
 
 const CustomElementUploader = () => {
-  const [customElements, setCustomElements] = useAtom(自定义元素集合原子);
+  const entries = useAtomValue(自定义分析数据库.entries);
+  const set = useSetAtom(自定义分析数据库.set);
+  const del = useSetAtom(自定义分析数据库.delete);
   const [name, setName] = useState("");
   return (
     <Flex vertical gap="middle">
-      {Object.entries(customElements).map(([name, map]) => {
+      {entries.map(([name, map]) => {
         return (
           <Flex key={name} align="baseline" gap="middle">
             <Typography.Text>
@@ -135,14 +119,7 @@ const CustomElementUploader = () => {
             >
               下载
             </Button>
-            <Button
-              onClick={() => {
-                const { [name]: _, ...rest } = customElements;
-                setCustomElements(rest);
-              }}
-            >
-              清空
-            </Button>
+            <Button onClick={() => del(name)}>清空</Button>
           </Flex>
         );
       })}
@@ -158,7 +135,7 @@ const CustomElementUploader = () => {
           action={(text) => {
             const tsv = 读取表格(text);
             const 自定义元素 = 解析自定义元素(tsv);
-            setCustomElements({ ...customElements, [name]: 自定义元素 });
+            set(name, 自定义元素);
           }}
         />
       </Flex>
@@ -238,8 +215,6 @@ export default function Index() {
     <EditorRow>
       <EditorColumn span={12}>
         <Typography.Title level={2}>方案</Typography.Title>
-        <Typography.Title level={3}>管理配置</Typography.Title>
-        <ConfigManager />
         <ConfigInfo />
       </EditorColumn>
       <EditorColumn span={12}>
@@ -253,28 +228,28 @@ export default function Index() {
           title="词库"
           format="词\t带调拼音（空格分隔）\t频率"
           description="系统默认采用的一字词来自通用规范汉字（以《通用规范汉字字典》注音，共 8773 条），多字词来自「玲珑词库」（以冰雪拼音输入方案注音，共 69429 条）。"
-          atom={用户词典原子 as any}
+          atom={用户词典原子}
           defaultAtom={默认词典原子}
           parser={解析词典}
-          dumper={getTSVFromDict}
+          dumper={序列化词典}
         />
         <AssetUploader
           title="当量"
           format="字符串\t速度当量"
           description="系统默认采用的速度当量来自陈一凡的论文。您可以在此处自定义当量。"
-          atom={用户双键当量原子}
+          atom={用户当量映射原子}
           defaultAtom={默认当量原子}
           parser={解析当量映射}
-          dumper={getTSVFromRecord}
+          dumper={序列化当量映射}
         />
         <AssetUploader
           title="键位分布目标"
           format="键位\t理想值\t小于理想值惩罚系数\t大于理想值惩罚系数"
           description="系统默认采用的键位分布目标是我拍脑袋想出来的。您可以在此处自定义键位分布目标。"
-          atom={用户键位分布原子}
+          atom={用户键位分布目标原子}
           defaultAtom={默认键位分布目标原子}
           parser={解析键位分布目标}
-          dumper={getTSVFromDistribution}
+          dumper={序列化键位频率目标}
         />
         <Typography.Title level={2}>自定义元素</Typography.Title>
         <Typography.Paragraph>

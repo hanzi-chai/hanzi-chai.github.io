@@ -1,4 +1,4 @@
-import { ProForm, ProFormSelect } from "@ant-design/pro-form";
+import { ProForm, ProFormSelect } from "@ant-design/pro-components";
 import { useAtom } from "jotai";
 import { forwardRef } from "react";
 import { 全部标签原子, 用户标签列表原子 } from "~/atoms";
@@ -7,8 +7,8 @@ const TagPicker = forwardRef(() => {
   const [tags] = useAtom(全部标签原子);
   const [userTags, setUserTags] = useAtom(用户标签列表原子);
 
-  const handleFormSubmit = (values: { tags: string[] }) => {
-    setUserTags(values.tags);
+  const handleFormSubmit = (values: { tags?: string[] }) => {
+    setUserTags(values?.tags || []);
   };
 
   return (

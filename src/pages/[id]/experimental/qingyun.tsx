@@ -13,7 +13,6 @@ import { atomWithStorage } from "jotai/utils";
 import { sortBy } from "lodash-es";
 import styled from "styled-components";
 import {
-  adaptedFrequencyAtom,
   拼写运算自定义原子,
   字母表原子,
   字形分析配置原子,
@@ -29,23 +28,9 @@ import {
   如笔顺映射原子,
   useAtom,
   useAtomValue,
-  useChaifenTitle,
-  用户频率原子,
 } from "~/atoms";
 import { AdjustableElementGroup, getAffiliates } from "~/components/Mapping";
 import { Display } from "~/components/Utils";
-import {
-  BasicComponent,
-  dynamicAnalysis,
-  ElementWithIndex,
-  exportTSV,
-  exportYAML,
-  getReversedMapping,
-  isMerge,
-  isPUA,
-  首码分组,
-  Value,
-} from "~/lib";
 
 const PrintArea = styled.div`
   width: 210mm;

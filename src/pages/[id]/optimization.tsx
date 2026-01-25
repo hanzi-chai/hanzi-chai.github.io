@@ -6,12 +6,11 @@ import {
   InputNumber,
   Switch,
   Typography,
-  Select as AntdSelect,
   Skeleton,
 } from "antd";
 import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useMemo } from "react";
 import { 目标原子, 正则化强度原子 } from "~/atoms";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
@@ -21,7 +20,7 @@ import {
   EditorRow,
   Select,
 } from "~/components/Utils";
-import { 层级权重, 码长权重, 部分权重, 部分目标类型 } from "~/lib";
+import type { 层级权重, 码长权重, 部分权重 } from "~/lib";
 
 const AtomicObjective = ({
   title,
@@ -289,12 +288,7 @@ const PartialObjective = ({
   const [tiers, setTiers] = useAtom(tiersAtom);
   const [levels, setLevels] = useAtom(levelsAtom);
   const currentPart = partialObjective ?? {};
-  const {
-    duplication,
-    key_distribution,
-    pair_equivalence,
-    extended_pair_equivalence,
-  } = currentPart;
+  const { duplication, key_distribution, pair_equivalence } = currentPart;
   const update = (type: keyof 部分权重, value: number | undefined) => {
     setPartialObjective({ ...currentPart, [type]: value });
   };

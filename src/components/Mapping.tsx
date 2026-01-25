@@ -3,7 +3,6 @@ import {
   Button,
   Divider,
   Flex,
-  Form,
   Input,
   List,
   notification,
@@ -25,7 +24,7 @@ import {
   useAtom,
   决策空间原子,
   键盘原子,
-  type 首码分组,
+  type 名称与安排,
   useAtomValueUnwrapped,
   按首码分组决策原子,
   当前元素原子,
@@ -34,7 +33,7 @@ import {
 } from "~/atoms";
 import Char from "./Character";
 import MappingSpace, { RulesForm } from "./MappingSpace";
-import { hex, 决策, 可打印字符列表, 安排, 是归并, 非空安排 } from "~/lib";
+import { hex, 决策, 可打印字符列表, 是归并, 读取表格, 非空安排 } from "~/lib";
 import {
   DeleteButton,
   Display,
@@ -141,7 +140,7 @@ export const AdjustableElementGroup = ({
   名称: name,
   安排: code,
   displayMode,
-}: 首码分组 & { displayMode?: boolean }) => {
+}: 名称与安排 & { displayMode?: boolean }) => {
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
@@ -256,10 +255,7 @@ const MappingUploader = ({
     <Uploader
       action={(result) => {
         const record: Record<string, string> = {};
-        const tsv = result
-          .trim()
-          .split("\n")
-          .map((x) => x.trim().split("\t"));
+        const tsv = 读取表格(result);
         const unknownKeys: string[] = [];
         const unknownValues: string[] = [];
         for (const line of tsv) {
@@ -412,7 +408,7 @@ const MappingHeader = () => {
 };
 
 const MappingRow = memo(
-  ({ symbol, elements }: { symbol: string; elements: 首码分组[] }) => {
+  ({ symbol, elements }: { symbol: string; elements: 名称与安排[] }) => {
     const [alphabet, setAlphabet] = useAtom(字母表原子);
     return (
       <Flex style={{ borderTop: "1px solid #aaa" }}>
@@ -449,7 +445,7 @@ export default function MappingComponent() {
       <MappingHeader />
       <List
         dataSource={[...reversedMapping]}
-        renderItem={([key, roots]: [string, 首码分组[]]) => (
+        renderItem={([key, roots]: [string, 名称与安排[]]) => (
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />

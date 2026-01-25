@@ -1,5 +1,4 @@
 import { atom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
 import pako from "pako";
@@ -10,6 +9,7 @@ import type {
   字形分析结果,
   当量映射,
   码位,
+  码表条目,
   组装条目,
   组装配置,
   自定义分析,
@@ -120,33 +120,33 @@ export const 默认当量原子 = atom(async () => {
 });
 
 // 用户数据存储
-const db = new MiniDb<词典>();
+const 用户词典数据库 = new MiniDb<词典>({ name: "词典" });
 
-export const 用户词典原子 = db.item("user_dictionary");
+export const 用户词典原子 = 用户词典数据库.item("user_dictionary");
 
-export const 用户键位分布原子 = atomWithStorage<键位分布目标 | undefined>(
-  "user_key_distribution",
-  undefined,
-);
+const 用户键位分布目标数据库 = new MiniDb<键位分布目标>({
+  name: "键位分布目标",
+});
 
-export const 用户双键当量原子 = atomWithStorage<当量映射 | undefined>(
-  "user_pair_equivalence",
-  undefined,
-);
+export const 用户键位分布目标原子 =
+  用户键位分布目标数据库.item("user_distribution");
 
-export const 自定义元素集合原子 = atomWithStorage<Record<string, 自定义分析>>(
-  "custom_elements",
-  {},
-);
+const 用户当量映射数据库 = new MiniDb<当量映射>({ name: "当量映射" });
+
+export const 用户当量映射原子 = 用户当量映射数据库.item("user_equivalence");
+
+export const 自定义分析数据库 = new MiniDb<自定义分析>({ name: "自定义分析" });
+
+export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 
 export const 词典原子 = atom(async (get) => {
   return get(用户词典原子) ?? (await get(默认词典原子));
 });
 
 export const 自定义元素映射原子 = atom((get) => {
-  const 自定义元素集合 = get(自定义元素集合原子);
+  const 自定义元素集合 = get(自定义分析数据库.entries);
   const 查找表 = new Map<string, Record<string, string[]>>();
-  for (const [类别, 映射] of Object.entries(自定义元素集合)) {
+  for (const [类别, 映射] of 自定义元素集合) {
     for (const [汉字, 元素列表] of Object.entries(映射)) {
       const 记录 = 查找表.get(汉字) ?? {};
       记录[类别] = 元素列表;
@@ -276,23 +276,44 @@ export const 平铺决策原子 = atom((get) => {
   return 展开决策(决策);
 });
 
-export interface 首码分组 {
+export interface 名称与安排 {
   名称: string;
   安排: string | 码位[];
 }
 
 export const 按首码分组决策原子 = atom((get) => {
   const 决策 = get(决策原子);
-  const 平铺决策 = get(平铺决策原子);
-  const 字母表 = get(字母表原子);
-  if (!平铺决策.ok) return 平铺决策;
-  const 分组决策 = new Map<string, 首码分组[]>([...字母表].map((x) => [x, []]));
-  for (const [名称, 安排] of Object.entries(决策)) {
-    if (!是归并(安排)) {
-      const 首码 = 平铺决策.value.get(名称)?.[0];
-      if (首码 === undefined) return default_err(`无法找到名称 ${名称} 的首码`);
-      分组决策.get(首码)?.push({ 名称, 安排 });
+  const 引用孩子映射 = new Map<string, string[]>();
+  const 根节点 = new Map<string, string>();
+  // 建反向映射
+  for (const [node, 安排] of Object.entries(决策)) {
+    if (是归并(安排)) continue;
+    const 首码 = 安排[0];
+    if (!首码) continue;
+    if (typeof 首码 === "string") {
+      根节点.set(node, 首码);
+    } else {
+      if (!引用孩子映射.has(首码.element)) {
+        引用孩子映射.set(首码.element, []);
+      }
+      引用孩子映射.get(首码.element)!.push(node);
     }
+  }
+  const 字母表 = get(字母表原子);
+  const 分组决策 = new Map<string, 名称与安排[]>(
+    [...字母表].map((x) => [x, []]),
+  );
+  function dfs(名称: string, 首码: string) {
+    const 安排 = 决策[名称];
+    if (!安排 || 是归并(安排)) return;
+    分组决策.get(首码)?.push({ 名称, 安排 });
+    for (const 孩子 of 引用孩子映射.get(名称) ?? []) {
+      dfs(孩子, 首码);
+    }
+  }
+  // 每棵树依次 DFS
+  for (const [名称, 首码] of 根节点) {
+    dfs(名称, 首码);
   }
   return ok(分组决策);
 });
@@ -410,8 +431,8 @@ export const 如前端输入原子 = atom(async (get) => {
       元素序列: 总序列化(x.元素序列),
     })),
     原始键位分布信息:
-      get(用户键位分布原子) ?? (await get(默认键位分布目标原子)),
-    原始当量信息: get(用户双键当量原子) ?? (await get(默认当量原子)),
+      get(用户键位分布目标原子) ?? (await get(默认键位分布目标原子)),
+    原始当量信息: get(用户当量映射原子) ?? (await get(默认当量原子)),
   });
 });
 

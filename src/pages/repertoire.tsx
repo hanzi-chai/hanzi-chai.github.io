@@ -1,9 +1,9 @@
 import { Flex, Layout, Table, Typography } from "antd";
-import { ColumnsType } from "antd/es/table";
-import { 区块, 区块列表 } from "~/lib";
-import { Suspense, useEffect } from "react";
-import { 拉取资源, 原始字库数据原子, useAtom, useAtomValue } from "~/atoms";
+import type { ColumnsType } from "antd/es/table";
+import { Suspense } from "react";
+import { useAtomValue, 原始字库数据原子 } from "~/atoms";
 import CustomSpin from "~/components/CustomSpin";
+import { type 区块, 区块列表 } from "~/lib";
 
 export default function Repertoire() {
   const repertoire = useAtomValue(原始字库数据原子);

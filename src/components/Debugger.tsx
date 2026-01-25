@@ -1,17 +1,17 @@
 import { Flex, Form, Statistic, Switch, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   汉字集合原子,
   配置原子,
   如字库原子,
   useAtomValueUnwrapped,
+  码表数据库,
 } from "~/atoms";
 import { 如编码结果原子 } from "~/atoms";
 import { Select, Uploader } from "~/components/Utils";
-import { chars } from "~/lib";
+import { chars, 解析码表, 读取表格 } from "~/lib";
 import type { 编码条目 } from "~/utils";
 
 interface DictEntryWithReference extends 编码条目 {
@@ -25,16 +25,10 @@ export default function Debugger() {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const characters = useAtomValue(汉字集合原子);
   const [code] = useAtomValueUnwrapped(如编码结果原子);
-  const referenceAtom = useMemo(
-    () =>
-      atomWithStorage<Record<string, string[]>>(
-        `reference_${config.info?.name ?? "default"}`,
-        {},
-      ),
-    [config.info?.name],
-  );
 
-  const [reference, setReference] = useAtom(referenceAtom);
+  const [reference, setReference] = useAtom(
+    码表数据库.item(config.info?.name ?? "方案"),
+  );
   const [incorrectOnly, setIncorrectOnly] = useState(false);
   const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as const;
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
@@ -48,13 +42,21 @@ export default function Debugger() {
   };
   const filterFn = filterMap[filterOption];
 
+  const 编码映射 = new Map<string, string[]>();
+  for (const { 词, 编码 } of reference || []) {
+    if (!编码映射.has(词)) {
+      编码映射.set(词, []);
+    }
+    编码映射.get(词)!.push(编码);
+  }
+
   let correct = 0;
   let incorrect = 0;
   let unknown = 0;
   let dataSource: DictEntryWithReference[] = code
     .filter((x) => chars(x.词) === 1 && filterFn(x.词))
     .map((x) => {
-      const codes = reference[x.词] ?? [];
+      const codes = 编码映射.get(x.词) ?? [];
       const hash = `${x.词}-${x.全码}`;
       let status: "correct" | "incorrect" | "unknown" = "unknown";
       if (codes.length === 0) {
@@ -100,22 +102,12 @@ export default function Debugger() {
           type="txt"
           text="导入 TSV 码表"
           action={(content) => {
-            const ref: Record<string, string[]> = {};
-            const tsv = content
-              .trim()
-              .split("\n")
-              .map((x) => x.trim().split("\t"));
-            for (const line of tsv) {
-              const [key, value] = line;
-              if (key !== undefined && value !== undefined) {
-                ref[key] = (ref[key] ?? []).concat(value);
-              }
-            }
-            setReference(ref);
+            const tsv = 读取表格(content);
+            const 码表 = 解析码表(tsv);
+            setReference(码表);
           }}
         />
-        {reference !== undefined &&
-          `已加载码表，条数：${Object.keys(reference).length}`}
+        {reference !== undefined && `已加载码表，条数：${reference.length}`}
       </Flex>
       <Flex
         justify="space-between"

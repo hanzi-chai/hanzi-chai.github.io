@@ -9,29 +9,28 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { nanoid } from "nanoid";
-import { type Updater, useImmer } from "use-immer";
-import { examples, Example } from "~/templates";
-import { DeleteButton, Uploader } from "~/components/Utils";
-import { load } from "js-yaml";
-import Starter from "~/components/Starter";
 import type { MenuProps } from "antd/lib";
+import { load } from "js-yaml";
+import { nanoid } from "nanoid";
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import styled from "styled-components";
 import Changelog from "~/components/changelog/ChangelogDrawer";
+import Starter from "~/components/Starter";
 import User from "~/components/User";
-import { 基本信息, 示例配置, 配置 } from "~/lib";
+import { DeleteButton, Uploader } from "~/components/Utils";
+import type { 基本信息, 示例配置, 配置 } from "~/lib";
+import { type Example, examples } from "~/templates";
 import { useChaifenTitle, validateConfig } from "~/utils";
 
 const ListItem = ({
   id,
   info,
-  setConfigs,
+  removeConfig,
 }: {
   id: string;
   info: 基本信息;
-  setConfigs: Updater<Record<string, 配置>>;
+  removeConfig: (id: string) => void;
 }) => {
   return (
     <Flex align="center" justify="space-between" style={{ width: "100%" }}>
@@ -51,10 +50,7 @@ const ListItem = ({
       <DeleteButton
         onClick={(e) => {
           e.stopPropagation();
-          setConfigs((configs) => {
-            delete configs[id];
-            return configs;
-          });
+          removeConfig(id);
         }}
       />
     </Flex>
@@ -76,9 +72,7 @@ const StyledListItem = styled(Link)`
 export default function HomeLayout() {
   useChaifenTitle("首页");
   const isSchema = (key: string) => key.length === 9;
-  const isResource = (key: string) =>
-    key.length !== 9 && !["user", "token"].includes(key);
-  const [configs, setConfigs] = useImmer(() =>
+  const [configs, setConfigs] = useState(() =>
     Object.fromEntries(
       Object.entries(localStorage)
         .filter(([key]) => isSchema(key))
@@ -86,11 +80,6 @@ export default function HomeLayout() {
           const data = JSON.parse(value) as 配置;
           return [key, data];
         }),
-    ),
-  );
-  const [resources, setResources] = useImmer(() =>
-    Object.fromEntries(
-      Object.entries(localStorage).filter(([key]) => isResource(key)),
     ),
   );
 
@@ -154,18 +143,18 @@ export default function HomeLayout() {
     Object.keys(localStorage)
       .filter((x) => !configs[x] && isSchema(x))
       .map((id) => localStorage.removeItem(id));
-    Object.entries(resources).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
-    });
-    Object.keys(localStorage)
-      .filter((x) => !resources[x] && isResource(x))
-      .map((key) => localStorage.removeItem(key));
-  }, [configs, resources]);
+  }, [configs]);
 
   const listData = Object.entries(configs).map(([id, { info }]) => ({
     id,
-    setConfigs,
     info: info ?? {},
+    removeConfig: (id: string) => {
+      setConfigs((configs) => {
+        const newConfigs = { ...configs };
+        delete newConfigs[id];
+        return newConfigs;
+      });
+    },
   }));
 
   return (
@@ -182,14 +171,19 @@ export default function HomeLayout() {
             header={"方案管理"}
             footer={
               <Flex justify="center" gap="middle">
-                <Starter setConfigs={setConfigs} />
+                <Starter
+                  addConfig={(id, config) =>
+                    setConfigs({ ...configs, [id]: config })
+                  }
+                />
                 <Dropdown
                   placement="bottom"
                   menu={{
                     items,
                     onClick: (menu) => {
-                      setConfigs((configs) => {
-                        configs[nanoid(9)] = examples[menu.key as Example];
+                      setConfigs({
+                        ...configs,
+                        [nanoid(9)]: examples[menu.key as Example],
                       });
                     },
                   }}
@@ -201,36 +195,15 @@ export default function HomeLayout() {
                   action={async (s) => {
                     const config = load(s) as 配置;
                     const valid = await validateConfig(config);
-                    // if (!valid) return;
-                    setConfigs((configs) => {
-                      configs[nanoid(9)] = load(s) as 配置;
+                    if (!valid) return;
+                    setConfigs({
+                      ...configs,
+                      [nanoid(9)]: config,
                     });
                   }}
                 />
               </Flex>
             }
-          />
-          <List
-            dataSource={Object.keys(resources).map((key) => ({ key }))}
-            header={"资源管理"}
-            renderItem={({ key }) => (
-              <Flex
-                align="center"
-                justify="space-between"
-                style={{ width: "100%" }}
-              >
-                <span>{key}</span>
-                <DeleteButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setResources((res) => {
-                      delete res[key];
-                      return res;
-                    });
-                  }}
-                />
-              </Flex>
-            )}
           />
         </Flex>
       </Layout.Sider>

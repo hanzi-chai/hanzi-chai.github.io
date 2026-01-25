@@ -1,7 +1,9 @@
 import { atom } from "jotai";
 import { atomWithLocation } from "jotai-location";
 import { focusAtom } from "jotai-optics";
-import { atomFamily, atomWithStorage } from "jotai/utils";
+import { withHistory } from "jotai-history";
+import { atomWithStorage } from "jotai/utils";
+import { atomFamily } from "jotai-family";
 import {
   defaultOptimization,
   type 分析配置,
@@ -32,6 +34,9 @@ export const 配置原子 = atom(
   (get) => get(配置存储(get(方案序列号原子))),
   (get, set, value: 配置) => set(配置存储(get(方案序列号原子)), value),
 );
+
+const 历史数量 = 10;
+export const 配置历史原子 = withHistory(配置原子, 历史数量);
 
 export const 基本信息原子 = focusAtom(配置原子, (o) =>
   o.prop("info").valueOr({} as 基本信息),
