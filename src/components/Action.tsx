@@ -36,6 +36,7 @@ import {
   type 原始字库数据,
   type 原始汉字数据,
   type 字形数据,
+  模拟全等,
   模拟基本部件,
   模拟复合体,
   模拟拼接部件,
@@ -48,7 +49,7 @@ import CompoundForm from "./CompoundForm";
 
 interface CreateProps {
   charOrName: string;
-  type: "component" | "compound";
+  type: 字形数据["type"];
 }
 
 export const Create = forwardRef(
@@ -71,11 +72,20 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
   const nextUnicode = useAtomValue(下一个可用的码位原子);
   const 原始字库数据 = useAtomValue(原始字库数据原子);
   const options = [
-    { label: "部件", value: "component" },
+    { label: "衍生部件", value: "derived_component" },
+    { label: "拼接部件", value: "spliced_component" },
     { label: "复合体", value: "compound" },
+    { label: "全等字形", value: "identity" },
   ];
   const handle = async ({ charOrName, type }: CreateProps) => {
-    const glyph = type === "component" ? 模拟衍生部件() : 模拟复合体("⿰");
+    const glyph =
+      type === "derived_component"
+        ? 模拟衍生部件()
+        : type === "spliced_component"
+          ? 模拟拼接部件()
+          : type === "identity"
+            ? 模拟全等()
+            : 模拟复合体("⿰");
     if (chars(charOrName) > 1) {
       let char: string;
       if (remote) {

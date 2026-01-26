@@ -221,7 +221,7 @@ type 长度限定 =
   | { length_equal: number }
   | { length_in_range: [number, number] };
 
-export const wordLengthArray = [...Array(9).keys()].map((x) => ({
+export const 多字词长度列表 = [...Array(9).keys()].map((x) => ({
   label: x + 1,
   value: x + 1,
 }));
@@ -287,7 +287,7 @@ export interface 优化配置 {
   metaheuristic: 求解器配置;
 }
 
-export const defaultOptimization: 优化配置 = {
+export const 默认优化配置: 优化配置 = {
   objective: {},
   metaheuristic: {
     algorithm: "SimulatedAnnealing",

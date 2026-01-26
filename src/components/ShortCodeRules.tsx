@@ -1,6 +1,6 @@
 import { Button, Flex, Form } from "antd";
 import type { 简码规则 } from "~/lib";
-import { wordLengthArray } from "~/lib";
+import { 多字词长度列表 } from "~/lib";
 import { useAtom } from "~/atoms";
 import { 简码配置原子 } from "~/atoms";
 import {
@@ -30,11 +30,11 @@ const defaultRules: 简码规则[] = [
 
 export default function ShortCodeRules() {
   const [shortCodeConfig, setShortCodeConfig] = useAtom(简码配置原子);
-  const wordLengthArray2D = wordLengthArray
-    .slice(0, wordLengthArray.length - 1)
+  const wordLengthArray2D = 多字词长度列表
+    .slice(0, 多字词长度列表.length - 1)
     .map((x) => ({
       ...x,
-      children: wordLengthArray.filter((y) => y.value > x.value),
+      children: 多字词长度列表.filter((y) => y.value > x.value),
     }));
   const [form] = Form.useForm<{ short_code: 简码规则[] }>();
   return (
@@ -60,7 +60,7 @@ export default function ShortCodeRules() {
                 <ProFormSelect
                   name="length_equal"
                   label="长度等于"
-                  options={wordLengthArray}
+                  options={多字词长度列表}
                   width="xs"
                   allowClear={false}
                 />

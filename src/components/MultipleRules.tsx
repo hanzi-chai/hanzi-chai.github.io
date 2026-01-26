@@ -1,6 +1,6 @@
 import { Form, Space, Button } from "antd";
 import { useAtom, 构词配置原子 } from "~/atoms";
-import { wordLengthArray, type 构词规则 } from "~/lib";
+import { 多字词长度列表, type 构词规则 } from "~/lib";
 import {
   ModalForm,
   ProFormCascader,
@@ -20,11 +20,11 @@ const defaultRules: 构词规则[] = [
 export default function MultipleRules() {
   const [wordRules, setWordRules] = useAtom(构词配置原子);
   const [form] = Form.useForm<{ rules: 构词规则[] }>();
-  const wordLengthArray2D = wordLengthArray
-    .slice(0, wordLengthArray.length - 1)
+  const wordLengthArray2D = 多字词长度列表
+    .slice(0, 多字词长度列表.length - 1)
     .map((x) => ({
       ...x,
-      children: wordLengthArray.filter((y) => y.value > x.value),
+      children: 多字词长度列表.filter((y) => y.value > x.value),
     }));
   const validator = async (_: any, value: string) =>
     /^([A-Z][a-z]){1,}$/.test(value)
@@ -50,7 +50,7 @@ export default function MultipleRules() {
                   <ProFormSelect
                     name="length_equal"
                     label="长度等于"
-                    options={wordLengthArray}
+                    options={多字词长度列表}
                     width="xs"
                     allowClear={false}
                   />

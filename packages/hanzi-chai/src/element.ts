@@ -9,7 +9,7 @@ import type {
 import { 是归并 } from "./config.js";
 import { 展开决策 } from "./utils.js";
 
-export interface Extra {
+export interface 额外信息 {
   字根笔画映射: Map<string, number[]>;
 }
 
@@ -177,7 +177,7 @@ export class 取码器 {
     private sources: Record<string, 源节点配置>,
     private conditions: Record<string, 条件节点配置>,
     private max_length: number,
-    private extra: Extra,
+    private extra: 额外信息,
   ) {
     const { mapping } = keyboard;
     const expanded = 展开决策(mapping);

@@ -1,6 +1,6 @@
 import type { 拼写运算, 源节点配置, 编码配置, 运算规则 } from "./config.js";
 import {
-  getRegistry,
+  获取注册表,
   ok,
   type Result,
   type 词典,
@@ -105,7 +105,7 @@ function 分析拼音(
   拼写运算: Map<string, 拼写运算>,
   词典: 词典,
 ) {
-  const 注册表 = getRegistry();
+  const 注册表 = 获取注册表();
   const 拼写运算查找表 = new Map<string, 拼写运算>();
   for (const value of Object.values(编码器)) {
     const object = value.object;

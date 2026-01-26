@@ -29,7 +29,7 @@ import { Collapse } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
 import {
-  getRegistry,
+  获取注册表,
   type 基本分析,
   type 默认部件分析,
   type 字形分析结果,
@@ -67,7 +67,7 @@ const ConfigureRules = () => {
   const [modal, setModal] = useState(0);
   const [部件分析器, 设置部件分析器] = useAtom(部件分析器原子);
   const [复合体分析器, 设置复合体分析器] = useAtom(复合体分析器原子);
-  const 注册表 = getRegistry();
+  const 注册表 = 获取注册表();
 
   return (
     <Flex gap="middle" justify="center" align="center">

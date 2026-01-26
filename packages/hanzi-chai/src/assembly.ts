@@ -9,9 +9,9 @@ import {
   type 编码配置,
   type 键盘配置,
 } from "./config.js";
-import { type Extra as 额外信息, 取码器 } from "./element.js";
+import { type 额外信息 as 额外信息, 取码器 } from "./element.js";
 import type { 拼音分析结果 } from "./pinyin.js";
-import { getRegistry } from "./main.js";
+import { 获取注册表 } from "./main.js";
 import type { 基本分析, 字形分析结果 } from "./repertoire.js";
 import {
   chars,
@@ -216,7 +216,7 @@ const 组装 = (
 ) => {
   const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
   const 组装结果: 组装条目[] = [];
-  const 组装器 = getRegistry().创建组装器(配置.组装器 || "默认", {
+  const 组装器 = 获取注册表().创建组装器(配置.组装器 || "默认", {
     ...配置,
     额外信息: { 字根笔画映射: 字形分析结果.字根笔画映射 },
   })!;

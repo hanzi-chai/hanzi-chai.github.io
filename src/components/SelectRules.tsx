@@ -1,7 +1,7 @@
 import { Button } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import { 字母表原子, 编码配置原子 } from "~/atoms";
-import { 可打印字符列表, wordLengthArray, type 编码配置 } from "~/lib";
+import { 可打印字符列表, 多字词长度列表, type 编码配置 } from "~/lib";
 import {
   ModalForm,
   ProFormGroup,
@@ -26,12 +26,12 @@ export default function SelectRules() {
         <ProFormSelect
           name="max_length"
           label="最大码长"
-          options={wordLengthArray}
+          options={多字词长度列表}
         />
         <ProFormSelect
           name="auto_select_length"
           label="顶屏码长"
-          options={wordLengthArray}
+          options={多字词长度列表}
         />
         <ProFormText name="auto_select_pattern" label="顶屏模式" />
         <ProFormSelect

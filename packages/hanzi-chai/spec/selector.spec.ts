@@ -30,33 +30,33 @@ const g = (ns: number[]): 拆分方式 => ns.map((n) => ({
 
 describe("length", () => {
   it("should measure the length of scheme", () => {
-    expect(length.evaluate(g([8, 7]))).toEqual([2]);
+    expect(length.评价(g([8, 7]))).toEqual([2]);
   });
 });
 
 describe("bias", () => {
   it("should measure the bias of scheme", () => {
-    expect(bias.evaluate(g([8, 7]))).toEqual([-1, -3]);
+    expect(bias.评价(g([8, 7]))).toEqual([-1, -3]);
   });
 });
 
 describe("order", () => {
   it("should measure the order of scheme", () => {
-    expect(order.evaluate(g([8, 7]))).toEqual([0]);
+    expect(order.评价(g([8, 7]))).toEqual([0]);
   });
 });
 
 describe("crossing", () => {
   it("should measure the crossing of scheme", () => {
-    expect(crossing.evaluate(g([8, 7]), env)).toEqual([0]);
-    expect(crossing.evaluate(g([12, 3]), env)).toEqual([1]);
+    expect(crossing.评价(g([8, 7]), env)).toEqual([0]);
+    expect(crossing.评价(g([12, 3]), env)).toEqual([1]);
   });
 });
 
 describe("attaching", () => {
   it("should measure the attaching of scheme", () => {
-    expect(attaching.evaluate(g([8, 7]), env)).toEqual([1]);
-    expect(attaching.evaluate(g([12, 3]), env)).toEqual([0]);
+    expect(attaching.评价(g([8, 7]), env)).toEqual([1]);
+    expect(attaching.评价(g([12, 3]), env)).toEqual([0]);
   });
 });
 

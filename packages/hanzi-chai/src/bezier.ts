@@ -1,16 +1,7 @@
 import { isEqual } from "lodash-es";
 import type { 笔画名称 } from "./classifier.js";
 import type { 绘制, 向量, 矢量笔画数据 } from "./data.js";
-import {
-  add,
-  area,
-  distance,
-  divide,
-  isCollinear,
-  multiply,
-  sorted,
-  subtract,
-} from "./math.js";
+import { 加, 叉乘, 距离, 除, 是共线, 乘, 排序, 减 } from "./math.js";
 
 /**
  * 一段 Bezier 曲线的主要朝向
@@ -50,10 +41,10 @@ type 离散关系 = 平行离散关系 | 垂直离散关系;
 type 曲线关系 = 相交关系 | 相连关系 | 离散关系;
 
 abstract class 曲线 {
-  abstract getType(): "linear" | "cubic" | "arc";
-  abstract getOrientation(): 朝向;
+  abstract 获取类型(): "linear" | "cubic" | "arc";
+  abstract 获取朝向(): 朝向;
   abstract 获取起点和终点(): [向量, 向量];
-  abstract evaluate(t: number): 向量;
+  abstract 求值(t: number): 向量;
   abstract 二分(): [曲线, 曲线];
 
   获取区间(): [区间, 区间] {
@@ -65,15 +56,15 @@ abstract class 曲线 {
 
   获取主轴和副轴区间(): [区间, 区间] {
     const [x, y] = this.获取区间();
-    return this.getOrientation() === "horizontal" ? [x, y] : [y, x];
+    return this.获取朝向() === "horizontal" ? [x, y] : [y, x];
   }
 
-  length(): number {
+  长度(): number {
     const [start, end] = this.获取起点和终点();
-    return distance(start, end);
+    return 距离(start, end);
   }
 
-  isBoundedBy(xrange: 区间, yrange: 区间): boolean {
+  是被区间包围(xrange: 区间, yrange: 区间): boolean {
     const [x, y] = this.获取区间();
     return xrange.包含(x) && yrange.包含(y);
   }
@@ -94,13 +85,13 @@ abstract class 曲线 {
     if (isEqual(astart, bend)) return 构造相连("前", "后");
     if (isEqual(aend, bstart)) return 构造相连("后", "前");
     if (isEqual(aend, bend)) return 构造相连("后", "后");
-    if (this.getType() === "linear") {
-      if (isCollinear(astart, aend, bstart)) return 构造相连("中", "前");
-      if (isCollinear(astart, aend, bend)) return 构造相连("中", "后");
+    if (this.获取类型() === "linear") {
+      if (是共线(astart, aend, bstart)) return 构造相连("中", "前");
+      if (是共线(astart, aend, bend)) return 构造相连("中", "后");
     }
-    if (c.getType() === "linear") {
-      if (isCollinear(bstart, bend, astart)) return 构造相连("前", "中");
-      if (isCollinear(bstart, bend, aend)) return 构造相连("后", "中");
+    if (c.获取类型() === "linear") {
+      if (是共线(bstart, bend, astart)) return 构造相连("前", "中");
+      if (是共线(bstart, bend, aend)) return 构造相连("后", "中");
     }
   }
 
@@ -110,15 +101,15 @@ abstract class 曲线 {
     const [起点, 终点] = this.获取起点和终点();
     const [另一起点, 另一终点] = c.获取起点和终点();
     const 相连误差 = 3;
-    if (distance(交点, 起点) < 相连误差) return 构造相连("前", "中");
-    if (distance(交点, 终点) < 相连误差) return 构造相连("后", "中");
-    if (distance(交点, 另一起点) < 相连误差) return 构造相连("中", "前");
-    if (distance(交点, 另一终点) < 相连误差) return 构造相连("中", "后");
+    if (距离(交点, 起点) < 相连误差) return 构造相连("前", "中");
+    if (距离(交点, 终点) < 相连误差) return 构造相连("后", "中");
+    if (距离(交点, 另一起点) < 相连误差) return 构造相连("中", "前");
+    if (距离(交点, 另一终点) < 相连误差) return 构造相连("中", "后");
     return { type: "交" };
   }
 
   计算离散关系(c: 曲线): 离散关系 {
-    if (this.getOrientation() === c.getOrientation()) {
+    if (this.获取朝向() === c.获取朝向()) {
       const [amain, across] = this.获取主轴和副轴区间();
       const [bmain, bcross] = c.获取主轴和副轴区间();
       return {
@@ -150,10 +141,10 @@ abstract class 曲线 {
     const disjoint = [区间关系.先于, 区间关系.后于];
     if (disjoint.includes(xposition) || disjoint.includes(yposition))
       return undefined;
-    const [alength, blength] = [distance(astart, aend), distance(bstart, bend)];
+    const [alength, blength] = [距离(astart, aend), 距离(bstart, bend)];
     const threshold = 1;
     if (alength < threshold && blength < threshold)
-      return divide(add(add(astart, aend), add(bstart, bend)), 4);
+      return 除(加(加(astart, aend), 加(bstart, bend)), 4);
     const [a_firsthalf, a_secondhalf] = this.二分();
     const [b_firsthalf, b_secondhalf] = c.二分();
     return (
@@ -181,30 +172,30 @@ class 一次曲线 extends 曲线 {
     let p1: 向量;
     switch (draw.command) {
       case "h":
-        p1 = add(start, [draw.parameterList[0], 0]);
+        p1 = 加(start, [draw.parameterList[0], 0]);
         break;
       default:
-        p1 = add(start, [0, draw.parameterList[0]]);
+        p1 = 加(start, [0, draw.parameterList[0]]);
         break;
     }
     const orientation = draw.command === "v" ? "vertical" : "horizontal";
     return new 一次曲线(orientation, [start, p1]);
   }
 
-  getType() {
+  获取类型() {
     return "linear" as const;
   }
-  getOrientation() {
+  获取朝向() {
     return this.orientation;
   }
-  clone(): 一次曲线 {
+  复制(): 一次曲线 {
     return new 一次曲线(this.orientation, structuredClone(this.controls));
   }
 
   二分(): [曲线, 曲线] {
-    const mid = this.evaluate(0.5);
-    const firstHalf = this.clone();
-    const secondHalf = this.clone();
+    const mid = this.求值(0.5);
+    const firstHalf = this.复制();
+    const secondHalf = this.复制();
     firstHalf.controls[1] = mid;
     secondHalf.controls[0] = mid;
     return [firstHalf, secondHalf];
@@ -212,10 +203,10 @@ class 一次曲线 extends 曲线 {
   获取起点和终点(): [向量, 向量] {
     return [this.controls[0], this.controls[1]];
   }
-  evaluate(t: number): 向量 {
-    return add(
-      multiply(1 - t, this.controls[0]) as 向量,
-      multiply(t, this.controls[1]) as 向量,
+  求值(t: number): 向量 {
+    return 加(
+      乘(1 - t, this.controls[0]) as 向量,
+      乘(t, this.controls[1]) as 向量,
     );
   }
 
@@ -223,17 +214,17 @@ class 一次曲线 extends 曲线 {
     const [astart, aend] = this.controls;
     const [bstart, bend] = b.controls;
     const [v, v1, v2] = [
-      subtract(aend, astart),
-      subtract(bstart, astart),
-      subtract(bend, astart),
+      减(aend, astart),
+      减(bstart, astart),
+      减(bend, astart),
     ];
-    const vc = area(v, v1) * area(v, v2);
+    const vc = 叉乘(v, v1) * 叉乘(v, v2);
     const [u, u1, u2] = [
-      subtract(bend, bstart),
-      subtract(astart, bstart),
-      subtract(aend, bstart),
+      减(bend, bstart),
+      减(astart, bstart),
+      减(aend, bstart),
     ];
-    const uc = area(u, u1) * area(u, u2);
+    const uc = 叉乘(u, u1) * 叉乘(u, u2);
     if (vc < 0 && uc < 0) {
       return { type: "交" };
     }
@@ -254,19 +245,19 @@ class 三次曲线 extends 曲线 {
   }
 
   static 从绘制创建(start: 向量, draw: 绘制) {
-    const p1 = add(start, draw.parameterList.slice(0, 2) as 向量);
-    const p2 = add(start, draw.parameterList.slice(2, 4) as 向量);
-    const p3 = add(start, draw.parameterList.slice(4) as 向量);
+    const p1 = 加(start, draw.parameterList.slice(0, 2) as 向量);
+    const p2 = 加(start, draw.parameterList.slice(2, 4) as 向量);
+    const p3 = 加(start, draw.parameterList.slice(4) as 向量);
     const orientation = draw.command === "c" ? "vertical" : "horizontal";
     return new 三次曲线(orientation, [start, p1, p2, p3]);
   }
-  getType() {
+  获取类型() {
     return "cubic" as const;
   }
-  getOrientation() {
+  获取朝向() {
     return this.orientation;
   }
-  clone(): 三次曲线 {
+  复制(): 三次曲线 {
     return new 三次曲线(this.orientation, structuredClone(this.controls));
   }
   获取起点和终点(): [向量, 向量] {
@@ -274,28 +265,28 @@ class 三次曲线 extends 曲线 {
   }
   二分(): [曲线, 曲线] {
     const [p0, p1, p2, p3] = this.controls;
-    const p01 = divide(add(p0, p1), 2);
-    const p12 = divide(add(p1, p2), 2);
-    const p23 = divide(add(p2, p3), 2);
-    const p012 = divide(add(p01, p12), 2);
-    const p123 = divide(add(p12, p23), 2);
-    const p0123 = divide(add(p012, p123), 2);
-    const firstHalf = this.clone();
-    const secondHalf = this.clone();
+    const p01 = 除(加(p0, p1), 2);
+    const p12 = 除(加(p1, p2), 2);
+    const p23 = 除(加(p2, p3), 2);
+    const p012 = 除(加(p01, p12), 2);
+    const p123 = 除(加(p12, p23), 2);
+    const p0123 = 除(加(p012, p123), 2);
+    const firstHalf = this.复制();
+    const secondHalf = this.复制();
     firstHalf.controls = [p0, p01, p012, p0123];
     secondHalf.controls = [p0123, p123, p23, p3];
     return [firstHalf, secondHalf];
   }
-  evaluate(t: number) {
-    const v01 = add(
-      multiply((1 - t) ** 3, this.controls[0]),
-      multiply(3 * (1 - t) ** 2 * t, this.controls[1]),
+  求值(t: number) {
+    const v01 = 加(
+      乘((1 - t) ** 3, this.controls[0]),
+      乘(3 * (1 - t) ** 2 * t, this.controls[1]),
     );
-    const v23 = add(
-      multiply(3 * (1 - t) * t ** 2, this.controls[2]),
-      multiply(t ** 3, this.controls[3]),
+    const v23 = 加(
+      乘(3 * (1 - t) * t ** 2, this.controls[2]),
+      乘(t ** 3, this.controls[3]),
     );
-    return add(v01, v23);
+    return 加(v01, v23);
   }
 }
 
@@ -316,20 +307,20 @@ class 圆弧曲线 extends 曲线 {
     return new 圆弧曲线(orientation, [start, start]);
   }
 
-  getType() {
+  获取类型() {
     return "arc" as const;
   }
-  getOrientation() {
+  获取朝向() {
     return this.orientation;
   }
-  evaluate(_: number): 向量 {
+  求值(_: number): 向量 {
     return [0, 0];
   }
   获取起点和终点(): [向量, 向量] {
     return [this.controls[0], this.controls[1]];
   }
   二分(): [曲线, 曲线] {
-    const mid = this.evaluate(0.5);
+    const mid = this.求值(0.5);
     const firstHalf = structuredClone(this);
     const secondHalf = structuredClone(this);
     firstHalf.controls[1] = mid;
@@ -361,7 +352,7 @@ class 区间 {
   private end: number;
 
   constructor(a: number, b: number) {
-    [this.start, this.end] = sorted([a, b]);
+    [this.start, this.end] = 排序(a, b);
   }
   比较(other: 区间): 区间关系 {
     // totally disjoint
@@ -414,13 +405,13 @@ class 笔画图形 {
     let previousPosition = start;
     for (const draw of curveList) {
       const curve = 创建曲线(previousPosition, draw);
-      previousPosition = curve.evaluate(1);
+      previousPosition = curve.求值(1);
       this.curveList.push(curve);
     }
   }
 
   isBoundedBy(xrange: 区间, yrange: 区间): boolean {
-    return this.curveList.every((x) => x.isBoundedBy(xrange, yrange));
+    return this.curveList.every((x) => x.是被区间包围(xrange, yrange));
   }
 
   relation(stroke2: 笔画图形): 笔画关系 {

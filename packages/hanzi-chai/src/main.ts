@@ -51,7 +51,7 @@ export * from "./utils.js";
 
 let 注册表实例: 注册表 | undefined;
 
-export function getRegistry() {
+export function 获取注册表() {
   if (!注册表实例) {
     注册表实例 = new 注册表();
     注册内置组件(注册表实例);

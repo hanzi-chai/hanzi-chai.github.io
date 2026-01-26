@@ -28,12 +28,12 @@ interface 拆分环境 {
 }
 
 interface 筛选器 {
-  evaluate: (scheme: 拆分方式, environment: 拆分环境) => number[];
+  评价: (scheme: 拆分方式, environment: 拆分环境) => number[];
 }
 
 class 根少优先 implements 筛选器 {
   static readonly type = "根少优先";
-  evaluate(scheme: 拆分方式) {
+  评价(scheme: 拆分方式) {
     return [scheme.length];
   }
 }
@@ -45,7 +45,7 @@ class 根少优先 implements 筛选器 {
  */
 class 取大优先 implements 筛选器 {
   static readonly type = "取大优先";
-  evaluate(scheme: 拆分方式) {
+  评价(scheme: 拆分方式) {
     return scheme.map((x) => -x.笔画索引.length);
   }
 }
@@ -57,7 +57,7 @@ class 取大优先 implements 筛选器 {
  */
 class 取小优先 implements 筛选器 {
   static readonly type = "取小优先";
-  evaluate(scheme: 拆分方式) {
+  评价(scheme: 拆分方式) {
     return scheme.map((x) => x.笔画索引.length);
   }
 }
@@ -72,7 +72,7 @@ class 取小优先 implements 筛选器 {
  */
 class 全符笔顺 implements 筛选器 {
   static readonly type = "全符笔顺";
-  evaluate(scheme: 拆分方式) {
+  评价(scheme: 拆分方式) {
     const indices = scheme.flatMap((x) => x.笔画索引);
     const isSorted = indices.every((value, index) => value === index);
     return [Number(!isSorted)];
@@ -88,7 +88,7 @@ class 全符笔顺 implements 筛选器 {
  */
 class 连续笔顺 implements 筛选器 {
   static readonly type = "连续笔顺";
-  evaluate(scheme: 拆分方式) {
+  评价(scheme: 拆分方式) {
     let unsorted = 0;
     // 如果一个字根不是由连续的笔画构成，那么称它是不连续的
     // 让不连续的字根数量少者优先
@@ -112,7 +112,7 @@ class 连续笔顺 implements 筛选器 {
  */
 class 非形近根 implements 筛选器 {
   static readonly type = "非形近根";
-  evaluate(scheme: 拆分方式, { 字根决策: roots }: 拆分环境) {
+  评价(scheme: 拆分方式, { 字根决策: roots }: 拆分环境) {
     let 形近根数量 = 0;
     for (const { 名称 } of scheme) {
       const value = roots.get(名称);
@@ -131,7 +131,7 @@ class 非形近根 implements 筛选器 {
  */
 class 多强字根 implements 筛选器 {
   static readonly type = "多强字根";
-  evaluate(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
+  评价(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
     const 强字根列表 = analysis?.strong || [];
     const count = scheme.filter((x) => 强字根列表.includes(x.名称)).length;
     return [-count];
@@ -145,7 +145,7 @@ class 多强字根 implements 筛选器 {
  */
 class 少弱字根 implements 筛选器 {
   static readonly type = "少弱字根";
-  evaluate(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
+  评价(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
     const weak = analysis?.weak || [];
     const count = scheme.filter((x) => weak.includes(x.名称)).length;
     return [count];
@@ -185,7 +185,7 @@ const 计算出现次数 = (
  */
 class 能连不交 implements 筛选器 {
   static readonly type = "能连不交";
-  evaluate(scheme: 拆分方式, { 部件图形: component }: 拆分环境) {
+  评价(scheme: 拆分方式, { 部件图形: component }: 拆分环境) {
     const crosses = 计算出现次数("交", [], scheme, component);
     return [crosses];
   }
@@ -198,7 +198,7 @@ class 能连不交 implements 筛选器 {
  */
 class 能散不连 implements 筛选器 {
   static readonly type = "能散不连";
-  evaluate(scheme: 拆分方式, { 部件图形: component }: 拆分环境) {
+  评价(scheme: 拆分方式, { 部件图形: component }: 拆分环境) {
     const connects = 计算出现次数("连", ["交"], scheme, component);
     return [connects];
   }
@@ -211,7 +211,7 @@ class 能散不连 implements 筛选器 {
  */
 class 同向笔画 implements 筛选器 {
   static readonly type = "同向笔画";
-  evaluate(scheme: 拆分方式, { 部件图形: component }: 拆分环境) {
+  评价(scheme: 拆分方式, { 部件图形: component }: 拆分环境) {
     let totalCrosses = 0;
     for (const [i, { 笔画索引: bi }] of scheme.entries()) {
       for (const [j, { 笔画索引: bj }] of scheme.entries()) {
@@ -239,7 +239,7 @@ class 同向笔画 implements 筛选器 {
  */
 class 结构完整 implements 筛选器 {
   static readonly type = "结构完整";
-  evaluate(scheme: 拆分方式, { 二进制字根映射: rootMap }: 拆分环境) {
+  评价(scheme: 拆分方式, { 二进制字根映射: rootMap }: 拆分环境) {
     const priorities = [
       "口",
       "囗",

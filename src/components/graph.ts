@@ -5,7 +5,7 @@ import type {
   条件节点配置,
   源节点配置,
 } from "~/lib";
-import { add } from "~/lib";
+import { 加 } from "~/lib";
 import { createContext } from "react";
 import { sum } from "lodash-es";
 
@@ -112,13 +112,13 @@ export const getLayoutedElements = (
     if (!childrefs.length) return;
     if (childrefs.length === 1) {
       const [cid] = childrefs[0]!;
-      graph[cid]!.position = add(position, [0, 64]);
+      graph[cid]!.position = 加(position, [0, 64]);
       predfs(cid);
     } else {
       const [[cid1], [cid2]] = [childrefs[0]!, childrefs[1]!];
       const span = 64 + graph[cid1]?.width / 2 + graph[cid2]?.width / 2;
-      graph[cid1]!.position = add(position, [-span / 2, 64]);
-      graph[cid2]!.position = add(position, [span / 2, 64]);
+      graph[cid1]!.position = 加(position, [-span / 2, 64]);
+      graph[cid2]!.position = 加(position, [span / 2, 64]);
       predfs(cid1);
       predfs(cid2);
     }

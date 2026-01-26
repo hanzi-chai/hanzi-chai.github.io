@@ -24,7 +24,7 @@ import {
 import { Button, Dropdown, Flex, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import PrioritizedRoots from "./PrioritizedRoots";
-import { getRegistry } from "~/lib";
+import { 获取注册表 } from "~/lib";
 
 const SortableItem = ({ sieve, index }: { sieve: string; index: number }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -65,7 +65,7 @@ export default function Selector() {
     }
   }
 
-  const 注册表 = getRegistry();
+  const 注册表 = 获取注册表();
 
   return (
     <Flex vertical gap="small">

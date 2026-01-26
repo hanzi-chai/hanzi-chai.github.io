@@ -91,6 +91,11 @@ export const 模拟拼接部件 = (): 拼接部件数据 => ({
   operandList: ["一", "丨"],
 });
 
+export const 模拟全等 = (): 全等数据 => ({
+  type: "identity",
+  source: "一",
+});
+
 export const 模拟复合体 = (operator: 结构表示符): 复合体数据 => ({
   type: "compound",
   operator,
@@ -150,9 +155,6 @@ export const 可打印字符列表 = range(33, 127).map((x) =>
 export const chars = (s: string) => {
   return Array.from(s).length;
 };
-
-export const listToObject = <T extends { unicode: number }>(list: T[]) =>
-  Object.fromEntries(list.map((x) => [String.fromCodePoint(x.unicode), x]));
 
 export function 读取表格(tsvText: string): string[][] {
   const lines = tsvText.trim().split("\n");

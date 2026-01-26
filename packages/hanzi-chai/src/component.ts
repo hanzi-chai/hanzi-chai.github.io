@@ -4,7 +4,7 @@ import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import type { 退化配置 } from "./config.js";
 import type { 基本部件数据, 矢量图形数据, 结构表示符 } from "./data.js";
-import { isCollinear, isLess, sorted } from "./math.js";
+import { 是共线, 是小于, 排序 } from "./math.js";
 import type { 基本分析, 字形分析配置 } from "./repertoire.js";
 import {
   默认筛选器列表,
@@ -13,9 +13,9 @@ import {
   type 筛选器,
 } from "./selector.js";
 import { default_err, ok, type Result } from "./utils.js";
-import { getRegistry } from "./main.js";
+import { 获取注册表 } from "./main.js";
 
-export const defaultDegenerator: 退化配置 = {
+export const 默认退化配置: 退化配置 = {
   feature: {
     提: "横",
     捺: "点",
@@ -72,7 +72,7 @@ class 部件图形 {
   }
 
   具有同向笔画(i: number, j: number) {
-    const [smaller, larger] = sorted([i, j]);
+    const [smaller, larger] = 排序(i, j);
     return this.拓扑.orientedPairs.some((x) => isEqual(x, [larger, smaller]));
   }
 
@@ -112,7 +112,7 @@ class 部件图形 {
       queue = queue.filter((indices) => {
         const others = allindices.filter((x) => !indices.includes(x));
         const allCombinations = indices.flatMap((x) =>
-          others.map((y) => sorted([x, y])),
+          others.map((y) => 排序(x, y)),
         );
         return allCombinations.every(([x, y]) => {
           const relation = ctopology.matrix[y]![x]!;
@@ -223,14 +223,14 @@ class 部件图形 {
       const [i1, _, i3] = indices as [number, number, number];
       const upperHeng = this.笔画列表[i1]!.curveList[0]!;
       const lowerHeng = this.笔画列表[i3]!.curveList[0]!;
-      const lowerIsLonger = upperHeng.length() < lowerHeng.length();
+      const lowerIsLonger = upperHeng.长度() < lowerHeng.长度();
       return root.名称 === "土" ? lowerIsLonger : !lowerIsLonger;
     }
     if (["未", "末"].includes(root.名称)) {
       const [i1, i2] = indices as [number, number];
       const upperHeng = this.笔画列表[i1]!.curveList[0]!;
       const lowerHeng = this.笔画列表[i2]!.curveList[0]!;
-      const lowerIsLonger = upperHeng.length() < lowerHeng.length();
+      const lowerIsLonger = upperHeng.长度() < lowerHeng.长度();
       return root.名称 === "未" ? lowerIsLonger : !lowerIsLonger;
     }
     if (["口", "囗"].includes(root.名称)) {
@@ -238,8 +238,8 @@ class 部件图形 {
         return root.名称 === "囗";
       }
       const [i1, _, i3] = indices as [number, number, number];
-      const upperLeft = this.笔画列表[i1]!.curveList[0]!.evaluate(0);
-      const lowerRight = this.笔画列表[i3]!.curveList[0]!.evaluate(1);
+      const upperLeft = this.笔画列表[i1]!.curveList[0]!.求值(0);
+      const lowerRight = this.笔画列表[i3]!.curveList[0]!.求值(1);
       const xrange = new 区间(upperLeft[0], lowerRight[0]);
       const yrange = new 区间(upperLeft[1], lowerRight[1]);
       const otherStrokes = this.笔画列表.filter(
@@ -252,15 +252,15 @@ class 部件图形 {
     }
     if (["\ue087" /* 木无十 */, "\ue43d" /* 全字头 */].includes(root.名称)) {
       const [i1] = indices as [number];
-      const attachPoint = this.笔画列表[i1]!.curveList[0]!.evaluate(0);
+      const attachPoint = this.笔画列表[i1]!.curveList[0]!.求值(0);
       const otherStrokes = this.笔画列表.filter(
         (_, index) => !indices.includes(index),
       );
       const otherCurves = otherStrokes.flatMap((s) => s.curveList);
       const pieAndNaIsSeparated = otherCurves.some(
         (x) =>
-          x.getType() === "linear" &&
-          isCollinear(x.evaluate(0), x.evaluate(1), attachPoint),
+          x.获取类型() === "linear" &&
+          是共线(x.求值(0), x.求值(1), attachPoint),
       );
       return root.名称 === "\ue087"
         ? pieAndNaIsSeparated
@@ -299,7 +299,7 @@ class 部件图形 {
     const 当前字根 = new Set([...配置.字根决策.keys()]);
     const 可选字根 = new Set([...配置.可选字根.keys()]);
     const 必要字根 = new Set([...当前字根].filter((x) => !可选字根.has(x)));
-    const 退化配置 = 配置.分析配置?.degenerator ?? defaultDegenerator;
+    const 退化配置 = 配置.分析配置?.degenerator ?? 默认退化配置;
     const 二进制字根映射 = this.生成二进制字根映射(
       配置.字根图形映射,
       退化配置,
@@ -366,7 +366,7 @@ class 部件图形 {
     };
     const 筛选器列表: [string, 筛选器][] = [];
     for (const name of 配置.分析配置.selector ?? 默认筛选器列表) {
-      const 筛选器 = getRegistry().创建筛选器(name);
+      const 筛选器 = 获取注册表().创建筛选器(name);
       if (筛选器) {
         筛选器列表.push([name, 筛选器]);
       }
@@ -374,7 +374,7 @@ class 部件图形 {
     const 拆分方式与评价列表 = 拆分方式列表.map((拆分方式) => {
       const 评价: Map<string, number[]> = new Map();
       for (const [name, 筛选器] of 筛选器列表) {
-        const 取值 = 筛选器.evaluate(拆分方式, environment);
+        const 取值 = 筛选器.评价(拆分方式, environment);
         评价.set(name, 取值);
       }
       return { 拆分方式, 评价, 可用: false };
@@ -383,8 +383,8 @@ class 部件图形 {
       for (const [name, _] of 筛选器列表) {
         const aValue = a.评价.get(name)!;
         const bValue = b.评价.get(name)!;
-        if (isLess(aValue, bValue)) return -1;
-        if (isLess(bValue, aValue)) return 1;
+        if (是小于(aValue, bValue)) return -1;
+        if (是小于(bValue, aValue)) return 1;
       }
       return 0;
     });

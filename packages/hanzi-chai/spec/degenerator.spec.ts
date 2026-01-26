@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { defaultDegenerator } from "../src/index.js";
+import { 默认退化配置 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 const { 部件图形库 } = 获取数据();
@@ -25,50 +25,50 @@ describe("二进制数和索引的相互转换", () => {
 describe("退化函数：特殊情况", () => {
   it("should find multiple occurence of a root", () => {
     const { 丰, 十 } = 部件图形库;
-    expect(丰!.生成二进制切片列表(十!, defaultDegenerator)).toEqual([
+    expect(丰!.生成二进制切片列表(十!, 默认退化配置)).toEqual([
       9, 5, 3,
     ]);
   });
 
   it("区分「土」和「士」", () => {
     const { 土, 士, 王, 壬 } = 部件图形库;
-    expect(王!.生成二进制切片列表(土!, defaultDegenerator)).toEqual([7]);
-    expect(王!.生成二进制切片列表(士!, defaultDegenerator)).toEqual([]);
-    expect(壬!.生成二进制切片列表(土!, defaultDegenerator)).toEqual([]);
-    expect(壬!.生成二进制切片列表(士!, defaultDegenerator)).toEqual([7]);
+    expect(王!.生成二进制切片列表(土!, 默认退化配置)).toEqual([7]);
+    expect(王!.生成二进制切片列表(士!, 默认退化配置)).toEqual([]);
+    expect(壬!.生成二进制切片列表(土!, 默认退化配置)).toEqual([]);
+    expect(壬!.生成二进制切片列表(士!, 默认退化配置)).toEqual([7]);
   });
 
   it("区分「未」和「末」", () => {
     const { 未, 末, 朱, 耒 } = 部件图形库;
-    expect(朱!.生成二进制切片列表(未!, defaultDegenerator)).toEqual([31]);
-    expect(耒!.生成二进制切片列表(未!, defaultDegenerator)).toEqual([
+    expect(朱!.生成二进制切片列表(未!, 默认退化配置)).toEqual([31]);
+    expect(耒!.生成二进制切片列表(未!, 默认退化配置)).toEqual([
       47, 31,
     ]);
-    expect(朱!.生成二进制切片列表(末!, defaultDegenerator)).toEqual([]);
-    expect(耒!.生成二进制切片列表(末!, defaultDegenerator)).toEqual([]);
+    expect(朱!.生成二进制切片列表(末!, 默认退化配置)).toEqual([]);
+    expect(耒!.生成二进制切片列表(末!, 默认退化配置)).toEqual([]);
   });
 
   it("区分「口」和「囗」", () => {
     const { 口, 囗, 中, 日 } = 部件图形库;
-    expect(中!.生成二进制切片列表(口!, defaultDegenerator)).toEqual([14]);
-    expect(中!.生成二进制切片列表(囗!, defaultDegenerator)).toEqual([]);
-    expect(日!.生成二进制切片列表(口!, defaultDegenerator)).toEqual([]);
-    expect(日!.生成二进制切片列表(囗!, defaultDegenerator)).toEqual([13]);
+    expect(中!.生成二进制切片列表(口!, 默认退化配置)).toEqual([14]);
+    expect(中!.生成二进制切片列表(囗!, 默认退化配置)).toEqual([]);
+    expect(日!.生成二进制切片列表(口!, 默认退化配置)).toEqual([]);
+    expect(日!.生成二进制切片列表(囗!, 默认退化配置)).toEqual([13]);
   });
 
   it("区分「木无十」和「全字头」", () => {
     const 木无十 = 部件图形库["\ue087"]!;
     const 全字头 = 部件图形库["\ue43d"]!;
     const { 朱 } = 部件图形库;
-    expect(朱!.生成二进制切片列表(木无十!, defaultDegenerator)).toEqual([3]);
-    expect(朱!.生成二进制切片列表(全字头!, defaultDegenerator)).toEqual([]);
+    expect(朱!.生成二进制切片列表(木无十!, 默认退化配置)).toEqual([3]);
+    expect(朱!.生成二进制切片列表(全字头!, 默认退化配置)).toEqual([]);
   });
 });
 
 const 包含 = (字根名: string, 部件名: string, indices: number[]) => {
   const 字根 = 部件图形库[字根名]!;
   const 部件 = 部件图形库[部件名]!;
-  expect(部件.生成二进制切片列表(字根, defaultDegenerator)).toContain(部件.索引转二进制(indices));
+  expect(部件.生成二进制切片列表(字根, 默认退化配置)).toContain(部件.索引转二进制(indices));
 };
 
 interface 切片来源 {

@@ -1,5 +1,5 @@
 import { expect, describe, it } from "vitest";
-import { 一次曲线, 三次曲线, area, 区间 } from "../src/index.js";
+import { 一次曲线, 三次曲线, 叉乘, 区间 } from "../src/index.js";
 import type { 绘制, 向量, Tuple, 笔画关系 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
@@ -133,10 +133,10 @@ describe("三次曲线关系", () => {
 
 describe("面积计算", () => {
   it("正的旋转角度时返回正值", () => {
-    expect(area([1, 0], [0, 2])).toBeCloseTo(2);
+    expect(叉乘([1, 0], [0, 2])).toBeCloseTo(2);
   });
   it("负的旋转角度时返回负值", () => {
-    expect(area([0, 1], [2, 0])).toBeCloseTo(-2);
+    expect(叉乘([0, 1], [2, 0])).toBeCloseTo(-2);
   });
 });
 
@@ -146,11 +146,11 @@ describe("工厂函数", () => {
   const d2: 绘制 = { command: "h", parameterList: [10] };
   const d3: 绘制 = { command: "v", parameterList: [20] };
   it("makes cubic curves", () => {
-    expect(三次曲线.从绘制创建(p0, d1).evaluate(1)).toEqual([61, 67]);
+    expect(三次曲线.从绘制创建(p0, d1).求值(1)).toEqual([61, 67]);
   });
   it("makes linear curves", () => {
-    expect(一次曲线.从绘制创建(p0, d2).evaluate(1)).toEqual([22, 34]);
-    expect(一次曲线.从绘制创建(p0, d3).evaluate(1)).toEqual([12, 54]);
+    expect(一次曲线.从绘制创建(p0, d2).求值(1)).toEqual([22, 34]);
+    expect(一次曲线.从绘制创建(p0, d3).求值(1)).toEqual([12, 54]);
   });
 });
 

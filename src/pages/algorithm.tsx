@@ -9,7 +9,7 @@ import Element from "~/components/Element";
 import { ElementWithTooltip } from "~/components/ElementPool";
 import { Display } from "~/components/Utils";
 import {
-  defaultDegenerator,
+  默认退化配置,
   type 原始字库数据,
   type 原始汉字数据,
   部件图形,
@@ -156,7 +156,7 @@ const DegeneratorTable = () => {
         const rootMap = new Map<string, number[]>();
         for (const another of toCompare) {
           if (another.名称 === record.名称) continue;
-          const slices = record.生成二进制切片列表(another, defaultDegenerator);
+          const slices = record.生成二进制切片列表(another, 默认退化配置);
           if (slices.length) {
             rootMap.set(another.名称, slices);
           }

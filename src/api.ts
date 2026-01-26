@@ -83,7 +83,7 @@ export function 转模型(character: 原始汉字数据): 原始汉字模型 {
 }
 
 interface PUA {
-  type: "component" | "compound";
+  type: 字形数据["type"];
   name: string;
 }
 

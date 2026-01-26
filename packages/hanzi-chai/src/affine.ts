@@ -1,4 +1,4 @@
-import { add } from "./math.js";
+import { 加 } from "./math.js";
 import type {
   复合体数据,
   绘制,
@@ -69,10 +69,7 @@ class 仿射变换 {
 
   public 变换笔画(笔画: 矢量笔画数据): 矢量笔画数据 {
     const [x, y] = 笔画.start;
-    const start = add(
-      [x * this.横向缩放, y * this.纵向缩放] as 向量,
-      this.平移,
-    );
+    const start = 加([x * this.横向缩放, y * this.纵向缩放] as 向量, this.平移);
     const 新笔画 = {
       ...笔画,
       start,
@@ -97,7 +94,7 @@ class 图形盒子 {
     return this.笔画列表;
   }
 
-  determineWidthAndViewBox(displayMode: boolean) {
+  确定笔画粗细和视窗(displayMode: boolean) {
     const strokeWidthPercentage = displayMode ? 0.01 : 0.07;
     const xMin = this.横向区间.起点();
     const xMax = this.横向区间.终点();

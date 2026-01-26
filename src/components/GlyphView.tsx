@@ -2,7 +2,7 @@ import type React from "react";
 import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import styled from "styled-components";
 import type { Draw, N6, Point, 图形盒子, 矢量笔画数据, 笔画名称 } from "~/lib";
-import { add, subtract, 笔画图形, 部件图形 } from "~/lib";
+import { 加, 减, 笔画图形, 部件图形 } from "~/lib";
 
 const Box = styled.div`
   border: 1px solid black;
@@ -133,9 +133,9 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
         }
         const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
         const previous: Point = [...current];
-        const control1 = add(previous, [x1, y1]);
-        const control2 = add(previous, [x2, y2]);
-        const control3 = add(previous, [x, y]);
+        const control1 = 加(previous, [x1, y1]);
+        const control2 = 加(previous, [x2, y2]);
+        const control3 = 加(previous, [x, y]);
         current = structuredClone(control3);
         return (
           <Fragment key={curveIndex}>
@@ -238,7 +238,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
         const renderedCurve =
           renderedGlyph[strokeIndex]!.curveList[curveIndex]!;
         const previous = renderedCurve.controls[controlIndex]!;
-        const diff = subtract([x, y], previous);
+        const diff = 减([x, y], previous);
         if (curve.command === "h" || curve.command === "v") {
           curve.parameterList[0] += curve.command === "h" ? diff[0] : diff[1];
         } else {

@@ -23,7 +23,7 @@ import type {
 } from "./data.js";
 import { chars, default_err, hex, ok, type Result } from "./utils.js";
 import { 字集过滤查找表 } from "./unicode.js";
-import { getRegistry } from "./main.js";
+import { 获取注册表 } from "./main.js";
 
 // 变量映射：variable id -> 绑定的子树 key
 type 变量映射 = Map<number, string>;
@@ -416,7 +416,7 @@ class 字库 {
     if (!config.ok) return config;
     const configValue = config.value;
     const { 部件列表, 复合体列表 } = this.获取待分析对象(汉字集合);
-    const 部件分析器 = getRegistry().创建部件分析器(
+    const 部件分析器 = 获取注册表().创建部件分析器(
       configValue.分析配置?.component_analyzer || "默认",
       configValue,
     )!;
@@ -428,7 +428,7 @@ class 字库 {
     }
     const 部件分析结果定制 = 生成定制(configValue, 原始部件分析结果);
     const 部件分析结果 = new Map([...原始部件分析结果, ...部件分析结果定制]);
-    const 复合体分析器 = getRegistry().创建复合体分析器(
+    const 复合体分析器 = 获取注册表().创建复合体分析器(
       configValue.分析配置?.compound_analyzer || "默认",
       configValue,
     )!;

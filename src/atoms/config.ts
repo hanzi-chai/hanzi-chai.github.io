@@ -5,7 +5,7 @@ import { withHistory } from "jotai-history";
 import { atomWithStorage } from "jotai/utils";
 import { atomFamily } from "jotai-family";
 import {
-  defaultOptimization,
+  默认优化配置,
   type 分析配置,
   type 图示配置,
   type 基本信息,
@@ -63,7 +63,7 @@ export const 编码配置原子 = focusAtom(配置原子, (o) =>
 );
 
 export const 优化配置原子 = focusAtom(配置原子, (o) =>
-  o.prop("optimization").valueOr(defaultOptimization),
+  o.prop("optimization").valueOr(默认优化配置),
 );
 
 export const 图示配置原子 = focusAtom(配置原子, (o) =>

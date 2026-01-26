@@ -4,11 +4,11 @@
  * 保存到 src/data 目录里。
  */
 
-import { writeFileSync, mkdirSync, cpSync } from "node:fs";
+import { writeFileSync, mkdirSync, cpSync } from "fs";
 import axios from "axios";
 import pako from "pako";
 import { 从模型构建, type 原始汉字模型 } from "~/api"
-import { listToObject } from "~/lib";
+import { 原始字库数据 } from "~/lib";
 
 const apiEndpoint = "https://api.chaifen.app/";
 const assetsEndpoint = "https://assets.chaifen.app/";
@@ -16,7 +16,12 @@ const outputFolder = "packages/hanzi-chai/src/data/";
 mkdirSync(outputFolder, { recursive: true });
 
 const models: 原始汉字模型[] = await fetch(`${apiEndpoint}repertoire/all`).then((res) => res.json());
-const repertoire = listToObject(models.map(从模型构建));
+const repertoire: 原始字库数据 = {};
+for (const model of models) {
+  const character = 从模型构建(model);
+  const name = String.fromCodePoint(model.unicode);
+  repertoire[name] = character;
+}
 
 // Compress the repertoire data
 const output = pako.deflate(JSON.stringify(repertoire));
