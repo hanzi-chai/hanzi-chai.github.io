@@ -42,22 +42,12 @@ class 原始字库 {
    * - 如果用户指定的某个标签匹配上了这个字符的某个字形，则使用这个字形
    * - 如果都没有，就使用默认字形
    */
-  确定(
-    自定义字形: 字形自定义 = {},
-    标签列表: string[] = [],
-  ): Result<字库, Error> {
+  确定(自定义字形: 字形自定义 = {}): Result<字库, Error> {
     const 确定字库 = new 字库();
     const 字形缓存: Map<string, 矢量图形数据> = new Map();
     for (const [汉字名, 汉字] of Object.entries(this.字库)) {
       const { ambiguous: _, glyphs, ...rest } = 汉字;
-      let 选定字形 = glyphs[0];
-      for (const 标签 of 标签列表) {
-        const 含标签字形 = glyphs.find((x) => (x.tags ?? []).includes(标签));
-        if (含标签字形 !== undefined) {
-          选定字形 = 含标签字形;
-          break;
-        }
-      }
+      const 选定字形 = glyphs[0];
       const 原始字形 = 自定义字形[汉字名] ?? 选定字形 ?? 模拟基本部件();
       const 字形 = this.递归渲染原始字形(原始字形, 字形缓存, [汉字名]);
       if (!字形.ok) return 字形;

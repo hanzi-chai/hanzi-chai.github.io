@@ -6,6 +6,7 @@ import {
   Input,
   Popconfirm,
   Popover,
+  Select,
 } from "antd";
 import type { MenuProps } from "antd/lib";
 import { isInteger } from "lodash-es";
@@ -29,7 +30,7 @@ import {
   字形自定义原子,
   用户原始字库数据原子,
 } from "~/atoms";
-import { DeleteButton, NumberInput, Select } from "~/components/Utils";
+import { DeleteButton, NumberInput } from "~/components/Utils";
 import {
   chars,
   创建原始汉字数据,
@@ -59,7 +60,7 @@ export const Create = forwardRef(
   ) => (
     <Popover content={<CreatePopoverContent onCreate={onCreate} />}>
       <Button type="primary" ref={ref}>
-        新建
+        新建字符
       </Button>
     </Popover>
   ),
@@ -145,14 +146,14 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
           },
         ]}
       >
-        <Input style={{ width: 128 }} />
+        <Input width={128} />
       </Form.Item>
       <Form.Item<CreateProps>
         label="类型"
         name="type"
         rules={[{ required: true }]}
       >
-        <Select options={options} style={{ width: 128 }} />
+        <Select options={options} />
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit">
@@ -197,7 +198,6 @@ const planMerge = (
 
 export const Merge = ({ unicode }: { unicode: number }) => {
   const [newName, setNewName] = useState("");
-  const remote = useContext(RemoteContext);
   const [repertoire, setRepertoire] = useAtom(原始字库数据原子);
   return (
     <Popconfirm
@@ -217,7 +217,7 @@ export const Merge = ({ unicode }: { unicode: number }) => {
         }
       }}
     >
-      <Button style={{ display: remote ? "initial" : "none" }}>合并到</Button>
+      <Button>合并到</Button>
     </Popconfirm>
   );
 };
@@ -230,7 +230,6 @@ export const Rename = ({
   name: string | null;
 }) => {
   const [newName, setNewName] = useState("");
-  const remote = useContext(RemoteContext);
   const repertoire = useAtomValue(原始字库数据原子);
   const update = useAddAtom(原始字库数据原子);
   return (
@@ -257,9 +256,7 @@ export const Rename = ({
         }
       }}
     >
-      <Button style={{ display: remote ? "initial" : "none" }}>
-        {name ?? "无"}
-      </Button>
+      <Button>{name ?? "无"}</Button>
     </Popconfirm>
   );
 };
@@ -274,7 +271,6 @@ export const EditGF = ({
   unicode: number;
 }) => {
   const [id, setId] = useState(0);
-  const remote = useContext(RemoteContext);
   const repertoire = useAtomValue(原始字库数据原子);
   const update = useAddAtom(原始字库数据原子);
   const name = String.fromCodePoint(unicode);
@@ -300,9 +296,7 @@ export const EditGF = ({
         }
       }}
     >
-      <Button style={{ display: remote ? "initial" : "none" }}>
-        {value ?? "无"}
-      </Button>
+      <Button>{value ?? "无"}</Button>
     </Popconfirm>
   );
 };

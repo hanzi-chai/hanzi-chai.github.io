@@ -10,10 +10,6 @@ export const 字形自定义原子 = focusAtom(数据配置原子, (o) =>
   o.prop("glyph_customization").valueOr({} as 字形自定义),
 );
 
-export const 用户标签列表原子 = focusAtom(数据配置原子, (o) =>
-  o.prop("tags").valueOr([] as string[]),
-);
-
 export const 变换器列表原子 = focusAtom(数据配置原子, (o) =>
   o.prop("transformers").valueOr([] as 变换器[]),
 );

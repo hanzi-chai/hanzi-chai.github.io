@@ -78,8 +78,7 @@ export function 获取字库(config: 配置): Result<字库, Error> {
   const 用户原始字库数据 = config.data?.repertoire ?? {};
   const 原始字库 = 获取原始字库(用户原始字库数据);
   const 自定义字形 = config.data?.glyph_customization ?? {};
-  const 标签列表 = config.data?.tags ?? [];
-  const 字库或错误 = 原始字库.确定(自定义字形, 标签列表);
+  const 字库或错误 = 原始字库.确定(自定义字形);
   if (!字库或错误.ok) {
     return 字库或错误;
   }

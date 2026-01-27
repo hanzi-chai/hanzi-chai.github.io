@@ -1,7 +1,11 @@
-import { 原始汉字数据 } from "~/lib";
+import { 原始字库数据, 原始汉字数据 } from "~/lib";
 import { Layout } from "antd";
 import CharacterTable from "~/components/CharacterTable";
 import { useChaifenTitle } from "~/utils";
+import { listAll } from "~/api";
+import { useEffect } from "react";
+import { useSetAtom } from "jotai";
+import { 原始字库数据原子 } from "~/atoms";
 
 const checkIDsInData = (data: 原始汉字数据[]) => {
   const reverseGF3001Map = new Map<
@@ -36,6 +40,19 @@ const checkIDsInData = (data: 原始汉字数据[]) => {
 
 export default function AdminLayout() {
   useChaifenTitle("管理");
+  const set = useSetAtom(原始字库数据原子);
+
+  useEffect(() => {
+    listAll().then((data) => {
+      if ("err" in data) return;
+      const repertoire: 原始字库数据 = {};
+      for (const item of data) {
+        const name = String.fromCodePoint(item.unicode);
+        repertoire[name] = item;
+      }
+      set(repertoire);
+    });
+  }, []);
 
   return (
     <Layout style={{ height: "100%" }}>

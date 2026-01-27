@@ -240,7 +240,7 @@ export default function ComponentForm({
     }
     return true;
   };
-  const formRef = useRef<ProFormInstance>();
+  const formRef = useRef<ProFormInstance>(undefined);
   return (
     <ModalForm<基本或衍生部件>
       title={title}

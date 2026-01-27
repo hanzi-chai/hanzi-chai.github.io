@@ -47,6 +47,8 @@ abstract class 曲线 {
   abstract 求值(t: number): 向量;
   abstract 二分(): [曲线, 曲线];
 
+  abstract _controls(): 向量[];
+
   获取区间(): [区间, 区间] {
     const [start, end] = this.获取起点和终点();
     const x = new 区间(start[0], end[0]);
@@ -168,6 +170,10 @@ class 一次曲线 extends 曲线 {
     super();
   }
 
+  _controls(): 向量[] {
+    return this.controls;
+  }
+
   static 从绘制创建(start: 向量, draw: 绘制) {
     let p1: 向量;
     switch (draw.command) {
@@ -244,6 +250,10 @@ class 三次曲线 extends 曲线 {
     super();
   }
 
+  _controls(): 向量[] {
+    return this.controls;
+  }
+
   static 从绘制创建(start: 向量, draw: 绘制) {
     const p1 = 加(start, draw.parameterList.slice(0, 2) as 向量);
     const p2 = 加(start, draw.parameterList.slice(2, 4) as 向量);
@@ -300,6 +310,10 @@ class 圆弧曲线 extends 曲线 {
     private controls: [向量, 向量],
   ) {
     super();
+  }
+
+  _controls(): 向量[] {
+    return this.controls;
   }
 
   static 从绘制创建(start: 向量, _: 绘制) {

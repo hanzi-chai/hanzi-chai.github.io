@@ -1,17 +1,8 @@
 import { useContext, useRef, useState } from "react";
-import {
-  Checkbox,
-  Flex,
-  FloatButton,
-  Layout,
-  Space,
-  Tooltip,
-  Tour,
-} from "antd";
+import { Checkbox, Flex, FloatButton, Layout, Space, Tour } from "antd";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
-  原始字库原子,
   字形自定义原子,
   如确定字库原子,
   原始字库数据原子,
@@ -21,7 +12,6 @@ import {
   useAddAtom,
   useAtomValue,
   用户原始字库数据原子,
-  用户标签列表原子,
   useAtomValueUnwrapped,
 } from "~/atoms";
 import {
@@ -37,17 +27,15 @@ import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { remoteUpdate } from "~/api";
 import { DeleteButton, Display } from "./Utils";
-import Element from "./Element";
 import * as O from "optics-ts/standalone";
 import CharacterQuery from "./CharacterQuery";
-import TagPicker from "./TagPicker";
 import type { TourProps } from "antd/lib";
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import { ElementWithTooltip } from "./ElementPool";
 import TransformersForm from "./Transformers";
 import type { 原始汉字数据 } from "~/lib";
 import {
-  字符过滤器参数,
+  type 字符过滤器参数,
   errorFeedback,
   RemoteContext,
   字符过滤器,
@@ -68,13 +56,8 @@ export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) 
   const char = String.fromCodePoint(unicode);
   const remote = useContext(RemoteContext);
   const userRepertoire = useAtomValue(用户原始字库数据原子);
-  const userTags = useAtomValue(用户标签列表原子);
   const addUser = useAddAtom(用户原始字库数据原子);
   const add = useAddAtom(原始字库数据原子 as any);
-  let selectedIndex = glyphs.findIndex((x) =>
-    x.tags?.some((t) => userTags.includes(t)),
-  );
-  if (selectedIndex === -1) selectedIndex = 0;
   const inlineUpdate = async (newCharacter: 原始汉字数据) => {
     if (userRepertoire[char] !== undefined) {
       addUser(char, newCharacter);
@@ -90,7 +73,7 @@ export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) 
     <Flex gap="small">
       {glyphs.map((x, i) => {
         const lens = O.compose("glyphs", O.at(i));
-        const primary = i === selectedIndex;
+        const primary = i === 0;
         const title =
           x.type === "compound" ? (
             <Space>
@@ -272,7 +255,7 @@ export default function CharacterTable() {
         <Flex align="center" gap="small">
           <ElementWithTooltip element={char} />
           {hex}
-          {是私用区(char) && <Rename unicode={unicode} name={name} />}
+          {是私用区(char) && remote && <Rename unicode={unicode} name={name} />}
         </Flex>
       );
     },
@@ -388,7 +371,7 @@ export default function CharacterTable() {
     render: (_, record) => (
       <Space>
         <EditGlyph character={record} />
-        <Merge unicode={record.unicode} />
+        {remote && <Merge unicode={record.unicode} />}
         <Delete unicode={record.unicode} />
       </Space>
     ),
@@ -458,10 +441,10 @@ export default function CharacterTable() {
       style={{ overflowY: "scroll" }}
       vertical
       align="center"
+      gap="small"
     >
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
-        <TagPicker />
         <TransformersForm />
         <Create onCreate={() => {}} ref={ref3} />
       </Flex>

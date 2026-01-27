@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   Button,
   Flex,
@@ -21,11 +21,18 @@ import NumberOutlined from "@ant-design/icons/NumberOutlined";
 import type { MenuProps } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import CusSpin from "~/components/CustomSpin";
-import { 基本信息原子, useAtomValue } from "~/atoms";
+import {
+  基本信息原子,
+  useAtomValue,
+  useSetAtom,
+  原始字库数据原子,
+  拉取资源,
+} from "~/atoms";
 import { examples } from "~/templates";
 import { AppstoreOutlined } from "@ant-design/icons";
 import { getCurrentId } from "~/utils";
 import ConfigManager from "~/components/ConfigManager";
+import type { 原始字库数据 } from "~/lib";
 
 const items: MenuProps["items"] = [
   { label: "基本", key: "", icon: <MailOutlined /> },
@@ -154,6 +161,15 @@ function EditorLayout() {
 
 export default function Contextualized() {
   const id = getCurrentId();
+  const set = useSetAtom(原始字库数据原子);
+
+  useEffect(() => {
+    拉取资源("repertoire.json.deflate").then((content) => {
+      const data: 原始字库数据 = JSON.parse(content);
+      set(data);
+    });
+  }, [id, set]);
+
   if (!(id in localStorage || id in examples)) {
     return <Empty description="无方案数据" />;
   }

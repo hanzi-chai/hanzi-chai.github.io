@@ -17,7 +17,6 @@ import type {
   键位分布目标,
 } from "~/lib";
 import {
-  default_err,
   ok,
   分析拼音,
   原始字库,
@@ -51,7 +50,6 @@ import {
   构词配置原子,
   源映射原子,
   用户原始字库数据原子,
-  用户标签列表原子,
   组装器原子,
   键盘原子,
   默认目标原子,
@@ -98,11 +96,7 @@ async function 处理压缩文件(filename: string, response: Response) {
 
 // 服务器资源
 
-export const 原始字库数据原子 = atom(async () => {
-  const content = await 拉取资源("repertoire.json.deflate");
-  const data: 原始字库数据 = JSON.parse(content);
-  return data;
-});
+export const 原始字库数据原子 = atom({} as 原始字库数据);
 
 export const 默认词典原子 = atom(async () => {
   const content = await 拉取资源("dictionary.txt");
@@ -179,8 +173,7 @@ export const 别名显示原子 = atom(async (get) => {
 export const 如确定字库原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 字形自定义 = get(字形自定义原子);
-  const 用户标签列表 = get(用户标签列表原子);
-  return 原始字库.确定(字形自定义, 用户标签列表);
+  return 原始字库.确定(字形自定义);
 });
 
 export const 如字库原子 = atom(async (get) => {

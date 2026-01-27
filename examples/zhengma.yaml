@@ -7,7 +7,7 @@ info:
   description: 形码四码定长
 analysis:
   classifier:
-    斜钩: 6
+    斜钩: 8
     横折提: 6
     横折折: 6
     横折弯: 6
@@ -27,6 +27,9 @@ analysis:
     竖折撇: 8
     竖折折钩: 8
     竖折折: 8
+    卧钩: 8
+    圈: 8
+    特殊笔画: 8
   degenerator:
     feature:
       提: 横
@@ -52,9 +55,6 @@ analysis:
     里:
       - 日
       - 土
-    兆:
-      - "\ue997"
-      - 儿
     井:
       - 二
       - "\ue0e3"
@@ -68,6 +68,150 @@ analysis:
       - '6'
       - '3'
       - '4'
+    丙:
+      - '1'
+      - 冂
+      - 人
+    两:
+      - '1'
+      - 冂
+      - 人
+      - 人
+    丑:
+      - "\ue007"
+      - "\ue452"
+    凹:
+      - '2'
+      - '6'
+      - '2'
+      - '5'
+      - '1'
+    来:
+      - 二
+      - 氺
+    失:
+      - "\ue40f"
+      - 人
+    壬:
+      - '3'
+      - 士
+    未:
+      - 二
+      - "\ue445"
+    朱:
+      - "\ue40f"
+      - "\ue445"
+    毋:
+      - "\ue405"
+      - '3'
+      - '1'
+    面:
+      - 丆
+      - 囗
+      - "\ue09c"
+    重:
+      - 千
+      - 日
+      - 二
+    赤:
+      - 土
+      - "\ue0ba"
+      - 八
+    兆:
+      - "\ue42b"
+      - 儿
+    发:
+      - '8'
+      - '3'
+      - 又
+      - '4'
+    垂:
+      - 千
+      - 艹
+      - 二
+    凸:
+      - '2'
+      - '1'
+      - '2'
+      - '6'
+      - '1'
+    堇:
+      - 廿
+      - 口
+      - 龶
+    亦:
+      - 亠
+      - "\ue0ba"
+      - 八
+    瓦:
+      - '1'
+      - '8'
+      - '7'
+      - '4'
+    缶:
+      - "\ue078"
+      - 十
+      - 凵
+    聿:
+      - 肀
+      - 二
+    芈:
+      - '2'
+      - '1'
+      - "\ue018"
+      - "\ue002"
+    丢:
+      - '3'
+      - 土
+      - 厶
+    兕:
+      - '2'
+      - '6'
+      - '2'
+      - '5'
+      - '1'
+      - 儿
+    甩:
+      - "\ue08c"
+      - '8'
+    甪:
+      - '3'
+      - "\ue08c"
+    角:
+      - "\ue020"
+      - "\ue08c"
+    "\ue072":
+      - '1'
+      - 口
+      - '2'
+      - 冖
+    "\ue00e":
+      - '5'
+      - 氺
+    丌:
+      - '1'
+      - "\ue0e3"
+    "\ue048":
+      - 肀
+      - "\ue08c"
+    再:
+      - '1'
+      - 冂
+      - "\ue43a"
+    "\ue021":
+      - "\ue078"
+      - '1'
+      - 止
+    "\ue104":
+      - 廿
+      - 口
+      - 二
+      - 人
+    "\ue189":
+      - '2'
+      - '6'
+      - '2'
+      - '6'
   strong:
     - '1'
     - 二
@@ -283,8 +427,6 @@ form:
       element: 工
     者:
       element: 耂
-    "\ue000":
-      element: 丰
     龶:
       element: 丰
     春:
@@ -603,8 +745,6 @@ form:
       element: 水
     "\ue043":
       element: 大
-    "\ue449":
-      element: 大
     "\ue448":
       element: "\ue42d"
     "\ue04c":
@@ -630,7 +770,7 @@ form:
     "\ue0b6":
       element: 䒑
     "\ue02a":
-      element: 冂
+      element: 月
     "\ue442":
       element: 小
     "\ue411":
@@ -639,6 +779,35 @@ form:
       element: 凵
     "\ue42b":
       element: 氵
+    "\ue452":
+      element: 十
+    "\ue406":
+      element: "\ue405"
+    "\ue003":
+      element: 丰
+    "\ue0c2":
+      element: 舌
+    "\ue102":
+      element: 王
+    "\ue18e":
+      element: 氺
+    "\ue0c9":
+      element: 辛
+    "\ue103":
+      element: 戈
+    尨:
+      element: 龙
+    "\ue106":
+      element: "\ue0b7"
+    "\ue14e":
+      element: 爿
+    "\ue838":
+      element: 鹿
+    豐:
+      element: 丰
+    用: ld
+    毌:
+      element: 母
 encoder:
   max_length: 4
   auto_select_length: 4
@@ -738,3 +907,70 @@ encoder:
       operator: 存在
       positive: s9
       negative: s10
+data:
+  glyph_customization:
+    周:
+      type: compound
+      operator: ⿵
+      operandList: [冂, "\ue832"]
+    佥:
+      type: spliced_component
+      operator: ⿱
+      operandList: [亼, "\ue046"]
+    亘:
+      type: compound
+      tags: [纵向包夹]
+      operator: ⿴
+      operandList: [二, 日]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    畺:
+      type: compound
+      tags: [纵向包夹]
+      operator: ⿻
+      operandList: [三, 畕]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 5}, {index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    南:
+      type: compound
+      operator: ⿱
+      operandList: [十, "\ue81b"]
+    "\uea02":
+      type: compound
+      operator: ⿴
+      operandList: ["\ue42b", 幺]
+    "\ue9d0":
+      type: compound
+      tags: [横向包夹]
+      operator: ⿴
+      operandList: ["\ue0e3", 米]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    戢:
+      type: compound
+      tags: [戈部截断]
+      operator: ⿰
+      operandList: [咠, 戈]
+    "\ue0a5":
+      type: compound
+      tags: [戈部截断]
+      operator: ⿰
+      operandList: ["\ue81f", 戈]
+    容:
+      type: compound
+      operator: ⿳
+      operandList: [穴, 人, 口]
+    胤:
+      type: compound
+      tags: [横向包夹]
+      operator: ⿴
+      operandList: [儿, "\ue99d"]
+      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+  transformers:
+    - from: {operator: ⿺, operandList: [辶, {id: 1}]}
+      to: {operator: ⿺, operandList: [辶, {id: 1}]}
+    - from: {operator: ⿺, operandList: [廴, {id: 1}]}
+      to: {operator: ⿺, operandList: [廴, {id: 1}]}
+    - from: {operator: ⿺, operandList: [㇗, {id: 1}]}
+      to: {operator: ⿺, operandList: [㇗, {id: 1}]}
+    - from: {operator: ⿲, operandList: [彳, {id: 1}, 亍]}
+      to: {operator: ⿴, operandList: [行, {id: 1}]}
+    - from: {operator: ⿶, operandList: [山, {id: 1}]}
+      to: {operator: ⿶, operandList: [{id: 1}, 山]}

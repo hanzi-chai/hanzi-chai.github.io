@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import styled from "styled-components";
-import type { Draw, N6, Point, 图形盒子, 矢量笔画数据, 笔画名称 } from "~/lib";
+import type { N6, 向量, 图形盒子, 矢量笔画数据, 笔画名称, 绘制 } from "~/lib";
 import { 加, 减, 笔画图形, 部件图形 } from "~/lib";
 
 const Box = styled.div`
@@ -12,7 +12,7 @@ const Box = styled.div`
   font-size: 398px;
 `;
 
-const drawLength = ({ command, parameterList }: Draw) => {
+const drawLength = ({ command, parameterList }: 绘制) => {
   if (command === "h" || command === "v") {
     return parameterList[0];
   }
@@ -77,7 +77,7 @@ interface PointIndex {
 }
 
 const Circle: React.FC<{
-  center: Point;
+  center: 向量;
   index: PointIndex;
   setIndex: (i: PointIndex) => void;
 }> = ({ center, index, setIndex }) => {
@@ -101,7 +101,7 @@ interface ControlProps {
 
 const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
   const start = stroke.start;
-  let current: Point = [start[0], start[1]];
+  let current: 向量 = [start[0], start[1]];
   return (
     <>
       <Circle
@@ -111,7 +111,7 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
       />
       {stroke.curveList.map((curve, curveIndex) => {
         if (curve.command === "h" || curve.command === "v") {
-          const previous: Point = [...current];
+          const previous: 向量 = [...current];
           if (curve.command === "h") previous[0] += curve.parameterList[0];
           if (curve.command === "v") previous[1] += curve.parameterList[0];
           current = structuredClone(previous);
@@ -132,7 +132,7 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
           return null;
         }
         const [x1, y1, x2, y2, x, y] = curve.parameterList as N6;
-        const previous: Point = [...current];
+        const previous: 向量 = [...current];
         const control1 = 加(previous, [x1, y1]);
         const control2 = 加(previous, [x2, y2]);
         const control3 = 加(previous, [x, y]);
@@ -237,7 +237,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
         const curve = newGlyph[strokeIndex]!.curveList[curveIndex]!;
         const renderedCurve =
           renderedGlyph[strokeIndex]!.curveList[curveIndex]!;
-        const previous = renderedCurve.controls[controlIndex]!;
+        const previous = renderedCurve._controls()[controlIndex]!;
         const diff = 减([x, y], previous);
         if (curve.command === "h" || curve.command === "v") {
           curve.parameterList[0] += curve.command === "h" ? diff[0] : diff[1];
@@ -266,7 +266,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
     };
   }, [setGlyph, index, onMouseMove]);
 
-  const { strokeWidth, viewBox } = glyph.determineWidthAndViewBox(
+  const { strokeWidth, viewBox } = glyph.确定笔画粗细和视窗(
     displayMode ?? false,
   );
 

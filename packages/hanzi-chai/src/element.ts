@@ -187,15 +187,6 @@ export class 取码器 {
     this.最终映射 = expanded.value;
   }
 
-  编码长度(字根: string) {
-    const 键盘映射 = this.keyboard.mapping;
-    let value = 键盘映射[字根]!;
-    while (是归并(value)) {
-      value = 键盘映射[value.element]!;
-    }
-    return value.length;
-  }
-
   取码(汉字分析: 默认汉字分析) {
     const 字母表 = Array.from(this.keyboard.alphabet ?? "");
     let 节点: string | null = "s0";
@@ -215,7 +206,7 @@ export class 取码器 {
           // 如果是固定编码，直接加入
           码位序列.push(元素);
         } else {
-          const 长度 = this.编码长度(元素);
+          const 长度 = this.最终映射.get(元素)?.length ?? 0;
           // 如果没有定义指标，就是全取；否则检查指标是否有效并取
           if (index === undefined) {
             for (let i = 0; i < 长度; i++) {

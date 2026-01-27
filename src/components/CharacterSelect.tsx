@@ -28,9 +28,13 @@ export default function CharacterSelect(
   const { customFilter, includeVariables, ...rest } = props;
   const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
   const [data, setData] = useState<SelectProps["options"]>([]);
-  const value: string = props.value;
+  const value: string | undefined = props.value;
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   useEffect(() => {
+    if (!value) {
+      setData([]);
+      return;
+    }
     let label: React.ReactNode = <Display name={value} />;
     if (/^\{.+\}$/.test(value)) {
       label = getLabel(JSON.parse(value));

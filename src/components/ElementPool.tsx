@@ -41,7 +41,7 @@ interface ElementProps {
 export const ElementWithTooltip = ({ element }: { element: string }) => {
   const display = useAtomValue(别名显示原子);
   const core = (
-    <Element>
+    <Element onClick={() => navigator.clipboard.writeText(element)}>
       <Display name={element} />
     </Element>
   );

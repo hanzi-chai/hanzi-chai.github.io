@@ -1,8 +1,7 @@
-import { Flex, Layout, Table, Typography } from "antd";
+import { Flex, Layout, Skeleton, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Suspense } from "react";
 import { useAtomValue, 原始字库数据原子 } from "~/atoms";
-import CustomSpin from "~/components/CustomSpin";
 import { type 区块, 区块列表 } from "~/lib";
 
 export default function Repertoire() {
@@ -59,7 +58,7 @@ export default function Repertoire() {
   return (
     <Layout>
       <Flex vertical justify="center" align="center">
-        <Suspense fallback={<CustomSpin tip="加载JSON数据…" />}>
+        <Suspense fallback={<Skeleton />}>
           <Typography.Title>自动拆分系统收字情况</Typography.Title>
           <Table
             columns={columns}

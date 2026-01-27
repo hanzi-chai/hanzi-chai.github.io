@@ -535,7 +535,7 @@ class 逸码部件分析器 implements 部件分析器<逸码部件分析> {
   static readonly type = "逸码";
   constructor(private 配置: 字形分析配置) {}
 
-  限制字根数量(拆分方式: 拆分方式, n: number, 图形: 部件图形) {
+  private 限制字根数量(拆分方式: 拆分方式, n: number, 图形: 部件图形) {
     const 新拆分方式 = 拆分方式.slice(0, n);
     let 补笔画: number[];
     if (拆分方式.length <= n) {
