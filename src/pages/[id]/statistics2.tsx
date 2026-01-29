@@ -18,7 +18,7 @@ import {
 import { Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 最大码长原子 } from "~/atoms";
-import { type 部分目标类型, type 频率映射, 序列化, 反序列化 } from "~/lib";
+import { type 部分目标类型, 序列化, 反序列化, 码表条目, chars } from "~/lib";
 import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
 import { blue } from "@ant-design/colors";
@@ -26,61 +26,44 @@ import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
-import { useChaifenTitle } from "~/utils";
+import { useChaifenTitle, 数字, 标准键盘, 颜色插值 } from "~/utils";
 
 const { Column, Heatmap } = await import("~/components/export/charts");
 
-function interpolate(color1: string, color2: string, percent: number) {
-  // Convert the hex colors to RGB values
-  const r1 = Number.parseInt(color1.substring(1, 3), 16);
-  const g1 = Number.parseInt(color1.substring(3, 5), 16);
-  const b1 = Number.parseInt(color1.substring(5, 7), 16);
-
-  const r2 = Number.parseInt(color2.substring(1, 3), 16);
-  const g2 = Number.parseInt(color2.substring(3, 5), 16);
-  const b2 = Number.parseInt(color2.substring(5, 7), 16);
-
-  // Interpolate the RGB values
-  const r = Math.round(r1 + (r2 - r1) * percent);
-  const g = Math.round(g1 + (g2 - g1) * percent);
-  const b = Math.round(b1 + (b2 - b1) * percent);
-
-  // Convert the interpolated RGB values back to a hex color
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+interface 带频码表条目 extends 码表条目 {
+  频率: number;
 }
-const filterType = (type: 部分目标类型, combined: 联合条目[]) => {
-  const filtered = type.includes("character")
-    ? combined.filter((item) => [...item.词].length === 1)
-    : combined.filter((item) => [...item.词].length > 1);
-  return type.includes("full")
-    ? filtered.map((item) => ({
-        name: item.词,
-        code: item.全码,
-        importance: item.频率,
-      }))
-    : filtered.map((item) => ({
-        name: item.词,
-        code: item.简码,
-        importance: item.频率,
-      }));
+
+const 按部分目标类型过滤 = (type: 部分目标类型, combined: 联合条目[]) => {
+  const result: 带频码表条目[] = [];
+  for (const 条目 of combined) {
+    if (type.includes("character") !== (chars(条目.词) === 1)) continue;
+    const code = type.includes("full") ? 条目.全码 : 条目.简码;
+    result.push({
+      词: 条目.词,
+      编码: code,
+      频率: 条目.频率,
+    });
+  }
+  return result;
 };
 
-interface DistributionConfig {
-  type: 部分目标类型;
-  index: number[];
-  dynamic: boolean;
+interface 分布统计范围 {
+  类型: 部分目标类型;
+  码位: number[];
+  加权: boolean;
 }
 
-type DistributionResult = Map<string, { count: number; items: string[] }>;
+type 分布结果 = Map<string, { count: number; items: string[] }>;
 
-const count = (
-  data: { name: string; code: string; importance: number }[],
+const 构建分布 = (
+  data: 带频码表条目[],
   alphabet: string,
-  config: DistributionConfig,
-  multiple?: boolean,
+  config: 分布统计范围,
+  多重?: boolean,
 ) => {
-  const result: DistributionResult = new Map();
-  if (multiple) {
+  const result: 分布结果 = new Map();
+  if (多重) {
     [...alphabet].forEach((x) => {
       result.set(x, { count: 0, items: [] });
     });
@@ -92,27 +75,27 @@ const count = (
     });
   }
   for (const item of data) {
-    const keys = config.index.map((i) => item.code[i]);
-    const value = 1;
-    if (multiple) {
+    const keys = config.码位.map((i) => item.编码[i]);
+    const value = config.加权 ? item.频率 : 1;
+    if (多重) {
       keys.forEach((k) => {
         if (!k) return;
         const previous = result.get(k) ?? { count: 0, items: [] };
         previous.count += value;
-        previous.items.push(item.name);
+        previous.items.push(item.词);
         result.set(k, previous);
       });
     } else {
-      if (!keys.every((k) => k)) continue;
+      if (!keys.every((k) => k !== undefined)) continue;
       const key = keys.join("");
       const previous = result.get(key) ?? { count: 0, items: [] };
       previous.count += value;
-      previous.items.push(item.name);
+      previous.items.push(item.词);
       result.set(key, previous);
     }
   }
   const total = sum([...result.values()].map((x) => x.count));
-  if (config.dynamic) {
+  if (config.加权) {
     for (const key of result.keys()) {
       result.get(key)!.count /= total;
     }
@@ -121,29 +104,29 @@ const count = (
 };
 
 const countFingering = (
-  data: { name: string; code: string; importance: number }[],
+  data: 带频码表条目[],
   alphabet: string,
-  config: DistributionConfig,
+  config: 分布统计范围,
 ) => {
-  const result: DistributionResult = new Map();
+  const result: 分布结果 = new Map();
   [...alphabet].forEach((x) => {
     [...alphabet].forEach((y) => {
       result.set(x + y, { count: 0, items: [] });
     });
   });
   for (const item of data) {
-    for (const i of config.index) {
-      const string = item.code.slice(i, i + 2);
+    for (const i of config.码位) {
+      const string = item.编码.slice(i, i + 2);
       if (string.length < 2) continue;
-      const value = 1;
+      const value = config.加权 ? item.频率 : 1;
       const previous = result.get(string) ?? { count: 0, items: [] };
       previous.count += value;
-      previous.items.push(item.name);
+      previous.items.push(item.词);
       result.set(string, previous);
     }
   }
   const total = sum([...result.values()].map((x) => x.count));
-  if (config.dynamic) {
+  if (config.加权) {
     for (const key of result.keys()) {
       result.get(key)!.count /= total;
     }
@@ -163,7 +146,7 @@ const KeyboardItem = ({
   dynamic: boolean;
 }) => {
   const formatted = dynamic ? `${(value * 100).toFixed(2)}` : value.toFixed(0);
-  const color = interpolate("#f5f5f5", blue[4]!, value / maximum);
+  const color = 颜色插值("#f5f5f5", blue[4]!, value / maximum);
   return (
     <Flex
       vertical
@@ -191,24 +174,18 @@ const Keyboard = ({
   alphabet,
   dynamic,
 }: {
-  result: DistributionResult;
+  result: 分布结果;
   alphabet: string;
   dynamic: boolean;
 }) => {
-  const keys = [
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-    ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-    ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";"],
-    ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"],
-  ];
-  if (keys[0]?.every((x) => !alphabet.includes(x))) {
-    keys.shift();
-  }
+  const 实际使用的行 = 标准键盘.filter((row) =>
+    row.some((key) => alphabet.includes(key)),
+  );
   const maximum = Math.max(...[...result.values()].map((x) => x.count));
 
   return (
     <Flex vertical gap="small">
-      {keys.map((row, index) => (
+      {实际使用的行.map((row, index) => (
         <Flex key={index} gap="small" align="center">
           {row.map((key) => (
             <KeyboardItem
@@ -241,17 +218,17 @@ const DistributionForm = ({
 }: {
   multiple?: boolean;
   combination?: boolean;
-  config: DistributionConfig;
-  setConfig: (s: DistributionConfig) => void;
+  config: 分布统计范围;
+  setConfig: (s: 分布统计范围) => void;
 }) => {
   const types = useAtomValue(默认目标类型原子);
   const maxLength = useAtomValue(最大码长原子);
   const options1d = range(maxLength).map((d) => ({
-    label: `第 ${d + 1} 码`,
+    label: `第${数字(d + 1)}码`,
     value: d,
   }));
   const options1dcomb = range(maxLength - 1).map((d) => ({
-    label: `第 ${d} / ${d + 1} 码`,
+    label: `第${数字(d + 1)}／${数字(d + 2)}码`,
     value: d,
   }));
   const options = combination ? options1dcomb : options1d;
@@ -260,7 +237,7 @@ const DistributionForm = ({
     children: options1d.filter((y) => y.value > x.value),
   }));
   return (
-    <ProForm<DistributionConfig>
+    <ProForm<分布统计范围>
       layout="horizontal"
       submitter={false}
       initialValues={config}
@@ -269,7 +246,7 @@ const DistributionForm = ({
     >
       <ProFormGroup>
         <ProFormSelect
-          name="type"
+          name="类型"
           label="类型"
           options={types.map((x) => ({
             label: 部分目标类型名称映射[x],
@@ -278,7 +255,7 @@ const DistributionForm = ({
         />
         {multiple ? (
           <ProFormSelect
-            name="index"
+            name="码位"
             label="维度"
             mode="multiple"
             options={options}
@@ -286,13 +263,13 @@ const DistributionForm = ({
           />
         ) : (
           <ProFormCascader
-            name="index"
+            name="码位"
             label="维度"
             allowClear={false}
             fieldProps={{ options: options2d }}
           />
         )}
-        <ProFormSwitch name="dynamic" label="加权" />
+        <ProFormSwitch name="加权" label="加权" />
       </ProFormGroup>
     </ProForm>
   );
@@ -303,14 +280,14 @@ const UnaryDistribution = () => {
   const combined = useAtomValueUnwrapped(联合结果原子);
   const alphabet = useAtomValue(字母表原子);
   const types = useAtomValue(默认目标类型原子);
-  const init: DistributionConfig = {
-    type: types[0]!,
-    index: range(0, maxLength),
-    dynamic: true,
+  const init: 分布统计范围 = {
+    类型: types[0]!,
+    码位: range(0, maxLength),
+    加权: false,
   };
   const [config, setConfig] = useState(init);
-  const data = filterType(config.type, combined);
-  const result = count(data, alphabet, config, true);
+  const data = 按部分目标类型过滤(config.类型, combined);
+  const result = 构建分布(data, alphabet, config, true);
 
   return (
     <>
@@ -319,21 +296,10 @@ const UnaryDistribution = () => {
         <DistributionForm config={config} setConfig={setConfig} multiple />
       </Flex>
       <Suspense fallback={<Skeleton active />}>
-        <Keyboard
-          result={result}
-          dynamic={config.dynamic}
-          alphabet={alphabet}
-        />
+        <Keyboard result={result} dynamic={config.加权} alphabet={alphabet} />
       </Suspense>
     </>
   );
-};
-
-const customCompare = (a: string, b: string) => {
-  const order = "1qaz2wsx3edc4rfv5tgb6yhn7ujm8ik,9ol.0p;/";
-  const a_value = order.indexOf(a[0]!) * 1000 + order.indexOf(a[1]!);
-  const b_value = order.indexOf(b[0]!) * 1000 + order.indexOf(b[1]!);
-  return a_value - b_value;
 };
 
 const MatrixHeatMap = ({
@@ -341,13 +307,21 @@ const MatrixHeatMap = ({
   dynamic,
   isFingering,
 }: {
-  result: DistributionResult;
+  result: 分布结果;
   dynamic: boolean;
   isFingering?: boolean;
 }) => {
   const pairEquivalence = useAtomValue(默认当量原子);
+  const sequence: string[] = [];
+  for (const column of range(标准键盘[0]!.length)) {
+    for (const row of 标准键盘) {
+      sequence.push(row[column]!);
+    }
+  }
+  const order = sequence.join("");
   const data = [...result]
-    .sort((a, b) => customCompare(a[0], b[0]))
+    .sort(([a], [b]) => order.indexOf(a[0]!) - order.indexOf(b[0]!))
+    .sort(([a], [b]) => order.indexOf(a[1]!) - order.indexOf(b[1]!))
     .map(([key, value]) => {
       const [x, y] = [...key];
       return {
@@ -410,14 +384,14 @@ const BinaryDistribution = () => {
   const combined = useAtomValueUnwrapped(联合结果原子);
   const types = useAtomValue(默认目标类型原子);
   const alphabet = useAtomValue(字母表原子);
-  const init: DistributionConfig = {
-    type: types[0]!,
-    index: [0, 1],
-    dynamic: false,
+  const init: 分布统计范围 = {
+    类型: types[0]!,
+    码位: [0, 1],
+    加权: false,
   };
   const [config, setConfig] = useState(init);
-  const data = filterType(config.type, combined);
-  const result = count(data, alphabet, config);
+  const data = 按部分目标类型过滤(config.类型, combined);
+  const result = 构建分布(data, alphabet, config);
 
   return (
     <>
@@ -426,7 +400,7 @@ const BinaryDistribution = () => {
         <DistributionForm config={config} setConfig={setConfig} />
       </Flex>
       <Suspense fallback={<Skeleton active />}>
-        <MatrixHeatMap result={result} dynamic={config.dynamic} />
+        <MatrixHeatMap result={result} dynamic={config.加权} />
       </Suspense>
     </>
   );
@@ -436,7 +410,7 @@ const EquivalenceColumns = ({
   result,
   dynamic,
 }: {
-  result: DistributionResult;
+  result: 分布结果;
   dynamic: boolean;
 }) => {
   const pairEquivalence = useAtomValue(默认当量原子);
@@ -496,14 +470,14 @@ const FingeringDistribution = () => {
   const combined = useAtomValueUnwrapped(联合结果原子);
   const types = useAtomValue(默认目标类型原子);
   const maxLength = useAtomValue(最大码长原子);
-  const init: DistributionConfig = {
-    type: types[0]!,
-    index: range(0, maxLength - 1),
-    dynamic: false,
+  const init: 分布统计范围 = {
+    类型: types[0]!,
+    码位: range(0, maxLength - 1),
+    加权: false,
   };
   const [config, setConfig] = useState(init);
   const alphabet = useAtomValue(字母表原子);
-  const data = filterType(config.type, combined);
+  const data = 按部分目标类型过滤(config.类型, combined);
   const result = countFingering(data, alphabet, config);
   return (
     <>
@@ -517,8 +491,8 @@ const FingeringDistribution = () => {
         />
       </Flex>
       <Suspense fallback={<Skeleton active />}>
-        <MatrixHeatMap result={result} dynamic={config.dynamic} isFingering />
-        <EquivalenceColumns result={result} dynamic={config.dynamic} />
+        <MatrixHeatMap result={result} dynamic={config.加权} isFingering />
+        <EquivalenceColumns result={result} dynamic={config.加权} />
       </Suspense>
     </>
   );

@@ -1,5 +1,3 @@
-import { Flex, Popover, Select, Skeleton, Table } from "antd";
-import { useAtomValueUnwrapped, 字母表原子 } from "~/atoms";
 import {
   ProForm,
   ProFormDependency,
@@ -7,37 +5,35 @@ import {
   ProFormGroup,
   ProFormSelect,
 } from "@ant-design/pro-components";
-import { Form, Space, Typography } from "antd";
-import { useAtomValue } from "jotai";
-import { 最大码长原子 } from "~/atoms";
-import type { 码位, 组装条目 } from "~/lib";
-import { 反序列化, 序列化 } from "~/lib";
-import { Suspense, useState } from "react";
-import { 如组装结果原子 } from "~/atoms";
+import {
+  Flex,
+  Form,
+  Popover,
+  Select,
+  Skeleton,
+  Space,
+  Table,
+  Typography,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { useAtomValue } from "jotai";
 import { isEqual, range, sumBy } from "lodash-es";
+import { Suspense, useState } from "react";
+import {
+  useAtomValueUnwrapped,
+  如组装结果原子,
+  字母表原子,
+  最大码长原子,
+} from "~/atoms";
+import KeySelect from "~/components/KeySelect";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
 import { MinusButton, PlusButton } from "~/components/Utils";
-import KeySelect from "~/components/KeySelect";
-import { AnalyzerForm, useChaifenTitle } from "~/utils";
-
-const numbers = [
-  "零",
-  "一",
-  "二",
-  "三",
-  "四",
-  "五",
-  "六",
-  "七",
-  "八",
-  "九",
-  "十",
-];
-const render = (value: number) => numbers[value] || value.toString();
+import type { 码位, 组装条目 } from "~/lib";
+import { 反序列化, 序列化 } from "~/lib";
+import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
 
 const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
-  let relevant = result;
+  let relevant = result.sort((a, b) => a.频率 - b.频率);
   if (analyzer.type === "single")
     relevant = relevant.filter((x) => [...x.词].length === 1);
   if (analyzer.type === "multi")
@@ -99,7 +95,7 @@ const AnalyzerConfig = ({
             name="position"
             label="取码"
             options={range(maxLength).map((d) => ({
-              label: `第 ${d + 1} 码`,
+              label: `第${数字(d + 1)}码`,
               value: d,
             }))}
             allowClear={false}
@@ -184,7 +180,7 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
     },
   ];
 
-  const coorder = render(maxLength - analyzer.position.length);
+  const coorder = 数字(maxLength - analyzer.position.length);
   const space = alphabet.length ** (maxLength - analyzer.position.length);
   const estimation = sumBy(lengths, (x) =>
     analyzer.position.length === maxLength ? x - 1 : (x * x) / 2 / space,
@@ -218,15 +214,15 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer);
   for (const assembly of relevant) {
-    const { 词: name, 元素序列: sequence } = assembly;
-    sequence.forEach((x, i) => {
+    const { 词, 元素序列 } = assembly;
+    元素序列.forEach((x, i) => {
       const key = 序列化(x);
       if (!reverseMap.has(key))
         reverseMap.set(
           key,
           range(maxLength).map(() => new Set()),
         );
-      reverseMap.get(key)?.[i]?.add(name);
+      reverseMap.get(key)?.[i]?.add(词);
     });
   }
   const dataSource = [...reverseMap]
@@ -249,7 +245,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       width: 192,
     },
     ...range(maxLength).map((i) => ({
-      title: `第 ${i + 1} 码`,
+      title: `第${数字(i + 1)}码`,
       dataIndex: "items",
       key: `density-${i}`,
       render: (items: Set<string>[]) => (

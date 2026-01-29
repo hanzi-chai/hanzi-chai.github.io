@@ -12,16 +12,16 @@ import { debounce } from "lodash-es";
 import type { ReactNode } from "react";
 import styled from "styled-components";
 import {
-  字母表原子,
-  基本信息原子,
-  决策原子,
-  图示配置原子,
   useAtom,
   useAtomValue,
-  按首码分组决策原子,
   useAtomValueUnwrapped,
+  图示配置原子,
+  基本信息原子,
+  字母表原子,
+  按首码分组决策原子,
 } from "~/atoms";
-import { 图示配置, 区块配置, 读取表格 } from "~/lib";
+import { AdjustableElementGroup } from "~/components/Mapping";
+import { type 区块配置, type 图示配置, 读取表格 } from "~/lib";
 import { useChaifenTitle } from "~/utils";
 
 const PrintArea = styled.div`
@@ -55,8 +55,6 @@ const KeyboardArea = styled.div`
 
 const Keyboard = () => {
   const diagram = useAtomValue(图示配置原子);
-  const mapping = useAtomValue(决策原子);
-  const alphabet = useAtomValue(字母表原子);
   const { contents, layout } = diagram;
   const reversedMapping = useAtomValueUnwrapped(按首码分组决策原子);
   const processedConents = contents.map((content) => {
@@ -96,12 +94,17 @@ const Keyboard = () => {
                 } else if (type === "element") {
                   const mapped = reversedMapping.get(key);
                   if (mapped) {
-                    // 还没有处理双编码的情况
-                    for (const { 名称: name, 安排: code } of mapped) {
-                      if (value.match && !value.match.test(name)) {
+                    for (const { 名称, 安排 } of mapped) {
+                      if (value.match && !value.match.test(名称)) {
                         continue;
                       }
-                      boxes.push(<div>{name}</div>);
+                      boxes.push(
+                        <AdjustableElementGroup
+                          名称={名称}
+                          安排={安排}
+                          displayMode
+                        />,
+                      );
                     }
                   }
                 } else if (type === "custom") {
@@ -156,11 +159,11 @@ const Sidebar = () => {
   const debounced = debounce(setSchematic, 500);
   return (
     <SidebarWrapper>
-      <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+      <Flex justify="center">
         <Button type="primary" onClick={() => window.print()}>
           打印图示
         </Button>
-      </div>
+      </Flex>
       <ProForm<图示配置>
         initialValues={withDefaultStyles(diagram)}
         layout="horizontal"

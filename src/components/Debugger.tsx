@@ -1,4 +1,4 @@
-import { Flex, Form, Statistic, Switch, Table, Typography } from "antd";
+import { Flex, Form, Select, Statistic, Switch, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
@@ -10,7 +10,7 @@ import {
   码表数据库,
 } from "~/atoms";
 import { 如编码结果原子 } from "~/atoms";
-import { Select, Uploader } from "~/components/Utils";
+import { Uploader } from "~/components/Utils";
 import { chars, 解析码表, 读取表格 } from "~/lib";
 import type { 编码条目 } from "~/utils";
 
@@ -118,7 +118,6 @@ export default function Debugger() {
       >
         <Form.Item label="校对范围" style={{ margin: 0 }}>
           <Select
-            style={{ width: 128 }}
             value={filterOption}
             options={filterOptions.map((x) => ({ label: x, value: x }))}
             onChange={setFilterOption}

@@ -106,12 +106,12 @@ export const 默认词典原子 = atom(async () => {
 });
 
 export const 默认键位分布目标原子 = atom(async () => {
-  const content = await 拉取资源("key_distribution.txt");
+  const content = await 拉取资源("distribution.txt");
   return 解析键位分布目标(读取表格(content));
 });
 
 export const 默认当量原子 = atom(async () => {
-  const content = await 拉取资源("pair_equivalence.txt");
+  const content = await 拉取资源("equivalence.txt");
   return 解析当量映射(读取表格(content));
 });
 

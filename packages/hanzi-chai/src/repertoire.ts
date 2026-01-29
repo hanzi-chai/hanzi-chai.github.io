@@ -77,17 +77,6 @@ class 字库 {
     this.repertoire[character] = data;
   }
 
-  过滤(字集指示: 字集指示, 自定义字集?: Set<string>): string[] {
-    const 过滤器 = 字集过滤查找表[字集指示];
-    const result = [];
-    for (const [k, v] of Object.entries(this.repertoire)) {
-      if (过滤器(k, v, 自定义字集)) {
-        result.push(k);
-      }
-    }
-    return result;
-  }
-
   准备字形分析配置(
     分析配置: 分析配置,
     决策: 决策,

@@ -1,3 +1,5 @@
+import { blue } from "@ant-design/colors";
+import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import {
   Alert,
   Button,
@@ -11,43 +13,48 @@ import {
   Select,
   Typography,
 } from "antd";
-import { useState, memo } from "react";
+import { sortBy } from "lodash-es";
+import { memo, useState } from "react";
+import styled from "styled-components";
 import {
+  useAddAtom,
+  useAtom,
   useAtomValue,
+  useAtomValueUnwrapped,
+  useRemoveAtom,
   useSetAtom,
+  决策原子,
+  决策空间原子,
+  别名显示原子,
+  type 名称与安排,
   如字库原子,
   字母表原子,
-  编码类型原子,
-  决策原子,
-  useAddAtom,
-  useRemoveAtom,
-  useAtom,
-  决策空间原子,
-  键盘原子,
-  type 名称与安排,
-  useAtomValueUnwrapped,
-  按首码分组决策原子,
-  当前元素原子,
   平铺决策原子,
-  别名显示原子,
+  当前元素原子,
+  按首码分组决策原子,
+  编码类型原子,
+  键盘原子,
 } from "~/atoms";
+import {
+  hex,
+  type 决策,
+  可打印字符列表,
+  是归并,
+  是私用区,
+  读取表格,
+  type 非空安排,
+} from "~/lib";
+import { exportTSV } from "~/utils";
 import Char from "./Character";
+import { ElementWithTooltip } from "./ElementPool";
 import MappingSpace, { RulesForm } from "./MappingSpace";
-import { hex, 决策, 可打印字符列表, 是归并, 读取表格, 非空安排 } from "~/lib";
 import {
   DeleteButton,
   Display,
   DisplayWithSuperScript,
   Uploader,
 } from "./Utils";
-import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import styled from "styled-components";
-import { blue } from "@ant-design/colors";
-import { ElementWithTooltip } from "./ElementPool";
-import { sortBy } from "lodash-es";
 import ValueEditor from "./Value";
-import { 是私用区 } from "~/lib";
-import { exportTSV } from "~/utils";
 
 const visit = (parent: string, name: string, output: any[], mapping: 决策) => {
   output.push({ from: name, to: parent });
@@ -136,6 +143,11 @@ const DisplayWrapper = styled(Display)<{ $optional: boolean }>`
   color: ${({ $optional }) => ($optional ? "#9d9d9d" : "black")};
 `;
 
+const ResidualCodeWrapper = styled.span`
+  font-size: 0.85em;
+  padding-left: 2px;
+`;
+
 export const AdjustableElementGroup = ({
   名称: name,
   安排: code,
@@ -186,7 +198,7 @@ export const AdjustableElementGroup = ({
       ))}
       {
         /* 第二码及之后的编码 */ rest.length > 0 && (
-          <span style={{ fontSize: "0.85em", paddingLeft: "2px" }}>
+          <ResidualCodeWrapper>
             {typeof rest === "string"
               ? rest
               : rest.map((x, i) => {
@@ -200,7 +212,7 @@ export const AdjustableElementGroup = ({
                     />
                   );
                 })}
-          </span>
+          </ResidualCodeWrapper>
         )
       }
     </span>

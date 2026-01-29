@@ -53,3 +53,7 @@ export const 部件分析器原子 = focusAtom(分析配置原子, (o) =>
 export const 复合体分析器原子 = focusAtom(分析配置原子, (o) =>
   o.prop("compound_analyzer").valueOr("默认"),
 );
+
+export const 动态分析原子 = focusAtom(分析配置原子, (o) =>
+  o.prop("dynamic").valueOr(false),
+);

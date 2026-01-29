@@ -7,8 +7,7 @@ import {
   useAtomValueUnwrapped,
 } from "~/atoms";
 import { 指法标签列表, type 部分目标类型 } from "~/lib";
-import { Flex } from "antd";
-import { Select } from "./Utils";
+import { Flex, Select } from "antd";
 import { useState } from "react";
 
 interface LevelMetric {
