@@ -12,6 +12,7 @@ import {
   useAtomValue,
   useRemoveAtom,
   useSetAtom,
+  动态分析原子,
 } from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
@@ -252,6 +253,7 @@ export default function MappingSpace() {
   const mappingSpace = useAtomValue(决策空间原子);
   const setMappingSpace = useSetAtom(决策空间原子);
   const addMappingSpace = useAddAtom(决策空间原子);
+  const dynamic = useAtomValue(动态分析原子);
   const [character, setCharacter] = useState<string | undefined>(undefined);
   const alphabet = useAtomValue(字母表原子);
   const currentElement = useAtomValue(当前元素原子);
@@ -261,57 +263,66 @@ export default function MappingSpace() {
       <Flex justify="middle" gap="middle">
         <MappingVariablesForm />
         <MappingGeneratorsForm />
-        <Button
-          onClick={() => {
-            const idles = Object.entries(mappingSpace).filter(
-              ([name]) => mapping[name] === undefined,
-            );
-            const ms = structuredClone(mappingSpace);
-            for (const [name] of idles) {
-              delete ms[name];
-            }
-            const sortedIdles = sortBy(idles, ([name]) => name.codePointAt(0)!);
-            for (const [name, value] of sortedIdles) {
-              ms[name] = value;
-            }
-            setMappingSpace(ms);
-          }}
-        >
-          对未选取元素排序
-        </Button>
-        <CharacterSelect value={character} onChange={setCharacter} />
-        <Button
-          onClick={() =>
-            addMappingSpace(character!, [{ value: alphabet[0]!, score: 0 }])
-          }
-          disabled={character === undefined}
-        >
-          添加备选元素
-        </Button>
+        {dynamic && (
+          <>
+            <Button
+              onClick={() => {
+                const idles = Object.entries(mappingSpace).filter(
+                  ([name]) => mapping[name] === undefined,
+                );
+                const ms = structuredClone(mappingSpace);
+                for (const [name] of idles) {
+                  delete ms[name];
+                }
+                const sortedIdles = sortBy(
+                  idles,
+                  ([name]) => name.codePointAt(0)!,
+                );
+                for (const [name, value] of sortedIdles) {
+                  ms[name] = value;
+                }
+                setMappingSpace(ms);
+              }}
+            >
+              对未选取元素排序
+            </Button>
+            <CharacterSelect value={character} onChange={setCharacter} />
+            <Button
+              onClick={() =>
+                addMappingSpace(character!, [{ value: alphabet[0]!, score: 0 }])
+              }
+              disabled={character === undefined}
+            >
+              添加备选元素
+            </Button>
+          </>
+        )}
       </Flex>
-      <Flex wrap="wrap" gap="small">
-        {Object.entries(mappingSpace)
-          .filter(([name]) => mapping[name] === undefined)
-          .map(([name, values]) => {
-            return (
-              <Flex key={name} align="center">
-                <Popover
-                  title="编辑决策空间"
-                  trigger={["hover", "click"]}
-                  content={<RulesForm name={name} />}
-                >
-                  <Element>
-                    <ElementLabelWrapper
-                      $shouldHighlight={name === currentElement}
-                    >
-                      <Display name={name} />
-                    </ElementLabelWrapper>
-                  </Element>
-                </Popover>
-              </Flex>
-            );
-          })}
-      </Flex>
+      {dynamic && (
+        <Flex wrap="wrap" gap="small">
+          {Object.entries(mappingSpace)
+            .filter(([name]) => mapping[name] === undefined)
+            .map(([name, values]) => {
+              return (
+                <Flex key={name} align="center">
+                  <Popover
+                    title="编辑决策空间"
+                    trigger={["hover", "click"]}
+                    content={<RulesForm name={name} />}
+                  >
+                    <Element>
+                      <ElementLabelWrapper
+                        $shouldHighlight={name === currentElement}
+                      >
+                        <Display name={name} />
+                      </ElementLabelWrapper>
+                    </Element>
+                  </Popover>
+                </Flex>
+              );
+            })}
+        </Flex>
+      )}
     </Flex>
   );
 }

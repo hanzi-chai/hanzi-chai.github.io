@@ -9,7 +9,7 @@ import {
   如编码结果原子,
 } from "~/atoms";
 import { Select } from "~/components/Utils";
-import { 优先简码, 识别符 } from "~/lib";
+import { type 优先简码, 识别符 } from "~/lib";
 
 export function 编码渲染({
   index,
@@ -24,7 +24,7 @@ export function 编码渲染({
   const rank = type === "全码" ? Math.abs(全码排名) : Math.abs(简码排名);
   return (
     <Suspense fallback={<span>加载中...</span>}>
-      <span style={{ color: rank > 0 ? "red" : "inherit" }}>
+      <span style={{ color: rank > 0 ? "red" : undefined }}>
         {code}
         {rank > 0 ? `[${rank}]` : ""}
       </span>

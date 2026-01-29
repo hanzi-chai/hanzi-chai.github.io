@@ -25,7 +25,7 @@ import {
   复合体分析器原子,
   useAtomValueUnwrapped,
 } from "~/atoms";
-import { Collapse } from "antd";
+import { Collapse, Select } from "antd";
 import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
 import {
@@ -39,7 +39,6 @@ import Degenerator from "~/components/Degenerator";
 import CharacterQuery from "~/components/CharacterQuery";
 import { 如字形分析结果原子 } from "~/atoms";
 import ResultSummary from "~/components/ResultSummary";
-import { Select } from "~/components/Utils";
 import {
   type 字符过滤器参数,
   exportTSV,

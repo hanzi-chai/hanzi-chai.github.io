@@ -67,6 +67,7 @@ export interface 分析配置 {
   weak?: string[];
   component_analyzer?: string;
   compound_analyzer?: string;
+  dynamic?: boolean;
 }
 
 export interface 退化配置 {

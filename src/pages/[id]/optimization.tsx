@@ -21,6 +21,8 @@ import {
   Select,
 } from "~/components/Utils";
 import type { 层级权重, 码长权重, 部分权重 } from "~/lib";
+import { 数字 } from "~/utils";
+import { range } from "lodash-es";
 
 const AtomicObjective = ({
   title,
@@ -136,9 +138,8 @@ const LevelObjective = ({
         <Form.Item label="码长" style={{ marginBottom: 0 }}>
           <Select
             value={level.length}
-            style={{ width: "80px" }}
-            options={[1, 2, 3, 4, 5, 6].map((x) => ({
-              label: `${x} 键`,
+            options={range(10).map((x) => ({
+              label: `${数字(x)} 键`,
               value: x,
             }))}
             onChange={(value) => {
@@ -176,7 +177,6 @@ const TierObjective = ({
       <Flex justify="space-between">
         <Form.Item style={{ marginBottom: 0 }}>
           <Select
-            style={{ width: "80px" }}
             value={tier.top !== undefined}
             options={[
               { label: "全部", value: false },

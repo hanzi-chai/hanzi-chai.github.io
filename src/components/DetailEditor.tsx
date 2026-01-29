@@ -1,6 +1,6 @@
 import { Panel } from "reactflow";
 import styled from "styled-components";
-import { Cascader, Flex, Form, Typography } from "antd";
+import { Cascader, Flex, Form, Select, Typography } from "antd";
 import {
   type 一元运算符,
   一元运算符列表,
@@ -12,7 +12,6 @@ import {
   转列表,
   运算符列表,
 } from "~/lib";
-import { Select } from "./Utils";
 import TextArea from "antd/es/input/TextArea";
 import {
   useAtomValue,
@@ -160,7 +159,6 @@ export default function DetailEditor({
         {!("operator" in data) && (
           <Item label="码数">
             <Select
-              style={{ width: "128px" }}
               value={data.index}
               options={[-1, 0, 1, 2, 3].map((v) => ({
                 value: v,
@@ -178,7 +176,6 @@ export default function DetailEditor({
           <>
             <Item label="判断">
               <Select
-                style={{ width: "128px" }}
                 value={data.operator}
                 options={运算符列表.map((v) => ({
                   label: v,

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import pako from "pako";
-import { 原始字库数据, 词典 } from "~/lib";
+import { 原始字库数据, 是私用区, 词典 } from "~/lib";
 
 const frequency = new Map<string, number>();
 const frequencyContent = readFileSync("public/cache/frequency.txt", "utf-8");
@@ -21,9 +21,11 @@ const newDict: 词典 = [];
 for (const [char, data] of Object.entries(repertoire)) {
   const d = data as Record<string, any>;
   const readings = JSON.parse(d["readings"]);
-  console.log(char, readings);
+  if (readings.length === 0) {
+    readings.push({ pinyin: "", importance: 100 });
+  }
   const f = frequency.get(char) || 0;
-  if (data.tygf) {
+  if (!是私用区(char)) {
     for (const { pinyin, importance } of readings) {
       newDict.push({ 词: char, 拼音: [pinyin], 频率: Math.round(f * importance / 100.0) });
     }

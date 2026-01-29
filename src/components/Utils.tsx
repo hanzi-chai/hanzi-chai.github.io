@@ -1,21 +1,21 @@
+import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import MinusOutlined from "@ant-design/icons/MinusOutlined";
+import PlusOutlined from "@ant-design/icons/PlusOutlined";
 import type { ColProps, RowProps } from "antd";
 import {
+  Select as _Select,
   Button,
   Col,
   InputNumber,
+  notification,
   Row,
   Upload,
-  Select as _Select,
-  notification,
 } from "antd";
-import styled from "styled-components";
 import type { MouseEventHandler } from "react";
-import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import PlusOutlined from "@ant-design/icons/PlusOutlined";
-import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import { StrokesView } from "./GlyphView";
-import { 如私用区图形原子, useAtomValue, useAtomValueUnwrapped } from "~/atoms";
+import styled from "styled-components";
+import { useAtomValueUnwrapped, 如私用区图形原子 } from "~/atoms";
 import { 是私用区 } from "~/lib";
+import { StrokesView } from "./GlyphView";
 
 const ScrollableRow = styled(Row)`
   height: 100%;

@@ -1,4 +1,4 @@
-import { Button, Flex } from "antd";
+import { Button, Flex, notification } from "antd";
 import { 配置原子, 配置历史原子, useAtom } from "~/atoms";
 import { UNDO, REDO } from "jotai-history";
 import { type Example, examples } from "~/templates";
@@ -24,10 +24,22 @@ export default function ConfigManager() {
           重置
         </Button>
       )}
-      <Button disabled={!history.canUndo} onClick={() => setHistory(UNDO)}>
+      <Button
+        disabled={!history.canUndo}
+        onClick={() => {
+          setHistory(UNDO);
+          notification.success({ message: "已撤销" });
+        }}
+      >
         撤销
       </Button>
-      <Button disabled={!history.canRedo} onClick={() => setHistory(REDO)}>
+      <Button
+        disabled={!history.canRedo}
+        onClick={() => {
+          setHistory(REDO);
+          notification.success({ message: "已重做" });
+        }}
+      >
         重做
       </Button>
     </Flex>

@@ -4,6 +4,7 @@ import {
   自定义拆分原子,
   useRemoveAtom,
   动态自定义拆分原子,
+  动态分析原子,
 } from "~/atoms";
 import { Button, Flex, Form, Popover } from "antd";
 import ElementSelect from "./ElementSelect";
@@ -123,8 +124,9 @@ export default function ResultSummary({
 }) {
   const { 字根序列 } = analysis;
   const customize = useAtomValue(自定义拆分原子);
-  const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const remove = useRemoveAtom(自定义拆分原子);
+  const dynamic = useAtomValue(动态分析原子);
+  const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const removeDynamic = useRemoveAtom(动态自定义拆分原子);
   const overrideRootSeries = customize[char];
   const overrideDynamicSeries = dynamicCustomize[char];
@@ -169,7 +171,7 @@ export default function ResultSummary({
           {overrideDynamicSeries && (
             <Button onClick={() => removeDynamic(char)}>取消动态</Button>
           )}
-          {"全部拆分方式" in analysis && (
+          {"全部拆分方式" in analysis && dynamic && (
             <Popover
               title="自定义动态拆分"
               trigger="click"

@@ -159,6 +159,10 @@ analysis:
     丌:
       - '1'
       - "\ue0e3"
+    良:
+      - '4'
+      - 彐
+      - "\ue422"
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping_type: 1
@@ -273,7 +277,6 @@ form:
     了: j
     斤: j
     十: k
-    "\ue40a": k
     廿: k
     艹: k
     廾: k
@@ -476,8 +479,6 @@ form:
       element: 勹
     乑:
       element: 豕
-    "\ue449":
-      element: 大
     "\ue043":
       element: 大
     "\ue447":
@@ -576,3 +577,24 @@ encoder:
       operator: 存在
       positive: s13
       negative: s14
+diagram:
+  layout:
+    - keys: [q, w, e, r, t, 'y', u, i, o, p]
+    - keys: [a, s, d, f, g, h, j, k, l]
+    - keys: [z, x, c, v, b, 'n', m]
+  row_style: |-
+    display: flex;
+    justify-content: center;
+    gap: 2mm;
+  cell_style: |-
+    position: relative;
+    width: 25mm;
+    height: 45mm;
+    border: 0.3mm #d3d3d3 solid;
+    border-radius: 1mm;
+  contents:
+    - type: uppercase
+      style: "font-size: 20px;\nposition: absolute;\ntop: 2mm;\nleft: 2mm;"
+    - type: element
+      match: ^.$
+      style: "display: flex;\nflex-wrap: wrap;\ngap: 4px;\nmargin-top: 10mm;\nmargin-left: 2mm;"

@@ -10,6 +10,7 @@ import {
   useAtomValue,
   useSetAtom,
   字集指示原子,
+  原始字库数据原子,
 } from "~/atoms";
 import {
   type 字集指示,
@@ -25,6 +26,7 @@ import {
   序列化词典,
   序列化当量映射,
   序列化键位频率目标,
+  字集过滤查找表,
 } from "~/lib";
 import {
   ProForm,
@@ -38,7 +40,7 @@ import {
   用户词典原子,
   自定义分析数据库,
 } from "~/atoms";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { exportTSV, useChaifenTitle } from "~/utils";
 
 function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({
@@ -54,7 +56,7 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
   defaultAtom: Atom<Promise<V>> | Atom<V>;
   title: string;
   format: string;
-  description: string;
+  description: ReactNode;
   parser: (tsv: string[][]) => V;
   dumper?: (value: V) => string[][];
 }) {
@@ -62,26 +64,27 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
   const defaultValue = useAtomValue(defaultAtom);
   return (
     <>
-      <Flex align="baseline" gap="middle">
+      <Flex align="baseline" justify="space-between">
         <Typography.Title level={3}>{title}</Typography.Title>
-        <div style={{ flex: 1 }} />
-        {defaultValue && dumper && (
+        <Flex gap="middle">
+          {defaultValue && dumper && (
+            <Button
+              onClick={() => exportTSV(dumper(defaultValue), `${title}.txt`)}
+            >
+              下载预置
+            </Button>
+          )}
+          <Uploader
+            type=".txt"
+            action={(text) => setValue(parser(读取表格(text)))}
+          />
           <Button
-            onClick={() => exportTSV(dumper(defaultValue), `${title}.txt`)}
+            disabled={value === undefined}
+            onClick={() => setValue(undefined)}
           >
-            下载预置
+            清空
           </Button>
-        )}
-        <Uploader
-          type=".txt"
-          action={(text) => setValue(parser(读取表格(text)))}
-        />
-        <Button
-          disabled={value === undefined}
-          onClick={() => setValue(undefined)}
-        >
-          清空
-        </Button>
+        </Flex>
       </Flex>
       <Typography.Paragraph>
         格式：<code>{format}</code>
@@ -105,22 +108,23 @@ const CustomElementUploader = () => {
     <Flex vertical gap="middle">
       {entries.map(([name, map]) => {
         return (
-          <Flex key={name} align="baseline" gap="middle">
+          <Flex key={name} align="baseline" justify="space-between">
             <Typography.Text>
               {name}（条目数量：{Object.entries(map).length}）
             </Typography.Text>
-            <div style={{ flex: 1 }} />
-            <Button
-              onClick={() =>
-                exportTSV(
-                  Object.entries(map).map(([k, v]) => [k, v.join(" ")]),
-                  `${name}.txt`,
-                )
-              }
-            >
-              下载
-            </Button>
-            <Button onClick={() => del(name)}>清空</Button>
+            <Flex gap="middle">
+              <Button
+                onClick={() =>
+                  exportTSV(
+                    Object.entries(map).map(([k, v]) => [k, v.join(" ")]),
+                    `${name}.txt`,
+                  )
+                }
+              >
+                下载
+              </Button>
+              <Button onClick={() => del(name)}>清空</Button>
+            </Flex>
           </Flex>
         );
       })}
@@ -172,63 +176,69 @@ const ConfigInfo = () => {
   );
 };
 
-function CharacterSetFilter() {
-  const [字集指示, 设置字集指示] = useAtom(字集指示原子);
-  return (
-    <>
-      <Flex align="baseline" justify="space-between">
-        <Typography.Title level={3}>字集</Typography.Title>
-        <Select<字集指示>
-          value={字集指示}
-          onChange={(value) => 设置字集指示(value)}
-          options={[
-            { label: "极简", value: "minimal" },
-            { label: "GB2312", value: "gb2312" },
-            { label: "通用", value: "general" },
-            { label: "基本", value: "basic" },
-            { label: "扩展", value: "extended" },
-            { label: "补充", value: "supplement" },
-            { label: "全部", value: "maximal" },
-          ]}
-        />
-      </Flex>
-      <Typography.Paragraph>字集将用于对词库进行过滤。</Typography.Paragraph>
-      <ul>
-        <li>
-          极简（6638 个字符）即 GB2312 和《通用规范汉字表》的交集中的所有字符；
-        </li>
-        <li>GB2312（6763 个字符）即 GB2312 中的所有字符；</li>
-        <li>通用（8105 个字符）即《通用规范汉字表》中的所有字符；</li>
-        <li>
-          基本（21265
-          个字符）是在通用字集的基础上增加了所有中日韩统一表意文字基本区的字符；
-        </li>
-        <li>
-          扩展（97668
-          个字符）是在基本字集的基础上增加了所有中日韩统一表意文字扩展区 A-I
-          的字符；
-        </li>
-        <li>
-          补充（98000+
-          个字符）是在扩展字集的基础上增加了中日韩笔画、康熙部首、中日韩部首补充、中日韩兼容表意文字、中日韩兼容表意文字补充、以及中日韩符号和标点中的「〇」；
-        </li>
-        <li>
-          全部（100000+
-          个字符）是在补充字集的基础上增加了西夏文、西夏文构件、西夏文补充、契丹小字；
-        </li>
-      </ul>
-    </>
-  );
-}
-
 export default function Index() {
   useChaifenTitle("基本信息");
+  const [字集指示, 设置字集指示] = useAtom(字集指示原子);
+  const 原始字库数据 = useAtomValue(原始字库数据原子);
+  const counter = Object.fromEntries(
+    Object.keys(字集过滤查找表).map((key) => [key as 字集指示, 0]),
+  ) as Record<字集指示, number>;
+  for (const [name, data] of Object.entries(原始字库数据)) {
+    for (const key of Object.keys(counter) as 字集指示[]) {
+      const fn = 字集过滤查找表[key];
+      if (fn(name, data)) counter[key]++;
+    }
+  }
+
   return (
     <EditorRow>
       <EditorColumn span={12}>
         <Typography.Title level={2}>方案</Typography.Title>
         <ConfigInfo />
-        <CharacterSetFilter />
+        <Flex align="baseline" justify="space-between">
+          <Typography.Title level={3}>字集</Typography.Title>
+          <Select<字集指示>
+            value={字集指示}
+            onChange={(value) => 设置字集指示(value)}
+            options={[
+              { label: "极简", value: "minimal" },
+              { label: "GB2312", value: "gb2312" },
+              { label: "通用", value: "general" },
+              { label: "基本", value: "basic" },
+              { label: "扩展", value: "extended" },
+              { label: "补充", value: "supplement" },
+              { label: "全部", value: "maximal" },
+            ]}
+          />
+        </Flex>
+        <Typography.Paragraph>字集将用于对词库进行过滤。</Typography.Paragraph>
+        <ul>
+          <li>
+            极简（{counter.minimal} 个字符）即 GB2312
+            和《通用规范汉字表》的交集中的所有字符；
+          </li>
+          <li>GB2312（{counter.gb2312} 个字符）即 GB2312 中的所有字符；</li>
+          <li>
+            通用（{counter.general} 个字符）即《通用规范汉字表》中的所有字符；
+          </li>
+          <li>
+            基本（{counter.basic}
+            个字符）是在通用字集的基础上增加了所有中日韩统一表意文字基本区的字符；
+          </li>
+          <li>
+            扩展（{counter.extended}
+            个字符）是在基本字集的基础上增加了所有中日韩统一表意文字扩展区 A-J
+            的字符；
+          </li>
+          <li>
+            补充（{counter.supplement}
+            个字符）是在扩展字集的基础上增加了中日韩笔画、康熙部首、中日韩部首补充、中日韩兼容表意文字、中日韩兼容表意文字补充、以及中日韩符号和标点中的「〇」；
+          </li>
+          <li>
+            全部（{counter.maximal}
+            个字符）是在补充字集的基础上增加了西夏文、西夏文构件、西夏文补充、契丹小字；
+          </li>
+        </ul>
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>资料</Typography.Title>
@@ -239,8 +249,21 @@ export default function Index() {
         </Typography.Paragraph>
         <AssetUploader
           title="词库"
-          format="词\t带调拼音（空格分隔）\t频率"
-          description="系统默认采用的一字词来自通用规范汉字（以《通用规范汉字字典》注音，共 8773 条），多字词来自「玲珑词库」（以冰雪拼音输入方案注音，共 69429 条）。"
+          format="词\t拼音（音节之间空格分隔）\t频率"
+          description={
+            <span>
+              系统默认采用的一字词即全部字集，多字词来自「玲珑词库」（共 69429
+              条）。一字词属通用规范汉字的采用《通用规范汉字字典》注音，其余采用&nbsp;
+              <a
+                href="https://github.com/mozillazg/pinyin-data"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                pinyin-data
+              </a>
+              &nbsp;注音，未收录则标记为无音。
+            </span>
+          }
           atom={用户词典原子}
           defaultAtom={默认词典原子}
           parser={解析词典}

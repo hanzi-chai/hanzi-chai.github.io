@@ -1,21 +1,21 @@
+import { range } from "lodash-es";
 import type { 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
+import type { 决策, 广义码位, 码位 } from "./config.js";
 import type {
-  衍生部件数据,
-  复合体数据,
-  绘制,
-  结构表示符,
-  向量,
-  矢量笔画数据,
-  基本部件数据,
-  引用笔画数据,
-  拼接部件数据,
-  字形数据,
   全等数据,
   原始汉字数据,
+  向量,
+  基本部件数据,
+  复合体数据,
+  字形数据,
+  引用笔画数据,
+  拼接部件数据,
+  矢量笔画数据,
+  结构表示符,
+  绘制,
+  衍生部件数据,
 } from "./data.js";
-import { range } from "lodash-es";
-import type { 码位, 决策, 广义码位 } from "./config.js";
 
 // Result 类型定义
 export type Ok<T> = { ok: true; value: T };
@@ -207,11 +207,11 @@ export const 序列化键位频率目标 = (target: 键位分布目标): string[
 
 export function 解析当量映射(tsv: string[][]): 当量映射 {
   const data: 当量映射 = new Map();
-  for (const [char, value_s] of tsv) {
-    if (char === undefined || value_s === undefined) continue;
+  for (const [sequence, value_s] of tsv) {
+    if (sequence === undefined || value_s === undefined) continue;
     const value = Number(value_s);
     if (Number.isNaN(value)) continue;
-    data.set(char, value);
+    data.set(sequence, value);
   }
   return data;
 }
