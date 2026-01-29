@@ -1,13 +1,13 @@
 version: '0.3'
 source: yustar
 info:
-  name: 宇浩·星陈
+  name: 星陈
   author: 朱宇浩
-  version: 3.7.0
+  version: 3.11.0-beta
   description: |
     十万汉字字形输入・繁简通打。
     相似字根分九十九大类排布于二十五键。
-    方案名取自《尚书大传》之「明明上天"\uff0c"烂然星陈」。
+    方案名取自《尚书大传》之「明明上天烂然星陈」。
 analysis:
   classifier:
     竖钩: 5
@@ -657,8 +657,6 @@ form:
       element: 氵
     "\ue046":
       element: 氵
-    "\ue444":
-      element: 厶
     "\ue0c2":
       element: 舌
     "\ue0ba":
@@ -726,8 +724,6 @@ form:
     丱:
       element: 丩
     "\ue137":
-      element: 八
-    "\ue129":
       element: 八
     "\uf006":
       element: 丌
@@ -815,7 +811,10 @@ form:
       element: 彐
     "\ue189":
       element: 冂
+    "\ue01c":
+      element: 艮
   mapping_type: 2
+  mapping_space: {}
 encoder:
   max_length: 4
   select_keys:
@@ -943,10 +942,6 @@ data:
       type: compound
       operator: ⿱
       operandList: ["\ue060", 兀]
-    命:
-      type: compound
-      operator: ⿸
-      operandList: [合, 卩]
     哀:
       type: compound
       operator: ⿱
@@ -1324,6 +1319,20 @@ data:
       operator: ⿹
       operandList: ["\ue872", 角]
       order: [{index: 0, strokes: 6}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
+    严:
+      type: compound
+      operator: ⿱
+      operandList: [󲜬, 厂]
+    󲜬:
+      type: spliced_component
+      operator: ⿻
+      operandList: ["\uf006", 丷]
+    卿:
+      type: compound
+      tags: [横向包夹]
+      operator: ⿴
+      operandList: [卯, "\ue01c"]
+      order: [{index: 0, strokes: 3}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
   tags: []
   repertoire:
     "\uf000":

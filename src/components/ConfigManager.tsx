@@ -11,14 +11,16 @@ export default function ConfigManager() {
   const [config, setConfig] = useAtom(配置原子);
   const [history, setHistory] = useAtom(配置历史原子);
   const { source } = config;
+  const name = config.info?.name ?? "config";
+  const author = config.info?.author ?? "unknown";
+  const version = config.info?.version ?? "0.0.0";
+  const filename = `${name}_${author}_${version}`;
   return (
     <Flex wrap="wrap" gap="small" justify="center">
       <Button onClick={() => validateConfig(config)}>校验</Button>
       <Button onClick={() => roundTestConfig(config)}>环行</Button>
       <Uploader text="替换" action={(s) => setConfig(load(s) as 配置)} />
-      <Button onClick={() => exportYAML(config, config.info?.name ?? "config")}>
-        导出
-      </Button>
+      <Button onClick={() => exportYAML(config, filename)}>导出</Button>
       {source && (
         <Button onClick={() => setConfig(examples[source as Example])}>
           重置
