@@ -1,5 +1,5 @@
 import type { 字集指示 } from "./config.js";
-import type { 汉字数据 } from "./data.js";
+import type { 原始汉字数据, 汉字数据 } from "./data.js";
 
 export interface 区块 {
   name: string; // 简洁的英文名，如 "cjk", "cjk-a"
@@ -242,7 +242,7 @@ export const 是私用区 = (char: string) => {
 
 export const 字集过滤查找表: Record<
   字集指示,
-  (k: string, v: 汉字数据, s?: Set<string>) => boolean
+  (k: string, v: 原始汉字数据) => boolean
 > = {
   minimal: (_, v) => v.gb2312 > 0 && v.tygf > 0,
   gb2312: (_, v) => v.gb2312 > 0,
@@ -251,8 +251,4 @@ export const 字集过滤查找表: Record<
   extended: (k, v) => v.tygf > 0 || 是汉字(k),
   supplement: (k, v) => v.tygf > 0 || 是汉字(k) || 是汉字补充(k),
   maximal: (k, _) => !是私用区(k),
-  custom: (k, v, s) => {
-    if (s !== undefined) return s.has(k);
-    return v.gb2312 > 0 && v.tygf > 0;
-  },
 };

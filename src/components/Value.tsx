@@ -1,18 +1,20 @@
 import { Flex, Select, Space } from "antd";
 import { useAtomValue } from "jotai";
 import { 字母表原子, 编码类型原子 } from "~/atoms";
-import { 合并字符串, 广义安排, 广义码位, 是归并 } from "~/lib";
+import { 合并字符串, type 广义安排, type 广义码位, 是归并 } from "~/lib";
 import KeySelect from "./KeySelect";
 import ElementSelect from "./ElementSelect";
 
 const KeysEditor = ({
   value,
   onChange,
-  isCurrent,
+  allowVariables,
+  allowPlaceholder,
 }: {
   value: string | 广义码位[];
   onChange: (newValue: string | 广义码位[]) => void;
-  isCurrent?: boolean;
+  allowVariables?: boolean;
+  allowPlaceholder?: boolean;
 }) => {
   const mappingType = useAtomValue(编码类型原子);
   const keys = Array.from(value);
@@ -33,8 +35,10 @@ const KeysEditor = ({
               onChange(合并字符串(newValue));
             }}
             allowEmpty={index !== 0}
-            disablePlaceholder={isCurrent}
-            disableVariables={isCurrent}
+            allowPlaceholder={allowPlaceholder}
+            allowVariables={allowVariables}
+            allowAlphabets
+            allowElements
           />
         );
       })}
@@ -47,10 +51,14 @@ type ValueType = "禁用" | "键位" | "归并";
 const ValueEditor = ({
   value,
   onChange,
+  allowVariables,
+  allowPlaceholder,
   isCurrent,
 }: {
   value: 广义安排;
   onChange: (newValue: 广义安排) => void;
+  allowVariables?: boolean;
+  allowPlaceholder?: boolean;
   isCurrent?: boolean;
 }) => {
   const alphabet = useAtomValue(字母表原子);
@@ -84,7 +92,12 @@ const ValueEditor = ({
           }}
         />
       ) : value !== null ? (
-        <KeysEditor value={value} onChange={onChange} isCurrent={isCurrent} />
+        <KeysEditor
+          value={value}
+          onChange={onChange}
+          allowVariables={allowVariables}
+          allowPlaceholder={allowPlaceholder}
+        />
       ) : null}
     </Flex>
   );

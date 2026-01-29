@@ -170,6 +170,22 @@ const Sidebar = () => {
         }}
         submitter={false}
       >
+        <Typography.Title level={4}>布局</Typography.Title>
+        <ProFormList
+          name="layout"
+          creatorRecord={{
+            keys: [],
+          }}
+          copyIconProps={false}
+          alwaysShowItemLabel
+        >
+          <ProFormSelect
+            mode="tags"
+            name="keys"
+            label="字符"
+            options={[...alphabet].map((x) => ({ label: x, value: x }))}
+          />
+        </ProFormList>
         <Typography.Title level={4}>共享样式</Typography.Title>
         <ProFormTextArea name="row_style" label="行样式" />
         <ProFormTextArea name="cell_style" label="格样式" />
@@ -213,22 +229,6 @@ const Sidebar = () => {
             </ProFormDependency>
           </ProFormGroup>
           <ProFormTextArea name="style" label="样式" />
-        </ProFormList>
-        <Typography.Title level={4}>布局</Typography.Title>
-        <ProFormList
-          name="layout"
-          creatorRecord={{
-            keys: [],
-          }}
-          copyIconProps={false}
-          alwaysShowItemLabel
-        >
-          <ProFormSelect
-            mode="tags"
-            name="keys"
-            label="字符"
-            options={[...alphabet].map((x) => ({ label: x, value: x }))}
-          />
         </ProFormList>
       </ProForm>
     </SidebarWrapper>

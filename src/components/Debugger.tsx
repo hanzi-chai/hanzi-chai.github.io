@@ -1,4 +1,4 @@
-import { Flex, Form, Statistic, Switch, Table } from "antd";
+import { Flex, Form, Statistic, Switch, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
@@ -25,19 +25,17 @@ export default function Debugger() {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const characters = useAtomValue(汉字集合原子);
   const [code] = useAtomValueUnwrapped(如编码结果原子);
-
   const [reference, setReference] = useAtom(
     码表数据库.item(config.info?.name ?? "方案"),
   );
-  const [incorrectOnly, setIncorrectOnly] = useState(false);
-  const filterOptions = ["成字部件", "非成字部件", "所有汉字"] as const;
+  const [incorrectOnly, setIncorrectOnly] = useState(true);
+  const filterOptions = ["成字部件", "所有汉字"] as const;
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   type FilterOption = (typeof filterOptions)[number];
   const { 部件列表 } = repertoire.获取待分析对象(characters);
   const 汉字集合 = new Set(characters);
   const filterMap: Record<FilterOption, (p: string) => boolean> = {
     成字部件: (char) => 部件列表.has(char) && 汉字集合.has(char),
-    非成字部件: (char) => 部件列表.has(char) && !汉字集合.has(char),
     所有汉字: () => true,
   };
   const filterFn = filterMap[filterOption];
@@ -99,8 +97,8 @@ export default function Debugger() {
       <Flex justify="center" align="center" gap="middle">
         校对模式
         <Uploader
-          type="txt"
-          text="导入 TSV 码表"
+          type=".txt,.yaml"
+          text="导入码表"
           action={(content) => {
             const tsv = 读取表格(content);
             const 码表 = 解析码表(tsv);
@@ -109,6 +107,10 @@ export default function Debugger() {
         />
         {reference !== undefined && `已加载码表，条数：${reference.length}`}
       </Flex>
+      <Typography.Text type="secondary">
+        码表格式：每行一个条目，至少包含「单字」和「编码」两列，使用制表符分隔。文件可以为
+        .txt 或 .yaml 后缀。
+      </Typography.Text>
       <Flex
         justify="space-between"
         align="center"

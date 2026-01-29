@@ -191,7 +191,6 @@ export default function HomeLayout() {
                   <Button>示例</Button>
                 </Dropdown>
                 <Uploader
-                  type="yaml"
                   action={async (s) => {
                     const config = load(s) as 配置;
                     const valid = await validateConfig(config);

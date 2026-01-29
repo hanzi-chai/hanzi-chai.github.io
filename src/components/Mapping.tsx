@@ -284,7 +284,7 @@ const MappingUploader = ({
         });
       }}
       text="导入键盘映射"
-      type="txt"
+      type=".txt"
     />
   );
 };

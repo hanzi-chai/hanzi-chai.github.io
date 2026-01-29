@@ -34,8 +34,8 @@ export default function ElementAdder({ element }: { element?: string }) {
                   }),
                 )
               }
-              disablePlaceholder
-              disableVariables
+              allowAlphabets
+              allowElements
             />
           );
         })}

@@ -38,7 +38,7 @@ const AtomicObjective = ({
           style={{ width: "64px" }}
           value={value}
           disabled={value === undefined}
-          onChange={(value) => onChange(value || undefined)}
+          onChange={(value) => onChange(value || 0)}
         />
         <Switch
           checked={value !== undefined}
@@ -323,7 +323,7 @@ const PartialObjective = ({
               onChange={(value) => update("duplication", value)}
             />
             <AtomicObjective
-              title="用指分布偏差权重"
+              title="分布偏差权重"
               value={key_distribution}
               onChange={(value) => update("key_distribution", value)}
             />

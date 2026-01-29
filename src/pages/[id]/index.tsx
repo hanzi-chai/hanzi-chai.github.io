@@ -1,4 +1,4 @@
-import { Button, Flex, Input, Typography } from "antd";
+import { Button, Flex, Input, Select, Typography } from "antd";
 import {
   type Atom,
   type WritableAtom,
@@ -9,8 +9,10 @@ import {
   useAtom,
   useAtomValue,
   useSetAtom,
+  字集指示原子,
 } from "~/atoms";
 import {
+  type 字集指示,
   type 词典,
   type 键位分布目标,
   type 当量映射,
@@ -24,7 +26,6 @@ import {
   序列化当量映射,
   序列化键位频率目标,
 } from "~/lib";
-import ConfigManager from "~/components/ConfigManager";
 import {
   ProForm,
   ProFormText,
@@ -72,7 +73,7 @@ function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | st
           </Button>
         )}
         <Uploader
-          type="txt"
+          type=".txt"
           action={(text) => setValue(parser(读取表格(text)))}
         />
         <Button
@@ -130,7 +131,7 @@ const CustomElementUploader = () => {
           onChange={(e) => setName(e.target.value)}
         />
         <Uploader
-          type="txt"
+          type=".txt"
           disabled={name === ""}
           action={(text) => {
             const tsv = 读取表格(text);
@@ -171,15 +172,27 @@ const ConfigInfo = () => {
   );
 };
 
-function 字集() {
+function CharacterSetFilter() {
+  const [字集指示, 设置字集指示] = useAtom(字集指示原子);
   return (
     <>
       <Flex align="baseline" justify="space-between">
         <Typography.Title level={3}>字集</Typography.Title>
+        <Select<字集指示>
+          value={字集指示}
+          onChange={(value) => 设置字集指示(value)}
+          options={[
+            { label: "极简", value: "minimal" },
+            { label: "GB2312", value: "gb2312" },
+            { label: "通用", value: "general" },
+            { label: "基本", value: "basic" },
+            { label: "扩展", value: "extended" },
+            { label: "补充", value: "supplement" },
+            { label: "全部", value: "maximal" },
+          ]}
+        />
       </Flex>
-      <Typography.Paragraph>
-        字集是系统所处理的字符集合，您可以选择通用、基本或扩展三者之一。字集越大，您的方案能输入的字符就越多，但是在拆分时要考虑的字形种类也就更多。建议您从通用字集开始，根据实际需要逐步扩展。
-      </Typography.Paragraph>
+      <Typography.Paragraph>字集将用于对词库进行过滤。</Typography.Paragraph>
       <ul>
         <li>
           极简（6638 个字符）即 GB2312 和《通用规范汉字表》的交集中的所有字符；
@@ -203,7 +216,6 @@ function 字集() {
           全部（100000+
           个字符）是在补充字集的基础上增加了西夏文、西夏文构件、西夏文补充、契丹小字；
         </li>
-        <li>自定义即用户自定义的字符集合，可以是上述全部字符的任意子集。</li>
       </ul>
     </>
   );
@@ -216,6 +228,7 @@ export default function Index() {
       <EditorColumn span={12}>
         <Typography.Title level={2}>方案</Typography.Title>
         <ConfigInfo />
+        <CharacterSetFilter />
       </EditorColumn>
       <EditorColumn span={12}>
         <Typography.Title level={2}>资料</Typography.Title>

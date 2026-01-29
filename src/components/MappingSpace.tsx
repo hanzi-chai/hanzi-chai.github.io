@@ -33,9 +33,13 @@ import { 决策生成器规则, 安排描述 } from "~/lib";
 const ValueDescriptionEditor = ({
   value,
   onChange,
+  allowVariables,
+  allowPlaceholder,
 }: {
   value: 安排描述;
   onChange: (newValue: 安排描述 | undefined) => void;
+  allowVariables?: boolean;
+  allowPlaceholder?: boolean;
 }) => {
   const currentCondition = value.condition ?? [];
   const updateCondition = (index: number, key: string, update: any) => {
@@ -52,6 +56,8 @@ const ValueDescriptionEditor = ({
         <ValueEditor
           value={value.value}
           onChange={(newValue) => onChange({ ...value, value: newValue })}
+          allowVariables={allowVariables}
+          allowPlaceholder={allowPlaceholder}
         />
         打分
         <NumberInput
@@ -233,7 +239,7 @@ const MappingGeneratorsForm = () => {
           <ProFormText name="regex" label="匹配元素" />
           <ProFormItem name="value" label="添加元素安排">
             {/* @ts-ignore */}
-            <ValueDescriptionEditor />
+            <ValueDescriptionEditor allowPlaceholder allowVariables />
           </ProFormItem>
         </ProFormGroup>
       </ProFormList>

@@ -9,16 +9,16 @@ import {
 } from "~/atoms";
 import { DisplayWithSuperScript, Select } from "./Utils";
 import type { BaseOptionType } from "antd/es/select";
-import { 广义码位, 是变量, 是归并 } from "~/lib";
+import { type 广义码位, 是变量, 是归并 } from "~/lib";
 
 export interface KeySelectProps {
   value: 广义码位;
   onChange: (k: 广义码位) => void;
   allowEmpty?: boolean;
-  disableAlphabets?: boolean;
-  disableElements?: boolean;
-  disableVariables?: boolean;
-  disablePlaceholder?: boolean;
+  allowAlphabets?: boolean;
+  allowElements?: boolean;
+  allowVariables?: boolean;
+  allowPlaceholder?: boolean;
 }
 
 // 有五种可能的 key 类型：
@@ -31,10 +31,10 @@ export default function KeySelect({
   value,
   onChange,
   allowEmpty,
-  disableAlphabets,
-  disableElements,
-  disableVariables,
-  disablePlaceholder,
+  allowAlphabets,
+  allowElements,
+  allowVariables,
+  allowPlaceholder,
 }: KeySelectProps) {
   const keyOptions: BaseOptionType[] = allowEmpty
     ? [{ label: "无", value: JSON.stringify("") }]
@@ -44,7 +44,7 @@ export default function KeySelect({
     label: x,
     value: JSON.stringify(x),
   }));
-  if (!disableAlphabets) keyOptions.push(...alphabetOptions);
+  if (allowAlphabets) keyOptions.push(...alphabetOptions);
   const mapping = useAtomValue(决策原子);
   const referenceOptions = Object.entries(mapping).flatMap(
     ([element, mapped]) => {
@@ -56,14 +56,14 @@ export default function KeySelect({
       }));
     },
   );
-  if (!disableElements) keyOptions.push(...referenceOptions);
+  if (allowElements) keyOptions.push(...referenceOptions);
   const variables = useAtomValue(变量规则映射原子);
   const variableOptions = Object.keys(variables).map((key) => ({
     label: key,
     value: JSON.stringify({ variable: key }),
   }));
-  if (!disableVariables) keyOptions.push(...variableOptions);
-  if (!disablePlaceholder)
+  if (allowVariables) keyOptions.push(...variableOptions);
+  if (allowPlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const form = useAtomValueUnwrapped(如字库原子);

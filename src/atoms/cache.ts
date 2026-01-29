@@ -22,6 +22,7 @@ import {
   原始字库,
   合并拼写运算,
   图形盒子,
+  字集过滤查找表,
   展开决策,
   总序列化,
   是归并,
@@ -44,6 +45,7 @@ import {
   变换器列表原子,
   字形自定义原子,
   字母表原子,
+  字集指示原子,
   拼写运算自定义原子,
   最大码长原子,
   条件映射原子,
@@ -133,8 +135,25 @@ export const 自定义分析数据库 = new MiniDb<自定义分析>({ name: "自
 
 export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 
+export const 字集原子 = atom(async (get) => {
+  const 字集指示 = get(字集指示原子);
+  const 过滤函数 = 字集过滤查找表[字集指示]!;
+  const 原始字库数据 = get(原始字库数据原子);
+  const 字集 = new Set<string>();
+  for (const [字符, 数据] of Object.entries(原始字库数据)) {
+    if (过滤函数(字符, 数据)) {
+      字集.add(字符);
+    }
+  }
+  return 字集;
+});
+
 export const 词典原子 = atom(async (get) => {
-  return get(用户词典原子) ?? (await get(默认词典原子));
+  const 词典 = get(用户词典原子) ?? (await get(默认词典原子));
+  const 字集 = await get(字集原子);
+  return 词典.filter(({ 词 }) => {
+    return [...词].every((char) => 字集.has(char));
+  });
 });
 
 export const 自定义元素映射原子 = atom((get) => {

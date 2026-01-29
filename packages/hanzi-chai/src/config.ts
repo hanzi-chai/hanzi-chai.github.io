@@ -27,11 +27,11 @@ export const 字集指示列表 = [
   "extended",
   "supplement",
   "maximal",
-  "custom",
 ] as const;
 export type 字集指示 = (typeof 字集指示列表)[number];
 
 export interface 数据配置 {
+  character_set?: 字集指示;
   repertoire?: 原始字库数据;
   glyph_customization?: 字形自定义;
   transformers?: 变换器[];

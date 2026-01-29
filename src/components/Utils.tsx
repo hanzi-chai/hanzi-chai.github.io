@@ -57,11 +57,11 @@ export const Uploader = ({
   action: (s: string) => void;
   disabled?: boolean;
   text?: string;
-  type?: "yaml" | "json" | "txt";
+  type?: string;
 }) => {
   return (
     <Upload
-      accept={`.${type ?? "yaml"}`}
+      accept={type ?? ".yaml"}
       customRequest={({ file }) => {
         const reader = new FileReader();
         reader.addEventListener("load", () => {

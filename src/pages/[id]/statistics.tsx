@@ -75,9 +75,11 @@ interface Density {
 const AnalyzerConfig = ({
   analyzer,
   setAnalyzer,
+  disablePosition,
 }: {
   analyzer: AnalyzerForm;
   setAnalyzer: (a: AnalyzerForm) => void;
+  disablePosition?: boolean;
 }) => {
   const [form] = Form.useForm<AnalyzerForm>();
   const maxLength = useAtomValue(最大码长原子);
@@ -91,16 +93,18 @@ const AnalyzerConfig = ({
       autoFocusFirstInput={false}
     >
       <ProFormGroup>
-        <ProFormSelect
-          mode="multiple"
-          name="position"
-          label="取码"
-          options={range(maxLength).map((d) => ({
-            label: `第 ${d + 1} 码`,
-            value: d,
-          }))}
-          allowClear={false}
-        />
+        {!disablePosition && (
+          <ProFormSelect
+            mode="multiple"
+            name="position"
+            label="取码"
+            options={range(maxLength).map((d) => ({
+              label: `第 ${d + 1} 码`,
+              value: d,
+            }))}
+            allowClear={false}
+          />
+        )}
         <ProFormSelect
           name="type"
           label="类型"
@@ -234,7 +238,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
     .sort((a, b) => b.total - a.total);
   const columns: ColumnsType<UnaryDensity> = [
     {
-      title: "元素序列",
+      title: "元素",
       dataIndex: "name",
       key: "name",
       render: (_, record) => {
@@ -274,7 +278,11 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   return (
     <>
       <Typography.Title level={3}>一元分布</Typography.Title>
-      <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
+      <AnalyzerConfig
+        analyzer={analyzer}
+        setAnalyzer={setAnalyzer}
+        disablePosition
+      />
       <Table
         dataSource={dataSource}
         columns={columns}
@@ -319,7 +327,7 @@ const MarginalFirstOrderDuplication = () => {
               <KeySelect
                 key={i}
                 value={x}
-                disableAlphabets
+                allowElements
                 onChange={(newKey) => {
                   const newElements = [...elements];
                   newElements[i]! = newKey as 码位;
