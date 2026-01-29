@@ -84,7 +84,7 @@ class 全符笔顺 implements 筛选器 {
  *
  * 字根是否由部件中连续的几个笔画构成，不符合此特点的字根数量少者优先。该规则采集自宇浩输入法的文档。
  *
- * @see https://zhuyuhao.com/yuhao/docs/learn.html#符合笔顺
+ * @see https://shurufa.app/learn/division#符合笔顺
  */
 class 连续笔顺 implements 筛选器 {
   static readonly type = "连续笔顺";
@@ -235,7 +235,7 @@ class 同向笔画 implements 筛选器 {
  *
  * 避免框类部件被拆散。该规则采集自宇浩输入法的文档
  *
- * @see https://zhuyuhao.com/yuhao/docs/learn.html#结构完整
+ * @see https://shurufa.app/learn/division#结构完整
  */
 class 结构完整 implements 筛选器 {
   static readonly type = "结构完整";
