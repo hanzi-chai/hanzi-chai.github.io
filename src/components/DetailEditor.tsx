@@ -208,6 +208,17 @@ export default function DetailEditor({
             )}
           </>
         )}
+        <Item label="备注">
+          <TextArea
+            rows={2}
+            style={{ width: "128px" }}
+            placeholder="添加备注..."
+            value={data.notes}
+            onChange={(event) =>
+              setData({ ...data, notes: event.target.value })
+            }
+          />
+        </Item>
       </Background>
     </Panel>
   );

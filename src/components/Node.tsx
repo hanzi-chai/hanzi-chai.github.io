@@ -1,4 +1,4 @@
-import { Button, Dropdown } from "antd";
+import { Button, Dropdown, Tooltip } from "antd";
 import { useContext, type PropsWithChildren } from "react";
 import type { NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
@@ -177,9 +177,11 @@ const SourceNode = ({ id, data }: NodeProps<SourceData>) => {
   return (
     <>
       <ContextMenu id={id}>
-        <SourceButton type={id === "s0" ? "primary" : "default"}>
-          {data.object ? 摘要(data.object) + renderIndex(data.index) : "开始"}
-        </SourceButton>
+        <Tooltip title={data.notes} placement="top">
+          <SourceButton type={id === "s0" ? "primary" : "default"}>
+            {data.object ? 摘要(data.object) + renderIndex(data.index) : "开始"}
+          </SourceButton>
+        </Tooltip>
       </ContextMenu>
       {id !== "s0" && <Handle type="target" position={Position.Top} />}
       <Handle type="source" position={Position.Bottom} />
@@ -191,9 +193,11 @@ const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
   return (
     <>
       <ContextMenu id={id}>
-        <ConditionButton type="dashed">
-          {`${摘要(data.object)}: ${data.operator}?`}
-        </ConditionButton>
+        <Tooltip title={data.notes} placement="top">
+          <ConditionButton type="dashed">
+            {`${摘要(data.object)}: ${data.operator}?`}
+          </ConditionButton>
+        </Tooltip>
       </ContextMenu>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" id="positive" position={Position.Left} />
