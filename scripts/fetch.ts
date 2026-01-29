@@ -36,8 +36,13 @@ for (const filename of [
 ]) {
   const url = `${assetsEndpoint}${filename}.txt`;
   const path = `${outputFolder}${filename}.txt`;
-  const response = await axios.get(url);
-  writeFileSync(path, response.data);
+  try {
+    const response = await axios.get(url);
+    writeFileSync(path, response.data);
+    console.log(`已下载 ${filename}.txt`);
+  } catch (error) {
+    console.warn(`跳过 ${filename}.txt（服务器上不存在或者不可用）`);
+  }
 }
 
 cpSync(outputFolder, "public/cache/", { recursive: true });
