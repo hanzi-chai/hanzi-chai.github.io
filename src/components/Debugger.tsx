@@ -4,6 +4,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import {
   汉字集合原子,
+  原始字库数据原子,
   配置原子,
   如字库原子,
   useAtomValueUnwrapped,
@@ -21,21 +22,34 @@ interface DictEntryWithReference extends 编码条目 {
 }
 
 export default function Debugger() {
-  const config = useAtomValue(配置原子);
+  const config = useAtomValue(配置原子) as any;
   const repertoire = useAtomValueUnwrapped(如字库原子);
+  const allRepertoire = useAtomValue(原始字库数据原子);
   const characters = useAtomValue(汉字集合原子);
   const [code] = useAtomValueUnwrapped(如编码结果原子);
   const [reference, setReference] = useAtom(
     码表数据库.item(config.info?.name ?? "方案"),
   );
   const [incorrectOnly, setIncorrectOnly] = useState(true);
-  const filterOptions = ["成字部件", "所有汉字"] as const;
+  const filterOptions = [
+    "成字部件",
+    "CJK 基本集",
+    "通用规范汉字",
+    "GB2312",
+    "所有汉字",
+  ] as const;
   const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
   type FilterOption = (typeof filterOptions)[number];
   const { 部件列表 } = repertoire.获取待分析对象(characters);
   const 汉字集合 = new Set(characters);
   const filterMap: Record<FilterOption, (p: string) => boolean> = {
     成字部件: (char) => 部件列表.has(char) && 汉字集合.has(char),
+    "CJK 基本集": (char) => {
+      const code = char.codePointAt(0);
+      return code !== undefined && code >= 0x4e00 && code <= 0x9fff;
+    },
+    通用规范汉字: (char) => (allRepertoire[char]?.tygf ?? 0) > 0,
+    GB2312: (char) => (allRepertoire[char]?.gb2312 ?? 0) > 0,
     所有汉字: () => true,
   };
   const filterFn = filterMap[filterOption];
