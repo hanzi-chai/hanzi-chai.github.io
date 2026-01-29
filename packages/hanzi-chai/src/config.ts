@@ -182,6 +182,8 @@ export interface 源节点配置 {
   index?: number;
   // next 是对下个节点的引用，所以是 null
   next: string | null;
+  // 节点备注
+  notes?: string;
 }
 
 export const 二元运算符列表 = [
@@ -205,6 +207,7 @@ export interface 一元条件配置 {
   operator: 一元运算符;
   positive: string | null;
   negative: string | null;
+  notes?: string;
 }
 
 export interface 二元条件配置 {
@@ -213,6 +216,7 @@ export interface 二元条件配置 {
   value: string;
   positive: string | null;
   negative: string | null;
+  notes?: string;
 }
 
 export type 条件节点配置 = 一元条件配置 | 二元条件配置;
