@@ -7,7 +7,7 @@ info:
   description: |
     十万汉字字形输入・繁简通打。
     卿云是宇浩输入法的乱序单编衍生方案。
-    方案名取自《尚书大传》之「卿雲爛兮"\uff0c"糺縵縵兮」。
+    方案名取自《尚书大传》之「卿雲爛兮糺縵縵兮」。
 analysis:
   classifier:
     竖钩: 5
@@ -143,13 +143,6 @@ analysis:
     "\ue076":
       - 巛
       - '1'
-    "\ue10e":
-      - 彐
-      - '3'
-    "\ue121":
-      - '6'
-      - '4'
-      - '4'
   weak:
     - "\ue410"
     - "\ue039"
@@ -190,7 +183,7 @@ form:
     彡: ws
     讠: ci
     白: db
-    爿: tq
+    爿: tp
     臼: ij
     鬼: mg
     甶: mf
@@ -200,7 +193,7 @@ form:
     片: tp
     申: is
     由: ui
-    曲: vq
+    曲: nq
     电: hd
     車: xc
     叀: xc
@@ -347,7 +340,7 @@ form:
     合: sh
     僉: sq
     骨: hg
-    咼: cg
+    咼: ck
     九: fj
     瓦: nw
     乂: ci
@@ -378,7 +371,7 @@ form:
     瓜: vg
     爪: vz
     皿: xm
-    罒: xw
+    罒: xm
     舟: oz
     髟: mb
     長: mc
@@ -396,7 +389,7 @@ form:
     儿: ee
     屮: jc
     丩: jj
-    凵: jk
+    凵: jv
     勹: ib
     囗: bw
     月: yv
@@ -436,7 +429,6 @@ form:
     䒑: lc
     "\ue0e3": rj
     "\ue137": ei
-    "\ue129": ed
     "\ue834": dl
     "\ue018": uv
     "\ue08d": lv
@@ -638,8 +630,6 @@ form:
       element: 冂
     "\ue0d0":
       element: 雨
-    "\ue444":
-      element: 厶
     "\ue0c2":
       element: 舌
     "\ue052":
@@ -776,6 +766,8 @@ form:
       element: 彐
     "\ue189":
       element: 冂
+    "\ue01c":
+      element: 艮
     "\ue131":
       element: "\ue0d5"
     "\ue04e":
@@ -932,10 +924,6 @@ data:
       type: compound
       operator: ⿱
       operandList: ["\ue060", 兀]
-    命:
-      type: compound
-      operator: ⿸
-      operandList: [合, 卩]
     哀:
       type: compound
       operator: ⿱
@@ -1317,6 +1305,14 @@ data:
       type: derived_component
       source: 乀
       strokes: [{feature: reference, index: 0}]
+    严:
+      type: compound
+      operator: ⿱
+      operandList: [󲜬, 厂]
+    󲜬:
+      type: spliced_component
+      operator: ⿻
+      operandList: ["\uf006", 丷]
     卿:
       type: compound
       tags: [横向包夹]

@@ -148,7 +148,7 @@ analysis:
     - "\ue039"
     - "\ue042"
 form:
-  alphabet: qwertyuiopasdfghjklzxcvbnm
+  alphabet: abcdefghijklmnopqrstuvwxyz
   mapping:
     '1': fi
     '2': us
