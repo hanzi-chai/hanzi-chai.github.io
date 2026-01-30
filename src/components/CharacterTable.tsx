@@ -12,6 +12,7 @@ import {
   useAddAtom,
   useAtomValue,
   用户原始字库数据原子,
+  原始可编辑字库数据原子,
   useAtomValueUnwrapped,
 } from "~/atoms";
 import {
@@ -57,7 +58,7 @@ export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) 
   const remote = useContext(RemoteContext);
   const userRepertoire = useAtomValue(用户原始字库数据原子);
   const addUser = useAddAtom(用户原始字库数据原子);
-  const add = useAddAtom(原始字库数据原子 as any);
+  const add = useAddAtom(原始可编辑字库数据原子);
   const inlineUpdate = async (newCharacter: 原始汉字数据) => {
     if (userRepertoire[char] !== undefined) {
       addUser(char, newCharacter);

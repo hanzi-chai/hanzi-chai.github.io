@@ -56,7 +56,7 @@ import {
   键盘原子,
   默认目标原子,
 } from ".";
-import { 配置原子 } from "./config";
+import { 位置原子, 配置原子 } from "./config";
 
 const 资源缓存: Record<string, string> = {};
 
@@ -98,7 +98,18 @@ async function 处理压缩文件(filename: string, response: Response) {
 
 // 服务器资源
 
-export const 原始字库数据原子 = atom({} as 原始字库数据);
+export const 远程原子 = atom((get) => {
+  const location = get(位置原子);
+  return location.pathname?.endsWith("admin") ?? false;
+});
+
+export const 原始字库数据原子 = atom(async () => {
+  const content = await 拉取资源("repertoire.json.deflate");
+  const data: 原始字库数据 = JSON.parse(content);
+  return data;
+});
+
+export const 原始可编辑字库数据原子 = atom({} as 原始字库数据);
 
 export const 默认词典原子 = atom(async () => {
   const content = await 拉取资源("dictionary.txt");
@@ -138,7 +149,7 @@ export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 export const 字集原子 = atom(async (get) => {
   const 字集指示 = get(字集指示原子);
   const 过滤函数 = 字集过滤查找表[字集指示]!;
-  const 原始字库数据 = get(原始字库数据原子);
+  const 原始字库数据 = await get(原始字库数据原子);
   const 字集 = new Set<string>();
   for (const [字符, 数据] of Object.entries(原始字库数据)) {
     if (过滤函数(字符, 数据)) {

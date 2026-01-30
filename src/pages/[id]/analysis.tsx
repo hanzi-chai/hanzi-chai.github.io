@@ -1,49 +1,50 @@
 import {
   Button,
   Col,
+  Collapse,
   Flex,
   Modal,
   Pagination,
   Radio,
   Row,
+  Select,
   Skeleton,
   Space,
   Statistic,
   Switch,
 } from "antd";
-import {
-  useAtomValue,
-  如笔顺映射原子,
-  别名显示原子,
-  如字库原子,
-  自定义拆分原子,
-  汉字集合原子,
-  决策原子,
-  动态自定义拆分原子,
-  useAtom,
-  部件分析器原子,
-  复合体分析器原子,
-  useAtomValueUnwrapped,
-} from "~/atoms";
-import { Collapse, Select } from "antd";
-import ResultDetail from "~/components/ResultDetail";
 import { Suspense, useState } from "react";
 import {
-  获取注册表,
-  type 基本分析,
-  type 默认部件分析,
-  type 字形分析结果,
-} from "~/lib";
-import Selector from "~/components/Selector";
-import Degenerator from "~/components/Degenerator";
+  useAtom,
+  useAtomValue,
+  useAtomValueUnwrapped,
+  决策原子,
+  别名显示原子,
+  动态自定义拆分原子,
+  复合体分析器原子,
+  如字库原子,
+  如字形分析结果原子,
+  如笔顺映射原子,
+  汉字集合原子,
+  自定义拆分原子,
+  部件分析器原子,
+} from "~/atoms";
 import CharacterQuery from "~/components/CharacterQuery";
-import { 如字形分析结果原子 } from "~/atoms";
+import Degenerator from "~/components/Degenerator";
+import ResultDetail from "~/components/ResultDetail";
 import ResultSummary from "~/components/ResultSummary";
+import Selector from "~/components/Selector";
 import {
-  type 字符过滤器参数,
+  type 基本分析,
+  type 字形分析结果,
+  获取注册表,
+  type 默认部件分析,
+} from "~/lib";
+import {
   exportTSV,
   useChaifenTitle,
   字符过滤器,
+  type 字符过滤器参数,
 } from "~/utils";
 
 const dumpAnalysisResult = (

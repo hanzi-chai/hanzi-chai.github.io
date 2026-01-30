@@ -360,3 +360,5 @@ export function 获取汉字集合(词典: 词典): Set<string> {
 
 export const hex = (汉字: string) =>
   汉字.codePointAt(0)!.toString(16).toUpperCase();
+
+export const 和编码 = (c: string) => `${c} (U+${hex(c)})`;

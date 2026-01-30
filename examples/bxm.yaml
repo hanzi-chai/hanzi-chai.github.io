@@ -33,9 +33,9 @@ analysis:
     撇点: 9
     撇折: 9
     斜钩: 9
-    竖折撇: 10
-    竖折折钩: 10
-    竖折折: 10
+    竖折撇: 9
+    竖折折钩: 9
+    竖折折: 9
   degenerator:
     no_cross: true
     feature:
@@ -143,19 +143,6 @@ analysis:
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping_type: 1
-  grouping:
-    首字母-ê: 首字母-e
-    "\ue452": 十
-    "\ue401": 力
-    "\ue0f1": 肀
-    "\ue102": 王
-    "\ue443": "\ue068"
-    "\ue44b": 禾
-    于: 干
-    "\ue413": 十
-    "\uf037": 帀
-    "\ue0d1": 夫
-    "\ue822": 北
   mapping:
     '1': h
     '2': i
@@ -166,7 +153,6 @@ form:
     '7': z
     '8': w
     '9': l
-    '10': l
     丁: t
     土: 'y'
     二: g
@@ -679,6 +665,30 @@ form:
     "\ue117": f
     "\uf038": j
     "\ue438": k
+    首字母-ê:
+      element: 首字母-e
+    "\ue452":
+      element: 十
+    "\ue401":
+      element: 力
+    "\ue0f1":
+      element: 肀
+    "\ue102":
+      element: 王
+    "\ue443":
+      element: "\ue068"
+    "\ue44b":
+      element: 禾
+    于:
+      element: 干
+    "\ue413":
+      element: 十
+    "\uf037":
+      element: 帀
+    "\ue0d1":
+      element: 夫
+    "\ue822":
+      element: 北
 encoder:
   max_length: 4
   auto_select_length: 4

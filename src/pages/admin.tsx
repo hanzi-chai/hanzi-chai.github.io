@@ -5,7 +5,7 @@ import { useChaifenTitle } from "~/utils";
 import { listAll } from "~/api";
 import { useEffect } from "react";
 import { useSetAtom } from "jotai";
-import { 原始字库数据原子 } from "~/atoms";
+import { 原始可编辑字库数据原子 } from "~/atoms";
 
 const checkIDsInData = (data: 原始汉字数据[]) => {
   const reverseGF3001Map = new Map<
@@ -40,7 +40,7 @@ const checkIDsInData = (data: 原始汉字数据[]) => {
 
 export default function AdminLayout() {
   useChaifenTitle("管理");
-  const set = useSetAtom(原始字库数据原子);
+  const set = useSetAtom(原始可编辑字库数据原子);
 
   useEffect(() => {
     listAll().then((data) => {

@@ -1,38 +1,30 @@
-import { Suspense, useEffect, useState } from "react";
+import { AppstoreOutlined } from "@ant-design/icons";
+import BoldOutlined from "@ant-design/icons/BoldOutlined";
+import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
+import MailOutlined from "@ant-design/icons/MailOutlined";
+import NumberOutlined from "@ant-design/icons/NumberOutlined";
+import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
+import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
+import RiseOutlined from "@ant-design/icons/RiseOutlined";
+import SettingOutlined from "@ant-design/icons/SettingOutlined";
+import type { MenuProps } from "antd";
 import {
+  Avatar,
   Button,
+  Empty,
   Flex,
   Layout,
   Menu,
-  Avatar,
   Tooltip,
-  Empty,
   Typography,
 } from "antd";
-import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
-import MailOutlined from "@ant-design/icons/MailOutlined";
-import SettingOutlined from "@ant-design/icons/SettingOutlined";
-import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
-import BoldOutlined from "@ant-design/icons/BoldOutlined";
-import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
-import RiseOutlined from "@ant-design/icons/RiseOutlined";
-import NumberOutlined from "@ant-design/icons/NumberOutlined";
-
-import type { MenuProps } from "antd";
+import { Suspense, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import CusSpin from "~/components/CustomSpin";
-import {
-  基本信息原子,
-  useAtomValue,
-  useSetAtom,
-  原始字库数据原子,
-  拉取资源,
-} from "~/atoms";
-import { examples } from "~/templates";
-import { AppstoreOutlined } from "@ant-design/icons";
-import { getCurrentId } from "~/utils";
+import { 基本信息原子, useAtomValue } from "~/atoms";
 import ConfigManager from "~/components/ConfigManager";
-import type { 原始字库数据 } from "~/lib";
+import CusSpin from "~/components/CustomSpin";
+import { examples } from "~/templates";
+import { getCurrentId } from "~/utils";
 
 const items: MenuProps["items"] = [
   { label: "基本", key: "", icon: <MailOutlined /> },
@@ -161,14 +153,6 @@ function EditorLayout() {
 
 export default function Contextualized() {
   const id = getCurrentId();
-  const set = useSetAtom(原始字库数据原子);
-
-  useEffect(() => {
-    拉取资源("repertoire.json.deflate").then((content) => {
-      const data: 原始字库数据 = JSON.parse(content);
-      set(data);
-    });
-  }, [id, set]);
 
   if (!(id in localStorage || id in examples)) {
     return <Empty description="无方案数据" />;

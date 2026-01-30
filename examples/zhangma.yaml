@@ -825,7 +825,7 @@ data:
       type: compound
       tags: []
       operator: ⿱
-      operandList: ["\ue40f", "\ue122"]
+      operandList: ["\ue40f", ㇤]
     "\uea02":
       type: compound
       operator: ⿴
@@ -883,10 +883,6 @@ data:
       type: compound
       operator: ⿳
       operandList: ["\ue006", 丨, "\ue0b7"]
-    乙:
-      type: derived_component
-      source: "\ue065"
-      strokes: [{feature: reference, index: 0}]
     鼍:
       type: compound
       operator: ⿱

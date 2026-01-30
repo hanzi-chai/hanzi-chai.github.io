@@ -16,6 +16,7 @@ import {
   type Result,
   default_err,
   ok,
+  hex,
 } from "./utils.js";
 
 class 原始字库 {
@@ -61,25 +62,25 @@ class 原始字库 {
   }
 
   获取源部件(
-    name: string,
+    字符: string,
     字形缓存: Map<string, 矢量图形数据> = new Map(),
     栈: string[] = [],
   ): Result<基本部件数据, Error> {
-    const 源字 = this.字库[name];
+    const 源字 = this.字库[字符];
+    const 字符信息 = `${字符} (U+${hex(字符)} )`;
+    const 栈信息 = 栈.map((x) => `${x} (U+${hex(x)})`).join(" -> ");
     if (源字 === undefined)
-      return default_err(`源部件 ${name} 不存在，当前栈：${栈.join(" -> ")}`);
+      return default_err(`源部件 ${字符信息} 不存在，当前栈：${栈信息}`);
     const 源字形 = 源字.glyphs.find(是部件或全等);
     if (源字形 === undefined)
       return default_err(
-        `源部件 ${name} 没有部件或全等，当前栈：${栈.join(" -> ")}`,
+        `源部件 ${字符信息} 没有部件或全等，当前栈：${栈信息}`,
       );
-    const 渲染后源字形 = this.递归渲染原始字形(源字形, 字形缓存, [...栈, name]);
+    const 渲染后源字形 = this.递归渲染原始字形(源字形, 字形缓存, [...栈, 字符]);
     if (!渲染后源字形.ok) return 渲染后源字形;
     const value = 渲染后源字形.value;
     if (value.type !== "basic_component")
-      return default_err(
-        `源部件 ${name} 不是基本部件，当前栈：${栈.join(" -> ")}`,
-      );
+      return default_err(`源部件 ${字符信息} 不是基本部件，当前栈：${栈信息}`);
     return ok(value);
   }
 

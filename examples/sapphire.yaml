@@ -744,7 +744,7 @@ data:
       gb2312: 0
       gf0014_id: null
       readings: []
-      glyphs: [{type: derived_component, source: 熏, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}, {feature: reference, index: 11}, {feature: reference, index: 12}, {feature: reference, index: 13}]}]
+      glyphs: [{type: derived_component, source: "\ue085", strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}]}]
       ambiguous: false
       name: 熏字底
     "\uf001":

@@ -17,7 +17,7 @@ import {
 } from "~/lib";
 import { defaultConfig, examples, type Example } from "~/templates";
 
-const 位置原子 = atomWithLocation();
+export const 位置原子 = atomWithLocation();
 
 export const 方案序列号原子 = atom((get) => {
   if (import.meta.env.MODE === "CF") {

@@ -9,7 +9,6 @@ import type {
   决策空间,
   分析配置,
   变换器,
-  字集指示,
   安排,
   模式,
   结构变量,
@@ -21,8 +20,7 @@ import type {
   字形数据,
   汉字数据,
 } from "./data.js";
-import { chars, default_err, hex, ok, type Result } from "./utils.js";
-import { 字集过滤查找表 } from "./unicode.js";
+import { chars, default_err, hex, ok, type Result, 和编码 } from "./utils.js";
 import { 获取注册表 } from "./main.js";
 
 // 变量映射：variable id -> 绑定的子树 key
@@ -218,7 +216,7 @@ class 字库 {
     for (const 部分 of 复合体.operandList) {
       const 字形数据 = this.repertoire[部分]?.glyph;
       if (字形数据 === undefined)
-        return default_err(`无法找到字形数据: ${部分}`);
+        return default_err(`无法找到字形数据: ${和编码(部分)}`);
       if (字形数据.type === "basic_component") {
         let 盒子 = 图形缓存.get(部分);
         if (盒子 === undefined) {
