@@ -7,6 +7,9 @@ import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
 import { visualizer } from "rollup-plugin-visualizer";
 import mdx from "@mdx-js/rollup";
+import packageJson from "./package.json";
+
+const APP_VERSION = packageJson.version;
 
 const wasmContentTypePlugin = {
   name: "wasm-content-type-plugin",
@@ -17,6 +20,30 @@ const wasmContentTypePlugin = {
       }
       next();
     });
+  },
+};
+
+// 动态注入版本化的 prefetch 链接
+const injectPrefetchPlugin = {
+  name: "inject-prefetch",
+  transformIndexHtml(html: string) {
+    const dataFiles = [
+      "cjk.txt",
+      "dictionary.txt",
+      "distribution.txt",
+      "equivalence.txt",
+      "tygf.txt",
+      "repertoire.json.deflate",
+    ];
+    
+    const prefetchLinks = dataFiles
+      .map(file => `  <link rel="prefetch" href="/data/${APP_VERSION}/${file}" as="fetch" />`)
+      .join("\n");
+    
+    return html.replace(
+      /(<meta charset="UTF-8" \/>)/,
+      `$1\n  <link rel="icon" href="/favicon.ico" />\n${prefetchLinks}`
+    );
   },
 };
 
@@ -58,13 +85,15 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      APP_VERSION: JSON.stringify(process.env.npm_package_version),
+      APP_VERSION: JSON.stringify(APP_VERSION),
+      "import.meta.env.APP_VERSION": JSON.stringify(APP_VERSION),
     },
     optimizeDeps: {
       exclude: ["libchai"],
     },
     plugins: [
       wasmContentTypePlugin,
+      injectPrefetchPlugin,
       { enforce: "pre", ...mdx() },
       react({
         // plugins: [["@swc-jotai/react-refresh", {}]],

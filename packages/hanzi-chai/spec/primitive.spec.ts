@@ -8,13 +8,13 @@ const { 字库, 原始字库 } = 获取数据();
 describe("e2e test", () => {
   it("checks stroke orders are correct", { timeout: 50000 }, () => {
     const tygf = new Map(
-      readFileSync("../../public/cache/tygf.txt", "utf-8")
+      readFileSync("../src/data/tygf.txt", "utf-8")
         .trim()
         .split("\n")
         .map((x) => x.trim().split("\t") as [string, string]),
     );
     const cjk = new Map(
-      readFileSync("../../public/cache/cjk.txt", "utf-8")
+      readFileSync("../src/data/cjk.txt", "utf-8")
         .trim()
         .split("\n")
         .map((x) => x.trim().split("\t") as [string, string]),
