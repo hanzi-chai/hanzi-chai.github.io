@@ -13,7 +13,6 @@
     "dist"
   ],
   "scripts": {
-    "fetch": "tsx scripts/fetch.ts",
     "build": "tsc -p tsconfig.build.json && cp -r src/data dist/data",
     "test": "vitest",
     "testui": "vitest --ui --coverage",
