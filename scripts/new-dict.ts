@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import pako from "pako";
-import { 原始字库数据, 是私用区, 词典 } from "~/lib";
+import { chars, 原始字库数据, 是私用区, 词典 } from "~/lib";
 
 const frequency = new Map<string, number>();
 const frequencyContent = readFileSync("public/cache/frequency.txt", "utf-8");
@@ -34,9 +34,9 @@ for (const [char, data] of Object.entries(repertoire)) {
 
 const dictionaryContent = readFileSync("public/cache/dictionary.txt", "utf-8");
 for (const line of dictionaryContent.trim().split("\n")) {
-  const [char, reading] = line.split("\t");
-  const f = frequency.get(char!) || 0;
-  newDict.push({ 词: char!, 拼音: [reading!], 频率: f });
+  const [char, reading, freq] = line.split("\t");
+  if (chars(char) === 1) continue;
+  newDict.push({ 词: char!, 拼音: [reading!], 频率: Number(freq) });
 }
 
 writeFileSync(

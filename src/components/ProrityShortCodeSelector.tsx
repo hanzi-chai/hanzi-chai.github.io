@@ -1,36 +1,12 @@
-import { Suspense } from "react";
 import {
   useAtomValue,
   优先简码原子,
   最大码长原子,
   优先简码映射原子,
   useAtom,
-  useAtomValueUnwrapped,
-  如编码结果原子,
 } from "~/atoms";
 import { Select } from "~/components/Utils";
 import { type 优先简码, 识别符 } from "~/lib";
-
-export function 编码渲染({
-  index,
-  type,
-}: {
-  index: number;
-  type: "全码" | "简码";
-}) {
-  const [编码结果] = useAtomValueUnwrapped(如编码结果原子);
-  const { 全码, 全码排名, 简码, 简码排名 } = 编码结果[index]!;
-  const code = type === "全码" ? 全码 : 简码;
-  const rank = type === "全码" ? Math.abs(全码排名) : Math.abs(简码排名);
-  return (
-    <Suspense fallback={<span>加载中...</span>}>
-      <span style={{ color: rank > 0 ? "red" : undefined }}>
-        {code}
-        {rank > 0 ? `[${rank}]` : ""}
-      </span>
-    </Suspense>
-  );
-}
 
 export default function PriorityShortCodeSelector({
   词,

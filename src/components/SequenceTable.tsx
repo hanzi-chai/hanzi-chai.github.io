@@ -1,20 +1,28 @@
-import { Button, Flex, Input, Space, Table } from "antd";
+import { Button, Flex, Input, Space } from "antd";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
   如组装结果与优先简码原子,
-  如组装结果原子,
   最大码长原子,
+  type 联合条目,
+  联合结果原子,
 } from "~/atoms";
-import { 序列化, 总序列化, 识别符, type 码位, type 组装条目 } from "~/lib";
+import { 序列化, 总序列化, 识别符, type 码位 } from "~/lib";
 import { 如编码结果原子 } from "~/atoms";
-import type { ProColumns } from "@ant-design/pro-components";
+import { ProTable, type ProColumns } from "@ant-design/pro-components";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
 import type { ReactNode } from "react";
 import { exportTSV } from "~/utils";
-import { 编码渲染 } from "./ProrityShortCodeSelector";
-import type { ColumnsType } from "antd/es/table";
+
+export function 编码渲染({ code, rank }: { code: string; rank: number }) {
+  return (
+    <span style={{ color: rank > 0 ? "red" : undefined }}>
+      {code}
+      {rank > 0 ? `[${rank}]` : ""}
+    </span>
+  );
+}
 
 const ExportAssembly = () => {
   const 组装结果 = useAtomValueUnwrapped(如组装结果与优先简码原子);
@@ -66,7 +74,9 @@ const ExportCode = () => {
   );
 };
 
-const getColumnSearchProps = (dataIndex: "词"): ProColumns<组装条目> => ({
+const getColumnSearchProps = (
+  dataIndex: "词" | "全码" | "简码",
+): ProColumns<联合条目> => ({
   filterDropdown: ({
     setSelectedKeys,
     selectedKeys,
@@ -104,9 +114,9 @@ export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => 
 
 export default function SequenceTable() {
   const 最大码长 = useAtomValue(最大码长原子);
-  const 组装结果 = useAtomValueUnwrapped(如组装结果原子);
+  const 联合结果 = useAtomValueUnwrapped(联合结果原子);
 
-  const dataSource = 组装结果.map((x, i) => ({
+  const dataSource = 联合结果.map((x, i) => ({
     ...x,
     key: 识别符(x.词, x.拼音来源列表),
     originalIndex: i,
@@ -114,12 +124,13 @@ export default function SequenceTable() {
 
   dataSource.sort((a, b) => b.频率 - a.频率);
 
-  const columns: ColumnsType<组装条目> = [
+  const columns: ProColumns<联合条目>[] = [
     {
       title: "名称",
       dataIndex: "词",
       sortDirections: ["ascend", "descend"],
       width: 96,
+      ...getColumnSearchProps("词"),
     },
     {
       title: "频率",
@@ -181,6 +192,7 @@ export default function SequenceTable() {
       },
       sortDirections: ["ascend", "descend"],
       width: 96,
+      filters: true,
       onFilter: (value, record) => {
         const element = record.元素序列[i];
         if (element === undefined) {
@@ -188,6 +200,7 @@ export default function SequenceTable() {
         }
         return 序列化(element) === value;
       },
+      valueEnum: allValues,
       ellipsis: true,
     });
   }
@@ -210,33 +223,30 @@ export default function SequenceTable() {
       title: "全码",
       width: 96,
       render: (_, record) => (
-        <编码渲染 index={record.originalIndex} type="全码" />
+        <编码渲染 code={record.全码} rank={Math.abs(record.全码排名)} />
       ),
-      // ...getColumnSearchProps("全码"),
+      ...getColumnSearchProps("全码"),
     },
     {
       title: "简码",
       width: 96,
       render: (_, record) => (
-        <编码渲染 index={record.originalIndex} type="简码" />
+        <编码渲染 code={record.简码} rank={Math.abs(record.简码排名)} />
       ),
-      // ...getColumnSearchProps("简码"),
+      ...getColumnSearchProps("简码"),
     },
   );
 
   return (
-    <>
-      <Flex justify="end" gap="small">
-        <ExportAssembly />
-        <ExportCode />
-      </Flex>
-      <Table<组装条目>
-        scroll={{ y: 1080 }}
-        columns={columns}
-        dataSource={dataSource}
-        size="small"
-        pagination={{ pageSize: 100 }}
-      />
-    </>
+    <ProTable<联合条目>
+      scroll={{ y: 1080 }}
+      columns={columns}
+      dataSource={dataSource}
+      size="small"
+      pagination={{ pageSize: 100 }}
+      search={false}
+      defaultSize="small"
+      toolBarRender={() => [<ExportAssembly key={1} />, <ExportCode key={2} />]}
+    />
   );
 }
