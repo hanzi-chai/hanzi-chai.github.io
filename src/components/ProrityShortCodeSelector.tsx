@@ -1,9 +1,9 @@
 import {
+  useAtom,
   useAtomValue,
   优先简码原子,
-  最大码长原子,
   优先简码映射原子,
-  useAtom,
+  最大码长原子,
 } from "~/atoms";
 import { Select } from "~/components/Utils";
 import { type 优先简码, 识别符 } from "~/lib";

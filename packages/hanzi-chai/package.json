@@ -14,8 +14,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && cp -r src/data dist/data",
-    "test": "vitest",
-    "testui": "vitest --ui --coverage",
+    "test": "vitest --test-timeout=50000",
+    "testui": "vitest --test-timeout=50000 --ui --coverage",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

@@ -1,19 +1,21 @@
+import { type ProColumns, ProTable } from "@ant-design/pro-components";
 import { Button, Flex, Input, Space } from "antd";
+import type { ReactNode } from "react";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
+  优先简码映射原子,
   如组装结果与优先简码原子,
+  如编码结果原子,
   最大码长原子,
   type 联合条目,
   联合结果原子,
 } from "~/atoms";
-import { 序列化, 总序列化, 识别符, type 码位 } from "~/lib";
-import { 如编码结果原子 } from "~/atoms";
-import { ProTable, type ProColumns } from "@ant-design/pro-components";
+import { 序列化, 总序列化, type 码位, 识别符 } from "~/lib";
+import { exportTSV } from "~/utils";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
-import type { ReactNode } from "react";
-import { exportTSV } from "~/utils";
+import { range } from "lodash-es";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
   return (
@@ -115,6 +117,7 @@ export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => 
 export default function SequenceTable() {
   const 最大码长 = useAtomValue(最大码长原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
+  const 优先简码映射 = useAtomValue(优先简码映射原子);
 
   const dataSource = 联合结果.map((x, i) => ({
     ...x,
@@ -218,6 +221,15 @@ export default function SequenceTable() {
           />
         );
       },
+      filters: true,
+      onFilter: (value, record) => {
+        const hash = 识别符(record.词, record.拼音来源列表);
+        const level = 优先简码映射.get(hash) ?? -1;
+        return level.toString() === value;
+      },
+      valueEnum: Object.fromEntries(
+        range(0, 最大码长).map((x) => [x, x.toString()]),
+      ),
     },
     {
       title: "全码",

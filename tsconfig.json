@@ -25,6 +25,7 @@
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,
     "types": [
+      "@types/node",
       "@modyfi/vite-plugin-yaml/modules",
       "./vite-env.d.ts",
       "@types/mdx"

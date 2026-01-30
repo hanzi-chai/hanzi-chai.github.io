@@ -24,6 +24,7 @@ jobs:
 
       - name: Test
         run: |
+          npm ci
           npm run fetch
           cd packages/hanzi-chai
           npm ci
