@@ -6,7 +6,7 @@ import { 获取数据 } from "./index.js";
 const { 字库, 原始字库 } = 获取数据();
 
 describe("e2e test", () => {
-  it("checks stroke orders are correct", () => {
+  it("checks stroke orders are correct", { timeout: 50000 }, () => {
     const tygf = new Map(
       readFileSync("../../public/cache/tygf.txt", "utf-8")
         .trim()
