@@ -252,3 +252,13 @@ export const 字集过滤查找表: Record<
   supplement: (k, v) => v.tygf > 0 || 是汉字(k) || 是汉字补充(k),
   maximal: (k, _) => !是私用区(k),
 };
+
+export const 字集过滤选项 = [
+  { label: "极简", value: "minimal" },
+  { label: "GB2312", value: "gb2312" },
+  { label: "通用", value: "general" },
+  { label: "基本", value: "basic" },
+  { label: "扩展", value: "extended" },
+  { label: "补充", value: "supplement" },
+  { label: "全部", value: "maximal" },
+];
