@@ -12,14 +12,24 @@ import {
 } from "~/atoms";
 import { 如编码结果原子 } from "~/atoms";
 import { Uploader } from "~/components/Utils";
-import { chars, 解析码表, 读取表格 } from "~/lib";
+import {
+  chars,
+  type 字集指示,
+  字集过滤查找表,
+  字集过滤选项,
+  解析码表,
+  读取表格,
+} from "~/lib";
 import type { 编码条目 } from "~/utils";
 
-interface DictEntryWithReference extends 编码条目 {
+interface 编码条目与参考 extends 编码条目 {
   参考全码: string[];
   状态: "correct" | "incorrect" | "unknown";
   标识符: string;
 }
+
+type 扩展字集指示 = 字集指示 | "components";
+type 过滤 = (typeof 字集过滤查找表)[字集指示];
 
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
@@ -31,28 +41,17 @@ export default function Debugger() {
     码表数据库.item(config.info?.name ?? "方案"),
   );
   const [incorrectOnly, setIncorrectOnly] = useState(true);
-  const filterOptions = [
-    "成字部件",
-    "CJK 基本集",
-    "通用规范汉字",
-    "GB2312",
-    "所有汉字",
-  ] as const;
-  const [filterOption, setFilterOption] = useState<FilterOption>("所有汉字");
-  type FilterOption = (typeof filterOptions)[number];
+  const [filterOption, setFilterOption] = useState<扩展字集指示>("maximal");
   const { 部件列表 } = repertoire.获取待分析对象(characters);
-  const 汉字集合 = new Set(characters);
-  const filterMap: Record<FilterOption, (p: string) => boolean> = {
-    成字部件: (char) => 部件列表.has(char) && 汉字集合.has(char),
-    "CJK 基本集": (char) => {
-      const code = char.codePointAt(0);
-      return code !== undefined && code >= 0x4e00 && code <= 0x9fff;
+  const 是部件: 过滤 = (c, _) => 部件列表.has(c) && characters.has(c);
+  const 过滤函数 =
+    filterOption === "components" ? 是部件 : 字集过滤查找表[filterOption];
+  const filterOptions = [
+    {
+      label: "成字部件",
+      value: "components",
     },
-    通用规范汉字: (char) => (allRepertoire[char]?.tygf ?? 0) > 0,
-    GB2312: (char) => (allRepertoire[char]?.gb2312 ?? 0) > 0,
-    所有汉字: () => true,
-  };
-  const filterFn = filterMap[filterOption];
+  ].concat(字集过滤选项);
 
   const 编码映射 = new Map<string, string[]>();
   for (const { 词, 编码 } of reference || []) {
@@ -65,8 +64,13 @@ export default function Debugger() {
   let correct = 0;
   let incorrect = 0;
   let unknown = 0;
-  let dataSource: DictEntryWithReference[] = code
-    .filter((x) => chars(x.词) === 1 && filterFn(x.词))
+  let dataSource: 编码条目与参考[] = code
+    .filter((x) => {
+      if (chars(x.词) !== 1) return false;
+      const data = allRepertoire[x.词];
+      if (!data) return false;
+      return 过滤函数(x.词, data);
+    })
     .map((x) => {
       const codes = 编码映射.get(x.词) ?? [];
       const hash = `${x.词}-${x.全码}`;
@@ -133,7 +137,8 @@ export default function Debugger() {
         <Form.Item label="校对范围" style={{ margin: 0 }}>
           <Select
             value={filterOption}
-            options={filterOptions.map((x) => ({ label: x, value: x }))}
+            style={{ width: 96 }}
+            options={filterOptions}
             onChange={setFilterOption}
           />
         </Form.Item>

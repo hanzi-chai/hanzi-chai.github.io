@@ -27,6 +27,7 @@ import {
   序列化当量映射,
   序列化键位频率目标,
   字集过滤查找表,
+  字集过滤选项,
 } from "~/lib";
 import {
   ProForm,
@@ -200,15 +201,7 @@ export default function Index() {
           <Select<字集指示>
             value={字集指示}
             onChange={(value) => 设置字集指示(value)}
-            options={[
-              { label: "极简", value: "minimal" },
-              { label: "GB2312", value: "gb2312" },
-              { label: "通用", value: "general" },
-              { label: "基本", value: "basic" },
-              { label: "扩展", value: "extended" },
-              { label: "补充", value: "supplement" },
-              { label: "全部", value: "maximal" },
-            ]}
+            options={字集过滤选项}
           />
         </Flex>
         <Typography.Paragraph>字集将用于对词库进行过滤。</Typography.Paragraph>
