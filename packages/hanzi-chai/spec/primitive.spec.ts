@@ -1,24 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "fs";
-import { 矢量图形数据, 默认分类器, 是基本区汉字 } from "../src/index.js";
+import { 矢量图形数据, 默认分类器, 是基本区汉字, 获取通用规范汉字笔画数据, 获取CJK汉字笔画数据 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 const { 字库, 原始字库 } = 获取数据();
 
 describe("e2e test", () => {
   it("checks stroke orders are correct", { timeout: 50000 }, () => {
-    const tygf = new Map(
-      readFileSync("../../public/cache/tygf.txt", "utf-8")
-        .trim()
-        .split("\n")
-        .map((x) => x.trim().split("\t") as [string, string]),
-    );
-    const cjk = new Map(
-      readFileSync("../../public/cache/cjk.txt", "utf-8")
-        .trim()
-        .split("\n")
-        .map((x) => x.trim().split("\t") as [string, string]),
-    );
+    const tygf = 获取通用规范汉字笔画数据();
+    const cjk = 获取CJK汉字笔画数据();
     const result = new Map<string, string[]>();
     const summarize = (glyph: 矢量图形数据) =>
       glyph.map((x) => 默认分类器[x.feature]).join("");

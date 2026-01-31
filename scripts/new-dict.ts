@@ -1,9 +1,12 @@
 import { readFileSync, writeFileSync } from "fs";
 import pako from "pako";
 import { chars, 原始字库数据, 是私用区, 词典 } from "~/lib";
+import { getLocalDataPath } from "./version.js";
+
+const outputDir = getLocalDataPath();
 
 const frequency = new Map<string, number>();
-const frequencyContent = readFileSync("public/cache/frequency.txt", "utf-8");
+const frequencyContent = readFileSync(`${outputDir}/frequency.txt`, "utf-8");
 for (const line of frequencyContent.trim().split("\n")) {
   const [char, freqStr] = line.split("\t");
   frequency.set(char!, Number(freqStr));
@@ -11,7 +14,7 @@ for (const line of frequencyContent.trim().split("\n")) {
 
 const repertoire: 原始字库数据 = JSON.parse(
   pako.inflate(
-    readFileSync("public/cache/repertoire.json.deflate"),
+    readFileSync(`${outputDir}/repertoire.json.deflate`),
     { to: "string" }
   )
 )
@@ -32,14 +35,14 @@ for (const [char, data] of Object.entries(repertoire)) {
   }
 }
 
-const dictionaryContent = readFileSync("public/cache/dictionary.txt", "utf-8");
+const dictionaryContent = readFileSync(`${outputDir}/dictionary.txt`, "utf-8");
 for (const line of dictionaryContent.trim().split("\n")) {
   const [char, reading, freq] = line.split("\t");
-  if (chars(char) === 1) continue;
-  newDict.push({ 词: char!, 拼音: [reading!], 频率: Number(freq) });
+  if (!char || chars(char) === 1) continue;
+  newDict.push({ 词: char, 拼音: [reading!], 频率: Number(freq) });
 }
 
 writeFileSync(
-  "public/cache/new_dictionary.txt",
+  `${outputDir}/new_dictionary.txt`,
   newDict.map((entry) => `${entry.词}\t${entry.拼音.join(",")}\t${entry.频率}`).join("\n")
 )

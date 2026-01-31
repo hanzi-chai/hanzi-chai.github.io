@@ -33,6 +33,37 @@ export function 读取配置(路径: string): 配置 {
   return load(内容) as 配置;
 }
 
+// 辅助函数：从数据文件读取并解析
+function 读取数据文件<T>(
+  文件名: string,
+  解析函数: (tsv: string[][]) => T,
+  自定义路径?: string,
+): T {
+  const 默认路径 = path.join(__dirname, "data", 文件名);
+  const 内容 = readFileSync(自定义路径 ?? 默认路径, "utf-8");
+  const tsv = 读取表格(内容);
+  return 解析函数(tsv);
+}
+
+// 辅助函数：读取笔画数据
+function 读取笔画数据(
+  文件名: string,
+  自定义路径?: string,
+): Map<string, string> {
+  return 读取数据文件(
+    文件名,
+    (tsv) => {
+      const 笔画数据 = new Map<string, string>();
+      for (const [char, strokes] of tsv) {
+        if (char === undefined || strokes === undefined) continue;
+        笔画数据.set(char, strokes);
+      }
+      return 笔画数据;
+    },
+    自定义路径,
+  );
+}
+
 export function 获取原始字库(自定义字库: 原始字库数据 = {}): 原始字库 {
   const 路径 = path.join(__dirname, "data", "repertoire.json.deflate");
   const 内容 = Pako.inflate(readFileSync(路径), { to: "string" });
@@ -41,23 +72,23 @@ export function 获取原始字库(自定义字库: 原始字库数据 = {}): �
 }
 
 export function 获取词典(路径?: string): 词典 {
-  const 默认路径 = path.join(__dirname, "data", "dictionary.txt");
-  const tsv = 读取表格(readFileSync(路径 ?? 默认路径, "utf-8"));
-  return 解析词典(tsv);
+  return 读取数据文件("dictionary.txt", 解析词典, 路径);
 }
 
 export function 获取键位分布目标(路径?: string): 键位分布目标 {
-  const 默认路径 = path.join(__dirname, "data", "distribution.txt");
-  const 内容 = readFileSync(路径 ?? 默认路径, "utf-8");
-  const tsv = 读取表格(内容);
-  return 解析键位分布目标(tsv);
+  return 读取数据文件("distribution.txt", 解析键位分布目标, 路径);
 }
 
 export function 获取当量映射(路径?: string) {
-  const 默认路径 = path.join(__dirname, "data", "equivalence.txt");
-  const 内容 = readFileSync(路径 ?? 默认路径, "utf-8");
-  const tsv = 读取表格(内容);
-  return 解析当量映射(tsv);
+  return 读取数据文件("equivalence.txt", 解析当量映射, 路径);
+}
+
+export function 获取通用规范汉字笔画数据(路径?: string) {
+  return 读取笔画数据("tygf.txt", 路径);
+}
+
+export function 获取CJK汉字笔画数据(路径?: string) {
+  return 读取笔画数据("cjk.txt", 路径);
 }
 
 export function 获取自定义元素映射(自定义元素文件集合: Record<string, string>) {

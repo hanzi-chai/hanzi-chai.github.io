@@ -37,6 +37,7 @@ import {
   默认拼音分析器,
 } from "~/lib";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
+import { getDataPath } from "~/version";
 import {
   优先简码原子,
   决策原子,
@@ -66,7 +67,7 @@ export async function 拉取资源(文件名: string) {
     return 资源缓存[文件名]!;
   }
   try {
-    const 响应 = await fetch(`/cache/${文件名}`);
+    const 响应 = await fetch(getDataPath(文件名));
     if (!响应.ok) {
       throw new Error(`获取资源失败: ${文件名}, 状态码: ${响应.status}`);
     }
