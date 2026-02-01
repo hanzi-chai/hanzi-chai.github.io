@@ -108,7 +108,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const analysisResult = useAtomValueUnwrapped(如字形分析结果原子);
-  const { 原始部件分析结果, 部件分析结果, 复合体分析结果 } = analysisResult;
+  const { 部件分析结果, 复合体分析结果 } = analysisResult;
   const characters = useAtomValue(汉字集合原子);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -123,7 +123,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const filterFn = new 字符过滤器(filter);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
-  const componentsNeedAnalysis = [...原始部件分析结果].filter(([k, v]) => {
+  const componentsNeedAnalysis = [...部件分析结果].filter(([k, v]) => {
     if (mapping[k]) return false;
     if (v.字根序列.length === 1 && /\d+/.test(v.字根序列[0]!)) return false;
     return true;

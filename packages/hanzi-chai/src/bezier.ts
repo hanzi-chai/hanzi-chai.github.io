@@ -1,7 +1,7 @@
 import { isEqual } from "lodash-es";
 import type { 笔画名称 } from "./classifier.js";
-import type { 绘制, 向量, 矢量笔画数据 } from "./data.js";
-import { 加, 叉乘, 距离, 除, 是共线, 乘, 排序, 减 } from "./math.js";
+import type { 向量, 矢量笔画数据, 绘制 } from "./data.js";
+import { 乘, 减, 加, 叉乘, 排序, 是共线, 距离, 除 } from "./math.js";
 
 /**
  * 一段 Bezier 曲线的主要朝向

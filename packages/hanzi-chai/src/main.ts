@@ -8,12 +8,14 @@ import {
 import {
   二笔复合体分析器,
   张码复合体分析器,
-  逸码复合体分析器,
   星空键道复合体分析器,
   真码复合体分析器,
+  逸码复合体分析器,
   首右复合体分析器,
   默认复合体分析器,
 } from "./compound.js";
+import { 默认拼音分析器 } from "./pinyin.js";
+import { 注册表 } from "./registry.js";
 import {
   全符笔顺,
   取大优先,
@@ -28,8 +30,6 @@ import {
   连续笔顺,
   非形近根,
 } from "./selector.js";
-import { 默认拼音分析器 } from "./pinyin.js";
-import { 注册表 } from "./registry.js";
 
 export * from "./affine.js";
 export * from "./assembly.js";

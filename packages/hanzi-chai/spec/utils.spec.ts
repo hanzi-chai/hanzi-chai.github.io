@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  chars,
+  字数,
   是部件或全等,
   模拟基本部件,
   模拟复合体,
@@ -24,7 +24,7 @@ describe("Unicode 方法", () => {
 
   it("字符计数", () => {
     const s = "𠃌"; // CJK-B
-    expect(chars(s)).toBe(1);
+    expect(字数(s)).toBe(1);
   });
 });
 

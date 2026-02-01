@@ -13,7 +13,7 @@ import {
 import { 如编码结果原子 } from "~/atoms";
 import { Uploader } from "~/components/Utils";
 import {
-  chars,
+  字数,
   type 字集指示,
   字集过滤查找表,
   字集过滤选项,
@@ -66,7 +66,7 @@ export default function Debugger() {
   let unknown = 0;
   let dataSource: 编码条目与参考[] = code
     .filter((x) => {
-      if (chars(x.词) !== 1) return false;
+      if (字数(x.词) !== 1) return false;
       const data = allRepertoire[x.词];
       if (!data) return false;
       return 过滤函数(x.词, data);

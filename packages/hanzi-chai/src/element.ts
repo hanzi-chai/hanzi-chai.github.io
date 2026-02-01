@@ -1,12 +1,11 @@
 import type { 默认汉字分析 } from "./assembly.js";
 import type {
   条件节点配置,
-  键盘配置,
-  运算符,
   源节点配置,
   码位,
+  运算符,
+  键盘配置,
 } from "./config.js";
-import { 是归并 } from "./config.js";
 import { 展开决策 } from "./utils.js";
 
 export interface 额外信息 {

@@ -36,7 +36,7 @@ import {
   键盘原子,
 } from "~/atoms";
 import {
-  hex,
+  码,
   type 决策,
   可打印字符列表,
   是归并,
@@ -319,7 +319,7 @@ const PUAExporter = () => {
         const output: string[][] = [];
         for (const key of Object.keys(mapping)) {
           if (是私用区(key)) {
-            output.push([key, `U+${hex(key)}`, display(key)]);
+            output.push([key, `U+${码(key)}`, display(key)]);
           }
         }
         const sorted = sortBy(output, (x) => x[0]!.codePointAt(0));

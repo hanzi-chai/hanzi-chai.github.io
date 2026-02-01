@@ -1,7 +1,6 @@
-import { isEqual } from "lodash-es";
 import type { 曲线关系 } from "./bezier.js";
 import type { 部件图形 } from "./component.js";
-import { type 分析配置, type 元素, type 安排, 是归并 } from "./config.js";
+import { type 元素, type 分析配置, type 安排, 是归并 } from "./config.js";
 
 const 默认筛选器列表: string[] = [
   "结构完整",

@@ -1,6 +1,6 @@
-import { cloneDeep, isEqual, sortBy } from "lodash-es";
+import { sortBy } from "lodash-es";
 import { 图形盒子 } from "./affine.js";
-import { 合并分类器, 默认分类器, type 分类器 } from "./classifier.js";
+import { type 分类器, 合并分类器, 默认分类器 } from "./classifier.js";
 import type { 默认部件分析 } from "./component.js";
 import { 部件图形 } from "./component.js";
 import type {
@@ -20,8 +20,8 @@ import type {
   字形数据,
   汉字数据,
 } from "./data.js";
-import { chars, default_err, hex, ok, type Result, 和编码 } from "./utils.js";
 import { 获取注册表 } from "./main.js";
+import { default_err, ok, type Result, 和编码, 字数, 码 } from "./utils.js";
 
 // 变量映射：variable id -> 绑定的子树 key
 type 变量映射 = Map<number, string>;
@@ -34,8 +34,6 @@ interface 字形分析结果<
   部件分析 extends 基本分析 = 基本分析,
   复合体分析 extends 基本分析 = 基本分析,
 > {
-  原始部件分析结果: Map<string, 部件分析>;
-  部件分析结果定制: Map<string, 部件分析>;
   部件分析结果: Map<string, 部件分析>;
   复合体分析结果: Map<string, 复合体分析>;
   字根笔画映射: Map<string, number[]>;
@@ -82,7 +80,7 @@ class 字库 {
   ): Result<字形分析配置, Error> {
     const 可选字根: Set<元素> = new Set();
     const 字根决策 = new Map(
-      Object.entries(决策).filter(([k, _]) => chars(k) === 1),
+      Object.entries(决策).filter(([k, _]) => 字数(k) === 1),
     );
     for (const [key, value] of Object.entries(决策空间)) {
       if (value.some((x) => x.value == null) || 决策[key] === undefined) {
@@ -255,7 +253,7 @@ class 字库 {
     for (const char of compound.operandList) {
       const glyph = this.repertoire[char]?.glyph;
       if (glyph === undefined)
-        return default_err(`无法找到字形数据: ${char}（U+${hex(char)}）`);
+        return default_err(`无法找到字形数据: ${char}（U+${码(char)}）`);
       if (glyph.type === "basic_component") {
         sequences.push(
           glyph.strokes.map((x) => 默认分类器[x.feature]).join(""),
@@ -407,14 +405,12 @@ class 字库 {
       configValue.分析配置?.component_analyzer || "默认",
       configValue,
     )!;
-    const 原始部件分析结果 = new Map<string, 基本分析 | 默认部件分析>();
+    const 部件分析结果 = new Map<string, 基本分析 | 默认部件分析>();
     for (const [部件名称, 部件字形] of 部件列表) {
       const 分析 = 部件分析器.分析(部件名称, 部件字形);
       if (!分析.ok) return 分析;
-      原始部件分析结果.set(部件名称, 分析.value);
+      部件分析结果.set(部件名称, 分析.value);
     }
-    const 部件分析结果定制 = 生成定制(configValue, 原始部件分析结果);
-    const 部件分析结果 = new Map([...原始部件分析结果, ...部件分析结果定制]);
     const 复合体分析器 = 获取注册表().创建复合体分析器(
       configValue.分析配置?.compound_analyzer || "默认",
       configValue,
@@ -429,44 +425,11 @@ class 字库 {
       复合体分析结果.set(复合体名称, 分析.value);
     }
     return ok({
-      原始部件分析结果,
-      部件分析结果定制,
       部件分析结果,
       复合体分析结果,
       字根笔画映射: configValue.字根笔画映射,
     });
   }
-}
-
-function 生成定制<T extends 基本分析 | 默认部件分析>(
-  config: 字形分析配置,
-  原始部件分析结果: Map<string, T>,
-) {
-  const 部件分析结果定制: Map<string, T> = new Map();
-  const 自定义分析 = cloneDeep(config.分析配置.customize ?? {});
-  const 动态自定义分析 = config.分析配置?.dynamic_customize ?? {};
-  for (const [部件, 字根序列列表] of Object.entries(动态自定义分析)) {
-    for (const 字根序列 of 字根序列列表) {
-      if (!字根序列.every((x) => config.字根决策.has(x))) continue;
-      自定义分析[部件] = 字根序列;
-      break;
-    }
-  }
-  for (const [部件, 字根序列] of Object.entries(自定义分析)) {
-    const 分析 = 原始部件分析结果.get(部件);
-    if (分析 === undefined) continue;
-    const 新分析: T = { ...分析, 字根序列 };
-    if ("全部拆分方式" in 新分析) {
-      const 拆分方式 = 新分析.全部拆分方式.find((x) => {
-        return isEqual(x.拆分方式, 字根序列);
-      });
-      if (拆分方式 !== undefined) {
-        新分析.当前拆分方式 = 拆分方式;
-      }
-    }
-    部件分析结果定制.set(部件, 新分析);
-  }
-  return 部件分析结果定制;
 }
 
 // interface 动态拆分 {
@@ -755,5 +718,5 @@ function 生成定制<T extends 基本分析 | 默认部件分析>(
 //   return result;
 // };
 
-export type { 基本分析, 字形分析结果, 字形分析配置 };
 export { 字库 };
+export type { 基本分析, 字形分析结果, 字形分析配置 };

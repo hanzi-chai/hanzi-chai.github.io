@@ -32,7 +32,7 @@ import {
 } from "~/atoms";
 import { DeleteButton, NumberInput } from "~/components/Utils";
 import {
-  chars,
+  字数 as chars,
   创建原始汉字数据,
   type 原始字库数据,
   type 原始汉字数据,

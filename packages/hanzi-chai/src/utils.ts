@@ -152,7 +152,7 @@ export const 可打印字符列表 = range(33, 127).map((x) =>
   String.fromCodePoint(x),
 );
 
-export const chars = (s: string) => {
+export const 字数 = (s: string) => {
   return Array.from(s).length;
 };
 
@@ -358,7 +358,7 @@ export function 获取汉字集合(词典: 词典): Set<string> {
   return 汉字集合;
 }
 
-export const hex = (汉字: string) =>
+export const 码 = (汉字: string) =>
   汉字.codePointAt(0)!.toString(16).toUpperCase();
 
-export const 和编码 = (c: string) => `${c} (U+${hex(c)})`;
+export const 和编码 = (c: string) => `${c} (U+${码(c)})`;

@@ -1,8 +1,8 @@
-import type { 拼写运算, 源节点配置, 编码配置, 运算规则 } from "./config.js";
+import type { 拼写运算, 源节点配置, 运算规则 } from "./config.js";
 import {
-  获取注册表,
   ok,
   type Result,
+  获取注册表,
   type 词典,
   type 词典条目,
 } from "./main.js";

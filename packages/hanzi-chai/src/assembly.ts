@@ -2,22 +2,21 @@ import type { 默认部件分析 } from "./component.js";
 import type { 星空键道复合体分析 } from "./compound.js";
 import {
   是归并,
-  条件节点配置,
-  源节点配置,
+  type 条件节点配置,
   type 构词规则,
+  type 源节点配置,
   type 码位,
-  type 编码配置,
   type 键盘配置,
 } from "./config.js";
-import { type 额外信息 as 额外信息, 取码器 } from "./element.js";
-import type { 拼音分析结果 } from "./pinyin.js";
+import { 取码器, type 额外信息 } from "./element.js";
 import { 获取注册表 } from "./main.js";
+import type { 拼音分析结果 } from "./pinyin.js";
 import type { 基本分析, 字形分析结果 } from "./repertoire.js";
 import {
-  chars,
   default_err,
   ok,
   type Result,
+  字数,
   总序列化,
   type 自定义分析映射,
 } from "./utils.js";
@@ -222,7 +221,7 @@ const 组装 = (
   })!;
   for (const { 词, 拼音, 频率, 元素映射 } of 拼音分析结果) {
     let 元素序列: Result<码位[], Error>;
-    if (chars(词) === 1) {
+    if (字数(词) === 1) {
       const 字形分析 = 部件分析结果.get(词) ?? 复合体分析结果.get(词);
       元素序列 = 组装器.一字词组装(词, 字形分析!, 元素映射[0]!);
     } else {

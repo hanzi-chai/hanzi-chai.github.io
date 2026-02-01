@@ -11,12 +11,12 @@ import type {
 } from "./data.js";
 import { 字库 } from "./repertoire.js";
 import {
-  模拟基本部件,
-  是部件或全等,
-  type Result,
   default_err,
   ok,
-  hex,
+  type Result,
+  是部件或全等,
+  模拟基本部件,
+  码,
 } from "./utils.js";
 
 class 原始字库 {
@@ -67,8 +67,8 @@ class 原始字库 {
     栈: string[] = [],
   ): Result<基本部件数据, Error> {
     const 源字 = this.字库[字符];
-    const 字符信息 = `${字符} (U+${hex(字符)} )`;
-    const 栈信息 = 栈.map((x) => `${x} (U+${hex(x)})`).join(" -> ");
+    const 字符信息 = `${字符} (U+${码(字符)} )`;
+    const 栈信息 = 栈.map((x) => `${x} (U+${码(x)})`).join(" -> ");
     if (源字 === undefined)
       return default_err(`源部件 ${字符信息} 不存在，当前栈：${栈信息}`);
     const 源字形 = 源字.glyphs.find(是部件或全等);

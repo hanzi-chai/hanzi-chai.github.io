@@ -4,16 +4,16 @@ import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import type { 退化配置 } from "./config.js";
 import type { 基本部件数据, 矢量图形数据, 结构表示符 } from "./data.js";
-import { 是共线, 是小于, 排序 } from "./math.js";
+import { 获取注册表 } from "./main.js";
+import { 排序, 是共线, 是小于 } from "./math.js";
 import type { 基本分析, 字形分析配置 } from "./repertoire.js";
 import {
-  默认筛选器列表,
   type 拆分方式,
   type 拆分环境,
   type 筛选器,
+  默认筛选器列表,
 } from "./selector.js";
 import { default_err, ok, type Result } from "./utils.js";
-import { 获取注册表 } from "./main.js";
 
 export const 默认退化配置: 退化配置 = {
   feature: {
@@ -443,7 +443,9 @@ class 默认部件分析器 implements 部件分析器<默认部件分析> {
   分析(名称: string, 部件: 基本部件数据) {
     const 图形 =
       this.配置.字根图形映射.get(名称) ?? new 部件图形(名称, 部件.strokes);
-    return 图形.给出部件分析(this.配置);
+    const 分析 = 图形.给出部件分析(this.配置);
+    if (!分析.ok) return 分析;
+    return ok(定制化分析(名称, 分析.value, this.配置));
   }
 }
 
@@ -526,9 +528,46 @@ class 张码部件分析器 implements 部件分析器<张码部件分析> {
   }
 }
 
+interface 逸码拆分方式 {
+  字根: string[];
+  补码: string[];
+}
+
 interface 逸码部件分析 extends 基本分析 {
-  余一字根序列: string[];
-  笔画序列: string[];
+  余二拆分方式: 逸码拆分方式;
+  余一拆分方式: 逸码拆分方式;
+  笔画拆分方式: 逸码拆分方式;
+}
+
+function 定制化分析<T extends 基本分析 | 默认部件分析>(
+  名称: string,
+  部件分析: T,
+  config: 字形分析配置,
+) {
+  // const 动态自定义分析 = config.分析配置?.dynamic_customize ?? {};
+  // for (const [部件, 字根序列列表] of Object.entries(动态自定义分析)) {
+  //   for (const 字根序列 of 字根序列列表) {
+  //     if (!字根序列.every((x) => config.字根决策.has(x))) continue;
+  //     自定义分析[部件] = 字根序列;
+  //     break;
+  //   }
+  // }
+  const 自定义分析 = config.分析配置.customize ?? {};
+  const 字根序列 = 自定义分析[名称];
+  if (字根序列 === undefined) return 部件分析;
+  const 新分析: T = { ...部件分析, 字根序列 };
+  if ("全部拆分方式" in 新分析) {
+    const 拆分方式 = 新分析.全部拆分方式.find((x) => {
+      return isEqual(
+        x.拆分方式.map((y) => y.名称),
+        字根序列,
+      );
+    });
+    if (拆分方式 !== undefined) {
+      新分析.当前拆分方式 = 拆分方式;
+    }
+  }
+  return 新分析;
 }
 
 class 逸码部件分析器 implements 部件分析器<逸码部件分析> {
@@ -536,24 +575,53 @@ class 逸码部件分析器 implements 部件分析器<逸码部件分析> {
   constructor(private 配置: 字形分析配置) {}
 
   private 限制字根数量(拆分方式: 拆分方式, n: number, 图形: 部件图形) {
-    const 新拆分方式 = 拆分方式.slice(0, n);
-    let 补笔画: number[];
+    const get = (i: number) =>
+      `${this.配置.分类器[图形._笔画列表()[i]!.feature]}0`;
+    const 新拆分方式 = {
+      字根: 拆分方式.slice(0, n).map((x) => x.名称),
+      补码: [] as string[],
+    };
     if (拆分方式.length <= n) {
-      补笔画 = 拆分方式.at(-1)!.笔画索引;
+      for (const 笔画 of 拆分方式.at(-1)!.笔画索引) {
+        新拆分方式.补码.push(get(笔画));
+      }
+      while (新拆分方式.补码.length < 6) {
+        新拆分方式.补码.push(新拆分方式.补码.at(-1)!);
+      }
     } else {
       const 全部笔画 = range(图形.笔画数());
       const 已用笔画 = new Set(拆分方式.slice(0, n).flatMap((x) => x.笔画索引));
       const 未用笔画 = 全部笔画.filter((x) => !已用笔画.has(x));
-      补笔画 = 未用笔画;
+      未用笔画.map((x) => 新拆分方式.字根.push(get(x)));
+      while (新拆分方式.补码.length < 6) {
+        新拆分方式.补码.push(新拆分方式.字根.at(-1)!);
+      }
     }
-    for (const 笔画 of 补笔画) {
-      const 名称 = this.配置.分类器[图形._笔画列表()[笔画]!.feature].toString();
-      const 笔画二进制表示 = 1 << (图形.笔画数() - 1 - 笔画);
-      新拆分方式.push({
-        名称: `${名称}0`,
-        笔画索引: [笔画],
-        笔画二进制表示,
-      });
+    return 新拆分方式;
+  }
+
+  private 自定义限制字根数量(字根序列: string[], n: number) {
+    const 新拆分方式 = {
+      字根: 字根序列.slice(0, n),
+      补码: [] as string[],
+    };
+    if (字根序列.length <= n) {
+      for (const 笔画 of this.配置.字根笔画映射.get(字根序列.at(-1)!) ?? [
+        parseInt(字根序列.at(-1)!, 10),
+      ]) {
+        新拆分方式.补码.push(`${笔画}0`);
+      }
+      while (新拆分方式.补码.length < 6) {
+        新拆分方式.补码.push(新拆分方式.补码.at(-1)!);
+      }
+    } else {
+      const 未用笔画 = 字根序列
+        .slice(n)
+        .flatMap((x) => this.配置.字根笔画映射.get(x)! ?? [parseInt(x, 10)]);
+      未用笔画.map((x) => 新拆分方式.字根.push(`${x}0`));
+      while (新拆分方式.补码.length < 6) {
+        新拆分方式.补码.push(新拆分方式.字根.at(-1)!);
+      }
     }
     return 新拆分方式;
   }
@@ -563,16 +631,31 @@ class 逸码部件分析器 implements 部件分析器<逸码部件分析> {
       this.配置.字根图形映射.get(名称) ?? new 部件图形(名称, 部件.strokes);
     const 可选分析 = 图形.给出部件分析(this.配置);
     if (!可选分析.ok) return 可选分析;
-    const 分析 = 可选分析.value;
+    const 分析 = 定制化分析(名称, 可选分析.value, this.配置);
+    let 余二拆分方式: 逸码拆分方式,
+      余一拆分方式: 逸码拆分方式,
+      笔画拆分方式: 逸码拆分方式;
     const 拆分方式 = 分析.当前拆分方式.拆分方式;
-    const 余二拆分方式 = this.限制字根数量(拆分方式, 2, 图形);
-    const 余一拆分方式 = this.限制字根数量(拆分方式, 1, 图形);
-    const 笔画拆分方式 = this.限制字根数量(拆分方式, 0, 图形);
+    if (
+      isEqual(
+        拆分方式.map((x) => x.名称),
+        分析.字根序列,
+      )
+    ) {
+      余二拆分方式 = this.限制字根数量(拆分方式, 2, 图形);
+      余一拆分方式 = this.限制字根数量(拆分方式, 1, 图形);
+      笔画拆分方式 = this.限制字根数量(拆分方式, 0, 图形);
+    } else {
+      余二拆分方式 = this.自定义限制字根数量(分析.字根序列, 2);
+      余一拆分方式 = this.自定义限制字根数量(分析.字根序列, 1);
+      笔画拆分方式 = this.自定义限制字根数量(分析.字根序列, 0);
+    }
     const result = {
       ...分析,
-      字根序列: 余二拆分方式.map((x) => x.名称),
-      余一字根序列: 余一拆分方式.map((x) => x.名称),
-      笔画序列: 笔画拆分方式.map((x) => x.名称),
+      字根序列: 余二拆分方式.字根.concat(余二拆分方式.补码),
+      余二拆分方式,
+      余一拆分方式,
+      笔画拆分方式,
     };
     return ok(result);
   }
@@ -585,9 +668,11 @@ export {
   计算张码补码,
   部件图形,
   默认部件分析器,
+  定制化分析,
 };
 export type {
   张码部件分析,
+  逸码拆分方式,
   逸码部件分析,
   拆分方式与评价,
   部件分析器,
