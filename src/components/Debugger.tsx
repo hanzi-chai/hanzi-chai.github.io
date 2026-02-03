@@ -1,4 +1,14 @@
-import { Flex, Form, Select, Statistic, Switch, Table, Typography } from "antd";
+import {
+  Flex,
+  Form,
+  Modal,
+  Select,
+  Space,
+  Statistic,
+  Switch,
+  Table,
+  Typography,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
@@ -10,8 +20,12 @@ import {
   如字库原子,
   useAtomValueUnwrapped,
   码表数据库,
+  如组装结果原子,
+  决策原子,
 } from "~/atoms";
 import { 如编码结果原子 } from "~/atoms";
+import { ElementDetail } from "~/components/Mapping";
+import { Display } from "~/components/Utils";
 import { Uploader } from "~/components/Utils";
 import {
   字数,
@@ -42,12 +56,19 @@ export default function Debugger() {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const allRepertoire = useAtomValue(原始字库数据原子);
   const characters = useAtomValue(汉字集合原子);
-  const [code] = useAtomValueUnwrapped(如编码结果原子);
+  const [编码结果] = useAtomValueUnwrapped(如编码结果原子);
+  const 组装结果 = useAtomValueUnwrapped(如组装结果原子);
+  const 决策 = useAtomValue(决策原子);
   const [reference, setReference] = useAtom(
     码表数据库.item(config.info?.name ?? "方案"),
   );
   const [incorrectOnly, setIncorrectOnly] = useState(true);
   const [filterOption, setFilterOption] = useAtom(校对范围原子);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<{
+    name: string;
+    keys: any;
+  } | null>(null);
   const { 部件列表 } = repertoire.获取待分析对象(characters);
   const 是部件: 过滤 = (c, _) => 部件列表.has(c) && characters.has(c);
   const 过滤函数 =
@@ -59,6 +80,14 @@ export default function Debugger() {
     },
   ].concat(字集过滤选项);
 
+  // 创建字到元素序列的映射
+  const 元素映射 = new Map<string, any[]>();
+  for (const { 词, 元素序列 } of 组装结果) {
+    if (词.length === 1) {
+      元素映射.set(词, 元素序列);
+    }
+  }
+
   const 编码映射 = new Map<string, string[]>();
   for (const { 词, 编码 } of reference || []) {
     if (!编码映射.has(词)) {
@@ -67,10 +96,19 @@ export default function Debugger() {
     编码映射.get(词)!.push(编码);
   }
 
+  // 处理点击元素的函数
+  const handleElementClick = (elementName: string) => {
+    const keys = 决策[elementName];
+    if (keys) {
+      setSelectedElement({ name: elementName, keys });
+      setModalOpen(true);
+    }
+  };
+
   let correct = 0;
   let incorrect = 0;
   let unknown = 0;
-  let dataSource: 编码条目与参考[] = code
+  let dataSource: 编码条目与参考[] = 编码结果
     .filter((x) => {
       if (字数(x.词) !== 1) return false;
       const data = allRepertoire[x.词];
@@ -78,19 +116,19 @@ export default function Debugger() {
       return 过滤函数(x.词, data);
     })
     .map((x) => {
-      const codes = 编码映射.get(x.词) ?? [];
+      const 编码结果序列 = 编码映射.get(x.词) ?? [];
       const hash = `${x.词}-${x.全码}`;
       let status: "correct" | "incorrect" | "unknown" = "unknown";
-      if (codes.length === 0) {
+      if (编码结果序列.length === 0) {
         unknown += 1;
-      } else if (!codes.includes(x.全码)) {
+      } else if (!编码结果序列.includes(x.全码)) {
         incorrect += 1;
         status = "incorrect";
       } else {
         correct += 1;
         status = "correct";
       }
-      return { ...x, 参考全码: codes, 状态: status, 标识符: hash };
+      return { ...x, 参考全码: 编码结果序列, 状态: status, 标识符: hash };
     });
 
   if (incorrectOnly) {
@@ -112,7 +150,43 @@ export default function Debugger() {
       title: "参考全码",
       dataIndex: "参考全码",
       key: "参考全码",
-      render: (codes) => codes.join(", "),
+      render: (编码结果序列) => 编码结果序列.join(", "),
+    },
+    {
+      title: "编辑元素编码",
+      key: "elements",
+      render: (_, record) => {
+        const 元素序列 = 元素映射.get(record.词);
+        if (!元素序列) return null;
+        // 提取所有唯一的元素名称
+        const 元素名称集合 = new Set<string>();
+        for (const element of 元素序列) {
+          if (typeof element === "string") {
+            元素名称集合.add(element);
+          } else if (element?.element) {
+            元素名称集合.add(element.element);
+          }
+        }
+        return (
+          <Space size="small" wrap>
+            {[...元素名称集合].map((name) => (
+              <span
+                key={name}
+                style={{
+                  cursor: "pointer",
+                  padding: "2px 4px",
+                  border: "1px solid #d9d9d9",
+                  borderRadius: "2px",
+                  display: "inline-block",
+                }}
+                onClick={() => handleElementClick(name)}
+              >
+                <Display name={name} />
+              </span>
+            ))}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -171,6 +245,21 @@ export default function Debugger() {
           pageSize: 50,
         }}
       />
+      <Modal
+        title="编辑元素编码"
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        footer={null}
+        destroyOnClose
+      >
+        {selectedElement && (
+          <ElementDetail
+            keys={selectedElement.keys}
+            name={selectedElement.name}
+            onClose={() => setModalOpen(false)}
+          />
+        )}
+      </Modal>
     </>
   );
 }
