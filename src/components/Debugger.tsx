@@ -20,12 +20,11 @@ import {
   如字库原子,
   useAtomValueUnwrapped,
   码表数据库,
-  如组装结果原子,
   决策原子,
+  联合结果原子,
+  type 联合条目,
 } from "~/atoms";
-import { 如编码结果原子 } from "~/atoms";
 import { ElementDetail } from "~/components/Mapping";
-import { Display } from "~/components/Utils";
 import { Uploader } from "~/components/Utils";
 import {
   字数,
@@ -35,9 +34,10 @@ import {
   解析码表,
   读取表格,
 } from "~/lib";
-import type { 编码条目 } from "~/utils";
+import { DisplayOptionalSuperscript } from "./SequenceTable";
+import Element from "./Element";
 
-interface 编码条目与参考 extends 编码条目 {
+interface 联合条目与参考 extends 联合条目 {
   参考全码: string[];
   状态: "correct" | "incorrect" | "unknown";
   标识符: string;
@@ -56,8 +56,7 @@ export default function Debugger() {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const allRepertoire = useAtomValue(原始字库数据原子);
   const characters = useAtomValue(汉字集合原子);
-  const [编码结果] = useAtomValueUnwrapped(如编码结果原子);
-  const 组装结果 = useAtomValueUnwrapped(如组装结果原子);
+  const 联合结果 = useAtomValueUnwrapped(联合结果原子);
   const 决策 = useAtomValue(决策原子);
   const [reference, setReference] = useAtom(
     码表数据库.item(config.info?.name ?? "方案"),
@@ -80,14 +79,6 @@ export default function Debugger() {
     },
   ].concat(字集过滤选项);
 
-  // 创建字到元素序列的映射
-  const 元素映射 = new Map<string, any[]>();
-  for (const { 词, 元素序列 } of 组装结果) {
-    if (词.length === 1) {
-      元素映射.set(词, 元素序列);
-    }
-  }
-
   const 编码映射 = new Map<string, string[]>();
   for (const { 词, 编码 } of reference || []) {
     if (!编码映射.has(词)) {
@@ -108,7 +99,7 @@ export default function Debugger() {
   let correct = 0;
   let incorrect = 0;
   let unknown = 0;
-  let dataSource: 编码条目与参考[] = 编码结果
+  let dataSource: 联合条目与参考[] = 联合结果
     .filter((x) => {
       if (字数(x.词) !== 1) return false;
       const data = allRepertoire[x.词];
@@ -135,11 +126,34 @@ export default function Debugger() {
     dataSource = dataSource.filter((x) => x.状态 === "incorrect");
   }
 
-  const columns: ColumnsType<编码条目> = [
+  const columns: ColumnsType<联合条目> = [
     {
       title: "字符",
       dataIndex: "词",
       key: "词",
+    },
+    {
+      title: "元素序列",
+      key: "元素序列",
+      render: (_, record) => {
+        return (
+          <Space size="small" wrap>
+            {record.元素序列.map((element, index) => (
+              <Element
+                style={{ maxWidth: 32 }}
+                key={index}
+                onClick={
+                  typeof element === "object"
+                    ? () => handleElementClick(element.element)
+                    : undefined
+                }
+              >
+                <DisplayOptionalSuperscript element={element} />
+              </Element>
+            ))}
+          </Space>
+        );
+      },
     },
     {
       title: "全码",
@@ -151,42 +165,6 @@ export default function Debugger() {
       dataIndex: "参考全码",
       key: "参考全码",
       render: (编码结果序列) => 编码结果序列.join(", "),
-    },
-    {
-      title: "编辑元素编码",
-      key: "elements",
-      render: (_, record) => {
-        const 元素序列 = 元素映射.get(record.词);
-        if (!元素序列) return null;
-        // 提取所有唯一的元素名称
-        const 元素名称集合 = new Set<string>();
-        for (const element of 元素序列) {
-          if (typeof element === "string") {
-            元素名称集合.add(element);
-          } else if (element?.element) {
-            元素名称集合.add(element.element);
-          }
-        }
-        return (
-          <Space size="small" wrap>
-            {[...元素名称集合].map((name) => (
-              <span
-                key={name}
-                style={{
-                  cursor: "pointer",
-                  padding: "2px 4px",
-                  border: "1px solid #d9d9d9",
-                  borderRadius: "2px",
-                  display: "inline-block",
-                }}
-                onClick={() => handleElementClick(name)}
-              >
-                <Display name={name} />
-              </span>
-            ))}
-          </Space>
-        );
-      },
     },
   ];
 
