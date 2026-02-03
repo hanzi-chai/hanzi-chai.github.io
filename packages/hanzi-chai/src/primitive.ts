@@ -8,12 +8,15 @@ import type {
   字形数据,
   汉字数据,
   矢量图形数据,
+  规范字形数据,
+  非空列表,
 } from "./data.js";
 import { 字库 } from "./repertoire.js";
 import {
   default_err,
   ok,
   type Result,
+  是地区标签,
   是部件或全等,
   模拟基本部件,
   码,
@@ -43,18 +46,48 @@ class 原始字库 {
    * - 如果用户指定的某个标签匹配上了这个字符的某个字形，则使用这个字形
    * - 如果都没有，就使用默认字形
    */
-  确定(自定义字形: 字形自定义 = {}): Result<字库, Error> {
+  确定(自定义字形: 字形自定义, 来源: string[]): Result<字库, Error> {
     const 确定字库 = new 字库();
     const 字形缓存: Map<string, 矢量图形数据> = new Map();
     for (const [汉字名, 汉字] of Object.entries(this.字库)) {
       const { ambiguous: _, glyphs, ...rest } = 汉字;
-      const 选定字形 = glyphs[0];
-      const 原始字形 = 自定义字形[汉字名] ?? 选定字形 ?? 模拟基本部件();
-      const 字形 = this.递归渲染原始字形(原始字形, 字形缓存, [汉字名]);
-      if (!字形.ok) return 字形;
+      const 字形列表: 字形数据[] = [];
+      const 自定义字形列表 = 自定义字形[汉字名];
+      if (自定义字形列表) {
+        if (Array.isArray(自定义字形列表)) {
+          字形列表.push(...自定义字形列表);
+        } else {
+          字形列表.push(自定义字形列表);
+        }
+      }
+      const 已有地区标签集合 = new Set(
+        字形列表.flatMap((g) => g.tags ?? []).filter(是地区标签),
+      );
+      for (const 字形 of glyphs) {
+        const 地区标签 = (字形.tags ?? []).filter(是地区标签);
+        const 剩余标签 = 地区标签.filter((t) => !已有地区标签集合.has(t));
+        if (剩余标签.length === 0) continue;
+        字形列表.push({ ...字形, tags: 剩余标签 });
+        剩余标签.map((t) => 已有地区标签集合.add(t));
+      }
+      if (字形列表.length === 0) 字形列表.push(模拟基本部件());
+      const 规范字形列表: 规范字形数据[] = [];
+      for (const 字形 of 字形列表) {
+        const 标签列表 = 字形.tags ?? [];
+        if (标签列表.length === 0) 标签列表.push("G"); // 默认标签
+        if (来源.every((src) => !标签列表.includes(src))) {
+          continue;
+        }
+        const 渲染后字形 = this.递归渲染原始字形(字形, 字形缓存, [汉字名]);
+        if (!渲染后字形.ok) return 渲染后字形;
+        规范字形列表.push({
+          ...渲染后字形.value,
+          tags: 标签列表 as 非空列表<string>,
+        });
+      }
       const 确定汉字: 汉字数据 = {
         ...rest,
-        glyph: 字形.value,
+        glyphs: 规范字形列表,
       };
       确定字库.添加(汉字名, 确定汉字);
     }

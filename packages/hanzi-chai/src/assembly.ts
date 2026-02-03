@@ -18,6 +18,7 @@ import {
   type Result,
   字数,
   总序列化,
+  排列组合,
   type 自定义分析映射,
 } from "./utils.js";
 
@@ -220,27 +221,32 @@ const 组装 = (
     额外信息: { 字根笔画映射: 字形分析结果.字根笔画映射 },
   })!;
   for (const { 词, 拼音, 频率, 元素映射 } of 拼音分析结果) {
-    let 元素序列: Result<码位[], Error>;
+    const 全部元素序列: 码位[][] = [];
     if (字数(词) === 1) {
-      const 字形分析 = 部件分析结果.get(词) ?? 复合体分析结果.get(词);
-      元素序列 = 组装器.一字词组装(词, 字形分析!, 元素映射[0]!);
-    } else {
-      const 字形分析列表: 基本分析[] = [];
-      let valid = true;
-      for (const 汉字 of Array.from(词)) {
-        const 字形分析 = 部件分析结果.get(汉字) ?? 复合体分析结果.get(汉字);
-        if (!字形分析) {
-          valid = false;
-          break;
-        } else {
-          字形分析列表.push(字形分析);
-        }
+      const 部件分析 = 部件分析结果.get(词) ?? [];
+      const 复合体分析 = 复合体分析结果.get(词) ?? [];
+      const 字形分析 = 部件分析.concat(复合体分析);
+      for (const 分析 of 字形分析) {
+        const 元素序列 = 组装器.一字词组装(词, 分析, 元素映射[0]!);
+        if (!元素序列.ok) return 元素序列;
+        全部元素序列.push(元素序列.value);
       }
-      if (!valid) continue;
-      元素序列 = 组装器.多字词组装(词, 字形分析列表, 元素映射);
+    } else {
+      const 字形分析列表: 基本分析[][] = [];
+      for (const 汉字 of Array.from(词)) {
+        const 部件分析 = 部件分析结果.get(汉字) ?? [];
+        const 复合体分析 = 复合体分析结果.get(汉字) ?? [];
+        const 字形分析 = 部件分析.concat(复合体分析);
+        字形分析列表.push(字形分析);
+      }
+      for (const 组合 of 排列组合(字形分析列表)) {
+        const 元素序列 = 组装器.多字词组装(词, 组合, 元素映射);
+        if (!元素序列.ok) return 元素序列;
+        全部元素序列.push(元素序列.value);
+      }
     }
-    if (!元素序列.ok) continue;
-    组装结果.push({ 词, 元素序列: 元素序列.value, 频率, 拼音来源列表: [拼音] });
+    for (const 元素序列 of 全部元素序列)
+      组装结果.push({ 词, 元素序列: 元素序列, 频率, 拼音来源列表: [拼音] });
   }
   const 去重后组装结果: 组装条目[] = [];
   const 索引映射 = new Map<string, number>();

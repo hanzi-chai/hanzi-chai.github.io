@@ -50,6 +50,7 @@ import {
   拼写运算自定义原子,
   最大码长原子,
   条件映射原子,
+  来源列表原子,
   构词配置原子,
   源映射原子,
   用户原始字库数据原子,
@@ -204,7 +205,8 @@ export const 别名显示原子 = atom(async (get) => {
 export const 如确定字库原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 字形自定义 = get(字形自定义原子);
-  return 原始字库.确定(字形自定义);
+  const 来源列表 = get(来源列表原子);
+  return 原始字库.确定(字形自定义, 来源列表);
 });
 
 export const 如字库原子 = atom(async (get) => {

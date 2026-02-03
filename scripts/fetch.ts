@@ -42,6 +42,7 @@ for (const filename of [
   "distribution",
   "equivalence",
   "tygf",
+  "Unihan_IRGSources"
 ]) {
   const url = `${assetsEndpoint}${filename}.txt`;
   try {

@@ -1,5 +1,5 @@
 import type { 字集指示 } from "./config.js";
-import type { 原始汉字数据, 汉字数据 } from "./data.js";
+import type { 原始汉字数据 } from "./data.js";
 
 export interface 区块 {
   name: string; // 简洁的英文名，如 "cjk", "cjk-a"

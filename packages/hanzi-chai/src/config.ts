@@ -1,11 +1,5 @@
 import type { 笔画名称 } from "./classifier.js";
-import type {
-  全等数据,
-  原始字库数据,
-  复合体数据,
-  结构表示符,
-  部件数据,
-} from "./data.js";
+import type { 原始字库数据, 字形数据, 结构表示符 } from "./data.js";
 import type { 取码对象 } from "./element.js";
 
 // config.info begin
@@ -35,9 +29,11 @@ export interface 数据配置 {
   repertoire?: 原始字库数据;
   glyph_customization?: 字形自定义;
   transformers?: 变换器[];
+  sources?: string[];
 }
 
-export type 字形自定义 = Record<string, 部件数据 | 复合体数据 | 全等数据>;
+export type 字形自定义 = Record<string, 字形数据 | 字形数据[]>;
+
 export interface 变换器 {
   from: 模式;
   to: 模式;

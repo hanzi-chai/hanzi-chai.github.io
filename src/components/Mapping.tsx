@@ -273,12 +273,12 @@ const MappingUploader = ({
         for (const line of tsv) {
           const [key, value] = line;
           if (key === undefined || value === undefined) continue;
-          const glyph = repertoire.查询字形(key);
-          if (glyph === undefined || 是私用区(key)) {
+          const glyphs = repertoire.查询字形(key);
+          if (glyphs === undefined || 是私用区(key)) {
             unknownKeys.push(key);
             continue;
           }
-          if ("strokes" in glyph && glyph.strokes.length === 1) {
+          if (glyphs.some((g) => "strokes" in g && g.strokes.length === 1)) {
             unknownKeys.push(key);
             continue;
           }

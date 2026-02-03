@@ -17,3 +17,7 @@ export const 字形自定义原子 = focusAtom(数据配置原子, (o) =>
 export const 变换器列表原子 = focusAtom(数据配置原子, (o) =>
   o.prop("transformers").valueOr([] as 变换器[]),
 );
+
+export const 来源列表原子 = focusAtom(数据配置原子, (o) =>
+  o.prop("sources").valueOr(["G"] as string[]),
+);

@@ -176,6 +176,19 @@ export interface 全等数据 {
  */
 export type 字形数据 = 部件数据 | 复合体数据 | 全等数据;
 
+export type 非空列表<T> = [T, ...T[]];
+
+export interface 规范基本部件数据 extends Omit<基本部件数据, "tags"> {
+  tags: 非空列表<string>;
+}
+
+export interface 规范复合体数据 extends Omit<复合体数据, "tags"> {
+  tags: 非空列表<string>;
+}
+
+/** 规范字形数据，只能是规范基本部件或规范复合体 */
+export type 规范字形数据 = 规范基本部件数据 | 规范复合体数据;
+
 /**
  * 原始字符 PrimitiveCharacter
  * unicode: 字符的 Unicode 编码
@@ -204,15 +217,7 @@ export interface 原始汉字数据 {
  * 此时的 glyph 要么是基本部件，要么是复合体
  */
 export interface 汉字数据 extends Omit<原始汉字数据, "glyphs" | "ambiguous"> {
-  glyph: 基本部件数据 | 复合体数据;
-}
-
-export interface 部件汉字数据 extends 汉字数据 {
-  glyph: 基本部件数据;
-}
-
-export interface 复合体汉字数据 extends 汉字数据 {
-  glyph: 复合体数据;
+  glyphs: 规范字形数据[];
 }
 
 /** 原始字库数据，为字符名称到原始字符的映射 */

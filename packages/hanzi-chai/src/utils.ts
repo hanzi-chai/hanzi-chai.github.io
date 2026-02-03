@@ -362,3 +362,18 @@ export const 码 = (汉字: string) =>
   汉字.codePointAt(0)!.toString(16).toUpperCase();
 
 export const 和编码 = (c: string) => `${c} (U+${码(c)})`;
+
+export const 是地区标签 = (tag: string) => /^[GHTJKNVMSBU]/.test(tag);
+
+export const 排列组合 = <T>(数组: T[][]): T[][] => {
+  if (数组.length === 0) return [[]];
+  const [第一个, ...剩余] = 数组;
+  const 剩余组合 = 排列组合(剩余);
+  const 结果: T[][] = [];
+  for (const 元素 of 第一个!) {
+    for (const 组合 of 剩余组合) {
+      结果.push([元素, ...组合]);
+    }
+  }
+  return 结果;
+};
