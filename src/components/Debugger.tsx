@@ -1,6 +1,7 @@
 import { Flex, Form, Select, Statistic, Switch, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAtom, useAtomValue } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import {
   汉字集合原子,
@@ -31,6 +32,11 @@ interface 编码条目与参考 extends 编码条目 {
 type 扩展字集指示 = 字集指示 | "components";
 type 过滤 = (typeof 字集过滤查找表)[字集指示];
 
+const 校对范围原子 = atomWithStorage(
+  "debug-filter-option",
+  "maximal" as 扩展字集指示,
+);
+
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
   const repertoire = useAtomValueUnwrapped(如字库原子);
@@ -41,7 +47,7 @@ export default function Debugger() {
     码表数据库.item(config.info?.name ?? "方案"),
   );
   const [incorrectOnly, setIncorrectOnly] = useState(true);
-  const [filterOption, setFilterOption] = useState<扩展字集指示>("maximal");
+  const [filterOption, setFilterOption] = useAtom(校对范围原子);
   const { 部件列表 } = repertoire.获取待分析对象(characters);
   const 是部件: 过滤 = (c, _) => 部件列表.has(c) && characters.has(c);
   const 过滤函数 =
