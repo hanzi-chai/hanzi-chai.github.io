@@ -18,7 +18,13 @@ import {
 import { Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { 最大码长原子 } from "~/atoms";
-import { type 部分目标类型, 序列化, 反序列化, 码表条目, chars } from "~/lib";
+import {
+  type 部分目标类型,
+  序列化,
+  反序列化,
+  码表条目,
+  字数 as chars,
+} from "~/lib";
 import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
 import { blue } from "@ant-design/colors";

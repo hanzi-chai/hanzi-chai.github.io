@@ -75,34 +75,66 @@ export const getAffiliates = (name: string, mapping: 决策) => {
   return result;
 };
 
-const ElementDetail = ({ keys, name }: { keys: 非空安排; name: string }) => {
+export const ElementDetail = ({
+  keys,
+  name,
+  onClose,
+}: {
+  keys: 非空安排;
+  name: string;
+  onClose?: () => void;
+}) => {
   const addMapping = useAddAtom(决策原子);
   const removeMapping = useRemoveAtom(决策原子);
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   const alphabet = useAtomValue(字母表原子);
 
+  // 将修改先保存在本地，而非立即触发 addMapping。
+  // 如此，用户可以调整多个编码而不会每次都刷新字根表
+  const [currentValue, setCurrentValue] = useState<非空安排 | null>(keys);
   const [otherWay, setOtherWay] = useState<非空安排>(
     是归并(keys) ? alphabet[0]! : { element: "1" },
   );
+
+  // 只有在用户点击「确定」时才更新字根表
+  const handleConfirm = () => {
+    if (currentValue === null) {
+      if (affiliates.length === 0) {
+        removeMapping(name);
+        onClose?.();
+      } else {
+        notification.error({ message: "无法删除有归并关系的元素" });
+      }
+    } else {
+      addMapping(name, currentValue);
+      onClose?.();
+    }
+  };
+
   return (
     <Flex vertical gap="middle">
       <Flex gap="small" align="center">
         <ElementWithTooltip element={name} />
         <ValueEditor
-          value={keys}
+          value={currentValue}
           onChange={(newValue) => {
-            if (newValue === null) {
-              if (affiliates.length === 0) removeMapping(name);
-              else notification.error({ message: "无法删除有归并关系的元素" });
-            } else {
-              addMapping(name, newValue as 非空安排);
-            }
+            setCurrentValue(newValue as 非空安排 | null);
           }}
           isCurrent
         />
+        <Button type="primary" onClick={handleConfirm}>
+          确定
+        </Button>
         <DeleteButton
-          onClick={() => removeMapping(name)}
+          onClick={() => {
+            if (affiliates.length === 0) {
+              removeMapping(name);
+              onClose?.();
+            } else {
+              notification.error({ message: "无法删除有归并关系的元素" });
+            }
+          }}
           disabled={affiliates.length > 0}
         />
       </Flex>
@@ -115,7 +147,14 @@ const ElementDetail = ({ keys, name }: { keys: 非空安排; name: string }) => 
           }}
           isCurrent
         />
-        <Button onClick={() => addMapping(name, otherWay)}>确定</Button>
+        <Button
+          onClick={() => {
+            addMapping(name, otherWay);
+            onClose?.();
+          }}
+        >
+          确定
+        </Button>
       </Flex>
       <Divider size="small" />
       <RulesForm name={name} />
@@ -161,13 +200,25 @@ export const AdjustableElementGroup = ({
   const isOptional = (name: string) =>
     mappingSpace[name]?.some((x) => x.value === null) ?? false;
   const rest = code.slice(1);
+  const [openPopover, setOpenPopover] = useState(false);
+  const [openAffiliatePopover, setOpenAffiliatePopover] = useState<
+    Record<string, boolean>
+  >({});
+
   return (
     <span>
       <Popover
         title="编辑决策"
-        trigger={["hover", "click"]}
-        mouseLeaveDelay={0.3}
-        content={<ElementDetail keys={code} name={name} />}
+        trigger="click"
+        open={openPopover}
+        onOpenChange={setOpenPopover}
+        content={
+          <ElementDetail
+            keys={code}
+            name={name}
+            onClose={() => setOpenPopover(false)}
+          />
+        }
       >
         <ElementLabelWrapper $shouldHighlight={name === currentElement}>
           <DisplayWrapper
@@ -180,9 +231,23 @@ export const AdjustableElementGroup = ({
         <Popover
           key={`${from}-${to}`}
           title="编辑决策"
-          trigger={["hover", "click"]}
-          mouseLeaveDelay={0.3}
-          content={<ElementDetail keys={{ element: to }} name={from} />}
+          trigger="click"
+          open={openAffiliatePopover[from] ?? false}
+          onOpenChange={(open) =>
+            setOpenAffiliatePopover({ ...openAffiliatePopover, [from]: open })
+          }
+          content={
+            <ElementDetail
+              keys={{ element: to }}
+              name={from}
+              onClose={() =>
+                setOpenAffiliatePopover({
+                  ...openAffiliatePopover,
+                  [from]: false,
+                })
+              }
+            />
+          }
         >
           <ElementLabelWrapper
             $shouldHighlight={from === currentElement}
