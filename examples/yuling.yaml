@@ -162,7 +162,7 @@ form:
     㔾: cje
     卩: kje
     言: ra
-    马: gma
+    马: rma
     尸: msi
     弓: ggo
     皮: dpi
@@ -186,7 +186,7 @@ form:
     臼: pu
     鬼: pi
     甶: pu
-    向: xja
+    向: jxa
     戶: lhu
     斤: dji
     片: wpa
@@ -383,15 +383,15 @@ form:
     丆: fa
     厂: fa
     石: psi
-    不: mbu
+    不: lbu
     甲: xja
     里: xli
     田: gta
     禺: xyu
     魚: syu
     儿: pe
-    屮: ja
-    丩: ja
+    屮: jca
+    丩: ju
     凵: ja
     勹: pa
     囗: nwe
@@ -409,13 +409,14 @@ form:
     "\ue001":
       element: '2'
     㐄: ska
-    "\ue0b7": gy
+    "\ue0b7": fo
     "\ue0e2": ls
-    "\ue007": bo
-    "\ue009": bo
-    "\ue064": yd
-    "\ue055": ce
-    "\ue0cb": dd
+    "\ue007": vo
+    "\ue009":
+      element: "\ue007"
+    "\ue064": ydi
+    "\ue055": lc
+    "\ue0cb": kdi
     馬: wm
     烏: dw
     鳥: dn
@@ -426,10 +427,11 @@ form:
     "\ue14f":
       element: 爫
     正: fe
-    "\ue0e8": bw
-    "\ue066": cv
+    "\ue0e8": kwu
+    "\ue066": do
     "\ue16a": jv
-    "\ue895": xv
+    "\ue895":
+      element: "\ue020"
     "\ue089":
       element: 丷
     䒑:
@@ -448,24 +450,21 @@ form:
       element: 勹
     "\ue427":
       element: 勹
-    "\ue04e":
-      element: 屮
+    "\ue04e": jo
     "\ue440":
       element: 彑
     "\ue405":
       element: 彑
     "\ue025":
       element: 亦
-    "\ue834":
-      element: 亡
+    "\ue834": klo
     "\ue420":
       element: 豕
     爫:
       element: 爪
     "\ue018":
       element: 卜
-    "\ue07c":
-      element: 卜
+    "\ue07c": ro
     "\ue41a":
       element: "\ue001"
     "\ue03e":
@@ -480,8 +479,7 @@ form:
       element: 足
     牜:
       element: 牛
-    "\ue029":
-      element: 牛
+    "\ue029": mo
     朩:
       element: 木
     "\ue04c":
@@ -494,8 +492,7 @@ form:
       element: 高
     "\ue804":
       element: 高
-    "\ue006":
-      element: 高
+    "\ue006": co
     "\ue415":
       element: 艹
     龷:
@@ -510,14 +507,11 @@ form:
       element: 电
     "\ue421":
       element: 臼
-    "\ue028":
-      element: 向
-    "\ue02d":
-      element: 向
+    "\ue028": jo
+    "\ue02d": jo
     "\ue400":
       element: 斤
-    "\ue024":
-      element: 斤
+    "\ue024": ri
     "\ue0e0":
       element: 片
     "\ue0e1":
@@ -536,20 +530,15 @@ form:
       element: 丂
     "\ue04d":
       element: 丄
-    "\ue0e3":
-      element: 八
-    "\ue413":
-      element: 寸
+    "\ue0e3": co
     "\ue8d9":
       element: 卯
-    "\ue08e":
-      element: 卯
+    "\ue08e": wo
     "\ue01a":
-      element: 卯
+      element: "\ue08e"
     "\ue057":
-      element: 卯
-    "\ue40c":
-      element: 卯
+      element: "\ue08e"
+    "\ue40c": wo
     "\ue023":
       element: 纟
     "\ue020":
@@ -592,8 +581,7 @@ form:
       element: 干
     "\ue0dc":
       element: 鹿
-    "\ue08d":
-      element: 辰
+    "\ue08d": fo
     "\ue0da":
       element: 鸟
     "\ue00d":
@@ -653,15 +641,14 @@ form:
     "\ue0d0":
       element: 雨
     "\ue448":
-      element: 氵
-    "\ue42d":
-      element: 氵
+      element: "\ue42d"
+    "\ue42d": na
     "\ue046":
-      element: 氵
+      element: "\ue42d"
     "\ue0c2":
       element: 舌
     "\ue0ba":
-      element: 八
+      element: "\ue0e3"
     "\ue052":
       element: 車
     "\ue446":
@@ -672,8 +659,7 @@ form:
       element: 车
     "\ue106":
       element: "\ue0b7"
-    "\ue0d5":
-      element: 臣
+    "\ue0d5": bi
     "\ue404":
       element: 亻
     "\ue08c":
@@ -700,8 +686,7 @@ form:
       element: 鬼
     "\ue41f":
       element: 月
-    "\ue419":
-      element: 且
+    "\ue419": vo
     "\ue452":
       element: 十
     "\ue443":
@@ -763,7 +748,7 @@ form:
     "\uf00b":
       element: 爿
     "\ue10c":
-      element: 卜
+      element: "\ue07c"
     "\ue10b":
       element: 月
     飠:
@@ -790,8 +775,7 @@ form:
       element: 虎
     "\uf00f":
       element: 忄
-    "\ue016":
-      element: 羊
+    "\ue016": ro
     "\ue0a9":
       element: 日
     "\ue16e":
@@ -804,8 +788,7 @@ form:
       element: 勹
     "\ue18e":
       element: 水
-    孑:
-      element: 子
+    孑: hje
     "\ue0bf":
       element: 彐
     "\ue188":
@@ -814,6 +797,7 @@ form:
       element: 冂
     "\ue01c":
       element: 艮
+    "\ue413": jo
   mapping_type: 3
   mapping_space: {}
 encoder:
