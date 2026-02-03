@@ -82,7 +82,7 @@ export const ElementDetail = ({
 }: {
   keys: 非空安排;
   name: string;
-  onClose?: () => void;
+  onClose: () => void;
 }) => {
   const addMapping = useAddAtom(决策原子);
   const removeMapping = useRemoveAtom(决策原子);
@@ -92,8 +92,8 @@ export const ElementDetail = ({
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
-  const [currentValue, setCurrentValue] = useState<非空安排 | null>(keys);
-  const [otherWay, setOtherWay] = useState<非空安排>(
+  const [currentValue, setCurrentValue] = useState<非空安排>(keys);
+  const [otherValue, setOtherValue] = useState<非空安排>(
     是归并(keys) ? alphabet[0]! : { element: "1" },
   );
 
@@ -102,13 +102,40 @@ export const ElementDetail = ({
     if (currentValue === null) {
       if (affiliates.length === 0) {
         removeMapping(name);
-        onClose?.();
+        onClose();
       } else {
         notification.error({ message: "无法删除有归并关系的元素" });
       }
     } else {
       addMapping(name, currentValue);
-      onClose?.();
+      onClose();
+    }
+  };
+
+  const handleDelete = () => {
+    const referenced: string[] = [];
+    for (const [k, v] of Object.entries(mapping)) {
+      if (是归并(v)) {
+        if (v.element === name) referenced.push(k);
+      } else if (Array.isArray(v)) {
+        if (v.some((x) => typeof x === "object" && x.element === name))
+          referenced.push(k);
+      }
+    }
+    if (referenced.length === 0) {
+      removeMapping(name);
+      onClose();
+    } else {
+      notification.error({
+        message: (
+          <span>
+            无法删除元素，因为元素被其他元素引用：
+            {referenced.map((x) => (
+              <Display name={x} key={x} />
+            ))}
+          </span>
+        ),
+      });
     }
   };
 
@@ -119,38 +146,26 @@ export const ElementDetail = ({
         <ValueEditor
           value={currentValue}
           onChange={(newValue) => {
-            setCurrentValue(newValue as 非空安排 | null);
+            setCurrentValue(newValue as 非空安排);
           }}
           isCurrent
         />
-        <Button type="primary" onClick={handleConfirm}>
-          确定
-        </Button>
-        <DeleteButton
-          onClick={() => {
-            if (affiliates.length === 0) {
-              removeMapping(name);
-              onClose?.();
-            } else {
-              notification.error({ message: "无法删除有归并关系的元素" });
-            }
-          }}
-          disabled={affiliates.length > 0}
-        />
+        <Button onClick={handleConfirm}>确定</Button>
+        <DeleteButton onClick={handleDelete} disabled={affiliates.length > 0} />
       </Flex>
       <Flex align="center" gap="small">
         或改为：
         <ValueEditor
-          value={otherWay}
+          value={otherValue}
           onChange={(newValue) => {
-            setOtherWay(newValue as 非空安排);
+            setOtherValue(newValue as 非空安排);
           }}
           isCurrent
         />
         <Button
           onClick={() => {
-            addMapping(name, otherWay);
-            onClose?.();
+            addMapping(name, otherValue);
+            onClose();
           }}
         >
           确定

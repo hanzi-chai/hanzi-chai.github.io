@@ -1,13 +1,5 @@
-import { Flex, Skeleton, Table } from "antd";
-import type { 联合条目 } from "~/atoms";
-import {
-  字母表原子,
-  联合结果原子,
-  默认目标类型原子,
-  默认当量原子,
-  部分目标类型名称映射,
-  useAtomValueUnwrapped,
-} from "~/atoms";
+import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
+import { blue } from "@ant-design/colors";
 import {
   ProForm,
   ProFormCascader,
@@ -15,20 +7,27 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { Typography } from "antd";
+import { Flex, Skeleton, Table, Typography } from "antd";
 import { useAtomValue } from "jotai";
-import { 最大码长原子 } from "~/atoms";
-import {
-  type 部分目标类型,
-  序列化,
-  反序列化,
-  码表条目,
-  字数 as chars,
-} from "~/lib";
-import { Suspense, useState } from "react";
 import { range, sum, sumBy } from "lodash-es";
-import { blue } from "@ant-design/colors";
-import type { ColumnConfig, HeatmapConfig } from "@ant-design/charts";
+import { Suspense, useState } from "react";
+import type { 联合条目 } from "~/atoms";
+import {
+  useAtomValueUnwrapped,
+  字母表原子,
+  最大码长原子,
+  联合结果原子,
+  部分目标类型名称映射,
+  默认当量原子,
+  默认目标类型原子,
+} from "~/atoms";
+import {
+  反序列化,
+  字数,
+  序列化,
+  type 码表条目,
+  type 部分目标类型,
+} from "~/lib";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
@@ -43,7 +42,7 @@ interface 带频码表条目 extends 码表条目 {
 const 按部分目标类型过滤 = (type: 部分目标类型, combined: 联合条目[]) => {
   const result: 带频码表条目[] = [];
   for (const 条目 of combined) {
-    if (type.includes("character") !== (chars(条目.词) === 1)) continue;
+    if (type.includes("character") !== (字数(条目.词) === 1)) continue;
     const code = type.includes("full") ? 条目.全码 : 条目.简码;
     result.push({
       词: 条目.词,
