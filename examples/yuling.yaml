@@ -831,7 +831,7 @@ encoder:
       object: {type: 字根, rootIndex: 1}
       next: null
       index: 1
-      notes: A1A3
+      notes: A1A2
     s6:
       object: {type: 字根, rootIndex: 3}
       next: c4
@@ -842,21 +842,11 @@ encoder:
       next: null
       index: 2
       notes: A1B1B2B3
-    s8:
-      object: {type: 字根, rootIndex: 2}
-      next: null
-      index: 1
-      notes: A1B1B3
     s9:
       object: {type: 字根, rootIndex: 3}
       next: null
       index: 1
       notes: A1B1C1C2
-    s10:
-      object: {type: 字根, rootIndex: 3}
-      next: null
-      index: 1
-      notes: A1B1C1C3
     s11:
       object: {type: 字根, rootIndex: -1}
       next: null
@@ -877,11 +867,6 @@ encoder:
       next: null
       index: 1
       notes: A1A2B1B2
-    s15:
-      object: {type: 字根, rootIndex: 2}
-      next: null
-      index: 1
-      notes: A1A2B1B3
     s16:
       object: {type: 字根, rootIndex: -1}
       next: null
@@ -898,7 +883,7 @@ encoder:
       operator: 编码匹配
       positive: s1
       negative: s3
-      value: ^[a-z]{2}[aeiou]$
+      value: .{3}
       notes: 第一根是大根?
     c1:
       object: {type: 字根, rootIndex: 2}
@@ -916,40 +901,19 @@ encoder:
       object: {type: 字根, rootIndex: 3}
       operator: 存在
       positive: s6
-      negative: c7
+      negative: s4
       notes: 存在第三根?
     c4:
       object: {type: 字根, rootIndex: 4}
       operator: 存在
       positive: s11
-      negative: c5
+      negative: s9
       notes: 存在第四根?
-    c5:
-      object: {type: 字根, rootIndex: 3}
-      operator: 编码匹配
-      positive: s9
-      negative: s10
-      value: ^[a-z]{2}[aeiou]$
-      notes: 第三根是大根?
     c6:
       object: {type: 字根, rootIndex: 3}
       operator: 存在
       positive: s16
-      negative: c8
-    c7:
-      object: {type: 字根, rootIndex: 2}
-      operator: 编码匹配
-      positive: s4
-      negative: s8
-      value: ^[a-z]{2}[aeiou]$
-      notes: 第二根是大根?
-    c8:
-      object: {type: 字根, rootIndex: 2}
-      operator: 编码匹配
-      positive: s14
-      negative: s15
-      value: ^[a-z]{2}[aeiou]$
-      notes: 第二根是大根"\uff1f"
+      negative: s14
   short_code:
     - length_equal: 1
       schemes: [{prefix: 1}, {prefix: 2, count: 1}, {prefix: 3, count: 1}]
@@ -960,6 +924,7 @@ encoder:
       formula: AaBaCaCb
     - length_in_range: [4, 10]
       formula: AaBaCaZa
+  auto_select_pattern: '[aeuio]'
 data:
   glyph_customization:
     重:
