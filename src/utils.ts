@@ -138,25 +138,14 @@ export const exportYAML = (
   config: object,
   filename: string,
   flowLevel: number = 4,
-  sanitize: boolean = true,
 ) => {
   const unsafeContent = dump(config, { flowLevel });
-  if (!sanitize) {
-    processExport(unsafeContent, `${filename}.yaml`);
-  } else {
-    const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-      return `"\\u${c.codePointAt(0)?.toString(16)}"`;
-    });
-    processExport(fileContent, `${filename}.yaml`);
-  }
+  processExport(unsafeContent, `${filename}.yaml`);
 };
 
 export const exportJSON = (data: object, filename: string) => {
   const unsafeContent = JSON.stringify(data);
-  const fileContent = unsafeContent.replace(/[\uE000-\uFFFF]/g, (c) => {
-    return `\\u${c.codePointAt(0)?.toString(16)}`;
-  });
-  processExport(fileContent, filename);
+  processExport(unsafeContent, filename);
 };
 
 export const exportTSV = (data: string[][], filename: string) => {

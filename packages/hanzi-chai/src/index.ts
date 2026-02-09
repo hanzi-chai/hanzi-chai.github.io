@@ -128,7 +128,7 @@ export function 获取字形分析结果(config: 配置, repertoire: 字库, 词
     决策空间: config.form.mapping_space ?? {},
   };
   const characters = 获取汉字集合(词典);
-  return repertoire.拆分(字形分析配置, characters);
+  return repertoire.分析(字形分析配置, characters);
 }
 
 export function 获取拼音分析结果(config: 配置, 词典: 词典) {

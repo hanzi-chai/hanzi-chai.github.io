@@ -157,6 +157,7 @@ export const RulesForm = ({ name }: { name: string }) => {
               );
             }
           }}
+          allowVariables
         />
       ))}
       <Flex justify="center" gap="middle">
