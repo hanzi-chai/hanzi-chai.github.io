@@ -5,6 +5,7 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   优先简码映射原子,
+  如动态组装结果与优先简码原子,
   如组装结果与优先简码原子,
   如编码结果原子,
   最大码长原子,
@@ -12,7 +13,7 @@ import {
   联合结果原子,
 } from "~/atoms";
 import { 序列化, 总序列化, type 码位, 识别符 } from "~/lib";
-import { exportTSV } from "~/utils";
+import { exportTSV, exportYAML } from "~/utils";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
 import { range } from "lodash-es";
@@ -48,6 +49,19 @@ const ExportAssembly = () => {
         exportTSV(tsv, "elements.txt");
       }}
     >
+      导出元素序列表
+    </Button>
+  );
+};
+
+const ExportDynamicAssembly = () => {
+  const 组装结果 = useAtomValueUnwrapped(如动态组装结果与优先简码原子);
+  const 导出组装结果 = 组装结果.map((x) => ({
+    ...x,
+    元素序列: x.元素序列.map(总序列化),
+  }));
+  return (
+    <Button onClick={() => exportYAML(导出组装结果, "elements")}>
       导出元素序列表
     </Button>
   );
@@ -258,7 +272,11 @@ export default function SequenceTable() {
       pagination={{ pageSize: 100 }}
       search={false}
       defaultSize="small"
-      toolBarRender={() => [<ExportAssembly key={1} />, <ExportCode key={2} />]}
+      toolBarRender={() => [
+        <ExportAssembly key={1} />,
+        <ExportDynamicAssembly key={2} />,
+        <ExportCode key={3} />,
+      ]}
     />
   );
 }

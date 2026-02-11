@@ -5,6 +5,7 @@ import pako from "pako";
 import type { Metric } from "~/components/MetricTable";
 import type {
   Result,
+  动态组装条目,
   原始字库数据,
   字形分析结果,
   当量映射,
@@ -27,6 +28,7 @@ import {
   总序列化,
   是归并,
   是私用区,
+  添加优先简码,
   获取汉字集合,
   解析当量映射,
   解析词典,
@@ -378,12 +380,23 @@ export const 如字形分析结果原子 = atom(async (get) => {
   if (!如字库.ok) return 如字库;
   const 字形分析配置 = get(字形分析配置原子);
   const 汉字集合 = await get(汉字集合原子);
-  const result = await thread.spawn<Result<字形分析结果, Error>>("analysis", [
+  return await thread.spawn<Result<字形分析结果, Error>>("analysis", [
     如字库.value._get(),
     字形分析配置,
     汉字集合,
   ]);
-  return result;
+});
+
+export const 如动态字形分析结果原子 = atom(async (get) => {
+  const 如字库 = await get(如字库原子);
+  if (!如字库.ok) return 如字库;
+  const 字形分析配置 = get(字形分析配置原子);
+  const 汉字集合 = await get(汉字集合原子);
+  return await thread.spawn<Result<字形分析结果, Error>>("dynamic_analysis", [
+    如字库.value._get(),
+    字形分析配置,
+    汉字集合,
+  ]);
 });
 
 export const 拼音分析结果原子 = atom(async (get) => {
@@ -393,23 +406,40 @@ export const 拼音分析结果原子 = atom(async (get) => {
   return 分析拼音(源映射, 拼写运算查找表, 词典);
 });
 
-export const 如组装结果原子 = atom(async (get) => {
-  const 拼音分析结果 = await get(拼音分析结果原子);
-  const 如字形分析结果 = await get(如字形分析结果原子);
-  if (!如字形分析结果.ok) return 如字形分析结果;
-  const 字形分析结果 = 如字形分析结果.value;
-  const 键盘配置 = get(键盘原子);
-  const 自定义元素映射 = get(自定义元素映射原子);
+export const 组装配置原子 = atom((get) => {
   const config: Omit<组装配置, "额外信息"> = {
     源映射: get(源映射原子),
     条件映射: get(条件映射原子),
     组装器: get(组装器原子),
     构词规则列表: get(构词配置原子),
     最大码长: get(最大码长原子),
-    键盘配置: 键盘配置,
-    自定义分析映射: 自定义元素映射,
+    键盘配置: get(键盘原子),
+    自定义分析映射: get(自定义元素映射原子),
   };
+  return config;
+});
+
+export const 如组装结果原子 = atom(async (get) => {
+  const 拼音分析结果 = await get(拼音分析结果原子);
+  const 如字形分析结果 = await get(如字形分析结果原子);
+  if (!如字形分析结果.ok) return 如字形分析结果;
+  const 字形分析结果 = 如字形分析结果.value;
+  const config = get(组装配置原子);
   const result = await thread.spawn<组装条目[]>("assembly", [
+    config,
+    拼音分析结果,
+    字形分析结果,
+  ]);
+  return ok(result);
+});
+
+export const 如动态组装结果原子 = atom(async (get) => {
+  const 拼音分析结果 = await get(拼音分析结果原子);
+  const 如字形分析结果 = await get(如动态字形分析结果原子);
+  if (!如字形分析结果.ok) return 如字形分析结果;
+  const 字形分析结果 = 如字形分析结果.value;
+  const config = get(组装配置原子);
+  const result = await thread.spawn<动态组装条目[]>("dynamic_assembly", [
     config,
     拼音分析结果,
     字形分析结果,
@@ -431,16 +461,14 @@ export const 如组装结果与优先简码原子 = atom(async (get) => {
   const 如组装结果 = await get(如组装结果原子);
   if (!如组装结果.ok) return 如组装结果;
   const 优先简码映射 = get(优先简码映射原子);
-  const result = 如组装结果.value.map((x) => {
-    const hash = 识别符(x.词, x.拼音来源列表);
-    const 简码长度 = 优先简码映射.get(hash);
-    const value: 组装条目 & { 简码长度?: number } = { ...x };
-    if (简码长度 !== undefined) {
-      value.简码长度 = 简码长度;
-    }
-    return value;
-  });
-  return ok(result);
+  return ok(添加优先简码(如组装结果.value, 优先简码映射));
+});
+
+export const 如动态组装结果与优先简码原子 = atom(async (get) => {
+  const 如动态组装结果 = await get(如动态组装结果原子);
+  if (!如动态组装结果.ok) return 如动态组装结果;
+  const 优先简码映射 = get(优先简码映射原子);
+  return ok(添加优先简码(如动态组装结果.value, 优先简码映射));
 });
 
 export const 如前端输入原子 = atom(async (get) => {

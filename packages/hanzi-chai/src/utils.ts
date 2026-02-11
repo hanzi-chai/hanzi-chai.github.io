@@ -16,6 +16,7 @@ import type {
   绘制,
   衍生部件数据,
 } from "./data.js";
+import { 动态组装条目, 组装条目 } from "./main.js";
 
 // Result 类型定义
 export type Ok<T> = { ok: true; value: T };
@@ -362,3 +363,31 @@ export const 码 = (汉字: string) =>
   汉字.codePointAt(0)!.toString(16).toUpperCase();
 
 export const 和编码 = (c: string) => `${c} (U+${码(c)})`;
+
+export const 排列组合 = <T>(array: T[][]): T[][] => {
+  if (array.length === 0) return [[]];
+  const [first, ...rest] = array;
+  const restCombinations = 排列组合(rest);
+  const combinations: T[][] = [];
+  for (const item of first!) {
+    for (const combination of restCombinations) {
+      combinations.push([item, ...combination]);
+    }
+  }
+  return combinations;
+};
+
+export const 添加优先简码 = <T extends 组装条目 | 动态组装条目>(
+  entries: T[],
+  优先简码映射: Map<string, number>,
+) => {
+  const result = entries.map((entry) => {
+    const hash = 识别符(entry.词, entry.拼音来源列表);
+    const level = 优先简码映射.get(hash);
+    const { 拼音来源列表, ...rest } = entry;
+    const value: Omit<T, "拼音来源列表"> & { 简码长度?: number } = rest;
+    if (level !== undefined) value.简码长度 = level;
+    return value;
+  });
+  return result;
+};

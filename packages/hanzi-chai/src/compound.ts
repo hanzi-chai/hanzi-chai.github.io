@@ -8,7 +8,7 @@ import {
 } from "./component.js";
 import type { 复合体数据, 结构表示符 } from "./data.js";
 import type { 基本分析, 字形分析配置 } from "./repertoire.js";
-import { default_err, ok, type Result } from "./utils.js";
+import { default_err, ok, 排列组合, type Result } from "./utils.js";
 
 interface 复合体分析器<
   部件分析 extends 基本分析 = 基本分析,
@@ -82,6 +82,23 @@ class 默认复合体分析器 implements 复合体分析器<默认部件分析>
     if (this.config.字根决策.has(名称)) return ok({ 字根序列: [名称] });
     const 全部字根 = 部分分析列表.map((x) => x.字根序列);
     return ok({ 字根序列: 按笔顺组装(全部字根, 部分分析列表, 复合体) });
+  }
+
+  动态分析(
+    名称: string,
+    复合体: 复合体数据,
+    部分分析列表: (默认部件分析[] | 基本分析[])[],
+  ) {
+    const 结果列表: 基本分析[] = [];
+    if (this.config.字根决策.has(名称)) {
+      结果列表.push({ 字根序列: [名称] });
+      if (!this.config.可选字根.has(名称)) return ok(结果列表);
+    }
+    for (const 组合 of 排列组合(部分分析列表)) {
+      const 全部字根 = 组合.map((x) => x.字根序列);
+      结果列表.push({ 字根序列: 按笔顺组装(全部字根, 组合, 复合体) });
+    }
+    return ok(结果列表);
   }
 }
 

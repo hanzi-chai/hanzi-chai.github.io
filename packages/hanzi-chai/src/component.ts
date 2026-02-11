@@ -455,6 +455,24 @@ class 默认部件分析器 implements 部件分析器<默认部件分析> {
     if (!分析.ok) return 分析;
     return ok(定制化分析(名称, 分析.value, this.配置));
   }
+
+  动态分析(名称: string, 部件: 基本部件数据) {
+    const 图形 =
+      this.配置.字根图形映射.get(名称) ?? new 部件图形(名称, 部件.strokes);
+    const 分析 = 图形.给出部件分析(this.配置);
+    if (!分析.ok) return 分析;
+    const 基本分析 = 分析.value;
+    const 结果列表 = 基本分析.全部拆分方式
+      .filter((x) => x.可用)
+      .map((x) => {
+        return {
+          ...基本分析,
+          当前拆分方式: x,
+          字根序列: x.拆分方式.map((y) => y.名称),
+        };
+      });
+    return ok(结果列表);
+  }
 }
 
 class 二笔部件分析器 implements 部件分析器<基本分析> {

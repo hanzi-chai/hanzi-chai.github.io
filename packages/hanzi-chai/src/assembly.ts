@@ -11,13 +11,14 @@ import {
 import { 取码器, type 额外信息 } from "./element.js";
 import { 获取注册表 } from "./main.js";
 import type { 拼音分析结果 } from "./pinyin.js";
-import type { 基本分析, 字形分析结果 } from "./repertoire.js";
+import type { 动态字形分析结果, 基本分析, 字形分析结果 } from "./repertoire.js";
 import {
   default_err,
   ok,
   type Result,
   字数,
   总序列化,
+  排列组合,
   type 自定义分析映射,
 } from "./utils.js";
 
@@ -36,6 +37,10 @@ interface 组装条目 {
   拼音来源列表: string[][];
   元素序列: 码位[];
   频率: number;
+}
+
+interface 动态组装条目 extends Omit<组装条目, "元素序列"> {
+  元素序列: 码位[][];
 }
 
 class 组词器 {
@@ -259,5 +264,64 @@ const 组装 = (
   return 去重后组装结果;
 };
 
-export { 组装, 星空键道组装器, 默认组装器 };
-export type { 组装条目, 组装器, 组装配置, 默认汉字分析 };
+const 动态组装 = (
+  配置: Omit<组装配置, "额外信息">,
+  拼音分析结果: 拼音分析结果,
+  字形分析结果: 动态字形分析结果,
+) => {
+  const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
+  const 组装结果: 动态组装条目[] = [];
+  const 组装器 = 获取注册表().创建组装器(配置.组装器 || "默认", {
+    ...配置,
+    额外信息: { 字根笔画映射: 字形分析结果.字根笔画映射 },
+  })!;
+  for (const { 词, 拼音, 频率, 元素映射 } of 拼音分析结果) {
+    const 元素序列哈希 = new Set<string>();
+    const 元素序列列表: 码位[][] = [];
+    if (字数(词) === 1) {
+      const 字形分析 = 部件分析结果.get(词) ?? 复合体分析结果.get(词) ?? [];
+      for (const 字形分析项 of 字形分析) {
+        const 元素序列 = 组装器.一字词组装(词, 字形分析项, 元素映射[0]!);
+        if (!元素序列.ok) continue;
+        const hash = 总序列化(元素序列.value);
+        if (元素序列哈希.has(hash)) continue;
+        元素序列哈希.add(hash);
+        元素序列列表.push(元素序列.value);
+      }
+    } else {
+      const 字形分析列表: 基本分析[][] = [];
+      for (const 汉字 of Array.from(词)) {
+        const 字形分析 =
+          部件分析结果.get(汉字) ?? 复合体分析结果.get(汉字) ?? [];
+        字形分析列表.push(字形分析);
+      }
+      for (const 组合 of 排列组合(字形分析列表)) {
+        const 元素序列 = 组装器.多字词组装(词, 组合, 元素映射);
+        if (!元素序列.ok) continue;
+        const hash = 总序列化(元素序列.value);
+        if (元素序列哈希.has(hash)) continue;
+        元素序列哈希.add(hash);
+        元素序列列表.push(元素序列.value);
+      }
+    }
+    组装结果.push({ 词, 元素序列: 元素序列列表, 频率, 拼音来源列表: [拼音] });
+  }
+  const 去重后组装结果: 动态组装条目[] = [];
+  const 索引映射 = new Map<string, number>();
+  for (const 组装 of 组装结果) {
+    const hash = `${组装.词}:${组装.元素序列.map(总序列化).join(",")}`;
+    const 索引 = 索引映射.get(hash);
+    if (索引 !== undefined) {
+      const 上一个组装 = 去重后组装结果[索引]!;
+      上一个组装.频率 += 组装.频率;
+      上一个组装.拼音来源列表.push(...组装.拼音来源列表);
+    } else {
+      索引映射.set(hash, 去重后组装结果.length);
+      去重后组装结果.push(组装);
+    }
+  }
+  return 去重后组装结果;
+};
+
+export { 组装, 动态组装, 星空键道组装器, 默认组装器 };
+export type { 组装条目, 动态组装条目, 组装器, 组装配置, 默认汉字分析 };
