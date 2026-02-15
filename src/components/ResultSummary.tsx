@@ -1,18 +1,18 @@
-import {
-  useAtomValue,
-  useAddAtom,
-  自定义拆分原子,
-  useRemoveAtom,
-  动态自定义拆分原子,
-  动态分析原子,
-} from "~/atoms";
-import { Button, Flex, Form, Popover } from "antd";
-import ElementSelect from "./ElementSelect";
 import { ProForm, ProFormList } from "@ant-design/pro-components";
+import { Button, Flex, Form, Popover } from "antd";
+import styled from "styled-components";
+import {
+  useAddAtom,
+  useAtomValue,
+  useRemoveAtom,
+  动态分析原子,
+  动态自定义拆分原子,
+  自定义拆分原子,
+} from "~/atoms";
+import type { 基本分析, 默认部件分析 } from "~/lib";
 import { InlineRender } from "./ComponentForm";
 import { CharWithTooltip, ElementWithTooltip } from "./ElementPool";
-import styled from "styled-components";
-import { 基本分析, 默认部件分析 } from "~/lib";
+import ElementSelect from "./ElementSelect";
 
 const Customize = ({
   component,
@@ -122,7 +122,10 @@ export default function ResultSummary({
   analysis: 基本分析 | 默认部件分析;
   disableCustomize?: boolean;
 }) {
-  const { 字根序列 } = analysis;
+  let 字根序列 = analysis.字根序列;
+  if ("被覆盖拆分方式" in analysis && analysis.被覆盖拆分方式) {
+    字根序列 = analysis.被覆盖拆分方式.拆分方式.map((x) => x.名称);
+  }
   const customize = useAtomValue(自定义拆分原子);
   const remove = useRemoveAtom(自定义拆分原子);
   const dynamic = useAtomValue(动态分析原子);
@@ -151,7 +154,7 @@ export default function ResultSummary({
         )}
         {overrideDynamicSeries && (
           <Flex gap="small" align="center" wrap="wrap">
-            <span>（自定义：）</span>
+            <span>（自定义组：）</span>
             {overrideDynamicSeries.map((x, i) => (
               <Flex key={i} align="center">
                 {x.map((y, j) => (
@@ -169,7 +172,7 @@ export default function ResultSummary({
             <Button onClick={() => remove(char)}>取消自定义</Button>
           )}
           {overrideDynamicSeries && (
-            <Button onClick={() => removeDynamic(char)}>取消动态</Button>
+            <Button onClick={() => removeDynamic(char)}>取消自定义组</Button>
           )}
           {"全部拆分方式" in analysis && dynamic && (
             <Popover
@@ -187,7 +190,7 @@ export default function ResultSummary({
                 />
               }
             >
-              <Button>动态</Button>
+              <Button>自定义组</Button>
             </Popover>
           )}
           <Popover

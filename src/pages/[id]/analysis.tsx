@@ -19,7 +19,9 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   决策原子,
+  决策空间原子,
   别名显示原子,
+  动态分析原子,
   动态自定义拆分原子,
   复合体分析器原子,
   如字库原子,
@@ -65,12 +67,15 @@ const dumpAnalysisResult = (
 
 const ConfigureRules = () => {
   const [modal, setModal] = useState(0);
+  const [动态分析, 设置动态分析] = useAtom(动态分析原子);
   const [部件分析器, 设置部件分析器] = useAtom(部件分析器原子);
   const [复合体分析器, 设置复合体分析器] = useAtom(复合体分析器原子);
   const 注册表 = 获取注册表();
 
   return (
     <Flex gap="middle" justify="center" align="center">
+      动态拆分：
+      <Switch checked={动态分析} onChange={设置动态分析} />
       部件分析器：
       <Select
         value={部件分析器}
@@ -121,10 +126,12 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   ]);
   const mapping = useAtomValue(决策原子);
   const filterFn = new 字符过滤器(filter);
+  const 决策空间 = useAtomValue(决策空间原子);
 
   const [customizedOnly, setCustomizedOnly] = useState(false);
   const componentsNeedAnalysis = [...部件分析结果].filter(([k, v]) => {
-    if (mapping[k]) return false;
+    const 是可选字根 = (决策空间[k] ?? []).some((x) => x.value === null);
+    if (mapping[k] && !是可选字根) return false;
     if (v.字根序列.length === 1 && /\d+/.test(v.字根序列[0]!)) return false;
     return true;
   });

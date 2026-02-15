@@ -1,10 +1,12 @@
 import { type ProColumns, ProTable } from "@ant-design/pro-components";
 import { Button, Flex, Input, Space } from "antd";
+import { range } from "lodash-es";
 import type { ReactNode } from "react";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
   优先简码映射原子,
+  动态分析原子,
   如动态组装结果与优先简码原子,
   如组装结果与优先简码原子,
   如编码结果原子,
@@ -13,10 +15,9 @@ import {
   联合结果原子,
 } from "~/atoms";
 import { 序列化, 总序列化, type 码位, 识别符 } from "~/lib";
-import { exportTSV, exportYAML } from "~/utils";
+import { exportTSV } from "~/utils";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
-import { range } from "lodash-es";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
   return (
@@ -35,15 +36,11 @@ const ExportAssembly = () => {
         const tsv: string[][] = [];
         for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
           const 元素序列字符串 = 总序列化(元素序列);
+          const row = [词, 元素序列字符串, 频率.toString()];
           if (简码长度 !== undefined) {
-            tsv.push([
-              词,
-              元素序列字符串,
-              频率.toString(),
-              简码长度.toString(),
-            ]);
+            tsv.push([...row, 简码长度.toString()]);
           } else {
-            tsv.push([词, 元素序列字符串, 频率.toString()]);
+            tsv.push(row);
           }
         }
         exportTSV(tsv, "elements.txt");
@@ -56,13 +53,23 @@ const ExportAssembly = () => {
 
 const ExportDynamicAssembly = () => {
   const 组装结果 = useAtomValueUnwrapped(如动态组装结果与优先简码原子);
-  const 导出组装结果 = 组装结果.map((x) => ({
-    ...x,
-    元素序列: x.元素序列.map(总序列化),
-  }));
   return (
-    <Button onClick={() => exportYAML(导出组装结果, "elements")}>
-      导出元素序列表
+    <Button
+      onClick={() => {
+        const tsv: string[][] = [];
+        for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
+          const 元素序列字符串 = 元素序列.map(总序列化).join("　");
+          const row = [词, 元素序列字符串, 频率.toString()];
+          if (简码长度 !== undefined) {
+            tsv.push([...row, 简码长度.toString()]);
+          } else {
+            tsv.push(row);
+          }
+        }
+        exportTSV(tsv, "elements.txt");
+      }}
+    >
+      导出动态元素序列表
     </Button>
   );
 };
@@ -132,6 +139,7 @@ export default function SequenceTable() {
   const 最大码长 = useAtomValue(最大码长原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
   const 优先简码映射 = useAtomValue(优先简码映射原子);
+  const 动态分析 = useAtomValue(动态分析原子);
 
   const dataSource = 联合结果.map((x, i) => ({
     ...x,
@@ -274,7 +282,7 @@ export default function SequenceTable() {
       defaultSize="small"
       toolBarRender={() => [
         <ExportAssembly key={1} />,
-        <ExportDynamicAssembly key={2} />,
+        动态分析 && <ExportDynamicAssembly key={2} />,
         <ExportCode key={3} />,
       ]}
     />

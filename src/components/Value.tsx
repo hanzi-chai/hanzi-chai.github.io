@@ -29,10 +29,10 @@ const KeysEditor = ({
             key={index}
             value={key}
             onChange={(event) => {
-              const newValue = keys.map((v, i) => {
+              const newKeys = keys.map((v, i) => {
                 return i === index ? event : v;
               });
-              onChange(合并字符串(newValue));
+              onChange(合并字符串(newKeys.filter((v) => v !== "")));
             }}
             allowEmpty={index !== 0}
             allowPlaceholder={allowPlaceholder}
