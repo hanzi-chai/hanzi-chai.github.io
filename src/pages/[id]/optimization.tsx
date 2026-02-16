@@ -4,14 +4,15 @@ import {
   Flex,
   Form,
   InputNumber,
+  Skeleton,
   Switch,
   Typography,
-  Skeleton,
 } from "antd";
 import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
+import { range } from "lodash-es";
 import { Suspense, useMemo } from "react";
-import { 目标原子, 正则化强度原子 } from "~/atoms";
+import { 正则化强度原子, 目标原子 } from "~/atoms";
 import Optimizer from "~/components/Optimizer";
 import SolverForm from "~/components/SolverForm";
 import {
@@ -22,7 +23,6 @@ import {
 } from "~/components/Utils";
 import type { 层级权重, 码长权重, 部分权重 } from "~/lib";
 import { 数字 } from "~/utils";
-import { range } from "lodash-es";
 
 const AtomicObjective = ({
   title,

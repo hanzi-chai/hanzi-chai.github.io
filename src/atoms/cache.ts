@@ -5,6 +5,7 @@ import pako from "pako";
 import type { Metric } from "~/components/MetricTable";
 import type {
   Result,
+  动态字形分析结果,
   动态组装条目,
   原始字库数据,
   字形分析结果,
@@ -45,6 +46,7 @@ import {
   决策原子,
   决策空间原子,
   分析配置原子,
+  动态分析原子,
   变换器列表原子,
   字形自定义原子,
   字母表原子,
@@ -392,11 +394,10 @@ export const 如动态字形分析结果原子 = atom(async (get) => {
   if (!如字库.ok) return 如字库;
   const 字形分析配置 = get(字形分析配置原子);
   const 汉字集合 = await get(汉字集合原子);
-  return await thread.spawn<Result<字形分析结果, Error>>("dynamic_analysis", [
-    如字库.value._get(),
-    字形分析配置,
-    汉字集合,
-  ]);
+  return await thread.spawn<Result<动态字形分析结果, Error>>(
+    "dynamic_analysis",
+    [如字库.value._get(), 字形分析配置, 汉字集合],
+  );
 });
 
 export const 拼音分析结果原子 = atom(async (get) => {
@@ -473,15 +474,26 @@ export const 如动态组装结果与优先简码原子 = atom(async (get) => {
 
 export const 如前端输入原子 = atom(async (get) => {
   const 配置 = get(配置原子);
-  const 词列表 = await get(如组装结果与优先简码原子);
+  const 动态分析 = get(动态分析原子);
+  const 词列表 = 动态分析
+    ? await get(如动态组装结果与优先简码原子)
+    : await get(如组装结果与优先简码原子);
   if (!词列表.ok) return 词列表;
+
+  const 序列化词列表: any[] = [];
+  词列表.value.forEach((x) => {
+    序列化词列表.push({
+      ...x,
+      // @ts-ignore
+      元素序列: Array.isArray(x.元素序列[0])
+        ? x.元素序列.map(总序列化).join("　")
+        : 总序列化(x.元素序列),
+    });
+  });
 
   return ok({
     配置,
-    词列表: 词列表.value.map((x) => ({
-      ...x,
-      元素序列: 总序列化(x.元素序列),
-    })),
+    词列表: 序列化词列表,
     原始键位分布信息:
       get(用户键位分布目标原子) ?? (await get(默认键位分布目标原子)),
     原始当量信息: get(用户当量映射原子) ?? (await get(默认当量原子)),

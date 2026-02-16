@@ -473,7 +473,7 @@ class 默认部件分析器 implements 部件分析器<默认部件分析> {
           字根序列: x.拆分方式.map((y) => y.名称),
         };
       });
-    return ok(结果列表);
+    return ok(动态定制化分析(名称, 结果列表, this.配置));
   }
 }
 
@@ -572,14 +572,6 @@ function 定制化分析<T extends 基本分析 | 默认部件分析>(
   部件分析: T,
   config: 字形分析配置,
 ) {
-  // const 动态自定义分析 = config.分析配置?.dynamic_customize ?? {};
-  // for (const [部件, 字根序列列表] of Object.entries(动态自定义分析)) {
-  //   for (const 字根序列 of 字根序列列表) {
-  //     if (!字根序列.every((x) => config.字根决策.has(x))) continue;
-  //     自定义分析[部件] = 字根序列;
-  //     break;
-  //   }
-  // }
   const 自定义分析 = config.分析配置.customize ?? {};
   const 字根序列 = 自定义分析[名称];
   if (字根序列 === undefined) return 部件分析;
@@ -594,6 +586,32 @@ function 定制化分析<T extends 基本分析 | 默认部件分析>(
     });
     if (拆分方式 !== undefined) {
       新分析.当前拆分方式 = 拆分方式;
+    }
+  }
+  return 新分析;
+}
+
+function 动态定制化分析<T extends 基本分析 | 默认部件分析>(
+  名称: string,
+  部件分析列表: T[],
+  config: 字形分析配置,
+) {
+  const 动态自定义分析 = config.分析配置?.dynamic_customize ?? {};
+  const 自定义分析 = config.分析配置.customize ?? {};
+  let 全部字根序列 = 动态自定义分析[名称];
+  if (全部字根序列 === undefined && 自定义分析[名称] !== undefined) {
+    全部字根序列 = [自定义分析[名称]];
+  }
+  if (全部字根序列 === undefined) return 部件分析列表;
+  const 新分析: T[] = [];
+  for (const 字根序列 of 全部字根序列) {
+    const 分析 = 部件分析列表.find((x) => isEqual(x.字根序列, 字根序列));
+    if (分析) {
+      新分析.push(分析);
+    } else {
+      // 如果找不到完全匹配的分析，就用定制化分析覆盖当前分析
+      const 假装分析 = { ...部件分析列表[0]!, 字根序列 };
+      新分析.push(假装分析);
     }
   }
   return 新分析;
@@ -707,57 +725,3 @@ export type {
   部件分析器,
   默认部件分析,
 };
-
-// if (serializerName === "xkjd") {
-//   for (const [_, result] of componentResults.entries()) {
-//     result.sequence = limit(result.sequence, 4, config);
-//   }
-// } else if (serializerName === "snow2") {
-//   for (const [key, result] of componentResults.entries()) {
-//     result.sequence = result.sequence.slice(0, 1);
-//     if (result.sequence[0] !== key) result.sequence.push("");
-//   }
-// } else if (serializerName === "feihua") {
-//   for (const [key, result] of componentResults.entries()) {
-//     if ("schemes" in result) {
-//       const dc = config.analysis?.dynamic_customize ?? {};
-//       const schemeList =
-//         dc[key] ??
-//         result.schemes.filter((x) => x.optional).map((x) => x.roots);
-//       const scheme = schemeList.find((x) =>
-//         x.every((r) => {
-//           let value = config.roots.get(r)!;
-//           while (isMerge(value)) {
-//             value = config.roots.get(value.element)!;
-//           }
-//           return /[aoeiuv;/]/.test(value as string);
-//         }),
-//       )!;
-//       result.full2 = scheme;
-//       result.sequence = scheme.slice(0, 3);
-//     } else {
-//       result.full2 = [...result.full];
-//     }
-//   }
-// }
-
-// if (serializerName === "feihua") {
-//   const rawOperandResults = glyph.operandList.map(getResult);
-//   const operandResults = rawOperandResults as PartitionResult[];
-//   const serialization = serializer(operandResults, glyph, config);
-//   serialization.full = [char];
-//   let value = config.roots.get(char)!;
-//   while (isMerge(value)) {
-//     value = config.roots.get(value.element)!;
-//   }
-//   if (/[aoeiuv;/]/.test(value as string)) {
-//     serialization.full2 = [char];
-//   }
-//   compoundResults.set(char, serialization);
-//   continue;
-// }
-// // 复合体本身是一个字根
-// const sequence = [char];
-// if (serializerName === "snow2") {
-//   sequence.push("q");
-// }
