@@ -196,6 +196,12 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         </Button>
         <Button
           onClick={() => {
+            const 全部自定义拆分 = { ...动态自定义拆分 };
+            for (const [k, v] of Object.entries(自定义拆分)) {
+              if (全部自定义拆分[k] === undefined) {
+                全部自定义拆分[k] = [v];
+              }
+            }
             for (const [部件, 字根序列列表] of Object.entries(动态自定义拆分)) {
               const last = 字根序列列表[字根序列列表.length - 1];
               if (!last) continue;
