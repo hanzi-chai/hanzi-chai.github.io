@@ -90,7 +90,7 @@ class 默认复合体分析器 implements 复合体分析器<默认部件分析>
     部分分析列表: (默认部件分析[] | 基本分析[])[],
   ) {
     const 结果列表: 基本分析[] = [];
-    if (this.config.字根决策.has(名称)) {
+    if (this.config.字根决策.has(名称) || this.config.可选字根.has(名称)) {
       结果列表.push({ 字根序列: [名称] });
       if (!this.config.可选字根.has(名称)) return ok(结果列表);
     }

@@ -1,7 +1,14 @@
 import { range } from "lodash-es";
 import type { 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
-import type { 决策, 广义码位, 码位 } from "./config.js";
+import type {
+  元素,
+  决策,
+  决策空间,
+  广义码位,
+  码位,
+  非空广义安排,
+} from "./config.js";
 import type {
   全等数据,
   原始汉字数据,
@@ -16,7 +23,7 @@ import type {
   绘制,
   衍生部件数据,
 } from "./data.js";
-import { 动态组装条目, 组装条目 } from "./main.js";
+import type { 动态组装条目, 组装条目 } from "./main.js";
 
 // Result 类型定义
 export type Ok<T> = { ok: true; value: T };
@@ -306,7 +313,10 @@ export const 合并字符串 = <T extends 广义码位>(keys: T[]) => {
   return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
 };
 
-const 展开决策值 = (mapping: 决策, key: string): Result<string, Error> => {
+const 展开决策值 = (
+  mapping: Record<元素, 非空广义安排>,
+  key: string,
+): Result<string, Error> => {
   const value = mapping[key];
   if (value === undefined) {
     return default_err(`决策中不存在键: ${key}`);
@@ -318,6 +328,11 @@ const 展开决策值 = (mapping: 决策, key: string): Result<string, Error> =>
     for (const part of value) {
       if (typeof part === "string") {
         parts.push(part);
+      } else if (
+        part === null ||
+        (typeof part === "object" && "variable" in part)
+      ) {
+        parts.push("a");
       } else {
         const 部分值 = 展开决策值(mapping, part.element);
         if (!部分值.ok) return 部分值;
@@ -336,6 +351,35 @@ export const 展开决策 = (mapping: 决策): Result<Map<string, string>, Error
     const value = 展开决策值(mapping, key);
     if (!value.ok) return value;
     result.set(key, value.value);
+  }
+  return ok(result);
+};
+
+export const 计算当前或潜在长度 = (
+  mapping: 决策,
+  mapping_space: 决策空间,
+): Result<Map<string, number>, Error> => {
+  const result = new Map<string, number>();
+  for (const key of Object.keys(mapping)) {
+    const value = 展开决策值(mapping, key);
+    if (!value.ok) return value;
+    result.set(key, value.value.length);
+  }
+  const 增广决策: Record<string, 非空广义安排> = { ...mapping };
+  for (const [key, value] of Object.entries(mapping_space)) {
+    if (!(key in 增广决策)) {
+      const v = value.find((x) => x.value !== null);
+      if (v !== undefined) {
+        增广决策[key] = v.value as 非空广义安排;
+      }
+    }
+  }
+  for (const key of Object.keys(增广决策)) {
+    if (!result.has(key)) {
+      const value = 展开决策值(增广决策, key);
+      if (!value.ok) return value;
+      result.set(key, value.value.length);
+    }
   }
   return ok(result);
 };

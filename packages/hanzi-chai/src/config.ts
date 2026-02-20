@@ -135,6 +135,8 @@ export function 是变量(key: 广义码位): key is 变量安排 {
 
 export type 广义安排 = null | string | 广义码位[] | { element: string };
 
+export type 非空广义安排 = Exclude<广义安排, null>;
+
 export function 是归并(value: 广义安排): value is { element: string } {
   return typeof value === "object" && value !== null && "element" in value;
 }
