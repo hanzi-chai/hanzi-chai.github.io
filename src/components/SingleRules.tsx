@@ -63,6 +63,15 @@ function EncoderGraph({
   const [conditions, setConditions] = useAtom(条件映射原子);
   const [cachedSources, setCachedSources] = useState(sources);
   const [cachedConditions, setCachedConditions] = useState(conditions);
+
+  // 每次打开 Modal 时，从原子状态重置缓存，确保取消后再次打开不会丢失数据
+  useEffect(() => {
+    if (open) {
+      setCachedSources(sources);
+      setCachedConditions(conditions);
+    }
+  }, [open]);
+
   const [initialNodes, initialEdges] = initializeGraph(
     cachedSources,
     cachedConditions,
