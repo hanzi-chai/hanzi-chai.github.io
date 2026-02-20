@@ -115,9 +115,55 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       },
     };
   };
-  const deleteNode: MenuItemType = {
-    key: "delete",
-    label: "删除节点",
+  // 获取当前节点的唯一子节点（如果有且仅有一个,没有分支）
+  const getOnlyChild = (): string | null => {
+    if (id[0] === "s") {
+      return sources[id]?.next ?? null;
+    }
+    const cond = conditions[id];
+    if (!cond) return null;
+    const { positive, negative } = cond;
+    if (positive && !negative) return positive;
+    if (negative && !positive) return negative;
+    return null; // 两个分支都有或都没有
+  };
+
+  // 将父节点中指向 id 的指针替换为 replacement
+  const relinkParent = (
+    newSources: Record<string, 源节点配置>,
+    newConditions: Record<string, 条件节点配置>,
+    replacement: string | null,
+  ) => {
+    for (const value of Object.values(newSources)) {
+      if (value.next === id) value.next = replacement;
+    }
+    for (const value of Object.values(newConditions)) {
+      if (value.positive === id) value.positive = replacement;
+      if (value.negative === id) value.negative = replacement;
+    }
+  };
+
+  const deleteNodeOnly: MenuItemType = {
+    key: "delete-only",
+    label: "删除本节点",
+    onClick: () => {
+      const newSources = { ...sources };
+      const newConditions = { ...conditions };
+      const child = getOnlyChild();
+      // 将父节点的指针指向子节点
+      relinkParent(newSources, newConditions, child);
+      // 仅删除当前节点
+      delete newSources[id];
+      delete newConditions[id];
+      setSelected(undefined);
+      setSources(newSources);
+      setConditions(newConditions);
+    },
+  };
+
+  const deleteNodeAndChildren: MenuItemType = {
+    key: "delete-all",
+    label: "删除节点和子节点",
     onClick: () => {
       const newSources = { ...sources };
       const newConditions = { ...conditions };
@@ -137,25 +183,33 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
         delete newSources[currentId];
         delete newConditions[currentId];
       }
-      for (const value of Object.values(newSources)) {
-        if (value.next === id) value.next = null;
-      }
-      for (const value of Object.values(newConditions)) {
-        if (value.positive === id) value.positive = null;
-        if (value.negative === id) value.negative = null;
-      }
+      relinkParent(newSources, newConditions, null);
       setSelected(undefined);
       setSources(newSources);
       setConditions(newConditions);
     },
   };
+
+  // 判断是否可以仅删除本节点（条件节点两个分支都有子节点时不允许）
+  const canDeleteOnly = (): boolean => {
+    if (id[0] === "s") return true;
+    const cond = conditions[id];
+    if (!cond) return false;
+    // 两个分支都有子节点时，无法确定应将哪个接到父节点
+    return !(cond.positive && cond.negative);
+  };
+
   const items: (MenuItemType | MenuItemGroupType)[] = [];
   if (id[0] === "s") {
-    if (id !== "s0") items.push(deleteNode);
+    if (id !== "s0") {
+      if (canDeleteOnly()) items.push(deleteNodeOnly);
+      items.push(deleteNodeAndChildren);
+    }
     if (sources[id]?.next === null)
       items.push(createSourceNode(), createConditionNode());
   } else {
-    items.push(deleteNode);
+    if (canDeleteOnly()) items.push(deleteNodeOnly);
+    items.push(deleteNodeAndChildren);
     for (const label of ["positive", "negative"] as const) {
       if (conditions[id]?.[label] === null)
         items.push(createSourceNode(label), createConditionNode(label));
