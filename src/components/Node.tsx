@@ -57,7 +57,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     useContext(CacheContext);
   if (sources[id] === undefined && conditions[id] === undefined) return null;
   const createSourceNode: Creator = (etype) => {
-    const label = `添加子节点${etype ? `（${renderType[etype]}）` : ""}`;
+    const label = `添加子源节点${etype ? `（${renderType[etype]}）` : ""}`;
     return {
       key: `create-source-${etype}`,
       label,
@@ -163,7 +163,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
 
   const deleteNodeAndChildren: MenuItemType = {
     key: "delete-all",
-    label: "删除节点和子节点",
+    label: "删除本节点和后代节点",
     onClick: () => {
       const newSources = { ...sources };
       const newConditions = { ...conditions };
@@ -202,7 +202,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   // 在当前节点上方插入一个新的源节点
   const insertParentSourceNode: MenuItemType = {
     key: "insert-parent-source",
-    label: "插入父节点",
+    label: "插入父源节点",
     onClick: () => {
       const newId = getNewId(sources, "s");
       const newSources = sortObject({
@@ -235,7 +235,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       const newConditions = sortObject({
         ...conditions,
         [newId]: {
-          object: { type: "汉字" } as any,
+          object: { type: "汉字" } as const,
           operator: "存在" as const,
           positive: id,
           negative: null,
