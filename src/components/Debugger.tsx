@@ -31,9 +31,36 @@ import {
   type 字集指示,
   字集过滤查找表,
   字集过滤选项,
-  解析码表,
-  读取表格,
+  type 码表条目,
 } from "~/lib";
+
+type 码表格式 =
+  | "char_tab_code"
+  | "char_space_code"
+  | "code_tab_char"
+  | "code_space_char";
+
+const 码表格式选项: { label: string; value: 码表格式 }[] = [
+  { label: "单字 ⇥ 编码", value: "char_tab_code" },
+  { label: "单字 ␣ 编码", value: "char_space_code" },
+  { label: "编码 ⇥ 单字", value: "code_tab_char" },
+  { label: "编码 ␣ 单字", value: "code_space_char" },
+];
+
+function 按格式解析码表(content: string, format: 码表格式): 码表条目[] {
+  const separator = format.includes("tab") ? "\t" : /\s+/;
+  const charFirst = format.startsWith("char");
+  const lines = content.trim().split("\n");
+  const result: 码表条目[] = [];
+  for (const line of lines) {
+    const parts = line.split(separator);
+    const [first, second] = parts;
+    if (first === undefined || second === undefined) continue;
+    const [词, 编码] = charFirst ? [first, second] : [second, first];
+    result.push({ 词: 词!, 编码: 编码! });
+  }
+  return result;
+}
 import { DisplayOptionalSuperscript } from "./SequenceTable";
 import Element from "./Element";
 
@@ -63,6 +90,8 @@ export default function Debugger() {
   );
   const [incorrectOnly, setIncorrectOnly] = useState(true);
   const [filterOption, setFilterOption] = useAtom(校对范围原子);
+  const [codeTableFormat, setCodeTableFormat] =
+    useState<码表格式>("char_tab_code");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<{
     name: string;
@@ -176,15 +205,20 @@ export default function Debugger() {
           type=".txt,.yaml"
           text="导入码表"
           action={(content) => {
-            const tsv = 读取表格(content);
-            const 码表 = 解析码表(tsv);
+            const 码表 = 按格式解析码表(content, codeTableFormat);
             setReference(码表);
           }}
+        />
+        <Select
+          value={codeTableFormat}
+          onChange={setCodeTableFormat}
+          options={码表格式选项}
+          style={{ width: 160 }}
         />
         {reference !== undefined && `已加载码表，条数：${reference.length}`}
       </Flex>
       <Typography.Text type="secondary">
-        码表格式：每行一个条目，至少包含「单字」和「编码」两列，使用制表符分隔。文件可以为
+        码表格式：每行一个条目，包含「单字」和「编码」两列，按所选格式分隔。文件可以为
         .txt 或 .yaml 后缀。
       </Typography.Text>
       <Flex
