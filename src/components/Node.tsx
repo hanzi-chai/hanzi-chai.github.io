@@ -57,7 +57,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     useContext(CacheContext);
   if (sources[id] === undefined && conditions[id] === undefined) return null;
   const createSourceNode: Creator = (etype) => {
-    const label = `添加源节点${etype ? `（${renderType[etype]}）` : ""}`;
+    const label = `添加子节点${etype ? `（${renderType[etype]}）` : ""}`;
     return {
       key: `create-source-${etype}`,
       label,
@@ -84,7 +84,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     };
   };
   const createConditionNode: Creator = (etype) => {
-    const label = `添加条件节点${etype ? `（${renderType[etype]}）` : ""}`;
+    const label = `添加子条件节点${etype ? `（${renderType[etype]}）` : ""}`;
     return {
       key: `create-condition-${etype}`,
       label,
@@ -199,15 +199,74 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     return !(cond.positive && cond.negative);
   };
 
+  // 在当前节点上方插入一个新的源节点
+  const insertParentSourceNode: MenuItemType = {
+    key: "insert-parent-source",
+    label: "插入父节点",
+    onClick: () => {
+      const newId = getNewId(sources, "s");
+      const newSources = sortObject({
+        ...sources,
+        [newId]: { object: { type: "汉字" } as any, next: id },
+      });
+      const newConditions = { ...conditions };
+      // 将原来指向当前节点的父节点改为指向新节点
+      for (const value of Object.values(newSources)) {
+        if (value !== newSources[newId] && value.next === id)
+          value.next = newId;
+      }
+      for (const value of Object.values(newConditions)) {
+        if (value.positive === id) value.positive = newId;
+        if (value.negative === id) value.negative = newId;
+      }
+      setSources(newSources);
+      setConditions(newConditions);
+      setSelected(newId);
+    },
+  };
+
+  // 在当前节点上方插入一个新的条件节点
+  const insertParentConditionNode: MenuItemType = {
+    key: "insert-parent-condition",
+    label: "插入父条件节点",
+    onClick: () => {
+      const newId = getNewId(conditions, "c");
+      const newSources = { ...sources };
+      const newConditions = sortObject({
+        ...conditions,
+        [newId]: {
+          object: { type: "汉字" } as any,
+          operator: "存在" as const,
+          positive: id,
+          negative: null,
+        },
+      });
+      // 将原来指向当前节点的父节点改为指向新节点
+      for (const value of Object.values(newSources)) {
+        if (value.next === id) value.next = newId;
+      }
+      for (const [key, value] of Object.entries(newConditions)) {
+        if (key === newId) continue;
+        if (value.positive === id) value.positive = newId;
+        if (value.negative === id) value.negative = newId;
+      }
+      setSources(newSources);
+      setConditions(newConditions);
+      setSelected(newId);
+    },
+  };
+
   const items: (MenuItemType | MenuItemGroupType)[] = [];
   if (id[0] === "s") {
     if (id !== "s0") {
+      items.push(insertParentSourceNode, insertParentConditionNode);
       if (canDeleteOnly()) items.push(deleteNodeOnly);
       items.push(deleteNodeAndChildren);
     }
     if (sources[id]?.next === null)
       items.push(createSourceNode(), createConditionNode());
   } else {
+    items.push(insertParentSourceNode, insertParentConditionNode);
     if (canDeleteOnly()) items.push(deleteNodeOnly);
     items.push(deleteNodeAndChildren);
     for (const label of ["positive", "negative"] as const) {
