@@ -123,7 +123,8 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
   const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
-  const 动态字形分析结果 = useAtomValueUnwrapped(如动态字形分析结果原子);
+  const 动态字形分析结果 = useAtomValue(如动态字形分析结果原子);
+  const 动态分析 = useAtomValue(动态分析原子);
   const 汉字集合 = useAtomValue(汉字集合原子);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -189,11 +190,15 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         >
           导出拆分
         </Button>
-        <Button
-          onClick={() => 导出字形分析结果(汉字集合, 动态字形分析结果, display)}
-        >
-          导出动态拆分
-        </Button>
+        {动态分析 && 动态字形分析结果.ok && (
+          <Button
+            onClick={() =>
+              导出字形分析结果(汉字集合, 动态字形分析结果.value, display)
+            }
+          >
+            导出动态拆分
+          </Button>
+        )}
         <Button
           onClick={() => {
             const 全部自定义拆分 = { ...动态自定义拆分 };

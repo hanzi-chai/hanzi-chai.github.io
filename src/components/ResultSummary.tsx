@@ -53,7 +53,7 @@ const Customize = ({
   );
 };
 
-const MyProFormList = styled(ProFormList)`
+export const MyProFormList = styled(ProFormList)`
   & .ant-pro-form-list-action {
     margin: 0;
   }

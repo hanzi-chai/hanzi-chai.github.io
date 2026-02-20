@@ -25,9 +25,10 @@ import {
   字母表原子,
   最大码长原子,
 } from "~/atoms";
+import { InlineRender } from "~/components/ComponentForm";
 import KeySelect from "~/components/KeySelect";
+import { MyProFormList } from "~/components/ResultSummary";
 import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
-import { MinusButton, PlusButton } from "~/components/Utils";
 import type { 码位, 组装条目 } from "~/lib";
 import { 反序列化, 序列化 } from "~/lib";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
@@ -48,7 +49,7 @@ const 分析原始重码 = (
   分析配置: AnalyzerForm,
   result: 组装条目[],
   maxLength: number,
-  replacer: (d: 码位 | undefined) => 码位 | undefined = (d) => d,
+  合并组列表: 码位[][] = [],
 ) => {
   const 反向映射 = new Map<string, string[]>();
   const 相关结果 = filterRelevant(result, 分析配置);
@@ -57,7 +58,14 @@ const 分析原始重码 = (
     const sliced = range(maxLength).map((i) =>
       分析配置.position.includes(i) ? sequence[i] : "*",
     );
-    const summary = JSON.stringify(sliced.map(replacer));
+    const summary = JSON.stringify(
+      sliced.map((x) => {
+        const index = 合并组列表.findIndex((group) =>
+          group.some((y) => isEqual(y, x)),
+        );
+        return index !== -1 ? String.fromCodePoint(0x100000 + index) : x;
+      }),
+    );
     反向映射.set(summary, (反向映射.get(summary) || []).concat(name));
   }
   return 反向映射;
@@ -293,7 +301,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 const MarginalFirstOrderDuplication = () => {
   const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
   const maxLength = useAtomValue(最大码长原子);
-  const [elements, setElements] = useState([] as 码位[]);
+  const [合并组列表, 设置合并组列表] = useState([] as 码位[][]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
     type: "single",
     position: range(0, maxLength),
@@ -305,9 +313,7 @@ const MarginalFirstOrderDuplication = () => {
   rmBefore.forEach((items) => {
     if (items.length > 1) items.map((x) => szBefore.add(x));
   });
-  const rmAfter = 分析原始重码(analyzer, assemblyResult, maxLength, (d) =>
-    elements.some((x) => isEqual(x, d)) ? "^" : d,
-  );
+  const rmAfter = 分析原始重码(analyzer, assemblyResult, maxLength, 合并组列表);
   const szAfter = new Set<string>();
   rmAfter.forEach((items) => {
     if (items.length > 1) items.map((x) => szAfter.add(x));
@@ -316,32 +322,48 @@ const MarginalFirstOrderDuplication = () => {
     <>
       <Typography.Title level={3}>边际一阶重码计算</Typography.Title>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
-      <Flex gap="middle" align="baseline">
-        <Form.Item label="合并">
-          <Space>
-            {elements.map((x, i) => (
-              <KeySelect
-                key={i}
-                value={x}
-                allowElements
-                onChange={(newKey) => {
-                  const newElements = [...elements];
-                  newElements[i]! = newKey as 码位;
-                  setElements(newElements);
-                }}
-              />
-            ))}
-          </Space>
-        </Form.Item>
-        <PlusButton
-          onClick={() => setElements([...elements, { element: "1", index: 0 }])}
-        />
-        <MinusButton onClick={() => setElements(elements.slice(0, -1))} />
-        <Typography.Paragraph>
-          将增加重码：
-          {[...szAfter].filter((x) => !szBefore.has(x)).join("、")}
-        </Typography.Paragraph>
-      </Flex>
+      <ProForm<{ content: { content: 码位[] }[] }>
+        layout="horizontal"
+        submitter={false}
+        initialValues={{ content: 合并组列表.map((x) => ({ content: x })) }}
+        onValuesChange={async (_, { content }) =>
+          设置合并组列表(content.map((x) => x.content))
+        }
+      >
+        <MyProFormList
+          name="content"
+          creatorButtonProps={{
+            creatorButtonText: "添加一组合并",
+            icon: false,
+          }}
+          creatorRecord={() => ({
+            content: [{ element: "1", index: 0 } satisfies 码位],
+          })}
+        >
+          <MyProFormList
+            name="content"
+            creatorButtonProps={{
+              creatorButtonText: "添加",
+              icon: false,
+              style: { width: "unset" },
+            }}
+            itemRender={InlineRender}
+            creatorRecord={() => ({ element: "1", index: 0 }) satisfies 码位}
+            copyIconProps={false}
+          >
+            {(meta) => (
+              <Form.Item noStyle {...meta}>
+                {/* @ts-ignore */}
+                <KeySelect allowElements />
+              </Form.Item>
+            )}
+          </MyProFormList>
+        </MyProFormList>
+      </ProForm>
+      <Typography.Paragraph>
+        将增加重码：
+        {[...szAfter].filter((x) => !szBefore.has(x)).join("、")}
+      </Typography.Paragraph>
     </>
   );
 };

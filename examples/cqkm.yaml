@@ -19,7 +19,8 @@ analysis:
     - 能散不连
     - 全符笔顺
     - 取大优先
-  serializer: erbi
+  component_analyzer: 二笔
+  compound_analyzer: 二笔
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping:

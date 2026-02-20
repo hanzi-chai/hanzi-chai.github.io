@@ -52,12 +52,15 @@ const ExportAssembly = () => {
 };
 
 const ExportDynamicAssembly = () => {
-  const 组装结果 = useAtomValueUnwrapped(如动态组装结果与优先简码原子);
+  const 组装结果 = useAtomValue(如动态组装结果与优先简码原子);
+  if (!组装结果.ok) {
+    return null;
+  }
   return (
     <Button
       onClick={() => {
         const tsv: string[][] = [];
-        for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
+        for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果.value) {
           const 元素序列字符串 = 元素序列.map(总序列化).join("　");
           const row = [词, 元素序列字符串, 频率.toString()];
           if (简码长度 !== undefined) {

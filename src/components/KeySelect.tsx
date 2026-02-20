@@ -66,11 +66,10 @@ export default function KeySelect({
   if (allowPlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
-  const form = useAtomValueUnwrapped(如字库原子);
   return (
     <Select
       showSearch
-      placeholder="输入笔画搜索"
+      placeholder="输入搜索"
       options={keyOptions}
       style={{ minWidth: 96 }}
       value={JSON.stringify(value)}
@@ -87,10 +86,10 @@ export default function KeySelect({
         if ("variable" in key) {
           return key.variable.includes(input);
         }
-        if (form._get()[key.element] !== undefined) {
-          return sequenceMap.get(key.element)?.startsWith(input) ?? false;
-        }
-        return key.element.includes(input);
+        const sequence = sequenceMap.get(key.element);
+        const 匹配序列 = sequence?.startsWith(input) ?? false;
+        const 匹配元素 = key.element.includes(input);
+        return 匹配序列 || 匹配元素;
       }}
       filterSort={(a, b) => {
         const ak: 广义码位 = JSON.parse(a.value);

@@ -43,7 +43,7 @@ export default function ElementAdder({ element }: { element?: string }) {
           type="primary"
           disabled={element === undefined}
           onClick={() => {
-            const slice = keys.slice(0, mapping_type ?? 1);
+            const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
             addMapping(element!, 合并字符串(slice));
           }}
         >
