@@ -40,6 +40,7 @@ import {
   type 决策,
   可打印字符列表,
   是归并,
+  是聚类,
   是私用区,
   读取表格,
   type 非空安排,
@@ -160,7 +161,13 @@ export const ElementDetail = ({
           onChange={(newValue) => {
             setOtherValue(newValue as 非空安排);
           }}
-          isCurrent
+          excludeTypes={
+            是归并(keys)
+              ? ["禁用", "归并"]
+              : 是聚类(keys)
+                ? ["禁用", "聚类"]
+                : ["禁用", "键位"]
+          }
         />
         <Button
           onClick={() => {

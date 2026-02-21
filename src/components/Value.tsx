@@ -112,12 +112,14 @@ const ValueEditor = ({
   allowVariables,
   allowPlaceholder,
   isCurrent,
+  excludeTypes,
 }: {
   value: 广义安排;
   onChange: (newValue: 广义安排) => void;
   allowVariables?: boolean;
   allowPlaceholder?: boolean;
   isCurrent?: boolean;
+  excludeTypes?: ValueType[];
 }) => {
   const alphabet = useAtomValue(字母表原子);
   const currentType =
@@ -128,6 +130,15 @@ const ValueEditor = ({
         : 是聚类(value)
           ? "聚类"
           : "键位";
+  const allOptions: { label: string; value: ValueType }[] = [
+    { label: "禁用", value: "禁用" },
+    { label: "键位", value: "键位" },
+    { label: "聚类", value: "聚类" },
+    { label: "归并", value: "归并" },
+  ];
+  const filteredOptions = excludeTypes
+    ? allOptions.filter((o) => !excludeTypes.includes(o.value))
+    : allOptions;
   return (
     <Flex gap="small">
       <Select<ValueType>
@@ -143,12 +154,7 @@ const ValueEditor = ({
             onChange(alphabet[0]!);
           }
         }}
-        options={[
-          { label: "禁用", value: "禁用" },
-          { label: "键位", value: "键位" },
-          { label: "聚类", value: "聚类" },
-          { label: "归并", value: "归并" },
-        ]}
+        options={filteredOptions}
         disabled={isCurrent}
       />
       {是归并(value) ? (
