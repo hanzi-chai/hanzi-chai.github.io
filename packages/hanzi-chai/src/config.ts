@@ -141,6 +141,17 @@ export function 是归并(value: 广义安排): value is { element: string } {
   return typeof value === "object" && value !== null && "element" in value;
 }
 
+export function 是聚类(value: 广义安排): value is 广义码位[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    typeof value[0] === "object" &&
+    value[0] !== null &&
+    "element" in value[0] &&
+    "index" in value[0]
+  );
+}
+
 export type 决策 = Record<元素, 非空安排>;
 
 export interface 安排描述 {

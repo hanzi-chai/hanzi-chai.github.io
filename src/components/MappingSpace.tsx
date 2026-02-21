@@ -132,6 +132,10 @@ export const RulesForm = ({ name }: { name: string }) => {
   const creators = {
     禁用: () => ({ value: null, score: 0 }),
     键位: () => ({ value: alphabet[0]!, score: 0 }),
+    聚类: () => ({
+      value: [{ element: "1", index: 0 }, alphabet[0]!],
+      score: 0,
+    }),
     归并: () => ({ value: { element: "1" }, score: 0 }),
   };
   return (
