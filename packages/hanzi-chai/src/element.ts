@@ -47,6 +47,10 @@ interface 字根二笔取码 extends 基本 {
   strokeIndex: number;
 }
 
+interface 结构取码 extends 基本 {
+  type: "结构";
+}
+
 interface 自定义取码 extends 基本 {
   type: "自定义";
   subtype: string;
@@ -65,13 +69,15 @@ export type 取码对象 =
   | 字根取码
   | 字根笔画取码
   | 字根二笔取码
+  | 结构取码
   | 自定义取码
   | 特殊取码;
 
 export const 摘要 = (object: 取码对象) => {
   switch (object.type) {
     case "汉字":
-      return "汉字";
+    case "结构":
+      return object.type;
     case "固定":
       return object.key;
     case "字音":
@@ -95,6 +101,7 @@ export const 转列表 = (object: 取码对象): (string | number)[] => {
   const list = [object.type];
   switch (object.type) {
     case "汉字":
+    case "结构":
       return list;
     case "固定":
       return [...list, object.key];
@@ -117,6 +124,7 @@ export const 从列表生成 = (value: (string | number)[]): 取码对象 => {
   const type = value[0] as 取码对象["type"];
   switch (type) {
     case "汉字":
+    case "结构":
       return { type };
     case "固定":
       return { type, key: value[1] as string };
@@ -274,6 +282,8 @@ export class 取码器 {
         if (stroke1 === undefined) return undefined;
         stroke2 = signedIndex(strokes, object.strokeIndex * 2);
         return [stroke1, stroke2 ?? 0].join("");
+      case "结构":
+        return "结构" in result ? result.结构 : undefined;
       case "自定义":
         return signedIndex(
           result.自定义元素[object.subtype] ?? [],

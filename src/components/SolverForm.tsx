@@ -13,7 +13,7 @@ import type { 求解器配置 } from "~/lib";
 
 export default function SolverForm() {
   const [metaheuristic, setMetaheuristic] = useAtom(求解器原子);
-  const formRef = useRef<ProFormInstance>();
+  const formRef = useRef<ProFormInstance>(null);
   const defaultParams = {
     t_max: 1.0,
     t_min: 1.0e-6,
@@ -43,6 +43,7 @@ export default function SolverForm() {
           allowClear={false}
         />
         <ProFormDigit label="保存进度" name="report_after" width="xs" />
+        <ProFormDigit label="更新间隔" name="update_interval" width="xs" />
         <ProFormDependency name={["parameters"]}>
           {({ parameters }) => (
             <Form.Item label="自动调参">

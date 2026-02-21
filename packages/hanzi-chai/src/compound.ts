@@ -74,29 +74,40 @@ function 按笔顺组装(
   return 字根序列;
 }
 
-class 默认复合体分析器 implements 复合体分析器<默认部件分析> {
+export interface 默认复合体分析 extends 基本分析 {
+  结构: 结构表示符;
+}
+
+class 默认复合体分析器 implements 复合体分析器<默认部件分析, 默认复合体分析> {
   static readonly type = "默认";
   constructor(private config: 字形分析配置) {}
 
   分析(名称: string, 复合体: 复合体数据, 部分分析列表: 默认混合分析[]) {
-    if (this.config.字根决策.has(名称)) return ok({ 字根序列: [名称] });
+    if (this.config.字根决策.has(名称))
+      return ok({ 字根序列: [名称], 结构: 复合体.operator });
     const 全部字根 = 部分分析列表.map((x) => x.字根序列);
-    return ok({ 字根序列: 按笔顺组装(全部字根, 部分分析列表, 复合体) });
+    return ok({
+      字根序列: 按笔顺组装(全部字根, 部分分析列表, 复合体),
+      结构: 复合体.operator,
+    });
   }
 
   动态分析(
     名称: string,
     复合体: 复合体数据,
-    部分分析列表: (默认部件分析[] | 基本分析[])[],
+    部分分析列表: (默认部件分析[] | 默认复合体分析[])[],
   ) {
-    const 结果列表: 基本分析[] = [];
+    const 结果列表: 默认复合体分析[] = [];
     if (this.config.字根决策.has(名称) || this.config.可选字根.has(名称)) {
-      结果列表.push({ 字根序列: [名称] });
+      结果列表.push({ 字根序列: [名称], 结构: 复合体.operator });
       if (!this.config.可选字根.has(名称)) return ok(结果列表);
     }
-    for (const 组合 of 排列组合(部分分析列表)) {
+    for (const 组合 of 排列组合(部分分析列表 as 基本分析[][])) {
       const 全部字根 = 组合.map((x) => x.字根序列);
-      结果列表.push({ 字根序列: 按笔顺组装(全部字根, 组合, 复合体) });
+      结果列表.push({
+        字根序列: 按笔顺组装(全部字根, 组合, 复合体),
+        结构: 复合体.operator,
+      });
     }
     return ok(结果列表);
   }

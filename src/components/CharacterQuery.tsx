@@ -1,16 +1,15 @@
-import { Form } from "antd";
 import {
-  ProFormDigit,
   ProFormSelect,
   ProFormText,
   QueryFilter,
 } from "@ant-design/pro-components";
+import { Form } from "antd";
 import { useAtomValue } from "jotai";
-import { 全部标签原子 } from "~/atoms";
-import CharacterSelect from "./CharacterSelect";
 import { debounce } from "lodash-es";
-import type { 字符过滤器参数 } from "~/utils";
+import { 全部标签原子 } from "~/atoms";
 import { 结构表示符列表 } from "~/lib";
+import type { 字符过滤器参数 } from "~/utils";
+import CharacterSelect from "./CharacterSelect";
 
 interface StrokeSearchProps {
   setFilter: (s: 字符过滤器参数) => void;
@@ -26,7 +25,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
       style={{ maxWidth: 1080 }}
       autoFocusFirstInput={false}
     >
-      <ProFormDigit label="Unicode" name="unicode" />
+      <ProFormText label="Unicode" name="unicode" />
       <ProFormText label="名称" name="name" />
       <ProFormText label="笔画" name="sequence" />
       <ProFormSelect

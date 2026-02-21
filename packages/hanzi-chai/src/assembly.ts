@@ -1,5 +1,5 @@
 import type { 默认部件分析 } from "./component.js";
-import type { 星空键道复合体分析 } from "./compound.js";
+import type { 星空键道复合体分析, 默认复合体分析 } from "./compound.js";
 import {
   是归并,
   type 条件节点配置,
@@ -26,7 +26,7 @@ import {
  * 代表了一个有字音、有字形的汉字的中间结果
  * 由拆分结果 [`ComponentResult`](#componentresult) 或 [`CompoundResult`](#compoundresult) 与字音组成
  */
-type 默认汉字分析 = (默认部件分析 | 基本分析) & {
+type 默认汉字分析 = (默认部件分析 | 默认复合体分析) & {
   汉字: string;
   拼写运算: Map<string, string>;
   自定义元素: Record<string, string[]>;
@@ -153,7 +153,11 @@ class 默认组装器 extends 按规则构词 {
     );
   }
 
-  一字词组装(汉字: string, 字形分析: 基本分析, 拼写运算: Map<string, string>) {
+  一字词组装(
+    汉字: string,
+    字形分析: 默认部件分析 | 默认复合体分析,
+    拼写运算: Map<string, string>,
+  ) {
     const 汉字分析: 默认汉字分析 = {
       汉字,
       拼写运算,

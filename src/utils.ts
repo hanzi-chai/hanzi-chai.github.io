@@ -173,7 +173,9 @@ export class 字符过滤器 {
       result &&= this.sequenceRegex.test(笔画序列);
     }
     if (unicode) {
-      result &&= unicode === 汉字.codePointAt(0);
+      let hex_str = 汉字.codePointAt(0)?.toString(16).toLowerCase();
+      let dec_str = 汉字.codePointAt(0)?.toString(10);
+      result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
     }
     if ("glyphs" in 数据) {
       result &&= 数据.glyphs.some((glyph) => this.匹配字形(glyph));
@@ -200,7 +202,7 @@ export class 字符过滤器 {
 export interface 字符过滤器参数 {
   name?: string;
   sequence?: string;
-  unicode?: number;
+  unicode?: string;
   tag?: string;
   part?: string;
   operator?: 结构表示符;
