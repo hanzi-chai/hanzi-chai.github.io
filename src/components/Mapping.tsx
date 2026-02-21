@@ -236,6 +236,7 @@ export const AdjustableElementGroup = ({
         onOpenChange={setOpenPopover}
         content={
           <ElementDetail
+            key={JSON.stringify(code)}
             keys={code}
             name={name}
             onClose={() => setOpenPopover(false)}
@@ -260,6 +261,7 @@ export const AdjustableElementGroup = ({
           }
           content={
             <ElementDetail
+              key={`${from}-${to}`}
               keys={{ element: to }}
               name={from}
               onClose={() =>
