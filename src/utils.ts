@@ -231,11 +231,6 @@ export interface 编码条目 {
 
 export type 编码结果 = 编码条目[];
 
-export const formatDate = (date: Date) => {
-  return `${date.getMonth() + 1
-    }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-};
-
 export const 数字 = (n: number) => {
   const 汉字数字 = "零一二三四五六七八九";
   return 汉字数字[n] || n.toString();

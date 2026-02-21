@@ -10,8 +10,8 @@ export interface WorkerInput {
 export type WorkerOutput =
   | { type: "success"; result: any }
   | { type: "error"; error: Error }
-  | { type: "better_solution"; config: string; metric: string; save: boolean }
-  | { type: "progress"; steps: number; temperature: number; metric: string }
+  | { type: "better_solution"; config: string; metric: string; score: number; index?: number }
+  | { type: "progress"; config: string; metric: string; score: number; steps: number; temperature: number }
   | { type: "parameters"; t_max?: number; t_min?: number; steps?: number }
   | { type: "elapsed"; time: number }
   | { type: "trial_max"; temperature: number; accept_rate: number }
@@ -122,7 +122,7 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
           });
         } else {
           webInterface.sync(data[0]);
-          webInterface.optimize();
+          result = webInterface.optimize();
         }
         port.postMessage({ type: "success", result });
         break;

@@ -3,20 +3,20 @@ import {
   Col,
   Flex,
   List,
+  notification,
   Progress,
   Row,
   Statistic,
   Typography,
-  notification,
 } from "antd";
 import { useAtomValue } from "jotai";
-import { useState } from "react";
-import { 求解器原子, 如前端输入原子, useAtomValueUnwrapped } from "~/atoms";
-import type { WorkerOutput } from "~/worker";
 import { load } from "js-yaml";
 import { nanoid } from "nanoid";
-import { basePath, exportYAML, formatDate, thread } from "~/utils";
-import { 求解器配置, 配置 } from "~/lib";
+import { useState } from "react";
+import { useAtomValueUnwrapped, 如前端输入原子, 求解器原子 } from "~/atoms";
+import type { 求解器配置, 配置 } from "~/lib";
+import { basePath, exportYAML, thread } from "~/utils";
+import type { WorkerOutput } from "~/worker";
 
 const Schedule = ({
   params,
@@ -66,10 +66,16 @@ const Schedule = ({
   );
 };
 
+interface 优化结果 {
+  配置文件: string;
+  分数: number;
+}
+
 export default function Optimizer() {
   const metaheuristic = useAtomValue(求解器原子);
   const [result, setResult] = useState<{ date: Date; config: 配置 }[]>([]);
   const [bestResult, setBestResult] = useState<配置 | undefined>(undefined);
+  const [bestScore, setBestScore] = useState<number | undefined>(undefined);
   const [bestMetric, setBestMetric] = useState("");
   const [optimizing, setOptimizing] = useState(false);
   const [progress, setProgress] = useState<
@@ -92,7 +98,7 @@ export default function Optimizer() {
           setProgress(undefined);
           setOptimizing(true);
           try {
-            await thread.spawn<undefined>(
+            const finalResult = await thread.spawn<优化结果>(
               "optimize",
               [input],
               (data: WorkerOutput) => {
@@ -100,11 +106,10 @@ export default function Optimizer() {
                 switch (data.type) {
                   case "better_solution": {
                     const config: 配置 = load(data.config) as any;
-                    config.info ??= {};
-                    config.info.version = formatDate(date);
                     setBestResult(config);
                     setBestMetric(data.metric);
-                    if (data.save) {
+                    setBestScore(data.score);
+                    if (data.index !== undefined) {
                       setResult((result) => [{ date, config }].concat(result));
                     }
                     break;
@@ -134,6 +139,8 @@ export default function Optimizer() {
                 }
               },
             );
+            setBestResult(load(finalResult.配置文件) as 配置);
+            setBestScore(finalResult.分数);
             notification.success({
               message: "优化已完成，请查看结果!",
             });
@@ -153,6 +160,7 @@ export default function Optimizer() {
       {bestMetric && bestResult ? (
         <>
           <Typography.Text>
+            <pre>分数：{bestScore?.toExponential(4)}</pre>
             <pre>{bestMetric}</pre>
           </Typography.Text>
           <Flex justify="center" gap="middle">
