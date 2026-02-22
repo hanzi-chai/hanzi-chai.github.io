@@ -26,6 +26,7 @@ import {
   useAtomValue,
   useRemoveAtom,
   下一个可用的码位原子,
+  原始可编辑字库数据原子,
   原始字库数据原子,
   字形自定义原子,
   用户原始字库数据原子,
@@ -68,7 +69,7 @@ export const Create = forwardRef(
 
 function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
   const addUser = useAddAtom(用户原始字库数据原子);
-  const add = useAddAtom(原始字库数据原子);
+  const add = useAddAtom(原始可编辑字库数据原子);
   const remote = useContext(RemoteContext);
   const nextUnicode = useAtomValue(下一个可用的码位原子);
   const 原始字库数据 = useAtomValue(原始字库数据原子);
@@ -198,7 +199,7 @@ const planMerge = (
 
 export const Merge = ({ unicode }: { unicode: number }) => {
   const [newName, setNewName] = useState("");
-  const [repertoire, setRepertoire] = useAtom(原始字库数据原子);
+  const [repertoire, setRepertoire] = useAtom(原始可编辑字库数据原子);
   return (
     <Popconfirm
       title="输入笔画搜索"
@@ -231,7 +232,7 @@ export const Rename = ({
 }) => {
   const [newName, setNewName] = useState("");
   const repertoire = useAtomValue(原始字库数据原子);
-  const update = useAddAtom(原始字库数据原子);
+  const update = useAddAtom(原始可编辑字库数据原子);
   return (
     <Popconfirm
       title="新字形名称"
@@ -272,7 +273,7 @@ export const EditGF = ({
 }) => {
   const [id, setId] = useState(0);
   const repertoire = useAtomValue(原始字库数据原子);
-  const update = useAddAtom(原始字库数据原子);
+  const update = useAddAtom(原始可编辑字库数据原子);
   const name = String.fromCodePoint(unicode);
   return (
     <Popconfirm
@@ -304,7 +305,7 @@ export const EditGF = ({
 export const Delete = ({ unicode }: { unicode: number }) => {
   const remote = useContext(RemoteContext);
   const userRepertoire = useAtomValue(用户原始字库数据原子);
-  const remove = useRemoveAtom(原始字库数据原子);
+  const remove = useRemoveAtom(原始可编辑字库数据原子);
   const removeUser = useRemoveAtom(用户原始字库数据原子);
   const char = String.fromCodePoint(unicode);
   return (
@@ -327,7 +328,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
 export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
   const remote = useContext(RemoteContext);
   const repertoire = useAtomValue(原始字库数据原子);
-  const add = useAddAtom(原始字库数据原子);
+  const add = useAddAtom(原始可编辑字库数据原子);
   const addUser = useAddAtom(用户原始字库数据原子);
   const customGlyph = useAtomValue(字形自定义原子);
   const addCustomization = useAddAtom(字形自定义原子);
@@ -448,7 +449,7 @@ export const QuickPatchAmbiguous = ({
   record: 原始汉字数据;
 }) => {
   const remote = useContext(RemoteContext);
-  const add = useAddAtom(原始字库数据原子);
+  const add = useAddAtom(原始可编辑字库数据原子);
   return (
     <Checkbox
       checked={checked}
