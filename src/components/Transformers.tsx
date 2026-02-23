@@ -41,13 +41,6 @@ const 示例列表: 变换器[] = [
   {
     from: {
       operator: "⿰",
-      operandList: ["月", { operator: "⿱", operandList: ["龹", { id: 1 }] }],
-    },
-    to: { operator: "⿸", operandList: ["\uEBE1", { id: 1 }] },
-  },
-  {
-    from: {
-      operator: "⿰",
       operandList: [
         "方",
         { operator: "⿱", operandList: ["\uE078", { id: 1 }] },
@@ -131,7 +124,7 @@ const 示例列表: 变换器[] = [
     to: { operator: "⿴", operandList: ["行", { id: 1 }] },
   },
   {
-    from: { operator: "⿲", operandList: ["亠", { id: 1 }, "\uE0B7"] },
+    from: { operator: "⿳", operandList: ["亠", { id: 1 }, "\uE0B7"] },
     to: { operator: "⿴", operandList: ["\uE80A", { id: 1 }] },
   },
 ];
