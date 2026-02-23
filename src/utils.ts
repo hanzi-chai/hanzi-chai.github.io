@@ -3,11 +3,11 @@ import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
 import type { 后端错误 } from "~/api";
-import { createContext } from "react";
 import { isEqual, range } from "lodash-es";
 import { diff } from "deep-object-diff";
-import { dump, load } from "js-yaml";
+import { dump } from "js-yaml";
 import type { WorkerOutput } from "~/worker";
+import { APP_VERSION } from "./version";
 
 export const useHashRouter = import.meta.env.MODE !== "CF";
 
@@ -19,8 +19,6 @@ export function getCurrentId(): string {
 }
 
 export const basePath = useHashRouter ? "/#/" : "/";
-
-export const RemoteContext = createContext(true);
 
 export async function validateConfig(config: 配置) {
   await init();
@@ -177,11 +175,7 @@ export class 字符过滤器 {
       let dec_str = 汉字.codePointAt(0)?.toString(10);
       result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
     }
-    if ("glyphs" in 数据) {
-      result &&= 数据.glyphs.some((glyph) => this.匹配字形(glyph));
-    } else if ("glyph" in 数据) {
-      result &&= this.匹配字形(数据.glyph);
-    }
+    result &&= 数据.glyphs.some((glyph) => this.匹配字形(glyph));
     return result;
   }
 

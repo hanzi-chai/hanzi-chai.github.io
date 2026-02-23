@@ -14,15 +14,15 @@ import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import {
-  汉字集合原子,
-  原始字库数据原子,
-  配置原子,
-  如字库原子,
   useAtomValueUnwrapped,
-  码表数据库,
   决策原子,
-  联合结果原子,
+  原始字库原子,
+  如字库原子,
+  汉字集合原子,
+  码表数据库,
   type 联合条目,
+  联合结果原子,
+  配置原子,
 } from "~/atoms";
 import { ElementDetail } from "~/components/Mapping";
 import { Uploader } from "~/components/Utils";
@@ -61,8 +61,9 @@ function 按格式解析码表(content: string, format: 码表格式): 码表条
   }
   return result;
 }
-import { DisplayOptionalSuperscript } from "./SequenceTable";
+
 import Element from "./Element";
+import { DisplayOptionalSuperscript } from "./SequenceTable";
 
 interface 联合条目与参考 extends 联合条目 {
   参考全码: string[];
@@ -81,7 +82,7 @@ const 校对范围原子 = atomWithStorage(
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
   const repertoire = useAtomValueUnwrapped(如字库原子);
-  const allRepertoire = useAtomValue(原始字库数据原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   const characters = useAtomValue(汉字集合原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
   const 决策 = useAtomValue(决策原子);
@@ -131,7 +132,7 @@ export default function Debugger() {
   let dataSource: 联合条目与参考[] = 联合结果
     .filter((x) => {
       if (字数(x.词) !== 1) return false;
-      const data = allRepertoire[x.词];
+      const data = 原始字库.查询(x.词);
       if (!data) return false;
       return 过滤函数(x.词, data);
     })

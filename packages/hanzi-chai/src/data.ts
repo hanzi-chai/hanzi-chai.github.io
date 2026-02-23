@@ -177,6 +177,11 @@ export interface 全等数据 {
 export type 字形数据 = 部件数据 | 复合体数据 | 全等数据;
 
 /**
+ *
+ */
+export type 约化字形数据 = 基本部件数据 | 复合体数据;
+
+/**
  * 原始字符 PrimitiveCharacter
  * unicode: 字符的 Unicode 编码
  * tygf: 字符在通用规范汉字集中的类型，0 为不存在，1 为一级字，2 为二级字，3 为三级字
@@ -204,15 +209,7 @@ export interface 原始汉字数据 {
  * 此时的 glyph 要么是基本部件，要么是复合体
  */
 export interface 汉字数据 extends Omit<原始汉字数据, "glyphs" | "ambiguous"> {
-  glyph: 基本部件数据 | 复合体数据;
-}
-
-export interface 部件汉字数据 extends 汉字数据 {
-  glyph: 基本部件数据;
-}
-
-export interface 复合体汉字数据 extends 汉字数据 {
-  glyph: 复合体数据;
+  glyphs: 约化字形数据[];
 }
 
 /** 原始字库数据，为字符名称到原始字符的映射 */

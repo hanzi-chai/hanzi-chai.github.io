@@ -9,6 +9,7 @@ import type {
   动态组装条目,
   原始字库数据,
   字形分析结果,
+  字形自定义,
   当量映射,
   码位,
   码表条目,
@@ -105,7 +106,7 @@ async function 处理压缩文件(filename: string, response: Response) {
 
 export const 远程原子 = atom((get) => {
   const location = get(位置原子);
-  return location.pathname?.endsWith("admin") ?? false;
+  return location.pathname === "/admin" || location.hash === "#/admin";
 });
 
 export const 原始字库数据原子 = atom(async () => {
@@ -191,6 +192,12 @@ export const 汉字集合原子 = atom(async (get) => {
 });
 
 export const 原始字库原子 = atom(async (get) => {
+  const 远程 = get(远程原子);
+  if (远程) {
+    console.warn("处于远程环境，使用可编辑字库数据构建原始字库");
+    const 原始字库数据 = get(原始可编辑字库数据原子);
+    return new 原始字库(原始字库数据);
+  }
   const 原始字库数据 = await get(原始字库数据原子);
   const 用户原始字库数据 = get(用户原始字库数据原子);
   return new 原始字库({ ...原始字库数据, ...用户原始字库数据 });
@@ -205,9 +212,22 @@ export const 别名显示原子 = atom(async (get) => {
   };
 });
 
+export const 标准字形自定义原子 = atom((get) => {
+  const 字形自定义 = get(字形自定义原子);
+  const 标准字形自定义: 字形自定义 = {};
+  for (const [char, value] of Object.entries(字形自定义)) {
+    if (Array.isArray(value)) {
+      标准字形自定义[char] = value;
+    } else {
+      标准字形自定义[char] = [value];
+    }
+  }
+  return 标准字形自定义;
+});
+
 export const 如确定字库原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
-  const 字形自定义 = get(字形自定义原子);
+  const 字形自定义 = get(标准字形自定义原子);
   return 原始字库.确定(字形自定义);
 });
 
@@ -217,7 +237,6 @@ export const 如字库原子 = atom(async (get) => {
   const 变换器列表 = get(变换器列表原子);
   let 字库 = 如确定字库.value;
   for (const 变换器 of 变换器列表) {
-    console.log("应用变换器:", 变换器);
     字库 = 字库.应用变换器(变换器);
   }
   return ok(字库);
@@ -228,9 +247,10 @@ export const 如私用区图形原子 = atom(async (get) => {
   if (!如字库.ok) return 如字库;
   const 字库 = 如字库.value;
   const result = new Map<string, 图形盒子>();
-  for (const [字符, { glyph }] of Object.entries(字库._get())) {
+  for (const [字符, { glyphs }] of Object.entries(字库._get())) {
     if (!是私用区(字符)) continue;
     if (result.has(字符)) continue;
+    const glyph = glyphs[0]!;
     if (glyph.type === "basic_component") {
       result.set(字符, 图形盒子.从笔画列表构建(glyph.strokes));
     } else {
@@ -247,7 +267,8 @@ export const 如笔顺映射原子 = atom(async (get) => {
   if (!如字库.ok) return 如字库;
   const 字库 = 如字库.value;
   const result = new Map<string, string>();
-  for (const [字符, { glyph }] of Object.entries(字库._get())) {
+  for (const [字符, { glyphs }] of Object.entries(字库._get())) {
+    const glyph = glyphs[0]!;
     if (result.has(字符)) continue;
     if (glyph.type === "basic_component") {
       const 笔顺 = glyph.strokes.map((x) => 默认分类器[x.feature]).join("");
@@ -482,12 +503,10 @@ export const 如前端输入原子 = atom(async (get) => {
 
   const 序列化词列表: any[] = [];
   词列表.value.forEach((x) => {
+    const a = x.元素序列 as any;
     序列化词列表.push({
       ...x,
-      // @ts-ignore
-      元素序列: Array.isArray(x.元素序列[0])
-        ? x.元素序列.map(总序列化).join("　")
-        : 总序列化(x.元素序列),
+      元素序列: Array.isArray(a[0]) ? a.map(总序列化).join("　") : 总序列化(a),
     });
   });
 

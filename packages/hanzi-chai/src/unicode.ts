@@ -1,5 +1,5 @@
 import type { 字集指示 } from "./config.js";
-import type { 原始汉字数据, 汉字数据 } from "./data.js";
+import type { 原始汉字数据 } from "./data.js";
 
 export interface 区块 {
   name: string; // 简洁的英文名，如 "cjk", "cjk-a"
@@ -221,6 +221,14 @@ export const 是汉字 = (char: string) => {
   return block.startsWith("cjk");
 };
 
+export const 是汉字或兼容汉字 = (char: string) => {
+  const code = char.codePointAt(0)!;
+  const block = 查询区块(code);
+  return (
+    block.startsWith("cjk") || block === "compat" || block === "compat-sup"
+  );
+};
+
 export const 是汉字补充 = (char: string) => {
   const code = char.codePointAt(0)!;
   const block = 查询区块(code);
@@ -238,6 +246,12 @@ export const 是私用区 = (char: string) => {
   const code = char.codePointAt(0)!;
   const block = 查询区块(code);
   return block === "pua" || block === "pua-plane15";
+};
+
+export const 是用户私用区 = (char: string) => {
+  const code = char.codePointAt(0)!;
+  const block = 查询区块(code);
+  return block === "pua" && code >= 0xf000;
 };
 
 export const 字集过滤查找表: Record<

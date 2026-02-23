@@ -1,47 +1,46 @@
-import { useContext, useRef, useState } from "react";
+import { QuestionCircleOutlined } from "@ant-design/icons";
 import { Checkbox, Flex, FloatButton, Layout, Space, Tour } from "antd";
-import type { ColumnType, ColumnsType } from "antd/es/table";
+import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
+import type { TourProps } from "antd/lib";
+import { isEqual } from "lodash-es";
+import * as O from "optics-ts/standalone";
+import { useRef, useState } from "react";
+import { remoteUpdate } from "~/api";
 import {
-  字形自定义原子,
-  如确定字库原子,
-  原始字库数据原子,
-  如字库原子,
-  如笔顺映射原子,
-  如排序字库数据原子,
   useAddAtom,
   useAtomValue,
-  用户原始字库数据原子,
-  原始可编辑字库数据原子,
   useAtomValueUnwrapped,
+  useRemoveAtom,
+  原始可编辑字库数据原子,
+  原始字库原子,
+  如字库原子,
+  如排序字库数据原子,
+  如确定字库原子,
+  如笔顺映射原子,
+  字形自定义原子,
+  标准字形自定义原子,
+  用户原始字库数据原子,
+  远程原子,
 } from "~/atoms";
 import {
-  EditGlyph,
   Create,
   Delete,
+  EditGF,
+  EditGlyph,
   Merge,
   QuickPatchAmbiguous,
-  EditGF,
   Rename,
 } from "~/components/Action";
+import type { 原始汉字数据, 字形数据 } from "~/lib";
+import { 区块列表, 是用户私用区, 是私用区, 查询区块 } from "~/lib";
+import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/utils";
+import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
-import { remoteUpdate } from "~/api";
-import { DeleteButton, Display } from "./Utils";
-import * as O from "optics-ts/standalone";
-import CharacterQuery from "./CharacterQuery";
-import type { TourProps } from "antd/lib";
-import { QuestionCircleOutlined } from "@ant-design/icons";
 import { ElementWithTooltip } from "./ElementPool";
 import TransformersForm from "./Transformers";
-import type { 原始汉字数据 } from "~/lib";
-import {
-  type 字符过滤器参数,
-  errorFeedback,
-  RemoteContext,
-  字符过滤器,
-} from "~/utils";
-import { 区块列表, 是私用区, 查询区块 } from "~/lib";
+import { DeleteButton, Display } from "./Utils";
 
 type Column = ColumnType<原始汉字数据>;
 
@@ -49,98 +48,97 @@ const typenames = {
   basic_component: "基本部件",
   derived_component: "衍生部件",
   spliced_component: "拼接部件",
+  compound: "复合体",
   identity: "全等",
 };
 
-export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) => {
+export const 字形编辑器 = ({
+  字,
+  字形,
+  回调,
+  只读,
+}: {
+  字: string;
+  字形: 字形数据;
+  回调: (v: 字形数据) => Promise<boolean>;
+  只读: boolean;
+}) => {
+  const title = typenames[字形.type];
+  if (字形.type === "compound" || 字形.type === "spliced_component") {
+    return (
+      <CompoundForm
+        title={
+          <Space>
+            <span>{字形.operator}</span>
+            {字形.operandList.map((y, index) => (
+              <Display key={index} name={y} />
+            ))}
+          </Space>
+        }
+        initialValues={字形}
+        onFinish={回调}
+        primary
+        readonly={只读}
+      />
+    );
+  }
+  return 字形.type === "basic_component" ||
+    字形.type === "derived_component" ? (
+    <ComponentForm
+      title={title}
+      initialValues={字形}
+      current={字}
+      onFinish={回调}
+      primary
+      readonly={只读}
+    />
+  ) : (
+    <IdentityForm
+      title={title}
+      initialValues={字形}
+      current={字}
+      onFinish={回调}
+      primary
+      readonly={只读}
+    />
+  );
+};
+
+export const 字形数据更新器 = ({ character }: { character: 原始汉字数据 }) => {
   const { glyphs, unicode } = character;
-  const char = String.fromCodePoint(unicode);
-  const remote = useContext(RemoteContext);
-  const userRepertoire = useAtomValue(用户原始字库数据原子);
-  const addUser = useAddAtom(用户原始字库数据原子);
-  const add = useAddAtom(原始可编辑字库数据原子);
+  const 字 = String.fromCodePoint(unicode);
+  const 远程 = useAtomValue(远程原子);
+  const 用户原始字库数据 = useAtomValue(用户原始字库数据原子);
+  const 添加用户汉字 = useAddAtom(用户原始字库数据原子);
+  const 添加汉字 = useAddAtom(原始可编辑字库数据原子);
   const inlineUpdate = async (newCharacter: 原始汉字数据) => {
-    if (userRepertoire[char] !== undefined) {
-      addUser(char, newCharacter);
+    if (用户原始字库数据[字] !== undefined) {
+      添加用户汉字(字, newCharacter);
       return true;
     }
     const res = await remoteUpdate(newCharacter);
     if (!errorFeedback(res)) {
-      add(char, newCharacter);
+      添加汉字(字, newCharacter);
     }
     return true;
   };
+  const 只读 = !远程 && 用户原始字库数据[字] === undefined;
   return (
     <Flex gap="small">
       {glyphs.map((x, i) => {
         const lens = O.compose("glyphs", O.at(i));
-        const primary = i === 0;
-        const title =
-          x.type === "compound" ? (
-            <Space>
-              <span>{x.operator}</span>
-              {x.operandList.map((y, i) => (
-                <Display key={i} name={y} />
-              ))}
-            </Space>
-          ) : (
-            typenames[x.type]
+        const 回调 = (values: 字形数据) => {
+          const newGlyphs = O.set(
+            O.compose("glyphs", O.appendTo),
+            values,
+            O.remove(lens, character),
           );
+          return inlineUpdate(newGlyphs);
+        };
         return (
           <Flex key={i}>
-            {x.type === "compound" || x.type === "spliced_component" ? (
-              <CompoundForm
-                key={i}
-                title={title}
-                initialValues={x}
-                onFinish={(values) => {
-                  const newGlyphs = O.set(
-                    O.compose("glyphs", O.appendTo),
-                    values,
-                    O.remove(lens, character),
-                  );
-                  return inlineUpdate(newGlyphs);
-                }}
-                primary={primary}
-                readonly={!remote && userRepertoire[char] === undefined}
-              />
-            ) : x.type === "basic_component" ||
-              x.type === "derived_component" ? (
-              <ComponentForm
-                key={i}
-                title={title}
-                initialValues={x}
-                current={String.fromCodePoint(unicode)}
-                onFinish={(values) => {
-                  const newGlyphs = O.set(
-                    O.compose("glyphs", O.appendTo),
-                    values,
-                    O.remove(lens, character),
-                  );
-                  return inlineUpdate(newGlyphs);
-                }}
-                primary={primary}
-                readonly={!remote && userRepertoire[char] === undefined}
-              />
-            ) : (
-              <IdentityForm
-                key={i}
-                title={title}
-                initialValues={x}
-                current={String.fromCodePoint(unicode)}
-                onFinish={(values) => {
-                  const newGlyphs = O.set(
-                    O.compose("glyphs", O.appendTo),
-                    values,
-                    O.remove(lens, character),
-                  );
-                  return inlineUpdate(newGlyphs);
-                }}
-                primary={primary}
-                readonly={!remote && userRepertoire[char] === undefined}
-              />
-            )}
-            {remote || userRepertoire[char] !== undefined ? (
+            <字形编辑器 字={字} 字形={x} 回调={回调} 只读={只读} />
+            {远程 || 用户原始字库数据[字] !== undefined ? (
               <DeleteButton
                 onClick={() => inlineUpdate(O.remove(lens, character))}
               />
@@ -152,96 +150,69 @@ export const InlineUpdater = ({ character }: { character: 原始汉字数据 }) 
   );
 };
 
-export const InlineCustomizer = ({
+export const 字形数据自定义器 = ({
   character,
 }: {
   character: 原始汉字数据;
 }) => {
-  const determinedRepertoire = useAtomValueUnwrapped(如确定字库原子);
-  const repertoire = useAtomValueUnwrapped(如字库原子);
-  const addCustomGlyph = useAddAtom(字形自定义原子);
-  const customGlyph = useAtomValue(字形自定义原子);
-  const { unicode } = character;
-  const char = String.fromCodePoint(unicode);
-  let customized = customGlyph[char];
-  let readonly = false;
-  if (repertoire._get()[char] !== determinedRepertoire._get()[char]) {
-    customized = repertoire._get()[char]!.glyph;
-    readonly = true;
+  const 确定字库 = useAtomValueUnwrapped(如确定字库原子);
+  const 字库 = useAtomValueUnwrapped(如字库原子);
+  const 添加自定义字形 = useAddAtom(字形自定义原子);
+  const 删除自定义字形 = useRemoveAtom(字形自定义原子);
+  const 标准字形自定义 = useAtomValue(标准字形自定义原子);
+  const 字 = String.fromCodePoint(character.unicode);
+  let 自定义字形列表 = 标准字形自定义[字];
+  let 只读 = false;
+  // 把变换生成的也视为自定义
+  if (!isEqual(字库._get()[字], 确定字库._get()[字])) {
+    自定义字形列表 = 字库._get()[字]!.glyphs;
+    只读 = true;
   }
-  if (customized === undefined) return null;
-  const title =
-    customized.type === "compound" ||
-    customized.type === "spliced_component" ? (
-      <Space>
-        <span>{customized.operator}</span>
-        {customized.operandList.map((y, index) => (
-          <Display key={index} name={y} />
-        ))}
-      </Space>
-    ) : (
-      typenames[customized.type]
-    );
+  if (自定义字形列表 === undefined) return null;
   return (
     <Flex gap="small">
-      {customized.type === "compound" ||
-      customized.type === "spliced_component" ? (
-        <CompoundForm
-          title={title}
-          initialValues={customized}
-          onFinish={async (values) => {
-            addCustomGlyph(char, values);
-            return true;
-          }}
-          primary
-          readonly={readonly}
-        />
-      ) : customized.type === "basic_component" ||
-        customized.type === "derived_component" ? (
-        <ComponentForm
-          title={title}
-          initialValues={customized}
-          current={String.fromCodePoint(unicode)}
-          onFinish={async (values) => {
-            addCustomGlyph(char, values);
-            return true;
-          }}
-          primary
-          readonly={readonly}
-        />
-      ) : (
-        <IdentityForm
-          title={title}
-          initialValues={customized}
-          current={String.fromCodePoint(unicode)}
-          onFinish={async (values) => {
-            addCustomGlyph(char, values);
-            return true;
-          }}
-          primary
-          readonly={readonly}
-        />
-      )}
+      {自定义字形列表.map((x, i) => {
+        const 回调 = async (values: 字形数据) => {
+          const 新列表 = 自定义字形列表.map((item, index) =>
+            index === i ? values : item,
+          );
+          添加自定义字形(字, 新列表);
+          return true;
+        };
+        return (
+          <Flex key={i}>
+            <字形编辑器 字={字} 字形={x} 回调={回调} 只读={只读} />
+            <DeleteButton
+              onClick={() => {
+                const 新列表 = 自定义字形列表.filter((_, index) => index !== i);
+                if (新列表.length === 0) {
+                  删除自定义字形(字);
+                } else {
+                  添加自定义字形(字, 新列表);
+                }
+              }}
+            />
+          </Flex>
+        );
+      })}
     </Flex>
   );
 };
 
 export default function CharacterTable() {
-  const primitiveRepertoire = useAtomValue(原始字库数据原子);
-  const userRepertoire = useAtomValue(用户原始字库数据原子);
-  const sortedRepertoire = useAtomValueUnwrapped(如排序字库数据原子);
-  const customGlyph = useAtomValue(字形自定义原子);
-  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
-  const [page, setPage] = useState(1);
+  const 原始字库 = useAtomValue(原始字库原子);
+  const 排序字库数据 = useAtomValueUnwrapped(如排序字库数据原子);
+  const 字形自定义 = useAtomValue(标准字形自定义原子);
+  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const [filterProps, setFilterProps] = useState<字符过滤器参数>({});
-  const remote = useContext(RemoteContext);
+  const remote = useAtomValue(远程原子);
   const filter = new 字符过滤器(filterProps);
 
   const dataSource: 原始汉字数据[] = [];
-  for (const 字符 of Object.keys(sortedRepertoire)) {
-    const data = userRepertoire[字符] ?? primitiveRepertoire[字符];
+  for (const 字符 of Object.keys(排序字库数据)) {
+    const data = 原始字库.查询(字符);
     if (!data) continue;
-    if (filter.过滤(字符, data, sequenceMap.get(字符) ?? "")) {
+    if (filter.过滤(字符, data, 笔顺映射.get(字符) ?? "")) {
       dataSource.push(data);
     }
   }
@@ -334,7 +305,7 @@ export default function CharacterTable() {
 
   const glyphs: Column = {
     title: "系统字形",
-    render: (_, character) => <InlineUpdater character={character} />,
+    render: (_, character) => <字形数据更新器 character={character} />,
     sorter: (a, b) => {
       const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
       return as.localeCompare(bs);
@@ -348,7 +319,7 @@ export default function CharacterTable() {
 
   const customGlyphColumn: Column = {
     title: "自定义字形",
-    render: (_, character) => <InlineCustomizer character={character} />,
+    render: (_, character) => <字形数据自定义器 character={character} />,
     width: 128,
   };
 
@@ -382,8 +353,7 @@ export default function CharacterTable() {
     ],
     onFilter: (value, record) => {
       const char = String.fromCodePoint(record.unicode);
-      const customized =
-        userRepertoire[char] !== undefined || customGlyph[char] !== undefined;
+      const customized = 是用户私用区(char) || 字形自定义[char] !== undefined;
       return value === 1 ? customized : !customized;
     },
   };
@@ -457,11 +427,6 @@ export default function CharacterTable() {
           rowKey="unicode"
           pagination={{
             pageSize: 50,
-            current: page,
-          }}
-          onChange={(pagination) => {
-            const current = pagination.current;
-            current && setPage(current);
           }}
           style={{
             maxWidth: "1920px",

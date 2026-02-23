@@ -75,7 +75,7 @@ class 字库 {
   }
 
   查询字形(character: string): 字形数据 | undefined {
-    return this.repertoire[character]?.glyph;
+    return this.repertoire[character]?.glyphs[0];
   }
 
   添加(character: string, data: 汉字数据) {
@@ -135,7 +135,7 @@ class 字库 {
     const 无入度: string[] = [];
     while (汉字队列.length) {
       const 汉字 = 汉字队列.shift()!;
-      const 字形 = this.repertoire[汉字]!.glyph;
+      const 字形 = this.repertoire[汉字]!.glyphs[0]!;
       if (字形.type === "compound") {
         字形.operandList.forEach((部分) => {
           if (!已知有用汉字.has(部分)) {
@@ -164,7 +164,7 @@ class 字库 {
       if (用到该字的复合体列表 === undefined) continue;
       反向复合体映射.delete(汉字);
       for (const 复合体 of 用到该字的复合体列表) {
-        const operands = (this.repertoire[复合体]!.glyph as 复合体数据)
+        const operands = (this.repertoire[复合体]!.glyphs[0]! as 复合体数据)
           .operandList;
         if (operands.every((x) => !反向复合体映射.has(x))) {
           无入度.push(复合体);
@@ -174,7 +174,7 @@ class 字库 {
     const 复合体列表 = new Map(
       拓扑排序汉字
         .filter((x) => !部件列表.has(x))
-        .map((x) => [x, this.repertoire[x]!.glyph as 复合体数据]),
+        .map((x) => [x, this.repertoire[x]!.glyphs[0]! as 复合体数据]),
     );
     return { 部件列表, 复合体列表 };
   }
@@ -191,7 +191,7 @@ class 字库 {
     const 字根图形映射: Map<string, 部件图形> = new Map();
     const 字根笔画映射: Map<string, number[]> = new Map();
     for (const root of elements) {
-      const glyph = this.repertoire[root]?.glyph;
+      const glyph = this.repertoire[root]?.glyphs[0];
       if (glyph === undefined) continue;
       if (glyph.type === "basic_component") {
         字根图形映射.set(root, new 部件图形(root, glyph.strokes));
@@ -221,7 +221,7 @@ class 字库 {
   ): Result<图形盒子, Error> {
     const 图形盒子列表: 图形盒子[] = [];
     for (const 部分 of 复合体.operandList) {
-      const 字形数据 = this.repertoire[部分]?.glyph;
+      const 字形数据 = this.repertoire[部分]?.glyphs[0];
       if (字形数据 === undefined)
         return default_err(`无法找到字形数据: ${和编码(部分)}`);
       if (字形数据.type === "basic_component") {
@@ -260,7 +260,7 @@ class 字库 {
   ): Result<string, Error> {
     const sequences: string[] = [];
     for (const char of compound.operandList) {
-      const glyph = this.repertoire[char]?.glyph;
+      const glyph = this.repertoire[char]?.glyphs[0];
       if (glyph === undefined)
         return default_err(`无法找到字形数据: ${char}（U+${码(char)}）`);
       if (glyph.type === "basic_component") {
@@ -366,7 +366,7 @@ class 字库 {
       gf0014_id: null,
       gf3001_id: null,
       name: null,
-      glyph: 复合体,
+      glyphs: [复合体],
     });
     return ok(字符);
   }

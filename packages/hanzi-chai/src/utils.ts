@@ -435,3 +435,8 @@ export const 添加优先简码 = <T extends 组装条目 | 动态组装条目>(
   });
   return result;
 };
+
+export const 是地区标签 = (tag: string) => /^[GHTJKNVMSBU]$/.test(tag);
+
+export const 获取地区标签列表 = (glyph: 字形数据) =>
+  (glyph.tags ?? []).filter(是地区标签);

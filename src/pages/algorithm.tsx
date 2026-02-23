@@ -4,7 +4,7 @@ import { isEmpty } from "lodash-es";
 import { useMemo, useState } from "react";
 import { useAtomValue, 原始字库数据原子, 如字库原子 } from "~/atoms";
 import { EditGlyph } from "~/components/Action";
-import { InlineUpdater } from "~/components/CharacterTable";
+import { 字形数据更新器 } from "~/components/CharacterTable";
 import Element from "~/components/Element";
 import { ElementWithTooltip } from "~/components/ElementPool";
 import { Display } from "~/components/Utils";
@@ -86,7 +86,7 @@ const TreeNode = ({
     <Flex align="center">
       <ElementWithTooltip element={name} />
       {name}
-      <InlineUpdater character={character} />
+      <字形数据更新器 character={character} />
       <EditGlyph character={character} />
     </Flex>
   );

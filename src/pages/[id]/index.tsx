@@ -1,47 +1,45 @@
-import { Button, Flex, Input, Select, Typography } from "antd";
-import {
-  type Atom,
-  type WritableAtom,
-  默认词典原子,
-  基本信息原子,
-  默认键位分布目标原子,
-  默认当量原子,
-  useAtom,
-  useAtomValue,
-  useSetAtom,
-  字集指示原子,
-  原始字库数据原子,
-} from "~/atoms";
-import {
-  type 字集指示,
-  type 词典,
-  type 键位分布目标,
-  type 当量映射,
-  解析词典,
-  解析键位分布目标,
-  type 基本信息,
-  读取表格,
-  解析自定义元素,
-  解析当量映射,
-  序列化词典,
-  序列化当量映射,
-  序列化键位频率目标,
-  字集过滤查找表,
-  字集过滤选项,
-} from "~/lib";
 import {
   ProForm,
   ProFormText,
   ProFormTextArea,
 } from "@ant-design/pro-components";
-import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
+import { Button, Flex, Input, Select, Typography } from "antd";
+import { type ReactNode, useEffect, useState } from "react";
 import {
-  用户键位分布目标原子,
+  type Atom,
+  useAtom,
+  useAtomValue,
+  useSetAtom,
+  type WritableAtom,
+  原始字库数据原子,
+  基本信息原子,
+  字集指示原子,
   用户当量映射原子,
   用户词典原子,
+  用户键位分布目标原子,
   自定义分析数据库,
+  默认当量原子,
+  默认词典原子,
+  默认键位分布目标原子,
 } from "~/atoms";
-import { ReactNode, useEffect, useState } from "react";
+import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
+import {
+  type 基本信息,
+  type 字集指示,
+  字集过滤查找表,
+  字集过滤选项,
+  序列化当量映射,
+  序列化词典,
+  序列化键位频率目标,
+  type 当量映射,
+  解析当量映射,
+  解析自定义元素,
+  解析词典,
+  解析键位分布目标,
+  type 词典,
+  读取表格,
+  type 键位分布目标,
+} from "~/lib";
 import { exportTSV, useChaifenTitle } from "~/utils";
 
 function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({
