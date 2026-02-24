@@ -1,4 +1,3 @@
-import { sortBy } from "lodash-es";
 import { 图形盒子 } from "./affine.js";
 import { type 分类器, 合并分类器, 默认分类器 } from "./classifier.js";
 import type { 默认部件分析 } from "./component.js";
@@ -14,13 +13,13 @@ import type {
   结构变量,
 } from "./config.js";
 import type {
-  基本部件数据,
   复合体数据,
   字库数据,
   字形数据,
   汉字数据,
+  约化字形数据,
 } from "./data.js";
-import { 获取注册表 } from "./main.js";
+import { 排列组合, 获取注册表 } from "./main.js";
 import { default_err, ok, type Result, 和编码, 字数, 码 } from "./utils.js";
 
 // 变量映射：variable id -> 绑定的子树 key
@@ -34,8 +33,7 @@ interface 字形分析结果<
   部件分析 extends 基本分析 = 基本分析,
   复合体分析 extends 基本分析 = 基本分析,
 > {
-  部件分析结果: Map<string, 部件分析>;
-  复合体分析结果: Map<string, 复合体分析>;
+  分析结果: Map<string, (部件分析 | 复合体分析)[]>;
   字根笔画映射: Map<string, number[]>;
 }
 
@@ -43,8 +41,7 @@ interface 动态字形分析结果<
   部件分析 extends 基本分析 = 基本分析,
   复合体分析 extends 基本分析 = 基本分析,
 > {
-  部件分析结果: Map<string, 部件分析[]>;
-  复合体分析结果: Map<string, 复合体分析[]>;
+  分析结果: Map<string, (部件分析 | 复合体分析)[][]>;
   字根笔画映射: Map<string, number[]>;
 }
 
@@ -63,6 +60,11 @@ interface 字形分析配置 {
   字根笔画映射: Map<string, number[]>;
 }
 
+interface 汉字与字形列表 {
+  汉字: string;
+  字形列表: 约化字形数据[];
+}
+
 class 字库 {
   private repertoire: 字库数据;
 
@@ -74,8 +76,8 @@ class 字库 {
     return this.repertoire;
   }
 
-  查询字形(character: string): 字形数据 | undefined {
-    return this.repertoire[character]?.glyphs[0];
+  查询字形(character: string): 字形数据[] | undefined {
+    return this.repertoire[character]?.glyphs;
   }
 
   添加(character: string, data: 汉字数据) {
@@ -129,54 +131,58 @@ class 字库 {
    */
   获取待分析对象(汉字列表: Set<string>) {
     const 汉字队列 = [...汉字列表];
-    const 部件与名称列表: [string, 基本部件数据][] = [];
     const 已知有用汉字 = new Set(汉字列表);
     const 反向复合体映射 = new Map<string, Set<string>>();
-    const 无入度: string[] = [];
+    const 无入度: 汉字与字形列表[] = [];
+    // 1. 使用广度优先搜索从汉字列表出发，找到所有相关的字，并翻转复合体的引用关系
     while (汉字队列.length) {
       const 汉字 = 汉字队列.shift()!;
-      const 字形 = this.repertoire[汉字]!.glyphs[0]!;
-      if (字形.type === "compound") {
-        字形.operandList.forEach((部分) => {
-          if (!已知有用汉字.has(部分)) {
-            已知有用汉字.add(部分);
-            汉字队列.push(部分);
-          }
-          if (!反向复合体映射.has(部分)) {
-            反向复合体映射.set(部分, new Set());
-          }
-          反向复合体映射.get(部分)!.add(汉字);
-        });
-      } else {
-        部件与名称列表.push([汉字, 字形]);
-        无入度.push(汉字);
+      const 字形列表 = this.repertoire[汉字]!.glyphs;
+      let 所有字形都是基本部件 = true;
+      for (const 字形 of 字形列表) {
+        if (字形.type === "compound") {
+          所有字形都是基本部件 = false;
+          字形.operandList.forEach((部分) => {
+            if (!已知有用汉字.has(部分)) {
+              已知有用汉字.add(部分);
+              汉字队列.push(部分);
+            }
+            if (!反向复合体映射.has(部分)) {
+              反向复合体映射.set(部分, new Set());
+            }
+            反向复合体映射.get(部分)!.add(汉字);
+          });
+        }
+      }
+      if (所有字形都是基本部件) {
+        无入度.push({ 汉字, 字形列表 });
       }
     }
-    // 对字符集进行拓扑排序，得到复合体的拆分顺序
-    const 部件列表 = new Map(
-      sortBy(部件与名称列表, (x) => x[1].strokes.length),
-    );
-    const 拓扑排序汉字: string[] = [];
+    // 2. 对字符集进行拓扑排序，得到复合体的拆分顺序
+    const 拓扑排序汉字: 汉字与字形列表[] = [];
     while (无入度.length) {
-      const 汉字 = 无入度.shift()!;
-      拓扑排序汉字.push(汉字);
-      const 用到该字的复合体列表 = 反向复合体映射.get(汉字);
-      if (用到该字的复合体列表 === undefined) continue;
+      const x = 无入度.shift()!;
+      const { 汉字 } = x;
+      拓扑排序汉字.push(x);
+      const 用到该字的字列表 = 反向复合体映射.get(汉字);
+      if (用到该字的字列表 === undefined) continue;
       反向复合体映射.delete(汉字);
-      for (const 复合体 of 用到该字的复合体列表) {
-        const operands = (this.repertoire[复合体]!.glyphs[0]! as 复合体数据)
-          .operandList;
-        if (operands.every((x) => !反向复合体映射.has(x))) {
-          无入度.push(复合体);
+      for (const 字 of 用到该字的字列表) {
+        const 字形列表 = this.repertoire[字]!.glyphs;
+        let 可以处理 = true;
+        for (const 字形 of 字形列表) {
+          if (字形.type === "basic_component") continue;
+          if (字形.operandList.some((x) => 反向复合体映射.has(x))) {
+            可以处理 = false;
+            break;
+          }
+        }
+        if (可以处理) {
+          无入度.push({ 汉字: 字, 字形列表 });
         }
       }
     }
-    const 复合体列表 = new Map(
-      拓扑排序汉字
-        .filter((x) => !部件列表.has(x))
-        .map((x) => [x, this.repertoire[x]!.glyphs[0]! as 复合体数据]),
-    );
-    return { 部件列表, 复合体列表 };
+    return 拓扑排序汉字;
   }
 
   /**
@@ -303,13 +309,13 @@ class 字库 {
    * 变量绑定为子键字符串。
    */
   模式匹配(字符: string, 模式: 模式, 变量映射: 变量映射) {
-    const 复合体 = this.查询字形(字符);
-    if (!复合体 || 复合体.type !== "compound") return false;
-    if (模式.operator !== 复合体.operator) return false;
-    if (模式.operandList.length !== 复合体.operandList.length) return false;
+    const 字形列表 = this.查询字形(字符)?.[0];
+    if (!字形列表 || 字形列表.type !== "compound") return false;
+    if (模式.operator !== 字形列表.operator) return false;
+    if (模式.operandList.length !== 字形列表.operandList.length) return false;
     for (let i = 0; i < 模式.operandList.length; i++) {
       const 操作数 = 模式.operandList[i]!;
-      const 子键 = 复合体.operandList[i]!;
+      const 子键 = 字形列表.operandList[i]!;
       if (typeof 操作数 === "string") {
         if (子键 !== 操作数) return false;
       } else if ("id" in 操作数) {
@@ -333,6 +339,8 @@ class 字库 {
    * - 模式中的字符串直接视为已有的键引用
    * - 变量使用 varMap 中绑定的键
    * - 嵌套 pattern 递归生成子键
+   *
+   * TODO: 目前只处理了每个字的第一个字形
    */
   替换(
     目标字符: string | undefined,
@@ -353,22 +361,27 @@ class 字库 {
       if (!result.ok) return result;
       部分列表.push(result.value);
     }
-    const 字符 = 目标字符 ?? String.fromCodePoint(生成计数.c++);
     const 复合体: 复合体数据 = {
       type: "compound",
       operator: 项.operator,
       operandList: 部分列表,
     };
-    this.添加(字符, {
-      unicode: 字符.codePointAt(0)!,
-      gb2312: 0,
-      tygf: 0,
-      gf0014_id: null,
-      gf3001_id: null,
-      name: null,
-      glyphs: [复合体],
-    });
-    return ok(字符);
+    if (目标字符 !== undefined) {
+      this.添加(目标字符, { ...this.repertoire[目标字符]!, glyphs: [复合体] });
+      return ok(目标字符);
+    } else {
+      const 字符 = String.fromCodePoint(生成计数.c++);
+      this.添加(字符, {
+        unicode: 字符.codePointAt(0)!,
+        gb2312: 0,
+        tygf: 0,
+        gf0014_id: null,
+        gf3001_id: null,
+        name: null,
+        glyphs: [复合体],
+      });
+      return ok(字符);
+    }
   }
 
   /**
@@ -400,7 +413,7 @@ class 字库 {
     const config = this.准备字形分析配置(分析配置, 决策, 决策空间);
     if (!config.ok) return config;
     const configValue = config.value;
-    const { 部件列表, 复合体列表 } = this.获取待分析对象(汉字集合);
+    const 拓扑排序汉字 = this.获取待分析对象(汉字集合);
     const 部件分析器 = 获取注册表().创建部件分析器(
       configValue.分析配置?.component_analyzer || "默认",
       configValue,
@@ -410,8 +423,7 @@ class 字库 {
       configValue,
     )!;
     return ok({
-      部件列表,
-      复合体列表,
+      拓扑排序汉字,
       部件分析器,
       复合体分析器,
       字根笔画映射: configValue.字根笔画映射,
@@ -431,24 +443,29 @@ class 字库 {
     const a = this.准备分析(base, 汉字集合);
     if (!a.ok) return a;
     const b = a.value;
-    const 部件分析结果 = new Map<string, 基本分析 | 默认部件分析>();
-    for (const [部件名称, 部件字形] of b.部件列表) {
-      const 分析 = b.部件分析器.分析(部件名称, 部件字形);
-      if (!分析.ok) return 分析;
-      部件分析结果.set(部件名称, 分析.value);
-    }
-    const 复合体分析结果 = new Map<string, 基本分析>();
-    for (const [复合体名称, 复合体字形] of b.复合体列表) {
-      const 部分分析列表 = 复合体字形.operandList.map((部分) => {
-        return 部件分析结果.get(部分) || 复合体分析结果.get(部分)!;
-      });
-      const 分析 = b.复合体分析器.分析(复合体名称, 复合体字形, 部分分析列表);
-      if (!分析.ok) return 分析;
-      复合体分析结果.set(复合体名称, 分析.value);
+    const 分析结果 = new Map<string, (基本分析 | 默认部件分析)[]>();
+    for (const { 汉字, 字形列表 } of b.拓扑排序汉字) {
+      const 结果列表: (基本分析 | 默认部件分析)[] = [];
+      for (const 字形 of 字形列表) {
+        if (字形.type === "basic_component") {
+          const 分析 = b.部件分析器.分析(汉字, 字形);
+          if (!分析.ok) return 分析;
+          结果列表.push(分析.value);
+        } else {
+          const 各部分分析 = 字形.operandList.map((部分) => {
+            return 分析结果.get(部分) || [];
+          });
+          for (const 部分分析列表 of 排列组合(各部分分析)) {
+            const 分析 = b.复合体分析器.分析(汉字, 字形, 部分分析列表);
+            if (!分析.ok) return 分析;
+            结果列表.push(分析.value);
+          }
+        }
+      }
+      分析结果.set(汉字, 结果列表);
     }
     return ok({
-      部件分析结果,
-      复合体分析结果,
+      分析结果,
       字根笔画映射: b.字根笔画映射,
     });
   }
@@ -469,28 +486,29 @@ class 字库 {
     if (!b.部件分析器.动态分析 || !b.复合体分析器.动态分析) {
       return default_err("分析器不支持动态分析");
     }
-    const 部件分析结果 = new Map<string, 基本分析[] | 默认部件分析[]>();
-    for (const [部件名称, 部件字形] of b.部件列表) {
-      const 分析 = b.部件分析器.动态分析(部件名称, 部件字形);
-      if (!分析.ok) return 分析;
-      部件分析结果.set(部件名称, 分析.value);
-    }
-    const 复合体分析结果 = new Map<string, 基本分析[]>();
-    for (const [复合体名称, 复合体字形] of b.复合体列表) {
-      const 部分分析列表 = 复合体字形.operandList.map((部分) => {
-        return 部件分析结果.get(部分) || 复合体分析结果.get(部分)!;
-      });
-      const 分析 = b.复合体分析器.动态分析(
-        复合体名称,
-        复合体字形,
-        部分分析列表,
-      );
-      if (!分析.ok) return 分析;
-      复合体分析结果.set(复合体名称, 分析.value);
+    const 分析结果 = new Map<string, (基本分析 | 默认部件分析)[][]>();
+    for (const { 汉字, 字形列表 } of b.拓扑排序汉字) {
+      const 结果列表: (基本分析 | 默认部件分析)[][] = [];
+      for (const 字形 of 字形列表) {
+        if (字形.type === "basic_component") {
+          const 分析 = b.部件分析器.动态分析(汉字, 字形);
+          if (!分析.ok) return 分析;
+          结果列表.push(分析.value);
+        } else {
+          const 各部分分析 = 字形.operandList.map((部分) => {
+            return 分析结果.get(部分) || [];
+          });
+          for (const 部分分析列表 of 排列组合(各部分分析)) {
+            const 分析 = b.复合体分析器.动态分析(汉字, 字形, 部分分析列表);
+            if (!分析.ok) return 分析;
+            结果列表.push(分析.value);
+          }
+        }
+      }
+      分析结果.set(汉字, 结果列表);
     }
     return ok({
-      部件分析结果,
-      复合体分析结果,
+      分析结果,
       字根笔画映射: b.字根笔画映射,
     });
   }

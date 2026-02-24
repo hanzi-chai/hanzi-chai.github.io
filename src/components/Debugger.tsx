@@ -108,8 +108,9 @@ export default function Debugger() {
     name: string;
     keys: any;
   } | null>(null);
-  const { 部件列表 } = repertoire.获取待分析对象(characters);
-  const 是部件: 过滤 = (c, _) => 部件列表.has(c) && characters.has(c);
+  const 是部件: 过滤 = (c, _) =>
+    characters.has(c) &&
+    repertoire.查询字形(c)?.some((x) => x.type === "basic_component") === true;
   const 过滤函数 =
     校对范围 === "components" ? 是部件 : 字集过滤查找表[校对范围];
   const filterOptions = [

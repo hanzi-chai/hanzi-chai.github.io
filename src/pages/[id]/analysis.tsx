@@ -122,7 +122,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const 字库 = useAtomValueUnwrapped(如字库原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
-  const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
+  const { 分析结果 } = 字形分析结果;
   const 动态字形分析结果 = useAtomValue(如动态字形分析结果原子);
   const 动态分析 = useAtomValue(动态分析原子);
   const 汉字集合 = useAtomValue(汉字集合原子);
