@@ -56,15 +56,18 @@ class 原始字库 {
         字形列表.push(...自定义字形或字形列表);
       }
       if (是汉字或兼容汉字(汉字名)) {
-        // 对于汉字，按照地区标签来选择
-        const 已有地区标签集合 = new Set(字形列表.flatMap(获取地区标签列表));
-        for (const glyph of glyphs) {
-          const 剩余地区标签列表 = 获取地区标签列表(glyph).filter(
-            (x) => !已有地区标签集合.has(x),
-          );
-          if (剩余地区标签列表.length === 0) continue;
-          字形列表.push({ ...glyph, tags: 剩余地区标签列表 });
-          剩余地区标签列表.map((x) => 已有地区标签集合.add(x));
+        // 如果在自定义字形中有一个是没有任何地区标签的，那么视为其具有所有地区标签，不再考虑其他字形
+        if (!字形列表.some((x) => 获取地区标签列表(x).length === 0)) {
+          // 对于汉字，按照地区标签来选择
+          const 已有地区标签集合 = new Set(字形列表.flatMap(获取地区标签列表));
+          for (const glyph of glyphs) {
+            const 剩余地区标签列表 = 获取地区标签列表(glyph).filter(
+              (x) => !已有地区标签集合.has(x),
+            );
+            if (剩余地区标签列表.length === 0) continue;
+            字形列表.push({ ...glyph, tags: 剩余地区标签列表 });
+            剩余地区标签列表.map((x) => 已有地区标签集合.add(x));
+          }
         }
       } else if (是用户私用区(汉字名)) {
         字形列表.push(...glyphs);

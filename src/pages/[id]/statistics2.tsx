@@ -7,7 +7,7 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { Flex, Skeleton, Table, Typography } from "antd";
+import { Flex, Form, Skeleton, Switch, Table, Typography } from "antd";
 import { useAtomValue } from "jotai";
 import { range, sum, sumBy } from "lodash-es";
 import { Suspense, useState } from "react";
@@ -513,15 +513,17 @@ const DuplicationDistribution = () => {
   const combined = useAtomValueUnwrapped(联合结果原子);
   const duplicationMap = new Map<string, 联合条目[]>();
   const pairMap = new Map<string, [string, string][]>();
+  const [仅一字词, set仅一字词] = useState(true);
 
   for (const item of combined) {
+    if (仅一字词 && 字数(item.词) !== 1) continue;
     const key = item.全码;
     const previous = duplicationMap.get(key) ?? [];
     previous.push(item);
     duplicationMap.set(key, previous);
   }
 
-  for (const [key, value] of duplicationMap) {
+  for (const value of duplicationMap.values()) {
     if (value.length < 2) continue;
     for (const [iFirst, first] of value.entries()) {
       for (const [iSecond, second] of value.entries()) {
@@ -585,7 +587,16 @@ const DuplicationDistribution = () => {
   ];
   return (
     <>
-      <Typography.Title level={3}>重码分布</Typography.Title>
+      <Flex align="baseline" gap="large">
+        <Typography.Title level={3}>重码分布</Typography.Title>
+        <Form.Item
+          label="仅一字词"
+          valuePropName="checked"
+          style={{ marginBottom: 0 }}
+        >
+          <Switch checked={仅一字词} onChange={set仅一字词} />
+        </Form.Item>
+      </Flex>
       <Typography.Paragraph>
         重码总数：{sumBy([...duplicationMap.values()], (x) => x.length - 1)}
       </Typography.Paragraph>
