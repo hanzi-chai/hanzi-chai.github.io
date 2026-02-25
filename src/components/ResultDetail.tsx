@@ -1,14 +1,9 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { useAddAtom, 自定义拆分原子 } from "~/atoms";
+import type { 拆分方式与评价 } from "~/lib";
 import Element from "./Element";
-import {
-  自定义拆分原子,
-  过滤器列表原子,
-  useAddAtom,
-  useAtomValue,
-} from "~/atoms";
 import { Display } from "./Utils";
-import { 拆分方式与评价 } from "~/lib";
 
 export default function ResultDetail({
   char,
@@ -19,7 +14,6 @@ export default function ResultDetail({
   data: 拆分方式与评价[];
   map: Map<string, number[][]>;
 }) {
-  const selector = useAtomValue(过滤器列表原子);
   const addCustomization = useAddAtom(自定义拆分原子);
 
   const columns: ColumnsType<拆分方式与评价> = [

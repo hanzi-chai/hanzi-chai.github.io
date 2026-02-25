@@ -14,6 +14,7 @@ import type { 字库, 字形分析结果 } from "./repertoire.js";
 import {
   ok,
   type Result,
+  标准化自定义,
   type 自定义分析映射,
   获取汉字集合,
   解析当量映射,
@@ -109,7 +110,7 @@ export function 获取字库(config: 配置): Result<字库, Error> {
   const 用户原始字库数据 = config.data?.repertoire ?? {};
   const 原始字库 = 获取原始字库(用户原始字库数据);
   const 自定义字形 = config.data?.glyph_customization ?? {};
-  const 字库或错误 = 原始字库.确定(自定义字形);
+  const 字库或错误 = 原始字库.确定(标准化自定义(自定义字形));
   if (!字库或错误.ok) {
     return 字库或错误;
   }

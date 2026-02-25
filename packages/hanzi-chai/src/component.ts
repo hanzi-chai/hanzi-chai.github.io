@@ -338,6 +338,7 @@ class 部件图形 {
     }
     const 字根序列 = 当前拆分方式.拆分方式.map((x) => x.名称);
     return ok({
+      类型: "部件" as const,
       字根序列,
       部件图形: this,
       字根笔画映射: 字根笔画索引映射,
@@ -436,8 +437,7 @@ interface 部件分析器<部件分析 extends 基本分析 = 基本分析> {
 /**
  * 部件通过自动拆分算法分析得到的拆分结果的全部细节
  */
-interface 默认部件分析 {
-  字根序列: string[];
+interface 默认部件分析 extends 基本分析 {
   部件图形: 部件图形;
   字根笔画映射: Map<string, number[][]>;
   当前拆分方式: 拆分方式与评价;
@@ -482,7 +482,11 @@ class 二笔部件分析器 implements 部件分析器<基本分析> {
   constructor(private 配置: 字形分析配置) {}
 
   分析(名称: string, 部件: 基本部件数据) {
-    if (this.配置.字根决策.has(名称)) return ok({ 字根序列: [名称] });
+    const 结果: 基本分析 = { 类型: "部件", 字根序列: [] };
+    if (this.配置.字根决策.has(名称)) {
+      结果.字根序列.push(名称);
+      return ok(结果);
+    }
     const 笔画分类器 = this.配置.分类器;
     const 笔画列表 = 部件.strokes;
     const 第一笔 = 笔画列表[0];
@@ -492,7 +496,7 @@ class 二笔部件分析器 implements 部件分析器<基本分析> {
     const 第二笔 = 笔画列表[1];
     const 第一笔类别 = 笔画分类器[第一笔.feature].toString();
     const 第二笔类别 = 第二笔 ? 笔画分类器[第二笔.feature].toString() : "0";
-    const 结果 = { 字根序列: [第一笔类别 + 第二笔类别] };
+    结果.字根序列 = [第一笔类别 + 第二笔类别];
     if (笔画列表.length > 2) {
       const 末笔 = 笔画列表.at(-1)!;
       const 末笔类别 = 笔画分类器[末笔.feature].toString();

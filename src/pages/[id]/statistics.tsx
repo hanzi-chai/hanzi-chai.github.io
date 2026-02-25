@@ -34,7 +34,7 @@ import { 反序列化, 序列化 } from "~/lib";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
 
 const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
-  let relevant = result.sort((a, b) => a.频率 - b.频率);
+  let relevant = result.sort((a, b) => b.频率 - a.频率);
   if (analyzer.type === "single")
     relevant = relevant.filter((x) => [...x.词].length === 1);
   if (analyzer.type === "multi")

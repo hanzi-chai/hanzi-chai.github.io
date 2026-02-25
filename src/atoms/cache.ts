@@ -9,7 +9,6 @@ import type {
   动态组装条目,
   原始字库数据,
   字形分析结果,
-  字形自定义,
   当量映射,
   码位,
   码表条目,
@@ -30,6 +29,7 @@ import {
   总序列化,
   是归并,
   是私用区,
+  标准化自定义,
   添加优先简码,
   获取汉字集合,
   解析当量映射,
@@ -214,15 +214,7 @@ export const 别名显示原子 = atom(async (get) => {
 
 export const 标准字形自定义原子 = atom((get) => {
   const 字形自定义 = get(字形自定义原子);
-  const 标准字形自定义: 字形自定义 = {};
-  for (const [char, value] of Object.entries(字形自定义)) {
-    if (Array.isArray(value)) {
-      标准字形自定义[char] = value;
-    } else {
-      标准字形自定义[char] = [value];
-    }
-  }
-  return 标准字形自定义;
+  return 标准化自定义(字形自定义);
 });
 
 export const 如确定字库原子 = atom(async (get) => {

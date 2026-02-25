@@ -14,6 +14,7 @@ import {
   Statistic,
   Switch,
 } from "antd";
+import type { ItemType } from "rc-collapse/es/interface";
 import { Suspense, useState } from "react";
 import {
   useAtom,
@@ -57,19 +58,13 @@ const 导出字形分析结果 = (
   a: 字形分析结果 | 动态字形分析结果,
   display: (s: string) => string,
 ) => {
-  const { 部件分析结果, 复合体分析结果 } = a;
+  const { 分析结果 } = a;
   const tsv = [...characters].map((char) => {
-    const analysis = 部件分析结果.get(char) ?? 复合体分析结果.get(char);
-    if (!analysis) {
-      return [char, ""];
-    }
-    if (Array.isArray(analysis)) {
-      return [
-        char,
-        analysis.map((x) => x.字根序列.map(display).join(" ")).join("　"),
-      ];
-    }
-    return [char, analysis.字根序列.map(display).join(" ")];
+    const analysis = (分析结果.get(char) ?? []).flat();
+    return [
+      char,
+      analysis.map((x) => x.字根序列.map(display).join(" ")).join("　"),
+    ];
   });
   exportTSV(tsv, "拆分结果.txt");
 };
@@ -141,37 +136,37 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [只显示自定义, 设置只显示自定义] = useState(false);
   const 是必要字根 = (k: string) =>
     决策[k] && (决策空间[k] ?? []).every((x) => x.value !== null);
-  const 待展示部件分析结果 = [...部件分析结果].filter(([k, v]) => {
-    const 是单笔画 = v.字根序列.length === 1 && /\d+/.test(v.字根序列[0]!);
-    if (是必要字根(k) || 是单笔画) return false;
-    return true;
-  });
-  const 部件分析内容 = 待展示部件分析结果
-    .filter(([x]) => !只显示自定义 || 自定义拆分[x] || 动态自定义拆分[x])
-    .filter(([x]) => 过滤器.过滤(x, 字库._get()[x]!, 笔顺映射.get(x) ?? ""))
-    .map(([key, res]) => {
-      const r = res as 默认部件分析 | 基本分析;
-      return {
-        key,
-        label: <ResultSummary char={key} analysis={res} />,
-        children:
-          "全部拆分方式" in r ? (
-            <ResultDetail
-              char={key}
-              data={r.全部拆分方式}
-              map={r.字根笔画映射}
-            />
-          ) : null,
-      };
-    });
-  const 复合体分析内容 = [...复合体分析结果]
-    .filter(([x]) => 过滤器.过滤(x, 字库._get()[x]!, 笔顺映射.get(x) ?? ""))
-    .map(([key, res]) => {
-      return {
-        key,
-        label: <ResultSummary char={key} analysis={res} disableCustomize />,
-      };
-    });
+  const 部件分析内容: ItemType[] = [];
+  const 复合体分析内容: ItemType[] = [];
+  for (const [字, 分析列表] of 分析结果) {
+    if (只显示自定义 && !自定义拆分[字] && !动态自定义拆分[字]) continue;
+    if (!过滤器.过滤(字, 字库._get()[字]!, 笔顺映射.get(字) ?? "")) continue;
+    if (是必要字根(字)) continue;
+    for (const 分析 of 分析列表) {
+      if (分析.类型 === "部件") {
+        const r = 分析 as 默认部件分析 | 基本分析;
+        if (分析.字根序列.length === 1 && /\d+/.test(分析.字根序列[0]!))
+          continue;
+        部件分析内容.push({
+          key: 字,
+          label: <ResultSummary char={字} analysis={分析} />,
+          children:
+            "全部拆分方式" in r ? (
+              <ResultDetail
+                char={字}
+                data={r.全部拆分方式}
+                map={r.字根笔画映射}
+              />
+            ) : undefined,
+        });
+      } else {
+        复合体分析内容.push({
+          key: 字,
+          label: <ResultSummary char={字} analysis={分析} disableCustomize />,
+        });
+      }
+    }
+  }
 
   const displays = [部件分析内容, 复合体分析内容] as const;
   return (
@@ -232,18 +227,21 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
       </Flex>
       <Row style={{ width: "80%", alignItems: "center" }}>
         <Col span={5}>
-          <Statistic title="总部件数" value={部件分析结果.size} />
+          <Statistic
+            title="总部件数"
+            value={[...分析结果.values()].reduce(
+              (acc, val) => acc + val.filter((x) => x.类型 === "部件").length,
+              0,
+            )}
+          />
         </Col>
         <Col span={5}>
-          <Statistic title="需拆分部件数" value={待展示部件分析结果.length} />
+          <Statistic title="需拆分部件数" value={部件分析内容.length} />
         </Col>
         <Col span={5}>
           <Statistic
             title="自动拆分部件数"
-            value={
-              待展示部件分析结果.length &&
-              待展示部件分析结果.length - 全部自定义字符.size
-            }
+            value={部件分析内容.length - 全部自定义字符.size}
           />
         </Col>
         <Col span={5}>

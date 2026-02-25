@@ -26,6 +26,7 @@ import { default_err, ok, type Result, 和编码, 字数, 码 } from "./utils.js
 type 变量映射 = Map<number, string>;
 
 interface 基本分析 {
+  类型: "部件" | "复合体";
   字根序列: string[];
 }
 
@@ -443,9 +444,9 @@ class 字库 {
     const a = this.准备分析(base, 汉字集合);
     if (!a.ok) return a;
     const b = a.value;
-    const 分析结果 = new Map<string, (基本分析 | 默认部件分析)[]>();
+    const 分析结果 = new Map<string, 基本分析[]>();
     for (const { 汉字, 字形列表 } of b.拓扑排序汉字) {
-      const 结果列表: (基本分析 | 默认部件分析)[] = [];
+      const 结果列表: 基本分析[] = [];
       for (const 字形 of 字形列表) {
         if (字形.type === "basic_component") {
           const 分析 = b.部件分析器.分析(汉字, 字形);

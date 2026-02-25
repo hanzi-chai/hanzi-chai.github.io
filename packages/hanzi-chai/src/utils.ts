@@ -23,7 +23,12 @@ import type {
   绘制,
   衍生部件数据,
 } from "./data.js";
-import type { 动态组装条目, 组装条目 } from "./main.js";
+import type {
+  兼容字形自定义,
+  动态组装条目,
+  字形自定义,
+  组装条目,
+} from "./main.js";
 
 // Result 类型定义
 export type Ok<T> = { ok: true; value: T };
@@ -440,3 +445,15 @@ export const 是地区标签 = (tag: string) => /^[GHTJKNVMSBU]$/.test(tag);
 
 export const 获取地区标签列表 = (glyph: 字形数据) =>
   (glyph.tags ?? []).filter(是地区标签);
+
+export const 标准化自定义 = (字形自定义: 兼容字形自定义) => {
+  const 标准字形自定义: 字形自定义 = {};
+  for (const [char, value] of Object.entries(字形自定义)) {
+    if (Array.isArray(value)) {
+      标准字形自定义[char] = value;
+    } else {
+      标准字形自定义[char] = [value];
+    }
+  }
+  return 标准字形自定义;
+};

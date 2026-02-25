@@ -29,6 +29,7 @@ export interface 数据配置 {
   repertoire?: 原始字库数据;
   glyph_customization?: 兼容字形自定义;
   transformers?: 变换器[];
+  glyph_sources?: string[];
 }
 
 export type 兼容字形自定义 = Record<string, 字形数据 | 字形数据[]>;
