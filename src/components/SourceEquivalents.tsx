@@ -1,46 +1,32 @@
-import { Button, Flex, Input, Space } from "antd";
+import { CloseOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Flex, Modal, Select, Space } from "antd";
 import { useAtom } from "jotai";
+import { useState } from "react";
 import { 同源部件组列表原子 } from "~/atoms";
 import type { 同源部件组 } from "~/lib";
-import { Display } from "./Utils";
 import CharacterSelect from "./CharacterSelect";
-import {
-  ModalForm,
-  type ProFormInstance,
-  ProFormList,
-  ProFormItem,
-} from "@ant-design/pro-components";
-import { useRef } from "react";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { Display } from "./Utils";
 
 /** 地區源標籤選項 */
-const 源标签列表 = ["G", "H", "T", "J", "K", "N", "V", "M", "S", "B", "U"];
+const 源标签选项 = ["G", "H", "T", "J", "K", "N", "V", "M", "S", "B", "U"].map(
+  (s) => ({ label: s, value: s }),
+);
 
-/**
- * 將 Record<string, string> 格式轉爲列表格式
- * {G: "户", T: "戶"} → [{source: "G", char: "户"}, {source: "T", char: "戶"}]
- */
-interface 源条目表单项 {
+interface 源条目 {
   source: string;
   char: string;
 }
 
-interface 组表单值 {
-  entries: 源条目表单项[];
+/** 把 Record 轉成編輯用列表 */
+function 组到条目列表(组: 同源部件组): 源条目[] {
+  return Object.entries(组).map(([source, char]) => ({ source, char }));
 }
 
-function 组到表单(组: 同源部件组): 组表单值 {
-  return {
-    entries: Object.entries(组).map(([source, char]) => ({ source, char })),
-  };
-}
-
-function 表单到组(值: 组表单值): 同源部件组 {
+/** 把列表轉回 Record，過濾掉不完整的條目 */
+function 条目列表到组(条目列表: 源条目[]): 同源部件组 {
   const 组: 同源部件组 = {};
-  for (const { source, char } of 值.entries) {
-    if (source && char) {
-      组[source] = char;
-    }
+  for (const { source, char } of 条目列表) {
+    if (source && char) 组[source] = char;
   }
   return 组;
 }
@@ -48,6 +34,7 @@ function 表单到组(值: 组表单值): 同源部件组 {
 /** 顯示一個同源部件組的摘要 */
 function 组摘要({ 组 }: { 组: 同源部件组 }) {
   const 条目 = Object.entries(组);
+  if (条目.length === 0) return <span style={{ color: "#999" }}>（空）</span>;
   return (
     <Space size={4}>
       {条目.map(([源, 字], i) => (
@@ -61,131 +48,164 @@ function 组摘要({ 组 }: { 组: 同源部件组 }) {
   );
 }
 
-/** 單個源條目的編輯器 */
-function 源条目编辑器({
-  value,
+/** 單個源條目的行内編輯器 */
+function 源条目行({
+  条目,
   onChange,
+  onDelete,
 }: {
-  value?: 源条目表单项;
-  onChange?: (v: 源条目表单项) => void;
+  条目: 源条目;
+  onChange: (v: 源条目) => void;
+  onDelete: () => void;
 }) {
-  const current = value ?? { source: "", char: "" };
   return (
-    <Space>
-      <Input
-        style={{ width: 48 }}
-        maxLength={1}
-        value={current.source}
+    <Flex gap="small" align="center">
+      <Select
+        style={{ width: 64 }}
+        value={条目.source || undefined}
         placeholder="源"
-        onChange={(e) => onChange?.({ ...current, source: e.target.value })}
+        options={源标签选项}
+        onChange={(v) => onChange({ ...条目, source: v })}
       />
       <CharacterSelect
-        style={{ width: 160 }}
-        value={current.char}
-        onChange={(v: string) => onChange?.({ ...current, char: v })}
+        style={{ width: 180 }}
+        value={条目.char || undefined}
+        onChange={(v: string) => onChange({ ...条目, char: v })}
       />
-    </Space>
+      <Button
+        type="text"
+        danger
+        size="small"
+        icon={<CloseOutlined />}
+        onClick={onDelete}
+      />
+    </Flex>
   );
 }
 
-const 空条目 = (): 源条目表单项 => ({ source: "", char: "" });
+/** 單個同源部件組的編輯卡片 */
+function 组编辑卡片({
+  条目列表,
+  onChange,
+  onDelete,
+}: {
+  条目列表: 源条目[];
+  onChange: (v: 源条目[]) => void;
+  onDelete: () => void;
+}) {
+  const 组 = 条目列表到组(条目列表);
+  const 有效 = Object.keys(组).length >= 2;
+  return (
+    <Flex
+      vertical
+      gap={8}
+      style={{
+        border: `1px solid ${有效 ? "#d9d9d9" : "#ff4d4f"}`,
+        borderRadius: 6,
+        padding: "8px 12px",
+      }}
+    >
+      <Flex justify="space-between" align="center">
+        <span style={{ fontWeight: 500, fontSize: "0.85em" }}>
+          {有效 ? <组摘要 组={组} /> : "请填写至少两个源"}
+        </span>
+        <Button
+          type="text"
+          danger
+          size="small"
+          icon={<DeleteOutlined />}
+          onClick={onDelete}
+        />
+      </Flex>
+      {条目列表.map((条目, i) => (
+        <源条目行
+          key={i}
+          条目={条目}
+          onChange={(v) => {
+            const 新列表 = [...条目列表];
+            新列表[i] = v;
+            onChange(新列表);
+          }}
+          onDelete={() => onChange(条目列表.filter((_, j) => j !== i))}
+        />
+      ))}
+      <Button
+        type="dashed"
+        size="small"
+        icon={<PlusOutlined />}
+        onClick={() => onChange([...条目列表, { source: "", char: "" }])}
+      >
+        添加源
+      </Button>
+    </Flex>
+  );
+}
 
 const SourceEquivalentsForm = () => {
   const [同源部件组列表, 设置同源部件组列表] = useAtom(同源部件组列表原子);
-  const formRef = useRef<ProFormInstance>(undefined);
+  const [open, setOpen] = useState(false);
+  // 編輯態：打開 Modal 時從 atom 複製一份
+  const [编辑态, 设置编辑态] = useState<源条目[][]>([]);
 
-  const 表单初始值 = {
-    groups: 同源部件组列表.map(组到表单),
+  const 打开 = () => {
+    设置编辑态(同源部件组列表.map(组到条目列表));
+    setOpen(true);
+  };
+
+  const 保存 = () => {
+    const 组列表 = 编辑态
+      .map(条目列表到组)
+      .filter((g) => Object.keys(g).length >= 2);
+    设置同源部件组列表(组列表);
+    setOpen(false);
   };
 
   return (
-    <ModalForm
-      title="同源部件组设置"
-      layout="horizontal"
-      width={520}
-      trigger={
-        <Button>
-          编辑同源部件组
-          {同源部件组列表.length > 0 && ` (${同源部件组列表.length})`}
-        </Button>
-      }
-      initialValues={表单初始值}
-      onFinish={async (v) => {
-        const 组列表 = (v.groups as 组表单值[])
-          .map(表单到组)
-          .filter((g) => Object.keys(g).length >= 2);
-        设置同源部件组列表(组列表);
-        return true;
-      }}
-      formRef={formRef}
-    >
-      <ProFormList
-        name="groups"
-        creatorRecord={{ entries: [空条目(), 空条目()] }}
-        creatorButtonProps={{ creatorButtonText: "添加同源部件组" }}
-        alwaysShowItemLabel
-        itemRender={({ listDom, action }, { index }) => {
-          const values = formRef.current?.getFieldValue(["groups", index]) as
-            | 组表单值
-            | undefined;
-          const 组 = values ? 表单到组(values) : {};
-          const 有效 = Object.keys(组).length >= 2;
-          return (
-            <Flex
-              key={index}
-              style={{
-                border: `1px solid ${有效 ? "#d9d9d9" : "#ff4d4f"}`,
-                borderRadius: 6,
-                padding: "8px 12px",
-                marginBottom: 8,
-              }}
-              vertical
-              gap={4}
-            >
-              <Flex justify="space-between" align="center">
-                <span style={{ fontWeight: 500, fontSize: "0.85em" }}>
-                  {有效 ? <组摘要 组={组} /> : "请填写至少两个源"}
-                </span>
-                {action}
-              </Flex>
-              {listDom}
-            </Flex>
-          );
-        }}
+    <>
+      <Button onClick={打开}>
+        编辑同源部件组
+        {同源部件组列表.length > 0 && ` (${同源部件组列表.length})`}
+      </Button>
+      <Modal
+        title="同源部件组设置"
+        open={open}
+        onOk={保存}
+        onCancel={() => setOpen(false)}
+        width={480}
+        okText="保存"
+        cancelText="取消"
       >
-        <ProFormList
-          name="entries"
-          creatorRecord={空条目}
-          creatorButtonProps={{
-            creatorButtonText: "添加源",
-            icon: <PlusOutlined />,
-            size: "small",
-            type: "dashed",
-          }}
-          deleteIconProps={{ Icon: DeleteOutlined }}
-          alwaysShowItemLabel
-          min={2}
-        >
-          <ProFormItem noStyle>
-            {/* @ts-ignore */}
-            <源条目编辑器 />
-          </ProFormItem>
-        </ProFormList>
-      </ProFormList>
-
-      {同源部件组列表.length > 0 && (
-        <Flex vertical gap={4} style={{ marginTop: 8 }}>
-          <span style={{ color: "#999", fontSize: "0.85em" }}>
-            当前已配置 {同源部件组列表.length} 组：
-          </span>
-          {同源部件组列表.map((组, i) => (
-            <span key={i} style={{ fontSize: "0.85em" }}>
-              <组摘要 组={组} />
-            </span>
+        <Flex vertical gap={12} style={{ maxHeight: 400, overflowY: "auto" }}>
+          {编辑态.map((条目列表, i) => (
+            <组编辑卡片
+              key={i}
+              条目列表={条目列表}
+              onChange={(v) => {
+                const 新 = [...编辑态];
+                新[i] = v;
+                设置编辑态(新);
+              }}
+              onDelete={() => 设置编辑态(编辑态.filter((_, j) => j !== i))}
+            />
           ))}
+          <Button
+            type="dashed"
+            icon={<PlusOutlined />}
+            onClick={() =>
+              设置编辑态([
+                ...编辑态,
+                [
+                  { source: "", char: "" },
+                  { source: "", char: "" },
+                ],
+              ])
+            }
+          >
+            添加同源部件组
+          </Button>
         </Flex>
-      )}
-    </ModalForm>
+      </Modal>
+    </>
   );
 };
 
