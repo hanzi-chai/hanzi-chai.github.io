@@ -4,6 +4,7 @@ import type {
   原始字库数据,
   原始汉字数据,
   基本部件数据,
+  复合体数据,
   字形数据,
   汉字数据,
   矢量图形数据,
@@ -99,16 +100,36 @@ class 原始字库 {
     字形缓存: Map<string, 矢量图形数据> = new Map(),
     栈: string[] = [],
   ): Result<基本部件数据, Error> {
+    if (栈.length > 100) {
+      return default_err(`获取源部件时递归深度过大：${栈.join(" -> ")}`);
+    }
     const 源字 = this.字库[字符];
     const 字符信息 = `${字符} (U+${码(字符)} )`;
     const 栈信息 = 栈.map((x) => `${x} (U+${码(x)})`).join(" -> ");
     if (源字 === undefined)
       return default_err(`源部件 ${字符信息} 不存在，当前栈：${栈信息}`);
     const 源字形 = 源字.glyphs.find(是部件或全等);
-    if (源字形 === undefined)
-      return default_err(
-        `源部件 ${字符信息} 没有部件或全等，当前栈：${栈信息}`,
+    if (源字形 === undefined) {
+      const 复合体源字形 = 源字.glyphs.find(
+        (glyph): glyph is 复合体数据 => glyph.type === "compound",
       );
+      if (复合体源字形 === undefined)
+        return default_err(
+          `源部件 ${字符信息} 没有部件或全等，当前栈：${栈信息}`,
+        );
+      const 部分列表: 图形盒子[] = [];
+      for (const 部分 of 复合体源字形.operandList) {
+        const 渲染后源字形 = this.获取源部件(部分, 字形缓存, [...栈, 字符]);
+        if (!渲染后源字形.ok) return 渲染后源字形;
+        部分列表.push(图形盒子.从笔画列表构建(渲染后源字形.value.strokes));
+      }
+      const 笔画列表 = 图形盒子.仿射合并(复合体源字形, 部分列表).获取笔画列表();
+      return ok({
+        type: "basic_component",
+        tags: 复合体源字形.tags,
+        strokes: 笔画列表,
+      });
+    }
     const 渲染后源字形 = this.递归渲染原始字形(源字形, 字形缓存, [...栈, 字符]);
     if (!渲染后源字形.ok) return 渲染后源字形;
     const value = 渲染后源字形.value;
