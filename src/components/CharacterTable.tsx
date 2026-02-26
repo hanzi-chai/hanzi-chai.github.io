@@ -39,6 +39,7 @@ import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
 import { ElementWithTooltip } from "./ElementPool";
+import SourceEquivalentsForm from "./SourceEquivalents";
 import TransformersForm from "./Transformers";
 import { DeleteButton, Display } from "./Utils";
 
@@ -417,6 +418,7 @@ export default function CharacterTable() {
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
         <TransformersForm />
+        <SourceEquivalentsForm />
         <Create onCreate={() => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>
