@@ -87,6 +87,11 @@ export const 模拟矢量笔画 = (
   };
 };
 
+export const 模拟空基本部件 = (): 基本部件数据 => ({
+  type: "basic_component",
+  strokes: [],
+});
+
 export const 模拟基本部件 = (): 基本部件数据 => ({
   type: "basic_component",
   strokes: [模拟矢量笔画("横")],
@@ -442,6 +447,20 @@ export const 添加优先简码 = <T extends 组装条目 | 动态组装条目>(
 };
 
 export const 是地区标签 = (tag: string) => /^[GHTJKNVMSBU]$/.test(tag);
+
+export const 所有地区标签 = [
+  "G",
+  "H",
+  "T",
+  "J",
+  "K",
+  "N",
+  "V",
+  "M",
+  "S",
+  "B",
+  "U",
+] as const;
 
 export const 获取地区标签列表 = (glyph: 字形数据) =>
   (glyph.tags ?? []).filter(是地区标签);

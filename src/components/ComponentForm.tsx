@@ -222,6 +222,9 @@ export default function ComponentForm({
   readonly?: boolean;
 }) {
   const 原始字库 = useAtomValue(原始字库原子);
+  const 替代字形映射 = new Map(
+    Object.entries(原始字库._get()).map(([k, v]) => [k, v.glyphs]),
+  );
   const repertoire = 原始字库._get();
   const trigger = noButton ? (
     <span>{title}</span>
@@ -262,7 +265,10 @@ export default function ComponentForm({
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
                 const component = props as 基本或衍生部件;
-                const rendered = 原始字库.递归渲染原始字形(component);
+                const rendered = 原始字库.递归渲染原始字形(
+                  component,
+                  替代字形映射,
+                );
                 let glyph = new 图形盒子();
                 if (rendered.ok && rendered.value.type === "basic_component") {
                   glyph = 图形盒子.从笔画列表构建(rendered.value.strokes);
@@ -347,8 +353,10 @@ export default function ComponentForm({
                           onClick={() => {
                             const component: 基本或衍生部件 =
                               formRef.current?.getFieldsValue();
-                            const rendered =
-                              原始字库.递归渲染原始字形(component);
+                            const rendered = 原始字库.递归渲染原始字形(
+                              component,
+                              替代字形映射,
+                            );
                             if (!rendered.ok) return;
                             if (rendered.value.type !== "basic_component")
                               return;

@@ -1,5 +1,14 @@
 import { QuestionCircleOutlined } from "@ant-design/icons";
-import { Checkbox, Flex, FloatButton, Layout, Space, Tour } from "antd";
+import {
+  Checkbox,
+  Flex,
+  FloatButton,
+  Form,
+  Layout,
+  Select,
+  Space,
+  Tour,
+} from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
 import type { TourProps } from "antd/lib";
@@ -9,6 +18,7 @@ import { useRef, useState } from "react";
 import { remoteUpdate } from "~/api";
 import {
   useAddAtom,
+  useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
   useRemoveAtom,
@@ -18,6 +28,7 @@ import {
   如排序字库数据原子,
   如确定字库原子,
   如笔顺映射原子,
+  字形来源列表原子,
   字形自定义原子,
   标准字形自定义原子,
   用户原始字库数据原子,
@@ -33,7 +44,13 @@ import {
   Rename,
 } from "~/components/Action";
 import type { 原始汉字数据, 字形数据 } from "~/lib";
-import { 区块列表, 是用户私用区, 是私用区, 查询区块 } from "~/lib";
+import {
+  区块列表,
+  所有地区标签,
+  是用户私用区,
+  是私用区,
+  查询区块,
+} from "~/lib";
 import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/utils";
 import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
@@ -63,18 +80,21 @@ export const 字形编辑器 = ({
   回调: (v: 字形数据) => Promise<boolean>;
   只读: boolean;
 }) => {
-  const title = typenames[字形.type];
+  const title =
+    字形.type === "compound" ? (
+      <Space>
+        <span>{字形.operator}</span>
+        {字形.operandList.map((y, index) => (
+          <Display key={index} name={y} />
+        ))}
+      </Space>
+    ) : (
+      typenames[字形.type]
+    );
   if (字形.type === "compound" || 字形.type === "spliced_component") {
     return (
       <CompoundForm
-        title={
-          <Space>
-            <span>{字形.operator}</span>
-            {字形.operandList.map((y, index) => (
-              <Display key={index} name={y} />
-            ))}
-          </Space>
-        }
+        title={title}
         initialValues={字形}
         onFinish={回调}
         primary
@@ -206,6 +226,7 @@ export default function CharacterTable() {
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const [filterProps, setFilterProps] = useState<字符过滤器参数>({});
   const remote = useAtomValue(远程原子);
+  const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
   const filter = new 字符过滤器(filterProps);
 
   const dataSource: 原始汉字数据[] = [];
@@ -416,6 +437,14 @@ export default function CharacterTable() {
     >
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
+        <Form.Item label="选择字形来源" style={{ margin: 0 }}>
+          <Select
+            mode="multiple"
+            options={所有地区标签.map((x) => ({ label: x, value: x }))}
+            value={字形来源列表}
+            onChange={设置字形来源列表}
+          />
+        </Form.Item>
         <TransformersForm />
         <Create onCreate={() => {}} ref={ref3} />
       </Flex>

@@ -181,6 +181,15 @@ export type 字形数据 = 部件数据 | 复合体数据 | 全等数据;
  */
 export type 约化字形数据 = 基本部件数据 | 复合体数据;
 
+export interface 部件树数据 {
+  type: "tree";
+  operator: 结构表示符;
+  operandList: (部件树数据 | 基本部件数据)[];
+  tags?: string[];
+  order?: 笔画块[];
+  parameters?: 复合体参数;
+}
+
 /**
  * 原始字符 PrimitiveCharacter
  * unicode: 字符的 Unicode 编码

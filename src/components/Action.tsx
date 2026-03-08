@@ -61,7 +61,10 @@ export const Create = forwardRef(
     { onCreate }: { onCreate: (s: string) => void },
     ref: ForwardedRef<HTMLAnchorElement>,
   ) => (
-    <Popover content={<CreatePopoverContent onCreate={onCreate} />}>
+    <Popover
+      content={<CreatePopoverContent onCreate={onCreate} />}
+      trigger="click"
+    >
       <Button type="primary" ref={ref}>
         新建字符
       </Button>

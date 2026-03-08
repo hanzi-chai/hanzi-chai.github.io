@@ -49,6 +49,7 @@ import {
   分析配置原子,
   动态分析原子,
   变换器列表原子,
+  字形来源列表原子,
   字形自定义原子,
   字母表原子,
   字集指示原子,
@@ -194,7 +195,6 @@ export const 汉字集合原子 = atom(async (get) => {
 export const 原始字库原子 = atom(async (get) => {
   const 远程 = get(远程原子);
   if (远程) {
-    console.warn("处于远程环境，使用可编辑字库数据构建原始字库");
     const 原始字库数据 = get(原始可编辑字库数据原子);
     return new 原始字库(原始字库数据);
   }
@@ -220,7 +220,8 @@ export const 标准字形自定义原子 = atom((get) => {
 export const 如确定字库原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 字形自定义 = get(标准字形自定义原子);
-  return 原始字库.确定(字形自定义);
+  const 字形来源列表 = get(字形来源列表原子);
+  return 原始字库.确定(字形自定义, 字形来源列表);
 });
 
 export const 如字库原子 = atom(async (get) => {
@@ -260,7 +261,11 @@ export const 如笔顺映射原子 = atom(async (get) => {
   const 字库 = 如字库.value;
   const result = new Map<string, string>();
   for (const [字符, { glyphs }] of Object.entries(字库._get())) {
-    const glyph = glyphs[0]!;
+    const glyph = glyphs[0];
+    if (!glyph) {
+      result.set(字符, "");
+      continue;
+    }
     if (result.has(字符)) continue;
     if (glyph.type === "basic_component") {
       const 笔顺 = glyph.strokes.map((x) => 默认分类器[x.feature]).join("");

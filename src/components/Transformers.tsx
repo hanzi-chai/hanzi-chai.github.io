@@ -90,7 +90,7 @@ const 示例列表: 变换器[] = [
       operator: "⿲",
       operandList: [
         "彳",
-        { operator: "⿱", operandList: ["\uE990", { id: 1 }] },
+        { operator: "⿳", operandList: ["山", "一", { id: 1 }] },
         "攵",
       ],
     },

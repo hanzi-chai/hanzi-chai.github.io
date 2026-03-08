@@ -150,6 +150,12 @@ export default function Debugger() {
     if (!编码列表.includes(编码)) return "incorrect";
     return "correct";
   };
+  const 合法 = (词: string) => {
+    if (字数(词) !== 1) return false;
+    const data = 原始字库.查询(词);
+    if (!data) return false;
+    return 过滤函数(词, data);
+  };
 
   const 状态统计: Record<校对结果, number> = {
     correct: 0,
@@ -159,6 +165,7 @@ export default function Debugger() {
   let dataSource: 校对条目[] = [];
   if (校对方向 === "forward") {
     for (const { 词, 全码, 元素序列 } of 联合结果) {
+      if (!合法(词)) continue;
       const 参考编码列表 = 外部编码映射.get(词) ?? [];
       const 状态 = 获取状态(参考编码列表, 全码);
       状态统计[状态]++;
@@ -173,6 +180,7 @@ export default function Debugger() {
     }
   } else {
     for (const { 词, 编码 } of 外部码表 || []) {
+      if (!合法(词)) continue;
       const 内部列表 = 内部编码映射.get(词) ?? [];
       const 参考编码列表 = 内部列表.map((x) => x.全码);
       const 状态 = 获取状态(参考编码列表, 编码);
@@ -189,11 +197,8 @@ export default function Debugger() {
   }
 
   dataSource = dataSource.filter((x) => {
-    if (字数(x.词) !== 1) return false;
-    const data = 原始字库.查询(x.词);
-    if (!data) return false;
     if (只显示不正确 && x.状态 !== "incorrect") return false;
-    return 过滤函数(x.词, data);
+    return true;
   });
 
   const columns: ColumnsType<校对条目> = [
@@ -259,7 +264,6 @@ export default function Debugger() {
           value={码表格式}
           onChange={设置码表格式}
           options={码表格式选项}
-          style={{ width: 160 }}
         />
         {外部码表 !== undefined && `已加载码表，条数：${外部码表.length}`}
       </Flex>
@@ -275,7 +279,6 @@ export default function Debugger() {
         <Form.Item label="校对范围" style={{ margin: 0 }}>
           <Select
             value={校对范围}
-            style={{ width: 96 }}
             options={filterOptions}
             onChange={设置校对范围}
           />
@@ -283,10 +286,9 @@ export default function Debugger() {
         <Form.Item label="校对方向" style={{ margin: 0 }}>
           <Select
             value={校对方向}
-            style={{ width: 96 }}
             options={[
-              { label: "方案 → 码表", value: "forward" },
-              { label: "码表 → 方案", value: "reverse" },
+              { label: "以系统码表为主体", value: "forward" },
+              { label: "以外部码表为主体", value: "reverse" },
             ]}
             onChange={设置校对方向}
           />
@@ -331,7 +333,7 @@ export default function Debugger() {
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         {selectedElement && (
           <ElementDetail
