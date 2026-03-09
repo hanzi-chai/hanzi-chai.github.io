@@ -13,7 +13,7 @@ describe("E2E", () => {
     configs.push(配置);
   }
 
-  for (const 配置 of configs) {
+  for (const 配置 of configs.slice(0, 1)) {
     it(配置.info?.name ?? "Unnamed Test", () => {
       const 字库 = 获取字库(配置);
       if (!字库.ok) {

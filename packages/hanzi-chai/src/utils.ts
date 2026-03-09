@@ -446,9 +446,10 @@ export const 添加优先简码 = <T extends 组装条目 | 动态组装条目>(
   return result;
 };
 
-export const 是地区标签 = (tag: string) => /^[GHTJKNVMSBU]$/.test(tag);
+export const 是源标签 = (tag: string): tag is 源标签 =>
+  /^[GHTJKNVMSBU]$/.test(tag);
 
-export const 所有地区标签 = [
+export const 所有源标签 = [
   "G",
   "H",
   "T",
@@ -462,8 +463,9 @@ export const 所有地区标签 = [
   "U",
 ] as const;
 
-export const 获取地区标签列表 = (glyph: 字形数据) =>
-  (glyph.tags ?? []).filter(是地区标签);
+export type 源标签 = (typeof 所有源标签)[number];
+
+export type 源标签集合 = Set<源标签>;
 
 export const 标准化自定义 = (字形自定义: 兼容字形自定义) => {
   const 标准字形自定义: 字形自定义 = {};

@@ -1,6 +1,7 @@
 import type { 曲线关系 } from "./bezier.js";
-import type { 部件图形 } from "./component.js";
+import type { 部件 } from "./component.js";
 import { type 元素, type 分析配置, type 安排, 是归并 } from "./config.js";
+import type { 字根 } from "./repertoire.js";
 
 const 默认筛选器列表: string[] = [
   "结构完整",
@@ -12,7 +13,7 @@ const 默认筛选器列表: string[] = [
 ];
 
 interface 拆分字根信息 {
-  名称: string;
+  字根: 字根;
   笔画索引: number[];
   笔画二进制表示: number;
 }
@@ -20,8 +21,8 @@ interface 拆分字根信息 {
 type 拆分方式 = 拆分字根信息[];
 
 interface 拆分环境 {
-  部件图形: 部件图形;
-  二进制字根映射: Map<number, string>;
+  部件图形: 部件;
+  二进制字根映射: Map<number, 字根>;
   分析配置: 分析配置;
   字根决策: Map<元素, 安排>;
 }
@@ -113,8 +114,8 @@ class 非形近根 implements 筛选器 {
   static readonly type = "非形近根";
   评价(scheme: 拆分方式, { 字根决策: roots }: 拆分环境) {
     let 形近根数量 = 0;
-    for (const { 名称 } of scheme) {
-      const value = roots.get(名称);
+    for (const { 字根 } of scheme) {
+      const value = roots.get(字根.获取名称());
       if (value && 是归并(value)) {
         形近根数量 += 1;
       }
@@ -132,7 +133,9 @@ class 多强字根 implements 筛选器 {
   static readonly type = "多强字根";
   评价(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
     const 强字根列表 = analysis?.strong || [];
-    const count = scheme.filter((x) => 强字根列表.includes(x.名称)).length;
+    const count = scheme.filter((x) =>
+      强字根列表.includes(x.字根.获取名称()),
+    ).length;
     return [-count];
   }
 }
@@ -146,7 +149,7 @@ class 少弱字根 implements 筛选器 {
   static readonly type = "少弱字根";
   评价(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
     const weak = analysis?.weak || [];
-    const count = scheme.filter((x) => weak.includes(x.名称)).length;
+    const count = scheme.filter((x) => weak.includes(x.字根.获取名称())).length;
     return [count];
   }
 }
@@ -155,7 +158,7 @@ const 计算出现次数 = (
   relationType: 曲线关系["type"],
   avoidRelationType: 曲线关系["type"][],
   scheme: 拆分方式,
-  component: 部件图形,
+  component: 部件,
 ) => {
   let count = 0;
   for (const [i, { 笔画索引: bi }] of scheme.entries()) {
@@ -238,7 +241,7 @@ class 同向笔画 implements 筛选器 {
  */
 class 结构完整 implements 筛选器 {
   static readonly type = "结构完整";
-  评价(scheme: 拆分方式, { 二进制字根映射: rootMap }: 拆分环境) {
+  评价(scheme: 拆分方式, { 二进制字根映射 }: 拆分环境) {
     const priorities = [
       "口",
       "囗",
@@ -252,8 +255,8 @@ class 结构完整 implements 筛选器 {
       "\ue407" /* 央三 */,
     ];
     let 破坏结构完整 = 0;
-    for (const [二进制表示, 名称] of rootMap) {
-      if (priorities.includes(名称)) {
+    for (const [二进制表示, 字根] of 二进制字根映射) {
+      if (priorities.includes(字根.获取名称())) {
         if (
           !scheme.some(({ 笔画二进制表示 }) =>
             结构完整.contains(笔画二进制表示, 二进制表示),

@@ -1,4 +1,5 @@
 import type { 笔画名称 } from "./classifier.js";
+import type { 源标签集合 } from "./main.js";
 
 export type N1 = [number];
 export type N2 = [number, number];
@@ -88,11 +89,6 @@ export interface 拼接部件数据 extends Omit<复合体数据, "type"> {
   type: "spliced_component";
 }
 
-/**
- * 部件，包括基本部件和派生部件
- */
-export type 部件数据 = 基本部件数据 | 衍生部件数据 | 拼接部件数据;
-
 export const 结构表示符列表 = [
   "⿰",
   "⿱",
@@ -153,9 +149,9 @@ export interface 复合体参数 {
  */
 export interface 复合体数据 {
   type: "compound";
+  tags?: string[];
   operator: 结构表示符;
   operandList: string[];
-  tags?: string[];
   order?: 笔画块[];
   parameters?: 复合体参数;
 }
@@ -174,21 +170,21 @@ export interface 全等数据 {
 /**
  * 一个字形可以是复合体、部件或全等
  */
-export type 字形数据 = 部件数据 | 复合体数据 | 全等数据;
+export type 字形数据 =
+  | 基本部件数据
+  | 衍生部件数据
+  | 拼接部件数据
+  | 复合体数据
+  | 全等数据;
 
-/**
- *
- */
-export type 约化字形数据 = 基本部件数据 | 复合体数据;
+export type 带标签<T> = Omit<T, "tags"> & { user: boolean; tags: 源标签集合 };
 
-export interface 部件树数据 {
-  type: "tree";
-  operator: 结构表示符;
-  operandList: (部件树数据 | 基本部件数据)[];
-  tags?: string[];
-  order?: 笔画块[];
-  parameters?: 复合体参数;
-}
+export type 标签字形数据 =
+  | 带标签<基本部件数据>
+  | 带标签<衍生部件数据>
+  | 带标签<拼接部件数据>
+  | 带标签<复合体数据>
+  | 带标签<全等数据>;
 
 /**
  * 原始字符 PrimitiveCharacter
@@ -212,17 +208,5 @@ export interface 原始汉字数据 {
   ambiguous: boolean;
 }
 
-/**
- * 字符 Character
- * 与原始字符相比，省略了 ambiguous 字段，并且将 glyphs 字段替换为唯一的一个 glyph
- * 此时的 glyph 要么是基本部件，要么是复合体
- */
-export interface 汉字数据 extends Omit<原始汉字数据, "glyphs" | "ambiguous"> {
-  glyphs: 约化字形数据[];
-}
-
 /** 原始字库数据，为字符名称到原始字符的映射 */
 export type 原始字库数据 = Record<string, 原始汉字数据>;
-
-/** 字库数据，为字符名称到字符的映射 */
-export type 字库数据 = Record<string, 汉字数据>;

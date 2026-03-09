@@ -23,7 +23,7 @@ const crossing = new 能连不交();
 const attaching = new 能散不连();
 
 const g = (ns: number[]): 拆分方式 => ns.map((n) => ({
-  名称: env.二进制字根映射.get(n)!,
+  字根: env.二进制字根映射.get(n)!,
   笔画索引: 天!.二进制转索引(n),
   笔画二进制表示: n,
 }))
@@ -65,6 +65,6 @@ describe("select", () => {
     const a = 天!.给出部件分析(配置);
     if (!a.ok) throw new Error("Failed to analyze 天");
     const 字根序列 = a.value.字根序列;
-    expect(字根序列).toEqual(["1", "大"]);
+    expect(字根序列.map(x => x.获取名称())).toEqual(["1", "大"]);
   });
 });

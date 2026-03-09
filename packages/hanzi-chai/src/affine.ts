@@ -1,14 +1,14 @@
-import { 加 } from "./math.js";
-import type {
-  复合体数据,
-  绘制,
-  结构表示符,
-  向量,
-  矢量图形数据,
-  矢量笔画数据,
-} from "./data.js";
 import { cloneDeep } from "lodash-es";
 import { 区间 } from "./bezier.js";
+import type {
+  向量,
+  复合体数据,
+  矢量图形数据,
+  矢量笔画数据,
+  结构表示符,
+  绘制,
+} from "./data.js";
+import { 加 } from "./math.js";
 
 class 仿射变换 {
   static id = new 仿射变换(1, 1);

@@ -1,4 +1,5 @@
 import type { 默认汉字分析 } from "./assembly.js";
+import { 默认分类器 } from "./classifier.js";
 import type {
   条件节点配置,
   源节点配置,
@@ -6,11 +7,8 @@ import type {
   运算符,
   键盘配置,
 } from "./config.js";
+import type { 字根 } from "./repertoire.js";
 import { 展开决策, 计算当前或潜在长度 } from "./utils.js";
-
-export interface 额外信息 {
-  字根笔画映射: Map<string, number[]>;
-}
 
 interface 基本 {
   type: string;
@@ -185,7 +183,6 @@ export class 取码器 {
     private sources: Record<string, 源节点配置>,
     private conditions: Record<string, 条件节点配置>,
     private max_length: number,
-    private extra: 额外信息,
   ) {
     const { mapping, mapping_space } = keyboard;
     const expanded = 展开决策(mapping);
@@ -246,8 +243,8 @@ export class 取码器 {
 
   寻找(object: 取码对象, result: 默认汉字分析) {
     const { 拼写运算, 字根序列 } = result;
-    let root: string | undefined;
-    let strokes: number[] | undefined;
+    let root: 字根 | undefined;
+    let strokes: number[];
     let name: string;
     let stroke1: number | undefined;
     let stroke2: number | undefined;
@@ -261,16 +258,15 @@ export class 取码器 {
         name = object.subtype;
         return 拼写运算.get(name);
       case "字根":
-        return signedIndex(字根序列, object.rootIndex);
+        root = signedIndex(字根序列, object.rootIndex);
+        if (root === undefined) return undefined;
+        if (root.获取名称 === undefined) console.log(字根序列);
+        return root.获取名称();
       case "笔画":
       case "二笔":
         root = signedIndex(字根序列, object.rootIndex);
         if (root === undefined) return undefined;
-        strokes = this.extra.字根笔画映射.get(root);
-        if (strokes === undefined) {
-          if (Math.abs(object.strokeIndex) === 1) return root;
-          return undefined;
-        }
+        strokes = root.获取笔画序列(默认分类器);
         if (object.type === "笔画") {
           const number = signedIndex(strokes, object.strokeIndex);
           return number?.toString();
@@ -290,7 +286,7 @@ export class 取码器 {
           object.rootIndex,
         );
       default:
-        special = result[object.type as "字根序列"];
+        special = (result as any)[object.type] as string[];
         if (!Array.isArray(special)) return undefined;
         return signedIndex(special, object.index);
     }

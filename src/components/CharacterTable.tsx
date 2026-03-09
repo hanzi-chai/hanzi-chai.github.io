@@ -44,13 +44,7 @@ import {
   Rename,
 } from "~/components/Action";
 import type { 原始汉字数据, 字形数据 } from "~/lib";
-import {
-  区块列表,
-  所有地区标签,
-  是用户私用区,
-  是私用区,
-  查询区块,
-} from "~/lib";
+import { 区块列表, 所有源标签, 是用户私用区, 是私用区, 查询区块 } from "~/lib";
 import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/utils";
 import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
@@ -440,7 +434,7 @@ export default function CharacterTable() {
         <Form.Item label="选择字形来源" style={{ margin: 0 }}>
           <Select
             mode="multiple"
-            options={所有地区标签.map((x) => ({ label: x, value: x }))}
+            options={所有源标签.map((x) => ({ label: x, value: x }))}
             value={字形来源列表}
             onChange={设置字形来源列表}
           />

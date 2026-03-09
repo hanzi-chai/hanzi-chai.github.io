@@ -1,19 +1,146 @@
 import { range, sortBy } from "lodash-es";
+import type { 分类器, 笔画名称 } from "./classifier.js";
 import {
   type 张码部件分析,
   计算张码补码,
-  type 逸码拆分方式,
   type 逸码部件分析,
+  部件,
   type 默认部件分析,
 } from "./component.js";
-import type { 复合体数据, 结构表示符 } from "./data.js";
-import type { 基本分析, 字形分析配置 } from "./repertoire.js";
-import { default_err, ok, type Result, 排列组合 } from "./utils.js";
+import type { 笔画块, 结构表示符 } from "./data.js";
+import {
+  二笔字根,
+  type 基本分析,
+  type 基本复合体分析,
+  type 字形分析配置,
+  type 字根,
+  是复合体,
+  是部件,
+  type 统一字形,
+} from "./repertoire.js";
+import {
+  default_err,
+  ok,
+  type Result,
+  排列组合,
+  type 源标签集合,
+} from "./utils.js";
 
-interface 复合体分析器<
+class 复合体 {
+  private 笔画列表: 笔画名称[];
+
+  constructor(
+    public 字符: string,
+    public 标签集合: 源标签集合,
+    public 结构表示符: 结构表示符,
+    public 部分列表: 统一字形[],
+    public 笔顺: 笔画块[],
+  ) {
+    this.笔画列表 = this.计算笔画列表(笔顺, 部分列表);
+  }
+
+  /**
+   * 将复合体递归渲染为 SVG 图形
+   *
+   * @param compound - 复合体
+   * @param repertoire - 原始字符集
+   *
+   * @returns SVG 图形或错误
+   */
+  计算笔画列表(笔顺: 笔画块[], 部分列表: 统一字形[]): 笔画名称[] {
+    const 各部分笔画列表: 笔画名称[][] = [];
+    for (const 字形 of 部分列表) {
+      if (字形 instanceof 部件) {
+        各部分笔画列表.push(字形.矢量图形.map((x) => x.feature));
+      } else {
+        各部分笔画列表.push(字形.笔画列表);
+      }
+    }
+    const merged: 笔画名称[] = [];
+    for (const { index, strokes } of 笔顺) {
+      const seq = 各部分笔画列表[index];
+      if (seq === undefined) continue;
+      if (strokes === 0) {
+        merged.push(...seq);
+      } else {
+        merged.push(...seq.slice(0, strokes));
+        各部分笔画列表[index] = seq.slice(strokes);
+      }
+    }
+    return merged;
+  }
+
+  按首笔排序部分(): 统一字形[] {
+    const 部分列表 = sortBy(range(this.部分列表.length), (i) =>
+      this.笔顺.findIndex((b) => b.index === i),
+    ).map((i) => this.部分列表[i]!);
+    return 部分列表;
+  }
+
+  获取笔画序列(classifier: 分类器) {
+    return this.笔画列表.map((f) => classifier[f]);
+  }
+}
+
+abstract class 复合体分析器<
   部件分析 extends 基本分析 = 基本分析,
   复合体分析 extends 基本分析 = 基本分析,
 > {
+  public 部件分析结果: Map<部件, 部件分析> = new Map();
+  public 动态部件分析结果: Map<部件, 部件分析[]> = new Map();
+
+  查找部件分析结果(部件: 部件): 部件分析 | undefined {
+    return this.部件分析结果.get(部件);
+  }
+
+  查找动态部件分析结果(部件: 部件): 部件分析[] | undefined {
+    return this.动态部件分析结果.get(部件);
+  }
+
+  顺序取根(字形: 统一字形): 字根[] {
+    if (是部件(字形)) return this.查找部件分析结果(字形)!.字根序列;
+    const 复合体 = 字形 as 复合体;
+    const 剩余部分结果 = 复合体.部分列表.map((字形) => {
+      let 字根序列: 字根[];
+      let 部件分析: 部件分析 | undefined;
+      if (是部件(字形)) {
+        部件分析 = this.查找部件分析结果(字形);
+        字根序列 = 部件分析!.字根序列;
+      } else 字根序列 = this.顺序取根(字形);
+      return {
+        剩余序列: 字根序列,
+        部件分析,
+        已取笔画数: 0,
+      };
+    });
+    const 字根序列: 字根[] = [];
+    for (const { index, strokes } of 复合体.笔顺) {
+      const 剩余部分 = 剩余部分结果[index];
+      const 部分名称 = 复合体.部分列表[index];
+      if (部分名称 === undefined || 剩余部分 === undefined) continue; // 忽略无效部分
+      const 部件分析 = 剩余部分.部件分析;
+      if (
+        strokes === 0 ||
+        部件分析 === undefined ||
+        !("当前拆分方式" in 部件分析)
+      ) {
+        字根序列.push(...剩余部分.剩余序列);
+        剩余部分.剩余序列 = [];
+      } else {
+        const { 当前拆分方式 } = 部件分析 as any as 默认部件分析;
+        const toTake = 当前拆分方式.拆分方式.filter(
+          (x) =>
+            x.笔画索引[0]! >= 剩余部分.已取笔画数 &&
+            x.笔画索引[0]! <= 剩余部分.已取笔画数 + strokes - 1,
+        ).length;
+        字根序列.push(...剩余部分.剩余序列.slice(0, toTake));
+        剩余部分.剩余序列 = 剩余部分.剩余序列.slice(toTake);
+        剩余部分.已取笔画数 += strokes;
+      }
+    }
+    return 字根序列;
+  }
+
   /**
    * 对复合体进行拆分
    *
@@ -21,95 +148,48 @@ interface 复合体分析器<
    * @param 复合体 复合体字形数据
    * @param 部分分析列表 复合体各部分的拆分结果列表
    */
-  分析(
-    名称: string,
-    复合体: 复合体数据,
-    部分分析列表: (部件分析 | 复合体分析)[],
-  ): Result<复合体分析, Error>;
+  abstract 分析(复合体: 复合体): Result<复合体分析, Error>;
 
-  动态分析?(
-    名称: string,
-    复合体: 复合体数据,
-    部分分析列表: (部件分析[] | 复合体分析[])[],
-  ): Result<复合体分析[], Error>;
-}
-
-type 默认混合分析 = 默认部件分析 | 基本分析;
-
-function 按笔顺组装(
-  字根序列列表: string[][],
-  部分分析列表: 默认混合分析[],
-  glyph: 复合体数据,
-): string[] {
-  if (glyph.order === undefined) return 字根序列列表.flat();
-  const 字根序列: string[] = [];
-  const 剩余部分结果 = 字根序列列表.map((x) => ({
-    剩余序列: x.slice(),
-    已取笔画数: 0,
-  }));
-  for (const { index, strokes } of glyph.order) {
-    const 剩余部分 = 剩余部分结果[index];
-    const 部分名称 = glyph.operandList[index];
-    if (部分名称 === undefined || 剩余部分 === undefined) continue; // 忽略无效部分
-    const 部件分析 = 部分分析列表[index];
-    if (
-      strokes === 0 ||
-      部件分析 === undefined ||
-      !("当前拆分方式" in 部件分析)
-    ) {
-      字根序列.push(...剩余部分.剩余序列);
-      剩余部分.剩余序列 = [];
-    } else {
-      const { 当前拆分方式 } = 部件分析;
-      const toTake = 当前拆分方式.拆分方式.filter(
-        (x) =>
-          x.笔画索引[0]! >= 剩余部分.已取笔画数 &&
-          x.笔画索引[0]! <= 剩余部分.已取笔画数 + strokes - 1,
-      ).length;
-      字根序列.push(...剩余部分.剩余序列.slice(0, toTake));
-      剩余部分.剩余序列 = 剩余部分.剩余序列.slice(toTake);
-      剩余部分.已取笔画数 += strokes;
-    }
+  动态分析(_: 复合体): Result<复合体分析[], Error> {
+    return default_err("未实现动态分析");
   }
-  return 字根序列;
 }
 
-export interface 默认复合体分析 extends 基本分析 {
+export interface 默认复合体分析 extends 基本复合体分析 {
   结构: 结构表示符;
 }
 
-class 默认复合体分析器 implements 复合体分析器<默认部件分析, 默认复合体分析> {
+class 默认复合体分析器 extends 复合体分析器<默认部件分析, 默认复合体分析> {
   static readonly type = "默认";
-  constructor(private config: 字形分析配置) {}
-
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 默认混合分析[]) {
-    if (this.config.字根决策.has(名称))
-      return ok({
-        类型: "复合体" as const,
-        字根序列: [名称],
-        结构: 复合体.operator,
-      });
-    const 全部字根 = 部分分析列表.map((x) => x.字根序列);
-    return ok({
-      类型: "复合体" as const,
-      结构: 复合体.operator,
-      字根序列: 按笔顺组装(全部字根, 部分分析列表, 复合体),
-    });
+  constructor(private config: 字形分析配置) {
+    super();
   }
 
-  动态分析(
-    名称: string,
-    复合体: 复合体数据,
-    部分分析列表: (默认部件分析[] | 默认复合体分析[])[],
-  ) {
+  分析(复合体: 复合体) {
+    const 分析: 默认复合体分析 = {
+      类型: "复合体",
+      结构: 复合体.结构表示符,
+      字根序列: [],
+    };
+    const 字根 = this.config.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
+    } else {
+      分析.字根序列.push(...this.顺序取根(复合体));
+    }
+    return ok(分析);
+  }
+
+  动态分析(复合体: 复合体) {
     const 结果列表: 默认复合体分析[] = [];
-    if (this.config.字根决策.has(名称) || this.config.可选字根.has(名称)) {
+    const 字根 = this.config.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
       结果列表.push({
-        类型: "复合体" as const,
-        字根序列: [名称],
-        结构: 复合体.operator,
+        类型: "复合体",
+        字根序列: [字根],
+        结构: 复合体.结构表示符,
       });
-      if (!this.config.可选字根.has(名称)) return ok(结果列表);
+      if (!this.config.可选字根.has(复合体.字符)) return ok(结果列表);
     }
     for (const 组合 of 排列组合(部分分析列表 as 默认部件分析[][])) {
       const 全部字根 = 组合.map((x) => x.字根序列);
@@ -123,395 +203,370 @@ class 默认复合体分析器 implements 复合体分析器<默认部件分析,
   }
 }
 
-class 真码复合体分析器 implements 复合体分析器<默认部件分析> {
+class 真码复合体分析器 extends 复合体分析器<默认部件分析> {
   static readonly type = "真码";
-  constructor(private config: 字形分析配置) {}
+  constructor(private config: 字形分析配置) {
+    super();
+  }
 
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 默认混合分析[]) {
-    if (this.config.字根决策.has(名称))
-      return ok({ 类型: "复合体" as const, 字根序列: [名称] });
-    const 字根序列: string[] = [];
-    if (复合体.operator === "⿶") {
-      // 下包围结构优先取内部
-      字根序列.push(...部分分析列表[1]!.字根序列);
-      字根序列.push(...部分分析列表[0]!.字根序列);
+  分析(复合体: 复合体) {
+    const 分析: 基本复合体分析 = {
+      类型: "复合体",
+      字根序列: [],
+    };
+    const 字根 = this.config.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
     } else {
-      部分分析列表.map((x) => 字根序列.push(...x.字根序列));
-    }
-    return ok({ 类型: "复合体" as const, 字根序列 });
-  }
-}
-
-function 按首笔排序<T>(部分结果: T[], glyph: 复合体数据): T[] {
-  if (glyph.order === undefined) return 部分结果;
-  const orderedResults = sortBy(range(部分结果.length), (i) =>
-    glyph.order!.findIndex((b) => b.index === i),
-  ).map((i) => 部分结果[i]!);
-  return orderedResults;
-}
-
-interface 分部取码复合体分析 extends 基本分析 {
-  类型: "复合体";
-  完整字根序列: string[];
-}
-
-type 首右分析 = 默认部件分析 | 分部取码复合体分析;
-
-class 首右复合体分析器
-  implements 复合体分析器<默认部件分析, 分部取码复合体分析>
-{
-  static readonly type = "首右";
-  constructor(private config: 字形分析配置) {}
-
-  get(x: 首右分析) {
-    return "完整字根序列" in x ? x.完整字根序列 : x.字根序列;
-  }
-
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 分部取码复合体分析[]) {
-    if (this.config.字根决策.has(名称)) {
-      return ok({
-        类型: "复合体" as const,
-        字根序列: [名称],
-        完整字根序列: [名称],
-      });
-    }
-    const [第一部, 第二部] = 按首笔排序(部分分析列表, 复合体);
-    if (!第一部 || !第二部) return default_err(`${名称} 缺少部分`);
-    const 全部字根 = 部分分析列表.map((x) => x.字根序列);
-    const 完整字根序列 = 按笔顺组装(全部字根, 部分分析列表, 复合体);
-    const 字根序列: string[] = /[⿰⿲]/.test(复合体.operator)
-      ? [this.get(第一部)[0]!, this.get(第二部)[0]!]
-      : [完整字根序列[0]!, 完整字根序列.at(-1)!];
-    return ok({ 类型: "复合体" as const, 字根序列, 完整字根序列 });
-  }
-}
-
-class 二笔复合体分析器 implements 复合体分析器 {
-  static readonly type = "二笔";
-  constructor(private 配置: 字形分析配置) {}
-
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 默认混合分析[]) {
-    if (this.配置.字根决策.has(名称))
-      return ok({ 类型: "复合体" as const, 字根序列: [名称] });
-    const 字根序列: string[] = [];
-    const 排序部分结果 = 按首笔排序(部分分析列表, 复合体);
-    for (const [index, part] of 排序部分结果.entries()) {
-      if (index === 排序部分结果.length - 1) 字根序列.push(...part.字根序列);
-      else 字根序列.push(part.字根序列[0]!);
-    }
-    return ok({ 类型: "复合体" as const, 字根序列 });
-  }
-}
-
-interface 星空键道复合体分析 extends 基本分析 {
-  首部字根序列: string[];
-  余部字根序列: string[];
-}
-
-type 星空键道分析 = 默认部件分析 | 星空键道复合体分析;
-
-class 星空键道复合体分析器
-  implements 复合体分析器<默认部件分析, 星空键道复合体分析>
-{
-  static readonly type = "星空键道";
-  constructor(private 配置: 字形分析配置) {}
-
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 星空键道分析[]) {
-    if (this.配置.字根决策.has(名称)) {
-      return ok({
-        类型: "复合体" as const,
-        字根序列: [名称],
-        首部字根序列: [],
-        余部字根序列: [],
-      });
-    }
-    const 字根序列 = 按笔顺组装(
-      部分分析列表.map((x) => x.字根序列),
-      部分分析列表,
-      复合体,
-    );
-    const 首部字根序列: string[] = [];
-    const 余部字根序列: string[] = [];
-    if (复合体.order?.[0]?.index === 1) {
-      // 第一个书写的部分只写了一笔，视同独体字取码
-    } else {
-      const 排序部分结果 = 按首笔排序(部分分析列表, 复合体);
-      for (const [index, part] of 排序部分结果.entries()) {
-        if (index === 0) {
-          首部字根序列.push(...part.字根序列);
-        } else {
-          余部字根序列.push(...part.字根序列);
+      if (复合体.结构表示符 === "⿶") {
+        // 下包围结构优先取内部
+        for (const 字形 of [...复合体.部分列表].reverse()) {
+          分析.字根序列.push(...this.顺序取根(字形));
+        }
+      } else {
+        for (const 字形 of 复合体.部分列表) {
+          分析.字根序列.push(...this.顺序取根(字形));
         }
       }
     }
-    return ok({
-      类型: "复合体" as const,
-      字根序列,
-      首部字根序列,
-      余部字根序列,
-    });
+    return ok(分析);
   }
 }
 
-interface 张码复合体分析 extends 分部取码复合体分析 {
-  完整字根序列: string[];
+class 首右复合体分析器 extends 复合体分析器<默认部件分析> {
+  static readonly type = "首右";
+  constructor(private config: 字形分析配置) {
+    super();
+  }
+
+  分析(复合体: 复合体) {
+    const 分析: 基本复合体分析 = {
+      类型: "复合体",
+      字根序列: [],
+    };
+    const 字根 = this.config.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
+    } else {
+      const [第一部, 第二部] = 复合体.按首笔排序部分();
+      if (!第一部 || !第二部) return default_err(`${复合体.字符} 缺少部分`);
+      const 完整字根序列 = this.顺序取根(复合体);
+      const 第一部字根序列 = this.顺序取根(第一部);
+      const 第二部字根序列 = this.顺序取根(第二部);
+      if (/[⿰⿲]/.test(复合体.结构表示符)) {
+        分析.字根序列 = [第一部字根序列[0]!, 第二部字根序列[0]!];
+      } else {
+        分析.字根序列 = [完整字根序列[0]!, 完整字根序列.at(-1)!];
+      }
+    }
+    return ok(分析);
+  }
+}
+
+class 二笔复合体分析器 extends 复合体分析器 {
+  static readonly type = "二笔";
+  constructor(private 配置: 字形分析配置) {
+    super();
+  }
+
+  分析(复合体: 复合体) {
+    const 分析: 基本复合体分析 = {
+      类型: "复合体",
+      字根序列: [],
+    };
+    const 字根 = this.配置.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
+      return ok(分析);
+    }
+    const 排序部分结果 = 复合体.按首笔排序部分();
+    if (排序部分结果.length === 3) {
+      for (const 部分 of 排序部分结果) {
+        const 字根序列 = this.顺序取根(部分);
+        字根序列.push(字根序列[0]!);
+      }
+    } else {
+      const [第一部, 第二部] = 排序部分结果;
+      if (!第一部 || !第二部) return default_err(`${复合体.字符} 缺少部分`);
+      分析.字根序列.push(this.顺序取根(第一部)[0]!);
+      if (第二部 instanceof 部件) {
+        分析.字根序列.push(...this.顺序取根(第二部));
+      } else {
+        const [第二部之一, 第二部之二] = 第二部.按首笔排序部分();
+        if (!第二部之一 || !第二部之二)
+          return default_err(`${复合体.字符} 缺少部分`);
+        分析.字根序列.push(this.顺序取根(第二部之一)[0]!);
+        分析.字根序列.push(this.顺序取根(第二部之二)[0]!);
+      }
+    }
+    return ok(分析);
+  }
+}
+
+interface 星空键道复合体分析 extends 基本复合体分析 {
+  首部字根序列: 字根[];
+  余部字根序列: 字根[];
+}
+
+class 星空键道复合体分析器 extends 复合体分析器<
+  默认部件分析,
+  星空键道复合体分析
+> {
+  static readonly type = "星空键道";
+  constructor(private 配置: 字形分析配置) {
+    super();
+  }
+
+  分析(复合体: 复合体) {
+    const 分析: 星空键道复合体分析 = {
+      类型: "复合体",
+      字根序列: [],
+      首部字根序列: [],
+      余部字根序列: [],
+    };
+    const 字根 = this.配置.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
+      return ok(分析);
+    }
+    分析.字根序列 = this.顺序取根(复合体);
+    if (复合体.笔顺[0]?.index === 1) {
+      // 第一个书写的部分只写了一笔，视同独体字取码
+    } else {
+      const 排序部分结果 = 复合体.按首笔排序部分();
+      for (const [index, part] of 排序部分结果.entries()) {
+        if (index === 0) {
+          分析.首部字根序列.push(...this.顺序取根(part));
+        } else {
+          分析.余部字根序列.push(...this.顺序取根(part));
+        }
+      }
+    }
+    return ok(分析);
+  }
+}
+
+interface 张码复合体分析 extends 基本复合体分析 {
   结构符: 结构表示符;
-  部分分析列表: 张码分析[];
   补码: [string];
   为准码元: ["false"];
 }
 
-type 张码分析 = 张码部件分析 | 张码复合体分析;
-
-class 张码复合体分析器 implements 复合体分析器<张码部件分析, 张码复合体分析> {
+class 张码复合体分析器 extends 复合体分析器<张码部件分析, 张码复合体分析> {
   static readonly type = "张码";
-  constructor(private 配置: 字形分析配置) {}
-
-  get(x: 张码分析) {
-    return "完整字根序列" in x ? x.完整字根序列 : x.字根序列;
+  constructor(private 配置: 字形分析配置) {
+    super();
   }
 
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 张码分析[]) {
-    const 字根序列: string[] = [];
-    const 完整字根序列: string[] = [];
-    if (this.配置.字根决策.has(名称)) {
-      字根序列.push(名称);
-      完整字根序列.push(名称);
+  分析(复合体: 复合体) {
+    const 分析: 张码复合体分析 = {
+      类型: "复合体",
+      字根序列: [],
+      结构符: 复合体.结构表示符,
+      补码: [""],
+      为准码元: ["false"],
+    };
+    const 字根 = this.配置.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
+      return ok(分析);
     } else {
-      if (
-        复合体.operator === "⿶" ||
-        (复合体.operator === "⿺" && 复合体.operandList[0] === "\ue09d")
-      ) {
-        for (const part of 部分分析列表.reverse())
-          完整字根序列.push(...this.get(part));
+      const 展开部分列表 = this.展开嵌套上下和左右结构(复合体);
+      if (/[⿱⿳]/.test(复合体.结构表示符)) {
+        分析.字根序列 = this.上下结构取码规则(展开部分列表);
+      } else if (/[⿰⿲]/.test(复合体.结构表示符)) {
+        分析.字根序列 = this.左右结构取码规则(展开部分列表);
       } else {
-        for (const part of 部分分析列表) 完整字根序列.push(...this.get(part));
+        if (
+          复合体.结构表示符 === "⿶" ||
+          (复合体.结构表示符 === "⿺" && 复合体.部分列表[0]?.字符 === "\ue09d")
+        ) {
+          for (const part of [...复合体.部分列表].reverse())
+            分析.字根序列.push(...this.顺序取根(part));
+        } else {
+          for (const part of 复合体.部分列表)
+            分析.字根序列.push(...this.顺序取根(part));
+        }
       }
-      const 展开部分分析列表 = this.展开嵌套上下和左右结构(
-        部分分析列表,
-        复合体.operator,
-      );
-      const 取码结果 = /[⿱⿳]/.test(复合体.operator)
-        ? this.上下结构取码规则(展开部分分析列表)
-        : /[⿰⿲]/.test(复合体.operator)
-          ? this.左右结构取码规则(展开部分分析列表)
-          : [...完整字根序列];
-      字根序列.push(...取码结果);
     }
-    const 补码 = 计算张码补码(字根序列, this.配置.字根笔画映射);
-    return ok({
-      类型: "复合体" as const,
-      字根序列,
-      完整字根序列,
-      结构符: 复合体.operator,
-      部分分析列表,
-      补码: [补码] as [string],
-      为准码元: ["false"] as ["false"],
-    });
+    分析.补码 = [
+      计算张码补码(分析.字根序列, this.配置.分类器, 复合体.结构表示符),
+    ];
+    return ok(分析);
   }
 
-  展开嵌套上下和左右结构(部分分析列表: 张码分析[], 操作符: 结构表示符) {
-    if (部分分析列表.length !== 2 || !/[⿰⿱]/.test(操作符))
-      return 部分分析列表;
-    const 展开后: 张码分析[] = [];
-    const regex = 操作符 === "⿰" ? /[⿰⿲]/ : /[⿱⿳]/;
-    for (const 部分分析 of 部分分析列表) {
-      if (
-        展开后.length < 2 &&
-        "结构符" in 部分分析 &&
-        regex.test(部分分析.结构符)
-      ) {
-        展开后.push(...部分分析.部分分析列表);
+  展开嵌套上下和左右结构(复合体: 复合体) {
+    if (复合体.部分列表.length !== 2 || !/[⿰⿱]/.test(复合体.结构表示符))
+      return 复合体.部分列表;
+    const 展开后: 统一字形[] = [];
+    const regex = 复合体.结构表示符 === "⿰" ? /[⿰⿲]/ : /[⿱⿳]/;
+    for (const 字形 of 复合体.部分列表) {
+      if (展开后.length < 2 && !是部件(字形) && regex.test(字形.结构表示符)) {
+        展开后.push(...字形.部分列表);
       } else {
-        展开后.push(部分分析);
+        展开后.push(字形);
       }
     }
     return 展开后;
   }
 
-  寻找叠眼及其索引(部分分析列表: 张码分析[]) {
-    const index = 部分分析列表.findIndex(
-      (x) => "结构符" in x && /[⿰⿲]/.test(x.结构符),
+  寻找叠眼及其索引(部分列表: 统一字形[]) {
+    const index = 部分列表.findIndex(
+      (x) => !是部件(x) && /[⿰⿲]/.test(x.结构表示符),
     );
-    return [部分分析列表.at(index)! as 张码复合体分析, index] as const;
+    return [部分列表.at(index)! as 复合体, index] as const;
   }
 
-  上下结构取码规则(部分分析列表: 张码分析[]) {
-    const 字根序列: string[] = [];
-    const [叠眼, 叠眼索引] = this.寻找叠眼及其索引(部分分析列表);
-    const 叠眼以上序列: string[] = [];
+  上下结构取码规则(部分列表: 统一字形[]) {
+    const 字根序列: 字根[] = [];
+    const [叠眼, 叠眼索引] = this.寻找叠眼及其索引(部分列表);
+    const 叠眼以上序列: 字根[] = [];
     switch (叠眼索引) {
       case -1: // 没有叠眼
-        for (const 部分分析 of 部分分析列表)
-          字根序列.push(...this.get(部分分析));
+        for (const 字形 of 部分列表) 字根序列.push(...this.顺序取根(字形));
         break;
       case 0: // 叠眼在开头
         // 先取叠眼各部分的首根
-        for (const 部分分析 of 叠眼.部分分析列表)
-          字根序列.push(this.get(部分分析)[0]!);
+        for (const 部分分析 of 叠眼.部分列表)
+          字根序列.push(this.顺序取根(部分分析)[0]!);
         // 然后取剩余部分的首根和末根
-        if (部分分析列表.length > 2) {
-          字根序列.push(this.get(部分分析列表[1]!)[0]!);
-          字根序列.push(this.get(部分分析列表.at(-1)!).at(-1)!);
+        if (部分列表.length > 2) {
+          字根序列.push(this.顺序取根(部分列表[1]!)[0]!);
+          字根序列.push(this.顺序取根(部分列表.at(-1)!).at(-1)!);
         } else {
-          字根序列.push(...this.首末(this.get(部分分析列表[1]!)));
+          字根序列.push(...this.首末(this.顺序取根(部分列表[1]!)));
         }
         break;
       default: // 叠眼在中间或末尾
         // 叠眼以上，最多可顺序取两根
         for (let index = 0; index < 叠眼索引; ++index) {
-          叠眼以上序列.push(...this.get(部分分析列表[index]!));
+          叠眼以上序列.push(...this.顺序取根(部分列表[index]!));
         }
         字根序列.push(...叠眼以上序列.slice(0, 2));
-        if (叠眼索引 + 1 < 部分分析列表.length) {
+        if (叠眼索引 + 1 < 部分列表.length) {
           // 叠眼在中间时：
           // 如果已取两根，则取叠眼首根和叠眼以下的末根
           // 如果只取了一根，则取叠眼第一部分的首根、叠眼最后一部分的首根、叠眼以下的末根
-          字根序列.push(this.get(叠眼.部分分析列表[0]!).at(0)!);
+          字根序列.push(this.顺序取根(叠眼.部分列表[0]!).at(0)!);
           if (字根序列.length === 2) {
-            字根序列.push(this.get(叠眼.部分分析列表.at(-1)!).at(0)!);
+            字根序列.push(this.顺序取根(叠眼.部分列表.at(-1)!).at(0)!);
           }
-          字根序列.push(this.get(部分分析列表.at(-1)!).at(-1)!);
+          字根序列.push(this.顺序取根(部分列表.at(-1)!).at(-1)!);
         } else {
           // 叠眼在末尾时：按正常顺序取根
-          字根序列.push(...this.get(叠眼));
+          字根序列.push(...this.顺序取根(叠眼));
         }
     }
     return 字根序列;
   }
 
-  左右结构取码规则(部分分析列表: 张码分析[]) {
-    const 字根序列: string[] = [];
-    const 左部 = 部分分析列表[0]!;
+  左右结构取码规则(部分列表: 统一字形[]) {
+    const 字根序列: 字根[] = [];
+    const 左部 = 部分列表[0]!;
     let 左部是眼叠 = false;
-    if ("结构符" in 左部 && /[⿱⿳]/.test(左部.结构符)) {
+    if (是复合体(左部) && /[⿱⿳]/.test(左部.结构表示符)) {
       // 左部是叠型
-      const [叠眼, 叠眼索引] = this.寻找叠眼及其索引(左部.部分分析列表);
+      const [叠眼, 叠眼索引] = this.寻找叠眼及其索引(左部.部分列表);
       switch (叠眼索引) {
         case -1: // 没有叠眼
           break;
         case 0: // 叠眼在开头
           左部是眼叠 = true;
           // 取左部叠眼首部分和末部分的首根
-          字根序列.push(this.get(叠眼.部分分析列表[0]!)[0]!);
-          字根序列.push(this.get(叠眼.部分分析列表.at(-1)!)[0]!);
+          字根序列.push(this.顺序取根(叠眼.部分列表[0]!)[0]!);
+          字根序列.push(this.顺序取根(叠眼.部分列表.at(-1)!)[0]!);
           // 取左部剩余部分的末根
-          字根序列.push(this.get(左部.部分分析列表.at(-1)!)[0]!);
+          字根序列.push(this.顺序取根(左部.部分列表.at(-1)!)[0]!);
           break;
         default: // 叠眼在中间或末尾
           左部是眼叠 = true;
           // 取叠眼以上部分的首根
-          字根序列.push(this.get(左部.部分分析列表[0]!)[0]!);
+          字根序列.push(this.顺序取根(左部.部分列表[0]!)[0]!);
           // 取叠眼首部分的首根
-          字根序列.push(this.get(叠眼.部分分析列表[0]!)[0]!);
+          字根序列.push(this.顺序取根(叠眼.部分列表[0]!)[0]!);
           // 叠眼在末尾时，取叠眼末部分的末根
-          if (叠眼索引 === 左部.部分分析列表.length - 1)
-            字根序列.push(this.get(叠眼.部分分析列表.at(-1)!).at(-1)!);
+          if (叠眼索引 === 左部.部分列表.length - 1)
+            字根序列.push(this.顺序取根(叠眼.部分列表.at(-1)!).at(-1)!);
           // 叠眼在中间时，取左部末部分的末根
-          else 字根序列.push(this.get(左部.部分分析列表.at(-1)!).at(-1)!);
+          else 字根序列.push(this.顺序取根(左部.部分列表.at(-1)!).at(-1)!);
       }
     }
     if (左部是眼叠) {
       // 已经处理完左部，直接取右部末码即可
-      字根序列.push(this.get(部分分析列表.at(-1)!).at(-1)!);
+      字根序列.push(this.顺序取根(部分列表.at(-1)!).at(-1)!);
     } else {
       // 一般情况，左部、中部最多各取首尾两根
       let 余部开始索引 = 1;
-      字根序列.push(...this.首末(this.get(左部)));
-      if (部分分析列表.length > 2) {
-        字根序列.push(...this.首末(this.get(部分分析列表[1]!)));
+      字根序列.push(...this.首末(this.顺序取根(左部)));
+      if (部分列表.length > 2) {
+        字根序列.push(...this.首末(this.顺序取根(部分列表[1]!)));
         余部开始索引 = 2;
       }
       // 如果左部和中部已经有 4 根，舍弃一根
       if (字根序列.length === 4) 字根序列.pop();
-      for (const 部分分析 of 部分分析列表.slice(余部开始索引)) {
-        字根序列.push(...this.get(部分分析));
+      for (const 部分分析 of 部分列表.slice(余部开始索引)) {
+        字根序列.push(...this.顺序取根(部分分析));
       }
     }
     return 字根序列;
   }
 
-  首末(x: string[]) {
+  首末(x: 字根[]) {
     return x.length === 1 ? x : [x[0]!, x.at(-1)!];
   }
 }
 
-class 逸码复合体分析器 implements 复合体分析器<逸码部件分析, 逸码部件分析> {
+class 逸码复合体分析器 extends 复合体分析器<逸码部件分析> {
   static readonly type = "逸码";
-  constructor(private 配置: 字形分析配置) {}
+  constructor(private 配置: 字形分析配置) {
+    super();
+  }
 
-  分析(名称: string, 复合体: 复合体数据, 部分分析列表: 逸码部件分析[]) {
-    if (this.配置.字根决策.has(名称)) {
-      const 笔画序列 = this.配置.字根笔画映射.get(名称) ?? [];
-      const 余二拆分方式: 逸码拆分方式 = {
-        字根: [名称],
-        补码: 笔画序列.map((x) => `${x}0`),
-      };
-      while (余二拆分方式.补码.length < 6) {
-        余二拆分方式.补码.push(余二拆分方式.补码.at(-1)!);
-      }
-      const 余一拆分方式 = structuredClone(余二拆分方式);
-      const 笔画拆分方式: 逸码拆分方式 = {
-        字根: 笔画序列.map((x) => `${x}0`),
-        补码: Array(6)
-          .fill(笔画序列.at(-1)!)
-          .map((x) => `${x}0`),
-      };
-      const 字根序列 = 余二拆分方式.字根.concat(余二拆分方式.补码);
-      return ok({
-        类型: "复合体" as const,
-        字根序列,
-        余二拆分方式,
-        余一拆分方式,
-        笔画拆分方式,
-      });
-    }
-    const 余二拆分方式: 逸码拆分方式 = {
-      字根: [],
-      补码: [],
-    };
-    const 余一拆分方式: 逸码拆分方式 = {
-      字根: [],
-      补码: [],
-    };
-    const 笔画拆分方式: 逸码拆分方式 = {
-      字根: [],
-      补码: [],
-    };
-    const 排序部分结果 = 按首笔排序(部分分析列表, 复合体);
-    const last = 排序部分结果.length - 1;
-    for (const [i, 部分] of 排序部分结果.entries()) {
-      // 0
-      笔画拆分方式.字根.push(...部分.笔画拆分方式.字根);
-      if (i === last) 笔画拆分方式.补码.push(...部分.笔画拆分方式.补码);
-      // 1
-      if (余一拆分方式.字根.length === 0) {
-        余一拆分方式.字根.push(...部分.余一拆分方式.字根);
-        if (i === last) 余一拆分方式.补码.push(...部分.余一拆分方式.补码);
+  列举全部部件(复合体: 复合体) {
+    const 部件结果列表: 逸码部件分析[] = [];
+    for (const 部分 of 复合体.部分列表) {
+      if (部分 instanceof 部件) {
+        部件结果列表.push(this.查找部件分析结果(部分)!);
       } else {
-        余一拆分方式.字根.push(...部分.笔画拆分方式.字根);
-        if (i === last) 余一拆分方式.补码.push(...部分.笔画拆分方式.补码);
-      }
-      // 2
-      if (余二拆分方式.字根.length === 0) {
-        余二拆分方式.字根.push(...部分.余二拆分方式.字根);
-        if (i === last) 余二拆分方式.补码.push(...部分.余二拆分方式.补码);
-      } else if (余二拆分方式.字根.length === 1) {
-        余二拆分方式.字根.push(...部分.余一拆分方式.字根);
-        if (i === last) 余二拆分方式.补码.push(...部分.余一拆分方式.补码);
-      } else {
-        余二拆分方式.字根.push(...部分.笔画拆分方式.字根);
-        if (i === last) 余二拆分方式.补码.push(...部分.笔画拆分方式.补码);
+        const 部分结果 = this.列举全部部件(部分);
+        部件结果列表.push(...部分结果);
       }
     }
-    const 字根序列 = 余二拆分方式.字根.concat(余二拆分方式.补码);
-    return ok({
-      类型: "复合体" as const,
-      字根序列,
-      余二拆分方式,
-      余一拆分方式,
-      笔画拆分方式,
-    });
+    return 部件结果列表;
+  }
+
+  分析(复合体: 复合体) {
+    const 分析: 基本复合体分析 = {
+      类型: "复合体",
+      字根序列: [],
+    };
+    const 字根 = this.配置.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      分析.字根序列.push(字根);
+      const 笔画序列 = 字根.获取笔画序列(this.配置.分类器);
+      for (const 笔画 of 笔画序列) {
+        分析.字根序列.push(new 二笔字根(笔画, 0));
+      }
+      while (分析.字根序列.length < 6) {
+        分析.字根序列.push(分析.字根序列.at(-1)!);
+      }
+      return ok(分析);
+    }
+    const 部件序列 = this.列举全部部件(复合体);
+    const 最后索引 = 部件序列.length - 1;
+    for (const [索引, 部分] of 部件序列.entries()) {
+      if (分析.字根序列.length === 0) {
+        分析.字根序列.push(...部分.余二拆分方式.字根);
+        if (索引 === 最后索引) 分析.字根序列.push(...部分.余二拆分方式.补码);
+      } else if (分析.字根序列.length === 1) {
+        分析.字根序列.push(...部分.余一拆分方式.字根);
+        if (索引 === 最后索引) 分析.字根序列.push(...部分.余一拆分方式.补码);
+      } else {
+        分析.字根序列.push(...部分.笔画拆分方式.字根);
+        if (索引 === 最后索引) 分析.字根序列.push(...部分.笔画拆分方式.补码);
+      }
+    }
+    return ok(分析);
   }
 }
 
@@ -523,14 +578,9 @@ export {
   真码复合体分析器,
   首右复合体分析器,
   默认复合体分析器,
-  按首笔排序,
+  复合体,
 };
-export type {
-  分部取码复合体分析,
-  复合体分析器,
-  星空键道复合体分析,
-  默认混合分析,
-};
+export type { 复合体分析器, 星空键道复合体分析 };
 
 // const snow2Serializer = (operandResults, glyph) => {
 //   const order =

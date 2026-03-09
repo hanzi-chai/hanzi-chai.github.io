@@ -20,10 +20,3 @@ describe("pruning", () => {
     expect(schemes).toHaveLength(3);
   });
 });
-
-describe("recursive render component", () => {
-  it("has nong", () => {
-    const 农 = 原始字库.获取源部件("农")!;
-    expect(农.ok).toBeTruthy();
-  });
-});
