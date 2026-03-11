@@ -1,16 +1,16 @@
-import { Button, Dropdown, Flex, Select } from "antd";
-import { useAtom } from "jotai";
-import { 变换器列表原子 } from "~/atoms";
-import { type 变换器, type 结构变量, 结构表示符列表, type 节点 } from "~/lib";
-import { Display, MinusButton, PlusButton } from "./Utils";
-import CharacterSelect from "./CharacterSelect";
 import {
   ModalForm,
   type ProFormInstance,
   ProFormItem,
   ProFormList,
 } from "@ant-design/pro-components";
+import { Button, Dropdown, Flex, Select } from "antd";
+import { useAtom } from "jotai";
 import { type ReactNode, useRef } from "react";
+import { 变换器列表原子 } from "~/atoms";
+import { type 变换器, type 结构变量, 结构描述字符列表, type 节点 } from "~/lib";
+import CharacterSelect from "./CharacterSelect";
+import { Display, MinusButton, PlusButton } from "./Utils";
 
 function serialize(模式: 节点): ReactNode {
   if (typeof 模式 === "string") return <Display name={模式} />;
@@ -162,7 +162,7 @@ const PatternEditor: React.FC<{
       <Flex vertical align="center">
         <Select
           style={{ width: 64 }}
-          options={结构表示符列表.map((op) => ({ label: op, value: op }))}
+          options={结构描述字符列表.map((op) => ({ label: op, value: op }))}
           value={value.operator}
           onChange={(newOp) =>
             onChange({

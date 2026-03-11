@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
   字数,
-  是部件或全等,
   模拟基本部件,
   模拟复合体,
   模拟拼接部件,
   模拟衍生部件,
   是基本区汉字,
   是私用区,
-  解析词典
+  解析词典,
+  是基本或衍生部件
 } from "../src/index.js";
 
 describe("Unicode 方法", () => {
@@ -34,10 +34,10 @@ describe("数据工具", () => {
     const dc = 模拟衍生部件();
     const sc = 模拟拼接部件();
     const c = 模拟复合体("⿰");
-    expect(是部件或全等(bc)).toBeTruthy();
-    expect(是部件或全等(dc)).toBeTruthy();
-    expect(是部件或全等(sc)).toBeTruthy();
-    expect(是部件或全等(c)).toBeFalsy();
+    expect(是基本或衍生部件(bc)).toBeTruthy();
+    expect(是基本或衍生部件(dc)).toBeTruthy();
+    expect(是基本或衍生部件(sc)).toBeFalsy();
+    expect(是基本或衍生部件(c)).toBeFalsy();
   });
 });
 

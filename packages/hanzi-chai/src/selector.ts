@@ -1,6 +1,6 @@
 import type { 曲线关系 } from "./bezier.js";
 import type { 部件 } from "./component.js";
-import { type 元素, type 分析配置, type 安排, 是归并 } from "./config.js";
+import { type 分析配置, type 安排, 是归并 } from "./config.js";
 import type { 字根 } from "./repertoire.js";
 
 const 默认筛选器列表: string[] = [
@@ -24,7 +24,7 @@ interface 拆分环境 {
   部件图形: 部件;
   二进制字根映射: Map<number, 字根>;
   分析配置: 分析配置;
-  字根决策: Map<元素, 安排>;
+  字根决策: Map<字根, 安排>;
 }
 
 interface 筛选器 {
@@ -112,10 +112,10 @@ class 连续笔顺 implements 筛选器 {
  */
 class 非形近根 implements 筛选器 {
   static readonly type = "非形近根";
-  评价(scheme: 拆分方式, { 字根决策: roots }: 拆分环境) {
+  评价(scheme: 拆分方式, { 字根决策 }: 拆分环境) {
     let 形近根数量 = 0;
     for (const { 字根 } of scheme) {
-      const value = roots.get(字根.获取名称());
+      const value = 字根决策.get(字根);
       if (value && 是归并(value)) {
         形近根数量 += 1;
       }

@@ -7,7 +7,7 @@ import { Form } from "antd";
 import { useAtomValue } from "jotai";
 import { debounce } from "lodash-es";
 import { 全部标签原子 } from "~/atoms";
-import { 结构表示符列表 } from "~/lib";
+import { 结构描述字符列表 } from "~/lib";
 import type { 字符过滤器参数 } from "~/utils";
 import CharacterSelect from "./CharacterSelect";
 
@@ -36,7 +36,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
       <ProFormSelect
         label="包含结构"
         name="operator"
-        options={结构表示符列表.map((x) => ({ label: x, value: x }))}
+        options={结构描述字符列表.map((x) => ({ label: x, value: x }))}
       />
       <Form.Item label="包含部分" name="part">
         <CharacterSelect allowClear={true} />

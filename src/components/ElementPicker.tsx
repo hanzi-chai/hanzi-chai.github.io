@@ -1,23 +1,24 @@
+import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import { Button, Cascader, Flex, Popover, Typography } from "antd";
 import { useState } from "react";
-import ElementAdder from "./ElementAdder";
-import ElementPool from "./ElementPool";
 import {
-  拼写运算自定义原子,
-  分类器原子,
-  如排序字库数据原子,
   useAtom,
   useAtomValue,
-  useRemoveAtom,
   useAtomValueUnwrapped,
+  useRemoveAtom,
+  分类器原子,
+  如排序字库数据原子,
   如笔顺映射原子,
+  当前元素原子,
+  拼写运算自定义原子,
+  拼音元素枚举映射原子,
   自定义分析数据库,
 } from "~/atoms";
+import { 查询区块, 结构描述字符列表 } from "~/lib";
 import Algebra from "./Algebra";
-import { 拼音元素枚举映射原子, 当前元素原子 } from "~/atoms";
-import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
+import ElementAdder from "./ElementAdder";
 import ElementCounter from "./ElementCounter";
-import { 查询区块, 结构表示符列表 } from "~/lib";
+import ElementPool from "./ElementPool";
 
 const AlgebraEditor = ({
   type,
@@ -97,7 +98,7 @@ const useAllElements = () => {
     ["字根", 排序汉字],
     ["笔画", allStrokes],
     ["二笔", allErbi],
-    ["结构", [...结构表示符列表]],
+    ["结构", [...结构描述字符列表]],
   ]);
   const custom: Map<string, string[]> = new Map();
   for (const [key, value] of customElements) {

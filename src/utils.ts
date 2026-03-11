@@ -1,4 +1,4 @@
-import { type 原始汉字数据, type 字形数据, type 汉字数据, type 结构表示符, type 配置 } from "~/lib";
+import { type 原始汉字数据, type 字形数据, type 汉字数据, type 结构描述字符, type 配置 } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -199,7 +199,7 @@ export interface 字符过滤器参数 {
   unicode?: string;
   tag?: string;
   part?: string;
-  operator?: 结构表示符;
+  operator?: 结构描述字符;
 }
 
 export interface AnalyzerForm {

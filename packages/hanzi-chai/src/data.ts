@@ -89,7 +89,7 @@ export interface 拼接部件数据 extends Omit<复合体数据, "type"> {
   type: "spliced_component";
 }
 
-export const 结构表示符列表 = [
+export const 结构描述字符列表 = [
   "⿰",
   "⿱",
   "⿲",
@@ -109,12 +109,12 @@ export const 结构表示符列表 = [
 ] as const;
 
 /**
- * 结构表示符
+ * 结构描述字符
  * 例如 ⿰、⿱ 等
  * 符合 Unicode 中的 Ideography Description Characters
  * 参见 https://en.wikipedia.org/wiki/Ideographic_Description_Characters_(Unicode_block)
  */
-export type 结构表示符 = (typeof 结构表示符列表)[number];
+export type 结构描述字符 = (typeof 结构描述字符列表)[number];
 
 /**
  * 笔画块
@@ -142,7 +142,7 @@ export interface 复合体参数 {
 
 /**
  * 复合体 Compound
- * operator: 结构表示符
+ * operator: 结构描述字符
  * operandList: 部分列表，有可能是两部分，也可能是三部分（对于 ⿲、⿳）
  * tags: 复合体的标签
  * order: 笔画块的顺序
@@ -150,7 +150,7 @@ export interface 复合体参数 {
 export interface 复合体数据 {
   type: "compound";
   tags?: string[];
-  operator: 结构表示符;
+  operator: 结构描述字符;
   operandList: string[];
   order?: 笔画块[];
   parameters?: 复合体参数;
@@ -207,6 +207,3 @@ export interface 原始汉字数据 {
   glyphs: 字形数据[];
   ambiguous: boolean;
 }
-
-/** 原始字库数据，为字符名称到原始字符的映射 */
-export type 原始字库数据 = Record<string, 原始汉字数据>;

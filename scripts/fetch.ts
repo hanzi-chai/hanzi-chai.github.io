@@ -10,8 +10,8 @@ import { writeFileSync, mkdirSync } from "fs";
 import axios from "axios";
 import pako from "pako";
 import { 从模型构建, type 原始汉字模型 } from "~/api";
-import { 原始字库数据 } from "~/lib";
 import { VERSION, getLocalDataPath } from "./version.js";
+import { 原始汉字数据 } from "~/lib/index.js";
 
 const apiEndpoint = "https://api.chaifen.app/";
 const assetsEndpoint = "https://assets.chaifen.app/";
@@ -24,12 +24,7 @@ mkdirSync(webOutputDir, { recursive: true });
 const models: 原始汉字模型[] = await fetch(`${apiEndpoint}repertoire/all`).then(
   (res) => res.json(),
 );
-const repertoire: 原始字库数据 = {};
-for (const model of models) {
-  const character = 从模型构建(model);
-  const name = String.fromCodePoint(model.unicode);
-  repertoire[name] = character;
-}
+const repertoire: 原始汉字数据[] = models.map(从模型构建);
 
 // Compress the repertoire data
 const output = pako.deflate(JSON.stringify(repertoire));

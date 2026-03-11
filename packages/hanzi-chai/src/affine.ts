@@ -5,7 +5,7 @@ import type {
   复合体数据,
   矢量图形数据,
   矢量笔画数据,
-  结构表示符,
+  结构描述字符,
   绘制,
 } from "./data.js";
 import { 加 } from "./math.js";
@@ -22,7 +22,7 @@ class 仿射变换 {
   static topThird = new 仿射变换(1, 0.33);
   static middleThird = new 仿射变换(1, 0.33, [0, 33]);
   static bottomThird = new 仿射变换(1, 0.33, [0, 66]);
-  static 查找表: Record<结构表示符, 仿射变换[]> = {
+  static 查找表: Record<结构描述字符, 仿射变换[]> = {
     "⿰": [仿射变换.left, 仿射变换.right],
     "⿱": [仿射变换.top, 仿射变换.bottom],
     "⿲": [仿射变换.leftThird, 仿射变换.centerThird, 仿射变换.rightThird],

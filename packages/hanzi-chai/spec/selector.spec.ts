@@ -62,8 +62,12 @@ describe("attaching", () => {
 
 describe("select", () => {
   it("should select the correct scheme for 天", () => {
+    console.log(配置);
     const a = 天!.给出部件分析(配置);
-    if (!a.ok) throw new Error("Failed to analyze 天");
+    if (!a.ok) {
+      console.error(a.error);
+      throw new Error("Failed to analyze 天");
+    }
     const 字根序列 = a.value.字根序列;
     expect(字根序列.map(x => x.获取名称())).toEqual(["1", "大"]);
   });

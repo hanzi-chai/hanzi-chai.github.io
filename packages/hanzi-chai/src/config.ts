@@ -1,5 +1,5 @@
 import type { 笔画名称 } from "./classifier.js";
-import type { 原始字库数据, 字形数据, 结构表示符 } from "./data.js";
+import type { 原始汉字数据, 字形数据, 结构描述字符 } from "./data.js";
 import type { 取码对象 } from "./element.js";
 
 // config.info begin
@@ -26,7 +26,7 @@ export type 字集指示 = (typeof 字集指示列表)[number];
 
 export interface 数据配置 {
   character_set?: 字集指示;
-  repertoire?: 原始字库数据;
+  repertoire?: Record<string, 原始汉字数据>;
   glyph_customization?: 兼容字形自定义;
   transformers?: 变换器[];
   glyph_sources?: string[];
@@ -42,7 +42,7 @@ export interface 变换器 {
 }
 
 export interface 模式 {
-  operator: 结构表示符;
+  operator: 结构描述字符;
   operandList: 节点[];
 }
 

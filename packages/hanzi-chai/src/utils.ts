@@ -19,23 +19,26 @@ import type {
   引用笔画数据,
   拼接部件数据,
   矢量笔画数据,
-  结构表示符,
+  结构描述字符,
   绘制,
   衍生部件数据,
 } from "./data.js";
-import type {
-  兼容字形自定义,
-  动态组装条目,
-  字形自定义,
-  组装条目,
+import {
+  二笔字根,
+  type 兼容字形自定义,
+  type 分类器,
+  type 动态组装条目,
+  单笔字根,
+  type 字形自定义,
+  type 组装条目,
 } from "./main.js";
 
 // Result 类型定义
-export type Ok<T> = { ok: true; value: T };
+export type Ok<T> = { ok: true; value: T; warning?: string };
 export type Err<E> = { ok: false; error: E };
 export type Result<T, E> = Ok<T> | Err<E>;
-export function ok<T>(value: T): Result<T, never> {
-  return { ok: true, value };
+export function ok<T>(value: T, warning?: string): Result<T, never> {
+  return { ok: true, value, warning };
 }
 export function err<E>(error: E): Result<never, E> {
   return { ok: false, error };
@@ -54,6 +57,77 @@ export type Tuple<T, N extends number> = N extends N
 type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
   ? R
   : _TupleOf<T, N, [T, ...R]>;
+
+const 第十六平面起始位 = 0x100000;
+
+export class 字符 {
+  private static 字符池: Map<number, 字符> = new Map();
+  private static 自由码位 = 第十六平面起始位;
+  private constructor(private readonly 码位: number) {}
+
+  static 从码位创建(cp: number): Result<字符, Error> {
+    if (!Number.isInteger(cp) || cp < 0 || cp > 0x10ffff) {
+      return default_err(`不合法的 Unicode 码位: ${cp}`);
+    }
+    if (cp >= 0xd800 && cp <= 0xdfff) {
+      return default_err(`不合法的 Unicode 码位: ${cp} (代理项)`);
+    }
+    const 字符实例 = 字符.字符池.get(cp);
+    if (字符实例) return ok(字符实例);
+    const 新字符实例 = new 字符(cp);
+    字符.字符池.set(cp, 新字符实例);
+    return ok(新字符实例);
+  }
+
+  static 从字符串创建(s: string): Result<字符, Error> {
+    const arr = [...s];
+    if (arr.length !== 1) {
+      return default_err(
+        `将 ${s} 转化为字符失败，字符串必须包含且仅包含一个 Unicode 字符`,
+      );
+    }
+    return 字符.从码位创建(s.codePointAt(0)!);
+  }
+
+  toString(): string {
+    return String.fromCodePoint(this.码位);
+  }
+
+  toNumber(): number {
+    return this.码位;
+  }
+
+  print(): string {
+    return `${this.toString()} U+${this.toNumber().toString(16).toUpperCase().padStart(4, "0")}`;
+  }
+
+  static 获取自由字符() {
+    const 自由码位 = 字符.自由码位;
+    字符.自由码位++;
+    return 字符.从码位创建(自由码位);
+  }
+
+  static 重置() {
+    字符.自由码位 = 第十六平面起始位;
+    字符.字符池.clear();
+  }
+}
+
+export const 表示单笔字根 = (元素: 元素, 分类器: 分类器) => {
+  const 数字集合 = Object.values(分类器).map(String);
+  if (数字集合.includes(元素)) {
+    return 单笔字根.创建(Number(元素));
+  }
+};
+
+export const 表示二笔字根 = (元素: 元素, 分类器: 分类器) => {
+  const 数字集合 = Object.values(分类器).map(String);
+  const [笔画类别1, 笔画类别2] = [...元素];
+  if (!笔画类别1 || !笔画类别2) return;
+  if (数字集合.includes(笔画类别1) && 数字集合.includes(笔画类别2)) {
+    return 二笔字根.创建(Number(笔画类别1), Number(笔画类别2));
+  }
+};
 
 // 模拟函数
 export const 模拟引用笔画 = (): 引用笔画数据 => ({
@@ -114,29 +188,16 @@ export const 模拟全等 = (): 全等数据 => ({
   source: "一",
 });
 
-export const 模拟复合体 = (operator: 结构表示符): 复合体数据 => ({
+export const 模拟复合体 = (operator: 结构描述字符): 复合体数据 => ({
   type: "compound",
   operator,
   operandList: ["一", "一"],
 });
 
-export const 是部件或全等 = (
-  glyph: 字形数据,
-): glyph is 基本部件数据 | 衍生部件数据 | 拼接部件数据 | 全等数据 =>
-  glyph.type === "basic_component" ||
-  glyph.type === "derived_component" ||
-  glyph.type === "spliced_component" ||
-  glyph.type === "identity";
-
 export const 是基本或衍生部件 = (
   glyph: 字形数据,
 ): glyph is 基本部件数据 | 衍生部件数据 =>
   glyph.type === "basic_component" || glyph.type === "derived_component";
-
-export const 是拼接部件或复合体 = (
-  glyph: 字形数据,
-): glyph is 拼接部件数据 | 复合体数据 =>
-  glyph.type === "spliced_component" || glyph.type === "compound";
 
 export const 创建原始汉字数据 = (
   unicode: number,
@@ -403,20 +464,25 @@ export type 自定义分析 = Record<string, string[]>;
 
 export type 自定义分析映射 = Map<string, 自定义分析>;
 
-export function 获取汉字集合(词典: 词典): Set<string> {
+export function 获取汉字集合(词典: 词典): Set<字符> {
   const 汉字集合 = new Set<string>();
   for (const { 词 } of 词典) {
     for (const 汉字 of Array.from(词)) {
       汉字集合.add(汉字);
     }
   }
-  return 汉字集合;
+  const 字符集合 = new Set<字符>();
+  for (const 汉字 of 汉字集合) {
+    const 字符实例 = 字符.从字符串创建(汉字);
+    if (字符实例.ok) {
+      字符集合.add(字符实例.value);
+    }
+  }
+  return 字符集合;
 }
 
 export const 码 = (汉字: string) =>
   汉字.codePointAt(0)!.toString(16).toUpperCase();
-
-export const 和编码 = (c: string) => `${c} (U+${码(c)})`;
 
 export const 排列组合 = <T>(array: T[][]): T[][] => {
   if (array.length === 0) return [[]];

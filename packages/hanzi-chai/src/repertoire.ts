@@ -1,18 +1,18 @@
 import { 图形盒子 } from "./affine.js";
 import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 部件 } from "./component.js";
-import type { 元素, 决策, 决策空间, 分析配置, 安排 } from "./config.js";
-import type { 原始汉字数据, 复合体数据 } from "./data.js";
+import type { 决策, 决策空间, 分析配置, 安排 } from "./config.js";
+import type { 复合体数据 } from "./data.js";
 import { 复合体, 获取注册表 } from "./main.js";
-import { ok, type Result, 字数 } from "./utils.js";
+import { ok, type Result, 字符, 表示二笔字根, 表示单笔字根 } from "./utils.js";
 
-export type 统一字形 = 部件 | 复合体;
+export type 字形 = 部件 | 复合体;
 
-export function 是部件(字形: 统一字形): 字形 is 部件 {
+export function 是部件(字形: 字形): 字形 is 部件 {
   return 字形 instanceof 部件;
 }
 
-export function 是复合体(字形: 统一字形): 字形 is 复合体 {
+export function 是复合体(字形: 字形): 字形 is 复合体 {
   return 字形 instanceof 复合体;
 }
 
@@ -21,8 +21,18 @@ export interface 字根 {
   获取笔画序列(分类器: 分类器): number[];
 }
 
+/**
+ * 用于表示单个笔画构成的字根，笔画为数字类别
+ */
 export class 单笔字根 implements 字根 {
-  constructor(private 笔画类别: number) {}
+  static pool: Map<number, 单笔字根> = new Map();
+  static 创建(笔画类别: number) {
+    if (!单笔字根.pool.has(笔画类别)) {
+      单笔字根.pool.set(笔画类别, new 单笔字根(笔画类别));
+    }
+    return 单笔字根.pool.get(笔画类别)!;
+  }
+  private constructor(private 笔画类别: number) {}
   获取名称() {
     return this.笔画类别.toString();
   }
@@ -31,8 +41,20 @@ export class 单笔字根 implements 字根 {
   }
 }
 
+/**
+ * 表示二笔类输入方案中的隐式字根，笔画为数字类别
+ * 也可以用于表示张码、易码、蓝宝石等方案中的二笔补码
+ */
 export class 二笔字根 implements 字根 {
-  constructor(
+  static pool: Map<string, 二笔字根> = new Map();
+  static 创建(笔画类别1: number, 笔画类别2: number) {
+    const key = `${笔画类别1}${笔画类别2}`;
+    if (!二笔字根.pool.has(key)) {
+      二笔字根.pool.set(key, new 二笔字根(笔画类别1, 笔画类别2));
+    }
+    return 二笔字根.pool.get(key)!;
+  }
+  private constructor(
     private 笔画类别1: number,
     private 笔画类别2: number,
   ) {}
@@ -49,12 +71,12 @@ export class 二笔字根 implements 字根 {
  * 与原始字符相比，省略了 ambiguous 字段，并且将 glyphs 字段替换为唯一的一个 glyph
  * 此时的 glyph 要么是基本部件，要么是复合体
  */
-export interface 汉字数据 extends Omit<原始汉字数据, "glyphs" | "ambiguous"> {
-  glyphs: 统一字形[];
+export class 汉字 {
+  constructor(
+    public 字符: 字符,
+    public 字形列表: 字形[],
+  ) {}
 }
-
-/** 字库数据，为字符名称到字符的映射 */
-export type 字库数据 = Record<string, 汉字数据>;
 
 interface 基本部件分析 {
   类型: "部件";
@@ -72,7 +94,7 @@ interface 字形分析结果<
   部件分析 extends 基本部件分析 = 基本部件分析,
   复合体分析 extends 基本复合体分析 = 基本复合体分析,
 > {
-  分析结果: Map<string, (部件分析 | 复合体分析)[]>;
+  分析结果: Map<字符, (部件分析 | 复合体分析)[]>;
   字根部件列表: 部件[];
 }
 
@@ -80,7 +102,7 @@ interface 动态字形分析结果<
   部件分析 extends 基本部件分析 = 基本部件分析,
   复合体分析 extends 基本复合体分析 = 基本复合体分析,
 > {
-  分析结果: Map<string, (部件分析 | 复合体分析)[][]>;
+  分析结果: Map<字符, (部件分析 | 复合体分析)[][]>;
   字根部件列表: 部件[];
 }
 
@@ -91,18 +113,18 @@ interface 字形分析基本配置 {
 }
 
 interface 字形分析配置 {
-  分析配置: 分析配置;
-  字根决策: Map<元素, 安排>;
-  可选字根: Set<元素>;
-  分类器: 分类器;
+  分析配置: 分析配置; // 原始分析配置
+  字根决策: Map<字根, 安排>;
+  可选字根: Set<字根>;
+  分类器: 分类器; // 已经填充过默认值
   部件字根列表: 部件[];
   复合体字根映射: Map<复合体, 部件>;
 }
 
 class 字库 {
-  private repertoire: 字库数据;
+  private repertoire: Map<number, 汉字>;
 
-  constructor(repertoire: 字库数据 = {}) {
+  constructor(repertoire: Map<number, 汉字> = new Map()) {
     this.repertoire = repertoire;
   }
 
@@ -110,12 +132,12 @@ class 字库 {
     return this.repertoire;
   }
 
-  查询字形(character: string): 统一字形[] | undefined {
-    return this.repertoire[character]?.glyphs;
+  查询字形(character: 字符): 字形[] | undefined {
+    return this.repertoire.get(character.toNumber())?.字形列表;
   }
 
-  添加(character: string, data: 汉字数据) {
-    this.repertoire[character] = data;
+  添加(character: 字符, data: 汉字) {
+    this.repertoire.set(character.toNumber(), data);
   }
 
   准备字形分析配置(
@@ -123,48 +145,66 @@ class 字库 {
     决策: 决策,
     决策空间: 决策空间,
   ): Result<字形分析配置, Error> {
-    const 可选字根: Set<元素> = new Set();
-    const 字根决策 = new Map(
-      Object.entries(决策).filter(([k, _]) => 字数(k) === 1),
-    );
-    for (const [key, value] of Object.entries(决策空间)) {
-      if (value.some((x) => x.value == null) || 决策[key] === undefined) {
-        可选字根.add(key);
+    const 字根决策 = new Map<字根, 安排>();
+    const 可选字根 = new Set<字根>();
+    const 分类器 = 合并分类器(分析配置.classifier);
+    const 全部元素 = new Set(Object.keys(决策).concat(Object.keys(决策空间)));
+    const 部件字根列表: 部件[] = [];
+    const 复合体字根映射: Map<复合体, 部件> = new Map();
+    for (const 元素 of 全部元素) {
+      const 安排 = 决策[元素];
+      const 安排列表 = 决策空间[元素];
+      const 所有字根: 字根[] = [];
+      const 单笔字根 = 表示单笔字根(元素, 分类器);
+      const 二笔字根 = 表示二笔字根(元素, 分类器);
+      const 字根字符 = 字符.从字符串创建(元素);
+      if (单笔字根) {
+        所有字根.push(单笔字根);
+      } else if (二笔字根) {
+        所有字根.push(二笔字根);
+      } else if (字根字符.ok) {
+        const 字形列表 = this.查询字形(字根字符.value) ?? [];
+        for (const 字根字形 of 字形列表) {
+          if (字根字形 instanceof 部件) {
+            部件字根列表.push(字根字形);
+            所有字根.push(字根字形);
+          } else {
+            const 图形盒子 = this.递归渲染复合体(字根字形);
+            if (!图形盒子.ok) return 图形盒子;
+            const 真部件 = new 部件(
+              字根字符.value,
+              字根字形.标签集合,
+              图形盒子.value.获取笔画列表(),
+            );
+            部件字根列表.push(真部件);
+            复合体字根映射.set(字根字形, 真部件);
+            所有字根.push(真部件);
+          }
+        }
+      }
+      for (const 字根 of 所有字根) {
+        if (安排) 字根决策.set(字根, 安排);
+        if (安排 === undefined || 安排列表?.some((x) => x.value == null)) {
+          可选字根.add(字根);
+        }
       }
     }
-    const 字根列表 = [...字根决策.keys(), ...可选字根.keys()];
-    const 分类器 = 合并分类器(分析配置.classifier);
-    const 结果 = this.生成字根部件列表(字根列表);
-    if (!结果.ok) {
-      return 结果;
-    }
-    // if (analysis.serializer === "feihua") {
-    //   for (const root of roots.keys()) {
-    //     // e43d: 全字头、e0e3: 乔字底、e0ba: 亦字底无八、e439: 见二、e431: 聿三、e020: 负字头、e078：卧人、e03e：尚字头、e42d：学字头、e07f：荒字底、e02a：周字框、e087：木无十、f001: 龰字底、e41a：三竖、e001: 两竖、e17e: 西字心
-    //     if (
-    //       !/[12345二\ue001三\ue41a口八丷\ue087宀日人\ue43d\uf001十乂亠厶冂\ue439\ue02a儿\ue17e\ue0e3\ue0ba大小\ue03e\ue442川彐\ue431\ue020\ue078\ue42d\ue07f]/.test(
-    //         root,
-    //       )
-    //     ) {
-    //       optionalRoots.add(root);
-    //     }
-    //   }
-    // }
     return ok({
       分析配置,
       分类器,
       字根决策,
       可选字根,
-      ...结果.value,
+      部件字根列表,
+      复合体字根映射,
     });
   }
 
   /**
    * 确定需要分析的字符
    */
-  获取待分析部件(汉字列表: Set<string>) {
+  获取待分析部件(汉字列表: Set<字符>) {
     const 待分析部件集合: Set<部件> = new Set();
-    const recurse = (glyph: 统一字形) => {
+    const recurse = (glyph: 字形) => {
       if (是部件(glyph)) 待分析部件集合.add(glyph);
       else {
         for (const 子字形 of glyph.部分列表) {
@@ -173,41 +213,12 @@ class 字库 {
       }
     };
     for (const 汉字 of 汉字列表) {
-      const 字形列表 = this.repertoire[汉字]?.glyphs ?? [];
+      const 字形列表 = this.查询字形(汉字) ?? [];
       for (const 字形 of 字形列表) {
         recurse(字形);
       }
     }
     return 待分析部件集合;
-  }
-
-  /**
-   * 将所有的字根都计算成部件
-   *
-   * @returns 所有计算后字根的列表
-   */
-  生成字根部件列表(字根列表: string[]) {
-    const 部件字根列表: 部件[] = [];
-    const 复合体字根映射: Map<复合体, 部件> = new Map();
-    for (const 字根字符 of 字根列表) {
-      const 字根字形列表 = this.repertoire[字根字符]?.glyphs ?? [];
-      for (const 字根字形 of 字根字形列表) {
-        if (字根字形 instanceof 部件) {
-          部件字根列表.push(字根字形);
-        } else {
-          const 图形盒子 = this.递归渲染复合体(字根字形);
-          if (!图形盒子.ok) return 图形盒子;
-          const 真部件 = new 部件(
-            字根字符,
-            字根字形.标签集合,
-            图形盒子.value.获取笔画列表(),
-          );
-          部件字根列表.push(真部件);
-          复合体字根映射.set(字根字形, 真部件);
-        }
-      }
-    }
-    return ok({ 部件字根列表, 复合体字根映射 });
   }
 
   /**
@@ -234,7 +245,7 @@ class 字库 {
       图形盒子.仿射合并(
         {
           type: "compound",
-          operator: 复合体.结构表示符,
+          operator: 复合体.结构描述字符,
           parameters: {},
         } as 复合体数据,
         图形盒子列表,
@@ -242,7 +253,7 @@ class 字库 {
     );
   }
 
-  准备分析(base: 字形分析基本配置, 汉字集合: Set<string>) {
+  准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>) {
     const { 分析配置, 决策, 决策空间 } = base;
     const config = this.准备字形分析配置(分析配置, 决策, 决策空间);
     if (!config.ok) return config;
@@ -272,7 +283,7 @@ class 字库 {
    */
   分析(
     base: 字形分析基本配置,
-    汉字集合: Set<string>,
+    汉字集合: Set<字符>,
   ): Result<字形分析结果, Error> {
     const 分析配置或错误 = this.准备分析(base, 汉字集合);
     if (!分析配置或错误.ok) return 分析配置或错误;
@@ -284,10 +295,10 @@ class 字库 {
       部件分析结果.set(部件, 分析.value);
     }
     分析配置.复合体分析器.部件分析结果 = 部件分析结果;
-    const 分析结果 = new Map<string, 基本分析[]>();
+    const 分析结果 = new Map<字符, 基本分析[]>();
     for (const 字符 of 汉字集合) {
       const 结果列表: 基本分析[] = [];
-      const 字形列表 = this.repertoire[字符]?.glyphs ?? [];
+      const 字形列表 = this.查询字形(字符) ?? [];
       for (const 字形 of 字形列表) {
         if (字形 instanceof 部件) {
           const 分析 = 部件分析结果.get(字形)!;
@@ -314,7 +325,7 @@ class 字库 {
    */
   动态分析(
     base: 字形分析基本配置,
-    汉字集合: Set<string>,
+    汉字集合: Set<字符>,
   ): Result<动态字形分析结果, Error> {
     const 分析配置或错误 = this.准备分析(base, 汉字集合);
     if (!分析配置或错误.ok) return 分析配置或错误;
@@ -326,10 +337,10 @@ class 字库 {
       动态部件分析结果.set(部件, 分析.value);
     }
     分析配置.复合体分析器.动态部件分析结果 = 动态部件分析结果;
-    const 分析结果 = new Map<string, 基本分析[][]>();
+    const 分析结果 = new Map<字符, 基本分析[][]>();
     for (const 字符 of 汉字集合) {
       const 结果列表: 基本分析[][] = [];
-      const 字形列表 = this.repertoire[字符]?.glyphs ?? [];
+      const 字形列表 = this.查询字形(字符) ?? [];
       for (const 字形 of 字形列表) {
         if (字形 instanceof 部件) {
           const 分析 = 动态部件分析结果.get(字形)!;

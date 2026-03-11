@@ -1,6 +1,3 @@
-import { Button, Flex, Form } from "antd";
-import { useWatch } from "antd/es/form/Form";
-import CharacterSelect from "./CharacterSelect";
 import {
   ModalForm,
   ProFormDependency,
@@ -9,20 +6,23 @@ import {
   ProFormList,
   ProFormSelect,
 } from "@ant-design/pro-components";
-import { InlineRender, StaticList } from "./ComponentForm";
+import { Button, Flex, Form } from "antd";
+import { useWatch } from "antd/es/form/Form";
 import { useAtomValue } from "jotai";
-import { 如字库原子, 全部标签原子, useAtomValueUnwrapped } from "~/atoms";
-import Element from "./Element";
-import { EditorColumn, EditorRow } from "./Utils";
-import { Box, StrokesView } from "./GlyphView";
 import type { ReactNode } from "react";
+import { useAtomValueUnwrapped, 全部标签原子, 如字库原子 } from "~/atoms";
 import {
   图形盒子,
   type 复合体数据,
   type 拼接部件数据,
-  type 结构表示符,
-  结构表示符列表,
+  type 结构描述字符,
+  结构描述字符列表,
 } from "~/lib";
+import CharacterSelect from "./CharacterSelect";
+import { InlineRender, StaticList } from "./ComponentForm";
+import Element from "./Element";
+import { Box, StrokesView } from "./GlyphView";
+import { EditorColumn, EditorRow } from "./Utils";
 
 export const CommonForm = () => {
   const tags = useAtomValue(全部标签原子);
@@ -113,7 +113,7 @@ export default function CompoundForm({
             <ProFormSelect
               label="结构"
               name="operator"
-              onChange={(value: 结构表示符) => {
+              onChange={(value: 结构描述字符) => {
                 const newLength =
                   value === "⿲" || value === "⿳"
                     ? 3
@@ -123,7 +123,7 @@ export default function CompoundForm({
                 const newList = list.concat("一").slice(0, newLength);
                 form.setFieldValue("operandList", newList);
               }}
-              options={结构表示符列表.map((x) => ({ value: x, label: x }))}
+              options={结构描述字符列表.map((x) => ({ value: x, label: x }))}
               style={{ width: "96px" }}
               allowClear={false}
             />
