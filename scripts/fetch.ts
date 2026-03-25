@@ -36,6 +36,12 @@ const output = pako.deflate(JSON.stringify(repertoire));
 writeFileSync(`${nodeOutputDir}/repertoire.json.deflate`, output);
 writeFileSync(`${webOutputDir}/repertoire.json.deflate`, output);
 
+// 在数据库大改期间，临时用旧版的 repertoire 覆盖
+const res = await fetch("https://f5ffd718.chai.pages.dev/data/0.3.6/repertoire.json.deflate");
+const oldRepertoire = await res.arrayBuffer();
+writeFileSync(`${nodeOutputDir}/repertoire.json.deflate`, Buffer.from(oldRepertoire));
+writeFileSync(`${webOutputDir}/repertoire.json.deflate`, Buffer.from(oldRepertoire));
+
 for (const filename of [
   "cjk",
   "dictionary",

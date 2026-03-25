@@ -64,7 +64,9 @@ class 原始字库 {
             const 剩余地区标签列表 = 获取地区标签列表(glyph).filter(
               (x) => !已有地区标签集合.has(x),
             );
-            if (剩余地区标签列表.length === 0) continue;
+            // if (剩余地区标签列表.length === 0) continue;
+            if (字形列表.length > 0 && !剩余地区标签列表.includes("G"))
+              continue;
             字形列表.push({ ...glyph, tags: 剩余地区标签列表 });
             剩余地区标签列表.map((x) => 已有地区标签集合.add(x));
           }
