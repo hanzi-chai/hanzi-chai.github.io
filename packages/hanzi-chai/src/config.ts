@@ -30,7 +30,16 @@ export interface 数据配置 {
   glyph_customization?: 兼容字形自定义;
   transformers?: 变换器[];
   glyph_sources?: string[];
+  /** 同源部件组列表，諸元素爲 {源标签: 字符} 之映射，如 {G: "户", T: "戶"} */
+  source_equivalents?: 同源部件组[];
 }
+
+/**
+ * 同源部件組：形略異而義源皆同之部件，又名異寫字
+ *    以其爲組，建鍵爲地區之標籤（如 G、T），
+ *    建值爲該源對應之 Unicode 字符
+ */
+export type 同源部件组 = Record<string, string>;
 
 export type 兼容字形自定义 = Record<string, 字形数据 | 字形数据[]>;
 

@@ -8,6 +8,7 @@ import type {
   决策空间,
   分析配置,
   变换器,
+  同源部件组,
   安排,
   模式,
   结构变量,
@@ -407,6 +408,89 @@ class 字库 {
       输出数据库.替换(字符, 变换器.to, 变量映射, 生成计数);
     }
     return 输出数据库;
+  }
+
+  /**
+   * 應用同源部件之映射，返回新字庫。
+   *
+   * 每組同源之部件（如 {G: "户", T: "戶"}），於 Plane 15 PUA 分配一新字符，
+   * 俾其包含各源對應部首之字形（帶源之標籤）。
+   * 將所有複合體中引用到組内任一部首之 operandList 替換爲對應之 PUA 字符。
+   *
+   * 以此，拆分分析時，PUA 字符同時擁有各源字形，
+   * 複合字可在任何源下形成拆分。
+   */
+  应用同源部件(同源部件组列表: 同源部件组[]): 字库 {
+    if (同源部件组列表.length === 0) return this;
+
+    const 新字库 = new 字库({ ...this.repertoire });
+
+    // 找到 Plane 15 PUA 中当前已使用的最大码位
+    let 下一个码位 = 0xf0000;
+    for (const 字符 of Object.keys(this.repertoire)) {
+      const 码位 = 字符.codePointAt(0)!;
+      if (码位 >= 0xf0000 && 码位 <= 0xffffd) {
+        下一个码位 = Math.max(下一个码位, 码位 + 1);
+      }
+    }
+
+    // 反向映射：源部首字符 → PUA 字符
+    const 反向映射 = new Map<string, string>();
+
+    for (const 组 of 同源部件组列表) {
+      const 源条目 = Object.entries(组);
+      if (源条目.length < 2) continue; // 至少需要两个源
+
+      const PUA字 = String.fromCodePoint(下一个码位);
+      const PUA名 = "同源:" + 源条目.map(([, ch]) => ch).join("/");
+
+      // 收集各源部首的字形，加上源标签
+      const PUA字形列表: 约化字形数据[] = [];
+      for (const [源, 字符] of 源条目) {
+        const 源字数据 = this.repertoire[字符];
+        if (源字数据 === undefined) continue;
+        for (const 字形 of 源字数据.glyphs) {
+          PUA字形列表.push({ ...字形, tags: [源] });
+        }
+        反向映射.set(字符, PUA字);
+      }
+
+      if (PUA字形列表.length === 0) continue;
+
+      // 创建 PUA 字符的数据
+      新字库.添加(PUA字, {
+        unicode: 下一个码位,
+        tygf: 0,
+        gb2312: 0,
+        name: PUA名,
+        gf0014_id: null,
+        gf3001_id: null,
+        glyphs: PUA字形列表,
+      });
+
+      下一个码位++;
+    }
+
+    if (反向映射.size === 0) return this;
+
+    // 遍历所有字符，替换复合体中的 operandList 引用
+    for (const [字符, 数据] of Object.entries(新字库._get())) {
+      let 有变化 = false;
+      const 新字形列表 = 数据.glyphs.map((字形) => {
+        if (字形.type !== "compound") return 字形;
+        const 新操作数 = 字形.operandList.map(
+          (操作数) => 反向映射.get(操作数) ?? 操作数,
+        );
+        if (新操作数.every((op, i) => op === 字形.operandList[i])) return 字形;
+        有变化 = true;
+        return { ...字形, operandList: 新操作数 };
+      });
+      if (有变化) {
+        新字库.添加(字符, { ...数据, glyphs: 新字形列表 });
+      }
+    }
+
+    return 新字库;
   }
 
   准备分析(base: 字形分析基本配置, 汉字集合: Set<string>) {

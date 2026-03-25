@@ -119,6 +119,10 @@ export function 获取字库(config: 配置): Result<字库, Error> {
   for (const 变换器 of 变换器列表) {
     字库 = 字库.应用变换器(变换器);
   }
+  const 同源部件组列表 = config.data?.source_equivalents ?? [];
+  if (同源部件组列表.length > 0) {
+    字库 = 字库.应用同源部件(同源部件组列表);
+  }
   return ok(字库);
 }
 
