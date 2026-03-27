@@ -1,4 +1,10 @@
-import { type 原始汉字数据, type 字形数据, type 汉字数据, type 结构表示符, type 配置 } from "~/lib";
+import {
+  type 原始汉字数据,
+  type 字形数据,
+  type 汉字数据,
+  type 结构表示符,
+  type 配置,
+} from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -25,13 +31,13 @@ export async function validateConfig(config: 配置) {
   try {
     validate(config);
     notification.success({
-      message: "配置校验成功",
+      title: "配置校验成功",
       description: "该配置可以被正常使用。",
     });
     return true;
   } catch (e) {
     notification.error({
-      message: "配置校验失败，原因是：",
+      title: "配置校验失败，原因是：",
       description: (e as Error).message,
     });
     return false;
@@ -44,13 +50,13 @@ export async function roundTestConfig(config: 配置) {
     const rustConfig = validate(config) as object;
     if (isEqual(config, rustConfig)) {
       notification.success({
-        message: "配置环行成功",
+        title: "配置环行成功",
         description: "该配置在 libchai 中具有同样语义。",
       });
       return true;
     }
     notification.warning({
-      message: "配置环行失败",
+      title: "配置环行失败",
       description: `该配置在 libchai 中具有不同语义。以下是两者的差异：\n${JSON.stringify(
         diff(config, rustConfig),
       )}`,
@@ -61,7 +67,7 @@ export async function roundTestConfig(config: 配置) {
     return false;
   } catch (e) {
     notification.error({
-      message: "配置校验失败，原因是：",
+      title: "配置校验失败，原因是：",
       description: (e as Error).message,
     });
     return false;
@@ -157,7 +163,7 @@ export class 字符过滤器 {
     if (过滤条件.sequence) {
       try {
         this.sequenceRegex = new RegExp(过滤条件.sequence);
-      } catch { }
+      } catch {}
     }
   }
 
@@ -190,7 +196,7 @@ export class 字符过滤器 {
       result &&= glyph.type === "compound" && glyph.operandList.includes(part);
     }
     return result;
-  };
+  }
 }
 
 export interface 字符过滤器参数 {
@@ -230,7 +236,7 @@ export type 编码结果 = 编码条目[];
 export const 数字 = (n: number) => {
   const 汉字数字 = "零一二三四五六七八九";
   return 汉字数字[n] || n.toString();
-}
+};
 
 export const 颜色插值 = (color1: string, color2: string, percent: number) => {
   // Convert the hex colors to RGB values
@@ -249,12 +255,12 @@ export const 颜色插值 = (color1: string, color2: string, percent: number) =>
 
   // Convert the interpolated RGB values back to a hex color
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-}
+};
 
 export const 标准键盘 = [
   ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
   ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
   ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";"],
   ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"],
-  ['_', '\'', '-', '=', '[', ']', '\\', '`', ' ', ' '],
+  ["_", "'", "-", "=", "[", "]", "\\", "`", " ", " "],
 ];

@@ -24,7 +24,7 @@ const SigninForm = () => {
         );
         if ("err" in response) {
           notification.error({
-            message: "无法登录",
+            title: "无法登录",
             description: JSON.stringify(response),
           });
           return;
@@ -32,7 +32,7 @@ const SigninForm = () => {
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("token", response.token);
         notification.success({
-          message: "登录成功",
+          title: "登录成功",
           description: "",
         });
         window.location.reload();
@@ -65,13 +65,13 @@ const SignupForm = () => {
         const response = await post<true, Signup>("users", hashedValue);
         if (typeof response !== "boolean") {
           notification.error({
-            message: "无法注册",
+            title: "无法注册",
             description: JSON.stringify(response),
           });
           return;
         }
         notification.success({
-          message: "注册成功",
+          title: "注册成功",
           description: "现在请您登录",
         });
         window.location.reload();

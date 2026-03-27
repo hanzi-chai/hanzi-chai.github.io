@@ -30,7 +30,7 @@ export default function ConfigManager() {
         disabled={!history.canUndo}
         onClick={() => {
           setHistory(UNDO);
-          notification.success({ message: "已撤销" });
+          notification.success({ title: "已撤销" });
         }}
       >
         撤销
@@ -39,7 +39,7 @@ export default function ConfigManager() {
         disabled={!history.canRedo}
         onClick={() => {
           setHistory(REDO);
-          notification.success({ message: "已重做" });
+          notification.success({ title: "已重做" });
         }}
       >
         重做

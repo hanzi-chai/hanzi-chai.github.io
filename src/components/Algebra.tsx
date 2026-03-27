@@ -41,7 +41,7 @@ export default function Algebra({
       onFinish={async (values) => {
         addAlgebra(values.name, values.rules);
         notification.success({
-          message: "提交成功",
+          title: "提交成功",
         });
         return true;
       }}

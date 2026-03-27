@@ -396,7 +396,7 @@ const Equivalence = () => {
       },
     ]);
     notification.success({
-      message: "保存成功",
+      title: "保存成功",
       description: "您可以在下次访问时恢复数据",
     });
   };
@@ -416,7 +416,7 @@ const Equivalence = () => {
         const delta = Math.round(last - timestamps[0]);
         if (delta > 500) {
           notification.error({
-            message: "间隔过长",
+            title: "间隔过长",
             description: "请尽可能快地依次按下两个键",
           });
           setTimestamps([]);
@@ -555,13 +555,13 @@ const Equivalence = () => {
           setLoading(false);
           if (result === true) {
             notification.success({
-              message: "上传成功",
+              title: "上传成功",
               description: "感谢您的参与",
             });
             reset();
           } else {
             notification.error({
-              message: "上传失败",
+              title: "上传失败",
               description: "已将数据下载为 JSON 文件，请您把它手动发送给管理员",
             });
             setTimeout(() => {

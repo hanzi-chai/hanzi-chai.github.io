@@ -173,10 +173,10 @@ function RootTable() {
 }
 
 const Wrapper = styled.div`
-min-width: 20px;
-height: 20px;
-line-height: 1;
-text-align: center;
+  min-width: 20px;
+  height: 20px;
+  line-height: 1;
+  text-align: center;
 `;
 
 function AnalysisTable() {
@@ -440,7 +440,7 @@ function SyllableForm() {
             }
           }
           notification.info({
-            message: `检查完毕，共 ${message.length} 处问题`,
+            title: `检查完毕，共 ${message.length} 处问题`,
             description: message.join("；"),
             duration: 0,
           });

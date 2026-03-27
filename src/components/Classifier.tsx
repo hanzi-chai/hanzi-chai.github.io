@@ -78,7 +78,7 @@ export default function Classifier() {
         }
       }}
     >
-      <Space direction="vertical">
+      <Space orientation="vertical">
         {items.map(([x, v]) => (
           <Flex gap="small" align="center" key={x}>
             <Element>{x}</Element>
@@ -97,7 +97,7 @@ export default function Classifier() {
             onClick={() => {
               if (items[items.length - 1]?.[1].length) {
                 notification.warning({
-                  message: "不能删除分类",
+                  title: "不能删除分类",
                   description: "最后一个分类里还有笔画",
                 });
               } else {

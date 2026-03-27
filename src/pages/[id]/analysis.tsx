@@ -207,7 +207,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
               if (!last) continue;
               if (last.some((x) => !是必要字根(x))) {
                 notification.warning({
-                  message: "存在不合法的自定义拆分",
+                  title: "存在不合法的自定义拆分",
                   description: `部件 ${display(部件)} 的自定义拆分中包含非必要字根 ${last
                     .filter((x) => !是必要字根(x))
                     .map(display)
@@ -217,7 +217,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
               }
             }
             notification.success({
-              message: "检查通过",
+              title: "检查通过",
               description: "所有自定义拆分均合法",
             });
           }}

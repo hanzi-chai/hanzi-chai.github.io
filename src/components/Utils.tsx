@@ -68,7 +68,7 @@ export const Uploader = ({
             action(result);
           } else {
             notification.error({
-              message: "无法获取文件内容",
+              title: "无法获取文件内容",
             });
           }
         });

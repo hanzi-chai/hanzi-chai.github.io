@@ -142,11 +142,11 @@ export default function Optimizer() {
             setBestResult(load(finalResult.配置文件) as 配置);
             setBestScore(finalResult.分数);
             notification.success({
-              message: "优化已完成，请查看结果!",
+              title: "优化已完成，请查看结果!",
             });
           } catch (error) {
             notification.error({
-              message: "优化过程中 libchai 出现错误",
+              title: "优化过程中 libchai 出现错误",
               description: (error as any).message,
             });
           }
