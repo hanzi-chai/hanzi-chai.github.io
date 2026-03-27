@@ -15,7 +15,8 @@ import {
 } from "~/atoms";
 import Algebra from "./Algebra";
 import { 拼音元素枚举映射原子, 当前元素原子 } from "~/atoms";
-import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
+import { QuestionCircleOutlined } from "@ant-design/icons";
+
 import ElementCounter from "./ElementCounter";
 import { 查询区块, 结构表示符列表 } from "~/lib";
 

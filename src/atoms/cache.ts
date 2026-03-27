@@ -553,6 +553,7 @@ export const 如前端输入原子 = atom(async (get) => {
 
 export const 如编码结果原子 = atom(async (get) => {
   const 默认目标 = get(默认目标原子);
+  console.log("默认目标", 默认目标);
   const 如前端输入 = await get(如前端输入原子);
   if (!如前端输入.ok) return 如前端输入;
   const result = await thread.spawn<[编码结果, Metric]>("encode", [

@@ -1,5 +1,6 @@
 import { blue } from "@ant-design/colors";
-import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import { DeleteOutlined } from "@ant-design/icons";
+
 import {
   Alert,
   Button,

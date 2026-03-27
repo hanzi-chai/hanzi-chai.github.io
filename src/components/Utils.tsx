@@ -1,6 +1,4 @@
-import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
-import MinusOutlined from "@ant-design/icons/MinusOutlined";
-import PlusOutlined from "@ant-design/icons/PlusOutlined";
+import { DeleteOutlined, PlusOutlined, MinusOutlined } from "@ant-design/icons";
 import type { ColProps, RowProps } from "antd";
 import {
   Select as _Select,
@@ -90,14 +88,7 @@ interface Click {
 }
 
 export const PlusButton = ({ onClick }: Click) => {
-  return (
-    <Button
-      shape="circle"
-      type="text"
-      onClick={onClick}
-      icon={<PlusOutlined />}
-    />
-  );
+  return <Button shape="circle" type="text" onClick={onClick} />;
 };
 
 export const MinusButton = ({ onClick }: Click) => {

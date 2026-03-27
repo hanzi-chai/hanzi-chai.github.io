@@ -1,7 +1,6 @@
-/// <reference types="vitest/config" />
 import path from "node:path";
 import { defineConfig, type UserConfig, type PluginOption } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import yaml from "@modyfi/vite-plugin-yaml";
 import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
@@ -35,14 +34,17 @@ const injectPrefetchPlugin = {
       "tygf.txt",
       "repertoire.json.deflate",
     ];
-    
+
     const prefetchLinks = dataFiles
-      .map(file => `  <link rel="prefetch" href="/data/${APP_VERSION}/${file}" as="fetch" />`)
+      .map(
+        (file) =>
+          `  <link rel="prefetch" href="/data/${APP_VERSION}/${file}" as="fetch" />`,
+      )
       .join("\n");
-    
+
     return html.replace(
       /(<meta charset="UTF-8" \/>)/,
-      `$1\n  <link rel="icon" href="/favicon.ico" />\n${prefetchLinks}`
+      `$1\n  <link rel="icon" href="/favicon.ico" />\n${prefetchLinks}`,
     );
   },
 };
@@ -65,16 +67,21 @@ export default defineConfig(({ mode }) => {
           moduleSideEffects: "no-external",
         },
         output: {
-          manualChunks: {
-            lodash: ["lodash"],
-            yaml: ["js-yaml"],
-            md5: ["js-md5"],
-            "styled-components": ["styled-components"],
-            react: ["react", "react-dom", "react-router"],
-            reactflow: ["reactflow"],
-            antd: ["antd"],
-            g: ["@antv/g"],
-            g2: ["@antv/g2"],
+          codeSplitting: {
+            groups: [
+              {
+                name: "js-yaml",
+                test: /node_modules[\\/]js-yaml/,
+              },
+              {
+                name: "react",
+                test: /node_modules[\\/]react.*/,
+              },
+              {
+                name: "antd",
+                test: /node_modules[\\/](antd|@ant-design.*)/,
+              },
+            ],
           },
         },
       },
@@ -95,9 +102,7 @@ export default defineConfig(({ mode }) => {
       wasmContentTypePlugin,
       injectPrefetchPlugin,
       { enforce: "pre", ...mdx() },
-      react({
-        // plugins: [["@swc-jotai/react-refresh", {}]],
-      }),
+      react(),
       wasm(),
       yaml(),
       Pages({

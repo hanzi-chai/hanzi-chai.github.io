@@ -3,15 +3,36 @@ import { 组装, 字库, 动态组装 } from "./lib";
 import axios from "axios";
 
 export interface WorkerInput {
-  type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "dynamic_analysis" | "assembly" | "dynamic_assembly";
+  type:
+    | "sync"
+    | "encode"
+    | "evaluate"
+    | "optimize"
+    | "analysis"
+    | "dynamic_analysis"
+    | "assembly"
+    | "dynamic_assembly";
   data: any;
 }
 
 export type WorkerOutput =
   | { type: "success"; result: any }
   | { type: "error"; error: Error }
-  | { type: "better_solution"; config: string; metric: string; score: number; index?: number }
-  | { type: "progress"; config: string; metric: string; score: number; steps: number; temperature: number }
+  | {
+      type: "better_solution";
+      config: string;
+      metric: string;
+      score: number;
+      index?: number;
+    }
+  | {
+      type: "progress";
+      config: string;
+      metric: string;
+      score: number;
+      steps: number;
+      temperature: number;
+    }
   | { type: "parameters"; t_max?: number; t_min?: number; steps?: number }
   | { type: "elapsed"; time: number }
   | { type: "trial_max"; temperature: number; accept_rate: number }

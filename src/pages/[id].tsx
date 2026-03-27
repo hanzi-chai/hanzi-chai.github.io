@@ -1,12 +1,15 @@
-import { AppstoreOutlined } from "@ant-design/icons";
-import BoldOutlined from "@ant-design/icons/BoldOutlined";
-import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
-import MailOutlined from "@ant-design/icons/MailOutlined";
-import NumberOutlined from "@ant-design/icons/NumberOutlined";
-import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
-import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
-import RiseOutlined from "@ant-design/icons/RiseOutlined";
-import SettingOutlined from "@ant-design/icons/SettingOutlined";
+import {
+  AppstoreOutlined,
+  BoldOutlined,
+  DatabaseOutlined,
+  MailOutlined,
+  NumberOutlined,
+  OrderedListOutlined,
+  ProfileOutlined,
+  RiseOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+
 import type { MenuProps } from "antd";
 import {
   Avatar,

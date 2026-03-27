@@ -22,7 +22,8 @@ import {
 } from "~/atoms";
 
 import { Button, Dropdown, Flex, Typography } from "antd";
-import MenuOutlined from "@ant-design/icons/MenuOutlined";
+import { MenuOutlined } from "@ant-design/icons";
+
 import PrioritizedRoots from "./PrioritizedRoots";
 import { 获取注册表 } from "~/lib";
 
