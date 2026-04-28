@@ -1,8 +1,9 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAddAtom, 自定义拆分原子 } from "~/atoms";
-import type { 拆分方式与评价 } from "~/lib";
-import Element from "./Element";
+import type { 字根, 拆分方式与评价 } from "~/lib";
+import Element from "./BorderItem";
+import { ConvertDisplay } from "./Mapping";
 import { Display } from "./Utils";
 
 export default function ResultDetail({
@@ -12,7 +13,7 @@ export default function ResultDetail({
 }: {
   char: string;
   data: 拆分方式与评价[];
-  map: Map<string, number[][]>;
+  map: Map<字根, number[][]>;
 }) {
   const addCustomization = useAddAtom(自定义拆分原子);
 
@@ -23,9 +24,9 @@ export default function ResultDetail({
       key: "sequence",
       render: (_, { 拆分方式, 可用 }) => (
         <Space>
-          {拆分方式.map(({ 名称 }, index) => (
+          {拆分方式.map(({ 字根 }, index) => (
             <Element key={index}>
-              <Display name={名称} />
+              <ConvertDisplay name={字根.获取名称()} />
             </Element>
           ))}
           {可用 && <span>［备选］</span>}
@@ -60,7 +61,7 @@ export default function ResultDetail({
         onClick={() =>
           addCustomization(
             char,
-            拆分方式.map((x) => x.名称),
+            拆分方式.map((x) => x.字根.获取名称()),
           )
         }
       >
@@ -74,9 +75,9 @@ export default function ResultDetail({
       <Flex wrap="wrap" gap="middle" align="center">
         <span>包含字根</span>
         {[...map].map(([s, v]) => (
-          <Space key={s}>
+          <Space key={s.获取名称()}>
             <Element>
-              <Display name={s} />
+              <ConvertDisplay name={s.获取名称()} />
             </Element>
             <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>

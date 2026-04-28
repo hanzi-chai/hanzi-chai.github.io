@@ -2,6 +2,7 @@ import type { 拼写运算, 源节点配置, 运算规则 } from "./config.js";
 import {
   ok,
   type Result,
+  type 字符,
   获取注册表,
   type 词典,
   type 词典条目,
@@ -48,7 +49,7 @@ function 合并拼写运算(自定义?: Record<string, 拼写运算>) {
 type 拼音元素映射 = Map<string, string>;
 
 interface 拼音分析器 {
-  分析(词: string, 拼音: string[]): Result<拼音元素映射[], Error>;
+  分析(词: 字符[], 拼音: string[]): Result<拼音元素映射[], Error>;
 }
 
 type 拼音分析配置 = Map<string, 拼写运算>;
@@ -58,7 +59,7 @@ class 默认拼音分析器 implements 拼音分析器 {
   private 音节表缓存: Map<string, 拼音元素映射> = new Map();
   constructor(private 拼写运算映射: Map<string, 拼写运算>) {}
 
-  分析(_词: string, 拼音: string[]) {
+  分析(_词: 字符[], 拼音: string[]) {
     const 元素映射列表: 拼音元素映射[] = [];
     for (const 音节 of 拼音) {
       let 音节结果 = this.音节表缓存.get(音节);

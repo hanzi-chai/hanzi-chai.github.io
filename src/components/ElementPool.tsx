@@ -1,23 +1,23 @@
+import { Button, Flex, Modal, Pagination, Tooltip, Typography } from "antd";
 import type { FC } from "react";
 import { useState } from "react";
 import styled from "styled-components";
-import Char from "./Character";
-import { Button, Flex, Modal, Pagination, Tooltip, Typography } from "antd";
 import {
   useAtomValue,
-  如字库原子,
-  如笔顺映射原子,
-  别名显示原子,
-  键盘原子,
   useAtomValueUnwrapped,
+  别名显示原子,
+  原始字库原子,
+  原始字库数据原子,
+  如笔顺映射原子,
+  键盘原子,
 } from "~/atoms";
-import StrokeSearch from "./CharacterSearch";
-import type { ShapeElementTypes } from "./ElementPicker";
-import Classifier from "./Classifier";
-import { Display } from "./Utils";
-import Element from "./Element";
-import { 是私用区 } from "~/lib";
+import type { 字符 } from "~/lib";
 import { 字符过滤器 } from "~/utils";
+import Element from "./BorderItem";
+import StrokeSearch from "./CharacterSearch";
+import Classifier from "./Classifier";
+import Item from "./Item";
+import { Display } from "./Utils";
 
 const Content = styled(Flex)`
   padding: 8px;
@@ -26,49 +26,57 @@ const Content = styled(Flex)`
 `;
 
 interface PoolProps {
-  element?: string;
-  setElement: (s: string | undefined) => void;
-  content: string[];
-  name: ShapeElementTypes | string;
+  element?: string | 字符;
+  setElement: (s: string | 字符 | undefined) => void;
+  content: string[] | 字符[];
+  name: string;
 }
 
 interface ElementProps {
-  element: string;
-  setElement?: (s: string | undefined) => void;
-  currentElement?: string;
+  element: string | 字符;
+  setElement?: (s: string | 字符 | undefined) => void;
+  currentElement?: string | 字符;
 }
 
-export const ElementWithTooltip = ({ element }: { element: string }) => {
+export const ElementWithTooltip = ({ element }: { element: 字符 | string }) => {
   const display = useAtomValue(别名显示原子);
   const core = (
-    <Element onClick={() => navigator.clipboard.writeText(element)}>
-      <Display name={element} />
+    <Element onClick={() => navigator.clipboard.writeText(element.toString())}>
+      {typeof element === "string" ? element : <Display name={element} />}
     </Element>
   );
-  if (!是私用区(element)) return core;
+  if (typeof element === "string" || !element.是私用区()) return core;
   return <Tooltip title={display(element)}>{core}</Tooltip>;
 };
 
 export const CharWithTooltip: FC<ElementProps> = ({
-  element: x,
+  element,
   setElement,
   currentElement,
 }) => {
   const keyboard = useAtomValue(键盘原子);
   const { mapping } = keyboard;
   const type =
-    x === currentElement ? "primary" : mapping[x] ? "link" : "default";
+    element === currentElement
+      ? "primary"
+      : mapping[element.toString()]
+        ? "link"
+        : "default";
   const display = useAtomValue(别名显示原子);
+  if (typeof element === "string") return element;
   const core = (
-    <Char
-      onClick={() => setElement?.(x === currentElement ? undefined : x)}
+    <Item
+      onClick={() =>
+        setElement?.(element === currentElement ? undefined : element)
+      }
       type={type}
     >
-      <Display name={x} />
-    </Char>
+      {<Display name={element} />}
+    </Item>
   );
-  const codepoint = x.codePointAt(0)!.toString(16);
-  const title = 是私用区(x) ? `${display(x)} ${codepoint}` : codepoint;
+  const title = element.是私用区()
+    ? `${display(element)} ${element.toNumber().toString(16)}`
+    : element.toNumber().toString(16);
   return <Tooltip title={title}>{core}</Tooltip>;
 };
 
@@ -84,19 +92,18 @@ export default function ElementPool({
   const pageSize = 100;
   const [input, setInput] = useState("");
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
-  const determinedRepertoire = useAtomValueUnwrapped(如字库原子);
+  const determinedRepertoire = useAtomValue(原始字库原子);
   const [isOpen, setOpen] = useState(false);
   const 笔顺过滤 = new 字符过滤器({ sequence: input });
   const 直接过滤 = new 字符过滤器({ name: input });
   const filtered =
     name === "字根"
       ? content.filter((char) => {
-          const seq = sequenceMap.get(char);
-          const data = determinedRepertoire._get()[char];
+          const ch = char as 字符;
+          const seq = sequenceMap.get(ch);
+          const data = determinedRepertoire.查询(ch);
           if (!seq || !data) return false;
-          return (
-            笔顺过滤.过滤(char, data, seq) || 直接过滤.过滤(char, data, seq)
-          );
+          return 笔顺过滤.过滤(ch, data, seq) || 直接过滤.过滤(ch, data, seq);
         })
       : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -122,7 +129,7 @@ export default function ElementPool({
       <Content wrap="wrap">
         {range.map((x) => (
           <CharWithTooltip
-            key={x}
+            key={JSON.stringify(x)}
             element={x}
             currentElement={element}
             setElement={setElement}

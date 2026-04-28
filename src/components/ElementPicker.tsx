@@ -14,7 +14,7 @@ import {
   拼音元素枚举映射原子,
   自定义分析数据库,
 } from "~/atoms";
-import { 查询区块, 结构描述字符列表 } from "~/lib";
+import { 字符, 结构描述字符列表 } from "~/lib";
 import Algebra from "./Algebra";
 import ElementAdder from "./ElementAdder";
 import ElementCounter from "./ElementCounter";
@@ -77,74 +77,81 @@ const pronunciationElementsDescription = (
   </ul>
 );
 
-type PrimaryTypes = "shape" | "pronunciation" | "custom";
-
 const useAllElements = () => {
-  const customizedClassifier = useAtomValue(分类器原子);
-  const pronunciationElements = useAtomValue(拼音元素枚举映射原子);
+  const 分类器 = useAtomValue(分类器原子);
+  const 拼音元素枚举映射 = useAtomValue(拼音元素枚举映射原子);
   const customElements = useAtomValue(自定义分析数据库.entries);
-  const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
-  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
-  const 排序汉字 = Object.keys(sortedCharacters)
-    .filter((k) => sequenceMap.get(k)?.length !== 1)
-    .filter((k) => 查询区块(k.codePointAt(0) ?? 0) !== "kangxi");
-  const allStrokes = Array.from(new Set(Object.values(customizedClassifier)))
+  const 字符列表 = useAtomValueUnwrapped(如排序字库数据原子);
+  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
+  const 排序汉字 = 字符列表
+    .filter((k) => 笔顺映射.get(k)?.length !== 1)
+    .filter((k) => k.区块() !== "kangxi");
+  const 全部笔画列表 = Array.from(new Set(Object.values(分类器)))
     .sort()
     .map(String);
-  const allErbi = allStrokes.flatMap((x) =>
-    ["0"].concat(allStrokes).map((y) => x + y),
+  const 全部二笔列表 = 全部笔画列表.flatMap((x) =>
+    ["0"].concat(全部笔画列表).map((y) => x + y),
   );
-  const shapeElements: Map<ShapeElementTypes, string[]> = new Map([
-    ["字根", 排序汉字],
-    ["笔画", allStrokes],
-    ["二笔", allErbi],
-    ["结构", [...结构描述字符列表]],
-  ]);
-  const custom: Map<string, string[]> = new Map();
+  const 自定义元素映射: Map<string, string[]> = new Map();
   for (const [key, value] of customElements) {
     const s = new Set(Object.values(value).flat());
-    custom.set(key, Array.from(s).sort());
+    自定义元素映射.set(key, Array.from(s).sort());
   }
-  const elements: Record<PrimaryTypes, Map<string, string[]>> = {
-    shape: shapeElements,
-    pronunciation: pronunciationElements,
-    custom: custom,
+  return {
+    字根: 排序汉字,
+    二笔: 全部二笔列表,
+    笔画: 全部笔画列表,
+    结构: [...结构描述字符列表],
+    字音: 拼音元素枚举映射,
+    自定义: 自定义元素映射,
   };
-  return elements;
 };
+
+type ElementTypes = "字形" | "字音" | "自定义";
 
 export default function ElementPicker() {
   const [element, setElement] = useAtom(当前元素原子);
-  const [types, setTypes] = useState<[string, string]>(["shape", "字根"]);
+  const [types, setTypes] = useState<[ElementTypes, string]>(["字形", "字根"]);
   const elements = useAllElements();
-  const { shape, pronunciation, custom } = elements;
+  const { 字根, 二笔, 笔画, 结构, 字音, 自定义 } = elements;
   const [primary, secondary] = types;
-  const currentElements = elements[primary as PrimaryTypes].get(secondary)!;
+  let 当前元素列表: string[] | 字符[];
+  if (primary === "字形") {
+    if (secondary === "字根") 当前元素列表 = 字根;
+    else if (secondary === "二笔") 当前元素列表 = 二笔;
+    else if (secondary === "笔画") 当前元素列表 = 笔画;
+    else if (secondary === "结构") 当前元素列表 = 结构;
+    else 当前元素列表 = [];
+  } else if (primary === "字音") {
+    当前元素列表 = 字音.get(secondary) ?? [];
+  } else {
+    当前元素列表 = 自定义.get(secondary) ?? [];
+  }
   const options: Option[] = [
     {
-      value: "shape",
+      value: "字形",
       label: "字形",
-      children: [...shape.keys()].map((v) => ({
+      children: ["字根", "二笔", "笔画", "结构"].map((v) => ({
         value: v,
         label: v,
       })),
     },
     {
-      value: "pronunciation",
+      value: "字音",
       label: "字音",
-      children: [...pronunciation.keys()].map((v) => ({
+      children: [...字音.keys()].map((v) => ({
         value: v,
         label: v,
       })),
     },
     {
-      value: "custom",
+      value: "自定义",
       label: "自定义",
-      children: [...custom.keys()].map((v) => ({
+      children: [...自定义.keys()].map((v) => ({
         value: v,
         label: v,
       })),
-      disabled: custom.size === 0,
+      disabled: 自定义.size === 0,
     },
   ];
   return (
@@ -154,27 +161,29 @@ export default function ElementPicker() {
         <span>元素类型：</span>
         <Cascader
           value={types}
-          onChange={(x) => setTypes(x as [string, string])}
+          onChange={(x) => setTypes(x as [ElementTypes, string])}
           options={options}
         />
         <Popover content={pronunciationElementsDescription}>
           <QuestionCircleOutlined />
         </Popover>
       </Flex>
-      {primary === "pronunciation" && (
+      {primary === "字音" && (
         <AlgebraEditor
           type={secondary}
           defaultType="声母"
-          setType={(s) => setTypes(["pronunciation", s])}
+          setType={(s) => setTypes(["字音", s])}
         />
       )}
       <ElementPool
         element={element}
         setElement={setElement}
-        content={currentElements}
+        content={当前元素列表}
         name={secondary}
       />
-      <ElementAdder element={element} />
+      <ElementAdder
+        element={element instanceof 字符 ? element.toString() : undefined}
+      />
       <ElementCounter />
     </Flex>
   );

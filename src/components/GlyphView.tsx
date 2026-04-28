@@ -1,8 +1,8 @@
 import type React from "react";
-import { useState, useRef, useEffect, useCallback, Fragment } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import type { N6, 向量, 图形盒子, 矢量笔画数据, 笔画名称, 绘制 } from "~/lib";
-import { 加, 减, 笔画图形, 部件图形 } from "~/lib";
+import { 减, 加, 笔画图形, 部件 } from "~/lib";
 
 const Box = styled.div`
   border: 1px solid black;
@@ -82,6 +82,7 @@ const Circle: React.FC<{
   setIndex: (i: PointIndex) => void;
 }> = ({ center, index, setIndex }) => {
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
     <circle
       cx={center[0]}
       cy={center[1]}
@@ -215,7 +216,7 @@ const Rectangles = ({
 const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [index, setIndex] = useState<PointIndex | null>(null);
-  const renderedGlyph = new 部件图形("", glyph.获取笔画列表())._笔画列表();
+  const renderedGlyph = glyph.获取笔画列表().map((x) => new 笔画图形(x));
 
   const onMouseMove = useCallback(
     (e: MouseEvent) => {

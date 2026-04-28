@@ -66,7 +66,12 @@ const 分析原始重码 = (
         return index !== -1 ? String.fromCodePoint(0x100000 + index) : x;
       }),
     );
-    反向映射.set(summary, (反向映射.get(summary) || []).concat(name));
+    反向映射.set(
+      summary,
+      (反向映射.get(summary) || []).concat(
+        name.map((c) => c.toString()).join(""),
+      ),
+    );
   }
   return 反向映射;
 };
@@ -230,7 +235,8 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
           key,
           range(maxLength).map(() => new Set()),
         );
-      reverseMap.get(key)?.[i]?.add(词);
+      reverseMap.get(key)?.[i]?.add(词.map((c) => c.toString()).join("")) ??
+        null;
     });
   }
   const dataSource = [...reverseMap]

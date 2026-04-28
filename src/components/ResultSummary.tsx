@@ -124,7 +124,7 @@ export default function ResultSummary({
 }) {
   let 字根序列 = analysis.字根序列;
   if ("被覆盖拆分方式" in analysis && analysis.被覆盖拆分方式) {
-    字根序列 = analysis.被覆盖拆分方式.拆分方式.map((x) => x.名称);
+    字根序列 = analysis.被覆盖拆分方式.拆分方式.map((x) => x.字根);
   }
   const customize = useAtomValue(自定义拆分原子);
   const remove = useRemoveAtom(自定义拆分原子);
@@ -140,7 +140,7 @@ export default function ResultSummary({
         {字根序列.map((x, index) => {
           return (
             <Flex key={index} align="center">
-              <ElementWithTooltip element={x} />
+              <ElementWithTooltip element={x.获取名称()} />
             </Flex>
           );
         })}
@@ -185,7 +185,7 @@ export default function ResultSummary({
                     dynamicCustomize[char] ??
                     analysis.全部拆分方式
                       .filter((x) => x.可用)
-                      .map((x) => x.拆分方式.map((y) => y.名称))
+                      .map((x) => x.拆分方式.map((y) => y.字根.获取名称()))
                   }
                 />
               }
@@ -198,7 +198,9 @@ export default function ResultSummary({
             content={
               <Customize
                 component={char}
-                initialValues={overrideRootSeries ?? 字根序列}
+                initialValues={
+                  overrideRootSeries ?? 字根序列.map((x) => x.获取名称())
+                }
               />
             }
           >

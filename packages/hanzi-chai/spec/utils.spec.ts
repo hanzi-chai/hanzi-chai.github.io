@@ -5,21 +5,29 @@ import {
   模拟复合体,
   模拟拼接部件,
   模拟衍生部件,
-  是基本区汉字,
-  是私用区,
   解析词典,
-  是基本或衍生部件
+  是基本或衍生部件,
+  字符
 } from "../src/index.js";
+import { 获取数据 } from "./index.js";
+
+const { 原始字库 } = 获取数据();
 
 describe("Unicode 方法", () => {
   it("基本区汉字判断", () => {
-    const char = "字"; // Example CJK character
-    expect(是基本区汉字(char)).toBeTruthy();
+    const char = 字符.从码位创建(0x4e00); // Example CJK Unified Ideograph
+    expect(char.ok).toBeTruthy();
+    if (char.ok) {
+      expect(char.value.是基本区汉字()).toBeTruthy();
+    }
   });
 
   it("私用区判断", () => {
-    const char = ""; // Example PUA character
-    expect(是私用区(char)).toBeTruthy();
+    const char = 字符.从码位创建(0xe001); // Example PUA character
+    expect(char.ok).toBeTruthy();
+    if (char.ok) {
+      expect(char.value.是私用区()).toBeTruthy();
+    }
   });
 
   it("字符计数", () => {
@@ -44,6 +52,6 @@ describe("数据工具", () => {
 describe("其他", () => {
   it("解析词典", () => {
     const text = [["的", "de5", "100"]]; // Example TSV
-    expect(解析词典(text)).toEqual([{ 词: "的", 拼音: ["de5"], 频率: 100 }]);
+    expect(解析词典(text, 原始字库)).toEqual([{ 词: [{ 码位: 0x7684 }], 拼音: ["de5"], 频率: 100 }]);
   });
 });

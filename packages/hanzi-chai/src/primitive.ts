@@ -10,11 +10,11 @@ import type {
   笔画块,
 } from "./data.js";
 import { 字库, type 字形, 是部件, 汉字 } from "./repertoire.js";
+import { 字符 } from "./unicode.js";
 import {
   default_err,
   ok,
   type Result,
-  字符,
   所有源标签,
   排列组合,
   是源标签,
@@ -31,20 +31,33 @@ interface 字符与字形列表 {
   字形列表: 标签字形数据[];
 }
 
+export interface 校验原始汉字数据 extends 原始汉字数据 {
+  character: 字符;
+}
+
 class 原始字库 {
-  private 字库查找: Map<string, 原始汉字数据>;
+  private 字库查找: Map<number, 校验原始汉字数据>;
   constructor(字库: 原始汉字数据[]) {
-    this.字库查找 = new Map(
-      字库.map((data) => [String.fromCodePoint(data.unicode), data]),
-    );
+    this.字库查找 = new Map();
+    for (const data of 字库) {
+      const 字符实例 = 字符.从码位创建(data.unicode);
+      if (!字符实例.ok) continue;
+      this.字库查找.set(data.unicode, { ...data, character: 字符实例.value });
+    }
   }
 
   _get() {
     return this.字库查找;
   }
 
-  查询(汉字: string): 原始汉字数据 | undefined {
-    return this.字库查找.get(汉字);
+  查询(字符实例: 字符): 校验原始汉字数据 | undefined {
+    return this.字库查找.get(字符实例.toNumber());
+  }
+
+  校验(汉字: string): 校验原始汉字数据 | undefined {
+    const 字符列表 = [...汉字];
+    if (字符列表.length !== 1) return;
+    return this.字库查找.get(汉字.codePointAt(0)!);
   }
 
   /**
@@ -64,13 +77,10 @@ class 原始字库 {
     变换器列表: 变换器[] = [],
   ): Result<字库, Error> {
     let 字形列表映射 = new Map<字符, 标签字形数据[]>();
-    字符.重置();
     // 1. 合并用户自定义
-    for (const { unicode, glyphs } of this.字库查找.values()) {
-      const 字符实例 = 字符.从码位创建(unicode);
-      if (!字符实例.ok) return 字符实例;
+    for (const { character, glyphs } of this.字库查找.values()) {
       const 字形列表: 标签字形数据[] = [];
-      for (const 字形 of 自定义字形[字符实例.toString()] ?? []) {
+      for (const 字形 of 自定义字形[character.toString()] ?? []) {
         let tags = new Set((字形.tags ?? []).filter(是源标签));
         if (tags.size === 0) tags = new Set(所有源标签);
         字形列表.push({ ...字形, user: true, tags });
@@ -80,7 +90,7 @@ class 原始字库 {
         if (tags.size === 0) tags = new Set(所有源标签);
         字形列表.push({ ...字形, user: false, tags });
       }
-      字形列表映射.set(字符实例.value, 字形列表);
+      字形列表映射.set(character, 字形列表);
     }
     // 2. 应用变换器
     for (const 变换器 of 变换器列表) {
@@ -98,17 +108,17 @@ class 原始字库 {
       for (const 字形 of 字形列表) {
         if (字形.type === "compound" || 字形.type === "spliced_component") {
           for (const 字符串 of 字形.operandList) {
-            const 字符实例 = 字符.从字符串创建(字符串);
-            if (!字符实例.ok) return 字符实例;
-            引用的其他字符.add(字符实例.value);
+            const 字符实例 = this.校验(字符串)?.character;
+            if (!字符实例) return default_err(`无法找到字符: ${字符串}`);
+            引用的其他字符.add(字符实例);
           }
         } else if (
           字形.type === "derived_component" ||
           字形.type === "identity"
         ) {
-          const 字符实例 = 字符.从字符串创建(字形.source);
-          if (!字符实例.ok) return 字符实例;
-          引用的其他字符.add(字符实例.value);
+          const 字符实例 = this.校验(字形.source)?.character;
+          if (!字符实例) return default_err(`无法找到字符: ${字形.source}`);
+          引用的其他字符.add(字符实例);
         }
       }
       入度表.set(码位, 引用的其他字符.size);
@@ -177,9 +187,9 @@ class 原始字库 {
     if (模式.operandList.length !== 字形.operandList.length) return false;
     for (let i = 0; i < 模式.operandList.length; i++) {
       const 子模式 = 模式.operandList[i]!;
-      const 如子部分 = 字符.从字符串创建(字形.operandList[i]!);
-      if (!如子部分.ok) return false;
-      const 子部分 = 如子部分.value;
+      const 如子部分 = this.校验(字形.operandList[i]!)?.character;
+      if (!如子部分) return false;
+      const 子部分 = 如子部分;
       if (typeof 子模式 === "string") {
         if (子部分.toString() !== 子模式) return false;
       } else if ("id" in 子模式) {
@@ -218,7 +228,11 @@ class 原始字库 {
     项: 节点,
     变量映射: 变量映射,
   ): Result<标签字形数据 | 字符, Error> {
-    if (typeof 项 === "string") return 字符.从字符串创建(项);
+    if (typeof 项 === "string") {
+      const ch = this.校验(项)?.character;
+      if (!ch) return default_err(`无法找到字符: ${项}`);
+      return ok(ch);
+    }
     if ("id" in 项) {
       const 取值 = 变量映射.get(项.id);
       if (!取值) return default_err(`未知的结构变量 ID: ${项.id}`);
@@ -310,11 +324,11 @@ class 原始字库 {
     if (字形数据.type === "basic_component") {
       return ok([new 部件(字符实例, 字形数据.tags, 字形数据.strokes)]);
     } else if (字形数据.type === "derived_component") {
-      const 源字符 = 字符.从字符串创建(字形数据.source);
-      if (!源字符.ok) return 源字符;
-      const 基本部件 = 字库.查询字形(源字符.value)?.find(是部件);
+      const 源字符 = this.校验(字形数据.source)?.character;
+      if (!源字符) return default_err(`无法找到字符: ${字形数据.source}`);
+      const 基本部件 = 字库.查询字形(源字符)?.find(是部件);
       if (基本部件 === undefined)
-        return default_err(`源部件 ${源字符.value.print()} 不存在`);
+        return default_err(`源部件 ${源字符.十六进制()} 不存在`);
       const 笔画列表: 矢量图形数据 = [];
       字形数据.strokes.forEach((x) => {
         if (x.feature === "reference") {
@@ -329,11 +343,11 @@ class 原始字库 {
     } else if (字形数据.type === "spliced_component") {
       const 部分列表: 图形盒子[] = [];
       for (const 部分 of 字形数据.operandList) {
-        const 源字符 = 字符.从字符串创建(部分);
-        if (!源字符.ok) return 源字符;
-        const 基本部件 = 字库.查询字形(源字符.value)?.find(是部件);
+        const 源字符 = this.校验(部分)?.character;
+        if (!源字符) return default_err(`无法找到字符: ${部分}`);
+        const 基本部件 = 字库.查询字形(源字符)?.find(是部件);
         if (基本部件 === undefined)
-          return default_err(`源部件 ${源字符.value.print()} 不存在`);
+          return default_err(`源部件 ${源字符.十六进制()} 不存在`);
         部分列表.push(图形盒子.从笔画列表构建(基本部件.矢量图形));
       }
       const 作为复合体 = {
@@ -344,11 +358,11 @@ class 原始字库 {
       const 笔画列表 = 图形盒子.仿射合并(作为复合体, 部分列表).获取笔画列表();
       return ok([new 部件(字符实例, 字形数据.tags, 笔画列表)]);
     } else if (字形数据.type === "identity") {
-      const 源字符 = 字符.从字符串创建(字形数据.source);
-      if (!源字符.ok) return 源字符;
-      const 引用字形列表 = 字库.查询字形(源字符.value);
+      const 源字符 = this.校验(字形数据.source)?.character;
+      if (!源字符) return default_err(`无法找到字符: ${字形数据.source}`);
+      const 引用字形列表 = 字库.查询字形(源字符);
       if (引用字形列表 === undefined)
-        return default_err(`源部件 ${源字符.value.print()} 不存在`);
+        return default_err(`源部件 ${源字符.十六进制()} 不存在`);
       const 字形列表: 字形[] = [];
       const 反向索引映射: Map<number, 源标签集合> = new Map();
       for (const 标签 of 字形数据.tags) {
@@ -378,9 +392,9 @@ class 原始字库 {
     } else {
       const 引用字形列表的列表: 字形[][] = [];
       for (const source of 字形数据.operandList) {
-        const 源字符 = 字符.从字符串创建(source);
-        if (!源字符.ok) return 源字符;
-        引用字形列表的列表.push(字库.查询字形(源字符.value)!);
+        const 源字符 = this.校验(source)?.character;
+        if (!源字符) return default_err(`无法找到字符: ${source}`);
+        引用字形列表的列表.push(字库.查询字形(源字符)!);
       }
       const 约化字形列表: 字形[] = [];
       // 0-0: G

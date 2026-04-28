@@ -4,11 +4,10 @@ import { sortBy } from "lodash-es";
 import pako from "pako";
 import type { Metric } from "~/components/MetricTable";
 import type {
-  Result,
-  动态字形分析结果,
   动态组装条目,
   原始字库数据,
-  字形分析结果,
+  原始汉字数据,
+  字符,
   当量映射,
   码位,
   码表条目,
@@ -28,7 +27,7 @@ import {
   展开决策,
   总序列化,
   是归并,
-  是私用区,
+  是部件,
   标准化自定义,
   添加优先简码,
   获取汉字集合,
@@ -49,7 +48,6 @@ import {
   分析配置原子,
   动态分析原子,
   变换器列表原子,
-  字形来源列表原子,
   字形自定义原子,
   字母表原子,
   字集指示原子,
@@ -112,15 +110,18 @@ export const 远程原子 = atom((get) => {
 
 export const 原始字库数据原子 = atom(async () => {
   const content = await 拉取资源("repertoire.json.deflate");
-  const data: 原始字库数据 = JSON.parse(content);
-  return data;
+  const data: 原始汉字数据[] = JSON.parse(content);
+  return Object.fromEntries(
+    data.map((x) => [String.fromCodePoint(x.unicode), x]),
+  );
 });
 
 export const 原始可编辑字库数据原子 = atom({} as 原始字库数据);
 
-export const 默认词典原子 = atom(async () => {
+export const 默认词典原子 = atom(async (get) => {
   const content = await 拉取资源("dictionary.txt");
-  return 解析词典(读取表格(content));
+  const 原始字库 = await get(原始字库原子);
+  return 解析词典(读取表格(content), 原始字库);
 });
 
 export const 默认键位分布目标原子 = atom(async () => {
@@ -156,11 +157,11 @@ export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 export const 字集原子 = atom(async (get) => {
   const 字集指示 = get(字集指示原子);
   const 过滤函数 = 字集过滤查找表[字集指示]!;
-  const 原始字库数据 = await get(原始字库数据原子);
-  const 字集 = new Set<string>();
-  for (const [字符, 数据] of Object.entries(原始字库数据)) {
-    if (过滤函数(字符, 数据)) {
-      字集.add(字符);
+  const 原始字库 = await get(原始字库原子);
+  const 字集 = new Set<字符>();
+  for (const [_, 数据] of 原始字库._get()) {
+    if (过滤函数(数据.character, 数据 as any as 原始汉字数据)) {
+      字集.add(数据.character);
     }
   }
   return 字集;
@@ -168,20 +169,20 @@ export const 字集原子 = atom(async (get) => {
 
 export const 词典原子 = atom(async (get) => {
   const 词典 = get(用户词典原子) ?? (await get(默认词典原子));
-  const 字集 = await get(字集原子);
-  return 词典.filter(({ 词 }) => {
-    return [...词].every((char) => 字集.has(char));
-  });
+  return 词典;
 });
 
-export const 自定义元素映射原子 = atom((get) => {
+export const 自定义元素映射原子 = atom(async (get) => {
   const 自定义元素集合 = get(自定义分析数据库.entries);
-  const 查找表 = new Map<string, Record<string, string[]>>();
+  const 原始字库 = await get(原始字库原子);
+  const 查找表 = new Map<字符, Record<string, string[]>>();
   for (const [类别, 映射] of 自定义元素集合) {
     for (const [汉字, 元素列表] of Object.entries(映射)) {
-      const 记录 = 查找表.get(汉字) ?? {};
+      const 字符实例 = 原始字库.校验(汉字);
+      if (!字符实例) continue;
+      const 记录 = 查找表.get(字符实例.character) ?? {};
       记录[类别] = 元素列表;
-      查找表.set(汉字, 记录);
+      查找表.set(字符实例.character, 记录);
     }
   }
   return 查找表;
@@ -189,25 +190,29 @@ export const 自定义元素映射原子 = atom((get) => {
 
 export const 汉字集合原子 = atom(async (get) => {
   const 词典 = await get(词典原子);
-  return 获取汉字集合(词典);
+  const 原始字库 = await get(原始字库原子);
+  return 获取汉字集合(词典, 原始字库);
 });
 
 export const 原始字库原子 = atom(async (get) => {
   const 远程 = get(远程原子);
   if (远程) {
     const 原始字库数据 = get(原始可编辑字库数据原子);
-    return new 原始字库(原始字库数据);
+    return new 原始字库(Object.values(原始字库数据));
   }
   const 原始字库数据 = await get(原始字库数据原子);
   const 用户原始字库数据 = get(用户原始字库数据原子);
-  return new 原始字库({ ...原始字库数据, ...用户原始字库数据 });
+  return new 原始字库([
+    ...Object.values(原始字库数据),
+    ...Object.values(用户原始字库数据),
+  ]);
 });
 
 export const 别名显示原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
-  return (字符: string) => {
-    if (!是私用区(字符)) return 字符;
-    const name = 原始字库.查询(字符)?.name;
+  return (字符实例: 字符) => {
+    if (!字符实例.是私用区()) return 字符实例.toString();
+    const name = 原始字库.查询(字符实例)?.name;
     return name ?? "丢失的字根";
   };
 });
@@ -217,39 +222,28 @@ export const 标准字形自定义原子 = atom((get) => {
   return 标准化自定义(字形自定义);
 });
 
-export const 如确定字库原子 = atom(async (get) => {
+export const 如字库原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 字形自定义 = get(标准字形自定义原子);
-  const 字形来源列表 = get(字形来源列表原子);
-  return 原始字库.确定(字形自定义, 字形来源列表);
-});
-
-export const 如字库原子 = atom(async (get) => {
-  const 如确定字库 = await get(如确定字库原子);
-  if (!如确定字库.ok) return 如确定字库;
   const 变换器列表 = get(变换器列表原子);
-  let 字库 = 如确定字库.value;
-  for (const 变换器 of 变换器列表) {
-    字库 = 字库.应用变换器(变换器);
-  }
-  return ok(字库);
+  return 原始字库.确定(字形自定义, 变换器列表);
 });
 
 export const 如私用区图形原子 = atom(async (get) => {
   const 如字库 = await get(如字库原子);
   if (!如字库.ok) return 如字库;
   const 字库 = 如字库.value;
-  const result = new Map<string, 图形盒子>();
-  for (const [字符, { glyphs }] of Object.entries(字库._get())) {
-    if (!是私用区(字符)) continue;
+  const result = new Map<字符, 图形盒子>();
+  for (const [_, { 字符, 字形列表 }] of 字库._get()) {
+    if (!字符.是私用区()) continue;
     if (result.has(字符)) continue;
-    const glyph = glyphs[0]!;
-    if (glyph.type === "basic_component") {
-      result.set(字符, 图形盒子.从笔画列表构建(glyph.strokes));
+    const glyph = 字形列表[0]!;
+    if (是部件(glyph)) {
+      result.set(字符, 图形盒子.从笔画列表构建(glyph.矢量图形));
     } else {
-      const 如图形盒子 = 字库.递归渲染复合体(glyph, result);
-      if (!如图形盒子.ok) return 如图形盒子;
-      result.set(字符, 如图形盒子.value);
+      const 盒子 = 字库.递归渲染复合体(glyph);
+      if (!盒子.ok) continue;
+      result.set(字符, 盒子.value);
     }
   }
   return ok(result);
@@ -259,44 +253,41 @@ export const 如笔顺映射原子 = atom(async (get) => {
   const 如字库 = await get(如字库原子);
   if (!如字库.ok) return 如字库;
   const 字库 = 如字库.value;
-  const result = new Map<string, string>();
-  for (const [字符, { glyphs }] of Object.entries(字库._get())) {
-    const glyph = glyphs[0];
+  const result = new Map<字符, string>();
+  for (const [_, { 字符, 字形列表 }] of 字库._get()) {
+    const glyph = 字形列表[0];
     if (!glyph) {
       result.set(字符, "");
       continue;
     }
     if (result.has(字符)) continue;
-    if (glyph.type === "basic_component") {
-      const 笔顺 = glyph.strokes.map((x) => 默认分类器[x.feature]).join("");
+    if (是部件(glyph)) {
+      const 笔顺 = glyph.获取笔画序列(默认分类器).join("");
       result.set(字符, 笔顺);
     } else {
-      const 如笔顺 = 字库.递归渲染笔画序列(glyph, result);
-      if (!如笔顺.ok) return 如笔顺;
-      result.set(字符, 如笔顺.value);
+      const 笔顺 = glyph.获取笔画序列(默认分类器).join("");
+      result.set(字符, 笔顺);
     }
   }
   return ok(result);
 });
 
 export const 如排序字库数据原子 = atom(async (get) => {
-  const 如字库 = await get(如字库原子);
-  if (!如字库.ok) return 如字库;
+  const 原始字库 = await get(原始字库原子);
   const 如笔顺映射 = await get(如笔顺映射原子);
   if (!如笔顺映射.ok) return 如笔顺映射;
   const 笔顺映射 = 如笔顺映射.value;
   const result = sortBy(
-    Object.entries(如字库.value._get()),
-    ([char]) => 笔顺映射.get(char)?.length ?? 0,
-    // ([char]) => 笔顺映射.get(char) ?? "",
+    [...原始字库._get().values()].map((x) => x.character),
+    (char) => 笔顺映射.get(char)?.length ?? 0,
   );
-  return ok(Object.fromEntries(result));
+  return ok(result);
 });
 
 export const 全部标签原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 标签数量映射 = new Map<string, number>();
-  for (const { glyphs } of Object.values(原始字库._get())) {
+  for (const { glyphs } of 原始字库._get().values()) {
     for (const { tags } of glyphs) {
       tags?.map((s) => 标签数量映射.set(s, (标签数量映射.get(s) ?? 0) + 1));
     }
@@ -315,7 +306,7 @@ export const 下一个可用的码位原子 = atom((get) => {
   return 0xffff;
 });
 
-export const 当前元素原子 = atom<string | undefined>(undefined);
+export const 当前元素原子 = atom<string | 字符 | undefined>(undefined);
 
 export const 平铺决策原子 = atom((get) => {
   const 决策 = get(决策原子);
@@ -400,11 +391,13 @@ export const 如字形分析结果原子 = atom(async (get) => {
   if (!如字库.ok) return 如字库;
   const 字形分析配置 = get(字形分析配置原子);
   const 汉字集合 = await get(汉字集合原子);
-  return await thread.spawn<Result<字形分析结果, Error>>("analysis", [
-    如字库.value._get(),
-    字形分析配置,
-    汉字集合,
-  ]);
+  const 原始字库 = await get(原始字库原子);
+  // return await thread.spawn<Result<字形分析结果, Error>>("analysis", [
+  //   如字库.value._get(),
+  //   字形分析配置,
+  //   汉字集合,
+  // ]);
+  return 如字库.value.分析(字形分析配置, 汉字集合, 原始字库);
 });
 
 export const 如动态字形分析结果原子 = atom(async (get) => {
@@ -412,10 +405,12 @@ export const 如动态字形分析结果原子 = atom(async (get) => {
   if (!如字库.ok) return 如字库;
   const 字形分析配置 = get(字形分析配置原子);
   const 汉字集合 = await get(汉字集合原子);
-  return await thread.spawn<Result<动态字形分析结果, Error>>(
-    "dynamic_analysis",
-    [如字库.value._get(), 字形分析配置, 汉字集合],
-  );
+  const 原始字库 = await get(原始字库原子);
+  // return await thread.spawn<Result<动态字形分析结果, Error>>(
+  //   "dynamic_analysis",
+  //   [如字库.value._get(), 字形分析配置, 汉字集合],
+  // );
+  return 如字库.value.动态分析(字形分析配置, 汉字集合, 原始字库);
 });
 
 export const 拼音分析结果原子 = atom(async (get) => {
@@ -425,7 +420,7 @@ export const 拼音分析结果原子 = atom(async (get) => {
   return 分析拼音(源映射, 拼写运算查找表, 词典);
 });
 
-export const 组装配置原子 = atom((get) => {
+export const 组装配置原子 = atom(async (get) => {
   const config: Omit<组装配置, "额外信息"> = {
     源映射: get(源映射原子),
     条件映射: get(条件映射原子),
@@ -433,7 +428,7 @@ export const 组装配置原子 = atom((get) => {
     构词规则列表: get(构词配置原子),
     最大码长: get(最大码长原子),
     键盘配置: get(键盘原子),
-    自定义分析映射: get(自定义元素映射原子),
+    自定义分析映射: await get(自定义元素映射原子),
   };
   return config;
 });
@@ -443,7 +438,7 @@ export const 如组装结果原子 = atom(async (get) => {
   const 如字形分析结果 = await get(如字形分析结果原子);
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
-  const config = get(组装配置原子);
+  const config = await get(组装配置原子);
   const result = await thread.spawn<组装条目[]>("assembly", [
     config,
     拼音分析结果,
@@ -457,7 +452,7 @@ export const 如动态组装结果原子 = atom(async (get) => {
   const 如字形分析结果 = await get(如动态字形分析结果原子);
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
-  const config = get(组装配置原子);
+  const config = await get(组装配置原子);
   const result = await thread.spawn<动态组装条目[]>("dynamic_assembly", [
     config,
     拼音分析结果,
@@ -466,11 +461,21 @@ export const 如动态组装结果原子 = atom(async (get) => {
   return ok(result);
 });
 
-export const 优先简码映射原子 = atom((get) => {
+export const 优先简码映射原子 = atom(async (get) => {
+  const 原始字库 = await get(原始字库原子);
   const 优先简码列表 = get(优先简码原子);
   const map = new Map<string, number>();
   for (const { word, sources, level } of 优先简码列表) {
-    const hash = 识别符(word, sources);
+    const chars: 字符[] = [];
+    for (const char of word) {
+      const charInstance = 原始字库.校验(char);
+      if (!charInstance) {
+        console.warn(`优先简码中的字符不在字库中: ${char}`);
+        continue;
+      }
+      chars.push(charInstance.character);
+    }
+    const hash = 识别符(chars, sources);
     map.set(hash, level);
   }
   return map;
@@ -479,14 +484,14 @@ export const 优先简码映射原子 = atom((get) => {
 export const 如组装结果与优先简码原子 = atom(async (get) => {
   const 如组装结果 = await get(如组装结果原子);
   if (!如组装结果.ok) return 如组装结果;
-  const 优先简码映射 = get(优先简码映射原子);
+  const 优先简码映射 = await get(优先简码映射原子);
   return ok(添加优先简码(如组装结果.value, 优先简码映射));
 });
 
 export const 如动态组装结果与优先简码原子 = atom(async (get) => {
   const 如动态组装结果 = await get(如动态组装结果原子);
   if (!如动态组装结果.ok) return 如动态组装结果;
-  const 优先简码映射 = get(优先简码映射原子);
+  const 优先简码映射 = await get(优先简码映射原子);
   return ok(添加优先简码(如动态组装结果.value, 优先简码映射));
 });
 
@@ -527,7 +532,7 @@ export const 如编码结果原子 = atom(async (get) => {
   return ok(result);
 });
 
-export interface 联合条目 extends 组装条目, 编码条目 {}
+export interface 联合条目 extends 组装条目, Omit<编码条目, "词"> {}
 
 export const 联合结果原子 = atom(async (get) => {
   const 如组装结果 = await get(如组装结果原子);
@@ -535,9 +540,12 @@ export const 联合结果原子 = atom(async (get) => {
   const 如编码结果 = await get(如编码结果原子);
   if (!如编码结果.ok) return 如编码结果;
   const [编码结果] = 如编码结果.value;
-  const combined: 联合条目[] = 如组装结果.value.map((x, i) => ({
-    ...x,
-    ...编码结果[i]!,
-  }));
+  const combined: 联合条目[] = 如组装结果.value.map((x, i) => {
+    const { 词, ...rest } = 编码结果[i]!;
+    return {
+      ...x,
+      ...rest,
+    };
+  });
   return ok(combined);
 });

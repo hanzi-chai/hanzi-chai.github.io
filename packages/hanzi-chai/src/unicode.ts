@@ -1,5 +1,6 @@
 import type { 字集指示 } from "./config.js";
 import type { 原始汉字数据 } from "./data.js";
+import { default_err, ok, type Result } from "./utils.js";
 
 export interface 区块 {
   name: string; // 简洁的英文名，如 "cjk", "cjk-a"
@@ -200,71 +201,105 @@ export const 区块列表: 区块[] = [
   },
 ];
 
-export const 查询区块 = (code: number) => {
-  for (const block of 区块列表) {
-    if (code >= block.begin && code <= block.end) {
-      return block.name;
+const 第十六平面起始位 = 0x100000;
+
+export class 字符 {
+  private static 自由码位 = 第十六平面起始位;
+  private constructor(private readonly 码位: number) {}
+
+  static 从码位创建(cp: number): Result<字符, Error> {
+    if (!Number.isInteger(cp) || cp < 0 || cp > 0x10ffff) {
+      return default_err(`不合法的 Unicode 码位: ${cp}`);
     }
+    if (cp >= 0xd800 && cp <= 0xdfff) {
+      return default_err(`不合法的 Unicode 码位: ${cp} (代理项)`);
+    }
+    const 新字符实例 = new 字符(cp);
+    return ok(新字符实例);
   }
-  return "unknown";
-};
 
-export const 是基本区汉字 = (char: string) => {
-  const code = char.codePointAt(0)!;
-  const block = 查询区块(code);
-  return block === "cjk";
-};
+  toString(): string {
+    return String.fromCodePoint(this.码位);
+  }
 
-export const 是汉字 = (char: string) => {
-  const code = char.codePointAt(0)!;
-  const block = 查询区块(code);
-  return block.startsWith("cjk");
-};
+  toNumber(): number {
+    return this.码位;
+  }
 
-export const 是汉字或兼容汉字 = (char: string) => {
-  const code = char.codePointAt(0)!;
-  const block = 查询区块(code);
-  return (
-    block.startsWith("cjk") || block === "compat" || block === "compat-sup"
-  );
-};
+  十六进制(): string {
+    return `${this.toString()} U+${this.toNumber().toString(16).toUpperCase().padStart(4, "0")}`;
+  }
 
-export const 是汉字补充 = (char: string) => {
-  const code = char.codePointAt(0)!;
-  const block = 查询区块(code);
-  return (
-    block === "radicals-sup" ||
-    block === "kangxi" ||
-    block === "strokes" ||
-    block === "compat" ||
-    block === "compat-sup" ||
-    block === "punct"
-  );
-};
+  static 获取自由字符() {
+    const 自由码位 = 字符.自由码位;
+    字符.自由码位++;
+    return 字符.从码位创建(自由码位);
+  }
 
-export const 是私用区 = (char: string) => {
-  const code = char.codePointAt(0)!;
-  const block = 查询区块(code);
-  return block === "pua" || block === "pua-plane15";
-};
+  static 重置() {
+    字符.自由码位 = 第十六平面起始位;
+  }
 
-export const 是用户私用区 = (char: string) => {
-  const code = char.codePointAt(0)!;
-  const block = 查询区块(code);
-  return block === "pua" && code >= 0xf000;
-};
+  区块() {
+    for (const block of 区块列表) {
+      if (this.码位 >= block.begin && this.码位 <= block.end) {
+        return block.name;
+      }
+    }
+    return "unknown";
+  }
+
+  是基本区汉字() {
+    const block = this.区块();
+    return block === "cjk";
+  }
+
+  是汉字() {
+    const block = this.区块();
+    return block.startsWith("cjk");
+  }
+
+  是汉字或兼容汉字() {
+    const block = this.区块();
+    return (
+      block.startsWith("cjk") || block === "compat" || block === "compat-sup"
+    );
+  }
+
+  是汉字补充() {
+    const block = this.区块();
+    return (
+      block === "radicals-sup" ||
+      block === "kangxi" ||
+      block === "strokes" ||
+      block === "compat" ||
+      block === "compat-sup" ||
+      block === "punct"
+    );
+  }
+
+  是私用区() {
+    const block = this.区块();
+    return block === "pua" || block === "pua-plane15";
+  }
+
+  是用户私用区() {
+    const block = this.区块();
+    return block === "pua" && this.码位 >= 0xf000;
+  }
+}
 
 export const 字集过滤查找表: Record<
   字集指示,
-  (k: string, v: 原始汉字数据) => boolean
+  (k: 字符, v: 原始汉字数据) => boolean
 > = {
   minimal: (_, v) => v.gb2312 > 0 && v.tygf > 0,
   gb2312: (_, v) => v.gb2312 > 0,
   general: (_, v) => v.tygf > 0,
-  basic: (k, v) => v.tygf > 0 || 是基本区汉字(k),
-  extended: (k, v) => v.tygf > 0 || 是汉字(k),
-  supplement: (k, v) => v.tygf > 0 || 是汉字(k) || 是汉字补充(k),
-  maximal: (k, _) => !是私用区(k),
+  basic: (k, v) => v.tygf > 0 || k.是基本区汉字(),
+  extended: (k, v) => v.tygf > 0 || k.是汉字(),
+  supplement: (k, v) => v.tygf > 0 || k.是汉字() || k.是汉字补充(),
+  maximal: (k, _) => !k.是私用区(),
 };
 
 export const 字集过滤选项 = [

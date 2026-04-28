@@ -18,13 +18,8 @@ import {
   type 筛选器,
   默认筛选器列表,
 } from "./selector.js";
-import {
-  default_err,
-  ok,
-  type Result,
-  type 字符,
-  type 源标签集合,
-} from "./utils.js";
+import type { 字符 } from "./unicode.js";
+import { default_err, ok, type Result, type 源标签集合 } from "./utils.js";
 
 export const 默认退化配置: 退化配置 = {
   feature: {

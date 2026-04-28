@@ -1,14 +1,14 @@
+import type { ProFormSelectProps } from "@ant-design/pro-components";
+import type { SelectProps } from "antd";
 import { useAtomValue } from "jotai";
 import {
-  如字库原子,
-  如笔顺映射原子,
   useAtomValueUnwrapped,
   决策原子,
   决策空间原子,
+  原始字库原子,
+  如笔顺映射原子,
 } from "~/atoms";
-import { Select, Display } from "./Utils";
-import type { SelectProps } from "antd";
-import type { ProFormSelectProps } from "@ant-design/pro-components";
+import { Display, Select } from "./Utils";
 
 interface ElementSelectProps extends SelectProps<string> {
   customFilter?: (s: string) => boolean;
@@ -23,10 +23,10 @@ export default function ElementSelect(
   const mapping = useAtomValue(决策原子);
   const mapping_space = useAtomValue(决策空间原子);
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
-  const repertoire = useAtomValueUnwrapped(如字库原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   let keys = Object.keys(mapping);
   if (onlyRootsAndStrokes) {
-    keys = keys.filter((x) => repertoire._get()[x] || x.match(/\d/));
+    keys = keys.filter((x) => 原始字库.校验(x) || x.match(/\d/));
   }
   if (includeOptional) {
     for (const key of Object.keys(mapping_space ?? {})) {
@@ -45,21 +45,32 @@ export default function ElementSelect(
       placeholder="输入笔画搜索"
       options={keys.map((x) => ({
         value: x,
-        label: <Display name={x} />,
+        label: 原始字库.校验(x) ? (
+          <Display name={原始字库.校验(x)!.character} />
+        ) : (
+          x
+        ),
       }))}
       filterOption={(input, option) => {
         if (option === undefined) return false;
         const value = option.value;
-        const sequence = sequenceMap.get(value);
+        const ch = 原始字库.校验(value);
+        if (!ch) return false;
+        const sequence = sequenceMap.get(ch.character);
         if (sequence !== undefined) {
           return sequence.startsWith(input);
         }
         return value.includes(input);
       }}
       filterSort={(a, b) => {
+        const cha = 原始字库.校验(a.value);
+        const chb = 原始字库.校验(b.value);
+        if (!cha || !chb) {
+          return a.value.localeCompare(b.value);
+        }
         return (
-          (sequenceMap.get(a.value) ?? "").length -
-          (sequenceMap.get(b.value) ?? "").length
+          (sequenceMap.get(cha.character) ?? "").length -
+          (sequenceMap.get(chb.character) ?? "").length
         );
       }}
     />

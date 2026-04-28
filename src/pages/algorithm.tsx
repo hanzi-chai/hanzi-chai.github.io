@@ -4,16 +4,16 @@ import { isEmpty } from "lodash-es";
 import { useMemo, useState } from "react";
 import { useAtomValue, 原始字库数据原子, 如字库原子 } from "~/atoms";
 import { EditGlyph } from "~/components/Action";
+import Element from "~/components/BorderItem";
 import { 字形数据更新器 } from "~/components/CharacterTable";
-import Element from "~/components/Element";
 import { ElementWithTooltip } from "~/components/ElementPool";
 import { Display } from "~/components/Utils";
 import {
-  默认退化配置,
   type 原始字库数据,
   type 原始汉字数据,
   部件图形,
   type 部件数据,
+  默认退化配置,
 } from "~/lib";
 
 interface TreeNodeData {

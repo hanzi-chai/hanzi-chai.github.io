@@ -2,7 +2,7 @@ import { 获取原始字库, 获取词典, 部件 } from "../src/index.js";
 
 export const 获取数据 = () => {
   const 原始字库 = 获取原始字库();
-  const 词典 = 获取词典();
+  const 词典 = 获取词典(undefined, 原始字库);
   const 字库实例 = 原始字库.确定();
   if (!字库实例.ok) {
     console.error(字库实例.error);

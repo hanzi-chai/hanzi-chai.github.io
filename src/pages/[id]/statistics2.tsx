@@ -42,10 +42,10 @@ interface 带频码表条目 extends 码表条目 {
 const 按部分目标类型过滤 = (type: 部分目标类型, combined: 联合条目[]) => {
   const result: 带频码表条目[] = [];
   for (const 条目 of combined) {
-    if (type.includes("character") !== (字数(条目.词) === 1)) continue;
+    if (type.includes("character") !== (条目.词.length === 1)) continue;
     const code = type.includes("full") ? 条目.全码 : 条目.简码;
     result.push({
-      词: 条目.词,
+      词: 条目.词.map((c) => c.toString()).join(""),
       编码: code,
       频率: 条目.频率,
     });
@@ -516,7 +516,7 @@ const DuplicationDistribution = () => {
   const [仅一字词, set仅一字词] = useState(true);
 
   for (const item of combined) {
-    if (仅一字词 && 字数(item.词) !== 1) continue;
+    if (仅一字词 && item.词.length !== 1) continue;
     const key = item.全码;
     const previous = duplicationMap.get(key) ?? [];
     previous.push(item);
@@ -528,7 +528,10 @@ const DuplicationDistribution = () => {
     for (const [iFirst, first] of value.entries()) {
       for (const [iSecond, second] of value.entries()) {
         if (iFirst >= iSecond) continue;
-        const pair: [string, string] = [first.词, second.词];
+        const pair: [string, string] = [
+          first.词.map((c) => c.toString()).join(""),
+          second.词.map((c) => c.toString()).join(""),
+        ];
         const length = Math.max(first.元素序列.length, second.元素序列.length);
         for (let i = 0; i < length; i++) {
           const k1 = 序列化(first.元素序列[i]);

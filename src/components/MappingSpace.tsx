@@ -1,23 +1,3 @@
-import { Button, Flex, Popover, Select, Typography } from "antd";
-import { sortBy } from "lodash-es";
-import {
-  字母表原子,
-  决策原子,
-  决策生成器配置原子,
-  决策空间原子,
-  变量规则映射原子,
-  当前元素原子,
-  useAddAtom,
-  useAtom,
-  useAtomValue,
-  useRemoveAtom,
-  useSetAtom,
-  动态分析原子,
-} from "~/atoms";
-import ElementSelect from "~/components/ElementSelect";
-import { ElementLabelWrapper } from "~/components/Mapping";
-import { DeleteButton, Display, NumberInput } from "~/components/Utils";
-import Element from "./Element";
 import {
   ModalForm,
   ProFormGroup,
@@ -26,10 +6,30 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import CharacterSelect from "./CharacterSelect";
+import { Button, Flex, Popover, Select, Typography } from "antd";
+import { sortBy } from "lodash-es";
 import { useState } from "react";
+import {
+  useAddAtom,
+  useAtom,
+  useAtomValue,
+  useRemoveAtom,
+  useSetAtom,
+  决策原子,
+  决策生成器配置原子,
+  决策空间原子,
+  动态分析原子,
+  变量规则映射原子,
+  字母表原子,
+  当前元素原子,
+} from "~/atoms";
+import ElementSelect from "~/components/ElementSelect";
+import { ConvertDisplay, ElementLabelWrapper } from "~/components/Mapping";
+import { DeleteButton, Display, NumberInput } from "~/components/Utils";
+import type { 决策生成器规则, 安排描述 } from "~/lib";
+import Element from "./BorderItem";
+import CharacterSelect from "./CharacterSelect";
 import ValueEditor from "./Value";
-import { 决策生成器规则, 安排描述 } from "~/lib";
 
 const ValueDescriptionEditor = ({
   value,
@@ -315,7 +315,7 @@ export default function MappingSpace() {
                       <ElementLabelWrapper
                         $shouldHighlight={name === currentElement}
                       >
-                        <Display name={name} />
+                        <ConvertDisplay name={name} />
                       </ElementLabelWrapper>
                     </Element>
                   </Popover>

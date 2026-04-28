@@ -1,10 +1,8 @@
-import type { FormListFieldData, MenuProps } from "antd";
-import { Button, Dropdown, Flex, Form } from "antd";
-import { EditorColumn, EditorRow } from "./Utils";
-import type { MutableRefObject, ReactNode } from "react";
-import { useRef } from "react";
-import { 原始字库原子, useAtomValue } from "~/atoms";
-import CharacterSelect from "./CharacterSelect";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CameraOutlined,
+} from "@ant-design/icons";
 import type {
   ProFormInstance,
   ProFormListProps,
@@ -17,33 +15,41 @@ import {
   ProFormList,
   ProFormSelect,
 } from "@ant-design/pro-components";
-import styled from "styled-components";
-import { CommonForm } from "./CompoundForm";
-import Element from "./Element";
-import { Box, StrokesView } from "./GlyphView";
+import type { FormListFieldData, MenuProps } from "antd";
+import { Button, Dropdown, Flex, Form } from "antd";
 import type { BaseOptionType } from "antd/es/select";
+import type { MutableRefObject, ReactNode } from "react";
+import { useRef } from "react";
+import styled from "styled-components";
 import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  CameraOutlined,
-} from "@ant-design/icons";
-import {
-  区间,
-  图形盒子,
-  是基本或衍生部件,
-  模拟引用笔画,
-  模拟矢量笔画,
-  笔画表示方式,
-} from "~/lib";
+  useAtomValue,
+  useAtomValueUnwrapped,
+  原始字库原子,
+  如字库原子,
+} from "~/atoms";
 import type {
   全等数据,
   基本部件数据,
-  汉字数据,
   矢量笔画数据,
   笔画名称,
   笔画数据,
   衍生部件数据,
 } from "~/lib";
+import {
+  区间,
+  图形盒子,
+  type 字符,
+  是基本或衍生部件,
+  是部件,
+  模拟引用笔画,
+  模拟矢量笔画,
+  笔画表示方式,
+} from "~/lib";
+import Element from "./BorderItem";
+import CharacterSelect from "./CharacterSelect";
+import { CommonForm } from "./CompoundForm";
+import { Box, StrokesView } from "./GlyphView";
+import { EditorColumn, EditorRow } from "./Utils";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={56} name={name} fieldProps={{ min: -100 }} />
@@ -215,31 +221,29 @@ export default function ComponentForm({
 }: {
   title: ReactNode;
   initialValues: 基本或衍生部件;
-  current: string;
+  current: 字符;
   onFinish: (c: 基本或衍生部件) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
 }) {
   const 原始字库 = useAtomValue(原始字库原子);
-  const 替代字形映射 = new Map(
-    Object.entries(原始字库._get()).map(([k, v]) => [k, v.glyphs]),
-  );
+  const 字库 = useAtomValueUnwrapped(如字库原子);
   const repertoire = 原始字库._get();
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
     <Element type={primary ? "default" : "text"}>{title}</Element>
   );
-  const isValidSource = ([name]: [string, 汉字数据]) => {
-    let component: 基本或衍生部件 | undefined = repertoire[name]?.glyphs.find(
-      是基本或衍生部件,
-    );
+  const isValidSource = ([name]: [string, any]) => {
+    let component: 基本或衍生部件 | undefined = 原始字库
+      .校验(name)
+      ?.glyphs.find(是基本或衍生部件);
     if (component === undefined) return false;
     while (component?.type === "derived_component") {
       const source: string = component.source;
-      if (source === current) return false;
-      component = repertoire[source]?.glyphs.find(是基本或衍生部件);
+      if (source === current.toString()) return false;
+      component = 原始字库.校验(source)?.glyphs.find(是基本或衍生部件);
     }
     return true;
   };
@@ -265,13 +269,16 @@ export default function ComponentForm({
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
                 const component = props as 基本或衍生部件;
-                const rendered = 原始字库.递归渲染原始字形(
-                  component,
-                  替代字形映射,
-                );
                 let glyph = new 图形盒子();
-                if (rendered.ok && rendered.value.type === "basic_component") {
-                  glyph = 图形盒子.从笔画列表构建(rendered.value.strokes);
+                const rendered = 原始字库.渲染字形(
+                  current,
+                  { ...component, user: false, tags: new Set() },
+                  字库,
+                );
+                if (rendered.ok) {
+                  const maybecomponent = rendered.value[0]!;
+                  if (是部件(maybecomponent))
+                    glyph = 图形盒子.从笔画列表构建(maybecomponent.矢量图形);
                 }
                 return (
                   <StrokesView
@@ -311,11 +318,13 @@ export default function ComponentForm({
             {({ source }) => {
               const maxIndex =
                 typeof source === "string"
-                  ? (repertoire[source]?.glyphs.find(
-                      (x) =>
-                        x.type === "basic_component" ||
-                        x.type === "derived_component",
-                    )?.strokes.length ?? 10)
+                  ? (原始字库
+                      .校验(source)
+                      ?.glyphs.find(
+                        (x) =>
+                          x.type === "basic_component" ||
+                          x.type === "derived_component",
+                      )?.strokes.length ?? 10)
                   : 0;
               return (
                 <>
@@ -353,17 +362,18 @@ export default function ComponentForm({
                           onClick={() => {
                             const component: 基本或衍生部件 =
                               formRef.current?.getFieldsValue();
-                            const rendered = 原始字库.递归渲染原始字形(
-                              component,
-                              替代字形映射,
+                            const rendered = 原始字库.渲染字形(
+                              current,
+                              { ...component, user: false, tags: new Set() },
+                              字库,
                             );
                             if (!rendered.ok) return;
-                            if (rendered.value.type !== "basic_component")
-                              return;
+                            const maybecomponent = rendered.value[0]!;
+                            if (!是部件(maybecomponent)) return;
                             const strokes: 笔画数据[] =
                               formRef.current?.getFieldValue("strokes") ?? [];
                             const vectorized = structuredClone(
-                              rendered.value.strokes[field.name],
+                              maybecomponent.矢量图形[field.name],
                             );
                             if (!vectorized) return;
                             strokes[field.name] = vectorized;
@@ -471,7 +481,7 @@ export function IdentityForm({
 }: {
   title: ReactNode;
   initialValues: 全等数据;
-  current: string;
+  current: 字符;
   onFinish: (c: 全等数据) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
@@ -498,7 +508,7 @@ export function IdentityForm({
         <Form.Item name="source" label="源字">
           <CharacterSelect
             style={{ width: "96px" }}
-            customFilter={([x]) => x !== current}
+            customFilter={([x]) => x !== current.toString()}
           />
         </Form.Item>
       </ProFormGroup>

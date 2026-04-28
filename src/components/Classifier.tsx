@@ -1,16 +1,16 @@
-import styled from "styled-components";
-import {
-  分类器自定义原子,
-  分类器原子,
-  useAddAtom,
-  useAtomValue,
-} from "~/atoms";
-import { Button, Flex, Space, notification } from "antd";
-import Element from "~/components/Element";
+import { blue } from "@ant-design/colors";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
+import { Button, Flex, notification, Space } from "antd";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
-import { blue } from "@ant-design/colors";
+import styled from "styled-components";
+import {
+  useAddAtom,
+  useAtomValue,
+  分类器原子,
+  分类器自定义原子,
+} from "~/atoms";
+import Element from "~/components/BorderItem";
 import type { 笔画名称 } from "~/lib";
 
 function Draggable({ name }: { name: string }) {

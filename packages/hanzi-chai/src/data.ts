@@ -207,3 +207,5 @@ export interface 原始汉字数据 {
   glyphs: 字形数据[];
   ambiguous: boolean;
 }
+
+export type 原始字库数据 = Record<string, 原始汉字数据>;

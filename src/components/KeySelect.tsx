@@ -1,15 +1,15 @@
+import type { BaseOptionType } from "antd/es/select";
 import { useAtomValue } from "jotai";
 import {
-  字母表原子,
-  如字库原子,
-  决策原子,
-  如笔顺映射原子,
-  变量规则映射原子,
   useAtomValueUnwrapped,
+  决策原子,
+  原始字库原子,
+  变量规则映射原子,
+  如笔顺映射原子,
+  字母表原子,
 } from "~/atoms";
-import { DisplayWithSuperScript, Select } from "./Utils";
-import type { BaseOptionType } from "antd/es/select";
 import { type 广义码位, 是变量, 是归并 } from "~/lib";
+import { DisplayWithSuperScript, Select } from "./Utils";
 
 export interface KeySelectProps {
   value: 广义码位;
@@ -46,6 +46,7 @@ export default function KeySelect({
   }));
   if (allowAlphabets) keyOptions.push(...alphabetOptions);
   const mapping = useAtomValue(决策原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   const referenceOptions = Object.entries(mapping).flatMap(
     ([element, mapped]) => {
       if (是归并(mapped)) return [];
@@ -86,7 +87,9 @@ export default function KeySelect({
         if ("variable" in key) {
           return key.variable.includes(input);
         }
-        const sequence = sequenceMap.get(key.element);
+        const ch = 原始字库.校验(key.element);
+        if (!ch) return false;
+        const sequence = sequenceMap.get(ch.character);
         const 匹配序列 = sequence?.startsWith(input) ?? false;
         const 匹配元素 = key.element.includes(input);
         return 匹配序列 || 匹配元素;
@@ -110,8 +113,13 @@ export default function KeySelect({
         if (typeof bk === "string") {
           return 1;
         }
-        const amapped = sequenceMap.get(ak.element) ?? "";
-        const bmapped = sequenceMap.get(bk.element) ?? "";
+        const cha = 原始字库.校验(ak.element);
+        const chb = 原始字库.校验(bk.element);
+        if (!cha || !chb) {
+          return ak.element.localeCompare(bk.element);
+        }
+        const amapped = sequenceMap.get(cha.character) ?? "";
+        const bmapped = sequenceMap.get(chb.character) ?? "";
         return amapped.localeCompare(bmapped);
       }}
     />

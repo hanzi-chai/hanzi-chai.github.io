@@ -72,8 +72,8 @@ export function 获取原始字库(自定义字库: 原始汉字数据[] = []): 
   return new 原始字库([...原始字库数据, ...自定义字库]);
 }
 
-export function 获取词典(路径?: string): 词典 {
-  return 读取数据文件("dictionary.txt", 解析词典, 路径);
+export function 获取词典(路径: string | undefined, 原始字库: 原始字库): 词典 {
+  return 读取数据文件("dictionary.txt", (x) => 解析词典(x, 原始字库), 路径);
 }
 
 export function 获取键位分布目标(路径?: string): 键位分布目标 {
@@ -92,15 +92,25 @@ export function 获取CJK汉字笔画数据(路径?: string) {
   return 读取笔画数据("cjk.txt", 路径);
 }
 
-export function 获取自定义元素映射(自定义元素文件集合: Record<string, string>) {
+export function 获取自定义元素映射(
+  自定义元素文件集合: Record<string, string>,
+  原始字库: 原始字库,
+) {
   const 查找表: 自定义分析映射 = new Map();
   for (const [名称, 文件路径] of Object.entries(自定义元素文件集合)) {
     const tsv = 读取表格(readFileSync(文件路径, "utf-8"));
     for (const [char, elements] of tsv) {
       if (char === undefined || elements === undefined) continue;
-      const 记录 = 查找表.get(char) ?? {};
+      const 字符 = 原始字库.校验(char);
+      if (!字符) {
+        console.warn(
+          `警告：自定义元素文件中的字符 "${char}" 在字库中未找到，已跳过。`,
+        );
+        continue;
+      }
+      const 记录 = 查找表.get(字符.character) ?? {};
       记录[名称] = elements.split(" ");
-      查找表.set(char, 记录);
+      查找表.set(字符.character, 记录);
     }
   }
   return 查找表;
@@ -118,14 +128,19 @@ export function 获取字库(config: 配置): Result<字库, Error> {
   return ok(字库或错误.value);
 }
 
-export function 获取字形分析结果(config: 配置, repertoire: 字库, 词典: 词典) {
+export function 获取字形分析结果(
+  config: 配置,
+  repertoire: 字库,
+  词典: 词典,
+  原始字库: 原始字库,
+) {
   const 字形分析配置 = {
     分析配置: config.analysis ?? {},
     决策: config.form.mapping,
     决策空间: config.form.mapping_space ?? {},
   };
-  const characters = 获取汉字集合(词典);
-  return repertoire.分析(字形分析配置, characters);
+  const characters = 获取汉字集合(词典, 原始字库);
+  return repertoire.分析(字形分析配置, characters, 原始字库);
 }
 
 export function 获取拼音分析结果(config: 配置, 词典: 词典) {

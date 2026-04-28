@@ -28,9 +28,11 @@ import { ElementDetail } from "~/components/Mapping";
 import { Uploader } from "~/components/Utils";
 import {
   字数,
+  字符,
   type 字集指示,
   字集过滤查找表,
   字集过滤选项,
+  是部件,
   type 码表条目,
 } from "~/lib";
 
@@ -62,7 +64,7 @@ function 按格式解析码表(content: string, format: 码表格式): 码表条
   return result;
 }
 
-import Element from "./Element";
+import Element from "./BorderItem";
 import { DisplayOptionalSuperscript } from "./SequenceTable";
 
 type 校对结果 = "correct" | "incorrect" | "unknown";
@@ -108,11 +110,11 @@ export default function Debugger() {
     name: string;
     keys: any;
   } | null>(null);
-  const 是部件: 过滤 = (c, _) =>
-    characters.has(c) &&
-    repertoire.查询字形(c)?.some((x) => x.type === "basic_component") === true;
+  const 字符是部件: 过滤 = (c, _) => {
+    return characters.has(c) && repertoire.查询字形(c)?.some(是部件) === true;
+  };
   const 过滤函数 =
-    校对范围 === "components" ? 是部件 : 字集过滤查找表[校对范围];
+    校对范围 === "components" ? 字符是部件 : 字集过滤查找表[校对范围];
   const filterOptions = [
     {
       label: "成字部件",
@@ -130,10 +132,11 @@ export default function Debugger() {
 
   const 内部编码映射 = new Map<string, 联合条目[]>();
   for (const x of 联合结果) {
-    if (!内部编码映射.has(x.词)) {
-      内部编码映射.set(x.词, []);
+    const 字符串 = x.词.map((x) => x.toString()).join("");
+    if (!内部编码映射.has(字符串)) {
+      内部编码映射.set(字符串, []);
     }
-    内部编码映射.get(x.词)!.push(x);
+    内部编码映射.get(字符串)!.push(x);
   }
 
   // 处理点击元素的函数
@@ -152,9 +155,9 @@ export default function Debugger() {
   };
   const 合法 = (词: string) => {
     if (字数(词) !== 1) return false;
-    const data = 原始字库.查询(词);
+    const data = 原始字库.校验(词);
     if (!data) return false;
-    return 过滤函数(词, data);
+    return 过滤函数(data.character, data);
   };
 
   const 状态统计: Record<校对结果, number> = {
@@ -165,17 +168,18 @@ export default function Debugger() {
   let dataSource: 校对条目[] = [];
   if (校对方向 === "forward") {
     for (const { 词, 全码, 元素序列 } of 联合结果) {
-      if (!合法(词)) continue;
-      const 参考编码列表 = 外部编码映射.get(词) ?? [];
+      const 字符串 = 词.map((x) => x.toString()).join("");
+      if (!合法(字符串)) continue;
+      const 参考编码列表 = 外部编码映射.get(字符串) ?? [];
       const 状态 = 获取状态(参考编码列表, 全码);
       状态统计[状态]++;
       dataSource.push({
-        词,
+        词: 字符串,
         编码: 全码,
         元素序列: [元素序列],
         参考编码列表,
         状态,
-        标识符: `${词}-${全码}`,
+        标识符: `${字符串}-${全码}`,
       });
     }
   } else {

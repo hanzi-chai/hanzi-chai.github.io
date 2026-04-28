@@ -29,7 +29,9 @@ import {
   type 分类器,
   type 动态组装条目,
   单笔字根,
+  type 原始字库,
   type 字形自定义,
+  type 字符,
   type 组装条目,
 } from "./main.js";
 
@@ -57,61 +59,6 @@ export type Tuple<T, N extends number> = N extends N
 type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
   ? R
   : _TupleOf<T, N, [T, ...R]>;
-
-const 第十六平面起始位 = 0x100000;
-
-export class 字符 {
-  private static 字符池: Map<number, 字符> = new Map();
-  private static 自由码位 = 第十六平面起始位;
-  private constructor(private readonly 码位: number) {}
-
-  static 从码位创建(cp: number): Result<字符, Error> {
-    if (!Number.isInteger(cp) || cp < 0 || cp > 0x10ffff) {
-      return default_err(`不合法的 Unicode 码位: ${cp}`);
-    }
-    if (cp >= 0xd800 && cp <= 0xdfff) {
-      return default_err(`不合法的 Unicode 码位: ${cp} (代理项)`);
-    }
-    const 字符实例 = 字符.字符池.get(cp);
-    if (字符实例) return ok(字符实例);
-    const 新字符实例 = new 字符(cp);
-    字符.字符池.set(cp, 新字符实例);
-    return ok(新字符实例);
-  }
-
-  static 从字符串创建(s: string): Result<字符, Error> {
-    const arr = [...s];
-    if (arr.length !== 1) {
-      return default_err(
-        `将 ${s} 转化为字符失败，字符串必须包含且仅包含一个 Unicode 字符`,
-      );
-    }
-    return 字符.从码位创建(s.codePointAt(0)!);
-  }
-
-  toString(): string {
-    return String.fromCodePoint(this.码位);
-  }
-
-  toNumber(): number {
-    return this.码位;
-  }
-
-  print(): string {
-    return `${this.toString()} U+${this.toNumber().toString(16).toUpperCase().padStart(4, "0")}`;
-  }
-
-  static 获取自由字符() {
-    const 自由码位 = 字符.自由码位;
-    字符.自由码位++;
-    return 字符.从码位创建(自由码位);
-  }
-
-  static 重置() {
-    字符.自由码位 = 第十六平面起始位;
-    字符.字符池.clear();
-  }
-}
 
 export const 表示单笔字根 = (元素: 元素, 分类器: 分类器) => {
   const 数字集合 = Object.values(分类器).map(String);
@@ -221,7 +168,7 @@ interface 键位频率目标 {
   高于惩罚: number;
 }
 
-export type 词典条目 = { 词: string; 拼音: string[]; 频率: number };
+export type 词典条目 = { 词: 字符[]; 拼音: string[]; 频率: number };
 export type 词典 = 词典条目[];
 export type 频率映射 = Map<string, number>;
 export type 键位分布目标 = Map<string, 键位频率目标>;
@@ -303,7 +250,7 @@ export const 序列化当量映射 = (mapping: 当量映射): string[][] => {
   return result;
 };
 
-export function 解析词典(tsv: string[][]): 词典 {
+export function 解析词典(tsv: string[][], 原始字库: 原始字库): 词典 {
   const result: 词典 = [];
   for (const [word, pinyin_s, frequency_s] of tsv) {
     if (
@@ -315,7 +262,14 @@ export function 解析词典(tsv: string[][]): 词典 {
     const pinyin = pinyin_s.split(" ");
     const frequency = Number(frequency_s);
     if (Number.isNaN(frequency)) continue;
-    result.push({ 词: word, 拼音: pinyin, 频率: frequency });
+    const chars: 字符[] = [];
+    for (const char of Array.from(word)) {
+      const charInstance = 原始字库.校验(char)?.character;
+      if (charInstance) {
+        chars.push(charInstance);
+      }
+    }
+    result.push({ 词: chars, 拼音: pinyin, 频率: frequency });
   }
   return result;
 }
@@ -323,7 +277,11 @@ export function 解析词典(tsv: string[][]): 词典 {
 export function 序列化词典(词典: 词典): string[][] {
   const result: string[][] = [];
   for (const { 词, 拼音, 频率 } of 词典) {
-    result.push([词, 拼音.join(" "), 频率.toString()]);
+    result.push([
+      词.map((c) => c.toString()).join(""),
+      拼音.join(" "),
+      频率.toString(),
+    ]);
   }
   return result;
 }
@@ -455,27 +413,20 @@ export const 计算当前或潜在长度 = (
   return ok(result);
 };
 
-export const 识别符 = (词: string, 拼音来源列表: string[][]) => {
+export const 识别符 = (词: 字符[], 拼音来源列表: string[][]) => {
   const 拼音列表 = 拼音来源列表.map((list) => list.join(" "));
-  return `${词}-${拼音列表.join(",")}`;
+  return `${词.map((c) => c.toString()).join("")}-${拼音列表.join(",")}`;
 };
 
 export type 自定义分析 = Record<string, string[]>;
 
-export type 自定义分析映射 = Map<string, 自定义分析>;
+export type 自定义分析映射 = Map<字符, 自定义分析>;
 
-export function 获取汉字集合(词典: 词典): Set<字符> {
-  const 汉字集合 = new Set<string>();
-  for (const { 词 } of 词典) {
-    for (const 汉字 of Array.from(词)) {
-      汉字集合.add(汉字);
-    }
-  }
+export function 获取汉字集合(词典: 词典, 字库: 原始字库): Set<字符> {
   const 字符集合 = new Set<字符>();
-  for (const 汉字 of 汉字集合) {
-    const 字符实例 = 字符.从字符串创建(汉字);
-    if (字符实例.ok) {
-      字符集合.add(字符实例.value);
+  for (const { 词 } of 词典) {
+    for (const 汉字 of 词) {
+      字符集合.add(汉字);
     }
   }
   return 字符集合;

@@ -18,9 +18,9 @@ import {
   type 结构描述字符,
   结构描述字符列表,
 } from "~/lib";
+import Element from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { InlineRender, StaticList } from "./ComponentForm";
-import Element from "./Element";
 import { Box, StrokesView } from "./GlyphView";
 import { EditorColumn, EditorRow } from "./Utils";
 
@@ -97,11 +97,12 @@ export default function CompoundForm({
             >
               {(props) => {
                 const compound = props as 复合体数据;
-                let glyph = new 图形盒子();
-                const rendered = repertoire.递归渲染复合体(compound);
-                if (rendered.ok) {
-                  glyph = rendered.value;
-                }
+                const glyph = new 图形盒子();
+                // FIXME: 拼接部件和复合体暂时没有实时渲染
+                // const rendered = repertoire.递归渲染复合体(compound);
+                // if (rendered.ok) {
+                //   glyph = rendered.value;
+                // }
                 return <StrokesView displayMode glyph={glyph} />;
               }}
             </ProFormDependency>

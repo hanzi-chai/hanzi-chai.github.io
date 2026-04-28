@@ -40,6 +40,7 @@ import {
   type 原始字库数据,
   type 原始汉字数据,
   type 字形数据,
+  type 校验原始汉字数据,
   模拟全等,
   模拟基本部件,
   模拟复合体,
@@ -145,7 +146,7 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
             required: true,
             validator: (_, value: string) => {
               if (!value) return Promise.reject(new Error("不能为空"));
-              if (原始字库.查询(value) !== undefined)
+              if (原始字库.校验(value) !== undefined)
                 return Promise.reject(new Error("字符已存在"));
               return Promise.resolve();
             },
@@ -249,7 +250,7 @@ export const Rename = ({
       }
       onConfirm={async () => {
         const cname = String.fromCodePoint(unicode);
-        const character = 原始字库.查询(cname);
+        const character = 原始字库.校验(cname);
         if (!character) return;
         const newCharacter: 原始汉字数据 = {
           ...character,
@@ -289,7 +290,7 @@ export const EditGF = ({
         // id = 0 时表示删除
         const valid = isInteger(id) && id >= 0 && id < 561;
         if (!valid) return;
-        const character = 原始字库.查询(name);
+        const character = 原始字库.校验(name);
         if (!character) return;
         const newCharacter: 原始汉字数据 = {
           ...character,
@@ -329,7 +330,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
   );
 };
 
-export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
+export const EditGlyph = ({ character }: { character: 校验原始汉字数据 }) => {
   const remote = useAtomValue(远程原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const add = useAddAtom(原始可编辑字库数据原子);
@@ -337,7 +338,7 @@ export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
   const 标准字形自定义 = useAtomValue(标准字形自定义原子);
   const addCustomization = useAddAtom(字形自定义原子);
   const name = String.fromCodePoint(character.unicode);
-  const isCustomization = !remote && 原始字库.查询(name) !== undefined;
+  const isCustomization = !remote && 原始字库.校验(name) !== undefined;
   const 自定义列表 = 标准字形自定义[name] ?? [];
   const onFinish = async (component: 字形数据) => {
     if (isCustomization) {
@@ -367,7 +368,7 @@ export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
         <ComponentForm
           title="添加自定义衍生部件"
           initialValues={模拟衍生部件()}
-          current={name}
+          current={character.character}
           onFinish={onFinish}
           noButton
         />
@@ -401,7 +402,7 @@ export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
         <IdentityForm
           title="添加自定义全等字形"
           initialValues={模拟全等()}
-          current={name}
+          current={character.character}
           onFinish={onFinish}
           noButton
         />
@@ -415,7 +416,7 @@ export const EditGlyph = ({ character }: { character: 原始汉字数据 }) => {
         <ComponentForm
           title="添加自定义基本部件"
           initialValues={模拟基本部件()}
-          current={name}
+          current={character.character}
           onFinish={onFinish}
           noButton
         />

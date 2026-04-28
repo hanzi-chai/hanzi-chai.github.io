@@ -1,15 +1,16 @@
 import { Button, Flex, Space, Typography } from "antd";
-import {
-  useAtomValue,
-  分析配置原子,
-  useExcludeAtom,
-  强字根原子,
-  useAppendAtom,
-  弱字根原子,
-} from "~/atoms";
-import Element from "./Element";
 import { useState } from "react";
+import {
+  useAppendAtom,
+  useAtomValue,
+  useExcludeAtom,
+  分析配置原子,
+  弱字根原子,
+  强字根原子,
+} from "~/atoms";
+import Element from "./BorderItem";
 import ElementSelect from "./ElementSelect";
+import { ConvertDisplay } from "./Mapping";
 import { Display } from "./Utils";
 
 export default function PrioritizedRoots({
@@ -32,7 +33,7 @@ export default function PrioritizedRoots({
         {(list ?? []).map((x, i) => (
           <Space key={x}>
             <Element>
-              <Display name={x} />
+              <ConvertDisplay name={x} />
             </Element>
             <Button variant="text" color="danger" onClick={() => exclude(i)}>
               删除

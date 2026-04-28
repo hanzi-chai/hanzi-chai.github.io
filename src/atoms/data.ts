@@ -1,9 +1,9 @@
 import { focusAtom } from "jotai-optics";
-import type { 兼容字形自定义, 原始字库数据, 变换器, 字集指示 } from "~/lib";
+import type { 兼容字形自定义, 原始汉字数据, 变换器, 字集指示 } from "~/lib";
 import { 数据配置原子 } from ".";
 
 export const 用户原始字库数据原子 = focusAtom(数据配置原子, (o) =>
-  o.prop("repertoire").valueOr({} as 原始字库数据),
+  o.prop("repertoire").valueOr({} as Record<string, 原始汉字数据>),
 );
 
 export const 字集指示原子 = focusAtom(数据配置原子, (o) =>

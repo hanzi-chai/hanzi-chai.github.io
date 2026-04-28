@@ -251,7 +251,7 @@ export class 取码器 {
     let special: string[] | undefined;
     switch (object.type) {
       case "汉字":
-        return result.汉字;
+        return result.汉字.toString();
       case "固定":
         return object.key;
       case "字音":

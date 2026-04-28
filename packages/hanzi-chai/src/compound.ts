@@ -18,11 +18,11 @@ import {
   是复合体,
   是部件,
 } from "./repertoire.js";
+import type { 字符 } from "./unicode.js";
 import {
   default_err,
   ok,
   type Result,
-  type 字符,
   排列组合,
   type 源标签集合,
 } from "./utils.js";

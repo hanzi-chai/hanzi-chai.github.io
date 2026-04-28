@@ -26,6 +26,7 @@ import {
   决策原子,
   决策空间原子,
   别名显示原子,
+  原始字库原子,
   type 名称与安排,
   如字库原子,
   字母表原子,
@@ -36,17 +37,18 @@ import {
   键盘原子,
 } from "~/atoms";
 import {
-  码,
   type 决策,
   可打印字符列表,
+  字符,
   是归并,
-  是私用区,
+  是部件,
+  码,
   读取表格,
   type 非空安排,
 } from "~/lib";
 import { exportTSV } from "~/utils";
-import Char from "./Character";
 import { ElementWithTooltip } from "./ElementPool";
+import Item from "./Item";
 import MappingSpace, { RulesForm } from "./MappingSpace";
 import {
   DeleteButton,
@@ -75,6 +77,15 @@ export const getAffiliates = (name: string, mapping: 决策) => {
   return result;
 };
 
+export const ConvertDisplay = ({ name }: { name: string }) => {
+  const 原始字库 = useAtomValue(原始字库原子);
+  const ch = 原始字库.校验(name);
+  if (ch) {
+    return <Display name={ch.character} />;
+  }
+  return <span>{name}</span>;
+};
+
 export const ElementDetail = ({
   keys,
   name,
@@ -89,6 +100,7 @@ export const ElementDetail = ({
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   const alphabet = useAtomValue(字母表原子);
+  const 原始字库 = useAtomValue(原始字库原子);
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
@@ -131,7 +143,7 @@ export const ElementDetail = ({
           <span>
             无法删除元素，因为元素被其他元素引用：
             {referenced.map((x) => (
-              <Display name={x} key={x} />
+              <ConvertDisplay name={x} key={x} />
             ))}
           </span>
         ),
@@ -139,10 +151,12 @@ export const ElementDetail = ({
     }
   };
 
+  const ch = 原始字库.校验(name)?.character;
+
   return (
     <Flex vertical gap="middle">
       <Flex gap="small" align="center">
-        <ElementWithTooltip element={name} />
+        {ch ? <ElementWithTooltip element={ch} /> : <span>{name}</span>}
         <ValueEditor
           value={currentValue}
           onChange={(newValue) => {
@@ -193,7 +207,7 @@ export const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
   }
 `;
 
-const DisplayWrapper = styled(Display)<{ $optional: boolean }>`
+const DisplayWrapper = styled(ConvertDisplay)<{ $optional: boolean }>`
   color: ${({ $optional }) => ($optional ? "#9d9d9d" : "black")};
 `;
 
@@ -340,6 +354,7 @@ const MappingUploader = ({
   setImportResult: (a: any) => void;
 }) => {
   const repertoire = useAtomValueUnwrapped(如字库原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   const setMapping = useSetAtom(决策原子);
   const mappingType = useAtomValue(编码类型原子);
   const alphabet = useAtomValue(字母表原子);
@@ -353,14 +368,19 @@ const MappingUploader = ({
         for (const line of tsv) {
           const [key, value] = line;
           if (key === undefined || value === undefined) continue;
-          const glyphs = repertoire.查询字形(key);
-          if (glyphs === undefined || 是私用区(key)) {
+          const ch = 原始字库.校验(key);
+          if (!ch) {
+            unknownKeys.push(key);
+            continue;
+          }
+          const glyphs = repertoire.查询字形(ch.character);
+          if (glyphs === undefined || ch.character.是私用区()) {
             unknownKeys.push(key);
             continue;
           }
           let isSingleStroke = false;
           for (const glyph of glyphs) {
-            if ("strokes" in glyph && glyph.strokes.length === 1) {
+            if (是部件(glyph) && glyph._笔画列表().length === 1) {
               unknownKeys.push(key);
               isSingleStroke = true;
               break;
@@ -398,13 +418,16 @@ const MappingExporter = () => {
 const PUAExporter = () => {
   const mapping = useAtomValue(决策原子);
   const display = useAtomValue(别名显示原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   return (
     <Button
       onClick={() => {
         const output: string[][] = [];
         for (const key of Object.keys(mapping)) {
-          if (是私用区(key)) {
-            output.push([key, `U+${码(key)}`, display(key)]);
+          const ch = 原始字库.校验(key)?.character;
+          if (!ch) continue;
+          if (ch.是私用区()) {
+            output.push([key, ch.十六进制(), display(ch)]);
           }
         }
         const sorted = sortBy(output, (x) => x[0]!.codePointAt(0));
@@ -523,7 +546,7 @@ const MappingRow = memo(
           }
           icon={<DeleteOutlined />}
         />
-        <Char>{symbol}</Char>
+        <Item>{symbol}</Item>
         <Flex align="center" wrap="wrap" gap="small">
           {elements.map(({ 名称: name, 安排: code }) => (
             <AdjustableElementGroup key={name} 名称={name} 安排={code} />

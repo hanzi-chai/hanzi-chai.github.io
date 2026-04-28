@@ -10,10 +10,11 @@ import { type ReactNode, useRef } from "react";
 import { 变换器列表原子 } from "~/atoms";
 import { type 变换器, type 结构变量, 结构描述字符列表, type 节点 } from "~/lib";
 import CharacterSelect from "./CharacterSelect";
+import { ConvertDisplay } from "./Mapping";
 import { Display, MinusButton, PlusButton } from "./Utils";
 
 function serialize(模式: 节点): ReactNode {
-  if (typeof 模式 === "string") return <Display name={模式} />;
+  if (typeof 模式 === "string") return <ConvertDisplay name={模式} />;
   if ("id" in 模式) return "①②③④⑤⑥⑦⑧⑨⑩"[模式.id - 1] || `{${模式.id}}`;
   return (
     <span>

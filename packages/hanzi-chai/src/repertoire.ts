@@ -3,8 +3,8 @@ import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 部件 } from "./component.js";
 import type { 决策, 决策空间, 分析配置, 安排 } from "./config.js";
 import type { 复合体数据 } from "./data.js";
-import { 复合体, 获取注册表 } from "./main.js";
-import { ok, type Result, 字符, 表示二笔字根, 表示单笔字根 } from "./utils.js";
+import { type 原始字库, 复合体, type 字符, 获取注册表 } from "./main.js";
+import { ok, type Result, 表示二笔字根, 表示单笔字根 } from "./utils.js";
 
 export type 字形 = 部件 | 复合体;
 
@@ -144,6 +144,7 @@ class 字库 {
     分析配置: 分析配置,
     决策: 决策,
     决策空间: 决策空间,
+    原始字库: 原始字库,
   ): Result<字形分析配置, Error> {
     const 字根决策 = new Map<字根, 安排>();
     const 可选字根 = new Set<字根>();
@@ -157,13 +158,13 @@ class 字库 {
       const 所有字根: 字根[] = [];
       const 单笔字根 = 表示单笔字根(元素, 分类器);
       const 二笔字根 = 表示二笔字根(元素, 分类器);
-      const 字根字符 = 字符.从字符串创建(元素);
+      const 字根字符 = 原始字库.校验(元素)?.character;
       if (单笔字根) {
         所有字根.push(单笔字根);
       } else if (二笔字根) {
         所有字根.push(二笔字根);
-      } else if (字根字符.ok) {
-        const 字形列表 = this.查询字形(字根字符.value) ?? [];
+      } else if (字根字符) {
+        const 字形列表 = this.查询字形(字根字符) ?? [];
         for (const 字根字形 of 字形列表) {
           if (字根字形 instanceof 部件) {
             部件字根列表.push(字根字形);
@@ -172,7 +173,7 @@ class 字库 {
             const 图形盒子 = this.递归渲染复合体(字根字形);
             if (!图形盒子.ok) return 图形盒子;
             const 真部件 = new 部件(
-              字根字符.value,
+              字根字符,
               字根字形.标签集合,
               图形盒子.value.获取笔画列表(),
             );
@@ -253,9 +254,10 @@ class 字库 {
     );
   }
 
-  准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>) {
+  准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>, 原始字库: 原始字库) {
+    console.log(汉字集合);
     const { 分析配置, 决策, 决策空间 } = base;
-    const config = this.准备字形分析配置(分析配置, 决策, 决策空间);
+    const config = this.准备字形分析配置(分析配置, 决策, 决策空间, 原始字库);
     if (!config.ok) return config;
     const configValue = config.value;
     const 待分析部件集合 = this.获取待分析部件(汉字集合);
@@ -284,8 +286,9 @@ class 字库 {
   分析(
     base: 字形分析基本配置,
     汉字集合: Set<字符>,
+    原始字库: 原始字库,
   ): Result<字形分析结果, Error> {
-    const 分析配置或错误 = this.准备分析(base, 汉字集合);
+    const 分析配置或错误 = this.准备分析(base, 汉字集合, 原始字库);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
     const 部件分析结果 = new Map<部件, 基本部件分析>();
@@ -326,8 +329,9 @@ class 字库 {
   动态分析(
     base: 字形分析基本配置,
     汉字集合: Set<字符>,
+    原始字库: 原始字库,
   ): Result<动态字形分析结果, Error> {
-    const 分析配置或错误 = this.准备分析(base, 汉字集合);
+    const 分析配置或错误 = this.准备分析(base, 汉字集合, 原始字库);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
     const 动态部件分析结果 = new Map<部件, 基本部件分析[]>();

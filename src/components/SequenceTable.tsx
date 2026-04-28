@@ -16,6 +16,7 @@ import {
 } from "~/atoms";
 import { 序列化, 总序列化, type 码位, 识别符 } from "~/lib";
 import { exportTSV } from "~/utils";
+import { ConvertDisplay } from "./Mapping";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { Display, DisplayWithSuperScript } from "./Utils";
 
@@ -36,7 +37,11 @@ const ExportAssembly = () => {
         const tsv: string[][] = [];
         for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
           const 元素序列字符串 = 总序列化(元素序列);
-          const row = [词, 元素序列字符串, 频率.toString()];
+          const row = [
+            词.map((c) => c.toString()).join(""),
+            元素序列字符串,
+            频率.toString(),
+          ];
           if (简码长度 !== undefined) {
             tsv.push([...row, 简码长度.toString()]);
           } else {
@@ -62,7 +67,11 @@ const ExportDynamicAssembly = () => {
         const tsv: string[][] = [];
         for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果.value) {
           const 元素序列字符串 = 元素序列.map(总序列化).join("　");
-          const row = [词, 元素序列字符串, 频率.toString()];
+          const row = [
+            词.map((c) => c.toString()).join(""),
+            元素序列字符串,
+            频率.toString(),
+          ];
           if (简码长度 !== undefined) {
             tsv.push([...row, 简码长度.toString()]);
           } else {
@@ -125,12 +134,12 @@ const getColumnSearchProps = (
     </Flex>
   ),
   onFilter: (value, record) =>
-    new RegExp(value as string).test(record[dataIndex]),
+    new RegExp(value as string).test(record[dataIndex].toString()),
 });
 
 export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => {
   if (typeof element === "string") {
-    return <Display name={element} />;
+    return <ConvertDisplay name={element} />;
   } else {
     return (
       <DisplayWithSuperScript name={element.element} index={element.index} />

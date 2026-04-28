@@ -25,6 +25,7 @@ import {
   别名显示原子,
   动态分析原子,
   动态自定义拆分原子,
+  原始字库数据原子,
   复合体分析器原子,
   如动态字形分析结果原子,
   如字库原子,
@@ -43,6 +44,7 @@ import {
   type 动态字形分析结果,
   type 基本分析,
   type 字形分析结果,
+  type 字符,
   获取注册表,
   type 默认部件分析,
 } from "~/lib";
@@ -54,16 +56,18 @@ import {
 } from "~/utils";
 
 const 导出字形分析结果 = (
-  characters: Set<string>,
+  characters: Set<字符>,
   a: 字形分析结果 | 动态字形分析结果,
-  display: (s: string) => string,
+  display: (s: 字符) => string,
 ) => {
   const { 分析结果 } = a;
   const tsv = [...characters].map((char) => {
     const analysis = (分析结果.get(char) ?? []).flat();
     return [
-      char,
-      analysis.map((x) => x.字根序列.map(display).join(" ")).join("　"),
+      char.toString(),
+      analysis
+        .map((x) => x.字根序列.map((z) => z.获取名称()).join(" "))
+        .join("　"),
     ];
   });
   exportTSV(tsv, "拆分结果.txt");
@@ -114,6 +118,7 @@ const ConfigureRules = () => {
 
 const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
+  const 原始字库 = useAtomValue(原始字库数据原子);
   const 字库 = useAtomValueUnwrapped(如字库原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
@@ -139,21 +144,26 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const 部件分析内容: ItemType[] = [];
   const 复合体分析内容: ItemType[] = [];
   for (const [字, 分析列表] of 分析结果) {
-    if (只显示自定义 && !自定义拆分[字] && !动态自定义拆分[字]) continue;
-    if (!过滤器.过滤(字, 字库._get()[字]!, 笔顺映射.get(字) ?? "")) continue;
-    if (是必要字根(字)) continue;
+    const 字符串 = 字.toString();
+    if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])
+      continue;
+    if (!过滤器.过滤(字, 原始字库[字符串]!, 笔顺映射.get(字) ?? "")) continue;
+    if (是必要字根(字符串)) continue;
     for (const 分析 of 分析列表) {
       if (分析.类型 === "部件") {
         const r = 分析 as 默认部件分析 | 基本分析;
-        if (分析.字根序列.length === 1 && /\d+/.test(分析.字根序列[0]!))
+        if (
+          分析.字根序列.length === 1 &&
+          /\d+/.test(分析.字根序列[0]!.toString())
+        )
           continue;
         部件分析内容.push({
-          key: 字,
-          label: <ResultSummary char={字} analysis={分析} />,
+          key: 字符串,
+          label: <ResultSummary char={字符串} analysis={分析} />,
           children:
             "全部拆分方式" in r ? (
               <ResultDetail
-                char={字}
+                char={字符串}
                 data={r.全部拆分方式}
                 map={r.字根笔画映射}
               />
@@ -161,8 +171,10 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         });
       } else {
         复合体分析内容.push({
-          key: 字,
-          label: <ResultSummary char={字} analysis={分析} disableCustomize />,
+          key: 字符串,
+          label: (
+            <ResultSummary char={字符串} analysis={分析} disableCustomize />
+          ),
         });
       }
     }
@@ -208,9 +220,8 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
               if (last.some((x) => !是必要字根(x))) {
                 notification.warning({
                   message: "存在不合法的自定义拆分",
-                  description: `部件 ${display(部件)} 的自定义拆分中包含非必要字根 ${last
+                  description: `部件 ${部件} 的自定义拆分中包含非必要字根 ${last
                     .filter((x) => !是必要字根(x))
-                    .map(display)
                     .join("、")}，请修改后重试`,
                 });
                 return;

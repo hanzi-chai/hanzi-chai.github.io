@@ -14,7 +14,7 @@ import {
 import type { MouseEventHandler } from "react";
 import styled from "styled-components";
 import { useAtomValueUnwrapped, 如私用区图形原子 } from "~/atoms";
-import { 是私用区 } from "~/lib";
+import type { 字符 } from "~/lib";
 import { StrokesView } from "./GlyphView";
 
 const ScrollableRow = styled(Row)`
@@ -124,20 +124,20 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
   );
 };
 
-export const Display = ({ name, ...rest }: { name: string }) => {
+export const Display = ({ name, ...rest }: { name: 字符 }) => {
   const glyphMap = useAtomValueUnwrapped(如私用区图形原子);
-  if (!是私用区(name)) {
+  if (!name.是私用区()) {
     return (
       <span {...rest} style={{ whiteSpace: "nowrap" }}>
-        {/^\d$/.test(name)
-          ? String.fromCodePoint(name.codePointAt(0)! + 0xff10 - 0x30)
-          : name}
+        {/^\d$/.test(name.toString())
+          ? String.fromCodePoint(name.toNumber() + 0xff10 - 0x30)
+          : name.toString()}
       </span>
     );
   }
   const glyph = glyphMap.get(name);
   if (glyph === undefined) {
-    return <span {...rest}>{name}</span>;
+    return <span {...rest}>{name.toString()}</span>;
   }
   return (
     <span {...rest}>
@@ -150,13 +150,13 @@ export const DisplayWithSuperScript = ({
   name,
   index,
 }: {
-  name: string;
+  name: 字符 | string;
   index: number;
 }) => {
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
   return (
     <span>
-      <Display name={name} />
+      {typeof name === "string" ? name : <Display name={name} />}
       {index ? superscripts[index] : ""}
     </span>
   );

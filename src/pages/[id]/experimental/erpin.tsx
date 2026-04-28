@@ -17,8 +17,8 @@ import type { ColumnsType } from "antd/es/table";
 import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { isEqual, sample, sortBy } from "lodash-es";
-import { 汉字集合原子, 退化配置原子, 决策原子, 如字库原子 } from "~/atoms";
-import Element from "~/components/Element";
+import { 决策原子, 如字库原子, 汉字集合原子, 退化配置原子 } from "~/atoms";
+import Element from "~/components/BorderItem";
 import ElementSelect from "~/components/ElementSelect";
 import { Display } from "~/components/Utils";
 
@@ -29,7 +29,7 @@ export interface TreeNode {
 
 function 构建字根树(map: Map<string, string | undefined>): TreeNode {
   const nodes = new Map<string, TreeNode>();
-  let roots: TreeNode | undefined = undefined;
+  let roots: TreeNode | undefined;
 
   // 先创建所有的节点
   for (const key of map.keys()) {

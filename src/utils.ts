@@ -1,4 +1,4 @@
-import { type 原始汉字数据, type 字形数据, type 汉字数据, type 结构描述字符, type 配置 } from "~/lib";
+import { 字符, type 原始汉字数据, type 字形数据, type 结构描述字符, type 配置 } from "~/lib";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -161,18 +161,18 @@ export class 字符过滤器 {
     }
   }
 
-  过滤(汉字: string, 数据: 汉字数据 | 原始汉字数据, 笔画序列: string) {
+  过滤(汉字: 字符, 数据: 原始汉字数据, 笔画序列: string) {
     let result = true;
     const { name, unicode } = this.过滤条件;
     if (name) {
-      result &&= (数据.name ?? "").includes(name) || 汉字.includes(name);
+      result &&= (数据.name ?? "").includes(name) || 汉字.toString().includes(name);
     }
     if (this.sequenceRegex) {
       result &&= this.sequenceRegex.test(笔画序列);
     }
     if (unicode) {
-      let hex_str = 汉字.codePointAt(0)?.toString(16).toLowerCase();
-      let dec_str = 汉字.codePointAt(0)?.toString(10);
+      let hex_str = 汉字.toNumber().toString(16).toLowerCase();
+      let dec_str = 汉字.toNumber().toString(10);
       result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
     }
     result &&= 数据.glyphs.some((glyph) => this.匹配字形(glyph));

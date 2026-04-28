@@ -12,7 +12,7 @@ describe("字集过滤", () => {
       const 指示 = specifiers[i]!;
       const 结果 = [...原始字库._get()].filter(([汉字, 信息]) => {
         const 过滤器 = 字集过滤查找表[指示];
-        return 过滤器(汉字, 信息);
+        return 过滤器(信息.character, 信息);
       });
       expect(结果.length).toBe(汉字数量[i]);
     }

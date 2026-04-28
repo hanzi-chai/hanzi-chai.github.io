@@ -1,7 +1,7 @@
-import styled from "styled-components";
 import { Button } from "antd";
+import styled from "styled-components";
 
-const Char = styled(Button)`
+const Item = styled(Button)`
   min-width: 32px;
   height: 32px;
   padding: 0 8px;
@@ -11,4 +11,4 @@ const Char = styled(Button)`
   box-shadow: none;
 `;
 
-export default Char;
+export default Item;
