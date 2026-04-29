@@ -6,7 +6,7 @@ info:
   version: '6.0'
   description: 单字三码起顶、词组四码起顶的双拼词顶功方案
 analysis:
-  serializer: xkjd
+  compound_analyzer: 星空键道
   classifier: {}
   degenerator:
     no_cross: true

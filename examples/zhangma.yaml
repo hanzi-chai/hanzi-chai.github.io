@@ -142,7 +142,8 @@ analysis:
     万:
       - '1'
       - "\ue427"
-  serializer: zhangma
+  component_analyzer: 张码
+  compound_analyzer: 张码
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping:

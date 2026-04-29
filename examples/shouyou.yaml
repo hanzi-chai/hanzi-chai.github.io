@@ -19,7 +19,7 @@ analysis:
     - 能连不交
     - 能散不连
     - 取大优先
-  serializer: shouyou
+  compound_analyzer: 首右
   customize:
     大:
       - '1'

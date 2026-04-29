@@ -202,7 +202,7 @@ analysis:
     "\ue0b3":
       - 二
       - "\ue420"
-  serializer: zhenma
+  compound_analyzer: 真码
 form:
   alphabet: qwertyuiopasdfghjklxcvbnm
   mapping:

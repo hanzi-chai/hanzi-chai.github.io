@@ -5,6 +5,8 @@ import { 复合体 } from "./compound.js";
 import type { 变换器, 字形自定义, 字集指示, 模式, 节点 } from "./config.js";
 import type {
   原始汉字数据,
+  复合体数据,
+  带标签,
   标签字形数据,
   矢量图形数据,
   笔画块,
@@ -169,6 +171,13 @@ class 原始字库 {
           new 部件(字符, new Set(["G"]), false, 模拟基本部件().strokes),
         );
       }
+      let index = 0;
+      渲染后字形列表.forEach((x) => {
+        if (x instanceof 部件) {
+          x.index = index;
+          index += 1;
+        }
+      });
       确定字库.添加(字符, 渲染后字形列表);
     }
     return ok(确定字库);
@@ -206,14 +215,18 @@ class 原始字库 {
         const 子字形列表 = 映射.get(子部分);
         if (!子字形列表) return false;
         const 当前变量映射备份 = structuredClone(变量映射);
+        let 至少有一个匹配成功 = false;
         for (const 子字形 of 子字形列表) {
-          if (this.模式匹配(映射, 子字形, 子模式, 变量映射)) return true;
+          if (this.模式匹配(映射, 子字形, 子模式, 变量映射)) {
+            至少有一个匹配成功 = true;
+            break;
+          }
           变量映射.clear();
           当前变量映射备份.forEach((value, key) => {
             变量映射.set(key, value);
           });
         }
-        return false;
+        if (!至少有一个匹配成功) return false;
       }
     }
     return true;
@@ -254,7 +267,7 @@ class 原始字库 {
         部分列表.push(如码位.value.toString());
       }
     }
-    const 复合体: 标签字形数据 = {
+    const 复合体: 带标签<复合体数据> = {
       type: "compound",
       operator: 项.operator,
       operandList: 部分列表,
@@ -278,7 +291,7 @@ class 原始字库 {
           if (!新字形.ok) return 新字形;
           if (新字形.value instanceof 字符)
             return default_err("Unexpected string result");
-          新列表.push(新字形.value);
+          新列表.push({ ...新字形.value, user: 字形.user, tags: 字形.tags });
         } else {
           新列表.push(字形);
         }
@@ -429,10 +442,11 @@ class 原始字库 {
           index,
           strokes: 0,
         }));
+        const 保留自定义 = 约化字形列表.length === 0;
         const 约化字形 = new 复合体(
           字符实例,
           标签集合,
-          字形数据.user,
+          保留自定义 ? 字形数据.user : false,
           字形数据.operator,
           部分列表,
           字形数据.order ?? 默认笔顺,

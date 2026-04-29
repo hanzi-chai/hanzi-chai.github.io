@@ -1,15 +1,15 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAddAtom, 自定义拆分原子 } from "~/atoms";
-import { type 字根, type 拆分方式与评价, 部件 } from "~/lib";
+import { type 字根, type 字符, type 拆分方式与评价, 部件 } from "~/lib";
 import { BoxedElementWithTooltip } from "./Utils";
 
 export default function ResultDetail({
-  char,
+  character,
   data,
   map,
 }: {
-  char: string;
+  character: 字符;
   data: 拆分方式与评价[];
   map: Map<字根, number[][]>;
 }) {
@@ -59,7 +59,7 @@ export default function ResultDetail({
       <Button
         onClick={() =>
           addCustomization(
-            char,
+            character.toString(),
             拆分方式.map((x) => x.字根.获取名称()),
           )
         }

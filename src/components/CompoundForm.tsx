@@ -10,10 +10,17 @@ import { Button, Flex, Form } from "antd";
 import { useWatch } from "antd/es/form/Form";
 import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
-import { useAtomValueUnwrapped, 全部标签原子, 如字库原子 } from "~/atoms";
 import {
-  图形盒子,
+  useAtomValueUnwrapped,
+  全部标签原子,
+  原始字库原子,
+  如字库原子,
+} from "~/atoms";
+import {
+  复合体,
   type 复合体数据,
+  type 字符,
+  所有源标签,
   type 拼接部件数据,
   type 结构描述字符,
   结构描述字符列表,
@@ -54,6 +61,7 @@ type 拼接部件或复合体 = 拼接部件数据 | 复合体数据;
 
 export default function CompoundForm({
   title,
+  character,
   initialValues,
   onFinish,
   noButton,
@@ -61,13 +69,15 @@ export default function CompoundForm({
   readonly,
 }: {
   title: ReactNode;
+  character: 字符;
   initialValues: 拼接部件或复合体;
   onFinish: (c: 拼接部件或复合体) => Promise<boolean>;
   noButton?: boolean;
   primary?: boolean;
   readonly?: boolean;
 }) {
-  const repertoire = useAtomValueUnwrapped(如字库原子);
+  const 字库 = useAtomValueUnwrapped(如字库原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   const [form] = Form.useForm<拼接部件或复合体>();
   const list: string[] = useWatch("operandList", form);
   const trigger = noButton ? (
@@ -97,13 +107,29 @@ export default function CompoundForm({
             >
               {(props) => {
                 const compound = props as 复合体数据;
-                const glyph = new 图形盒子();
-                // FIXME: 拼接部件和复合体暂时没有实时渲染
-                // const rendered = repertoire.递归渲染复合体(compound);
-                // if (rendered.ok) {
-                //   glyph = rendered.value;
-                // }
-                return <StrokesView displayMode glyph={glyph} />;
+                console.log("当前复合体数据", compound);
+                const 字形列表 = 原始字库.渲染字形(
+                  character,
+                  { ...compound, user: false, tags: new Set(所有源标签) },
+                  字库,
+                );
+                if (!字形列表.ok) {
+                  console.error(字形列表.error);
+                  return null;
+                }
+                const 复合体实例 = 字形列表.value.find(
+                  (x) => x instanceof 复合体,
+                );
+                if (复合体实例 === undefined) {
+                  console.error("未找到复合体实例");
+                  return null;
+                }
+                const 如图形 = 字库.递归渲染复合体(复合体实例);
+                if (!如图形.ok) {
+                  console.error(如图形.error);
+                  return null;
+                }
+                return <StrokesView displayMode glyph={如图形.value} />;
               }}
             </ProFormDependency>
           </Box>

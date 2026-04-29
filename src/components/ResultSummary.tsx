@@ -10,7 +10,7 @@ import {
   原始字库原子,
   自定义拆分原子,
 } from "~/atoms";
-import { type 基本分析, type 字符, 部件, type 默认部件分析 } from "~/lib";
+import { type 基本分析, type 复合体, 部件, type 默认部件分析 } from "~/lib";
 import { InlineRender } from "./ComponentForm";
 import ElementSelect from "./ElementSelect";
 import { BoxedElementWithTooltip, CharacterWithTooltip } from "./Utils";
@@ -19,17 +19,18 @@ const Customize = ({
   component,
   initialValues,
 }: {
-  component: string;
+  component: 部件;
   initialValues: string[];
 }) => {
   const add = useAddAtom(自定义拆分原子);
+  const 索引 = component.获取索引();
   return (
     <ProForm<{ content: string[] }>
-      title={component}
+      title={component.获取名称()}
       layout="horizontal"
       initialValues={{ content: initialValues }}
       onFinish={async ({ content }) => {
-        add(component, content);
+        add(索引, content);
         return true;
       }}
     >
@@ -68,20 +69,21 @@ const DynamicCustomize = ({
   component,
   initialValues,
 }: {
-  component: string;
+  component: 部件;
   initialValues: string[][];
 }) => {
   const add = useAddAtom(动态自定义拆分原子);
+  const 索引 = component.获取索引();
   return (
     <ProForm<{ content: { content: string[] }[] }>
-      title={component}
+      title={component.获取名称()}
       layout="horizontal"
       initialValues={{
         content: initialValues.map((x) => ({ content: x })),
       }}
       onFinish={async ({ content }) => {
         add(
-          component,
+          索引,
           content.map((x) => x.content),
         );
         return true;
@@ -115,13 +117,11 @@ const DynamicCustomize = ({
 };
 
 export default function ResultSummary({
-  char,
+  glyph,
   analysis,
-  disableCustomize = false,
 }: {
-  char: 字符;
+  glyph: 部件 | 复合体;
   analysis: 基本分析 | 默认部件分析;
-  disableCustomize?: boolean;
 }) {
   let 字根序列 = analysis.字根序列;
   if ("被覆盖拆分方式" in analysis && analysis.被覆盖拆分方式) {
@@ -132,14 +132,14 @@ export default function ResultSummary({
   const dynamic = useAtomValue(动态分析原子);
   const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const removeDynamic = useRemoveAtom(动态自定义拆分原子);
-  const 字符串 = char.toString();
-  const overrideRootSeries = customize[字符串];
-  const overrideDynamicSeries = dynamicCustomize[字符串];
+  const 索引 = glyph instanceof 部件 ? glyph.获取索引() : "";
+  const overrideRootSeries = customize[索引];
+  const overrideDynamicSeries = dynamicCustomize[索引];
   const 原始字库 = useAtomValue(原始字库原子);
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
-        <CharacterWithTooltip element={char} />
+        <CharacterWithTooltip element={glyph.字符} />
         {字根序列.map((x, index) => {
           const element = x instanceof 部件 ? x.字符 : x;
           return (
@@ -174,13 +174,13 @@ export default function ResultSummary({
           </Flex>
         )}
       </Flex>
-      {!disableCustomize && (
+      {glyph instanceof 部件 && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {overrideRootSeries && (
-            <Button onClick={() => remove(字符串)}>取消自定义</Button>
+            <Button onClick={() => remove(索引)}>取消自定义</Button>
           )}
           {overrideDynamicSeries && (
-            <Button onClick={() => removeDynamic(字符串)}>取消自定义组</Button>
+            <Button onClick={() => removeDynamic(索引)}>取消自定义组</Button>
           )}
           {"全部拆分方式" in analysis && dynamic && (
             <Popover
@@ -188,9 +188,9 @@ export default function ResultSummary({
               trigger="click"
               content={
                 <DynamicCustomize
-                  component={字符串}
+                  component={glyph}
                   initialValues={
-                    dynamicCustomize[字符串] ??
+                    dynamicCustomize[索引] ??
                     analysis.全部拆分方式
                       .filter((x) => x.可用)
                       .map((x) => x.拆分方式.map((y) => y.字根.获取名称()))
@@ -205,7 +205,7 @@ export default function ResultSummary({
             title="自定义拆分"
             content={
               <Customize
-                component={字符串}
+                component={glyph}
                 initialValues={
                   overrideRootSeries ?? 字根序列.map((x) => x.获取名称())
                 }

@@ -8,7 +8,7 @@ import { 二笔, 单笔, 识别元素 } from "./element.js";
 import type { 原始字库 } from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
 import { 字符 } from "./unicode.js";
-import { ok, type Result, type 源标签, 源标签集合 } from "./utils.js";
+import { ok, type Result, type 源标签 } from "./utils.js";
 
 export type 字形 = 部件 | 复合体;
 
@@ -25,11 +25,13 @@ export type 字根 = 单笔 | 二笔 | 部件;
 interface 基本部件分析 {
   类型: "部件";
   字根序列: 字根[];
+  部件: 部件;
 }
 
 interface 基本复合体分析 {
   类型: "复合体";
   字根序列: 字根[];
+  复合体: 复合体;
 }
 
 type 基本分析 = 基本部件分析 | 基本复合体分析;

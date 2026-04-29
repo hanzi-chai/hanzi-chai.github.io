@@ -94,6 +94,7 @@ export const 字形编辑器 = ({
       <CompoundForm
         title={title}
         initialValues={字形}
+        character={字}
         onFinish={回调}
         primary
         readonly={只读}

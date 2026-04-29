@@ -130,6 +130,7 @@ export function 获取字形分析结果(
     分析配置: config.analysis ?? {},
     决策: config.form.mapping,
     决策空间: config.form.mapping_space ?? {},
+    字形来源列表: config.data?.glyph_sources ?? [],
   };
   const characters = 原始字库.获取汉字集合(
     词典,

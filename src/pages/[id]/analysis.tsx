@@ -150,18 +150,18 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
       continue;
     if (!过滤器.过滤(字, 原始字库[字符串]!, 笔顺映射.get(字) ?? "")) continue;
     if (是必要字根(字符串)) continue;
-    for (const 分析 of 分析列表) {
+    for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
         const r = 分析 as 默认部件分析 | 基本分析;
         if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 单笔)
           continue;
         部件分析内容.push({
-          key: 字符串,
-          label: <ResultSummary char={字} analysis={分析} />,
+          key: `${字符串}-${分析.部件.index}`,
+          label: <ResultSummary glyph={分析.部件} analysis={分析} />,
           children:
             "全部拆分方式" in r ? (
               <ResultDetail
-                char={字符串}
+                character={字}
                 data={r.全部拆分方式}
                 map={r.字根笔画映射}
               />
@@ -170,8 +170,8 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         });
       } else {
         复合体分析内容.push({
-          key: 字符串,
-          label: <ResultSummary char={字} analysis={分析} disableCustomize />,
+          key: `${字符串}-${i}`,
+          label: <ResultSummary glyph={分析.复合体} analysis={分析} />,
         });
       }
     }
