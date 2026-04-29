@@ -45,7 +45,7 @@ import {
   模拟矢量笔画,
   笔画表示方式,
 } from "~/lib";
-import Element from "./BorderItem";
+import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { CommonForm } from "./CompoundForm";
 import { Box, StrokesView } from "./GlyphView";
@@ -229,11 +229,10 @@ export default function ComponentForm({
 }) {
   const 原始字库 = useAtomValue(原始字库原子);
   const 字库 = useAtomValueUnwrapped(如字库原子);
-  const repertoire = 原始字库._get();
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Element type={primary ? "default" : "text"}>{title}</Element>
+    <BorderItem type={primary ? "default" : "text"}>{title}</BorderItem>
   );
   const isValidSource = ([name]: [string, any]) => {
     let component: 基本或衍生部件 | undefined = 原始字库
@@ -490,7 +489,7 @@ export function IdentityForm({
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Element type={primary ? "default" : "text"}>{title}</Element>
+    <BorderItem type={primary ? "default" : "text"}>{title}</BorderItem>
   );
   return (
     <ModalForm<全等数据>

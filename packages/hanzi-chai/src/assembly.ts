@@ -9,15 +9,14 @@ import {
   type 键盘配置,
 } from "./config.js";
 import { 取码器 } from "./element.js";
-import { 获取注册表 } from "./main.js";
 import type { 拼音分析结果 } from "./pinyin.js";
+import { 获取注册表 } from "./registry.js";
 import type { 动态字形分析结果, 基本分析, 字形分析结果 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 import {
   default_err,
   ok,
   type Result,
-  字数,
   总序列化,
   排列组合,
   type 自定义分析映射,
@@ -266,7 +265,7 @@ const 组装 = (
       去重后组装结果.push(组装);
     }
   }
-  return 去重后组装结果;
+  return ok(去重后组装结果);
 };
 
 /**
@@ -325,7 +324,7 @@ const 动态组装 = (
       去重后组装结果.push(组装);
     }
   }
-  return 去重后组装结果;
+  return ok(去重后组装结果);
 };
 
 export { 组装, 动态组装, 星空键道组装器, 默认组装器 };

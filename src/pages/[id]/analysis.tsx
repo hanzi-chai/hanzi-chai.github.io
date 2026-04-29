@@ -42,10 +42,12 @@ import ResultSummary from "~/components/ResultSummary";
 import Selector from "~/components/Selector";
 import {
   type 动态字形分析结果,
+  单笔,
   type 基本分析,
   type 字形分析结果,
   type 字符,
   获取注册表,
+  默认分类器,
   type 默认部件分析,
 } from "~/lib";
 import {
@@ -119,7 +121,6 @@ const ConfigureRules = () => {
 const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
   const 原始字库 = useAtomValue(原始字库数据原子);
-  const 字库 = useAtomValueUnwrapped(如字库原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
   const { 分析结果 } = 字形分析结果;
@@ -141,7 +142,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [只显示自定义, 设置只显示自定义] = useState(false);
   const 是必要字根 = (k: string) =>
     决策[k] && (决策空间[k] ?? []).every((x) => x.value !== null);
-  const 部件分析内容: ItemType[] = [];
+  const 部件分析内容: (ItemType & { sequence: number[] })[] = [];
   const 复合体分析内容: ItemType[] = [];
   for (const [字, 分析列表] of 分析结果) {
     const 字符串 = 字.toString();
@@ -152,14 +153,11 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     for (const 分析 of 分析列表) {
       if (分析.类型 === "部件") {
         const r = 分析 as 默认部件分析 | 基本分析;
-        if (
-          分析.字根序列.length === 1 &&
-          /\d+/.test(分析.字根序列[0]!.toString())
-        )
+        if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 单笔)
           continue;
         部件分析内容.push({
           key: 字符串,
-          label: <ResultSummary char={字符串} analysis={分析} />,
+          label: <ResultSummary char={字} analysis={分析} />,
           children:
             "全部拆分方式" in r ? (
               <ResultDetail
@@ -168,17 +166,21 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
                 map={r.字根笔画映射}
               />
             ) : undefined,
+          sequence: r.字根序列.flatMap((x) => x.获取笔画序列(默认分类器)),
         });
       } else {
         复合体分析内容.push({
           key: 字符串,
-          label: (
-            <ResultSummary char={字符串} analysis={分析} disableCustomize />
-          ),
+          label: <ResultSummary char={字} analysis={分析} disableCustomize />,
         });
       }
     }
   }
+  部件分析内容.sort(
+    (a, b) =>
+      a.sequence.length - b.sequence.length ||
+      a.sequence.join("").localeCompare(b.sequence.join("")),
+  );
 
   const displays = [部件分析内容, 复合体分析内容] as const;
   return (

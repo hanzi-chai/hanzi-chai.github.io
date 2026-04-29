@@ -9,7 +9,7 @@ describe("e2e test", () => {
     const tygf = 获取通用规范汉字笔画数据();
     const cjk = 获取CJK汉字笔画数据();
     const result = new Map<string, string>();
-    for (const [char, { 字符, 字形列表 }] of 字库._get()) {
+    for (const { 字符, 字形列表 } of 字库) {
       if (!字符.是基本区汉字()) continue;
       for (const glyph of 字形列表) {
         result.set(字符.toString(), glyph.获取笔画序列(默认分类器).join(""));

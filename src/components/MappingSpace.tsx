@@ -21,13 +21,14 @@ import {
   动态分析原子,
   变量规则映射原子,
   字母表原子,
+  强类型元素列表原子,
   当前元素原子,
 } from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
-import { ConvertDisplay, ElementLabelWrapper } from "~/components/Mapping";
-import { DeleteButton, Display, NumberInput } from "~/components/Utils";
+import { ElementLabelWrapper } from "~/components/Mapping";
+import { DeleteButton, ElementDisplay, NumberInput } from "~/components/Utils";
 import type { 决策生成器规则, 安排描述 } from "~/lib";
-import Element from "./BorderItem";
+import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import ValueEditor from "./Value";
 
@@ -258,6 +259,7 @@ export default function MappingSpace() {
   const [character, setCharacter] = useState<string | undefined>(undefined);
   const alphabet = useAtomValue(字母表原子);
   const currentElement = useAtomValue(当前元素原子);
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={3}>决策空间</Typography.Title>
@@ -301,9 +303,11 @@ export default function MappingSpace() {
       </Flex>
       {dynamic && (
         <Flex wrap="wrap" gap="small">
-          {Object.entries(mappingSpace)
-            .filter(([name]) => mapping[name] === undefined)
-            .map(([name, values]) => {
+          {Object.keys(mappingSpace)
+            .filter((name) => mapping[name] === undefined)
+            .map((name) => {
+              const element = 强类型元素列表.get(name);
+              if (!element) return null;
               return (
                 <Flex key={name} align="center">
                   <Popover
@@ -311,13 +315,13 @@ export default function MappingSpace() {
                     trigger={["hover", "click"]}
                     content={<RulesForm name={name} />}
                   >
-                    <Element>
+                    <BorderItem>
                       <ElementLabelWrapper
                         $shouldHighlight={name === currentElement}
                       >
-                        <ConvertDisplay name={name} />
+                        <ElementDisplay element={element} />
                       </ElementLabelWrapper>
-                    </Element>
+                    </BorderItem>
                   </Popover>
                 </Flex>
               );

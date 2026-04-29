@@ -5,21 +5,30 @@ import {
   ProFormList,
 } from "@ant-design/pro-components";
 import { Button, Dropdown, Flex, Select } from "antd";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { type ReactNode, useRef } from "react";
-import { 变换器列表原子 } from "~/atoms";
-import { type 变换器, type 结构变量, 结构描述字符列表, type 节点 } from "~/lib";
+import { 原始字库原子, 变换器列表原子 } from "~/atoms";
+import {
+  type 原始字库,
+  type 变换器,
+  type 结构变量,
+  结构描述字符列表,
+  type 节点,
+} from "~/lib";
 import CharacterSelect from "./CharacterSelect";
-import { ConvertDisplay } from "./Mapping";
-import { Display, MinusButton, PlusButton } from "./Utils";
+import { CharacterDisplay, MinusButton, PlusButton } from "./Utils";
 
-function serialize(模式: 节点): ReactNode {
-  if (typeof 模式 === "string") return <ConvertDisplay name={模式} />;
+function serialize(模式: 节点, 原始字库: 原始字库): ReactNode {
+  if (typeof 模式 === "string") {
+    const c = 原始字库.校验(模式);
+    if (!c) return null;
+    return <CharacterDisplay character={c.character} />;
+  }
   if ("id" in 模式) return "①②③④⑤⑥⑦⑧⑨⑩"[模式.id - 1] || `{${模式.id}}`;
   return (
     <span>
       {模式.operator}
-      {模式.operandList.map(serialize)}
+      {模式.operandList.map((operand) => serialize(operand, 原始字库))}
     </span>
   );
 }
@@ -145,12 +154,11 @@ const PatternEditor: React.FC<{
   value: 节点;
   onChange: (newValue: 节点) => void;
 }> = ({ value, onChange }) => {
-  const selectValue = isVariable(value) ? JSON.stringify(value) : value;
   return typeof value === "string" || isVariable(value) ? (
     <Flex vertical align="center">
       <CharacterSelect
         style={{ width: 88 }}
-        value={selectValue}
+        value={isVariable(value) ? JSON.stringify(value) : value}
         onChange={(v: string) =>
           onChange(v.startsWith("{") ? (JSON.parse(v) as 结构变量) : v)
         }
@@ -204,6 +212,7 @@ const PatternEditor: React.FC<{
 const TransformersForm = () => {
   const [transformers, setTransformers] = useAtom(变换器列表原子);
   const formRef = useRef<ProFormInstance>(undefined);
+  const 原始字库 = useAtomValue(原始字库原子);
 
   return (
     <ModalForm
@@ -248,7 +257,8 @@ const TransformersForm = () => {
                     form.setFieldValue("content", [...list, 示例]);
                   }}
                 >
-                  {serialize(示例.from)} → {serialize(示例.to)}
+                  {serialize(示例.from, 原始字库)} →{" "}
+                  {serialize(示例.to, 原始字库)}
                 </span>
               ),
             })),

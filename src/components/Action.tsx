@@ -35,7 +35,6 @@ import {
 } from "~/atoms";
 import { DeleteButton, NumberInput } from "~/components/Utils";
 import {
-  字数 as chars,
   创建原始汉字数据,
   type 原始字库数据,
   type 原始汉字数据,
@@ -94,7 +93,7 @@ function CreatePopoverContent({ onCreate }: { onCreate: (s: string) => void }) {
           : type === "identity"
             ? 模拟全等()
             : 模拟复合体("⿰");
-    if (chars(charOrName) > 1) {
+    if ([...charOrName].length > 1) {
       let char: string;
       if (remote) {
         const unicode = await remoteCreateWithoutUnicode({

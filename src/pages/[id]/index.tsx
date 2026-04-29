@@ -12,7 +12,6 @@ import {
   useSetAtom,
   type WritableAtom,
   原始字库原子,
-  原始字库数据原子,
   基本信息原子,
   字集指示原子,
   用户当量映射原子,
@@ -35,7 +34,6 @@ import {
   type 当量映射,
   解析当量映射,
   解析自定义元素,
-  解析词典,
   解析键位分布目标,
   type 词典,
   读取表格,
@@ -183,7 +181,7 @@ export default function Index() {
   const counter = Object.fromEntries(
     Object.keys(字集过滤查找表).map((key) => [key as 字集指示, 0]),
   ) as Record<字集指示, number>;
-  for (const [name, data] of 原始字库._get()) {
+  for (const data of 原始字库) {
     for (const key of Object.keys(counter) as 字集指示[]) {
       const fn = 字集过滤查找表[key];
       if (fn(data.character, data)) counter[key]++;
@@ -258,7 +256,7 @@ export default function Index() {
           }
           atom={用户词典原子}
           defaultAtom={默认词典原子}
-          parser={(x) => 解析词典(x, 原始字库)}
+          parser={(x) => 原始字库.解析词典(x)}
           dumper={序列化词典}
         />
         <AssetUploader

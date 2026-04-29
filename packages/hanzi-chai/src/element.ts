@@ -1,5 +1,5 @@
 import type { 默认汉字分析 } from "./assembly.js";
-import { 默认分类器 } from "./classifier.js";
+import { type 分类器, 默认分类器 } from "./classifier.js";
 import type {
   条件节点配置,
   源节点配置,
@@ -7,8 +7,94 @@ import type {
   运算符,
   键盘配置,
 } from "./config.js";
+import type { 结构描述字符 } from "./main.js";
 import type { 字根 } from "./repertoire.js";
+import type { 字符 } from "./unicode.js";
 import { 展开决策, 计算当前或潜在长度 } from "./utils.js";
+
+export type 元素识别结果 = 单笔 | 二笔 | 字符 | string;
+
+export function 识别元素(
+  元素: string,
+  分类器: 分类器,
+  查找汉字: (s: string) => 字符 | undefined,
+): 元素识别结果 {
+  const 数字集合 = Object.values(分类器).map(String);
+  if (元素.length === 1 && 数字集合.includes(元素)) {
+    return 单笔.创建(Number(元素));
+  }
+  const [ch1, ch2] = [...元素];
+  if (
+    元素.length === 2 &&
+    ch1 &&
+    ch2 &&
+    数字集合.includes(ch1) &&
+    数字集合.includes(ch2)
+  ) {
+    return 二笔.创建(Number(ch1), Number(ch2));
+  }
+  const 字符实例 = 查找汉字(元素);
+  if (字符实例) {
+    return 字符实例;
+  }
+  return 元素;
+}
+
+export class 结构符 {
+  constructor(public operator: 结构描述字符) {}
+}
+
+export class 拼音元素 {
+  constructor(
+    public 类型: string,
+    public 元素: string,
+  ) {}
+}
+
+export class 自定义元素 {
+  constructor(
+    public 类型: string,
+    public 元素: string,
+  ) {}
+}
+
+export class 单笔 {
+  static pool: Map<number, 单笔> = new Map();
+  static 创建(笔画类别: number) {
+    if (!单笔.pool.has(笔画类别)) {
+      单笔.pool.set(笔画类别, new 单笔(笔画类别));
+    }
+    return 单笔.pool.get(笔画类别)!;
+  }
+  private constructor(private 笔画类别: number) {}
+  获取名称() {
+    return this.笔画类别.toString();
+  }
+  获取笔画序列() {
+    return [this.笔画类别];
+  }
+}
+
+export class 二笔 {
+  static pool: Map<string, 二笔> = new Map();
+  static 创建(笔画类别1: number, 笔画类别2: number) {
+    const key = `${笔画类别1}${笔画类别2}`;
+    if (!二笔.pool.has(key)) {
+      二笔.pool.set(key, new 二笔(笔画类别1, 笔画类别2));
+    }
+    return 二笔.pool.get(key)!;
+  }
+  private constructor(
+    private 笔画类别1: number,
+    private 笔画类别2: number,
+  ) {}
+  获取名称() {
+    return `${this.笔画类别1}${this.笔画类别2}`;
+  }
+  获取笔画序列() {
+    return [this.笔画类别1, this.笔画类别2];
+  }
+}
 
 interface 基本 {
   type: string;

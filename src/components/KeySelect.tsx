@@ -7,9 +7,10 @@ import {
   变量规则映射原子,
   如笔顺映射原子,
   字母表原子,
+  强类型元素列表原子,
 } from "~/atoms";
-import { type 广义码位, 是变量, 是归并 } from "~/lib";
-import { DisplayWithSuperScript, Select } from "./Utils";
+import { 字符, type 广义码位, 是变量, 是归并 } from "~/lib";
+import { ElementPositionDisplay, Select } from "./Utils";
 
 export interface KeySelectProps {
   value: 广义码位;
@@ -46,13 +47,14 @@ export default function KeySelect({
   }));
   if (allowAlphabets) keyOptions.push(...alphabetOptions);
   const mapping = useAtomValue(决策原子);
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   const referenceOptions = Object.entries(mapping).flatMap(
     ([element, mapped]) => {
-      if (是归并(mapped)) return [];
+      const 强类型元素 = 强类型元素列表.get(element);
+      if (是归并(mapped) || !强类型元素) return [];
       const length = mapped.length;
       return [...Array(length).keys()].map((index) => ({
-        label: <DisplayWithSuperScript name={element} index={index} />,
+        label: <ElementPositionDisplay element={强类型元素} index={index} />,
         value: JSON.stringify({ element, index }),
       }));
     },
@@ -66,7 +68,7 @@ export default function KeySelect({
   if (allowVariables) keyOptions.push(...variableOptions);
   if (allowPlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
-  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   return (
     <Select
       showSearch
@@ -87,10 +89,10 @@ export default function KeySelect({
         if ("variable" in key) {
           return key.variable.includes(input);
         }
-        const ch = 原始字库.校验(key.element);
-        if (!ch) return false;
-        const sequence = sequenceMap.get(ch.character);
-        const 匹配序列 = sequence?.startsWith(input) ?? false;
+        const 元素 = 强类型元素列表.get(key.element);
+        if (!元素) return false;
+        const 匹配序列 =
+          元素 instanceof 字符 && 笔顺映射.get(元素)?.startsWith(input);
         const 匹配元素 = key.element.includes(input);
         return 匹配序列 || 匹配元素;
       }}
@@ -113,14 +115,14 @@ export default function KeySelect({
         if (typeof bk === "string") {
           return 1;
         }
-        const cha = 原始字库.校验(ak.element);
-        const chb = 原始字库.校验(bk.element);
-        if (!cha || !chb) {
-          return ak.element.localeCompare(bk.element);
+        const cha = 强类型元素列表.get(ak.element);
+        const chb = 强类型元素列表.get(bk.element);
+        if (cha instanceof 字符 && chb instanceof 字符) {
+          const aSequence = 笔顺映射.get(cha) ?? "";
+          const bSequence = 笔顺映射.get(chb) ?? "";
+          return aSequence.length - bSequence.length;
         }
-        const amapped = sequenceMap.get(cha.character) ?? "";
-        const bmapped = sequenceMap.get(chb.character) ?? "";
-        return amapped.localeCompare(bmapped);
+        return ak.element.localeCompare(bk.element);
       }}
     />
   );

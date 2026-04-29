@@ -4,10 +4,10 @@ import { isEmpty } from "lodash-es";
 import { useMemo, useState } from "react";
 import { useAtomValue, 原始字库数据原子, 如字库原子 } from "~/atoms";
 import { EditGlyph } from "~/components/Action";
-import Element from "~/components/BorderItem";
+import BorderItem from "~/components/BorderItem";
 import { 字形数据更新器 } from "~/components/CharacterTable";
 import { ElementWithTooltip } from "~/components/ElementPool";
-import { Display } from "~/components/Utils";
+import { CharacterDisplay } from "~/components/Utils";
 import {
   type 原始字库数据,
   type 原始汉字数据,
@@ -145,7 +145,7 @@ const DegeneratorTable = () => {
       title: "部件",
       dataIndex: "name",
       render: (_, { 名称 }) => {
-        return <Display name={名称} />;
+        return <CharacterDisplay name={名称} />;
       },
       width: 128,
     },
@@ -171,9 +171,9 @@ const DegeneratorTable = () => {
             {rootList.map(([name, slices]) => {
               return (
                 <Space key={name}>
-                  <Element>
-                    <Display name={name} />
-                  </Element>
+                  <BorderItem>
+                    <CharacterDisplay name={name} />
+                  </BorderItem>
                   {slices
                     .map((x) => `(${record.二进制转索引(x).join(", ")})`)
                     .join(", ")}

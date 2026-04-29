@@ -28,7 +28,7 @@ import {
 import { InlineRender } from "~/components/ComponentForm";
 import KeySelect from "~/components/KeySelect";
 import { MyProFormList } from "~/components/ResultSummary";
-import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
+import { CodePositionDisplay } from "~/components/Utils";
 import type { 码位, 组装条目 } from "~/lib";
 import { 反序列化, 序列化 } from "~/lib";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
@@ -171,7 +171,7 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
         return (
           <Space>
             {elements.map((element, i) => (
-              <DisplayOptionalSuperscript key={i} element={element ?? "ε"} />
+              <CodePositionDisplay key={i} element={element ?? "ε"} />
             ))}
           </Space>
         );
@@ -254,7 +254,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       render: (_, record) => {
         const element = 反序列化(record.name)!;
         if (!element.ok) return record.name;
-        return <DisplayOptionalSuperscript element={element.value!} />;
+        return <CodePositionDisplay element={element.value!} />;
       },
       width: 192,
     },

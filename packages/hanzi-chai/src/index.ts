@@ -7,7 +7,7 @@ import { load } from "js-yaml";
 import Pako from "pako";
 import { 组装, type 组装配置 } from "./assembly.js";
 import type { 配置 } from "./config.js";
-import type { 原始汉字数据 } from "./main.js";
+import type { 原始汉字数据 } from "./data.js";
 import { 分析拼音, 合并拼写运算, type 拼音分析结果 } from "./pinyin.js";
 import { 原始字库 } from "./primitive.js";
 import type { 字库, 字形分析结果 } from "./repertoire.js";
@@ -15,10 +15,9 @@ import {
   ok,
   type Result,
   标准化自定义,
+  type 自定义分析,
   type 自定义分析映射,
-  获取汉字集合,
   解析当量映射,
-  解析词典,
   解析键位分布目标,
   type 词典,
   读取表格,
@@ -73,7 +72,7 @@ export function 获取原始字库(自定义字库: 原始汉字数据[] = []): 
 }
 
 export function 获取词典(路径: string | undefined, 原始字库: 原始字库): 词典 {
-  return 读取数据文件("dictionary.txt", (x) => 解析词典(x, 原始字库), 路径);
+  return 读取数据文件("dictionary.txt", (x) => 原始字库.解析词典(x), 路径);
 }
 
 export function 获取键位分布目标(路径?: string): 键位分布目标 {
@@ -96,24 +95,17 @@ export function 获取自定义元素映射(
   自定义元素文件集合: Record<string, string>,
   原始字库: 原始字库,
 ) {
-  const 查找表: 自定义分析映射 = new Map();
+  const 自定义元素集合: Record<string, 自定义分析> = {};
   for (const [名称, 文件路径] of Object.entries(自定义元素文件集合)) {
     const tsv = 读取表格(readFileSync(文件路径, "utf-8"));
+    const 查找表: Record<string, string[]> = {};
     for (const [char, elements] of tsv) {
       if (char === undefined || elements === undefined) continue;
-      const 字符 = 原始字库.校验(char);
-      if (!字符) {
-        console.warn(
-          `警告：自定义元素文件中的字符 "${char}" 在字库中未找到，已跳过。`,
-        );
-        continue;
-      }
-      const 记录 = 查找表.get(字符.character) ?? {};
-      记录[名称] = elements.split(" ");
-      查找表.set(字符.character, 记录);
+      查找表[char] = elements.split(" ");
     }
+    自定义元素集合[名称] = 查找表;
   }
-  return 查找表;
+  return 原始字库.校验自定义映射(自定义元素集合);
 }
 
 export function 获取字库(config: 配置): Result<字库, Error> {
@@ -139,7 +131,10 @@ export function 获取字形分析结果(
     决策: config.form.mapping,
     决策空间: config.form.mapping_space ?? {},
   };
-  const characters = 获取汉字集合(词典, 原始字库);
+  const characters = 原始字库.获取汉字集合(
+    词典,
+    config.data?.character_set ?? "minimal",
+  );
   return repertoire.分析(字形分析配置, characters, 原始字库);
 }
 

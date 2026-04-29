@@ -31,6 +31,7 @@ import {
   如字库原子,
   字母表原子,
   平铺决策原子,
+  强类型元素列表原子,
   当前元素原子,
   按首码分组决策原子,
   编码类型原子,
@@ -39,21 +40,19 @@ import {
 import {
   type 决策,
   可打印字符列表,
-  字符,
   是归并,
   是部件,
-  码,
   读取表格,
   type 非空安排,
 } from "~/lib";
 import { exportTSV } from "~/utils";
-import { ElementWithTooltip } from "./ElementPool";
 import Item from "./Item";
 import MappingSpace, { RulesForm } from "./MappingSpace";
 import {
+  BoxedElementWithTooltip,
+  CodePositionDisplay,
   DeleteButton,
-  Display,
-  DisplayWithSuperScript,
+  ElementDisplay,
   Uploader,
 } from "./Utils";
 import ValueEditor from "./Value";
@@ -77,15 +76,6 @@ export const getAffiliates = (name: string, mapping: 决策) => {
   return result;
 };
 
-export const ConvertDisplay = ({ name }: { name: string }) => {
-  const 原始字库 = useAtomValue(原始字库原子);
-  const ch = 原始字库.校验(name);
-  if (ch) {
-    return <Display name={ch.character} />;
-  }
-  return <span>{name}</span>;
-};
-
 export const ElementDetail = ({
   keys,
   name,
@@ -101,6 +91,8 @@ export const ElementDetail = ({
   const affiliates = getAffiliates(name, mapping);
   const alphabet = useAtomValue(字母表原子);
   const 原始字库 = useAtomValue(原始字库原子);
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
+  const element = 强类型元素列表.get(name);
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
@@ -143,7 +135,7 @@ export const ElementDetail = ({
           <span>
             无法删除元素，因为元素被其他元素引用：
             {referenced.map((x) => (
-              <ConvertDisplay name={x} key={x} />
+              <ElementDisplay key={x} element={强类型元素列表.get(x) ?? x} />
             ))}
           </span>
         ),
@@ -151,12 +143,12 @@ export const ElementDetail = ({
     }
   };
 
-  const ch = 原始字库.校验(name)?.character;
+  if (!element) return null;
 
   return (
     <Flex vertical gap="middle">
       <Flex gap="small" align="center">
-        {ch ? <ElementWithTooltip element={ch} /> : <span>{name}</span>}
+        <BoxedElementWithTooltip element={element} />
         <ValueEditor
           value={currentValue}
           onChange={(newValue) => {
@@ -207,7 +199,7 @@ export const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
   }
 `;
 
-const DisplayWrapper = styled(ConvertDisplay)<{ $optional: boolean }>`
+const ElementDisplayWrapper = styled(ElementDisplay)<{ $optional: boolean }>`
   color: ${({ $optional }) => ($optional ? "#9d9d9d" : "black")};
 `;
 
@@ -225,6 +217,7 @@ export const AdjustableElementGroup = ({
   const affiliates = getAffiliates(name, mapping);
   const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
   const currentElement = useAtomValue(当前元素原子);
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   const mappingSpace = useAtomValue(决策空间原子);
   const isOptional = (name: string) =>
     mappingSpace[name]?.some((x) => x.value === null) ?? false;
@@ -233,6 +226,8 @@ export const AdjustableElementGroup = ({
   const [openAffiliatePopover, setOpenAffiliatePopover] = useState<
     Record<string, boolean>
   >({});
+  const element = 强类型元素列表.get(name);
+  if (!element) return null;
 
   return (
     <span>
@@ -250,8 +245,9 @@ export const AdjustableElementGroup = ({
         }
       >
         <ElementLabelWrapper $shouldHighlight={name === currentElement}>
-          <DisplayWrapper
-            name={normalize(name)}
+          <ElementDisplayWrapper
+            element={element}
+            hideTypeNames={displayMode}
             $optional={!displayMode && isOptional(name)}
           />
         </ElementLabelWrapper>
@@ -282,9 +278,10 @@ export const AdjustableElementGroup = ({
             $shouldHighlight={from === currentElement}
             style={{ fontSize: "0.85em" }}
           >
-            <DisplayWrapper
+            <ElementDisplayWrapper
               key={from}
-              name={normalize(from)}
+              hideTypeNames={displayMode}
+              element={强类型元素列表.get(from) ?? from}
               $optional={!displayMode && isOptional(from)}
             />
           </ElementLabelWrapper>
@@ -296,15 +293,7 @@ export const AdjustableElementGroup = ({
             {typeof rest === "string"
               ? rest
               : rest.map((x, i) => {
-                  return typeof x === "string" ? (
-                    x
-                  ) : (
-                    <DisplayWithSuperScript
-                      key={i}
-                      name={x.element}
-                      index={x.index}
-                    />
-                  );
+                  return <CodePositionDisplay key={i} element={x} />;
                 })}
           </ResidualCodeWrapper>
         )
@@ -548,8 +537,8 @@ const MappingRow = memo(
         />
         <Item>{symbol}</Item>
         <Flex align="center" wrap="wrap" gap="small">
-          {elements.map(({ 名称: name, 安排: code }) => (
-            <AdjustableElementGroup key={name} 名称={name} 安排={code} />
+          {elements.map(({ 名称, 安排 }) => (
+            <AdjustableElementGroup key={名称} 名称={名称} 安排={安排} />
           ))}
         </Flex>
       </Flex>

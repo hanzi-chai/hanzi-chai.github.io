@@ -9,13 +9,23 @@ import {
   InputNumber,
   notification,
   Row,
+  Tooltip,
   Upload,
 } from "antd";
 import type { MouseEventHandler } from "react";
 import styled from "styled-components";
-import { useAtomValueUnwrapped, 如私用区图形原子 } from "~/atoms";
-import type { 字符 } from "~/lib";
+import {
+  useAtomValue,
+  useAtomValueUnwrapped,
+  别名显示原子,
+  如私用区图形原子,
+  强类型元素列表原子,
+  键盘原子,
+} from "~/atoms";
+import { 二笔, type 元素识别结果, 单笔, 字符, type 码位 } from "~/lib";
+import BorderItem from "./BorderItem";
 import { StrokesView } from "./GlyphView";
+import Item from "./Item";
 
 const ScrollableRow = styled(Row)`
   height: 100%;
@@ -124,20 +134,42 @@ export const DeleteButton = ({ onClick, disabled }: Click) => {
   );
 };
 
-export const Display = ({ name, ...rest }: { name: 字符 }) => {
-  const glyphMap = useAtomValueUnwrapped(如私用区图形原子);
-  if (!name.是私用区()) {
+export const ElementDisplay = ({
+  element,
+  hideTypeNames,
+  ...rest
+}: {
+  element: 元素识别结果;
+  hideTypeNames?: boolean;
+}) => {
+  if (typeof element === "string") {
+    const text = hideTypeNames ? element.split("-").at(-1)! : element;
+    return <span {...rest}>{text}</span>;
+  }
+  if (element instanceof 单笔 || element instanceof 二笔) {
+    const name = element.获取名称();
+    return <span {...rest}>{name}</span>;
+  }
+  if (element instanceof 字符) {
+    return <CharacterDisplay {...rest} character={element} />;
+  }
+  return <span {...rest}>未知元素</span>;
+};
+
+export const CharacterDisplay = ({
+  character,
+  ...rest
+}: {
+  character: 字符;
+}) => {
+  const 私用区图形 = useAtomValueUnwrapped(如私用区图形原子);
+  const glyph = 私用区图形.get(character);
+  if (!character.是私用区() || glyph === undefined) {
     return (
       <span {...rest} style={{ whiteSpace: "nowrap" }}>
-        {/^\d$/.test(name.toString())
-          ? String.fromCodePoint(name.toNumber() + 0xff10 - 0x30)
-          : name.toString()}
+        {character.toString()}
       </span>
     );
-  }
-  const glyph = glyphMap.get(name);
-  if (glyph === undefined) {
-    return <span {...rest}>{name.toString()}</span>;
   }
   return (
     <span {...rest}>
@@ -146,18 +178,83 @@ export const Display = ({ name, ...rest }: { name: 字符 }) => {
   );
 };
 
-export const DisplayWithSuperScript = ({
-  name,
+export const ElementPositionDisplay = ({
+  element,
   index,
 }: {
-  name: 字符 | string;
+  element: 元素识别结果;
   index: number;
 }) => {
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
   return (
     <span>
-      {typeof name === "string" ? name : <Display name={name} />}
+      <ElementDisplay element={element} />
       {index ? superscripts[index] : ""}
     </span>
   );
+};
+
+export const CodePositionDisplay = ({ element }: { element: 码位 }) => {
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
+  if (typeof element === "string") {
+    return <span>{element}</span>;
+  } else {
+    const e = 强类型元素列表.get(element.element) ?? element.element;
+    return <ElementPositionDisplay element={e} index={element.index} />;
+  }
+};
+
+export const BoxedElementWithTooltip = ({
+  element,
+}: {
+  element: 元素识别结果;
+}) => {
+  const display = useAtomValue(别名显示原子);
+  const core = (
+    <BorderItem
+      onClick={() => navigator.clipboard.writeText(element.toString())}
+    >
+      <ElementDisplay element={element} />
+    </BorderItem>
+  );
+  if (element instanceof 字符 && element.是私用区())
+    return <Tooltip title={display(element)}>{core}</Tooltip>;
+  return core;
+};
+
+interface ElementProps {
+  element: string | 字符;
+  setElement?: (s: string | 字符 | undefined) => void;
+  currentElement?: string | 字符;
+}
+
+export const CharacterWithTooltip = ({
+  element,
+  setElement,
+  currentElement,
+}: ElementProps) => {
+  const keyboard = useAtomValue(键盘原子);
+  const { mapping } = keyboard;
+  const type =
+    element === currentElement
+      ? "primary"
+      : mapping[element.toString()]
+        ? "link"
+        : "default";
+  const display = useAtomValue(别名显示原子);
+  if (typeof element === "string") return element;
+  const core = (
+    <Item
+      onClick={() =>
+        setElement?.(element === currentElement ? undefined : element)
+      }
+      type={type}
+    >
+      {<CharacterDisplay character={element} />}
+    </Item>
+  );
+  const title = element.是私用区()
+    ? `${display(element)} ${element.十六进制()}`
+    : element.十六进制();
+  return <Tooltip title={title}>{core}</Tooltip>;
 };

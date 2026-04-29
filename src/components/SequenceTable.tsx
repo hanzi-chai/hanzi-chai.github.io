@@ -16,9 +16,8 @@ import {
 } from "~/atoms";
 import { 序列化, 总序列化, type 码位, 识别符 } from "~/lib";
 import { exportTSV } from "~/utils";
-import { ConvertDisplay } from "./Mapping";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
-import { Display, DisplayWithSuperScript } from "./Utils";
+import { CodePositionDisplay } from "./Utils";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
   return (
@@ -137,16 +136,6 @@ const getColumnSearchProps = (
     new RegExp(value as string).test(record[dataIndex].toString()),
 });
 
-export const DisplayOptionalSuperscript = ({ element }: { element: 码位 }) => {
-  if (typeof element === "string") {
-    return <ConvertDisplay name={element} />;
-  } else {
-    return (
-      <DisplayWithSuperScript name={element.element} index={element.index} />
-    );
-  }
-};
-
 export default function SequenceTable() {
   const 最大码长 = useAtomValue(最大码长原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
@@ -168,6 +157,9 @@ export default function SequenceTable() {
       sortDirections: ["ascend", "descend"],
       width: 96,
       ...getColumnSearchProps("词"),
+      render: (_, record) => (
+        <span>{record.词.map((c) => c.toString()).join("")}</span>
+      ),
     },
     {
       title: "频率",
@@ -190,7 +182,7 @@ export default function SequenceTable() {
         return (
           <Space>
             {record.元素序列.map((element, index) => (
-              <DisplayOptionalSuperscript key={index} element={element} />
+              <CodePositionDisplay key={index} element={element} />
             ))}
           </Space>
         );
@@ -211,16 +203,14 @@ export default function SequenceTable() {
       const element = 元素序列[i];
       if (element !== undefined) {
         const text = 序列化(element);
-        allValues[text] = <DisplayOptionalSuperscript element={element} />;
+        allValues[text] = <CodePositionDisplay element={element} />;
       }
     }
     columns.push({
       title: `元素 ${i + 1}`,
       render: (_, record) => {
         const element = record.元素序列[i];
-        return element ? (
-          <DisplayOptionalSuperscript element={element} />
-        ) : null;
+        return element ? <CodePositionDisplay element={element} /> : null;
       },
       sorter: (a, b) => {
         const ahash = 序列化(a.元素序列[i] ?? "");

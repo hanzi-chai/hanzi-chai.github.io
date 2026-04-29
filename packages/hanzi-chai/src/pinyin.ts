@@ -1,12 +1,7 @@
 import type { 拼写运算, 源节点配置, 运算规则 } from "./config.js";
-import {
-  ok,
-  type Result,
-  type 字符,
-  获取注册表,
-  type 词典,
-  type 词典条目,
-} from "./main.js";
+import { 获取注册表 } from "./registry.js";
+import type { 字符 } from "./unicode.js";
+import { ok, type Result, type 词典, type 词典条目 } from "./utils.js";
 
 const r = String.raw;
 

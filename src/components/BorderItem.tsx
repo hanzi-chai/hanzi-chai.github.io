@@ -1,10 +1,10 @@
-import styled from "styled-components";
 import { Button } from "antd";
+import styled from "styled-components";
 
-const Element = styled(Button)`
+const BorderItem = styled(Button)`
   min-width: 32px;
   padding: 0 8px;
   height: 32px;
 ` as typeof Button;
 
-export default Element;
+export default BorderItem;

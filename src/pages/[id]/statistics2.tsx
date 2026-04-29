@@ -21,16 +21,10 @@ import {
   默认当量原子,
   默认目标类型原子,
 } from "~/atoms";
-import {
-  反序列化,
-  字数,
-  序列化,
-  type 码表条目,
-  type 部分目标类型,
-} from "~/lib";
+import { 反序列化, 序列化, type 码表条目, type 部分目标类型 } from "~/lib";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
-import { DisplayOptionalSuperscript } from "~/components/SequenceTable";
+import { CodePositionDisplay } from "~/components/Utils";
 import { useChaifenTitle, 数字, 标准键盘, 颜色插值 } from "~/utils";
 
 const { Column, Heatmap } = await import("~/components/export/charts");
@@ -565,8 +559,8 @@ const DuplicationDistribution = () => {
         if (!first?.ok || !second?.ok) return key;
         return (
           <span>
-            <DisplayOptionalSuperscript element={first.value!} />・
-            <DisplayOptionalSuperscript element={second.value!} />
+            <CodePositionDisplay element={first.value!} />・
+            <CodePositionDisplay element={second.value!} />
           </span>
         );
       },

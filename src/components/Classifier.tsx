@@ -10,7 +10,7 @@ import {
   分类器原子,
   分类器自定义原子,
 } from "~/atoms";
-import Element from "~/components/BorderItem";
+import BorderItem from "~/components/BorderItem";
 import type { 笔画名称 } from "~/lib";
 
 function Draggable({ name }: { name: string }) {
@@ -24,9 +24,9 @@ function Draggable({ name }: { name: string }) {
     : undefined;
 
   return (
-    <Element ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <BorderItem ref={setNodeRef} style={style} {...listeners} {...attributes}>
       {name}
-    </Element>
+    </BorderItem>
   );
 }
 
@@ -81,7 +81,7 @@ export default function Classifier() {
       <Space direction="vertical">
         {items.map(([x, v]) => (
           <Flex gap="small" align="center" key={x}>
-            <Element>{x}</Element>
+            <BorderItem>{x}</BorderItem>
             <Droppable id={x}>
               {v.map((s) => (
                 <Draggable key={s} name={s} />

@@ -1,4 +1,3 @@
-import type { ProFormSelectProps } from "@ant-design/pro-components";
 import type { SelectProps } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -8,11 +7,11 @@ import {
   如排序字库数据原子,
   如笔顺映射原子,
 } from "~/atoms";
-import type { 汉字 } from "~/lib";
-import { Display, Select } from "./Utils";
+import type { 原始汉字数据 } from "~/lib";
+import { CharacterDisplay, Select } from "./Utils";
 
-interface ItemSelectProps extends SelectProps {
-  customFilter?: (e: [string, 汉字]) => boolean;
+interface ItemSelectProps extends SelectProps<string> {
+  customFilter?: (e: [string, 原始汉字数据]) => boolean;
   includeVariables?: boolean;
 }
 
@@ -20,14 +19,12 @@ function getLabel(value: { id: number }) {
   return `变量 ${value.id}`;
 }
 
-export default function CharacterSelect(
-  props: ItemSelectProps & ProFormSelectProps,
-) {
+export default function CharacterSelect(props: ItemSelectProps) {
   const { customFilter, includeVariables, ...rest } = props;
-  const sortedCharacters = useAtomValueUnwrapped(如排序字库数据原子);
+  const 字符列表 = useAtomValueUnwrapped(如排序字库数据原子);
   const [data, setData] = useState<SelectProps["options"]>([]);
-  const value: string | undefined = props.value;
-  const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
+  const value = props.value;
+  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 原始字库 = useAtomValue(原始字库原子);
   useEffect(() => {
     if (!value) {
@@ -43,7 +40,7 @@ export default function CharacterSelect(
         setData([]);
         return;
       }
-      label = <Display name={character.character} />;
+      label = <CharacterDisplay character={character.character} />;
     }
     const initial = [{ value, label }];
     setData(initial);
@@ -53,43 +50,42 @@ export default function CharacterSelect(
       setData([]);
       return;
     }
-    const allResults = sortedCharacters
-      .filter((char) => {
-        // FIXME: 这里已经获取不到 name 了，先放着
-        const name = "";
+    const allResults = 字符列表
+      .filter((字符实例) => {
+        const 别名 = 原始字库.查询(字符实例)?.name ?? "";
         return (
-          sequenceMap.get(char)?.startsWith(input) ||
-          char.toString() === input ||
-          name.includes(input)
+          笔顺映射.get(字符实例)?.startsWith(input) ||
+          字符实例.toString() === input ||
+          别名.includes(input)
         );
       })
-      .map((char) => ({
-        value: char.toString(),
+      .map((字符实例) => ({
+        value: 字符实例.toString(),
         label: (
           <span style={{ display: "flex", gap: "4px" }}>
-            <Display name={char} />
-            <span style={{ fontSize: "0.8em" }}>{char.十六进制()}</span>
+            <CharacterDisplay character={字符实例} />
+            <span style={{ fontSize: "0.8em" }}>{字符实例.十六进制()}</span>
           </span>
         ) as React.ReactNode,
+        length: 笔顺映射.get(字符实例)?.length ?? 0,
       }));
-    let minResults = allResults.filter(({ value }) => {
-      const ch = 原始字库.校验(value);
-      if (!ch) return false;
-      return sequenceMap.get(ch.character)?.length === input.length;
-    }).length;
+    let minResults = allResults.filter(
+      ({ length }) => length === input.length,
+    ).length;
     if (includeVariables) {
       const num = parseInt(input, 10);
       if (!Number.isNaN(num) && num > 0) {
         allResults.unshift({
           value: JSON.stringify({ id: num }),
           label: getLabel({ id: num }),
+          length: 0,
         });
         minResults += 1;
       }
     }
     setData(allResults.slice(0, Math.max(5, minResults)));
   };
-  const commonProps: SelectProps & ProFormSelectProps = {
+  const commonProps: SelectProps = {
     showSearch: true,
     placeholder: "输入笔画搜索",
     options: data,

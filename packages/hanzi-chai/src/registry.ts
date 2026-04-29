@@ -72,4 +72,13 @@ class 注册表 {
   }
 }
 
+let 注册表实例: 注册表 | undefined;
+
+export function 获取注册表() {
+  if (!注册表实例) {
+    注册表实例 = new 注册表();
+  }
+  return 注册表实例;
+}
+
 export { 注册表 };

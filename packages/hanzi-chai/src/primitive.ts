@@ -2,15 +2,15 @@ import { min } from "lodash-es";
 import { 图形盒子 } from "./affine.js";
 import { 部件 } from "./component.js";
 import { 复合体 } from "./compound.js";
-import type { 变换器, 字形自定义, 模式, 节点 } from "./config.js";
+import type { 变换器, 字形自定义, 字集指示, 模式, 节点 } from "./config.js";
 import type {
   原始汉字数据,
   标签字形数据,
   矢量图形数据,
   笔画块,
 } from "./data.js";
-import { 字库, type 字形, 是部件, 汉字 } from "./repertoire.js";
-import { 字符 } from "./unicode.js";
+import { 字库, type 字形, 是部件 } from "./repertoire.js";
+import { 字符, 字集过滤查找表 } from "./unicode.js";
 import {
   default_err,
   ok,
@@ -21,6 +21,9 @@ import {
   模拟基本部件,
   type 源标签,
   type 源标签集合,
+  type 自定义分析,
+  type 自定义分析映射,
+  type 词典,
 } from "./utils.js";
 
 // 变量映射：variable id -> 字符
@@ -46,8 +49,8 @@ class 原始字库 {
     }
   }
 
-  _get() {
-    return this.字库查找;
+  [Symbol.iterator](): Iterator<校验原始汉字数据> {
+    return this.字库查找.values();
   }
 
   查询(字符实例: 字符): 校验原始汉字数据 | undefined {
@@ -163,11 +166,10 @@ class 原始字库 {
       }
       if (渲染后字形列表.length === 0) {
         渲染后字形列表.push(
-          new 部件(字符, new Set(["G"]), 模拟基本部件().strokes),
+          new 部件(字符, new Set(["G"]), false, 模拟基本部件().strokes),
         );
       }
-      const 确定汉字 = new 汉字(字符, 渲染后字形列表);
-      确定字库.添加(字符, 确定汉字);
+      确定字库.添加(字符, 渲染后字形列表);
     }
     return ok(确定字库);
   }
@@ -322,7 +324,9 @@ class 原始字库 {
     字库: 字库,
   ): Result<字形[], Error> {
     if (字形数据.type === "basic_component") {
-      return ok([new 部件(字符实例, 字形数据.tags, 字形数据.strokes)]);
+      return ok([
+        new 部件(字符实例, 字形数据.tags, 字形数据.user, 字形数据.strokes),
+      ]);
     } else if (字形数据.type === "derived_component") {
       const 源字符 = this.校验(字形数据.source)?.character;
       if (!源字符) return default_err(`无法找到字符: ${字形数据.source}`);
@@ -339,7 +343,7 @@ class 原始字库 {
           笔画列表.push(x);
         }
       });
-      return ok([new 部件(字符实例, 字形数据.tags, 笔画列表)]);
+      return ok([new 部件(字符实例, 字形数据.tags, 字形数据.user, 笔画列表)]);
     } else if (字形数据.type === "spliced_component") {
       const 部分列表: 图形盒子[] = [];
       for (const 部分 of 字形数据.operandList) {
@@ -356,7 +360,7 @@ class 原始字库 {
         tags: [...字形数据.tags],
       };
       const 笔画列表 = 图形盒子.仿射合并(作为复合体, 部分列表).获取笔画列表();
-      return ok([new 部件(字符实例, 字形数据.tags, 笔画列表)]);
+      return ok([new 部件(字符实例, 字形数据.tags, 字形数据.user, 笔画列表)]);
     } else if (字形数据.type === "identity") {
       const 源字符 = this.校验(字形数据.source)?.character;
       if (!源字符) return default_err(`无法找到字符: ${字形数据.source}`);
@@ -375,12 +379,15 @@ class 原始字库 {
       for (const [index, 标签集合] of 反向索引映射) {
         const 字形 = 引用字形列表[index]!;
         if (字形 instanceof 部件) {
-          字形列表.push(new 部件(字形.字符, 标签集合, 字形.矢量图形));
+          字形列表.push(
+            new 部件(字形.字符, 标签集合, 字形.用户自定义, 字形.矢量图形),
+          );
         } else {
           字形列表.push(
             new 复合体(
               字形.字符,
               标签集合,
+              字形.用户自定义,
               字形.结构描述字符,
               字形.部分列表,
               字形.笔顺,
@@ -425,6 +432,7 @@ class 原始字库 {
         const 约化字形 = new 复合体(
           字符实例,
           标签集合,
+          字形数据.user,
           字形数据.operator,
           部分列表,
           字形数据.order ?? 默认笔顺,
@@ -433,6 +441,57 @@ class 原始字库 {
       }
       return ok(约化字形列表);
     }
+  }
+
+  校验自定义映射(自定义元素集合: Record<string, 自定义分析>): 自定义分析映射 {
+    const 查找表: 自定义分析映射 = new Map();
+    for (const [类别, 映射] of Object.entries(自定义元素集合)) {
+      for (const [汉字, 元素列表] of Object.entries(映射)) {
+        const 字符实例 = this.校验(汉字);
+        if (!字符实例) continue;
+        const 记录 = 查找表.get(字符实例.character) ?? {};
+        记录[类别] = 元素列表;
+        查找表.set(字符实例.character, 记录);
+      }
+    }
+    return 查找表;
+  }
+
+  解析词典(tsv: string[][]): 词典 {
+    const result: 词典 = [];
+    for (const [word, pinyin_s, frequency_s] of tsv) {
+      if (
+        word === undefined ||
+        pinyin_s === undefined ||
+        frequency_s === undefined
+      )
+        continue;
+      const pinyin = pinyin_s.split(" ");
+      const frequency = Number(frequency_s);
+      if (Number.isNaN(frequency)) continue;
+      const chars: 字符[] = [];
+      for (const char of Array.from(word)) {
+        const charInstance = this.校验(char)?.character;
+        if (charInstance) {
+          chars.push(charInstance);
+        }
+      }
+      result.push({ 词: chars, 拼音: pinyin, 频率: frequency });
+    }
+    return result;
+  }
+
+  获取汉字集合(词典: 词典, 字集指示: 字集指示): Set<字符> {
+    const 过滤函数 = 字集过滤查找表[字集指示]!;
+    const 字符集合 = new Set<字符>();
+    for (const { 词 } of 词典) {
+      for (const 汉字 of 词) {
+        const 汉字数据 = this.查询(汉字);
+        if (!汉字数据) continue;
+        if (过滤函数(汉字数据.character, 汉字数据)) 字符集合.add(汉字);
+      }
+    }
+    return 字符集合;
   }
 }
 

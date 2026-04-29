@@ -46,9 +46,12 @@ import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/ut
 import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
 import CompoundForm from "./CompoundForm";
-import { ElementWithTooltip } from "./ElementPool";
 import TransformersForm from "./Transformers";
-import { DeleteButton, Display } from "./Utils";
+import {
+  BoxedElementWithTooltip,
+  CharacterDisplay,
+  DeleteButton,
+} from "./Utils";
 
 type Column = ColumnType<校验原始汉字数据>;
 
@@ -80,7 +83,7 @@ export const 字形编辑器 = ({
         {字形.operandList.map((y, index) => {
           const ch = 原始字库.校验(y)?.character;
           if (!ch) return null;
-          return <Display key={index} name={ch} />;
+          return <CharacterDisplay key={index} character={ch} />;
         })}
       </Space>
     ) : (
@@ -249,11 +252,10 @@ export default function CharacterTable() {
     title: "Unicode",
     dataIndex: "unicode",
     render: (_, { unicode, character, name }) => {
-      const hex = unicode.toString(16).toUpperCase();
       return (
         <Flex align="center" gap="small">
-          <ElementWithTooltip element={character} />
-          {hex}
+          <BoxedElementWithTooltip element={character} />
+          {character.十六进制()}
           {character.是私用区() && remote && (
             <Rename unicode={unicode} name={name} />
           )}

@@ -7,30 +7,30 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { ColumnsType } from "antd/es/table";
+import type { ColumnsType } from "antd/es/table";
 import { Table } from "antd/lib";
 import { atomWithStorage } from "jotai/utils";
 import { sortBy } from "lodash-es";
 import styled from "styled-components";
 import {
-  拼写运算自定义原子,
-  字母表原子,
-  字形分析配置原子,
-  如字形分析结果原子,
-  汉字集合原子,
+  useAtom,
+  useAtomValue,
+  决策原子,
+  决策空间原子,
   分类器原子,
   别名显示原子,
   动态自定义拆分原子,
   基本信息原子,
-  决策原子,
-  决策空间原子,
   如字库原子,
+  如字形分析结果原子,
   如笔顺映射原子,
-  useAtom,
-  useAtomValue,
+  字形分析配置原子,
+  字母表原子,
+  拼写运算自定义原子,
+  汉字集合原子,
 } from "~/atoms";
 import { AdjustableElementGroup, getAffiliates } from "~/components/Mapping";
-import { Display } from "~/components/Utils";
+import { CharacterDisplay } from "~/components/Utils";
 
 const PrintArea = styled.div`
   width: 210mm;
@@ -231,13 +231,13 @@ function AnalysisTable() {
                     return (
                       <Flex>
                         <Wrapper style={{ color: "rgba(39, 86, 173, 1)" }}>
-                          <Display name={name} />
+                          <CharacterDisplay name={name} />
                         </Wrapper>
                         <Flex>
                           {sequence.map((x, index) => {
                             return (
                               <Wrapper>
-                                <Display name={x} />
+                                <CharacterDisplay name={x} />
                               </Wrapper>
                             );
                           })}
@@ -551,7 +551,7 @@ function SyllableForm() {
       </Button>
       {content.map(({ key, value }) => (
         <Flex key={key} align="center" gap="middle" justify="center">
-          <Display name={key} />
+          <CharacterDisplay name={key} />
           <span style={{ width: 200 }}>
             {value[0]}, {value[1]}
           </span>
@@ -567,7 +567,7 @@ function SyllableForm() {
       {PUA.map((char) => (
         <Flex key={char} align="center" gap="middle" justify="center">
           <span>U+{char.charCodeAt(0).toString(16).toUpperCase()}</span>
-          <Display name={char} />
+          <CharacterDisplay name={char} />
         </Flex>
       ))}
     </Flex>

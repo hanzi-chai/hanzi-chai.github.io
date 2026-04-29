@@ -227,7 +227,7 @@ export class 字符 {
   }
 
   十六进制(): string {
-    return `${this.toString()} U+${this.toNumber().toString(16).toUpperCase().padStart(4, "0")}`;
+    return `U+${this.toNumber().toString(16).toUpperCase().padStart(4, "0")}`;
   }
 
   static 获取自由字符() {

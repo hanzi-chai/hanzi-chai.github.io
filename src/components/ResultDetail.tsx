@@ -1,10 +1,8 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAddAtom, 自定义拆分原子 } from "~/atoms";
-import type { 字根, 拆分方式与评价 } from "~/lib";
-import Element from "./BorderItem";
-import { ConvertDisplay } from "./Mapping";
-import { Display } from "./Utils";
+import { type 字根, type 拆分方式与评价, 部件 } from "~/lib";
+import { BoxedElementWithTooltip } from "./Utils";
 
 export default function ResultDetail({
   char,
@@ -25,9 +23,10 @@ export default function ResultDetail({
       render: (_, { 拆分方式, 可用 }) => (
         <Space>
           {拆分方式.map(({ 字根 }, index) => (
-            <Element key={index}>
-              <ConvertDisplay name={字根.获取名称()} />
-            </Element>
+            <BoxedElementWithTooltip
+              key={index}
+              element={字根 instanceof 部件 ? 字根.字符 : 字根}
+            />
           ))}
           {可用 && <span>［备选］</span>}
         </Space>
@@ -76,9 +75,7 @@ export default function ResultDetail({
         <span>包含字根</span>
         {[...map].map(([s, v]) => (
           <Space key={s.获取名称()}>
-            <Element>
-              <ConvertDisplay name={s.获取名称()} />
-            </Element>
+            <BoxedElementWithTooltip element={s instanceof 部件 ? s.字符 : s} />
             <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>
         ))}

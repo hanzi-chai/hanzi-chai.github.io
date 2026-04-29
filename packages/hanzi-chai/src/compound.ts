@@ -8,8 +8,8 @@ import {
   type 默认部件分析,
 } from "./component.js";
 import type { 笔画块, 结构描述字符 } from "./data.js";
+import { 二笔 } from "./element.js";
 import {
-  二笔字根,
   type 基本分析,
   type 基本复合体分析,
   type 字形,
@@ -33,6 +33,7 @@ class 复合体 {
   constructor(
     public 字符: 字符,
     public 标签集合: 源标签集合,
+    public 用户自定义: boolean,
     public 结构描述字符: 结构描述字符,
     public 部分列表: 字形[],
     public 笔顺: 笔画块[],
@@ -597,7 +598,7 @@ class 逸码复合体分析器 extends 复合体分析器<逸码部件分析> {
       分析.字根序列.push(字根);
       const 笔画序列 = 字根.获取笔画序列(this.配置.分类器);
       for (const 笔画 of 笔画序列) {
-        分析.字根序列.push(二笔字根.创建(笔画, 0));
+        分析.字根序列.push(二笔.创建(笔画, 0));
       }
       while (分析.字根序列.length < 6) {
         分析.字根序列.push(分析.字根序列.at(-1)!);

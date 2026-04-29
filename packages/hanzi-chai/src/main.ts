@@ -15,7 +15,7 @@ import {
   默认复合体分析器,
 } from "./compound.js";
 import { 默认拼音分析器 } from "./pinyin.js";
-import { 注册表 } from "./registry.js";
+import { type 注册表, 获取注册表 } from "./registry.js";
 import {
   全符笔顺,
   取大优先,
@@ -48,16 +48,6 @@ export * from "./repertoire.js";
 export * from "./selector.js";
 export * from "./unicode.js";
 export * from "./utils.js";
-
-let 注册表实例: 注册表 | undefined;
-
-export function 获取注册表() {
-  if (!注册表实例) {
-    注册表实例 = new 注册表();
-    注册内置组件(注册表实例);
-  }
-  return 注册表实例;
-}
 
 export function 注册内置组件(registry: 注册表) {
   for (const x of [
@@ -96,3 +86,5 @@ export function 注册内置组件(registry: 注册表) {
     registry.注册筛选器(x);
   return registry;
 }
+
+注册内置组件(获取注册表());

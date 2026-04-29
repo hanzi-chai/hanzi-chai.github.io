@@ -1,11 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
-  字数,
   模拟基本部件,
   模拟复合体,
   模拟拼接部件,
   模拟衍生部件,
-  解析词典,
   是基本或衍生部件,
   字符
 } from "../src/index.js";
@@ -29,11 +27,6 @@ describe("Unicode 方法", () => {
       expect(char.value.是私用区()).toBeTruthy();
     }
   });
-
-  it("字符计数", () => {
-    const s = "𠃌"; // CJK-B
-    expect(字数(s)).toBe(1);
-  });
 });
 
 describe("数据工具", () => {
@@ -52,6 +45,6 @@ describe("数据工具", () => {
 describe("其他", () => {
   it("解析词典", () => {
     const text = [["的", "de5", "100"]]; // Example TSV
-    expect(解析词典(text, 原始字库)).toEqual([{ 词: [{ 码位: 0x7684 }], 拼音: ["de5"], 频率: 100 }]);
+    expect(原始字库.解析词典(text)).toEqual([{ 词: [{ 码位: 0x7684 }], 拼音: ["de5"], 频率: 100 }]);
   });
 });

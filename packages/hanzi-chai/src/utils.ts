@@ -1,10 +1,14 @@
 import { range } from "lodash-es";
+import type { 动态组装条目, 组装条目 } from "./assembly.js";
 import type { 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
 import type {
   元素,
+  兼容字形自定义,
   决策,
   决策空间,
+  字形自定义,
+  字集指示,
   广义码位,
   码位,
   非空广义安排,
@@ -23,17 +27,8 @@ import type {
   绘制,
   衍生部件数据,
 } from "./data.js";
-import {
-  二笔字根,
-  type 兼容字形自定义,
-  type 分类器,
-  type 动态组装条目,
-  单笔字根,
-  type 原始字库,
-  type 字形自定义,
-  type 字符,
-  type 组装条目,
-} from "./main.js";
+import type { 原始字库 } from "./primitive.js";
+import { type 字符, 字集过滤查找表 } from "./unicode.js";
 
 // Result 类型定义
 export type Ok<T> = { ok: true; value: T; warning?: string };
@@ -59,22 +54,6 @@ export type Tuple<T, N extends number> = N extends N
 type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
   ? R
   : _TupleOf<T, N, [T, ...R]>;
-
-export const 表示单笔字根 = (元素: 元素, 分类器: 分类器) => {
-  const 数字集合 = Object.values(分类器).map(String);
-  if (数字集合.includes(元素)) {
-    return 单笔字根.创建(Number(元素));
-  }
-};
-
-export const 表示二笔字根 = (元素: 元素, 分类器: 分类器) => {
-  const 数字集合 = Object.values(分类器).map(String);
-  const [笔画类别1, 笔画类别2] = [...元素];
-  if (!笔画类别1 || !笔画类别2) return;
-  if (数字集合.includes(笔画类别1) && 数字集合.includes(笔画类别2)) {
-    return 二笔字根.创建(Number(笔画类别1), Number(笔画类别2));
-  }
-};
 
 // 模拟函数
 export const 模拟引用笔画 = (): 引用笔画数据 => ({
@@ -178,10 +157,6 @@ export const 可打印字符列表 = range(33, 127).map((x) =>
   String.fromCodePoint(x),
 );
 
-export const 字数 = (s: string) => {
-  return Array.from(s).length;
-};
-
 export function 读取表格(tsvText: string): string[][] {
   const lines = tsvText.trim().split("\n");
   const table: string[][] = lines.map((line) => line.split("\t"));
@@ -249,30 +224,6 @@ export const 序列化当量映射 = (mapping: 当量映射): string[][] => {
   }
   return result;
 };
-
-export function 解析词典(tsv: string[][], 原始字库: 原始字库): 词典 {
-  const result: 词典 = [];
-  for (const [word, pinyin_s, frequency_s] of tsv) {
-    if (
-      word === undefined ||
-      pinyin_s === undefined ||
-      frequency_s === undefined
-    )
-      continue;
-    const pinyin = pinyin_s.split(" ");
-    const frequency = Number(frequency_s);
-    if (Number.isNaN(frequency)) continue;
-    const chars: 字符[] = [];
-    for (const char of Array.from(word)) {
-      const charInstance = 原始字库.校验(char)?.character;
-      if (charInstance) {
-        chars.push(charInstance);
-      }
-    }
-    result.push({ 词: chars, 拼音: pinyin, 频率: frequency });
-  }
-  return result;
-}
 
 export function 序列化词典(词典: 词典): string[][] {
   const result: string[][] = [];
@@ -421,19 +372,6 @@ export const 识别符 = (词: 字符[], 拼音来源列表: string[][]) => {
 export type 自定义分析 = Record<string, string[]>;
 
 export type 自定义分析映射 = Map<字符, 自定义分析>;
-
-export function 获取汉字集合(词典: 词典, 字库: 原始字库): Set<字符> {
-  const 字符集合 = new Set<字符>();
-  for (const { 词 } of 词典) {
-    for (const 汉字 of 词) {
-      字符集合.add(汉字);
-    }
-  }
-  return 字符集合;
-}
-
-export const 码 = (汉字: string) =>
-  汉字.codePointAt(0)!.toString(16).toUpperCase();
 
 export const 排列组合 = <T>(array: T[][]): T[][] => {
   if (array.length === 0) return [[]];

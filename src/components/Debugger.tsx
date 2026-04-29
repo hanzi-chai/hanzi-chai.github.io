@@ -25,10 +25,8 @@ import {
   配置原子,
 } from "~/atoms";
 import { ElementDetail } from "~/components/Mapping";
-import { Uploader } from "~/components/Utils";
+import { CodePositionDisplay, Uploader } from "~/components/Utils";
 import {
-  字数,
-  字符,
   type 字集指示,
   字集过滤查找表,
   字集过滤选项,
@@ -64,8 +62,7 @@ function 按格式解析码表(content: string, format: 码表格式): 码表条
   return result;
 }
 
-import Element from "./BorderItem";
-import { DisplayOptionalSuperscript } from "./SequenceTable";
+import BorderItem from "./BorderItem";
 
 type 校对结果 = "correct" | "incorrect" | "unknown";
 
@@ -154,7 +151,6 @@ export default function Debugger() {
     return "correct";
   };
   const 合法 = (词: string) => {
-    if (字数(词) !== 1) return false;
     const data = 原始字库.校验(词);
     if (!data) return false;
     return 过滤函数(data.character, data);
@@ -221,7 +217,7 @@ export default function Debugger() {
               return (
                 <Space size="small" wrap key={i}>
                   {x.map((element, index) => (
-                    <Element
+                    <BorderItem
                       key={index}
                       onClick={
                         typeof element === "object"
@@ -229,8 +225,8 @@ export default function Debugger() {
                           : undefined
                       }
                     >
-                      <DisplayOptionalSuperscript element={element} />
-                    </Element>
+                      <CodePositionDisplay element={element} />
+                    </BorderItem>
                   ))}
                 </Space>
               );

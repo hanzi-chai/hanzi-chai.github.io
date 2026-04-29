@@ -18,9 +18,9 @@ import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { isEqual, sample, sortBy } from "lodash-es";
 import { 决策原子, 如字库原子, 汉字集合原子, 退化配置原子 } from "~/atoms";
-import Element from "~/components/BorderItem";
+import BorderItem from "~/components/BorderItem";
 import ElementSelect from "~/components/ElementSelect";
-import { Display } from "~/components/Utils";
+import { CharacterDisplay } from "~/components/Utils";
 
 export interface TreeNode {
   字根: string;
@@ -206,9 +206,9 @@ const RootCheckbox = ({ name }: { name: string }) => {
 const Tree = ({ tree }: { tree: TreeNode }) => {
   return (
     <Flex>
-      <Element>
-        <Display name={tree.字根} />
-      </Element>
+      <BorderItem>
+        <CharacterDisplay name={tree.字根} />
+      </BorderItem>
       <div style={{ paddingLeft: "8px" }}>
         {tree.孩子们.map((child, index) => (
           <Flex key={index} gap="4px">
@@ -358,7 +358,7 @@ export default function Misc() {
       render: (_, { list }) => (
         <Flex align="center" wrap>
           {list.map((name) => (
-            <Display key={name} name={name} />
+            <CharacterDisplay key={name} name={name} />
           ))}
         </Flex>
       ),

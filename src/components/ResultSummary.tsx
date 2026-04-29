@@ -7,12 +7,13 @@ import {
   useRemoveAtom,
   动态分析原子,
   动态自定义拆分原子,
+  原始字库原子,
   自定义拆分原子,
 } from "~/atoms";
-import type { 基本分析, 默认部件分析 } from "~/lib";
+import { type 基本分析, type 字符, 部件, type 默认部件分析 } from "~/lib";
 import { InlineRender } from "./ComponentForm";
-import { CharWithTooltip, ElementWithTooltip } from "./ElementPool";
 import ElementSelect from "./ElementSelect";
+import { BoxedElementWithTooltip, CharacterWithTooltip } from "./Utils";
 
 const Customize = ({
   component,
@@ -118,7 +119,7 @@ export default function ResultSummary({
   analysis,
   disableCustomize = false,
 }: {
-  char: string;
+  char: 字符;
   analysis: 基本分析 | 默认部件分析;
   disableCustomize?: boolean;
 }) {
@@ -131,25 +132,29 @@ export default function ResultSummary({
   const dynamic = useAtomValue(动态分析原子);
   const dynamicCustomize = useAtomValue(动态自定义拆分原子);
   const removeDynamic = useRemoveAtom(动态自定义拆分原子);
-  const overrideRootSeries = customize[char];
-  const overrideDynamicSeries = dynamicCustomize[char];
+  const 字符串 = char.toString();
+  const overrideRootSeries = customize[字符串];
+  const overrideDynamicSeries = dynamicCustomize[字符串];
+  const 原始字库 = useAtomValue(原始字库原子);
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
-        <CharWithTooltip element={char} />
+        <CharacterWithTooltip element={char} />
         {字根序列.map((x, index) => {
+          const element = x instanceof 部件 ? x.字符 : x;
           return (
             <Flex key={index} align="center">
-              <ElementWithTooltip element={x.获取名称()} />
+              <BoxedElementWithTooltip element={element} />
             </Flex>
           );
         })}
         {overrideRootSeries && (
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
-            {overrideRootSeries.map((x, i) => (
-              <ElementWithTooltip key={i} element={x} />
-            ))}
+            {overrideRootSeries.map((x, i) => {
+              const 字符 = 原始字库.校验(x)?.character;
+              return <BoxedElementWithTooltip key={i} element={字符 ?? x} />;
+            })}
           </Flex>
         )}
         {overrideDynamicSeries && (
@@ -157,9 +162,12 @@ export default function ResultSummary({
             <span>（自定义组：）</span>
             {overrideDynamicSeries.map((x, i) => (
               <Flex key={i} align="center">
-                {x.map((y, j) => (
-                  <ElementWithTooltip key={j} element={y} />
-                ))}
+                {x.map((y, j) => {
+                  const 字符 = 原始字库.校验(y)?.character;
+                  return (
+                    <BoxedElementWithTooltip key={j} element={字符 ?? y} />
+                  );
+                })}
                 ・
               </Flex>
             ))}
@@ -169,10 +177,10 @@ export default function ResultSummary({
       {!disableCustomize && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {overrideRootSeries && (
-            <Button onClick={() => remove(char)}>取消自定义</Button>
+            <Button onClick={() => remove(字符串)}>取消自定义</Button>
           )}
           {overrideDynamicSeries && (
-            <Button onClick={() => removeDynamic(char)}>取消自定义组</Button>
+            <Button onClick={() => removeDynamic(字符串)}>取消自定义组</Button>
           )}
           {"全部拆分方式" in analysis && dynamic && (
             <Popover
@@ -180,9 +188,9 @@ export default function ResultSummary({
               trigger="click"
               content={
                 <DynamicCustomize
-                  component={char}
+                  component={字符串}
                   initialValues={
-                    dynamicCustomize[char] ??
+                    dynamicCustomize[字符串] ??
                     analysis.全部拆分方式
                       .filter((x) => x.可用)
                       .map((x) => x.拆分方式.map((y) => y.字根.获取名称()))
@@ -197,7 +205,7 @@ export default function ResultSummary({
             title="自定义拆分"
             content={
               <Customize
-                component={char}
+                component={字符串}
                 initialValues={
                   overrideRootSeries ?? 字根序列.map((x) => x.获取名称())
                 }

@@ -1,5 +1,5 @@
 import type { 笔画名称 } from "./classifier.js";
-import type { 源标签集合 } from "./main.js";
+import type { 源标签集合 } from "./utils.js";
 
 export type N1 = [number];
 export type N2 = [number, number];

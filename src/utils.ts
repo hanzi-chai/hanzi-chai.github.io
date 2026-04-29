@@ -171,7 +171,7 @@ export class 字符过滤器 {
       result &&= this.sequenceRegex.test(笔画序列);
     }
     if (unicode) {
-      let hex_str = 汉字.toNumber().toString(16).toLowerCase();
+      let hex_str = 汉字.十六进制();
       let dec_str = 汉字.toNumber().toString(10);
       result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
     }

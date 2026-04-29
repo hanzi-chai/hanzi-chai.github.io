@@ -18,7 +18,7 @@ import {
   type 结构描述字符,
   结构描述字符列表,
 } from "~/lib";
-import Element from "./BorderItem";
+import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { InlineRender, StaticList } from "./ComponentForm";
 import { Box, StrokesView } from "./GlyphView";
@@ -73,7 +73,7 @@ export default function CompoundForm({
   const trigger = noButton ? (
     <span>{title}</span>
   ) : (
-    <Element type={primary ? "default" : "text"}>{title}</Element>
+    <BorderItem type={primary ? "default" : "text"}>{title}</BorderItem>
   );
   return (
     <ModalForm<拼接部件或复合体>

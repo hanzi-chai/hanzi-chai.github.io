@@ -8,10 +8,8 @@ import {
   弱字根原子,
   强字根原子,
 } from "~/atoms";
-import Element from "./BorderItem";
 import ElementSelect from "./ElementSelect";
-import { ConvertDisplay } from "./Mapping";
-import { Display } from "./Utils";
+import { BoxedElementWithTooltip } from "./Utils";
 
 export default function PrioritizedRoots({
   variant,
@@ -32,9 +30,7 @@ export default function PrioritizedRoots({
       <Flex wrap="wrap" gap="small">
         {(list ?? []).map((x, i) => (
           <Space key={x}>
-            <Element>
-              <ConvertDisplay name={x} />
-            </Element>
+            <BoxedElementWithTooltip element={x} />
             <Button variant="text" color="danger" onClick={() => exclude(i)}>
               删除
             </Button>
