@@ -448,6 +448,46 @@ export const 如组装结果原子 = atom(async (get) => {
   return result;
 });
 
+export const 如带归并组装结果原子 = atom(async (get) => {
+  const 如组装结果 = await get(如组装结果原子);
+  if (!如组装结果.ok) return 如组装结果;
+  const 决策 = get(决策原子);
+  const 带归并组装结果: 组装条目[] = [];
+  for (const 条目 of 如组装结果.value) {
+    const 新元素序列: 码位[] = [];
+    for (const 码位 of 条目.元素序列) {
+      if (typeof 码位 === "string") {
+        新元素序列.push(码位);
+      } else {
+        // 判断当前元素位是自由还是归并的
+        let 当前码位 = 码位;
+        let i = 0;
+        while (true) {
+          i += 1;
+          if (i > 100) break; // 防止死循环
+          const 安排 = 决策[当前码位.element];
+          if (!安排) continue;
+          if (是归并(安排)) {
+            // 如果当前元素是归并的，更新元素为归并元素，位置不变
+            当前码位 = { ...当前码位, element: 安排.element };
+          } else if (Array.isArray(安排)) {
+            const 引用码位 = 安排[当前码位.index];
+            if (引用码位 === undefined || typeof 引用码位 === "string") {
+              break;
+            } else {
+              当前码位 = 引用码位;
+            }
+          }
+        }
+        新元素序列.push(当前码位);
+      }
+    }
+    带归并组装结果.push({ ...条目, 元素序列: 新元素序列 });
+  }
+  console.log(如组装结果.value.length, 带归并组装结果.length);
+  return ok(带归并组装结果);
+});
+
 export const 如动态组装结果原子 = atom(async (get) => {
   const 拼音分析结果 = await get(拼音分析结果原子);
   const 如字形分析结果 = await get(如动态字形分析结果原子);

@@ -21,7 +21,7 @@ import { isEqual, range, sumBy } from "lodash-es";
 import { Suspense, useState } from "react";
 import {
   useAtomValueUnwrapped,
-  如组装结果原子,
+  如带归并组装结果原子,
   字母表原子,
   最大码长原子,
 } from "~/atoms";
@@ -53,25 +53,24 @@ const 分析原始重码 = (
 ) => {
   const 反向映射 = new Map<string, string[]>();
   const 相关结果 = filterRelevant(result, 分析配置);
-  for (const assembly of 相关结果) {
-    const { 词: name, 元素序列: sequence } = assembly;
-    const sliced = range(maxLength).map((i) =>
-      分析配置.position.includes(i) ? sequence[i] : "*",
-    );
-    const summary = JSON.stringify(
-      sliced.map((x) => {
+  for (const 条目 of 相关结果) {
+    const { 词, 元素序列 } = 条目;
+    const 处理后元素序列: (码位 | undefined)[] = [];
+    for (const i of range(maxLength)) {
+      if (分析配置.position.includes(i)) {
+        const 码位 = 元素序列[i];
         const index = 合并组列表.findIndex((group) =>
-          group.some((y) => isEqual(y, x)),
+          group.some((y) => isEqual(y, 码位)),
         );
-        return index !== -1 ? String.fromCodePoint(0x100000 + index) : x;
-      }),
-    );
-    反向映射.set(
-      summary,
-      (反向映射.get(summary) || []).concat(
-        name.map((c) => c.toString()).join(""),
-      ),
-    );
+        处理后元素序列.push(
+          index !== -1 ? String.fromCodePoint(0x100000 + index) : 码位,
+        );
+      } else {
+        处理后元素序列.push("*");
+      }
+    }
+    const summary = JSON.stringify(处理后元素序列);
+    反向映射.set(summary, (反向映射.get(summary) || []).concat(词));
   }
   return 反向映射;
 };
@@ -154,7 +153,7 @@ const AnalyzerConfig = ({
 const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
-  const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
+  const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const reverseMap = 分析原始重码(analyzer, assemblyResult, maxLength);
   const alphabet = useAtomValue(字母表原子);
   const dataSource = [...reverseMap]
@@ -223,7 +222,7 @@ interface UnaryDensity {
 const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
-  const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
+  const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer);
   for (const assembly of relevant) {
@@ -305,7 +304,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 };
 
 const MarginalFirstOrderDuplication = () => {
-  const assemblyResult = useAtomValueUnwrapped(如组装结果原子);
+  const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const maxLength = useAtomValue(最大码长原子);
   const [合并组列表, 设置合并组列表] = useState([] as 码位[][]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
