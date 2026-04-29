@@ -1,0 +1,46 @@
+name: Publish
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js (for npm publish)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check if version changed
+        id: version-check
+        run: |
+          PKG_VERSION=$(node -p "require('./packages/hanzi-chai/package.json').version")
+          NPM_VERSION=$(npm view hanzi-chai version 2>/dev/null || echo "0.0.0")
+          echo "pkg=$PKG_VERSION"
+          echo "npm=$NPM_VERSION"
+          if [ "$PKG_VERSION" != "$NPM_VERSION" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install dependencies
+        if: steps.version-check.outputs.changed == 'true'
+        run: bun install --filter hanzi-chai
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.changed == 'true'
+        run: cd packages/hanzi-chai && bun run build && npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

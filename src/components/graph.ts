@@ -4,8 +4,8 @@ import type {
   二元条件配置,
   条件节点配置,
   源节点配置,
-} from "~/lib";
-import { 加 } from "~/lib";
+} from "hanzi-chai";
+import { 加 } from "hanzi-chai";
 import { createContext } from "react";
 import { sum } from "lodash-es";
 

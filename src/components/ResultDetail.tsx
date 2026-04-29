@@ -1,7 +1,7 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAddAtom, 自定义拆分原子 } from "~/atoms";
-import { type 字根, type 字符, type 拆分方式与评价, 部件 } from "~/lib";
+import { type 字根, type 字符, type 拆分方式与评价, 部件 } from "hanzi-chai";
 import { BoxedElementWithTooltip } from "./Utils";
 
 export default function ResultDetail({

@@ -49,7 +49,7 @@ import {
   获取注册表,
   默认分类器,
   type 默认部件分析,
-} from "~/lib";
+} from "hanzi-chai";
 import {
   exportTSV,
   useChaifenTitle,

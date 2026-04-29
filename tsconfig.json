@@ -6,9 +6,9 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": ["./src/*"],
+      "hanzi-chai": ["./packages/hanzi-chai/src/main.ts"]
     },
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -27,10 +27,8 @@
     "types": [
       "@types/node",
       "@modyfi/vite-plugin-yaml/modules",
-      "./vite-env.d.ts",
       "@types/mdx"
     ]
   },
-  "include": ["src", "scripts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "scripts", "vite.config.ts"]
 }

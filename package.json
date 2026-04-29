@@ -1,13 +1,16 @@
 {
   "name": "chai",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "description": "汉字自动拆分系统网页版",
   "author": {
     "name": "tansongchen",
     "email": "i@tansongchen.com",
     "url": "https://tansongchen.com"
   },
-  "version": "0.3.6",
+  "version": "0.3.7",
   "type": "module",
   "repository": {
     "type": "git",
@@ -15,25 +18,27 @@
   },
   "license": "GPL-3.0-only",
   "engines": {
-    "node": ">=20"
+    "bun": ">=1.0"
   },
   "scripts": {
-    "fetch": "tsx scripts/fetch.ts",
+    "fetch": "bun scripts/fetch.ts",
     "start": "vite --mode PAGES",
     "dev": "vite --mode PAGES",
     "preview": "vite preview --mode PAGES --outDir dist/pages",
-    "version": "tsc && npm run build:BEX && npm run build:PAGES && npm run build:CF",
-    "lint": "npx @biomejs/biome lint ./src",
-    "fix": "npx @biomejs/biome lint --fix --unsafe ./src",
-    "format": "npx @biomejs/biome format --write . && git add .",
-    "build:BEX": "vite build --mode BEX",
-    "build:PAGES": "vite build --mode PAGES",
-    "build:CF": "vite build --mode CF",
-    "build:CLIENT": "vite build --mode CLIENT",
-    "build": "npm run fetch && npm run build:CF",
+    "version": "tsc && bun run build:BEX && bun run build:PAGES && bun run build:CF",
+    "lint": "bunx @biomejs/biome lint ./src",
+    "fix": "bunx @biomejs/biome lint --fix --unsafe ./src",
+    "format": "bunx @biomejs/biome format --write . && git add .",
+    "build:pkg": "bun run --filter hanzi-chai build",
+    "build:BEX": "bun run build:pkg && vite build --mode BEX",
+    "build:PAGES": "bun run build:pkg && vite build --mode PAGES",
+    "build:CF": "bun run build:pkg && vite build --mode CF",
+    "build:CLIENT": "bun run build:pkg && vite build --mode CLIENT",
+    "build": "bun run fetch && bun run build:CF",
     "publish": "bump --tag --commit --push"
   },
   "dependencies": {
+    "hanzi-chai": "*",
     "@ant-design/charts": "^2.6.7",
     "@ant-design/colors": "^8.0.1",
     "@ant-design/icons": "^6.1.0",
@@ -77,8 +82,8 @@
     "@mdx-js/rollup": "^3.1.1",
     "@modyfi/vite-plugin-yaml": "^1.1.1",
     "@swc-jotai/react-refresh": "^0.5.0",
-    "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.4",
     "@types/d3-array": "^3.2.2",
     "@types/js-md5": "^0.8.0",
     "@types/js-yaml": "^4.0.9",
@@ -88,16 +93,13 @@
     "@types/react-dom": "^19.2.3",
     "@types/styled-components": "^5.1.36",
     "@vitejs/plugin-react-swc": "^4.2.2",
-    "autoprefixer": "^10.4.23",
     "axios": "^1.13.4",
     "fs-extra": "^11.3.3",
     "jotai-devtools": "^0.13.0",
     "less": "^4.5.1",
-    "postcss": "^8.5.6",
     "pre-commit": "^1.2.2",
     "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.10",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-pages": "^0.33.2",

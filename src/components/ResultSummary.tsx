@@ -10,7 +10,12 @@ import {
   原始字库原子,
   自定义拆分原子,
 } from "~/atoms";
-import { type 基本分析, type 复合体, 部件, type 默认部件分析 } from "~/lib";
+import {
+  type 基本分析,
+  type 复合体,
+  部件,
+  type 默认部件分析,
+} from "hanzi-chai";
 import { InlineRender } from "./ComponentForm";
 import ElementSelect from "./ElementSelect";
 import { BoxedElementWithTooltip, CharacterWithTooltip } from "./Utils";

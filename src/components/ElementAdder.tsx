@@ -9,7 +9,7 @@ import {
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { 合并字符串, 码位 } from "~/lib";
+import { 合并字符串, 码位 } from "hanzi-chai";
 
 export default function ElementAdder({ element }: { element?: string }) {
   const alphabet = useAtomValue(字母表原子);

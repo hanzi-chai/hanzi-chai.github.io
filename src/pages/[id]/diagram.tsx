@@ -21,7 +21,7 @@ import {
   按首码分组决策原子,
 } from "~/atoms";
 import { AdjustableElementGroup } from "~/components/Mapping";
-import { type 区块配置, type 图示配置, 读取表格 } from "~/lib";
+import { type 区块配置, type 图示配置, 读取表格 } from "hanzi-chai";
 import { useChaifenTitle } from "~/utils";
 
 const PrintArea = styled.div`

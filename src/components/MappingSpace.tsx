@@ -27,7 +27,7 @@ import {
 import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, ElementDisplay, NumberInput } from "~/components/Utils";
-import type { 决策生成器规则, 安排描述 } from "~/lib";
+import type { 决策生成器规则, 安排描述 } from "hanzi-chai";
 import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import ValueEditor from "./Value";

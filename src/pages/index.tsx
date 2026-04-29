@@ -19,7 +19,7 @@ import Changelog from "~/components/changelog/ChangelogDrawer";
 import Starter from "~/components/Starter";
 import User from "~/components/User";
 import { DeleteButton, Uploader } from "~/components/Utils";
-import type { 基本信息, 示例配置, 配置 } from "~/lib";
+import type { 基本信息, 示例配置, 配置 } from "hanzi-chai";
 import { type Example, examples } from "~/templates";
 import { useChaifenTitle, validateConfig } from "~/utils";
 

@@ -1,6 +1,11 @@
 import { atom } from "jotai";
 import { focusAtom } from "jotai-optics";
-import { type 分析配置, 合并分类器, type 笔画名称, type 退化配置 } from "~/lib";
+import {
+  type 分析配置,
+  合并分类器,
+  type 笔画名称,
+  type 退化配置,
+} from "hanzi-chai";
 import { 分析配置原子 } from "./config";
 
 export const 退化配置原子 = focusAtom(分析配置原子, (o) =>

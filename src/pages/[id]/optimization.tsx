@@ -21,7 +21,7 @@ import {
   EditorRow,
   Select,
 } from "~/components/Utils";
-import type { 层级权重, 码长权重, 部分权重 } from "~/lib";
+import type { 层级权重, 码长权重, 部分权重 } from "hanzi-chai";
 import { 数字 } from "~/utils";
 
 const AtomicObjective = ({

@@ -9,7 +9,7 @@ import {
   字母表原子,
   强类型元素列表原子,
 } from "~/atoms";
-import { 字符, type 广义码位, 是变量, 是归并 } from "~/lib";
+import { 字符, type 广义码位, 是变量, 是归并 } from "hanzi-chai";
 import { ElementPositionDisplay, Select } from "./Utils";
 
 export interface KeySelectProps {

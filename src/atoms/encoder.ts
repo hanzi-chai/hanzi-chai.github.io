@@ -8,7 +8,7 @@ import type {
   简码规则,
   部分权重,
   部分目标类型,
-} from "~/lib";
+} from "hanzi-chai";
 import { range } from "lodash-es";
 
 export const 最大码长原子 = focusAtom(编码配置原子, (o) =>

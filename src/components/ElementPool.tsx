@@ -7,7 +7,7 @@ import {
   原始字库原子,
   如笔顺映射原子,
 } from "~/atoms";
-import type { 字符 } from "~/lib";
+import type { 字符 } from "hanzi-chai";
 import { 字符过滤器 } from "~/utils";
 import StrokeSearch from "./CharacterSearch";
 import Classifier from "./Classifier";

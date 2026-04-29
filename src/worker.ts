@@ -1,5 +1,5 @@
 import init, { Web } from "libchai";
-import { 组装, 字库, 动态组装 } from "./lib";
+import { 组装, 字库, 动态组装 } from "hanzi-chai";
 import axios from "axios";
 
 export interface WorkerInput {
@@ -83,11 +83,11 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
   try {
     switch (event.data.type) {
       case "analysis":
-        result = new 字库(data[0]).分析(data[1], data[2]);
+        result = new 字库(data[0]).分析(data[1], data[2], data[3]);
         port.postMessage({ type: "success", result });
         break;
       case "dynamic_analysis":
-        result = new 字库(data[0]).动态分析(data[1], data[2]);
+        result = new 字库(data[0]).动态分析(data[1], data[2], data[3]);
         port.postMessage({ type: "success", result });
         break;
       case "assembly":

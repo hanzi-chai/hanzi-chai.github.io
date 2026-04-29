@@ -1,4 +1,4 @@
-import { 默认退化配置, 分类器, 合并分类器, 示例配置, 编码配置, 配置, 键盘配置, 默认筛选器列表 } from "~/lib";
+import { 默认退化配置, 分类器, 合并分类器, 示例配置, 编码配置, 配置, 键盘配置, 默认筛选器列表 } from "hanzi-chai";
 import snow4 from "../examples/snow4.yaml";
 import bxm from "../examples/bxm.yaml";
 import mswb from "../examples/mswb.yaml";

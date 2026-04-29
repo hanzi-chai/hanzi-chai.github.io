@@ -9,7 +9,7 @@ import {
 import { Form, Switch } from "antd";
 import { useRef } from "react";
 import { 求解器原子, useAtom } from "~/atoms";
-import type { 求解器配置 } from "~/lib";
+import type { 求解器配置 } from "hanzi-chai";
 
 export default function SolverForm() {
   const [metaheuristic, setMetaheuristic] = useAtom(求解器原子);

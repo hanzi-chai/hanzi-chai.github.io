@@ -7,7 +7,7 @@ import {
   如排序字库数据原子,
   如笔顺映射原子,
 } from "~/atoms";
-import type { 原始汉字数据 } from "~/lib";
+import type { 原始汉字数据 } from "hanzi-chai";
 import { CharacterDisplay, Select } from "./Utils";
 
 interface ItemSelectProps extends SelectProps<string> {

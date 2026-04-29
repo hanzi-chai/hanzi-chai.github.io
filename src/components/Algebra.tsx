@@ -6,9 +6,9 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Form, Space, notification } from "antd";
-import type { 运算规则 } from "~/lib";
+import type { 运算规则 } from "hanzi-chai";
 import { 拼写运算自定义原子, useAddAtom } from "~/atoms";
-import { 拼写运算查找表 } from "~/lib";
+import { 拼写运算查找表 } from "hanzi-chai";
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 
 interface AlgebraForm {

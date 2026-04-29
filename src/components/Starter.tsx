@@ -6,7 +6,7 @@ import {
   encoderTypes,
   keyboardTypes,
 } from "~/templates";
-import type { 配置 } from "~/lib";
+import type { 配置 } from "hanzi-chai";
 import { nanoid } from "nanoid";
 import {
   ModalForm,

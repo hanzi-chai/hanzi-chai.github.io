@@ -1,8 +1,15 @@
 import type React from "react";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import type { N6, 向量, 图形盒子, 矢量笔画数据, 笔画名称, 绘制 } from "~/lib";
-import { 减, 加, 笔画图形, 部件 } from "~/lib";
+import type {
+  N6,
+  向量,
+  图形盒子,
+  矢量笔画数据,
+  笔画名称,
+  绘制,
+} from "hanzi-chai";
+import { 减, 加, 笔画图形, 部件 } from "hanzi-chai";
 
 const Box = styled.div`
   border: 1px solid black;

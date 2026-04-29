@@ -23,7 +23,7 @@ import {
 } from "./graph";
 import DetailEditor from "./DetailEditor";
 import { Button, Modal } from "antd";
-import { 条件节点配置, 源节点配置 } from "~/lib";
+import { 条件节点配置, 源节点配置 } from "hanzi-chai";
 
 const initializeGraph = (
   sources: Record<string, 源节点配置>,

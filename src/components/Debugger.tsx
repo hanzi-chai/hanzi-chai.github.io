@@ -32,7 +32,7 @@ import {
   字集过滤选项,
   是部件,
   type 码表条目,
-} from "~/lib";
+} from "hanzi-chai";
 
 type 码表格式 =
   | "char_tab_code"

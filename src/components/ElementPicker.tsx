@@ -14,7 +14,7 @@ import {
   拼音元素枚举映射原子,
   自定义分析数据库,
 } from "~/atoms";
-import { 字符, 结构描述字符列表 } from "~/lib";
+import { 字符, 结构描述字符列表 } from "hanzi-chai";
 import Algebra from "./Algebra";
 import ElementAdder from "./ElementAdder";
 import ElementCounter from "./ElementCounter";

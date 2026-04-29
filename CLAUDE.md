@@ -9,28 +9,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 常用命令
 
 ```bash
-# 安装依赖并下载字库数据（npm i 后必须执行）
-npm ci && npm run fetch
+# 安装依赖并下载字库数据（安装后必须执行 fetch）
+bun install && bun run fetch
 
 # 开发
-npm run dev          # Vite 开发服务器（localhost:5173）
+bun run dev          # Vite 开发服务器（localhost:5173）
 
 # 代码检查与格式化
-npm run lint         # Biome 检查
-npm run fix          # Biome 自动修复（unsafe）
-npm run format       # 格式化并 git stage（pre-commit 钩子自动运行）
+bun run lint         # Biome 检查
+bun run fix          # Biome 自动修复（unsafe）
+bun run format       # 格式化并 git stage（pre-commit 钩子自动运行）
 
 # 构建目标
-npm run build:PAGES  # GitHub Pages 静态站点
-npm run build:CF     # Cloudflare Workers
-npm run build:BEX    # 浏览器扩展
-npm run build:CLIENT # 纯客户端版本
+bun run build:PAGES  # GitHub Pages 静态站点
+bun run build:CF     # Cloudflare Workers
+bun run build:BEX    # 浏览器扩展
+bun run build:CLIENT # 纯客户端版本
 
-# 测试（在 packages/hanzi-chai/ 目录下运行）
-cd packages/hanzi-chai && npm test
+# 测试
+bun run --filter hanzi-chai test
 ```
 
-需要 Node 20+。pre-commit 钩子会自动运行 `npm run format`。
+需要 Bun 1.0+。pre-commit 钩子会自动运行 `bun run format`。
 
 ## 架构
 
@@ -39,7 +39,7 @@ cd packages/hanzi-chai && npm test
 1. **`packages/hanzi-chai/`** — 纯 TypeScript 算法库，负责汉字拆分与编码，无 UI 依赖，有独立的 Vitest 测试套件。
 2. **`src/`** — 使用算法库的 React/Vite 网页应用。
 
-`src/lib/index.ts` 通过代理重新导出 `packages/hanzi-chai/src/main.ts` 的所有内容。路径别名 `~/` 指向 `src/`。
+路径别名 `~/` 指向 `src/`，`hanzi-chai` 别名在开发模式下直接指向 `packages/hanzi-chai/src/main.ts`。
 
 ### 状态管理（`src/atoms/`）
 
@@ -58,7 +58,7 @@ cd packages/hanzi-chai && npm test
 
 使用 `vite-plugin-pages` 实现基于文件的路由。主要路由：
 - `/` — 方案管理（列表、示例、上传）
-- `/:id/` — 方案编辑器，包含子页面：`element`、`analysis`、`statistics`、`optimization`、`diagram`
+- `/:id/` — 方案编辑器，包含子页面：`element`、`analysis`、`assembly`、`statistics`、`optimization`、`diagram`、`debug`
 - `/repertoire` — 字集管理
 - `/equivalence` — 当量测试
 
@@ -114,5 +114,5 @@ cd packages/hanzi-chai && npm test
 
 ## CI/CD
 
-- **`static.yml`**：推送到 `main` → `npm ci` → `npm run fetch` → `npm run build:PAGES` → 部署到 GitHub Pages
-- **`test.yml`**：PR 或推送到 `main` → 运行 hanzi-chai 包测试
+- **`static.yml`**：推送到 `main` → `bun install` → `bun run fetch` → `bun run build:PAGES` → 部署到 GitHub Pages
+- **`test.yml`**：PR 或推送到 `main` → `bun install` → `bun run fetch` → `bun run --filter hanzi-chai test`

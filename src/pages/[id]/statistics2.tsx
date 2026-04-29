@@ -21,7 +21,7 @@ import {
   默认当量原子,
   默认目标类型原子,
 } from "~/atoms";
-import { 反序列化, 序列化, type 码表条目, type 部分目标类型 } from "~/lib";
+import { 反序列化, 序列化, type 码表条目, type 部分目标类型 } from "hanzi-chai";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
 import { CodePositionDisplay } from "~/components/Utils";

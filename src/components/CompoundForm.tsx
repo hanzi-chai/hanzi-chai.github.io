@@ -24,7 +24,7 @@ import {
   type 拼接部件数据,
   type 结构描述字符,
   结构描述字符列表,
-} from "~/lib";
+} from "hanzi-chai";
 import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { InlineRender, StaticList } from "./ComponentForm";

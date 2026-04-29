@@ -14,7 +14,7 @@ import { load } from "js-yaml";
 import { nanoid } from "nanoid";
 import { useState } from "react";
 import { useAtomValueUnwrapped, 如前端输入原子, 求解器原子 } from "~/atoms";
-import type { 求解器配置, 配置 } from "~/lib";
+import type { 求解器配置, 配置 } from "hanzi-chai";
 import { basePath, exportYAML, thread } from "~/utils";
 import type { WorkerOutput } from "~/worker";
 

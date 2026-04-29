@@ -34,7 +34,7 @@ import type {
   笔画名称,
   笔画数据,
   衍生部件数据,
-} from "~/lib";
+} from "hanzi-chai";
 import {
   区间,
   图形盒子,
@@ -44,7 +44,7 @@ import {
   模拟引用笔画,
   模拟矢量笔画,
   笔画表示方式,
-} from "~/lib";
+} from "hanzi-chai";
 import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { CommonForm } from "./CompoundForm";

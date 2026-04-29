@@ -11,7 +11,7 @@ import {
   type 源节点配置,
   转列表,
   运算符列表,
-} from "~/lib";
+} from "hanzi-chai";
 import TextArea from "antd/es/input/TextArea";
 import {
   useAtomValue,

@@ -1,7 +1,7 @@
 import { Button } from "antd";
 import { useAtom, useAtomValue } from "jotai";
 import { 字母表原子, 编码配置原子 } from "~/atoms";
-import { 可打印字符列表, 多字词长度列表, type 编码配置 } from "~/lib";
+import { 可打印字符列表, 多字词长度列表, type 编码配置 } from "hanzi-chai";
 import {
   ModalForm,
   ProFormGroup,

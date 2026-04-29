@@ -5,7 +5,7 @@ import { type Example, examples } from "~/templates";
 import { Uploader } from "./Utils";
 import { load } from "js-yaml";
 import { exportYAML, roundTestConfig, validateConfig } from "~/utils";
-import type { 配置 } from "~/lib";
+import type { 配置 } from "hanzi-chai";
 
 export default function ConfigManager() {
   const [config, setConfig] = useAtom(配置原子);

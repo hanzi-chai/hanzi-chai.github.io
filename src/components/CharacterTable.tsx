@@ -40,8 +40,13 @@ import {
   QuickPatchAmbiguous,
   Rename,
 } from "~/components/Action";
-import type { 原始字库, 原始汉字数据, 字形数据, 校验原始汉字数据 } from "~/lib";
-import { 区块列表, type 字符, 所有源标签 } from "~/lib";
+import type {
+  原始字库,
+  原始汉字数据,
+  字形数据,
+  校验原始汉字数据,
+} from "hanzi-chai";
+import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
 import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/utils";
 import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";

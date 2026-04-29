@@ -2,7 +2,7 @@ import type { Atom, WritableAtom } from "jotai";
 import { useAtomValue, useSetAtom } from "jotai";
 import * as O from "optics-ts/standalone";
 import type { SetStateAction } from "react";
-import type { Result } from "~/lib";
+import type { Result } from "hanzi-chai";
 
 export * from "jotai";
 export * from "./analysis";

@@ -45,7 +45,7 @@ import {
   模拟复合体,
   模拟拼接部件,
   模拟衍生部件,
-} from "~/lib";
+} from "hanzi-chai";
 import { errorFeedback } from "~/utils";
 import CharacterSelect from "./CharacterSelect";
 import ComponentForm, { IdentityForm } from "./ComponentForm";

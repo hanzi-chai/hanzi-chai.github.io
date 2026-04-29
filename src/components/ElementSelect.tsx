@@ -6,7 +6,7 @@ import {
   如笔顺映射原子,
   强类型元素列表原子,
 } from "~/atoms";
-import { 单笔, 字符 } from "~/lib";
+import { 单笔, 字符 } from "hanzi-chai";
 import { ElementDisplay, Select } from "./Utils";
 
 interface ElementSelectProps extends SelectProps<string> {

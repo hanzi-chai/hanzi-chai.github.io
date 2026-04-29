@@ -1,6 +1,6 @@
 import { Form, Space, Button } from "antd";
 import { useAtom, 构词配置原子 } from "~/atoms";
-import { 多字词长度列表, type 构词规则 } from "~/lib";
+import { 多字词长度列表, type 构词规则 } from "hanzi-chai";
 import {
   ModalForm,
   ProFormCascader,

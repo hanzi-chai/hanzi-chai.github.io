@@ -1,12 +1,12 @@
 {
   "name": "hanzi-chai",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "提取自主仓库的汉字拆分/编码核心算法包",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
     }
   },
   "files": [
@@ -16,7 +16,8 @@
     "build": "tsc -p tsconfig.build.json && cp -r src/data dist/data",
     "test": "vitest",
     "testui": "vitest --ui --coverage",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postversion": "node -e \"const fs=require('fs');const r=JSON.parse(fs.readFileSync('../../package.json','utf8'));r.version=require('./package.json').version;fs.writeFileSync('../../package.json',JSON.stringify(r,null,2)+'\\n');\""
   },
   "dependencies": {
     "csv-parse": "^6.1.0",

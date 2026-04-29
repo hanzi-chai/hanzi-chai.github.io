@@ -14,7 +14,7 @@ import {
   type 联合条目,
   联合结果原子,
 } from "~/atoms";
-import { 序列化, 总序列化, type 码位, 识别符 } from "~/lib";
+import { 序列化, 总序列化, type 码位, 识别符 } from "hanzi-chai";
 import { exportTSV } from "~/utils";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { CodePositionDisplay } from "./Utils";

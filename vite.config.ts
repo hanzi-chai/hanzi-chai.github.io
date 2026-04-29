@@ -1,13 +1,14 @@
 /// <reference types="vitest/config" />
 import path from "node:path";
 import { defineConfig, type UserConfig, type PluginOption } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import yaml from "@modyfi/vite-plugin-yaml";
 import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
 import { visualizer } from "rollup-plugin-visualizer";
 import mdx from "@mdx-js/rollup";
-import packageJson from "./package.json";
+import packageJson from "./packages/hanzi-chai/package.json";
 
 const APP_VERSION = packageJson.version;
 
@@ -47,12 +48,19 @@ const injectPrefetchPlugin = {
   },
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
+  const isDev = command === "serve";
   // https://vitejs.dev/config/
   const sharedConfig: UserConfig = {
     resolve: {
       alias: {
         "~/": `${path.resolve(__dirname, "src")}/`,
+        ...(isDev && {
+          "hanzi-chai": path.resolve(
+            __dirname,
+            "packages/hanzi-chai/src/main.ts",
+          ),
+        }),
       },
     },
     build: {
@@ -92,6 +100,7 @@ export default defineConfig(({ mode }) => {
       exclude: ["libchai"],
     },
     plugins: [
+      tailwindcss(),
       wasmContentTypePlugin,
       injectPrefetchPlugin,
       { enforce: "pre", ...mdx() },

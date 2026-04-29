@@ -14,7 +14,7 @@ import {
   type 编码配置,
   type 配置,
   type 键盘配置,
-} from "~/lib";
+} from "hanzi-chai";
 import { defaultConfig, examples, type Example } from "~/templates";
 
 export const 位置原子 = atomWithLocation();

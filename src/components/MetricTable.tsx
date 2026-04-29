@@ -6,7 +6,7 @@ import {
   部分目标类型名称映射,
   useAtomValueUnwrapped,
 } from "~/atoms";
-import { 指法标签列表, type 部分目标类型 } from "~/lib";
+import { 指法标签列表, type 部分目标类型 } from "hanzi-chai";
 import { Flex, Select } from "antd";
 import { useState } from "react";
 

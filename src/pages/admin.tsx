@@ -1,4 +1,4 @@
-import { 原始字库数据, 原始汉字数据 } from "~/lib";
+import { 原始字库数据, 原始汉字数据 } from "hanzi-chai";
 import { Layout } from "antd";
 import CharacterTable from "~/components/CharacterTable";
 import { useChaifenTitle } from "~/utils";

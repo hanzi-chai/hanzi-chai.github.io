@@ -22,7 +22,7 @@ import {
   强类型元素列表原子,
   键盘原子,
 } from "~/atoms";
-import { 二笔, type 元素识别结果, 单笔, 字符, type 码位 } from "~/lib";
+import { 二笔, type 元素识别结果, 单笔, 字符, type 码位 } from "hanzi-chai";
 import BorderItem from "./BorderItem";
 import { StrokesView } from "./GlyphView";
 import Item from "./Item";

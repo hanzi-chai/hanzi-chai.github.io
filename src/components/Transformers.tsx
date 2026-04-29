@@ -14,7 +14,7 @@ import {
   type 结构变量,
   结构描述字符列表,
   type 节点,
-} from "~/lib";
+} from "hanzi-chai";
 import CharacterSelect from "./CharacterSelect";
 import { CharacterDisplay, MinusButton, PlusButton } from "./Utils";
 

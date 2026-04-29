@@ -1,4 +1,4 @@
-import { 字符, type 原始汉字数据, type 字形数据, type 结构描述字符, type 配置 } from "~/lib";
+import { 字符, type 原始汉字数据, type 字形数据, type 结构描述字符, type 配置 } from "hanzi-chai";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";

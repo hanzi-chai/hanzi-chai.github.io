@@ -38,7 +38,7 @@ import {
   type 词典,
   读取表格,
   type 键位分布目标,
-} from "~/lib";
+} from "hanzi-chai";
 import { exportTSV, useChaifenTitle } from "~/utils";
 
 function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({

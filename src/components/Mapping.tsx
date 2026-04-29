@@ -44,7 +44,7 @@ import {
   是部件,
   读取表格,
   type 非空安排,
-} from "~/lib";
+} from "hanzi-chai";
 import { exportTSV } from "~/utils";
 import Item from "./Item";
 import MappingSpace, { RulesForm } from "./MappingSpace";

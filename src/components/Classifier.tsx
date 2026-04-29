@@ -11,7 +11,7 @@ import {
   分类器自定义原子,
 } from "~/atoms";
 import BorderItem from "~/components/BorderItem";
-import type { 笔画名称 } from "~/lib";
+import type { 笔画名称 } from "hanzi-chai";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({

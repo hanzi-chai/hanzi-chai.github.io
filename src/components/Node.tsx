@@ -8,7 +8,7 @@ import { CacheContext, renderType } from "./graph";
 import { blue } from "@ant-design/colors";
 import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
 import { sortBy } from "lodash-es";
-import { 摘要, 条件节点配置, 源节点配置 } from "~/lib";
+import { 摘要, 条件节点配置, 源节点配置 } from "hanzi-chai";
 
 const SourceButton = styled(Button)`
   width: 64px;

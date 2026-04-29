@@ -29,8 +29,8 @@ import { InlineRender } from "~/components/ComponentForm";
 import KeySelect from "~/components/KeySelect";
 import { MyProFormList } from "~/components/ResultSummary";
 import { CodePositionDisplay } from "~/components/Utils";
-import type { 码位, 组装条目 } from "~/lib";
-import { 反序列化, 序列化 } from "~/lib";
+import type { 码位, 组装条目 } from "hanzi-chai";
+import { 反序列化, 序列化 } from "hanzi-chai";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
 
 const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {

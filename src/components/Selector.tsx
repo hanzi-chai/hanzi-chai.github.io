@@ -24,7 +24,7 @@ import {
 import { Button, Dropdown, Flex, Typography } from "antd";
 import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import PrioritizedRoots from "./PrioritizedRoots";
-import { 获取注册表 } from "~/lib";
+import { 获取注册表 } from "hanzi-chai";
 
 const SortableItem = ({ sieve, index }: { sieve: string; index: number }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =

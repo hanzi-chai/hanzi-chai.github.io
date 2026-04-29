@@ -1,7 +1,7 @@
 import { Flex, Select, Space } from "antd";
 import { useAtomValue } from "jotai";
 import { 字母表原子, 编码类型原子 } from "~/atoms";
-import { 合并字符串, type 广义安排, type 广义码位, 是归并 } from "~/lib";
+import { 合并字符串, type 广义安排, type 广义码位, 是归并 } from "hanzi-chai";
 import KeySelect from "./KeySelect";
 import ElementSelect from "./ElementSelect";
 

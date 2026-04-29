@@ -7,7 +7,7 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { 笔画名称, 默认分类器 } from "~/lib";
+import { 笔画名称, 默认分类器 } from "hanzi-chai";
 
 export default function Degenerator() {
   const [degenerator, setDegenerator] = useAtom(退化配置原子);

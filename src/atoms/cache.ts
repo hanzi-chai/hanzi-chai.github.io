@@ -16,7 +16,7 @@ import type {
   自定义分析,
   词典,
   键位分布目标,
-} from "~/lib";
+} from "hanzi-chai";
 import {
   ok,
   分析拼音,
@@ -38,7 +38,7 @@ import {
   读取表格,
   默认分类器,
   默认拼音分析器,
-} from "~/lib";
+} from "hanzi-chai";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
 import { getDataPath } from "~/version";
 import {
