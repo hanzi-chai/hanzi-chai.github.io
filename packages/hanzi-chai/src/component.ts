@@ -601,6 +601,22 @@ class 张码部件分析器 extends 部件分析器<张码部件分析> {
   }
 }
 
+const 从字根名称序列恢复字根序列 = (
+  字根名称序列: string[],
+  部件字根列表: 部件[],
+  单笔列表: 单笔[],
+) => {
+  const 字根序列: 字根[] = [];
+  for (const name of 字根名称序列) {
+    const 部件字根 = 部件字根列表.find((x) => x.获取名称() === name);
+    const 单笔字根 = 单笔列表.find((x) => x.获取名称() === name);
+    if (部件字根) 字根序列.push(部件字根);
+    else if (单笔字根) 字根序列.push(单笔字根);
+    else continue;
+  }
+  return 字根序列;
+};
+
 function 定制化分析<T extends 基本部件分析 | 默认部件分析>(
   部件: 部件,
   部件分析: T,
@@ -613,10 +629,10 @@ function 定制化分析<T extends 基本部件分析 | 默认部件分析>(
   const 自定义分析 = config.分析配置.customize ?? {};
   const 字根名称序列 = 自定义分析[索引];
   if (字根名称序列 === undefined) return 部件分析;
-  const 字根序列 = 字根名称序列.map(
-    (name) =>
-      config.部件字根列表.find((x) => x.获取名称() === name) ??
-      单笔列表.find((x) => x.获取名称() === name)!,
+  const 字根序列 = 从字根名称序列恢复字根序列(
+    字根名称序列,
+    config.部件字根列表,
+    单笔列表,
   );
   const 新分析: T = { ...部件分析, 字根序列 };
   if ("全部拆分方式" in 新分析) {
@@ -639,26 +655,39 @@ function 动态定制化分析<T extends 基本部件分析 | 默认部件分析
   部件分析列表: T[],
   config: 字形分析配置,
 ) {
-  const 名称 = 部件.获取名称();
-  const 动态自定义分析 = config.分析配置?.dynamic_customize ?? {};
+  const 索引 = 部件.获取索引();
+  const 单笔列表 = [...new Set(Object.values(config.分类器))].map((x) =>
+    单笔.创建(x),
+  );
+  const 动态自定义分析 = config.分析配置.dynamic_customize ?? {};
   const 自定义分析 = config.分析配置.customize ?? {};
-  let 全部字根序列 = 动态自定义分析[名称];
-  if (全部字根序列 === undefined && 自定义分析[名称] !== undefined) {
-    全部字根序列 = [自定义分析[名称]];
+  let 全部字根序列 = 动态自定义分析[索引];
+  if (全部字根序列 === undefined && 自定义分析[索引] !== undefined) {
+    全部字根序列 = [自定义分析[索引]];
   }
   if (全部字根序列 === undefined) return 部件分析列表;
-  const 新分析: T[] = [];
-  for (const 字根序列 of 全部字根序列) {
-    const 分析 = 部件分析列表.find((x) => isEqual(x.字根序列, 字根序列));
+  const 新分析列表: T[] = [];
+  for (const 字根名称序列 of 全部字根序列) {
+    const 恢复后的字根序列 = 从字根名称序列恢复字根序列(
+      字根名称序列,
+      config.部件字根列表,
+      单笔列表,
+    );
+    const 分析 = 部件分析列表.find((x) =>
+      isEqual(
+        x.字根序列.map((y) => y.获取名称()),
+        字根名称序列,
+      ),
+    );
     if (分析) {
-      新分析.push(分析);
+      新分析列表.push(分析);
     } else {
       // 如果找不到完全匹配的分析，就用定制化分析覆盖当前分析
-      const 假装分析 = { ...部件分析列表[0]!, 字根序列 };
-      新分析.push(假装分析);
+      const 假装分析 = { ...部件分析列表[0]!, 字根序列: 恢复后的字根序列 };
+      新分析列表.push(假装分析);
     }
   }
-  return 新分析;
+  return 新分析列表;
 }
 
 interface 逸码拆分方式 {

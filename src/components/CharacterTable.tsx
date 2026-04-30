@@ -12,6 +12,13 @@ import {
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
 import type { TourProps } from "antd/lib";
+import type {
+  原始字库,
+  原始汉字数据,
+  字形数据,
+  校验原始汉字数据,
+} from "hanzi-chai";
+import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
 import * as O from "optics-ts/standalone";
 import { useRef, useState } from "react";
 import { remoteUpdate } from "~/api";
@@ -40,13 +47,6 @@ import {
   QuickPatchAmbiguous,
   Rename,
 } from "~/components/Action";
-import type {
-  原始字库,
-  原始汉字数据,
-  字形数据,
-  校验原始汉字数据,
-} from "hanzi-chai";
-import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
 import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/utils";
 import CharacterQuery from "./CharacterQuery";
 import ComponentForm, { IdentityForm } from "./ComponentForm";
@@ -243,13 +243,13 @@ export default function CharacterTable() {
   const [filterProps, setFilterProps] = useState<字符过滤器参数>({});
   const remote = useAtomValue(远程原子);
   const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
-  const filter = new 字符过滤器(filterProps);
+  const filter = new 字符过滤器(filterProps, 笔顺映射);
 
   const dataSource: 校验原始汉字数据[] = [];
   for (const c of 排序字库数据) {
     const data = 原始字库.查询(c);
     if (!data) continue;
-    if (filter.过滤(c, data, 笔顺映射.get(c) ?? "")) {
+    if (filter.过滤(c, data)) {
       dataSource.push(data);
     }
   }

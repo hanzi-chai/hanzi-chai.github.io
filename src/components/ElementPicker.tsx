@@ -1,5 +1,6 @@
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import { Button, Cascader, Flex, Popover, Typography } from "antd";
+import { 字符, 结构描述字符列表 } from "hanzi-chai";
 import { useState } from "react";
 import {
   useAtom,
@@ -14,7 +15,6 @@ import {
   拼音元素枚举映射原子,
   自定义分析数据库,
 } from "~/atoms";
-import { 字符, 结构描述字符列表 } from "hanzi-chai";
 import Algebra from "./Algebra";
 import ElementAdder from "./ElementAdder";
 import ElementCounter from "./ElementCounter";
@@ -84,7 +84,7 @@ const useAllElements = () => {
   const 字符列表 = useAtomValueUnwrapped(如排序字库数据原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 排序汉字 = 字符列表
-    .filter((k) => 笔顺映射.get(k)?.length !== 1)
+    .filter((k) => 笔顺映射.get(k)?.[0]?.length !== 1)
     .filter((k) => k.区块() !== "kangxi");
   const 全部笔画列表 = Array.from(new Set(Object.values(分类器)))
     .sort()

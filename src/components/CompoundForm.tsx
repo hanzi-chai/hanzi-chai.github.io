@@ -8,14 +8,6 @@ import {
 } from "@ant-design/pro-components";
 import { Button, Flex, Form } from "antd";
 import { useWatch } from "antd/es/form/Form";
-import { useAtomValue } from "jotai";
-import type { ReactNode } from "react";
-import {
-  useAtomValueUnwrapped,
-  全部标签原子,
-  原始字库原子,
-  如字库原子,
-} from "~/atoms";
 import {
   复合体,
   type 复合体数据,
@@ -25,6 +17,14 @@ import {
   type 结构描述字符,
   结构描述字符列表,
 } from "hanzi-chai";
+import { useAtomValue } from "jotai";
+import type { ReactNode } from "react";
+import {
+  useAtomValueUnwrapped,
+  全部标签原子,
+  原始字库原子,
+  如字库原子,
+} from "~/atoms";
 import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { InlineRender, StaticList } from "./ComponentForm";
@@ -107,7 +107,6 @@ export default function CompoundForm({
             >
               {(props) => {
                 const compound = props as 复合体数据;
-                console.log("当前复合体数据", compound);
                 const 字形列表 = 原始字库.渲染字形(
                   character,
                   { ...compound, user: false, tags: new Set(所有源标签) },

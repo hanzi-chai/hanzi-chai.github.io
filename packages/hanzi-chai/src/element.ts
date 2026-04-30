@@ -346,7 +346,6 @@ export class 取码器 {
       case "字根":
         root = signedIndex(字根序列, object.rootIndex);
         if (root === undefined) return undefined;
-        if (root.获取名称 === undefined) console.log(字根序列);
         return root.获取名称();
       case "笔画":
       case "二笔":

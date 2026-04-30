@@ -1,4 +1,5 @@
 import type { SelectProps } from "antd";
+import type { 原始汉字数据 } from "hanzi-chai";
 import { useEffect, useState } from "react";
 import {
   useAtomValue,
@@ -7,7 +8,6 @@ import {
   如排序字库数据原子,
   如笔顺映射原子,
 } from "~/atoms";
-import type { 原始汉字数据 } from "hanzi-chai";
 import { CharacterDisplay, Select } from "./Utils";
 
 interface ItemSelectProps extends SelectProps<string> {
@@ -54,7 +54,7 @@ export default function CharacterSelect(props: ItemSelectProps) {
       .filter((字符实例) => {
         const 别名 = 原始字库.查询(字符实例)?.name ?? "";
         return (
-          笔顺映射.get(字符实例)?.startsWith(input) ||
+          笔顺映射.get(字符实例)?.some((s) => s.startsWith(input)) ||
           字符实例.toString() === input ||
           别名.includes(input)
         );

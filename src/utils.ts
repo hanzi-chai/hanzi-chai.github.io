@@ -153,7 +153,7 @@ export const exportTSV = (data: string[][], filename: string) => {
 
 export class 字符过滤器 {
   private sequenceRegex: RegExp | undefined;
-  constructor(private 过滤条件: 字符过滤器参数) {
+  constructor(private 过滤条件: 字符过滤器参数, private 笔顺映射: Map<字符, string[]>) {
     if (过滤条件.sequence) {
       try {
         this.sequenceRegex = new RegExp(过滤条件.sequence);
@@ -161,14 +161,15 @@ export class 字符过滤器 {
     }
   }
 
-  过滤(汉字: 字符, 数据: 原始汉字数据, 笔画序列: string) {
+  过滤(汉字: 字符, 数据: 原始汉字数据) {
+    const 笔顺列表 = this.笔顺映射.get(汉字) ?? [];
     let result = true;
     const { name, unicode } = this.过滤条件;
     if (name) {
       result &&= (数据.name ?? "").includes(name) || 汉字.toString().includes(name);
     }
-    if (this.sequenceRegex) {
-      result &&= this.sequenceRegex.test(笔画序列);
+    if (this.sequenceRegex !== undefined) {
+      result &&= 笔顺列表.some(s => this.sequenceRegex!.test(s));
     }
     if (unicode) {
       let hex_str = 汉字.十六进制();

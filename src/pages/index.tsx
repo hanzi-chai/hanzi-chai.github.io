@@ -1,5 +1,5 @@
+import { BookOutlined, GithubOutlined } from "@ant-design/icons";
 import {
-  Badge,
   Button,
   Dropdown,
   Flex,
@@ -203,6 +203,22 @@ export default function HomeLayout() {
           <Changelog />
         </Flex>
         <User />
+        <Flex gap="middle">
+          <Button
+            icon={<BookOutlined />}
+            href="https://docs.chaifen.app"
+            target="_blank"
+          >
+            文档
+          </Button>
+          <Button
+            icon={<GithubOutlined />}
+            href="https://github.com/hanzi-chai/"
+            target="_blank"
+          >
+            GitHub
+          </Button>
+        </Flex>
         <Typography.Text>
           © 汉字自动拆分开发团队 2019 - {new Date().getFullYear()}
         </Typography.Text>

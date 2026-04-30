@@ -233,22 +233,12 @@ export const 如私用区图形原子 = atom(async (get) => {
 export const 如笔顺映射原子 = atom(async (get) => {
   const 如字库 = await get(如字库原子);
   if (!如字库.ok) return 如字库;
-  const 字库 = 如字库.value;
-  const result = new Map<字符, string>();
-  for (const { 字符, 字形列表 } of 字库) {
-    const glyph = 字形列表[0];
-    if (!glyph) {
-      result.set(字符, "");
-      continue;
-    }
-    if (result.has(字符)) continue;
-    if (是部件(glyph)) {
-      const 笔顺 = glyph.获取笔画序列(默认分类器).join("");
-      result.set(字符, 笔顺);
-    } else {
-      const 笔顺 = glyph.获取笔画序列(默认分类器).join("");
-      result.set(字符, 笔顺);
-    }
+  const result = new Map<字符, string[]>();
+  for (const { 字符, 字形列表 } of 如字库.value) {
+    result.set(
+      字符,
+      字形列表.map((g) => g.获取笔画序列(默认分类器).join("")),
+    );
   }
   return ok(result);
 });
@@ -258,10 +248,8 @@ export const 如排序字库数据原子 = atom(async (get) => {
   const 如笔顺映射 = await get(如笔顺映射原子);
   if (!如笔顺映射.ok) return 如笔顺映射;
   const 笔顺映射 = 如笔顺映射.value;
-  const result = sortBy(
-    [...原始字库].map((x) => x.character),
-    (char) => 笔顺映射.get(char)?.length ?? 0,
-  );
+  const 全部字符 = [...原始字库].map((x) => x.character);
+  const result = sortBy(全部字符, (c) => 笔顺映射.get(c)?.[0]?.length ?? 0);
   return ok(result);
 });
 
@@ -393,11 +381,6 @@ export const 如字形分析结果原子 = atom(async (get) => {
   const 字形分析配置 = get(字形分析配置原子);
   const 汉字集合 = await get(汉字集合原子);
   const 原始字库 = await get(原始字库原子);
-  // return await thread.spawn<Result<字形分析结果, Error>>("analysis", [
-  //   [...如字库.value],
-  //   字形分析配置,
-  //   汉字集合,
-  // ]);
   return 如字库.value.分析(字形分析配置, 汉字集合, 原始字库);
 });
 
@@ -407,10 +390,6 @@ export const 如动态字形分析结果原子 = atom(async (get) => {
   const 字形分析配置 = get(字形分析配置原子);
   const 汉字集合 = await get(汉字集合原子);
   const 原始字库 = await get(原始字库原子);
-  // return await thread.spawn<Result<动态字形分析结果, Error>>(
-  //   "dynamic_analysis",
-  //   [[...如字库.value], 字形分析配置, 汉字集合],
-  // );
   return 如字库.value.动态分析(字形分析配置, 汉字集合, 原始字库);
 });
 
@@ -441,11 +420,6 @@ export const 如组装结果原子 = atom(async (get) => {
   const 字形分析结果 = 如字形分析结果.value;
   const config = await get(组装配置原子);
   const result = 组装(config, 拼音分析结果, 字形分析结果);
-  // const result = await thread.spawn<组装条目[]>("assembly", [
-  //   config,
-  //   拼音分析结果,
-  //   字形分析结果,
-  // ]);
   return result;
 });
 
@@ -485,7 +459,6 @@ export const 如带归并组装结果原子 = atom(async (get) => {
     }
     带归并组装结果.push({ ...条目, 元素序列: { 元素序列: 新元素序列 } });
   }
-  console.log(如组装结果.value.length, 带归并组装结果.length);
   return ok(带归并组装结果);
 });
 
@@ -496,11 +469,6 @@ export const 如动态组装结果原子 = atom(async (get) => {
   const 字形分析结果 = 如字形分析结果.value;
   const config = await get(组装配置原子);
   const result = 动态组装(config, 拼音分析结果, 字形分析结果);
-  // const result = await thread.spawn<动态组装条目[]>("dynamic_assembly", [
-  //   config,
-  //   拼音分析结果,
-  //   字形分析结果,
-  // ]);
   return result;
 });
 

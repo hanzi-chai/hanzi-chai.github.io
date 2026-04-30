@@ -1,4 +1,5 @@
 import type { BaseOptionType } from "antd/es/select";
+import { 字符, type 广义码位, 是变量, 是归并 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import {
   useAtomValueUnwrapped,
@@ -9,7 +10,6 @@ import {
   字母表原子,
   强类型元素列表原子,
 } from "~/atoms";
-import { 字符, type 广义码位, 是变量, 是归并 } from "hanzi-chai";
 import { ElementPositionDisplay, Select } from "./Utils";
 
 export interface KeySelectProps {
@@ -92,7 +92,8 @@ export default function KeySelect({
         const 元素 = 强类型元素列表.get(key.element);
         if (!元素) return false;
         const 匹配序列 =
-          元素 instanceof 字符 && 笔顺映射.get(元素)?.startsWith(input);
+          元素 instanceof 字符 &&
+          笔顺映射.get(元素)?.some((s) => s.startsWith(input));
         const 匹配元素 = key.element.includes(input);
         return 匹配序列 || 匹配元素;
       }}
@@ -118,8 +119,8 @@ export default function KeySelect({
         const cha = 强类型元素列表.get(ak.element);
         const chb = 强类型元素列表.get(bk.element);
         if (cha instanceof 字符 && chb instanceof 字符) {
-          const aSequence = 笔顺映射.get(cha) ?? "";
-          const bSequence = 笔顺映射.get(chb) ?? "";
+          const aSequence = 笔顺映射.get(cha)?.[0] ?? "";
+          const bSequence = 笔顺映射.get(chb)?.[0] ?? "";
           return aSequence.length - bSequence.length;
         }
         return ak.element.localeCompare(bk.element);

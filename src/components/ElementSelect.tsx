@@ -1,4 +1,5 @@
 import type { SelectProps } from "antd";
+import { 单笔, 字符 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import {
   useAtomValueUnwrapped,
@@ -6,7 +7,6 @@ import {
   如笔顺映射原子,
   强类型元素列表原子,
 } from "~/atoms";
-import { 单笔, 字符 } from "hanzi-chai";
 import { ElementDisplay, Select } from "./Utils";
 
 interface ElementSelectProps extends SelectProps<string> {
@@ -46,9 +46,7 @@ export default function ElementSelect(props: ElementSelectProps) {
         const 元素 = 强类型元素列表.get(option.value);
         if (!元素) return false;
         if (元素 instanceof 字符) {
-          const sequence = 笔顺映射.get(元素);
-          if (sequence === undefined) return false;
-          return sequence.startsWith(input);
+          return (笔顺映射.get(元素) ?? []).some((s) => s.startsWith(input));
         }
         return option.value.includes(input);
       }}
@@ -56,8 +54,8 @@ export default function ElementSelect(props: ElementSelectProps) {
         const cha = 强类型元素列表.get(a.value);
         const chb = 强类型元素列表.get(b.value);
         if (cha instanceof 字符 && chb instanceof 字符) {
-          const seqa = 笔顺映射.get(cha) ?? "";
-          const seqb = 笔顺映射.get(chb) ?? "";
+          const seqa = 笔顺映射.get(cha)?.[0] ?? "";
+          const seqb = 笔顺映射.get(chb)?.[0] ?? "";
           return seqa.length - seqb.length;
         }
         return a.value.localeCompare(b.value);

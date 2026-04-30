@@ -152,7 +152,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     ...Object.keys(动态自定义拆分),
   ]);
   const 决策 = useAtomValue(决策原子);
-  const 过滤器 = new 字符过滤器(filter);
+  const 过滤器 = new 字符过滤器(filter, 笔顺映射);
   const 决策空间 = useAtomValue(决策空间原子);
   const [只显示自定义, 设置只显示自定义] = useState(false);
   const 是必要字根 = (k: string) =>
@@ -163,7 +163,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     const 字符串 = 字.toString();
     if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])
       continue;
-    if (!过滤器.过滤(字, 原始字库.查询(字)!, 笔顺映射.get(字) ?? "")) continue;
+    if (!过滤器.过滤(字, 原始字库.查询(字)!)) continue;
     if (是必要字根(字符串)) continue;
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {

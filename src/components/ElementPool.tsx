@@ -1,4 +1,5 @@
 import { Button, Flex, Modal, Pagination, Typography } from "antd";
+import type { 字符 } from "hanzi-chai";
 import { useState } from "react";
 import {
   useAtomValue,
@@ -6,7 +7,6 @@ import {
   原始字库原子,
   如笔顺映射原子,
 } from "~/atoms";
-import type { 字符 } from "hanzi-chai";
 import { 字符过滤器 } from "~/utils";
 import StrokeSearch from "./CharacterSearch";
 import Classifier from "./Classifier";
@@ -31,16 +31,15 @@ export default function ElementPool({
   const sequenceMap = useAtomValueUnwrapped(如笔顺映射原子);
   const determinedRepertoire = useAtomValue(原始字库原子);
   const [isOpen, setOpen] = useState(false);
-  const 笔顺过滤 = new 字符过滤器({ sequence: input });
-  const 直接过滤 = new 字符过滤器({ name: input });
+  const 笔顺过滤 = new 字符过滤器({ sequence: input }, sequenceMap);
+  const 直接过滤 = new 字符过滤器({ name: input }, sequenceMap);
   const filtered =
     name === "字根"
       ? content.filter((char) => {
           const ch = char as 字符;
-          const seq = sequenceMap.get(ch);
           const data = determinedRepertoire.查询(ch);
-          if (!seq || !data) return false;
-          return 笔顺过滤.过滤(ch, data, seq) || 直接过滤.过滤(ch, data, seq);
+          if (!data) return false;
+          return 笔顺过滤.过滤(ch, data) || 直接过滤.过滤(ch, data);
         })
       : content;
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
