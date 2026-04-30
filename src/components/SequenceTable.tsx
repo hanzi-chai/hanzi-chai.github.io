@@ -1,16 +1,18 @@
 import { type ProColumns, ProTable } from "@ant-design/pro-components";
-import { Button, Flex, Input, Space } from "antd";
-import { 序列化, 总序列化, 识别符 } from "hanzi-chai";
+import { Button, Checkbox, Flex, Input, Space } from "antd";
+import { 字符, 序列化, 总序列化, type 码位, 识别符 } from "hanzi-chai";
 import { range } from "lodash-es";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
   优先简码映射原子,
   动态分析原子,
   如动态组装结果与优先简码原子,
+  如笔顺映射原子,
   如组装结果与优先简码原子,
   如编码结果原子,
+  强类型元素列表原子,
   最大码长原子,
   type 联合条目,
   联合结果原子,
@@ -123,8 +125,100 @@ const getColumnSearchProps = (
       </Space>
     </Flex>
   ),
-  onFilter: (value, record) =>
-    new RegExp(value as string).test(record[dataIndex].toString()),
+  onFilter: (value, record) => {
+    const regex = new RegExp(value as string);
+    const entry = record[dataIndex];
+    const text = Array.isArray(entry)
+      ? entry.map((x) => x.toString()).join("")
+      : entry;
+    return regex.test(text);
+  },
+});
+
+const EnumFilterDropdown = ({
+  allValues,
+  setSelectedKeys,
+  selectedKeys,
+  confirm,
+  clearFilters,
+}: {
+  allValues: Map<string, { element: 码位; node: ReactNode }>;
+  setSelectedKeys: (keys: React.Key[]) => void;
+  selectedKeys: React.Key[];
+  confirm: () => void;
+  clearFilters?: () => void;
+}) => {
+  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
+  const [search, setSearch] = useState("");
+  const filteredKeys = [...allValues]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .filter(([key, { element }]) => {
+      const 匹配元素 = key.includes(search);
+      if (typeof element === "string") return 匹配元素;
+      const 元素 = 强类型元素列表.get(element.element);
+      if (!元素) return 匹配元素;
+      const 匹配序列 =
+        元素 instanceof 字符 &&
+        笔顺映射.get(元素)?.some((s) => s.startsWith(search));
+      return 匹配序列 || 匹配元素;
+    });
+  return (
+    <div className="flex flex-col gap-2 p-3 w-48">
+      <Input
+        size="small"
+        placeholder="搜索元素…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        allowClear
+      />
+      <div className="flex flex-col overflow-y-auto max-h-60">
+        {filteredKeys.map(([key, { node }]) => (
+          <div key={key} className="px-1 py-0.5 rounded hover:bg-gray-50">
+            <Checkbox
+              checked={selectedKeys.includes(key)}
+              onChange={(e) =>
+                setSelectedKeys(
+                  e.target.checked
+                    ? [...selectedKeys, key]
+                    : selectedKeys.filter((k) => k !== key),
+                )
+              }
+            >
+              <span className="leading-tight">{node}</span>
+            </Checkbox>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-end gap-2 pt-1 border-t border-gray-100">
+        <Button size="small" onClick={() => clearFilters?.()}>
+          重置
+        </Button>
+        <Button size="small" type="primary" onClick={() => confirm()}>
+          确认
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const getColumnEnumFilterProps = (
+  allValues: Map<string, { element: 码位; node: ReactNode }>,
+): Pick<ProColumns<联合条目>, "filterDropdown"> => ({
+  filterDropdown: ({
+    setSelectedKeys,
+    selectedKeys,
+    confirm,
+    clearFilters,
+  }) => (
+    <EnumFilterDropdown
+      allValues={allValues}
+      setSelectedKeys={setSelectedKeys}
+      selectedKeys={selectedKeys}
+      confirm={confirm}
+      clearFilters={clearFilters}
+    />
+  ),
 });
 
 export default function SequenceTable() {
@@ -189,12 +283,16 @@ export default function SequenceTable() {
   ];
 
   for (const i of Array(最大码长).keys()) {
-    const allValues: Record<string, ReactNode> = {};
+    const allValues: Map<string, { element: 码位; node: ReactNode }> =
+      new Map();
     for (const { 元素序列 } of dataSource) {
       const element = 元素序列.元素序列[i];
       if (element !== undefined) {
         const text = 序列化(element);
-        allValues[text] = <CodePositionDisplay element={element} />;
+        allValues.set(text, {
+          element,
+          node: <CodePositionDisplay element={element} />,
+        });
       }
     }
     columns.push({
@@ -210,7 +308,6 @@ export default function SequenceTable() {
       },
       sortDirections: ["ascend", "descend"],
       width: 96,
-      filters: true,
       onFilter: (value, record) => {
         const element = record.元素序列.元素序列[i];
         if (element === undefined) {
@@ -218,7 +315,7 @@ export default function SequenceTable() {
         }
         return 序列化(element) === value;
       },
-      valueEnum: allValues,
+      ...getColumnEnumFilterProps(allValues),
       ellipsis: true,
     });
   }
@@ -243,7 +340,10 @@ export default function SequenceTable() {
         return level.toString() === value;
       },
       valueEnum: Object.fromEntries(
-        range(0, 最大码长).map((x) => [x, x.toString()]),
+        [...range(0, 最大码长 + 1), -1].map((x) => [
+          x,
+          x === -1 ? "默认" : `${x} 级简码`,
+        ]),
       ),
     },
     {
