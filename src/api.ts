@@ -1,4 +1,4 @@
-import type { 原始汉字数据, 字形数据 } from "./lib";
+import type { 原始汉字数据, 字形数据 } from "hanzi-chai";
 
 export interface 原始汉字模型 {
   unicode: number;

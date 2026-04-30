@@ -5,7 +5,7 @@ import { useChaifenTitle } from "~/utils";
 export default function Repertoire() {
   useChaifenTitle("数据");
   return (
-    <Flex vertical gap="middle" style={{ height: "100%" }}>
+    <Flex vertical gap="middle" className="h-full">
       <CharacterTable />
     </Flex>
   );

@@ -1,9 +1,7 @@
-import { blue } from "@ant-design/colors";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { Button, Flex, notification, Space } from "antd";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
-import styled from "styled-components";
 import {
   useAddAtom,
   useAtomValue,
@@ -30,26 +28,17 @@ function Draggable({ name }: { name: string }) {
   );
 }
 
-const Drop = styled(Flex)`
-  min-height: 48px;
-  background-color: ${blue[1]};
-  flex: 1;
-  padding: 8px;
-
-  &:empty {
-    display: flex;
-  }
-`;
-
 const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
   const { isOver, setNodeRef } = useDroppable({ id });
-  const style = {
-    color: isOver ? "green" : undefined,
-  };
   return (
-    <Drop ref={setNodeRef} style={style} gap="small" wrap="wrap">
+    <Flex
+      ref={setNodeRef}
+      className={`${isOver ? "text-green-500" : ""} min-h-[48px] bg-[#bae0ff] flex-1 p-2`}
+      gap="small"
+      wrap="wrap"
+    >
       {children}
-    </Drop>
+    </Flex>
   );
 };
 

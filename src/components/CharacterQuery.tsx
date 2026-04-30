@@ -22,7 +22,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
     <QueryFilter<字符过滤器参数>
       onValuesChange={async (_, values) => debounced(values)}
       submitter={false}
-      style={{ maxWidth: 1080 }}
+      className="max-w-[1080px]"
       autoFocusFirstInput={false}
     >
       <ProFormText label="Unicode" name="unicode" />

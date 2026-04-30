@@ -11,9 +11,8 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { mean, random, range, shuffle } from "lodash-es";
 import { nanoid } from "nanoid";
-import type { PropsWithChildren, SetStateAction } from "react";
+import type { ComponentProps, PropsWithChildren, SetStateAction } from "react";
 import { useEffect, useState } from "react";
-import styled from "styled-components";
 import { get, post } from "~/api";
 import User, { getUser } from "~/components/User";
 import { DeleteButton } from "~/components/Utils";
@@ -142,16 +141,16 @@ const COLORS = {
   finalPressed: "#aaa",
 };
 
-const KeyWrapper = styled.div<{ $type: keyof typeof COLORS }>`
-  border: 1px solid #aaa;
-  background-color: #eee;
-  aspect-ratio: 1 / 1;
-  place-content: center;
-  text-align: center;
-  background: ${({ $type }) => COLORS[$type]};
-  transition: background-color 0.1s;
-  touch-action: none;
-`;
+const KeyWrapper = ({
+  $type,
+  ...props
+}: { $type: keyof typeof COLORS } & ComponentProps<"div">) => (
+  <div
+    className="border border-[#aaa] aspect-square grid place-content-center text-center transition-[background-color] duration-100 touch-none"
+    style={{ background: COLORS[$type] }}
+    {...props}
+  />
+);
 
 const Key = ({ value, initial, final, timestamps, handleClick }: KeyProps) => {
   const progress = timestamps.length;
@@ -175,14 +174,6 @@ const Key = ({ value, initial, final, timestamps, handleClick }: KeyProps) => {
     </KeyWrapper>
   );
 };
-
-const Keyboard = styled.div`
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-`;
 
 const defaultPair: Pair = { initial: -1, final: -1 };
 
@@ -221,7 +212,7 @@ const keyboard = ({
   const rows = 5;
   const columns = 7;
   return (
-    <Keyboard>
+    <div className="fixed bottom-0 w-full grid grid-cols-7">
       {range(rows).flatMap((i) =>
         range(columns).map((j) => (
           <Key
@@ -234,7 +225,7 @@ const keyboard = ({
           />
         )),
       )}
-    </Keyboard>
+    </div>
   );
 };
 
@@ -450,10 +441,10 @@ const Equivalence = () => {
   };
   return (
     <>
-      <Typography.Title level={2} style={{ textAlign: "center" }}>
+      <Typography.Title level={2} className="text-center">
         当量实验
       </Typography.Title>
-      <Flex vertical gap="small" style={{ padding: "0 1rem" }}>
+      <Flex vertical gap="small" className="px-4">
         <Flex justify="center" gap="middle">
           <User />
           <Ranking model={model} />
@@ -503,12 +494,12 @@ const Equivalence = () => {
         {user && pairs.length > 0 && (
           <>
             {lastInitial !== -1 && (
-              <div style={{ textAlign: "center" }}>
+              <div className="text-center">
                 完成组合：{lastInitial} - {lastFinal}，时间：
                 {results.at(-1)} ms
               </div>
             )}
-            <div style={{ textAlign: "center" }}>
+            <div className="text-center">
               当前组合：{initial} - {final}，进度：{index} / {pairs.length}
             </div>
             <Progress percent={Math.floor((index / pairs.length) * 100)} />

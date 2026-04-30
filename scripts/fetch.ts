@@ -11,7 +11,7 @@ import axios from "axios";
 import pako from "pako";
 import { 从模型构建, type 原始汉字模型 } from "~/api";
 import { VERSION, getLocalDataPath } from "./version.js";
-import { 原始汉字数据 } from "~/lib/index.js";
+import { 原始汉字数据 } from "hanzi-chai";
 
 const apiEndpoint = "https://api.chaifen.app/";
 const assetsEndpoint = "https://assets.chaifen.app/";

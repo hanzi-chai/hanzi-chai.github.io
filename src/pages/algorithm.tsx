@@ -189,27 +189,15 @@ const DegeneratorTable = () => {
       onChange={(pagination) => {
         setPage(pagination.current!);
       }}
-      style={{
-        maxWidth: "1920px",
-      }}
+      className="max-w-[1920px]"
     />
   );
 };
 
 export default function Algorithm() {
   return (
-    <Layout style={{ height: "100%", overflowY: "auto" }}>
-      <Layout.Content
-        style={{
-          height: "100%",
-          padding: "32px",
-          maxWidth: "1440px",
-          margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-        }}
-      >
+    <Layout className="h-full overflow-y-auto">
+      <Layout.Content className="h-full p-8 max-w-[1440px] mx-auto flex flex-col overflow-y-auto">
         <Typography.Title>部件分解</Typography.Title>
         {/* <ComponentsTreeView /> */}
         <DegeneratorTable />

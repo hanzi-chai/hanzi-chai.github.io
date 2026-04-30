@@ -21,7 +21,7 @@ import { CodePositionDisplay } from "./Utils";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
   return (
-    <span style={{ color: rank > 0 ? "red" : undefined }}>
+    <span className={rank > 0 ? "text-red-500" : ""}>
       {code}
       {rank > 0 ? `[${rank}]` : ""}
     </span>
@@ -117,7 +117,7 @@ const getColumnSearchProps = (
     confirm,
     clearFilters,
   }) => (
-    <Flex vertical align="flex-end" gap="middle" style={{ padding: "1rem" }}>
+    <Flex vertical align="flex-end" gap="middle" className="p-4">
       <Input
         value={selectedKeys[0]}
         onChange={(e) =>

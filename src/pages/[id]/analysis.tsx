@@ -189,7 +189,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         <Radio.Group
           value={step}
           onChange={(e) => setStep(e.target.value as 0)}
-          style={{ minWidth: "200px" }}
+          className="min-w-[200px]"
         >
           <Radio.Button value={0}>部件拆分</Radio.Button>
           <Radio.Button value={1}>复合体拆分</Radio.Button>
@@ -238,7 +238,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
           检查自定义组
         </Button>
       </Flex>
-      <Row style={{ width: "80%", alignItems: "center" }}>
+      <Row className="w-4/5 items-center">
         <Col span={5}>
           <Statistic
             title="总部件数"
@@ -274,7 +274,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         items={displays[step].slice((page - 1) * pageSize, page * pageSize)}
         accordion={true}
         size="small"
-        style={{ alignSelf: "stretch" }}
+        className="self-stretch"
       />
       <Pagination
         current={page}
@@ -294,8 +294,8 @@ export default function Analysis() {
   const [filter, setFilter] = useState<字符过滤器参数>({});
 
   return (
-    <Flex vertical align="center" gap="middle" style={{ padding: "0 2rem" }}>
-      <Flex gap="middle" justify="center" style={{ marginBottom: "16px" }}>
+    <Flex vertical align="center" gap="middle" className="px-8">
+      <Flex gap="middle" justify="center" className="mb-4">
         <ConfigureRules />
       </Flex>
       <CharacterQuery setFilter={setFilter} />

@@ -1,6 +1,5 @@
 import { Button, Flex, Modal, Pagination, Typography } from "antd";
 import { useState } from "react";
-import styled from "styled-components";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
@@ -13,20 +12,12 @@ import StrokeSearch from "./CharacterSearch";
 import Classifier from "./Classifier";
 import { CharacterWithTooltip } from "./Utils";
 
-const Content = styled(Flex)`
-  padding: 8px;
-  border: 1px solid black;
-  width: 100%;
-`;
-
 interface PoolProps {
   element?: string | 字符;
   setElement: (s: string | 字符 | undefined) => void;
   content: string[] | 字符[];
   name: string;
 }
-
-const MyPagination = styled(Pagination)``;
 
 export default function ElementPool({
   element,
@@ -72,7 +63,7 @@ export default function ElementPool({
           </Modal>
         </>
       )}
-      <Content wrap="wrap">
+      <Flex wrap="wrap" className="p-[8px] border border-black w-full">
         {range.map((x) => (
           <CharacterWithTooltip
             key={JSON.stringify(x)}
@@ -81,9 +72,9 @@ export default function ElementPool({
             setElement={setElement}
           />
         ))}
-      </Content>
+      </Flex>
       {filtered.length > pageSize && (
-        <MyPagination
+        <Pagination
           current={page}
           onChange={(page) => {
             setPage(page);

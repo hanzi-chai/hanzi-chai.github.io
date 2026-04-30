@@ -84,17 +84,12 @@ const ValueDescriptionEditor = ({
         <DeleteButton onClick={() => onChange(undefined)} />
       </Flex>
       {currentCondition.map((c, i) => (
-        <Flex
-          key={i}
-          gap="small"
-          align="center"
-          style={{ paddingLeft: "32px" }}
-        >
+        <Flex key={i} gap="small" align="center" className="pl-8">
           当
           <ElementSelect
             value={c.element}
             onChange={(element) => updateCondition(i, "element", element)}
-            style={{ width: 96 }}
+            className="w-24"
             allowClear={false}
             includeOptional
           />

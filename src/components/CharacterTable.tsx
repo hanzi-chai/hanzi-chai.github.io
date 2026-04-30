@@ -447,14 +447,14 @@ export default function CharacterTable() {
   return (
     <Flex
       component={Layout.Content}
-      style={{ overflowY: "scroll" }}
+      className="overflow-y-scroll"
       vertical
       align="center"
       gap="small"
     >
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
-        <Form.Item label="选择字形来源" style={{ margin: 0 }}>
+        <Form.Item label="选择字形来源" className="!m-0">
           <Select
             mode="multiple"
             options={所有源标签.map((x) => ({ label: x, value: x }))}
@@ -474,15 +474,13 @@ export default function CharacterTable() {
           pagination={{
             pageSize: 50,
           }}
-          style={{
-            maxWidth: "1920px",
-          }}
+          className="max-w-[1920px]"
         />
         <Tour open={open} onClose={() => setOpen(false)} steps={steps} />
         <FloatButton
           icon={<QuestionCircleOutlined />}
           type="primary"
-          style={{ right: 64 }}
+          className="right-16"
           onClick={() => setOpen(true)}
         />
       </div>

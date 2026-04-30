@@ -14,7 +14,6 @@ import { load } from "js-yaml";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import styled from "styled-components";
 import Changelog from "~/components/changelog/ChangelogDrawer";
 import Starter from "~/components/Starter";
 import User from "~/components/User";
@@ -33,20 +32,16 @@ const ListItem = ({
   removeConfig: (id: string) => void;
 }) => {
   return (
-    <Flex align="center" justify="space-between" style={{ width: "100%" }}>
-      <StyledListItem
+    <Flex align="center" justify="space-between" className="w-full">
+      <Link
         to={`/${id}`}
-        style={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
+        className="cursor-pointer p-[12px] rounded-lg flex-1 overflow-hidden text-ellipsis whitespace-nowrap hover:bg-[#f5f5f5] transition-colors duration-300"
       >
-        <Typography.Title level={5} style={{ margin: 0 }}>
+        <Typography.Title level={5} className="!m-0">
           {info.name + (info.version ? ` (${info.version})` : "")}
         </Typography.Title>
         <Typography.Text>{info.description}</Typography.Text>
-      </StyledListItem>
+      </Link>
       <DeleteButton
         onClick={(e) => {
           e.stopPropagation();
@@ -56,18 +51,6 @@ const ListItem = ({
     </Flex>
   );
 };
-
-const StyledListItem = styled(Link)`
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 8px;
-  flex: 1;
-
-  &:hover {
-    background-color: #f5f5f5;
-    transition: background-color 0.3s;
-  }
-`;
 
 export default function HomeLayout() {
   useChaifenTitle("首页");
@@ -158,13 +141,9 @@ export default function HomeLayout() {
   }));
 
   return (
-    <Layout style={{ height: "100%" }}>
+    <Layout className="h-full">
       <Layout.Sider width={320} theme="light">
-        <Flex
-          vertical
-          justify="space-evenly"
-          style={{ height: "100%", padding: "0 1.5rem" }}
-        >
+        <Flex vertical justify="space-evenly" className="h-full px-6">
           <List
             dataSource={listData}
             renderItem={ListItem}
@@ -218,9 +197,7 @@ export default function HomeLayout() {
           alt="favicon"
           src="/icon.webp"
         />
-        <Typography.Title style={{ margin: 0 }}>
-          汉字自动拆分系统
-        </Typography.Title>
+        <Typography.Title className="!m-0">汉字自动拆分系统</Typography.Title>
         <Flex>
           <Tag>v{APP_VERSION}</Tag>
           <Changelog />

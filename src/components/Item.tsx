@@ -1,14 +1,12 @@
 import { Button } from "antd";
-import styled from "styled-components";
+import type { ComponentProps } from "react";
 
-const Item = styled(Button)`
-  min-width: 32px;
-  height: 32px;
-  padding: 0 8px;
-  background-color: ${(props) =>
-    props.type === "primary" ? "" : "transparent"};
-  border-color: transparent;
-  box-shadow: none;
-`;
+const Item = ({ className, type, ...props }: ComponentProps<typeof Button>) => (
+  <Button
+    type={type}
+    className={`min-w-[32px] !h-[32px] !px-[8px] !border-transparent shadow-none ${type !== "primary" ? "!bg-transparent" : ""} ${className ?? ""}`}
+    {...props}
+  />
+);
 
 export default Item;

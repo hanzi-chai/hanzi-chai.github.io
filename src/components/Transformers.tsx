@@ -157,7 +157,7 @@ const PatternEditor: React.FC<{
   return typeof value === "string" || isVariable(value) ? (
     <Flex vertical align="center">
       <CharacterSelect
-        style={{ width: 88 }}
+        className="w-[88px]"
         value={isVariable(value) ? JSON.stringify(value) : value}
         onChange={(v: string) =>
           onChange(v.startsWith("{") ? (JSON.parse(v) as 结构变量) : v)
@@ -170,7 +170,7 @@ const PatternEditor: React.FC<{
     <Flex wrap="wrap">
       <Flex vertical align="center">
         <Select
-          style={{ width: 64 }}
+          className="w-16"
           options={结构描述字符列表.map((op) => ({ label: op, value: op }))}
           value={value.operator}
           onChange={(newOp) =>
@@ -232,7 +232,7 @@ const TransformersForm = () => {
         creatorRecord={getDummyTransformer}
         alwaysShowItemLabel
       >
-        <ProFormItem label="查找" name="from" style={{ marginBottom: 0 }}>
+        <ProFormItem label="查找" name="from" className="!mb-0">
           {/* @ts-ignore */}
           <PatternEditor />
         </ProFormItem>

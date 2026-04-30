@@ -130,7 +130,7 @@ function EncoderGraph({
       }}
       width={1080}
     >
-      <div style={{ height: "70vh" }}>
+      <div className="h-[70vh]">
         <CacheContext.Provider value={context}>
           <ReactFlow
             nodes={nodes}

@@ -1,4 +1,3 @@
-import { blue } from "@ant-design/colors";
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
 import {
   Alert,
@@ -13,9 +12,16 @@ import {
   Select,
   Typography,
 } from "antd";
+import {
+  type 决策,
+  可打印字符列表,
+  是归并,
+  是部件,
+  读取表格,
+  type 非空安排,
+} from "hanzi-chai";
 import { sortBy } from "lodash-es";
-import { memo, useState } from "react";
-import styled from "styled-components";
+import { type ComponentProps, memo, useState } from "react";
 import {
   useAddAtom,
   useAtom,
@@ -37,14 +43,6 @@ import {
   编码类型原子,
   键盘原子,
 } from "~/atoms";
-import {
-  type 决策,
-  可打印字符列表,
-  是归并,
-  是部件,
-  读取表格,
-  type 非空安排,
-} from "hanzi-chai";
 import { exportTSV } from "~/utils";
 import Item from "./Item";
 import MappingSpace, { RulesForm } from "./MappingSpace";
@@ -183,30 +181,20 @@ export const ElementDetail = ({
   );
 };
 
-export const ElementLabelWrapper = styled.span<{ $shouldHighlight: boolean }>`
-  align-items: baseline;
-  cursor: pointer;
-  line-height: 1;
-  padding: 8px 0px;
-  border-radius: 4px;
-  background: ${({ $shouldHighlight }) =>
-    $shouldHighlight ? blue[2] : "transparent"};
-  outline: ${({ $shouldHighlight }) =>
-    $shouldHighlight ? `3px solid ${blue.primary}` : "none"};
-
-  &:hover {
-    background-color: #ddd;
-  }
-`;
-
-const ElementDisplayWrapper = styled(ElementDisplay)<{ $optional: boolean }>`
-  color: ${({ $optional }) => ($optional ? "#9d9d9d" : "black")};
-`;
-
-const ResidualCodeWrapper = styled.span`
-  font-size: 0.85em;
-  padding-left: 2px;
-`;
+export const ElementLabelWrapper = ({
+  $shouldHighlight,
+  className,
+  ...props
+}: { $shouldHighlight: boolean } & ComponentProps<"span">) => (
+  <span
+    className={`items-baseline cursor-pointer leading-none py-[8px] px-0 rounded-[4px] hover:bg-[#ddd] ${
+      $shouldHighlight
+        ? "bg-[#91caff] [outline:3px_solid_#1677ff]"
+        : "bg-transparent outline-none"
+    } ${className ?? ""}`}
+    {...props}
+  />
+);
 
 export const AdjustableElementGroup = ({
   名称: name,
@@ -230,7 +218,7 @@ export const AdjustableElementGroup = ({
   if (!element) return null;
 
   return (
-    <span>
+    <Flex align="center">
       <Popover
         title="编辑决策"
         trigger="click"
@@ -245,10 +233,12 @@ export const AdjustableElementGroup = ({
         }
       >
         <ElementLabelWrapper $shouldHighlight={name === currentElement}>
-          <ElementDisplayWrapper
+          <ElementDisplay
             element={element}
             hideTypeNames={displayMode}
-            $optional={!displayMode && isOptional(name)}
+            className={
+              !displayMode && isOptional(name) ? "text-[#9d9d9d]" : "text-black"
+            }
           />
         </ElementLabelWrapper>
       </Popover>
@@ -276,29 +266,33 @@ export const AdjustableElementGroup = ({
         >
           <ElementLabelWrapper
             $shouldHighlight={from === currentElement}
-            style={{ fontSize: "0.85em" }}
+            className="text-[0.85em]"
           >
-            <ElementDisplayWrapper
+            <ElementDisplay
               key={from}
               hideTypeNames={displayMode}
               element={强类型元素列表.get(from) ?? from}
-              $optional={!displayMode && isOptional(from)}
+              className={
+                !displayMode && isOptional(from)
+                  ? "text-[#9d9d9d]"
+                  : "text-black"
+              }
             />
           </ElementLabelWrapper>
         </Popover>
       ))}
       {
         /* 第二码及之后的编码 */ rest.length > 0 && (
-          <ResidualCodeWrapper>
+          <span className="text-[0.85em] pl-[2px]">
             {typeof rest === "string"
               ? rest
               : rest.map((x, i) => {
                   return <CodePositionDisplay key={i} element={x} />;
                 })}
-          </ResidualCodeWrapper>
+          </span>
         )
       }
-    </span>
+    </Flex>
   );
 };
 
@@ -453,7 +447,7 @@ const MappingHeader = () => {
         />
         添加按键：
         <Select
-          style={{ width: 64 }}
+          className="w-16"
           value={char}
           onChange={setChar}
           options={可打印字符列表
@@ -520,7 +514,7 @@ const MappingRow = memo(
   ({ symbol, elements }: { symbol: string; elements: 名称与安排[] }) => {
     const [alphabet, setAlphabet] = useAtom(字母表原子);
     return (
-      <Flex style={{ borderTop: "1px solid #aaa" }}>
+      <Flex className="border-t border-[#aaa]">
         <Button
           shape="circle"
           type="text"

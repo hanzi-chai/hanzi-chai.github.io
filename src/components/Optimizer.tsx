@@ -28,7 +28,7 @@ const Schedule = ({
   return (
     <>
       <Typography.Title level={4}>参数</Typography.Title>
-      <Row style={{ width: "100%" }}>
+      <Row className="w-full">
         <Col span={5}>
           <Statistic
             title="最高温"
@@ -184,10 +184,7 @@ export default function Optimizer() {
         size="small"
         dataSource={result}
         bordered
-        style={{
-          maxHeight: "300px",
-          overflowY: "scroll",
-        }}
+        className="max-h-[300px] overflow-y-scroll"
         renderItem={({ date, config }, index) => (
           <List.Item
             key={index}

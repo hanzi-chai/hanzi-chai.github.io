@@ -55,7 +55,7 @@ export default function AdminLayout() {
   }, []);
 
   return (
-    <Layout style={{ height: "100%" }}>
+    <Layout className="h-full">
       <CharacterTable />
     </Layout>
   );

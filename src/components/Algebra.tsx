@@ -74,7 +74,7 @@ export default function Algebra({
             ...defaultActionDom,
             <ArrowUpOutlined
               key="up_arrow"
-              style={{ marginLeft: "5px" }}
+              className="ml-[5px]"
               onClick={() => {
                 if (field.name === 0) {
                   action.move(field.name, count - 1);
@@ -85,7 +85,7 @@ export default function Algebra({
             />,
             <ArrowDownOutlined
               key="down_arrow"
-              style={{ marginLeft: "5px" }}
+              className="ml-[5px]"
               onClick={() => {
                 if (field.name === count - 1) {
                   action.move(field.name, 0);

@@ -271,19 +271,15 @@ export default function Debugger() {
         码表格式：每行一个条目，包含「单字」和「编码」两列，按所选格式分隔。文件可以为
         .txt 或 .yaml 后缀。
       </Typography.Text>
-      <Flex
-        justify="space-between"
-        align="center"
-        style={{ alignSelf: "stretch" }}
-      >
-        <Form.Item label="校对范围" style={{ margin: 0 }}>
+      <Flex justify="space-between" align="center" className="self-stretch">
+        <Form.Item label="校对范围" className="!m-0">
           <Select
             value={校对范围}
             options={filterOptions}
             onChange={设置校对范围}
           />
         </Form.Item>
-        <Form.Item label="校对方向" style={{ margin: 0 }}>
+        <Form.Item label="校对方向" className="!m-0">
           <Select
             value={校对方向}
             options={[
@@ -293,27 +289,15 @@ export default function Debugger() {
             onChange={设置校对方向}
           />
         </Form.Item>
-        <Form.Item label="仅显示错误" style={{ margin: 0 }}>
+        <Form.Item label="仅显示错误" className="!m-0">
           <Switch checked={只显示不正确} onChange={设置只显示不正确} />
         </Form.Item>
         <Flex>
+          <Statistic className="w-20" title="正确" value={状态统计.correct} />
+          <Statistic className="w-20" title="错误" value={状态统计.incorrect} />
+          <Statistic className="w-20" title="未知" value={状态统计.unknown} />
           <Statistic
-            style={{ width: 80 }}
-            title="正确"
-            value={状态统计.correct}
-          />
-          <Statistic
-            style={{ width: 80 }}
-            title="错误"
-            value={状态统计.incorrect}
-          />
-          <Statistic
-            style={{ width: 80 }}
-            title="未知"
-            value={状态统计.unknown}
-          />
-          <Statistic
-            style={{ width: 80 }}
+            className="w-20"
             title="准确率"
             value={`${Math.round((状态统计.correct / (状态统计.correct + 状态统计.incorrect)) * 100)}%`}
           />

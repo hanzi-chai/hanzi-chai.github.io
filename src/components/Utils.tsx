@@ -12,8 +12,7 @@ import {
   Tooltip,
   Upload,
 } from "antd";
-import type { MouseEventHandler } from "react";
-import styled from "styled-components";
+import type { ComponentProps, MouseEventHandler } from "react";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
@@ -27,36 +26,33 @@ import BorderItem from "./BorderItem";
 import { StrokesView } from "./GlyphView";
 import Item from "./Item";
 
-const ScrollableRow = styled(Row)`
-  height: 100%;
-  overflow-y: auto;
-`;
-
-export const EditorRow = (props: RowProps) => <ScrollableRow {...props} />;
-
-const ScrollableColumn = styled(Col)`
-  height: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding-left: 16px;
-  padding-right: 16px;
-`;
-
-export const EditorColumn = (props: ColProps) => (
-  <ScrollableColumn className="gutter-row" {...props} />
+export const EditorRow = ({ className, ...props }: RowProps) => (
+  <Row className={`h-full overflow-y-auto ${className ?? ""}`} {...props} />
 );
 
-export const NumberInput = styled(InputNumber)`
-  width: 48px;
-  & .ant-input-number-input {
-    padding: 4px 8px;
-  }
-`;
+export const EditorColumn = ({ className, ...props }: ColProps) => (
+  <Col
+    className={`gutter-row h-full overflow-y-auto flex flex-col px-[16px] ${className ?? ""}`}
+    {...props}
+  />
+);
 
-export const Select = styled(_Select)`
-  width: 96px;
-` as typeof _Select;
+export const NumberInput = (({
+  className,
+  ...props
+}: ComponentProps<typeof InputNumber>) => (
+  <InputNumber
+    className={`!w-[48px] [&_.ant-input-number-input]:!px-[8px] [&_.ant-input-number-input]:!py-[4px] ${className ?? ""}`}
+    {...props}
+  />
+)) as unknown as typeof InputNumber;
+
+export const Select = (({
+  className,
+  ...props
+}: ComponentProps<typeof _Select>) => (
+  <_Select className={`w-[96px] ${className ?? ""}`} {...props} />
+)) as unknown as typeof _Select;
 
 export const Uploader = ({
   action,
@@ -141,6 +137,7 @@ export const ElementDisplay = ({
 }: {
   element: 元素识别结果;
   hideTypeNames?: boolean;
+  className?: string;
 }) => {
   if (typeof element === "string") {
     const text = hideTypeNames ? element.split("-").at(-1)! : element;
@@ -166,7 +163,7 @@ export const CharacterDisplay = ({
   const glyph = 私用区图形.get(character);
   if (!character.是私用区() || glyph === undefined) {
     return (
-      <span {...rest} style={{ whiteSpace: "nowrap" }}>
+      <span {...rest} className="whitespace-nowrap">
         {character.toString()}
       </span>
     );

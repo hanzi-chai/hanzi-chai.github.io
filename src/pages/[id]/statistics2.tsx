@@ -149,18 +149,11 @@ const KeyboardItem = ({
   return (
     <Flex
       vertical
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 4,
-        padding: "4px 8px",
-        backgroundColor: color,
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
+      className="w-12 h-12 rounded-[4px] py-1 px-2 justify-between items-center"
+      style={{ backgroundColor: color }}
     >
-      <span style={{ alignSelf: "flex-start" }}>{name}</span>
-      <span style={{ alignSelf: "flex-end" }}>{formatted}</span>
+      <span className="self-start">{name}</span>
+      <span className="self-end">{formatted}</span>
     </Flex>
   );
 };
@@ -586,11 +579,7 @@ const DuplicationDistribution = () => {
     <>
       <Flex align="baseline" gap="large">
         <Typography.Title level={3}>重码分布</Typography.Title>
-        <Form.Item
-          label="仅一字词"
-          valuePropName="checked"
-          style={{ marginBottom: 0 }}
-        >
+        <Form.Item label="仅一字词" valuePropName="checked" className="!mb-0">
           <Switch checked={仅一字词} onChange={set仅一字词} />
         </Form.Item>
       </Flex>

@@ -1,6 +1,5 @@
-import React, { StrictMode, Suspense } from "react";
+import { Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { createGlobalStyle } from "styled-components";
 import {
   createBrowserRouter,
   createHashRouter,
@@ -19,31 +18,12 @@ idpath?.children?.forEach((v) => {
   v.errorElement = <ErrorResult />;
 });
 
-const GlobalStyle = createGlobalStyle`
-  html {
-    font-size: 14px;
-  }
-  body {
-    margin: 0;
-  }
-  html, body, #root {
-    height: 100%;
-  }
-
-  @media print {
-    header, aside {
-      display: none;
-    }
-  }  
-`;
-
 const createRouter = useHashRouter ? createHashRouter : createBrowserRouter;
 
 const router = createRouter(AutoRoute);
 
 createRoot(document.getElementById("root")!).render(
   <>
-    <GlobalStyle />
     <ConfigProvider
       button={{ autoInsertSpace: false }}
       theme={{

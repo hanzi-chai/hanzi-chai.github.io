@@ -20,7 +20,7 @@ import {
 } from "antd";
 import { Suspense, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import { 基本信息原子, useAtomValue } from "~/atoms";
+import { useAtomValue, 基本信息原子 } from "~/atoms";
 import ConfigManager from "~/components/ConfigManager";
 import CusSpin from "~/components/CustomSpin";
 import { examples } from "~/templates";
@@ -42,18 +42,9 @@ const items: MenuProps["items"] = [
 const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const info = useAtomValue(基本信息原子);
   return (
-    <Layout.Header
-      style={{
-        paddingLeft: isCollapsed ? "68px" : "170px",
-        height: 48,
-        placeContent: "center",
-      }}
-    >
+    <Layout.Header className={`!h-12 !place-content-center`}>
       <Flex justify="space-between" align="center">
-        <Typography.Title
-          level={2}
-          style={{ margin: 0, fontWeight: "normal", fontSize: "1.25rem" }}
-        >
+        <Typography.Title level={2} className="!m-0 !font-normal !text-xl">
           {info?.name ?? "未命名"}
         </Typography.Title>
         <ConfigManager />
@@ -71,15 +62,7 @@ function EditorLayout() {
   return (
     <Layout hasSider>
       <Layout.Sider
-        style={{
-          overflow: "auto",
-          height: "100vh",
-          position: "fixed",
-          zIndex: "999",
-          left: 0,
-          top: 0,
-          bottom: 0,
-        }}
+        className="overflow-auto h-screen fixed z-[999] left-0 top-0 bottom-0"
         breakpoint="md"
         collapsible
         collapsedWidth={58}
@@ -95,27 +78,11 @@ function EditorLayout() {
             <Link to="/">
               <Button
                 type="text"
-                style={{
-                  height: isCollapsed ? "48px" : "64px",
-                  margin: "8px 0",
-                  color: "#999",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
+                className={`${isCollapsed ? "!h-12" : "!h-16"} !mx-2 !text-[#999] flex flex-col`}
               >
-                <Avatar
-                  shape="square"
-                  src="/icon.webp"
-                  style={{ flexShrink: 0 }}
-                />
+                <Avatar shape="square" src="/icon.webp" className="shrink-0" />
                 {isCollapsed ? null : (
-                  <div
-                    style={{
-                      marginTop: "2px",
-                      letterSpacing: "1px",
-                      fontSize: "12px",
-                    }}
-                  >
+                  <div className="mt-[2px] tracking-[1px] text-xs">
                     汉字自动拆分系统
                   </div>
                 )}
@@ -132,15 +99,10 @@ function EditorLayout() {
           />
         </Flex>
       </Layout.Sider>
-      <Layout style={{ height: "100vh" }}>
+      <Layout className="h-screen">
         <Header isCollapsed={isCollapsed} />
         <Layout.Content
-          style={{
-            marginLeft: isCollapsed ? "58px" : "160px",
-            padding: "10px 24px",
-            height: "100%",
-            overflowY: "auto",
-          }}
+          className={`${isCollapsed ? "ml-[58px]" : "ml-[160px]"} py-[10px] px-6 h-full overflow-y-auto`}
         >
           <Suspense fallback={<CusSpin tip="加载标签页…" />}>
             <Outlet />

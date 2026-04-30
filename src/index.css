@@ -1,2 +1,46 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+@layer base {
+  html {
+    font-size: 14px;
+  }
+  body {
+    margin: 0;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+}
+
+@media print {
+  header,
+  aside {
+    display: none;
+  }
+}
+
+/* ComponentForm ModalForm 内部间距覆盖 */
+.component-form-modal .ant-pro-form-list-action {
+  margin: 0;
+}
+.component-form-modal .ant-pro-form-list-item {
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+.component-form-modal .ant-form-item {
+  margin-bottom: 8px;
+}
+.component-form-modal .ant-pro-form-list > .ant-form-item {
+  margin-bottom: 0;
+}
+
+/* ResultSummary ProFormList 内部间距覆盖 */
+.result-summary-list .ant-pro-form-list-action {
+  margin: 0;
+}
+.result-summary-list .ant-pro-form-list > .ant-form-item {
+  margin-bottom: 4px;
+}

@@ -62,9 +62,9 @@ export default function CharacterSelect(props: ItemSelectProps) {
       .map((字符实例) => ({
         value: 字符实例.toString(),
         label: (
-          <span style={{ display: "flex", gap: "4px" }}>
+          <span className="flex gap-1">
             <CharacterDisplay character={字符实例} />
-            <span style={{ fontSize: "0.8em" }}>{字符实例.十六进制()}</span>
+            <span className="text-[0.8em]">{字符实例.十六进制()}</span>
           </span>
         ) as React.ReactNode,
         length: 笔顺映射.get(字符实例)?.length ?? 0,

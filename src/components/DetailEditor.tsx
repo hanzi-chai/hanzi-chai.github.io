@@ -1,5 +1,4 @@
 import { Panel } from "reactflow";
-import styled from "styled-components";
 import { Cascader, Flex, Form, Select, Typography } from "antd";
 import {
   type 一元运算符,
@@ -19,18 +18,6 @@ import {
   字母表原子,
   自定义分析数据库,
 } from "~/atoms";
-
-const Background = styled(Flex)`
-  width: 240px;
-  height: 240px;
-  background-color: white;
-  border-radius: 8px;
-  padding: 16px;
-`;
-
-const Item = styled(Form.Item)`
-  margin: 0;
-`;
 
 interface Option {
   value: string | number;
@@ -141,13 +128,17 @@ export default function DetailEditor({
   ];
   return (
     <Panel position="top-right">
-      <Background vertical gap="small">
-        <Typography.Title level={4} style={{ margin: 0 }}>
+      <Flex
+        vertical
+        gap="small"
+        className="w-[240px] h-[240px] bg-white rounded-lg p-4"
+      >
+        <Typography.Title level={4} className="!m-0">
           编辑节点 {selected}
         </Typography.Title>
-        <Item label="取码">
+        <Form.Item className="!m-0" label="取码">
           <Cascader
-            style={{ width: "128px" }}
+            className="w-[128px]"
             value={转列表(data.object!)}
             options={options}
             onChange={(event) => {
@@ -155,9 +146,9 @@ export default function DetailEditor({
               setData({ ...data, object });
             }}
           />
-        </Item>
+        </Form.Item>
         {!("operator" in data) && (
-          <Item label="码数">
+          <Form.Item className="!m-0" label="码数">
             <Select
               value={data.index}
               options={[-1, 0, 1, 2, 3].map((v) => ({
@@ -170,11 +161,11 @@ export default function DetailEditor({
                   : setData({ ...data, index: event });
               }}
             />
-          </Item>
+          </Form.Item>
         )}
         {"operator" in data && (
           <>
-            <Item label="判断">
+            <Form.Item className="!m-0" label="判断">
               <Select
                 value={data.operator}
                 options={运算符列表.map((v) => ({
@@ -193,33 +184,33 @@ export default function DetailEditor({
                   }
                 }}
               />
-            </Item>
+            </Form.Item>
             {"value" in data && (
-              <Item label="取值">
+              <Form.Item className="!m-0" label="取值">
                 <TextArea
                   rows={3}
-                  style={{ width: "128px" }}
+                  className="w-[128px]"
                   value={data.value}
                   onChange={(event) =>
                     setData({ ...data, value: event.target.value })
                   }
                 />
-              </Item>
+              </Form.Item>
             )}
           </>
         )}
-        <Item label="备注">
+        <Form.Item className="!m-0" label="备注">
           <TextArea
             rows={2}
-            style={{ width: "128px" }}
+            className="w-[128px]"
             placeholder="添加备注..."
             value={data.notes}
             onChange={(event) =>
               setData({ ...data, notes: event.target.value })
             }
           />
-        </Item>
-      </Background>
+        </Form.Item>
+      </Flex>
     </Panel>
   );
 }

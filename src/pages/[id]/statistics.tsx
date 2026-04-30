@@ -138,7 +138,7 @@ const AnalyzerConfig = ({
                     form.setFieldValue("top", top);
                     setAnalyzer({ ...form.getFieldsValue(), top });
                   }}
-                  style={{ width: 96 }}
+                  className="w-24"
                 />
               </Form.Item>
               <ProFormDigit name="top" width="xs" disabled={top === 0} />
@@ -264,7 +264,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       render: (items: Set<string>[]) => (
         <Popover
           content={
-            <div style={{ maxWidth: "400px" }}>{[...items[i]!].join("、")}</div>
+            <div className="max-w-[400px]">{[...items[i]!].join("、")}</div>
           }
         >
           <span>{items[i]?.size ?? 0}</span>

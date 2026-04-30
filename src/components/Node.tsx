@@ -1,31 +1,29 @@
 import { Button, Dropdown, Tooltip } from "antd";
-import { useContext, type PropsWithChildren } from "react";
+import { useContext, type ComponentProps, type PropsWithChildren } from "react";
 import type { NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
-import styled from "styled-components";
 import type { SourceData, ConditionData } from "./graph";
 import { CacheContext, renderType } from "./graph";
-import { blue } from "@ant-design/colors";
 import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
 import { sortBy } from "lodash-es";
 import { 摘要, 条件节点配置, 源节点配置 } from "hanzi-chai";
 
-const SourceButton = styled(Button)`
-  width: 64px;
-  height: 32px;
-  padding: 4px 0;
-  font-size: 0.8em;
+const SourceButton = ({
+  className,
+  ...props
+}: ComponentProps<typeof Button>) => (
+  <Button
+    className={`!w-[64px] !h-[32px] !px-0 !py-[4px] !text-[0.8em] focus:!text-[#4096ff] focus:!border-[#4096ff] focus:[outline:2px_solid_#4096ff] ${className ?? ""}`}
+    {...props}
+  />
+);
 
-  &:focus {
-    color: ${blue[4]};
-    border-color: ${blue[4]};
-    outline: 2px solid ${blue[4]};
-  }
-`;
-
-const ConditionButton = styled(SourceButton)`
-  border-radius: 0;
-`;
+const ConditionButton = ({
+  className,
+  ...props
+}: ComponentProps<typeof Button>) => (
+  <SourceButton className={`!rounded-none ${className ?? ""}`} {...props} />
+);
 
 const sorter = (key: string) => Number.parseInt(key.slice(1), 10);
 
@@ -115,7 +113,6 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       },
     };
   };
-  // 获取当前节点的唯一子节点（如果有且仅有一个,没有分支）
   const getOnlyChild = (): string | null => {
     if (id[0] === "s") {
       return sources[id]?.next ?? null;
@@ -125,10 +122,9 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     const { positive, negative } = cond;
     if (positive && !negative) return positive;
     if (negative && !positive) return negative;
-    return null; // 两个分支都有或都没有
+    return null;
   };
 
-  // 将父节点中指向 id 的指针替换为 replacement
   const relinkParent = (
     newSources: Record<string, 源节点配置>,
     newConditions: Record<string, 条件节点配置>,
@@ -150,9 +146,7 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
       const newSources = { ...sources };
       const newConditions = { ...conditions };
       const child = getOnlyChild();
-      // 将父节点的指针指向子节点
       relinkParent(newSources, newConditions, child);
-      // 仅删除当前节点
       delete newSources[id];
       delete newConditions[id];
       setSelected(undefined);
@@ -167,7 +161,6 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     onClick: () => {
       const newSources = { ...sources };
       const newConditions = { ...conditions };
-      // 递归删除
       const stack = [id];
       while (stack.length) {
         const currentId = stack.pop()!;
@@ -190,16 +183,13 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     },
   };
 
-  // 判断是否可以仅删除本节点（条件节点两个分支都有子节点时不允许）
   const canDeleteOnly = (): boolean => {
     if (id[0] === "s") return true;
     const cond = conditions[id];
     if (!cond) return false;
-    // 两个分支都有子节点时，无法确定应将哪个接到父节点
     return !(cond.positive && cond.negative);
   };
 
-  // 在当前节点上方插入一个新的源节点
   const insertParentSourceNode: MenuItemType = {
     key: "insert-parent-source",
     label: "插入父源节点",
@@ -210,7 +200,6 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
         [newId]: { object: { type: "汉字" } as any, next: id },
       });
       const newConditions = { ...conditions };
-      // 将原来指向当前节点的父节点改为指向新节点
       for (const value of Object.values(newSources)) {
         if (value !== newSources[newId] && value.next === id)
           value.next = newId;
@@ -225,7 +214,6 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
     },
   };
 
-  // 在当前节点上方插入一个新的条件节点
   const insertParentConditionNode: MenuItemType = {
     key: "insert-parent-condition",
     label: "插入父条件节点",
@@ -241,7 +229,6 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
           negative: null,
         },
       });
-      // 将原来指向当前节点的父节点改为指向新节点
       for (const value of Object.values(newSources)) {
         if (value.next === id) value.next = newId;
       }

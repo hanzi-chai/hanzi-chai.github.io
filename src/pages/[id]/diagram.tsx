@@ -10,7 +10,6 @@ import {
 import { Button, Flex, Space, Tag, Typography } from "antd";
 import { debounce } from "lodash-es";
 import type { ReactNode } from "react";
-import styled from "styled-components";
 import {
   useAtom,
   useAtomValue,
@@ -24,34 +23,15 @@ import { AdjustableElementGroup } from "~/components/Mapping";
 import { type 区块配置, type 图示配置, 读取表格 } from "hanzi-chai";
 import { useChaifenTitle } from "~/utils";
 
-const PrintArea = styled.div`
-  width: 297mm;
-  height: 210mm;
-  float: left;
+const PrintArea = ({ children }: { children?: ReactNode }) => (
+  <div className="w-[297mm] h-[210mm] float-left pt-[20mm] pb-[20mm] px-[10mm] border border-[#d3d3d3] rounded-[5px] bg-white shadow-[0_0_8px_8px_rgba(0,0,0,0.1)] flex flex-col justify-between print:fixed print:top-0 print:left-0 print:border-none print:rounded-none">
+    {children}
+  </div>
+);
 
-  padding: 20mm 10mm;
-  border: 1px #d3d3d3 solid;
-  border-radius: 5px;
-  background: white;
-  box-shadow: 0 0 8px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-
-  @media print {
-    position: fixed;
-    top: 0;
-    left: 0;
-    border: none;
-    border-radius: 0;
-  }
-`;
-
-const KeyboardArea = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2mm;
-`;
+const KeyboardArea = ({ children }: { children?: ReactNode }) => (
+  <div className="flex flex-col gap-[2mm]">{children}</div>
+);
 
 const Keyboard = () => {
   const diagram = useAtomValue(图示配置原子);
@@ -126,23 +106,15 @@ const Keyboard = () => {
   );
 };
 
-const Secondary = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-`;
+const Secondary = ({ children }: { children?: ReactNode }) => (
+  <div className="flex-1 flex flex-col justify-center items-center gap-4">
+    {children}
+  </div>
+);
 
-const SidebarWrapper = styled.aside`
-  padding: 16px;
-  float: left;
-
-  @media print {
-    display: none;
-  }
-`;
+const SidebarWrapper = ({ children }: { children?: ReactNode }) => (
+  <aside className="p-[16px] float-left print:hidden">{children}</aside>
+);
 
 const withDefaultStyles = (diagram: 图示配置) => {
   const { row_style, cell_style } = diagram;
@@ -264,7 +236,7 @@ export default function Schematic() {
           <Secondary>
             <Typography.Text>{description}</Typography.Text>
           </Secondary>
-          <Typography.Title style={{ margin: 0 }}>{name}</Typography.Title>
+          <Typography.Title className="!m-0">{name}</Typography.Title>
           <Secondary>
             <Space>
               <Tag color="blue">作者：{author}</Tag>
@@ -273,7 +245,7 @@ export default function Schematic() {
           </Secondary>
         </Flex>
         <Keyboard />
-        <div style={{ textAlign: "center" }}>
+        <div className="text-center">
           &copy; {new Date().getFullYear()} 汉字自动拆分系统
         </div>
       </PrintArea>

@@ -1,6 +1,6 @@
 import { ProForm, ProFormList } from "@ant-design/pro-components";
+import type { ComponentProps } from "react";
 import { Button, Flex, Form, Popover } from "antd";
-import styled from "styled-components";
 import {
   useAddAtom,
   useAtomValue,
@@ -52,7 +52,7 @@ const Customize = ({
       >
         {(meta) => (
           <Form.Item noStyle {...meta}>
-            <ElementSelect style={{ width: 96 }} onlyRootsAndStrokes />
+            <ElementSelect className="w-24" onlyRootsAndStrokes />
           </Form.Item>
         )}
       </ProFormList>
@@ -60,15 +60,12 @@ const Customize = ({
   );
 };
 
-export const MyProFormList = styled(ProFormList)`
-  & .ant-pro-form-list-action {
-    margin: 0;
-  }
-
-  & .ant-pro-form-list > .ant-form-item {
-    margin-bottom: 4px;
-  }
-`;
+export const MyProFormList = (props: ComponentProps<typeof ProFormList>) => (
+  <ProFormList
+    className={`result-summary-list ${props.className ?? ""}`}
+    {...props}
+  />
+);
 
 const DynamicCustomize = ({
   component,
@@ -109,7 +106,7 @@ const DynamicCustomize = ({
           {(meta) => (
             <Form.Item noStyle {...meta}>
               <ElementSelect
-                style={{ width: 96 }}
+                className="w-24"
                 onlyRootsAndStrokes
                 includeOptional
               />

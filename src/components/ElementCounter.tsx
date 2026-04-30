@@ -45,7 +45,7 @@ const ElementSubCounter = ({
   return (
     <>
       <Typography.Title level={3}>{title}</Typography.Title>
-      <Row gutter={16} style={{ justifyContent: "center" }}>
+      <Row gutter={16} className="justify-center">
         {Object.entries(count).map(([key, value]) =>
           value ? (
             <Col key={key}>

@@ -20,7 +20,6 @@ import { Button, Dropdown, Flex, Form } from "antd";
 import type { BaseOptionType } from "antd/es/select";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef } from "react";
-import styled from "styled-components";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
@@ -36,7 +35,6 @@ import type {
   衍生部件数据,
 } from "hanzi-chai";
 import {
-  区间,
   图形盒子,
   type 字符,
   是基本或衍生部件,
@@ -55,30 +53,6 @@ const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={56} name={name} fieldProps={{ min: -100 }} />
 );
 
-const InlineFlex = styled.div`
-  display: inline-flex;
-  margin-right: 8px;
-`;
-
-const ModalForm = styled(_ModalForm)`
-  & .ant-pro-form-list-action {
-    margin: 0;
-  }
-
-  & .ant-pro-form-list-item {
-    justify-content: space-between !important;
-    align-items: center !important;
-  }
-
-  & .ant-form-item {
-    margin-bottom: 8px;
-  }
-
-  & .ant-pro-form-list > .ant-form-item {
-    margin-bottom: 0;
-  }
-` as typeof _ModalForm;
-
 export const InlineRender = ({
   listDom,
   action,
@@ -86,10 +60,10 @@ export const InlineRender = ({
   listDom: ReactNode;
   action: ReactNode;
 }) => (
-  <InlineFlex>
+  <div className="inline-flex mr-2">
     {listDom}
     {action}
-  </InlineFlex>
+  </div>
 );
 
 export function StaticList<T>(props: ProFormListProps<T>) {
@@ -171,16 +145,8 @@ const StrokeForm = ({
         {({ feature }) =>
           feature !== "reference" ? (
             <StaticList name="curveList">
-              <ProFormGroup
-                key="group"
-                size="small"
-                style={{ paddingLeft: 36 }}
-              >
-                <ProFormSelect
-                  name="command"
-                  disabled
-                  style={{ minWidth: 64 }}
-                />
+              <ProFormGroup key="group" size="small" className="pl-9">
+                <ProFormSelect name="command" disabled className="min-w-16" />
                 <ProFormDependency name={["command"]}>
                   {({ command }) =>
                     command === "c" || command === "z" ? (
@@ -248,7 +214,8 @@ export default function ComponentForm({
   };
   const formRef = useRef<ProFormInstance>(undefined);
   return (
-    <ModalForm<基本或衍生部件>
+    <_ModalForm<基本或衍生部件>
+      className="component-form-modal"
       title={title}
       layout="horizontal"
       omitNil={true}
@@ -263,7 +230,7 @@ export default function ComponentForm({
       formRef={formRef}
     >
       <EditorRow>
-        <EditorColumn span={10} style={{ padding: 0 }}>
+        <EditorColumn span={10} className="!p-0">
           <Box>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
@@ -305,7 +272,7 @@ export default function ComponentForm({
                 <ProFormGroup>
                   <Form.Item name="source" label="源字">
                     <CharacterSelect
-                      style={{ width: "96px" }}
+                      className="w-24"
                       customFilter={isValidSource}
                     />
                   </Form.Item>
@@ -335,7 +302,7 @@ export default function ComponentForm({
                         ...defaultActionDom,
                         <ArrowUpOutlined
                           key="up_arrow"
-                          style={{ marginLeft: "5px" }}
+                          className="ml-[5px]"
                           onClick={() => {
                             if (field.name === 0) {
                               action.move(field.name, count - 1);
@@ -346,7 +313,7 @@ export default function ComponentForm({
                         />,
                         <ArrowDownOutlined
                           key="down_arrow"
-                          style={{ marginLeft: "5px" }}
+                          className="ml-[5px]"
                           onClick={() => {
                             if (field.name === count - 1) {
                               action.move(field.name, 0);
@@ -357,7 +324,7 @@ export default function ComponentForm({
                         />,
                         <CameraOutlined
                           key="camera"
-                          style={{ marginLeft: "5px" }}
+                          className="ml-[5px]"
                           onClick={() => {
                             const component: 基本或衍生部件 =
                               formRef.current?.getFieldsValue();
@@ -465,7 +432,7 @@ export default function ComponentForm({
           </ProFormDependency>
         </EditorColumn>
       </EditorRow>
-    </ModalForm>
+    </_ModalForm>
   );
 }
 
@@ -492,7 +459,8 @@ export function IdentityForm({
     <BorderItem type={primary ? "default" : "text"}>{title}</BorderItem>
   );
   return (
-    <ModalForm<全等数据>
+    <_ModalForm<全等数据>
+      className="component-form-modal"
       title={title}
       layout="horizontal"
       omitNil={true}
@@ -506,11 +474,11 @@ export function IdentityForm({
       <ProFormGroup>
         <Form.Item name="source" label="源字">
           <CharacterSelect
-            style={{ width: "96px" }}
+            className="w-24"
             customFilter={([x]) => x !== current.toString()}
           />
         </Form.Item>
       </ProFormGroup>
-    </ModalForm>
+    </_ModalForm>
   );
 }

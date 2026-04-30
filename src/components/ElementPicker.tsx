@@ -63,7 +63,7 @@ interface Option {
 }
 
 const pronunciationElementsDescription = (
-  <ul style={{ width: 400 }}>
+  <ul className="w-[400px]">
     <li>
       「声母」和「韵母」是按照《汉语拼音方案》中所规定的声母和韵母来切分一个音节，例如
       yan 分析为零声母 + ian；
@@ -155,7 +155,7 @@ export default function ElementPicker() {
     },
   ];
   return (
-    <Flex vertical gap="small" style={{ flex: "0 0 400px" }}>
+    <Flex vertical gap="small" className="flex-none w-[400px]">
       <Typography.Title level={3}>元素选择器</Typography.Title>
       <Flex gap="middle" align="baseline">
         <span>元素类型：</span>

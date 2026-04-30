@@ -77,7 +77,6 @@ export default defineConfig(({ mode, command }) => {
             lodash: ["lodash"],
             yaml: ["js-yaml"],
             md5: ["js-md5"],
-            "styled-components": ["styled-components"],
             react: ["react", "react-dom", "react-router"],
             reactflow: ["reactflow"],
             antd: ["antd"],

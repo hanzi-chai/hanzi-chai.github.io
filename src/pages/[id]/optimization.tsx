@@ -34,10 +34,10 @@ const AtomicObjective = ({
   onChange: (n: number | undefined) => void;
 }) => {
   return (
-    <Form.Item label={title} style={{ marginBottom: 0 }}>
+    <Form.Item label={title} className="!mb-0">
       <Flex justify="space-between">
         <InputNumber
-          style={{ width: "64px" }}
+          className="w-16"
           value={value}
           disabled={value === undefined}
           onChange={(value) => onChange(value || 0)}
@@ -98,13 +98,10 @@ const ListObjective = ({
           <Form.Item
             key={index}
             label={weightTitles[index]}
-            style={{
-              marginBottom: 0,
-              display: weightTitles[index] === "备用" ? "none" : "initial",
-            }}
+            className={`!mb-0${weightTitles[index] === "备用" ? " !hidden" : ""}`}
           >
             <InputNumber
-              style={{ width: "64px" }}
+              className="w-16"
               value={num}
               onChange={(n) => {
                 const newValue = [...value];
@@ -135,7 +132,7 @@ const LevelObjective = ({
   return (
     <Flex justify="space-between">
       <Flex gap="small">
-        <Form.Item label="码长" style={{ marginBottom: 0 }}>
+        <Form.Item label="码长" className="!mb-0">
           <Select
             value={level.length}
             options={range(10).map((x) => ({
@@ -147,9 +144,9 @@ const LevelObjective = ({
             }}
           />
         </Form.Item>
-        <Form.Item label="频率权重" style={{ marginBottom: 0 }}>
+        <Form.Item label="频率权重" className="!mb-0">
           <InputNumber
-            style={{ width: "64px" }}
+            className="w-16"
             value={level.frequency}
             onChange={(value) => {
               update({ ...level, frequency: value ?? 0 });
@@ -175,7 +172,7 @@ const TierObjective = ({
   return (
     <Flex vertical gap="small">
       <Flex justify="space-between">
-        <Form.Item style={{ marginBottom: 0 }}>
+        <Form.Item className="!mb-0">
           <Select
             value={tier.top !== undefined}
             options={[
@@ -191,7 +188,7 @@ const TierObjective = ({
           />
           {tier.top !== undefined && (
             <InputNumber
-              style={{ width: "64px" }}
+              className="w-16"
               value={tier.top}
               onChange={(value) => {
                 update({ ...tier, top: value ?? 0 });
@@ -221,7 +218,7 @@ const TierObjective = ({
           <DeleteButton onClick={remove} />
         </Flex>
       </Flex>
-      <Flex vertical style={{ marginLeft: "4rem" }} gap="small">
+      <Flex vertical className="ml-16" gap="small">
         <AtomicObjective
           title="选重权重"
           value={tier.duplication}

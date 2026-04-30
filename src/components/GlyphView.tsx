@@ -1,6 +1,5 @@
 import type React from "react";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
 import type {
   N6,
   向量,
@@ -9,15 +8,13 @@ import type {
   笔画名称,
   绘制,
 } from "hanzi-chai";
-import { 减, 加, 笔画图形, 部件 } from "hanzi-chai";
+import { 减, 加, 笔画图形 } from "hanzi-chai";
 
-const Box = styled.div`
-  border: 1px solid black;
-  aspect-ratio: 1;
-  width: 400px;
-  height: 400px;
-  font-size: 398px;
-`;
+const Box = ({ children }: { children?: React.ReactNode }) => (
+  <div className="border border-black aspect-square w-[400px] h-[400px] text-[398px]">
+    {children}
+  </div>
+);
 
 const drawLength = ({ command, parameterList }: 绘制) => {
   if (command === "h" || command === "v") {
@@ -96,7 +93,7 @@ const Circle: React.FC<{
       r="1.5"
       fill="red"
       onMouseDown={() => setIndex(index)}
-      style={{ cursor: "pointer" }}
+      className="cursor-pointer"
     />
   );
 };

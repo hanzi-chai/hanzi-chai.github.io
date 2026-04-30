@@ -74,7 +74,7 @@ export default function KeySelect({
       showSearch
       placeholder="输入搜索"
       options={keyOptions}
-      style={{ minWidth: 96 }}
+      className="min-w-24"
       value={JSON.stringify(value)}
       onChange={(raw) => onChange(JSON.parse(raw))}
       filterOption={(input, option) => {

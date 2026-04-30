@@ -151,16 +151,13 @@ export default function CompoundForm({
                 form.setFieldValue("operandList", newList);
               }}
               options={结构描述字符列表.map((x) => ({ value: x, label: x }))}
-              style={{ width: "96px" }}
+              className="w-24"
               allowClear={false}
             />
             <StaticList name="operandList" itemRender={InlineRender}>
               {(meta) => (
                 <Form.Item noStyle {...meta}>
-                  <CharacterSelect
-                    style={{ width: "96px" }}
-                    disabled={readonly}
-                  />
+                  <CharacterSelect className="w-24" disabled={readonly} />
                 </Form.Item>
               )}
             </StaticList>
