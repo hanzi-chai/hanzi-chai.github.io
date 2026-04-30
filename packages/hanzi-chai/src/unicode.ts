@@ -299,7 +299,8 @@ export const 字集过滤查找表: Record<
   basic: (k, v) => v.tygf > 0 || k.是基本区汉字(),
   extended: (k, v) => v.tygf > 0 || k.是汉字(),
   supplement: (k, v) => v.tygf > 0 || k.是汉字() || k.是汉字补充(),
-  maximal: (k, _) => !k.是私用区(),
+  panlingual: (k, _) => !k.是私用区(),
+  maximal: (_, __) => true,
 };
 
 export const 字集过滤选项 = [
@@ -309,5 +310,6 @@ export const 字集过滤选项 = [
   { label: "基本", value: "basic" },
   { label: "扩展", value: "extended" },
   { label: "补充", value: "supplement" },
+  { label: "多语言", value: "panlingual" },
   { label: "全部", value: "maximal" },
 ];

@@ -312,11 +312,11 @@ const 展开决策值 = (
         part === null ||
         (typeof part === "object" && "variable" in part)
       ) {
-        parts.push("a");
+        parts.push("a"); // 不应该出现
       } else {
         const 部分值 = 展开决策值(mapping, part.element);
         if (!部分值.ok) return 部分值;
-        parts.push(部分值.value);
+        parts.push(部分值.value[part.index] ?? "");
       }
     }
     return ok(parts.join(""));

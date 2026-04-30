@@ -20,6 +20,7 @@ export const 字集指示列表 = [
   "basic",
   "extended",
   "supplement",
+  "panlingual",
   "maximal",
 ] as const;
 export type 字集指示 = (typeof 字集指示列表)[number];

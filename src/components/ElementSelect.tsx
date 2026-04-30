@@ -36,7 +36,7 @@ export default function ElementSelect(props: ElementSelectProps) {
     <Select
       {...rest}
       showSearch
-      placeholder="输入笔画搜索"
+      placeholder="输入元素名称或笔画搜索"
       options={名称与元素列表.map(([k, v]) => ({
         value: k,
         label: <ElementDisplay element={v} />,
@@ -45,10 +45,11 @@ export default function ElementSelect(props: ElementSelectProps) {
         if (option === undefined) return false;
         const 元素 = 强类型元素列表.get(option.value);
         if (!元素) return false;
-        if (元素 instanceof 字符) {
-          return (笔顺映射.get(元素) ?? []).some((s) => s.startsWith(input));
-        }
-        return option.value.includes(input);
+        const 匹配序列 =
+          元素 instanceof 字符 &&
+          笔顺映射.get(元素)?.some((s) => s.startsWith(input));
+        const 匹配元素 = option.value.includes(input);
+        return 匹配序列 || 匹配元素;
       }}
       filterSort={(a, b) => {
         const cha = 强类型元素列表.get(a.value);

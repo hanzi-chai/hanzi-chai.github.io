@@ -16,6 +16,8 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { 码位, 组装条目 } from "hanzi-chai";
+import { 反序列化, 序列化 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { isEqual, range, sumBy } from "lodash-es";
 import { Suspense, useState } from "react";
@@ -29,8 +31,6 @@ import { InlineRender } from "~/components/ComponentForm";
 import KeySelect from "~/components/KeySelect";
 import { MyProFormList } from "~/components/ResultSummary";
 import { CodePositionDisplay } from "~/components/Utils";
-import type { 码位, 组装条目 } from "hanzi-chai";
-import { 反序列化, 序列化 } from "hanzi-chai";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
 
 const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
@@ -58,7 +58,7 @@ const 分析原始重码 = (
     const 处理后元素序列: (码位 | undefined)[] = [];
     for (const i of range(maxLength)) {
       if (分析配置.position.includes(i)) {
-        const 码位 = 元素序列[i];
+        const 码位 = 元素序列.元素序列[i];
         const index = 合并组列表.findIndex((group) =>
           group.some((y) => isEqual(y, 码位)),
         );
@@ -70,7 +70,12 @@ const 分析原始重码 = (
       }
     }
     const summary = JSON.stringify(处理后元素序列);
-    反向映射.set(summary, (反向映射.get(summary) || []).concat(词));
+    反向映射.set(
+      summary,
+      (反向映射.get(summary) || []).concat(
+        词.map((c) => c.toString()).join(""),
+      ),
+    );
   }
   return 反向映射;
 };
@@ -227,7 +232,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const relevant = filterRelevant(assemblyResult, analyzer);
   for (const assembly of relevant) {
     const { 词, 元素序列 } = assembly;
-    元素序列.forEach((x, i) => {
+    元素序列.元素序列.forEach((x, i) => {
       const key = 序列化(x);
       if (!reverseMap.has(key))
         reverseMap.set(
@@ -297,7 +302,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
         columns={columns}
         size="small"
         rowKey="name"
-        pagination={{ pageSize: 20 }}
+        pagination={{ defaultPageSize: 20 }}
       />
     </>
   );

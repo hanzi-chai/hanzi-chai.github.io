@@ -471,9 +471,7 @@ export default function CharacterTable() {
           columns={columns}
           size="small"
           rowKey="unicode"
-          pagination={{
-            pageSize: 50,
-          }}
+          pagination={{ defaultPageSize: 50 }}
           className="max-w-[1920px]"
         />
         <Tour open={open} onClose={() => setOpen(false)} steps={steps} />

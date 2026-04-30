@@ -7,6 +7,7 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Flex, Popover, Select, Typography } from "antd";
+import type { 决策生成器规则, 安排描述 } from "hanzi-chai";
 import { sortBy } from "lodash-es";
 import { useState } from "react";
 import {
@@ -27,7 +28,6 @@ import {
 import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, ElementDisplay, NumberInput } from "~/components/Utils";
-import type { 决策生成器规则, 安排描述 } from "hanzi-chai";
 import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import ValueEditor from "./Value";
@@ -37,11 +37,13 @@ const ValueDescriptionEditor = ({
   onChange,
   allowVariables,
   allowPlaceholder,
+  disableDelete,
 }: {
   value: 安排描述;
   onChange: (newValue: 安排描述 | undefined) => void;
   allowVariables?: boolean;
   allowPlaceholder?: boolean;
+  disableDelete?: boolean;
 }) => {
   const currentCondition = value.condition ?? [];
   const updateCondition = (index: number, key: string, update: any) => {
@@ -81,7 +83,10 @@ const ValueDescriptionEditor = ({
         >
           添加条件
         </Button>
-        <DeleteButton onClick={() => onChange(undefined)} />
+        <DeleteButton
+          onClick={() => onChange(undefined)}
+          disabled={disableDelete}
+        />
       </Flex>
       {currentCondition.map((c, i) => (
         <Flex key={i} gap="small" align="center" className="pl-8">
@@ -237,7 +242,11 @@ const MappingGeneratorsForm = () => {
           <ProFormText name="regex" label="匹配元素" />
           <ProFormItem name="value" label="添加元素安排">
             {/* @ts-ignore */}
-            <ValueDescriptionEditor allowPlaceholder allowVariables />
+            <ValueDescriptionEditor
+              allowPlaceholder
+              allowVariables
+              disableDelete
+            />
           </ProFormItem>
         </ProFormGroup>
       </ProFormList>

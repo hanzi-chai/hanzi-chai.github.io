@@ -1,6 +1,12 @@
 import { ProForm, ProFormList } from "@ant-design/pro-components";
-import type { ComponentProps } from "react";
 import { Button, Flex, Form, Popover } from "antd";
+import {
+  type 基本分析,
+  type 复合体,
+  部件,
+  type 默认部件分析,
+} from "hanzi-chai";
+import type { ComponentProps } from "react";
 import {
   useAddAtom,
   useAtomValue,
@@ -10,12 +16,6 @@ import {
   原始字库原子,
   自定义拆分原子,
 } from "~/atoms";
-import {
-  type 基本分析,
-  type 复合体,
-  部件,
-  type 默认部件分析,
-} from "hanzi-chai";
 import { InlineRender } from "./ComponentForm";
 import ElementSelect from "./ElementSelect";
 import { BoxedElementWithTooltip, CharacterWithTooltip } from "./Utils";
@@ -205,6 +205,7 @@ export default function ResultSummary({
           )}
           <Popover
             title="自定义拆分"
+            trigger="click"
             content={
               <Customize
                 component={glyph}
