@@ -5,6 +5,7 @@ import {
   useAtomValue,
   useExcludeAtom,
   分析配置原子,
+  原始字库原子,
   弱字根原子,
   强字根原子,
 } from "~/atoms";
@@ -22,6 +23,7 @@ export default function PrioritizedRoots({
   const atom = variant === "strong" ? 强字根原子 : 弱字根原子;
   const exclude = useExcludeAtom(atom);
   const append = useAppendAtom(atom);
+  const 原始字库 = useAtomValue(原始字库原子);
   return (
     <>
       <Typography.Title level={4}>
@@ -30,7 +32,9 @@ export default function PrioritizedRoots({
       <Flex wrap="wrap" gap="small">
         {(list ?? []).map((x, i) => (
           <Space key={x}>
-            <BoxedElementWithTooltip element={x} />
+            <BoxedElementWithTooltip
+              element={原始字库.校验(x)?.character ?? x}
+            />
             <Button variant="text" color="danger" onClick={() => exclude(i)}>
               删除
             </Button>

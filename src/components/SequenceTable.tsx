@@ -1,5 +1,6 @@
 import { type ProColumns, ProTable } from "@ant-design/pro-components";
 import { Button, Flex, Input, Space } from "antd";
+import { 序列化, 总序列化, 识别符 } from "hanzi-chai";
 import { range } from "lodash-es";
 import type { ReactNode } from "react";
 import {
@@ -14,8 +15,7 @@ import {
   type 联合条目,
   联合结果原子,
 } from "~/atoms";
-import { 序列化, 总序列化, type 码位, 识别符 } from "hanzi-chai";
-import { exportTSV } from "~/utils";
+import { exportTSV, exportYAML } from "~/utils";
 import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
 import { CodePositionDisplay } from "./Utils";
 
@@ -35,7 +35,7 @@ const ExportAssembly = () => {
       onClick={() => {
         const tsv: string[][] = [];
         for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
-          const 元素序列字符串 = 总序列化(元素序列);
+          const 元素序列字符串 = 总序列化(元素序列.元素序列);
           const row = [
             词.map((c) => c.toString()).join(""),
             元素序列字符串,
@@ -56,28 +56,19 @@ const ExportAssembly = () => {
 };
 
 const ExportDynamicAssembly = () => {
-  const 组装结果 = useAtomValue(如动态组装结果与优先简码原子);
-  if (!组装结果.ok) {
-    return null;
-  }
+  const 组装结果 = useAtomValueUnwrapped(如动态组装结果与优先简码原子);
   return (
     <Button
       onClick={() => {
-        const tsv: string[][] = [];
-        for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果.value) {
-          const 元素序列字符串 = 元素序列.map(总序列化).join("　");
-          const row = [
-            词.map((c) => c.toString()).join(""),
-            元素序列字符串,
-            频率.toString(),
-          ];
-          if (简码长度 !== undefined) {
-            tsv.push([...row, 简码长度.toString()]);
-          } else {
-            tsv.push(row);
-          }
-        }
-        exportTSV(tsv, "elements.txt");
+        const result = 组装结果.map(({ 词, 元素序列, 频率, 简码长度 }) => {
+          return {
+            词: 词.map((c) => c.toString()).join(""),
+            元素序列: [...元素序列],
+            频率,
+            简码长度,
+          };
+        });
+        exportYAML(result, "elements");
       }}
     >
       导出动态元素序列表
@@ -181,15 +172,15 @@ export default function SequenceTable() {
       render: (_, record) => {
         return (
           <Space>
-            {record.元素序列.map((element, index) => (
+            {record.元素序列.元素序列.map((element, index) => (
               <CodePositionDisplay key={index} element={element} />
             ))}
           </Space>
         );
       },
       sorter: (a, b) => {
-        const ahash = 总序列化(a.元素序列);
-        const bhash = 总序列化(b.元素序列);
+        const ahash = 总序列化(a.元素序列.元素序列);
+        const bhash = 总序列化(b.元素序列.元素序列);
         return ahash.localeCompare(bhash);
       },
       width: 128,
@@ -200,7 +191,7 @@ export default function SequenceTable() {
   for (const i of Array(最大码长).keys()) {
     const allValues: Record<string, ReactNode> = {};
     for (const { 元素序列 } of dataSource) {
-      const element = 元素序列[i];
+      const element = 元素序列.元素序列[i];
       if (element !== undefined) {
         const text = 序列化(element);
         allValues[text] = <CodePositionDisplay element={element} />;
@@ -209,19 +200,19 @@ export default function SequenceTable() {
     columns.push({
       title: `元素 ${i + 1}`,
       render: (_, record) => {
-        const element = record.元素序列[i];
+        const element = record.元素序列.元素序列[i];
         return element ? <CodePositionDisplay element={element} /> : null;
       },
       sorter: (a, b) => {
-        const ahash = 序列化(a.元素序列[i] ?? "");
-        const bhash = 序列化(b.元素序列[i] ?? "");
+        const ahash = 序列化(a.元素序列.元素序列[i] ?? "");
+        const bhash = 序列化(b.元素序列.元素序列[i] ?? "");
         return ahash.localeCompare(bhash);
       },
       sortDirections: ["ascend", "descend"],
       width: 96,
       filters: true,
       onFilter: (value, record) => {
-        const element = record.元素序列[i];
+        const element = record.元素序列.元素序列[i];
         if (element === undefined) {
           return false;
         }

@@ -1,8 +1,3 @@
-import { atom } from "jotai";
-import { MiniDb } from "jotai-minidb";
-import { sortBy } from "lodash-es";
-import pako from "pako";
-import type { Metric } from "~/components/MetricTable";
 import type {
   元素识别结果,
   原始字库数据,
@@ -19,6 +14,7 @@ import type {
 } from "hanzi-chai";
 import {
   ok,
+  优先表,
   分析拼音,
   动态组装,
   原始字库,
@@ -39,6 +35,11 @@ import {
   默认分类器,
   默认拼音分析器,
 } from "hanzi-chai";
+import { atom } from "jotai";
+import { MiniDb } from "jotai-minidb";
+import { sortBy } from "lodash-es";
+import pako from "pako";
+import type { Metric } from "~/components/MetricTable";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
 import { getDataPath } from "~/version";
 import {
@@ -455,7 +456,7 @@ export const 如带归并组装结果原子 = atom(async (get) => {
   const 带归并组装结果: 组装条目[] = [];
   for (const 条目 of 如组装结果.value) {
     const 新元素序列: 码位[] = [];
-    for (const 码位 of 条目.元素序列) {
+    for (const 码位 of 条目.元素序列.元素序列) {
       if (typeof 码位 === "string") {
         新元素序列.push(码位);
       } else {
@@ -482,7 +483,7 @@ export const 如带归并组装结果原子 = atom(async (get) => {
         新元素序列.push(当前码位);
       }
     }
-    带归并组装结果.push({ ...条目, 元素序列: 新元素序列 });
+    带归并组装结果.push({ ...条目, 元素序列: { 元素序列: 新元素序列 } });
   }
   console.log(如组装结果.value.length, 带归并组装结果.length);
   return ok(带归并组装结果);
@@ -547,11 +548,14 @@ export const 如前端输入原子 = atom(async (get) => {
 
   const 序列化词列表: any[] = [];
   词列表.value.forEach((x) => {
-    const a = x.元素序列 as any;
+    const a = x.元素序列;
     序列化词列表.push({
       ...x,
       词: x.词.map((v) => v.toString()).join(""),
-      元素序列: Array.isArray(a[0]) ? a.map(总序列化).join("　") : 总序列化(a),
+      元素序列:
+        a instanceof 优先表
+          ? [...a].map((z) => 总序列化(z.元素序列)).join("　")
+          : 总序列化(a.元素序列),
     });
   });
 

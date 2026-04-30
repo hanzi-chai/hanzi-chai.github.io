@@ -1,8 +1,9 @@
+import { isEqual } from "lodash-es";
 import { 图形盒子 } from "./affine.js";
 import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 部件 } from "./component.js";
 import { 复合体 } from "./compound.js";
-import type { 决策, 决策空间, 分析配置, 安排 } from "./config.js";
+import type { 决策, 决策空间, 分析配置, 安排, 条件 } from "./config.js";
 import type { 复合体数据 } from "./data.js";
 import { 二笔, 单笔, 识别元素 } from "./element.js";
 import type { 原始字库 } from "./primitive.js";
@@ -28,6 +29,16 @@ interface 基本部件分析 {
   部件: 部件;
 }
 
+export type 带条件<T extends object> = T & {
+  条件列表: 条件[];
+};
+
+export const 存在 = (x: 字根): 条件 => ({
+  element: x.获取名称(),
+  op: "不是" as const,
+  value: null,
+});
+
 interface 基本复合体分析 {
   类型: "复合体";
   字根序列: 字根[];
@@ -48,7 +59,7 @@ interface 动态字形分析结果<
   部件分析 extends 基本部件分析 = 基本部件分析,
   复合体分析 extends 基本复合体分析 = 基本复合体分析,
 > {
-  分析结果: Map<字符, (部件分析 | 复合体分析)[][]>;
+  分析结果: Map<字符, (优先表<部件分析> | 优先表<复合体分析>)[]>;
   字根部件列表: 部件[];
 }
 
@@ -66,6 +77,58 @@ interface 字形分析配置 {
   分类器: 分类器; // 已经填充过默认值
   部件字根列表: 部件[];
   复合体字根映射: Map<复合体, 部件>;
+}
+
+export class 优先表<T extends object> {
+  constructor(private 列表: 带条件<T>[]) {}
+
+  [Symbol.iterator]() {
+    return this.列表[Symbol.iterator]();
+  }
+}
+
+export function 贝叶斯推断<T extends object, U extends object>(
+  优先表列表: 带条件<T>[][],
+  reducer: (a: T[]) => U,
+): 带条件<U>[] {
+  const recurse = (l: 带条件<T>[][]): 带条件<{ array: T[] }>[] => {
+    if (l.length === 1) return l[0]!.map((x) => ({ ...x, array: [x] }));
+    const 前一个表 = recurse(l.slice(0, -1));
+    const 当前表 = l.at(-1)!;
+    const 结果列表: 带条件<{ array: T[] }>[] = [];
+    for (const 前一个项 of 前一个表) {
+      for (const 当前项 of 当前表) {
+        const 合并项 = { array: [...前一个项.array, 当前项] };
+        if (蕴含(前一个项.条件列表, 当前项.条件列表)) {
+          结果列表.push({ ...合并项, 条件列表: 前一个项.条件列表 });
+          break;
+        } else {
+          const 扩充条件列表 = [...前一个项.条件列表];
+          for (const 条件 of 当前项.条件列表) {
+            if (!前一个项.条件列表.some((c) => isEqual(c, 条件))) {
+              扩充条件列表.push(条件);
+            }
+          }
+          结果列表.push({ ...合并项, 条件列表: 扩充条件列表 });
+        }
+      }
+    }
+    return 结果列表;
+  };
+  const 结果列表 = recurse(优先表列表).map((x) => ({
+    ...reducer(x.array),
+    条件列表: x.条件列表,
+  }));
+  return 结果列表;
+}
+
+function 蕴含(已有列表: 条件[], 目标列表: 条件[]): boolean {
+  for (const 目标 of 目标列表) {
+    if (!已有列表.some((条件) => isEqual(条件, 目标))) {
+      return false;
+    }
+  }
+  return true;
 }
 
 class 字库 {
@@ -303,16 +366,19 @@ class 字库 {
     const 分析配置或错误 = this.准备分析(base, 汉字集合, 原始字库);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
-    const 动态部件分析结果 = new Map<部件, 基本部件分析[]>();
+    const 动态部件分析结果 = new Map<部件, 优先表<基本部件分析>>();
     for (const 部件 of 分析配置.待分析部件集合) {
       const 分析 = 分析配置.部件分析器.动态分析(部件);
       if (!分析.ok) return 分析;
       动态部件分析结果.set(部件, 分析.value);
     }
     分析配置.复合体分析器.动态部件分析结果 = 动态部件分析结果;
-    const 分析结果 = new Map<字符, 基本分析[][]>();
+    const 分析结果 = new Map<
+      字符,
+      (优先表<基本部件分析> | 优先表<基本复合体分析>)[]
+    >();
     for (const 字符 of 汉字集合) {
-      const 结果列表: 基本分析[][] = [];
+      const 结果列表: (优先表<基本部件分析> | 优先表<基本复合体分析>)[] = [];
       const 字形列表 = this.查询字形(字符) ?? [];
       for (const 字形 of 字形列表) {
         if (字形 instanceof 部件) {

@@ -141,10 +141,12 @@ export function 是归并(value: 广义安排): value is { element: string } {
 
 export type 决策 = Record<元素, 非空安排>;
 
+export type 条件 = { element: string; op: "是" | "不是"; value: 安排 };
+
 export interface 安排描述 {
   value: 广义安排;
   score: number;
-  condition?: { element: string; op: "是" | "不是"; value: 安排 }[];
+  condition?: 条件[];
 }
 
 export type 决策空间 = Record<元素, 安排描述[]>;

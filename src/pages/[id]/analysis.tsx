@@ -14,6 +14,19 @@ import {
   Statistic,
   Switch,
 } from "antd";
+import {
+  优先表,
+  type 动态字形分析结果,
+  单笔,
+  type 基本分析,
+  type 字形分析结果,
+  type 字根,
+  type 字符,
+  获取注册表,
+  部件,
+  默认分类器,
+  type 默认部件分析,
+} from "hanzi-chai";
 import type { ItemType } from "rc-collapse/es/interface";
 import { Suspense, useState } from "react";
 import {
@@ -25,10 +38,9 @@ import {
   别名显示原子,
   动态分析原子,
   动态自定义拆分原子,
-  原始字库数据原子,
+  原始字库原子,
   复合体分析器原子,
   如动态字形分析结果原子,
-  如字库原子,
   如字形分析结果原子,
   如笔顺映射原子,
   汉字集合原子,
@@ -40,16 +52,6 @@ import Degenerator from "~/components/Degenerator";
 import ResultDetail from "~/components/ResultDetail";
 import ResultSummary from "~/components/ResultSummary";
 import Selector from "~/components/Selector";
-import {
-  type 动态字形分析结果,
-  单笔,
-  type 基本分析,
-  type 字形分析结果,
-  type 字符,
-  获取注册表,
-  默认分类器,
-  type 默认部件分析,
-} from "hanzi-chai";
 import {
   exportTSV,
   useChaifenTitle,
@@ -63,15 +65,28 @@ const 导出字形分析结果 = (
   display: (s: 字符) => string,
 ) => {
   const { 分析结果 } = a;
-  const tsv = [...characters].map((char) => {
-    const analysis = (分析结果.get(char) ?? []).flat();
-    return [
-      char.toString(),
-      analysis
-        .map((x) => x.字根序列.map((z) => z.获取名称()).join(" "))
-        .join("　"),
-    ];
-  });
+  const tsv: string[][] = [];
+  const 序列化 = (l: 字根[]) =>
+    l
+      .map((z) => (z instanceof 部件 ? display(z.字符) : z.获取名称()))
+      .join(" ");
+  for (const char of characters) {
+    const analysis = 分析结果.get(char) ?? [];
+    const head = [char.toString()];
+    for (const 字形分析 of analysis) {
+      if (字形分析 instanceof 优先表) {
+        tsv.push([
+          ...head,
+          // 动态分析以全角空格隔开
+          [...字形分析]
+            .map((x) => 序列化(x.字根序列))
+            .join("　"),
+        ]);
+      } else {
+        tsv.push([...head, 序列化(字形分析.字根序列)]);
+      }
+    }
+  }
   exportTSV(tsv, "拆分结果.txt");
 };
 
@@ -120,7 +135,7 @@ const ConfigureRules = () => {
 
 const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
-  const 原始字库 = useAtomValue(原始字库数据原子);
+  const 原始字库 = useAtomValue(原始字库原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
   const { 分析结果 } = 字形分析结果;
@@ -148,7 +163,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     const 字符串 = 字.toString();
     if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])
       continue;
-    if (!过滤器.过滤(字, 原始字库[字符串]!, 笔顺映射.get(字) ?? "")) continue;
+    if (!过滤器.过滤(字, 原始字库.查询(字)!, 笔顺映射.get(字) ?? "")) continue;
     if (是必要字根(字符串)) continue;
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
