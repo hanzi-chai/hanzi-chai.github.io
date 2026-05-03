@@ -1,5 +1,6 @@
 import { range, sortBy } from "lodash-es";
 import type { 分类器, 笔画名称 } from "./classifier.js";
+import type { 冰雪飞花部件分析 } from "./component.js";
 import {
   type 张码部件分析,
   计算张码补码,
@@ -8,11 +9,11 @@ import {
   type 默认部件分析,
 } from "./component.js";
 import type { 笔画块, 结构描述字符 } from "./data.js";
-import { 二笔 } from "./element.js";
-import type { 基本部件分析, 条件 } from "./main.js";
+import { 二笔, 单笔 } from "./element.js";
 import {
   优先表,
   type 基本复合体分析,
+  type 基本部件分析,
   type 字形,
   type 字形分析配置,
   type 字根,
@@ -157,14 +158,15 @@ abstract class 复合体分析器<
     for (const { index, strokes } of 笔顺) {
       const 剩余部分 = 部分结果列表[index];
       if (剩余部分 === undefined) continue; // 忽略无效部分
+      let 剩余部分字根序列 = [...剩余部分.字根序列];
       const 部件分析 = 剩余部分.部件分析;
       if (
         strokes === 0 ||
         部件分析 === undefined ||
         !("当前拆分方式" in 部件分析)
       ) {
-        字根序列.push(...剩余部分.字根序列);
-        剩余部分.字根序列 = [];
+        字根序列.push(...剩余部分字根序列);
+        剩余部分字根序列 = [];
       } else {
         const { 当前拆分方式 } = 部件分析 as any as 默认部件分析;
         const toTake = 当前拆分方式.拆分方式.filter(
@@ -172,8 +174,8 @@ abstract class 复合体分析器<
             x.笔画索引[0]! >= 已取笔画数列表[index]! &&
             x.笔画索引[0]! <= 已取笔画数列表[index]! + strokes - 1,
         ).length;
-        字根序列.push(...剩余部分.字根序列.slice(0, toTake));
-        剩余部分.字根序列 = 剩余部分.字根序列.slice(toTake);
+        字根序列.push(...剩余部分字根序列.slice(0, toTake));
+        剩余部分字根序列 = 剩余部分字根序列.slice(toTake);
         已取笔画数列表[index]! += strokes;
       }
     }
@@ -617,6 +619,131 @@ class 逸码复合体分析器 extends 复合体分析器<逸码部件分析> {
   }
 }
 
+interface 冰雪飞花复合体分析 extends 基本复合体分析 {
+  部首?: 字根;
+  余部: 字根[];
+}
+
+class 冰雪飞花复合体分析器 extends 复合体分析器<
+  冰雪飞花部件分析,
+  冰雪飞花复合体分析
+> {
+  static readonly type = "冰雪飞花";
+  static readonly 弱字根列表: string[] = ["又"];
+
+  取全集合首根(字形: 字形): [字根, boolean] {
+    if (是部件(字形)) {
+      const 部件分析结果 = this.查找部件分析结果(字形);
+      if (
+        部件分析结果 === undefined ||
+        部件分析结果.全集合字根序列.length === 0
+      )
+        throw new Error(`部件 ${字形.字符} 没有分析结果`);
+      return [
+        部件分析结果.全集合字根序列[0]!,
+        部件分析结果.全集合字根序列.length === 1,
+      ];
+    } else {
+      const 字根 = this.配置.复合体字根映射.get(字形);
+      if (字根 === undefined) {
+        return this.取全集合首根(字形.按首笔排序部分()[0]!);
+      }
+      return [字根, true];
+    }
+  }
+
+  取小集合首根(字形: 字形): 字根 {
+    if (是部件(字形)) {
+      const 部件分析结果 = this.查找部件分析结果(字形);
+      if (部件分析结果 === undefined || 部件分析结果.字根序列.length === 0)
+        throw new Error(`部件 ${字形.字符} 没有分析结果`);
+      return 部件分析结果.字根序列[0]!;
+    } else {
+      const 字根 = this.配置.复合体字根映射.get(字形);
+      if (字根 === undefined) {
+        return this.取小集合首根(字形.按首笔排序部分()[0]!);
+      }
+      return 字根;
+    }
+  }
+
+  取余部(字形列表: 字形[]): 字根[] {
+    if (字形列表.length >= 2) {
+      const [第一部, 第二部] = 字形列表;
+      const 第一部字根 = this.取小集合首根(第一部!);
+      const 第二部字根 = this.取小集合首根(第二部!);
+      return [第一部字根, 第二部字根];
+    } else if (字形列表.length === 1) {
+      const 字形 = 字形列表[0]!;
+      if (是部件(字形)) {
+        const 部件分析结果 = this.查找部件分析结果(字形);
+        if (部件分析结果 === undefined || 部件分析结果.字根序列.length === 0)
+          throw new Error(`部件 ${字形.字符} 没有分析结果`);
+        return 部件分析结果.字根序列.slice(0, 2);
+      } else {
+        return this.取余部(字形.按首笔排序部分());
+      }
+    } else {
+      throw new Error("没有余部");
+    }
+  }
+
+  分析(复合体: 复合体) {
+    const 分析: 冰雪飞花复合体分析 = {
+      类型: "复合体",
+      复合体,
+      字根序列: [],
+      余部: [],
+    };
+    const 字根 = this.配置.复合体字根映射.get(复合体);
+    if (字根 !== undefined) {
+      const 部件分析结果 = this.查找部件分析结果(字根);
+      if (部件分析结果 === undefined || 部件分析结果.字根序列.length === 0)
+        throw new Error(`部件 ${字根.获取名称()} 没有分析结果`);
+      分析.余部.push(...部件分析结果.字根序列);
+    } else {
+      const 按首笔排序列表 = 复合体.按首笔排序部分();
+      const 首部 = 按首笔排序列表[0]!;
+      const 末部 = 按首笔排序列表.at(-1)!;
+      const [首部字根, 首部是单字根] = this.取全集合首根(首部);
+      const [末部字根, 末部是单字根] = this.取全集合首根(末部);
+      if (首部是单字根 && 末部是单字根) {
+        // 包围结构，优先取外部
+        if (/[⿴⿵⿶⿷⿸⿹⿺⿼⿽⿻]/.test(复合体.结构描述字符)) {
+          分析.部首 = this.取全集合首根(复合体.部分列表[0]!)[0];
+          分析.余部.push(...this.取余部(复合体.部分列表.slice(1)));
+        } else {
+          const 首部弱指标 = 冰雪飞花复合体分析器.弱字根列表.indexOf(
+            首部字根.获取名称(),
+          );
+          const 末部弱指标 = 冰雪飞花复合体分析器.弱字根列表.indexOf(
+            末部字根.获取名称(),
+          );
+          if (首部弱指标 <= 末部弱指标) {
+            分析.部首 = 首部字根;
+            分析.余部.push(...this.取余部(按首笔排序列表.slice(1)));
+          } else {
+            分析.部首 = 末部字根;
+            分析.余部.push(...this.取余部(按首笔排序列表.slice(0, -1)));
+          }
+        }
+      } else if (首部是单字根) {
+        分析.部首 = 首部字根;
+        分析.余部.push(...this.取余部(按首笔排序列表.slice(1)));
+      } else if (末部是单字根) {
+        分析.部首 = 末部字根;
+        分析.余部.push(...this.取余部(按首笔排序列表.slice(0, -1)));
+      } else {
+        分析.部首 = 首部字根;
+        分析.余部.push(...this.取余部(按首笔排序列表.slice(1)));
+      }
+    }
+    if (分析.部首) 分析.字根序列.push(分析.部首);
+    分析.字根序列.push(...分析.余部);
+    return ok(分析);
+  }
+}
+
 export {
   二笔复合体分析器,
   复合体,
@@ -625,107 +752,7 @@ export {
   真码复合体分析器,
   逸码复合体分析器,
   首右复合体分析器,
+  冰雪飞花复合体分析器,
   默认复合体分析器,
 };
 export type { 复合体分析器, 星空键道复合体分析 };
-
-// const snow2Serializer = (operandResults, glyph) => {
-//   const order =
-//     glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
-//   const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
-//     order.findIndex((b) => b.index === i),
-//   ).map((i) => operandResults[i]!);
-//   const first = sortedOperandResults[0]!;
-//   const second = sortedOperandResults[1]!;
-//   const marker =
-//     first.full.length == 1
-//       ? second.full.length == 1
-//         ? "q"
-//         : "e"
-//       : second.full.length == 1
-//         ? "w"
-//         : "r";
-//   const full = [first.字根序列[0]!, second.字根序列[0]!];
-//   const sequence = [...full, marker];
-//   return {
-//     字根序列: sequence,
-//     full,
-//     结构符: glyph.operator,
-//     部分结果: operandResults,
-//   };
-// };
-
-// const feihuaSerializer = (operandResults, glyph, config) => {
-//   const order =
-//     glyph.order ?? glyph.operandList.map((_, i) => ({ index: i, strokes: 0 }));
-//   const sortedOperandResults = sortBy(range(operandResults.length), (i) =>
-//     order.findIndex((b) => b.index === i),
-//   ).map((i) => operandResults[i]!);
-//   const sequence: string[] = [];
-//   const first = sortedOperandResults[0]!;
-//   const last = sortedOperandResults.at(-1)!;
-//   const handleResidual = (sequence: string[], parts: 分析[]) => {
-//     if (parts.length > 1) {
-//       for (const x of parts) {
-//         sequence.push(...x.full2[0]!);
-//       }
-//     } else {
-//       const part = parts[0]!;
-//       if ("operandResults" in part) {
-//         for (const x of part.部分结果) {
-//           sequence.push(...x.full2[0]!);
-//         }
-//       } else {
-//         sequence.push(...part.full2);
-//       }
-//     }
-//   };
-//   if (
-//     /[⿴⿵⿶⿷⿸⿹⿺⿼⿽⿻]/.test(glyph.operator) &&
-//     "strokes" in operandResults[0]!
-//   ) {
-//     sequence.push(operandResults[0]!.full[0]!);
-//     handleResidual(sequence, operandResults.slice(1));
-//   } else if (
-//     first.full.length === 1 &&
-//     /[又]/.test(first.full[0]!) &&
-//     last.full.length === 1
-//   ) {
-//     sequence.push(last.full[0]!);
-//     handleResidual(sequence, sortedOperandResults.slice(0, -1));
-//   } else if (first.full.length !== 1 && last.full.length === 1) {
-//     sequence.push(last.full[0]!);
-//     handleResidual(sequence, sortedOperandResults.slice(0, -1));
-//   } else {
-//     sequence.push(first.full[0]!);
-//     handleResidual(sequence, sortedOperandResults.slice(1));
-//   }
-//   const full = sequentialSerializer(operandResults, glyph, config).full;
-//   const backups = operandResults.map((x) => x.full);
-//   operandResults.forEach((part) => {
-//     part.full = [...part.full2];
-//   });
-//   const full2 = sequentialSerializer(operandResults, glyph, config).full;
-//   operandResults.forEach((part, i) => {
-//     part.full = backups[i];
-//   });
-//   return {
-//     字根序列: sequence,
-//     full,
-//     full2,
-//     结构符: glyph.operator,
-//     部分结果: operandResults,
-//   };
-// };
-// if (analysis.serializer === "feihua") {
-//   for (const root of roots.keys()) {
-//     // e43d: 全字头、e0e3: 乔字底、e0ba: 亦字底无八、e439: 见二、e431: 聿三、e020: 负字头、e078：卧人、e03e：尚字头、e42d：学字头、e07f：荒字底、e02a：周字框、e087：木无十、f001: 龰字底、e41a：三竖、e001: 两竖、e17e: 西字心
-//     if (
-//       !/[12345二\ue001三\ue41a口八丷\ue087宀日人\ue43d\uf001十乂亠厶冂\ue439\ue02a儿\ue17e\ue0e3\ue0ba大小\ue03e\ue442川彐\ue431\ue020\ue078\ue42d\ue07f]/.test(
-//         root,
-//       )
-//     ) {
-//       optionalRoots.add(root);
-//     }
-//   }
-// }

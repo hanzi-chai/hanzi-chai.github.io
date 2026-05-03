@@ -137,7 +137,7 @@ export const exportYAML = (
   filename: string,
   flowLevel: number = 4,
 ) => {
-  const unsafeContent = dump(config, { flowLevel });
+  const unsafeContent = dump(config, { flowLevel, noRefs: true });
   processExport(unsafeContent, `${filename}.yaml`);
 };
 

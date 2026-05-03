@@ -12,6 +12,7 @@ import {
   Tooltip,
   Upload,
 } from "antd";
+import { 二笔, type 元素识别结果, 单笔, 字符, type 码位 } from "hanzi-chai";
 import type { ComponentProps, MouseEventHandler } from "react";
 import {
   useAtomValue,
@@ -21,7 +22,6 @@ import {
   强类型元素列表原子,
   键盘原子,
 } from "~/atoms";
-import { 二笔, type 元素识别结果, 单笔, 字符, type 码位 } from "hanzi-chai";
 import BorderItem from "./BorderItem";
 import { StrokesView } from "./GlyphView";
 import Item from "./Item";
@@ -137,8 +137,7 @@ export const ElementDisplay = ({
 }: {
   element: 元素识别结果;
   hideTypeNames?: boolean;
-  className?: string;
-}) => {
+} & ComponentProps<"span">) => {
   if (typeof element === "string") {
     const text = hideTypeNames ? element.split("-").at(-1)! : element;
     return <span {...rest}>{text}</span>;
@@ -158,12 +157,12 @@ export const CharacterDisplay = ({
   ...rest
 }: {
   character: 字符;
-}) => {
+} & ComponentProps<"span">) => {
   const 私用区图形 = useAtomValueUnwrapped(如私用区图形原子);
   const glyph = 私用区图形.get(character);
   if (!character.是私用区() || glyph === undefined) {
     return (
-      <span {...rest} className="whitespace-nowrap">
+      <span {...rest} className={`whitespace-nowrap ${rest.className ?? ""}`}>
         {character.toString()}
       </span>
     );

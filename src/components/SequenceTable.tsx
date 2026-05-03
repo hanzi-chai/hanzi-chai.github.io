@@ -35,21 +35,15 @@ const ExportAssembly = () => {
   return (
     <Button
       onClick={() => {
-        const tsv: string[][] = [];
-        for (const { 词, 元素序列, 频率, 简码长度 } of 组装结果) {
-          const 元素序列字符串 = 总序列化(元素序列.元素序列);
-          const row = [
-            词.map((c) => c.toString()).join(""),
-            元素序列字符串,
-            频率.toString(),
-          ];
-          if (简码长度 !== undefined) {
-            tsv.push([...row, 简码长度.toString()]);
-          } else {
-            tsv.push(row);
-          }
-        }
-        exportTSV(tsv, "elements.txt");
+        const result = 组装结果.map(({ 词, 元素序列, 频率, 简码长度 }) => {
+          return {
+            词: 词.map((c) => c.toString()).join(""),
+            元素序列: 元素序列.元素序列,
+            频率,
+            简码长度,
+          };
+        });
+        exportYAML(result, "elements", 1);
       }}
     >
       导出元素序列表
@@ -65,12 +59,12 @@ const ExportDynamicAssembly = () => {
         const result = 组装结果.map(({ 词, 元素序列, 频率, 简码长度 }) => {
           return {
             词: 词.map((c) => c.toString()).join(""),
-            元素序列: [...元素序列],
+            全部元素序列: [...元素序列],
             频率,
             简码长度,
           };
         });
-        exportYAML(result, "elements");
+        exportYAML(result, "elements", 1);
       }}
     >
       导出动态元素序列表

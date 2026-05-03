@@ -7,7 +7,7 @@ import type {
   运算符,
   键盘配置,
 } from "./config.js";
-import type { 结构描述字符 } from "./main.js";
+import type { 结构描述字符 } from "./data.js";
 import type { 字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 import { 展开决策, 计算当前或潜在长度 } from "./utils.js";

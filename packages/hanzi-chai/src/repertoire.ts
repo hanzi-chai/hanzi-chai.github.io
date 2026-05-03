@@ -99,11 +99,11 @@ export function 贝叶斯推断<T extends object, U extends object>(
     for (const 前一个项 of 前一个表) {
       for (const 当前项 of 当前表) {
         const 合并项 = { array: [...前一个项.array, 当前项] };
+        const 扩充条件列表 = [...前一个项.条件列表];
         if (蕴含(前一个项.条件列表, 当前项.条件列表)) {
-          结果列表.push({ ...合并项, 条件列表: 前一个项.条件列表 });
+          结果列表.push({ ...合并项, 条件列表: 扩充条件列表 });
           break;
         } else {
-          const 扩充条件列表 = [...前一个项.条件列表];
           for (const 条件 of 当前项.条件列表) {
             if (!前一个项.条件列表.some((c) => isEqual(c, 条件))) {
               扩充条件列表.push(条件);
@@ -287,6 +287,7 @@ class 字库 {
       部件分析器,
       复合体分析器,
       字根部件列表: configValue.部件字根列表,
+      复合体字根映射: configValue.复合体字根映射,
     });
   }
 
@@ -309,6 +310,14 @@ class 字库 {
       const 分析 = 分析配置.部件分析器.分析(部件);
       if (!分析.ok) return 分析;
       部件分析结果.set(部件, 分析.value);
+    }
+    // 对冰雪飞花，把从复合体转出的部件也分析一下
+    if (base.分析配置.component_analyzer === "冰雪飞花") {
+      for (const [_, 部件] of 分析配置.复合体字根映射) {
+        const 分析 = 分析配置.部件分析器.分析(部件);
+        if (!分析.ok) return 分析;
+        部件分析结果.set(部件, 分析.value);
+      }
     }
     分析配置.复合体分析器.部件分析结果 = 部件分析结果;
     const 分析结果 = new Map<字符, 基本分析[]>();
@@ -371,10 +380,18 @@ class 字库 {
       字符,
       (优先表<基本部件分析> | 优先表<基本复合体分析>)[]
     >();
+    const 当前标签集合 = new Set(base.字形来源列表);
     for (const 字符 of 汉字集合) {
       const 结果列表: (优先表<基本部件分析> | 优先表<基本复合体分析>)[] = [];
       const 字形列表 = this.查询字形(字符) ?? [];
+      const 已存在标签集合 = new Set<源标签>();
       for (const 字形 of 字形列表) {
+        const 剩余有效标签集合 = 字形.标签集合.difference(已存在标签集合);
+        const 选取 =
+          字形.用户自定义 ||
+          剩余有效标签集合.intersection(当前标签集合).size > 0;
+        if (!选取) continue;
+        [...字形.标签集合].map((x) => 已存在标签集合.add(x));
         if (字形 instanceof 部件) {
           const 分析 = 动态部件分析结果.get(字形)!;
           结果列表.push(分析);

@@ -189,7 +189,7 @@ export const ElementLabelWrapper = ({
   <span
     className={`items-baseline cursor-pointer leading-none py-[8px] px-0 rounded-[4px] hover:bg-[#ddd] ${
       $shouldHighlight
-        ? "bg-[#91caff] [outline:3px_solid_#1677ff]"
+        ? "bg-[#91caff] ![outline:3px_solid_#1677ff]"
         : "bg-transparent outline-none"
     } ${className ?? ""}`}
     {...props}
@@ -203,7 +203,6 @@ export const AdjustableElementGroup = ({
 }: 名称与安排 & { displayMode?: boolean }) => {
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
-  const normalize = (s: string) => (displayMode ? s.split("-").at(-1)! : s);
   const currentElement = useAtomValue(当前元素原子);
   const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   const mappingSpace = useAtomValue(决策空间原子);
@@ -232,7 +231,7 @@ export const AdjustableElementGroup = ({
           />
         }
       >
-        <ElementLabelWrapper $shouldHighlight={name === currentElement}>
+        <ElementLabelWrapper $shouldHighlight={element === currentElement}>
           <ElementDisplay
             element={element}
             hideTypeNames={displayMode}

@@ -2,7 +2,8 @@ import { bisectLeft, bisectRight } from "d3-array";
 import { isEqual, range } from "lodash-es";
 import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
-import type { 条件, 退化配置 } from "./config.js";
+import type { 安排, 条件, 退化配置 } from "./config.js";
+import { 是归并 } from "./config.js";
 import type { 矢量图形数据, 结构描述字符 } from "./data.js";
 import { 二笔, 单笔 } from "./element.js";
 import { 排序, 是共线, 是小于 } from "./math.js";
@@ -479,18 +480,18 @@ class 默认部件分析器 extends 部件分析器<默认部件分析> {
     const 结果列表 = 基本分析.全部拆分方式
       .filter((x) => x.可用)
       .map((x) => {
-        const 可选字根集 = this.配置.可选字根.intersection(
-          new Set(x.拆分方式.map((y) => y.字根)),
-        );
+        const 字根序列 = x.拆分方式.map((y) => y.字根);
+        const 可选字根集 = this.配置.可选字根.intersection(new Set(字根序列));
         const 条件列表: 条件[] = [...可选字根集].map(存在);
         return {
           ...基本分析,
           当前拆分方式: x,
-          字根序列: x.拆分方式.map((y) => y.字根),
+          字根序列,
           条件列表,
         };
       });
-    return ok(new 优先表(动态定制化分析(部件, 结果列表, this.配置)));
+    const 定制化结果列表 = 动态定制化分析(部件, 结果列表, this.配置);
+    return ok(new 优先表(定制化结果列表));
   }
 }
 
@@ -673,6 +674,8 @@ function 动态定制化分析<T extends 基本部件分析 | 默认部件分析
       config.部件字根列表,
       单笔列表,
     );
+    const 可选字根集 = config.可选字根.intersection(new Set(恢复后的字根序列));
+    const 条件列表: 条件[] = [...可选字根集].map(存在);
     const 分析 = 部件分析列表.find((x) =>
       isEqual(
         x.字根序列.map((y) => y.获取名称()),
@@ -683,7 +686,12 @@ function 动态定制化分析<T extends 基本部件分析 | 默认部件分析
       新分析列表.push(分析);
     } else {
       // 如果找不到完全匹配的分析，就用定制化分析覆盖当前分析
-      const 假装分析 = { ...部件分析列表[0]!, 字根序列: 恢复后的字根序列 };
+      const 假装分析 = {
+        ...部件分析列表[0]!,
+        字根序列: 恢复后的字根序列,
+        条件列表,
+        当前拆分方式: [],
+      };
       新分析列表.push(假装分析);
     }
   }
@@ -790,10 +798,139 @@ class 逸码部件分析器 extends 部件分析器<逸码部件分析> {
   }
 }
 
+interface 冰雪飞花部件分析 extends 默认部件分析 {
+  全集合当前拆分方式: 拆分方式与评价;
+  全集合字根序列: 字根[];
+}
+
+class 冰雪飞花部件分析器 extends 部件分析器<冰雪飞花部件分析> {
+  static readonly type = "冰雪飞花";
+  private 字根名称映射 = new Map<string, 字根>();
+  private 字根按键 = new Map<字根, string>();
+  private 可选字根备份 = new Set<字根>();
+
+  constructor(private 配置: 字形分析配置) {
+    super();
+    this.可选字根备份 = new Set(配置.可选字根);
+    this.字根名称映射 = new Map<string, 字根>();
+    for (const 字根 of 配置.字根决策.keys()) {
+      this.字根名称映射.set(字根.获取名称(), 字根);
+      // e001: 两竖、e41a：三竖、
+      // e43d: 全字头、f001: 龰字底、
+      // e0e3: 乔字底、e0ba: 亦字底无八、e439: 见二、e431: 聿三、e020: 负字头、e078：卧人、e03e：尚字头、e42d：学字头、e07f：荒字底、e02a：周字框、e087：木无十、e17e: 西字心
+      if (
+        !/[12345二\ue001三\ue41a口八丷\ue087宀日人\ue43d\uf001十乂亠厶冂\ue439\ue02a儿\ue17e\ue0e3\ue0ba大小\ue03e\ue442川彐\ue431\ue020\ue078\ue42d\ue07f]/.test(
+          字根.获取名称(),
+        )
+      ) {
+        配置.可选字根.add(字根);
+      }
+    }
+    for (const [字根, 安排] of 配置.字根决策.entries()) {
+      let 按键: string;
+      if (typeof 安排 === "string") {
+        按键 = 安排;
+      } else if (是归并(安排)) {
+        let 当前安排: 安排 = 安排;
+        while (是归并(当前安排)) {
+          const 归并字根 = this.字根名称映射.get(当前安排.element);
+          if (!归并字根)
+            throw new Error(`找不到字根名称为 ${当前安排.element} 的字根`);
+          当前安排 = this.配置.字根决策.get(归并字根)!;
+        }
+        按键 = 当前安排 as string;
+      } else {
+        throw new Error(
+          `字根 ${字根.获取名称()} 的安排 ${安排} 既不是按键也不是归并`,
+        );
+      }
+      this.字根按键.set(字根, 按键);
+    }
+  }
+
+  在小集合(字根: 字根) {
+    const 条件: 条件 = {
+      element: 字根.获取名称(),
+      op: "是" as const,
+      value: "a",
+    };
+    return 条件;
+  }
+
+  分析(部件: 部件) {
+    const 分析 = 部件.给出部件分析(this.配置);
+    if (!分析.ok) return 分析;
+    const { 当前拆分方式, 字根序列, ...rest } = 分析.value;
+    const 实际拆分方式 = rest.全部拆分方式.find((x) =>
+      x.拆分方式.every((y) =>
+        /[aeiouv;/]/.test(this.字根按键.get(y.字根) ?? ""),
+      ),
+    );
+    const 全字根当前拆分方式 = rest.全部拆分方式.find((x) =>
+      x.拆分方式.every((y) => this.字根按键.has(y.字根)),
+    );
+    if (!实际拆分方式 || !全字根当前拆分方式)
+      return default_err("无法找到符合当前字根名称的拆分方式");
+    const 新分析: 冰雪飞花部件分析 = {
+      ...rest,
+      当前拆分方式: 实际拆分方式,
+      字根序列: 实际拆分方式.拆分方式.map((y) => y.字根).slice(0, 3),
+      全集合当前拆分方式: 全字根当前拆分方式,
+      全集合字根序列: 全字根当前拆分方式.拆分方式
+        .map((y) => y.字根)
+        .slice(0, 3),
+    };
+    return ok(新分析);
+  }
+
+  动态分析(部件: 部件) {
+    const 分析 = 部件.给出部件分析(this.配置);
+    if (!分析.ok) return 分析;
+    const { 当前拆分方式, 字根序列, ...rest } = 分析.value;
+    const 分析列表: 带条件<冰雪飞花部件分析>[] = [];
+    const 可用拆分方式列表 = rest.全部拆分方式.filter((x) => x.可用);
+    for (const [i, 全集合拆分方式] of 可用拆分方式列表.entries()) {
+      for (const [j, 小集合拆分方式] of 可用拆分方式列表.entries()) {
+        // 根据最优性条件，必须 j >= i
+        if (j < i) continue;
+        const 新分析: 带条件<冰雪飞花部件分析> = {
+          ...rest,
+          当前拆分方式: 小集合拆分方式,
+          字根序列: 小集合拆分方式.拆分方式.map((y) => y.字根).slice(0, 3),
+          全集合当前拆分方式: 全集合拆分方式,
+          全集合字根序列: 全集合拆分方式.拆分方式
+            .map((y) => y.字根)
+            .slice(0, 3),
+          条件列表: [],
+        };
+        // 对于全集合拆分，所有涉及到的可选元素必须都存在
+        const 可选字根集 = this.可选字根备份.intersection(
+          new Set(全集合拆分方式.拆分方式.map((y) => y.字根)),
+        );
+        [...可选字根集].map((c) => 新分析.条件列表.push(存在(c)));
+        // 对于小集合拆分，所有涉及到的元素必须都在小集合
+        const 小集合字根集 = this.配置.可选字根.intersection(
+          new Set(小集合拆分方式.拆分方式.map((y) => y.字根)),
+        );
+        [...小集合字根集].map((c) => 新分析.条件列表.push(this.在小集合(c)));
+        分析列表.push(新分析);
+      }
+      // 如果全集合拆分方式的字根都不在可选字根备份中，说明这个拆分方式不包含任何可选字根，可以直接停止了
+      if (
+        全集合拆分方式.拆分方式.every((x) => !this.可选字根备份.has(x.字根))
+      ) {
+        break;
+      }
+    }
+    return ok(new 优先表(分析列表));
+  }
+}
+
 export {
   二笔部件分析器,
   张码部件分析器,
   逸码部件分析器,
+  冰雪飞花部件分析器,
   计算张码补码,
   部件,
   默认部件分析器,
@@ -803,6 +940,7 @@ export type {
   张码部件分析,
   逸码拆分方式,
   逸码部件分析,
+  冰雪飞花部件分析,
   拆分方式与评价,
   部件分析器,
   默认部件分析,

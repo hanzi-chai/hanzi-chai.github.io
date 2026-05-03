@@ -4,6 +4,7 @@ import type {
   原始汉字数据,
   字符,
   当量映射,
+  条件,
   码位,
   码表条目,
   组装条目,
@@ -37,7 +38,7 @@ import {
 } from "hanzi-chai";
 import { atom } from "jotai";
 import { MiniDb } from "jotai-minidb";
-import { sortBy } from "lodash-es";
+import { rest, sortBy } from "lodash-es";
 import pako from "pako";
 import type { Metric } from "~/components/MetricTable";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
@@ -509,23 +510,36 @@ export const 如动态组装结果与优先简码原子 = atom(async (get) => {
 export const 如前端输入原子 = atom(async (get) => {
   const 配置 = get(配置原子);
   const 动态分析 = get(动态分析原子);
-  const 词列表 = 动态分析
-    ? await get(如动态组装结果与优先简码原子)
-    : await get(如组装结果与优先简码原子);
-  if (!词列表.ok) return 词列表;
 
-  const 序列化词列表: any[] = [];
-  词列表.value.forEach((x) => {
-    const a = x.元素序列;
-    序列化词列表.push({
-      ...x,
-      词: x.词.map((v) => v.toString()).join(""),
-      元素序列:
-        a instanceof 优先表
-          ? [...a].map((z) => 总序列化(z.元素序列)).join("　")
-          : 总序列化(a.元素序列),
+  const 序列化词列表: {
+    词: string;
+    全部元素序列: { 元素序列: 码位[]; 条件列表: 条件[] }[];
+    频率: number;
+    简码长度?: number;
+  }[] = [];
+  if (动态分析) {
+    const 词列表 = await get(如动态组装结果与优先简码原子);
+    if (!词列表.ok) return 词列表;
+    词列表.value.forEach((x) => {
+      const { 元素序列, ...rest } = x;
+      序列化词列表.push({
+        ...rest,
+        词: x.词.map((v) => v.toString()).join(""),
+        全部元素序列: [...x.元素序列],
+      });
     });
-  });
+  } else {
+    const 词列表 = await get(如组装结果与优先简码原子);
+    if (!词列表.ok) return 词列表;
+    词列表.value.forEach((x) => {
+      const { 元素序列, ...rest } = x;
+      序列化词列表.push({
+        ...rest,
+        词: x.词.map((v) => v.toString()).join(""),
+        全部元素序列: [{ 元素序列: x.元素序列.元素序列, 条件列表: [] }],
+      });
+    });
+  }
 
   return ok({
     配置,
@@ -556,7 +570,12 @@ export const 联合结果原子 = atom(async (get) => {
   if (!如编码结果.ok) return 如编码结果;
   const [编码结果] = 如编码结果.value;
   const combined: 联合条目[] = 如组装结果.value.map((x, i) => {
-    const { 词, ...rest } = 编码结果[i]!;
+    const { 词, ...rest } = 编码结果[i] ?? {
+      全码: "",
+      简码: "",
+      全码排名: 0,
+      简码排名: 0,
+    };
     return {
       ...x,
       ...rest,
