@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import path from "node:path";
 import { defineConfig, type UserConfig, type PluginOption } from "vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -73,15 +72,20 @@ export default defineConfig(({ mode, command }) => {
           moduleSideEffects: "no-external",
         },
         output: {
-          manualChunks: {
-            lodash: ["lodash"],
-            yaml: ["js-yaml"],
-            md5: ["js-md5"],
-            react: ["react", "react-dom", "react-router"],
-            reactflow: ["reactflow"],
-            antd: ["antd"],
-            g: ["@antv/g"],
-            g2: ["@antv/g2"],
+          manualChunks: (id) => {
+            if (id.includes("lodash")) return "lodash";
+            if (id.includes("js-yaml")) return "yaml";
+            if (id.includes("js-md5")) return "md5";
+            if (id.includes("reactflow")) return "reactflow";
+            if (id.includes("antd")) return "antd";
+            if (id.includes("@antv/g2")) return "g2";
+            if (id.includes("@antv/g")) return "g";
+            if (
+              id.includes("node_modules/react") ||
+              id.includes("node_modules/react-dom") ||
+              id.includes("node_modules/react-router")
+            )
+              return "react";
           },
         },
       },
@@ -112,14 +116,6 @@ export default defineConfig(({ mode, command }) => {
         importMode: "async",
       }),
     ],
-    test: {
-      globals: true,
-      coverage: {
-        enabled: true,
-        provider: "v8",
-        reporter: ["text", "html"],
-      },
-    },
     worker: {
       format: "es",
       plugins: () => [wasm()],

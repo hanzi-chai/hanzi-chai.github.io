@@ -216,7 +216,7 @@ export default function Debugger() {
             {record.元素序列.map((x, i) => {
               return (
                 <Space size="small" wrap key={i}>
-                  {x.map((element, index) => (
+                  {x.元素序列.map((element, index) => (
                     <BorderItem
                       key={index}
                       onClick={

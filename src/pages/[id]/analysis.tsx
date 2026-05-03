@@ -14,6 +14,7 @@ import {
   Statistic,
   Switch,
 } from "antd";
+import { CollapseProps } from "antd/lib";
 import {
   优先表,
   type 动态字形分析结果,
@@ -27,7 +28,6 @@ import {
   默认分类器,
   type 默认部件分析,
 } from "hanzi-chai";
-import type { ItemType } from "rc-collapse/es/interface";
 import { Suspense, useState } from "react";
 import {
   useAtom,
@@ -78,9 +78,7 @@ const 导出字形分析结果 = (
         tsv.push([
           ...head,
           // 动态分析以全角空格隔开
-          [...字形分析]
-            .map((x) => 序列化(x.字根序列))
-            .join("　"),
+          [...字形分析].map((x) => 序列化(x.字根序列)).join("　"),
         ]);
       } else {
         tsv.push([...head, 序列化(字形分析.字根序列)]);
@@ -168,8 +166,10 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [只显示自定义, 设置只显示自定义] = useState(false);
   const 是必要字根 = (k: string) =>
     决策[k] && (决策空间[k] ?? []).every((x) => x.value !== null);
-  const 部件分析内容: (ItemType & { sequence: number[] })[] = [];
-  const 复合体分析内容: ItemType[] = [];
+  const 部件分析内容: (NonNullable<CollapseProps["items"]>[number] & {
+    sequence: number[];
+  })[] = [];
+  const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
   for (const [字, 分析列表] of 分析结果) {
     const 字符串 = 字.toString();
     if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])

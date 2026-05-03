@@ -1,6 +1,26 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mean, round, sortBy, sum } from "lodash-es";
-import { erf, std } from "math";
+
+// Abramowitz & Stegun approximation, max error 1.5e-7
+function erf(x: number): number {
+  const sign = x < 0 ? -1 : 1;
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const y =
+    1 -
+    ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) *
+      t +
+      0.254829592) *
+      t *
+      Math.exp(-(x * x));
+  return sign * y;
+}
+
+function std(data: number[]): number {
+  const m = mean(data);
+  return Math.sqrt(
+    data.reduce((s, x) => s + (x - m) ** 2, 0) / (data.length - 1),
+  );
+}
 import { exit } from "node:process";
 import { get } from "~/api";
 import { range } from "lodash-es";
@@ -112,7 +132,7 @@ interface Equivalence {
 function chauvenet(data: number[]) {
   const n = data.length;
   const meanValue = mean(data);
-  const stdValue = std(data, "unbiased") as number;
+  const stdValue = std(data);
   return data.filter((x) => {
     const k = Math.abs(x - meanValue) / stdValue;
     return erf(k / Math.SQRT2) < 1 - 1 / (2 * n);
@@ -144,7 +164,7 @@ function measure(data: number[]): Estimation {
   }
   return {
     value: mean(finalData),
-    std: (std(finalData, "unbiased") as number) / Math.sqrt(finalData.length),
+    std: std(finalData) / Math.sqrt(finalData.length),
     length: finalData.length,
   };
 }

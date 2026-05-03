@@ -77,6 +77,8 @@ interface 字形分析配置 {
   分类器: 分类器; // 已经填充过默认值
   部件字根列表: 部件[];
   复合体字根映射: Map<复合体, 部件>;
+  自定义分析映射: Map<部件, 字根[]>;
+  动态自定义分析映射: Map<部件, 字根[][]>;
 }
 
 export class 优先表<T extends object> {
@@ -152,6 +154,21 @@ class 字库 {
     this.repertoire.set(character, 字形列表);
   }
 
+  找到部件(key: string, 原始字库: 原始字库): 部件 | undefined {
+    let 汉字字符串 = key,
+      索引 = 0;
+    if (key.includes("-")) {
+      汉字字符串 = key.split("-")[0] ?? "";
+      索引 = parseInt(key.split("-")[1] ?? "", 10);
+    }
+    const 字符 = 原始字库.校验(汉字字符串)?.character;
+    if (!字符) return;
+    const 字形列表 = (this.查询字形(字符) ?? []).filter(
+      (x) => x instanceof 部件,
+    ) as 部件[];
+    return 字形列表[索引];
+  }
+
   准备字形分析配置(
     分析配置: 分析配置,
     决策: 决策,
@@ -204,6 +221,37 @@ class 字库 {
         }
       }
     }
+    const 字根名称映射 = new Map(
+      [...字根决策.keys()].map((x) => [x.获取名称(), x] as const),
+    );
+    const 自定义分析映射: Map<部件, 字根[]> = new Map();
+    const 动态自定义分析映射: Map<部件, 字根[][]> = new Map();
+    for (const [key, value] of Object.entries(分析配置.customize ?? {})) {
+      const 部件 = this.找到部件(key, 原始字库);
+      if (!部件) continue;
+      const 字根列表: 字根[] = [];
+      for (const 字根名称 of value) {
+        const 字根 = 字根名称映射.get(字根名称);
+        if (字根) 字根列表.push(字根);
+      }
+      自定义分析映射.set(部件, 字根列表);
+    }
+    for (const [key, value] of Object.entries(
+      分析配置.dynamic_customize ?? {},
+    )) {
+      const 部件 = this.找到部件(key, 原始字库);
+      if (!部件) continue;
+      const 字根列表列表: 字根[][] = [];
+      for (const 字根名称列表 of value) {
+        const 字根列表: 字根[] = [];
+        for (const 字根名称 of 字根名称列表) {
+          const 字根 = 字根名称映射.get(字根名称);
+          if (字根) 字根列表.push(字根);
+        }
+        字根列表列表.push(字根列表);
+      }
+      动态自定义分析映射.set(部件, 字根列表列表);
+    }
     return ok({
       分析配置,
       分类器,
@@ -211,6 +259,8 @@ class 字库 {
       可选字根,
       部件字根列表,
       复合体字根映射,
+      自定义分析映射,
+      动态自定义分析映射,
     });
   }
 

@@ -377,6 +377,7 @@ export const EditGlyph = ({ character }: { character: 校验原始汉字数据 }
       key: -2,
       label: (
         <CompoundForm
+          character={character.character}
           title="添加自定义拼接部件"
           initialValues={模拟拼接部件()}
           onFinish={onFinish}
@@ -388,6 +389,7 @@ export const EditGlyph = ({ character }: { character: 校验原始汉字数据 }
       key: -3,
       label: (
         <CompoundForm
+          character={character.character}
           title="添加自定义复合体"
           initialValues={模拟复合体("⿰")}
           onFinish={onFinish}

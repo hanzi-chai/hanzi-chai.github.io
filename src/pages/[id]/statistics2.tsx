@@ -519,10 +519,13 @@ const DuplicationDistribution = () => {
           first.词.map((c) => c.toString()).join(""),
           second.词.map((c) => c.toString()).join(""),
         ];
-        const length = Math.max(first.元素序列.length, second.元素序列.length);
+        const length = Math.max(
+          first.元素序列.元素序列.length,
+          second.元素序列.元素序列.length,
+        );
         for (let i = 0; i < length; i++) {
-          const k1 = 序列化(first.元素序列[i]);
-          const k2 = 序列化(second.元素序列[i]);
+          const k1 = 序列化(first.元素序列.元素序列[i]);
+          const k2 = 序列化(second.元素序列.元素序列[i]);
           if (k1 === k2) continue;
           const key = `${k1} ${k2}`;
           const previous = pairMap.get(key) ?? [];
