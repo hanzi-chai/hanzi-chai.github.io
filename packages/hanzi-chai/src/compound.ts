@@ -168,10 +168,11 @@ abstract class 复合体分析器<
   ): 字根[] {
     const 已取笔画数列表 = 部分结果列表.map(() => 0);
     const 字根序列: 字根[] = [];
+    const 剩余字根序列列表 = 部分结果列表.map((x) => [...x.字根序列]);
     for (const { index, strokes } of 笔顺) {
       const 剩余部分 = 部分结果列表[index];
-      if (剩余部分 === undefined) continue; // 忽略无效部分
-      let 剩余部分字根序列 = [...剩余部分.字根序列];
+      const 剩余部分字根序列 = 剩余字根序列列表[index];
+      if (剩余部分 === undefined || 剩余部分字根序列 === undefined) continue; // 忽略无效部分
       const 部件分析 = 剩余部分.部件分析;
       if (
         strokes === 0 ||
@@ -179,7 +180,7 @@ abstract class 复合体分析器<
         !("当前拆分方式" in 部件分析)
       ) {
         字根序列.push(...剩余部分字根序列);
-        剩余部分字根序列 = [];
+        剩余字根序列列表[index] = [];
       } else {
         const { 当前拆分方式 } = 部件分析 as any as 默认部件分析;
         const toTake = 当前拆分方式.拆分方式.filter(
@@ -188,7 +189,7 @@ abstract class 复合体分析器<
             x.笔画索引[0]! <= 已取笔画数列表[index]! + strokes - 1,
         ).length;
         字根序列.push(...剩余部分字根序列.slice(0, toTake));
-        剩余部分字根序列 = 剩余部分字根序列.slice(toTake);
+        剩余字根序列列表[index] = 剩余部分字根序列.slice(toTake);
         已取笔画数列表[index]! += strokes;
       }
     }
