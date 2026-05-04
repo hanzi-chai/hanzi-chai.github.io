@@ -1,11 +1,11 @@
 import { Button, Flex, notification } from "antd";
-import { 配置原子, 配置历史原子, useAtom } from "~/atoms";
-import { UNDO, REDO } from "jotai-history";
-import { type Example, examples } from "~/templates";
-import { Uploader } from "./Utils";
-import { load } from "js-yaml";
-import { exportYAML, roundTestConfig, validateConfig } from "~/utils";
 import type { 配置 } from "hanzi-chai";
+import { REDO, UNDO } from "jotai-history";
+import { load } from "js-yaml";
+import { useAtom, 配置历史原子, 配置原子 } from "~/atoms";
+import { type Example, examples } from "~/templates";
+import { exportYAML, roundTestConfig, validateConfig } from "~/utils";
+import { Uploader } from "./Utils";
 
 export default function ConfigManager() {
   const [config, setConfig] = useAtom(配置原子);

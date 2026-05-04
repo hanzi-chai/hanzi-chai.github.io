@@ -115,8 +115,6 @@ export interface 决策生成器规则 {
   value: 安排描述;
 }
 
-export type 元素 = string;
-
 export type 元素位 = { element: string; index: number };
 
 export type 码位 = string | 元素位;
@@ -141,7 +139,7 @@ export function 是归并(value: 广义安排): value is { element: string } {
   return typeof value === "object" && value !== null && "element" in value;
 }
 
-export type 决策 = Record<元素, 非空安排>;
+export type 决策 = Record<string, 非空安排>;
 
 export type 条件 = { element: string; op: "是" | "不是"; value: 安排 };
 
@@ -151,7 +149,7 @@ export interface 安排描述 {
   condition?: 条件[];
 }
 
-export type 决策空间 = Record<元素, 安排描述[]>;
+export type 决策空间 = Record<string, 安排描述[]>;
 // config.form end
 
 // config.encoder begin

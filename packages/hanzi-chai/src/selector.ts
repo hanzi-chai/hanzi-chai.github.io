@@ -1,6 +1,6 @@
 import type { 曲线关系 } from "./bezier.js";
 import type { 部件 } from "./component.js";
-import { type 分析配置, type 安排, 是归并 } from "./config.js";
+import { type 安排, 是归并 } from "./config.js";
 import type { 字根 } from "./repertoire.js";
 
 const 默认筛选器列表: string[] = [
@@ -276,6 +276,7 @@ class 结构完整 implements 筛选器 {
   }
 }
 
+export type { 拆分方式, 拆分环境, 筛选器 };
 export {
   全符笔顺,
   取大优先,
@@ -291,4 +292,3 @@ export {
   非形近根,
   默认筛选器列表,
 };
-export type { 拆分方式, 拆分环境, 筛选器 };

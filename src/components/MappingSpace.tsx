@@ -321,7 +321,7 @@ export default function MappingSpace() {
                   >
                     <BorderItem>
                       <ElementLabelWrapper
-                        $shouldHighlight={name === currentElement}
+                        $shouldHighlight={element === currentElement}
                       >
                         <ElementDisplay element={element} />
                       </ElementLabelWrapper>

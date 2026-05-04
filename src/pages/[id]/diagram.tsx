@@ -8,6 +8,7 @@ import {
   ProFormTextArea,
 } from "@ant-design/pro-components";
 import { Button, Flex, Space, Tag, Typography } from "antd";
+import { type 区块配置, type 图示配置, 读取表格 } from "hanzi-chai";
 import { debounce } from "lodash-es";
 import type { ReactNode } from "react";
 import {
@@ -20,7 +21,6 @@ import {
   按首码分组决策原子,
 } from "~/atoms";
 import { AdjustableElementGroup } from "~/components/Mapping";
-import { type 区块配置, type 图示配置, 读取表格 } from "hanzi-chai";
 import { useChaifenTitle } from "~/utils";
 
 const PrintArea = ({ children }: { children?: ReactNode }) => (
@@ -113,7 +113,7 @@ const Secondary = ({ children }: { children?: ReactNode }) => (
 );
 
 const SidebarWrapper = ({ children }: { children?: ReactNode }) => (
-  <aside className="p-[16px] float-left print:hidden">{children}</aside>
+  <aside className="p-4 float-left print:hidden">{children}</aside>
 );
 
 const withDefaultStyles = (diagram: 图示配置) => {
@@ -236,7 +236,7 @@ export default function Schematic() {
           <Secondary>
             <Typography.Text>{description}</Typography.Text>
           </Secondary>
-          <Typography.Title className="!m-0">{name}</Typography.Title>
+          <Typography.Title className="m-0!">{name}</Typography.Title>
           <Secondary>
             <Space>
               <Tag color="blue">作者：{author}</Tag>

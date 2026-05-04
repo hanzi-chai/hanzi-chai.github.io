@@ -7,9 +7,9 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 import { Form, Switch } from "antd";
-import { useRef } from "react";
-import { 求解器原子, useAtom } from "~/atoms";
 import type { 求解器配置 } from "hanzi-chai";
+import { useRef } from "react";
+import { useAtom, 求解器原子 } from "~/atoms";
 
 export default function SolverForm() {
   const [metaheuristic, setMetaheuristic] = useAtom(求解器原子);

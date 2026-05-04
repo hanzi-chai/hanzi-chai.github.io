@@ -1,5 +1,5 @@
 import type {
-  元素识别结果,
+  元素,
   原始字库数据,
   原始汉字数据,
   字符,
@@ -15,19 +15,23 @@ import type {
 } from "hanzi-chai";
 import {
   ok,
-  优先表,
+  二笔,
   分析拼音,
   动态组装,
+  单笔,
   原始字库,
   合并拼写运算,
   图形盒子,
   展开决策,
-  总序列化,
+  拼音元素,
   是归并,
   是部件,
   标准化自定义,
   添加优先简码,
   组装,
+  结构描述字符列表,
+  结构符元素,
+  自定义元素,
   解析当量映射,
   解析键位分布目标,
   识别元素,
@@ -38,7 +42,7 @@ import {
 } from "hanzi-chai";
 import { atom } from "jotai";
 import { MiniDb } from "jotai-minidb";
-import { rest, sortBy } from "lodash-es";
+import { sortBy } from "lodash-es";
 import pako from "pako";
 import type { Metric } from "~/components/MetricTable";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
@@ -277,7 +281,51 @@ export const 下一个可用的码位原子 = atom((get) => {
   return 0xffff;
 });
 
-export const 当前元素原子 = atom<string | 字符 | undefined>(undefined);
+export const 全部合法元素原子 = atom(async (get) => {
+  const 分类器 = get(分类器原子);
+  const 拼音元素映射 = await get(拼音元素映射原子);
+  const 自定义分析列表 = get(自定义分析数据库.entries);
+  const 如字符列表 = await get(如排序字库数据原子);
+  if (!如字符列表.ok) return 如字符列表;
+  const 字符列表 = 如字符列表.value;
+  const 如笔顺映射 = await get(如笔顺映射原子);
+  if (!如笔顺映射.ok) return 如笔顺映射;
+  const 笔顺映射 = 如笔顺映射.value;
+  const 排序汉字 = 字符列表
+    .filter((k) => 笔顺映射.get(k)?.[0]?.length !== 1)
+    .filter((k) => k.区块() !== "kangxi");
+  const 全部笔画类别 = [...new Set(Object.values(分类器))].sort(
+    (a, b) => a - b,
+  );
+  const 全部笔画列表: 单笔[] = [];
+  for (const n of 全部笔画类别) {
+    全部笔画列表.push(单笔.创建(n));
+  }
+  const 全部二笔列表: 二笔[] = [];
+  for (const n1 of 全部笔画类别) {
+    for (const n2 of [0, ...全部笔画类别]) {
+      全部二笔列表.push(二笔.创建(n1, n2));
+    }
+  }
+  const 自定义元素映射: Map<string, 自定义元素[]> = new Map();
+  for (const [类型, 自定义分析] of 自定义分析列表) {
+    const 全部元素 = new Set(Object.values(自定义分析).flat());
+    自定义元素映射.set(
+      类型,
+      [...全部元素].sort().map((x) => new 自定义元素(类型, x)),
+    );
+  }
+  return ok({
+    字根: 排序汉字,
+    笔画: 全部笔画列表,
+    二笔: 全部二笔列表,
+    结构: 结构描述字符列表.map((x) => new 结构符元素(x)),
+    字音: 拼音元素映射,
+    自定义: 自定义元素映射,
+  });
+});
+
+export const 当前元素原子 = atom<元素 | undefined>(undefined);
 
 export const 平铺决策原子 = atom((get) => {
   const 决策 = get(决策原子);
@@ -335,7 +383,7 @@ export const 强类型元素列表原子 = atom(async (get) => {
   );
   const 分类器 = get(分类器原子);
   const 原始字库 = await get(原始字库原子);
-  const result: Map<string, 元素识别结果> = new Map();
+  const result: Map<string, 元素> = new Map();
   for (const 元素 of [...当前元素列表, ...可选元素列表]) {
     result.set(
       元素,
@@ -350,23 +398,26 @@ export const 拼写运算查找表原子 = atom((get) => {
   return 合并拼写运算(拼写运算自定义);
 });
 
-export const 拼音元素枚举映射原子 = atom(async (get) => {
+export const 拼音元素映射原子 = atom(async (get) => {
   const 词典 = await get(词典原子);
   const 音节集合 = new Set<string>();
   for (const { 拼音 } of Object.values(词典)) {
     拼音.map((p) => 音节集合.add(p));
   }
   const 拼写运算查找表 = get(拼写运算查找表原子);
-  const content: Map<string, string[]> = new Map();
+  const 拼音元素映射: Map<string, 拼音元素[]> = new Map();
   for (const [类别, 拼写运算] of 拼写运算查找表) {
     const 元素集合 = new Set<string>();
     for (const s of 音节集合) {
       const res = 默认拼音分析器.应用拼写运算(类别, 拼写运算, s);
       元素集合.add(res);
     }
-    content.set(类别, [...元素集合].sort());
+    拼音元素映射.set(
+      类别,
+      [...元素集合].sort().map((x) => new 拼音元素(类别, x)),
+    );
   }
-  return content;
+  return 拼音元素映射;
 });
 
 export const 字形分析配置原子 = atom((get) => {

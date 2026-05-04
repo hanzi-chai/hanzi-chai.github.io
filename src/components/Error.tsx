@@ -3,9 +3,9 @@
  */
 
 import { Result } from "antd";
-import ConfigManager from "./ConfigManager";
 import React from "react";
 import { useRouteError } from "react-router";
+import ConfigManager from "./ConfigManager";
 
 function BacsErrorResult() {
   return (
@@ -43,7 +43,7 @@ export class ErrorBoundary extends React.Component<any, any> {
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(_error: any) {
     return { hasError: true };
   }
 

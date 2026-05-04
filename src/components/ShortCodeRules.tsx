@@ -1,8 +1,3 @@
-import { Button, Flex, Form } from "antd";
-import type { 简码规则 } from "hanzi-chai";
-import { 多字词长度列表 } from "hanzi-chai";
-import { useAtom } from "~/atoms";
-import { 简码配置原子 } from "~/atoms";
 import {
   ModalForm,
   ProFormCascader,
@@ -12,6 +7,10 @@ import {
   ProFormList,
   ProFormSelect,
 } from "@ant-design/pro-components";
+import { Button, Flex, Form } from "antd";
+import type { 简码规则 } from "hanzi-chai";
+import { 多字词长度列表 } from "hanzi-chai";
+import { useAtom, 简码配置原子 } from "~/atoms";
 
 const defaultRules: 简码规则[] = [
   {

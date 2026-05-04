@@ -1,6 +1,6 @@
+import type { 决策, 决策生成器规则, 决策空间, 变量规则 } from "hanzi-chai";
 import { focusAtom } from "jotai-optics";
 import { 键盘原子 } from "./config";
-import type { 决策, 决策生成器规则, 决策空间, 变量规则 } from "hanzi-chai";
 
 export const 字母表原子 = focusAtom(键盘原子, (o) =>
   o.prop("alphabet").valueOr("abcdefghijklmnopqrstuvwxyz"),

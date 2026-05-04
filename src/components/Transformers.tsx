@@ -5,9 +5,6 @@ import {
   ProFormList,
 } from "@ant-design/pro-components";
 import { Button, Dropdown, Flex, Select } from "antd";
-import { useAtom, useAtomValue } from "jotai";
-import { type ReactNode, useRef } from "react";
-import { 原始字库原子, 变换器列表原子 } from "~/atoms";
 import {
   type 原始字库,
   type 变换器,
@@ -15,6 +12,9 @@ import {
   结构描述字符列表,
   type 节点,
 } from "hanzi-chai";
+import { useAtom, useAtomValue } from "jotai";
+import { type ReactNode, useRef } from "react";
+import { 原始字库原子, 变换器列表原子 } from "~/atoms";
 import CharacterSelect from "./CharacterSelect";
 import { CharacterDisplay, MinusButton, PlusButton } from "./Utils";
 
@@ -157,7 +157,7 @@ const PatternEditor: React.FC<{
   return typeof value === "string" || isVariable(value) ? (
     <Flex vertical align="center">
       <CharacterSelect
-        className="w-[88px]"
+        className="w-22"
         value={isVariable(value) ? JSON.stringify(value) : value}
         onChange={(v: string) =>
           onChange(v.startsWith("{") ? (JSON.parse(v) as 结构变量) : v)
@@ -232,7 +232,7 @@ const TransformersForm = () => {
         creatorRecord={getDummyTransformer}
         alwaysShowItemLabel
       >
-        <ProFormItem label="查找" name="from" className="!mb-0">
+        <ProFormItem label="查找" name="from" className="mb-0!">
           {/* @ts-ignore */}
           <PatternEditor />
         </ProFormItem>

@@ -454,7 +454,7 @@ export default function CharacterTable() {
     >
       <CharacterQuery setFilter={setFilterProps} />
       <Flex gap="large" ref={ref2}>
-        <Form.Item label="选择字形来源" className="!m-0">
+        <Form.Item label="选择字形来源" className="m-0!">
           <Select
             mode="multiple"
             options={所有源标签.map((x) => ({ label: x, value: x }))}
@@ -472,7 +472,7 @@ export default function CharacterTable() {
           size="small"
           rowKey="unicode"
           pagination={{ defaultPageSize: 50 }}
-          className="max-w-[1920px]"
+          className="max-w-480"
         />
         <Tour open={open} onClose={() => setOpen(false)} steps={steps} />
         <FloatButton

@@ -4,6 +4,22 @@ import {
   ProFormTextArea,
 } from "@ant-design/pro-components";
 import { Button, Flex, Input, Select, Typography } from "antd";
+import {
+  type 基本信息,
+  type 字集指示,
+  字集过滤查找表,
+  字集过滤选项,
+  序列化当量映射,
+  序列化词典,
+  序列化键位频率目标,
+  type 当量映射,
+  解析当量映射,
+  解析自定义元素,
+  解析键位分布目标,
+  type 词典,
+  读取表格,
+  type 键位分布目标,
+} from "hanzi-chai";
 import { type ReactNode, useEffect, useState } from "react";
 import {
   type Atom,
@@ -23,22 +39,6 @@ import {
   默认键位分布目标原子,
 } from "~/atoms";
 import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
-import {
-  type 基本信息,
-  type 字集指示,
-  字集过滤查找表,
-  字集过滤选项,
-  序列化当量映射,
-  序列化词典,
-  序列化键位频率目标,
-  type 当量映射,
-  解析当量映射,
-  解析自定义元素,
-  解析键位分布目标,
-  type 词典,
-  读取表格,
-  type 键位分布目标,
-} from "hanzi-chai";
 import { exportTSV, useChaifenTitle } from "~/utils";
 
 function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({

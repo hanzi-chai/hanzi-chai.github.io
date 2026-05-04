@@ -17,7 +17,7 @@ import type { 原始字库 } from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符 } from "./unicode.js";
-import { ok, type Result, type 源标签 } from "./utils.js";
+import { ok, type Result } from "./utils.js";
 
 export type 字形 = 部件 | 复合体;
 

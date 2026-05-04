@@ -1,3 +1,4 @@
+import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import {
   ModalForm,
   ProFormGroup,
@@ -5,11 +6,10 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Button, Form, Space, notification } from "antd";
+import { Button, Form, notification, Space } from "antd";
 import type { 运算规则 } from "hanzi-chai";
-import { 拼写运算自定义原子, useAddAtom } from "~/atoms";
 import { 拼写运算查找表 } from "hanzi-chai";
-import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
+import { useAddAtom, 拼写运算自定义原子 } from "~/atoms";
 
 interface AlgebraForm {
   name: string;
@@ -74,7 +74,7 @@ export default function Algebra({
             ...defaultActionDom,
             <ArrowUpOutlined
               key="up_arrow"
-              className="ml-[5px]"
+              className="ml-1"
               onClick={() => {
                 if (field.name === 0) {
                   action.move(field.name, count - 1);
@@ -85,7 +85,7 @@ export default function Algebra({
             />,
             <ArrowDownOutlined
               key="down_arrow"
-              className="ml-[5px]"
+              className="ml-1"
               onClick={() => {
                 if (field.name === count - 1) {
                   action.move(field.name, 0);

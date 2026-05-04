@@ -10,6 +10,13 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import {
+  type 字集指示,
+  字集过滤查找表,
+  字集过滤选项,
+  是部件,
+  type 码表条目,
+} from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
@@ -26,13 +33,6 @@ import {
 } from "~/atoms";
 import { ElementDetail } from "~/components/Mapping";
 import { CodePositionDisplay, Uploader } from "~/components/Utils";
-import {
-  type 字集指示,
-  字集过滤查找表,
-  字集过滤选项,
-  是部件,
-  type 码表条目,
-} from "hanzi-chai";
 
 type 码表格式 =
   | "char_tab_code"
@@ -272,14 +272,14 @@ export default function Debugger() {
         .txt 或 .yaml 后缀。
       </Typography.Text>
       <Flex justify="space-between" align="center" className="self-stretch">
-        <Form.Item label="校对范围" className="!m-0">
+        <Form.Item label="校对范围" className="m-0!">
           <Select
             value={校对范围}
             options={filterOptions}
             onChange={设置校对范围}
           />
         </Form.Item>
-        <Form.Item label="校对方向" className="!m-0">
+        <Form.Item label="校对方向" className="m-0!">
           <Select
             value={校对方向}
             options={[
@@ -289,7 +289,7 @@ export default function Debugger() {
             onChange={设置校对方向}
           />
         </Form.Item>
-        <Form.Item label="仅显示错误" className="!m-0">
+        <Form.Item label="仅显示错误" className="m-0!">
           <Switch checked={只显示不正确} onChange={设置只显示不正确} />
         </Form.Item>
         <Flex>

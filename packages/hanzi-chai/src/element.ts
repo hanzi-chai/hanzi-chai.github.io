@@ -12,13 +12,20 @@ import type { 字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 import { 展开决策, 计算当前或潜在长度 } from "./utils.js";
 
-export type 元素识别结果 = 单笔 | 二笔 | 字符 | string;
+export type 元素 =
+  | 字符
+  | 单笔
+  | 二笔
+  | 结构符元素
+  | 拼音元素
+  | 自定义元素
+  | 未知元素;
 
 export function 识别元素(
   元素: string,
   分类器: 分类器,
   查找汉字: (s: string) => 字符 | undefined,
-): 元素识别结果 {
+): 元素 {
   const 数字集合 = Object.values(分类器).map(String);
   if (元素.length === 1 && 数字集合.includes(元素)) {
     return 单笔.创建(Number(元素));
@@ -37,11 +44,15 @@ export function 识别元素(
   if (字符实例) {
     return 字符实例;
   }
-  return 元素;
+  return new 未知元素(元素);
 }
 
-export class 结构符 {
-  constructor(public operator: 结构描述字符) {}
+export class 结构符元素 {
+  constructor(private operator: 结构描述字符) {}
+
+  获取名称() {
+    return this.operator;
+  }
 }
 
 export class 拼音元素 {
@@ -49,6 +60,10 @@ export class 拼音元素 {
     public 类型: string,
     public 元素: string,
   ) {}
+
+  获取名称() {
+    return `${this.类型}-${this.元素}`;
+  }
 }
 
 export class 自定义元素 {
@@ -56,6 +71,18 @@ export class 自定义元素 {
     public 类型: string,
     public 元素: string,
   ) {}
+
+  获取名称() {
+    return `${this.类型}-${this.元素}`;
+  }
+}
+
+export class 未知元素 {
+  constructor(private 元素: string) {}
+
+  获取名称() {
+    return this.元素;
+  }
 }
 
 export class 单笔 {

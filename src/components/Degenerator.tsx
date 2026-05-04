@@ -1,5 +1,3 @@
-import { Button } from "antd";
-import { 退化配置原子, useAtom } from "~/atoms";
 import {
   ModalForm,
   ProFormGroup,
@@ -7,7 +5,9 @@ import {
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
-import { 笔画名称, 默认分类器 } from "hanzi-chai";
+import { Button } from "antd";
+import { type 笔画名称, 默认分类器 } from "hanzi-chai";
+import { useAtom, 退化配置原子 } from "~/atoms";
 
 export default function Degenerator() {
   const [degenerator, setDegenerator] = useAtom(退化配置原子);

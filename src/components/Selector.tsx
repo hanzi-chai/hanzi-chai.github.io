@@ -1,3 +1,4 @@
+import MenuOutlined from "@ant-design/icons/MenuOutlined";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   DndContext,
@@ -7,24 +8,21 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
-  SortableContext,
   arrayMove,
+  SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  useAtom,
-  过滤器列表原子,
-  useAppendAtom,
-  useExcludeAtom,
-  useAtomValue,
-} from "~/atoms";
-
 import { Button, Dropdown, Flex, Typography } from "antd";
-import MenuOutlined from "@ant-design/icons/MenuOutlined";
-import PrioritizedRoots from "./PrioritizedRoots";
 import { 获取注册表 } from "hanzi-chai";
+import {
+  useAppendAtom,
+  useAtom,
+  useExcludeAtom,
+  过滤器列表原子,
+} from "~/atoms";
+import PrioritizedRoots from "./PrioritizedRoots";
 
 const SortableItem = ({ sieve, index }: { sieve: string; index: number }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =

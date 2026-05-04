@@ -1,13 +1,14 @@
 import { Button, Flex, Space, Typography } from "antd";
+import type { 元素 } from "hanzi-chai";
 import { useState } from "react";
 import {
   useAppendAtom,
   useAtomValue,
   useExcludeAtom,
   分析配置原子,
-  原始字库原子,
   弱字根原子,
   强字根原子,
+  强类型元素列表原子,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import { BoxedElementWithTooltip } from "./Utils";
@@ -17,24 +18,26 @@ export default function PrioritizedRoots({
 }: {
   variant: "strong" | "weak";
 }) {
-  const analysis = useAtomValue(分析配置原子);
-  const list = analysis ? analysis[variant] : [];
+  const 字符串列表 = useAtomValue(分析配置原子)[variant] ?? [];
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
+  const 元素列表: 元素[] = [];
+  for (const 字符串 of 字符串列表) {
+    const 元素 = 强类型元素列表.get(字符串);
+    if (元素) 元素列表.push(元素);
+  }
   const [current, setCurrent] = useState<string | undefined>(undefined);
   const atom = variant === "strong" ? 强字根原子 : 弱字根原子;
   const exclude = useExcludeAtom(atom);
   const append = useAppendAtom(atom);
-  const 原始字库 = useAtomValue(原始字库原子);
   return (
     <>
       <Typography.Title level={4}>
         {variant === "strong" ? "强" : "弱"}字根
       </Typography.Title>
       <Flex wrap="wrap" gap="small">
-        {(list ?? []).map((x, i) => (
-          <Space key={x}>
-            <BoxedElementWithTooltip
-              element={原始字库.校验(x)?.character ?? x}
-            />
+        {元素列表.map((x, i) => (
+          <Space key={x.toString()}>
+            <BoxedElementWithTooltip element={x} />
             <Button variant="text" color="danger" onClick={() => exclude(i)}>
               删除
             </Button>

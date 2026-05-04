@@ -1,5 +1,3 @@
-import type React from "react";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type {
   N6,
   向量,
@@ -9,9 +7,11 @@ import type {
   绘制,
 } from "hanzi-chai";
 import { 减, 加, 笔画图形 } from "hanzi-chai";
+import type React from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 
 const Box = ({ children }: { children?: React.ReactNode }) => (
-  <div className="border border-black aspect-square w-[400px] h-[400px] text-[398px]">
+  <div className="border border-black aspect-square w-100 h-100 text-[398px]">
     {children}
   </div>
 );
@@ -86,7 +86,7 @@ const Circle: React.FC<{
   setIndex: (i: PointIndex) => void;
 }> = ({ center, index, setIndex }) => {
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
+    // biome-ignore lint/a11y/noStaticElementInteractions: needed for interactions
     <circle
       cx={center[0]}
       cy={center[1]}

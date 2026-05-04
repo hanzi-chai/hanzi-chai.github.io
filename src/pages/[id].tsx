@@ -39,12 +39,12 @@ const items: MenuProps["items"] = [
   { label: "图示", key: "diagram", icon: <ProfileOutlined /> },
 ];
 
-const Header = ({ isCollapsed }: { isCollapsed: boolean }) => {
+const Header = ({ isCollapsed: _ }: { isCollapsed: boolean }) => {
   const info = useAtomValue(基本信息原子);
   return (
-    <Layout.Header className={`!h-12 !place-content-center`}>
+    <Layout.Header className={`h-12! place-content-center!`}>
       <Flex justify="space-between" align="center">
-        <Typography.Title level={2} className="!m-0 !font-normal !text-xl">
+        <Typography.Title level={2} className="m-0! font-normal! text-xl!">
           {info?.name ?? "未命名"}
         </Typography.Title>
         <ConfigManager />
@@ -62,7 +62,7 @@ function EditorLayout() {
   return (
     <Layout hasSider>
       <Layout.Sider
-        className="overflow-auto h-screen fixed z-[999] left-0 top-0 bottom-0"
+        className="overflow-auto h-screen fixed z-999 left-0 top-0 bottom-0"
         breakpoint="md"
         collapsible
         collapsedWidth={58}
@@ -78,11 +78,11 @@ function EditorLayout() {
             <Link to="/">
               <Button
                 type="text"
-                className={`${isCollapsed ? "!h-12" : "!h-16"} !mx-2 !text-[#999] flex flex-col`}
+                className={`${isCollapsed ? "h-12!" : "h-16!"} mx-2! text-[#999]! flex flex-col`}
               >
                 <Avatar shape="square" src="/icon.webp" className="shrink-0" />
                 {isCollapsed ? null : (
-                  <div className="mt-[2px] tracking-[1px] text-xs">
+                  <div className="mt-0.5 tracking-[1px] text-xs">
                     汉字自动拆分系统
                   </div>
                 )}
@@ -102,7 +102,7 @@ function EditorLayout() {
       <Layout className="h-screen">
         <Header isCollapsed={isCollapsed} />
         <Layout.Content
-          className={`${isCollapsed ? "ml-[58px]" : "ml-[160px]"} py-[10px] px-6 h-full overflow-y-auto`}
+          className={`${isCollapsed ? "ml-14.5" : "ml-40"} py-2.5 px-6 h-full overflow-y-auto`}
         >
           <Suspense fallback={<CusSpin tip="加载标签页…" />}>
             <Outlet />

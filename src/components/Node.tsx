@@ -1,19 +1,19 @@
 import { Button, Dropdown, Tooltip } from "antd";
-import { useContext, type ComponentProps, type PropsWithChildren } from "react";
+import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
+import { 摘要, type 条件节点配置, type 源节点配置 } from "hanzi-chai";
+import { sortBy } from "lodash-es";
+import { type ComponentProps, type PropsWithChildren, useContext } from "react";
 import type { NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
-import type { SourceData, ConditionData } from "./graph";
+import type { ConditionData, SourceData } from "./graph";
 import { CacheContext, renderType } from "./graph";
-import type { MenuItemGroupType, MenuItemType } from "antd/es/menu/interface";
-import { sortBy } from "lodash-es";
-import { 摘要, 条件节点配置, 源节点配置 } from "hanzi-chai";
 
 const SourceButton = ({
   className,
   ...props
 }: ComponentProps<typeof Button>) => (
   <Button
-    className={`!w-[64px] !h-[32px] !px-0 !py-[4px] !text-[0.8em] focus:!text-[#4096ff] focus:!border-[#4096ff] focus:[outline:2px_solid_#4096ff] ${className ?? ""}`}
+    className={`w-16! h-8! px-0! py-1! text-[0.8em]! focus:text-[#4096ff]! focus:border-[#4096ff]! focus:[outline:2px_solid_#4096ff] ${className ?? ""}`}
     {...props}
   />
 );
@@ -22,7 +22,7 @@ const ConditionButton = ({
   className,
   ...props
 }: ComponentProps<typeof Button>) => (
-  <SourceButton className={`!rounded-none ${className ?? ""}`} {...props} />
+  <SourceButton className={`rounded-none! ${className ?? ""}`} {...props} />
 );
 
 const sorter = (key: string) => Number.parseInt(key.slice(1), 10);
@@ -306,4 +306,4 @@ const ConditionNode = ({ id, data }: NodeProps<ConditionData>) => {
   );
 };
 
-export { SourceNode, ConditionNode };
+export { ConditionNode, SourceNode };

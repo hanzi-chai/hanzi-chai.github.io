@@ -88,7 +88,6 @@ export const ElementDetail = ({
   const mapping = useAtomValue(决策原子);
   const affiliates = getAffiliates(name, mapping);
   const alphabet = useAtomValue(字母表原子);
-  const 原始字库 = useAtomValue(原始字库原子);
   const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   const element = 强类型元素列表.get(name);
 
@@ -133,7 +132,7 @@ export const ElementDetail = ({
           <span>
             无法删除元素，因为元素被其他元素引用：
             {referenced.map((x) => (
-              <ElementDisplay key={x} element={强类型元素列表.get(x) ?? x} />
+              <ElementDisplay key={x} element={强类型元素列表.get(x)!} />
             ))}
           </span>
         ),
@@ -187,9 +186,9 @@ export const ElementLabelWrapper = ({
   ...props
 }: { $shouldHighlight: boolean } & ComponentProps<"span">) => (
   <span
-    className={`items-baseline cursor-pointer leading-none py-[8px] px-0 rounded-[4px] hover:bg-[#ddd] ${
+    className={`items-baseline cursor-pointer leading-none py-2 px-0 rounded-sm hover:bg-[#ddd] ${
       $shouldHighlight
-        ? "bg-[#91caff] ![outline:3px_solid_#1677ff]"
+        ? "bg-[#91caff] [outline:3px_solid_#1677ff]!"
         : "bg-transparent outline-none"
     } ${className ?? ""}`}
     {...props}
@@ -264,13 +263,13 @@ export const AdjustableElementGroup = ({
           }
         >
           <ElementLabelWrapper
-            $shouldHighlight={from === currentElement}
+            $shouldHighlight={强类型元素列表.get(from) === currentElement}
             className="text-[0.85em]"
           >
             <ElementDisplay
               key={from}
               hideTypeNames={displayMode}
-              element={强类型元素列表.get(from) ?? from}
+              element={强类型元素列表.get(from)!}
               className={
                 !displayMode && isOptional(from)
                   ? "text-[#9d9d9d]"
@@ -282,7 +281,7 @@ export const AdjustableElementGroup = ({
       ))}
       {
         /* 第二码及之后的编码 */ rest.length > 0 && (
-          <span className="text-[0.85em] pl-[2px]">
+          <span className="text-[0.85em] pl-0.5">
             {typeof rest === "string"
               ? rest
               : rest.map((x, i) => {

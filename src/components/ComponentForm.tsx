@@ -18,14 +18,6 @@ import {
 import type { FormListFieldData, MenuProps } from "antd";
 import { Button, Dropdown, Flex, Form } from "antd";
 import type { BaseOptionType } from "antd/es/select";
-import type { MutableRefObject, ReactNode } from "react";
-import { useRef } from "react";
-import {
-  useAtomValue,
-  useAtomValueUnwrapped,
-  原始字库原子,
-  如字库原子,
-} from "~/atoms";
 import type {
   全等数据,
   基本部件数据,
@@ -43,6 +35,14 @@ import {
   模拟矢量笔画,
   笔画表示方式,
 } from "hanzi-chai";
+import type { MutableRefObject, ReactNode } from "react";
+import { useRef } from "react";
+import {
+  useAtomValue,
+  useAtomValueUnwrapped,
+  原始字库原子,
+  如字库原子,
+} from "~/atoms";
 import BorderItem from "./BorderItem";
 import CharacterSelect from "./CharacterSelect";
 import { CommonForm } from "./CompoundForm";
@@ -230,7 +230,7 @@ export default function ComponentForm({
       formRef={formRef}
     >
       <EditorRow>
-        <EditorColumn span={10} className="!p-0">
+        <EditorColumn span={10} className="p-0!">
           <Box>
             <ProFormDependency name={["type", "source", "strokes"]}>
               {(props) => {
@@ -302,7 +302,7 @@ export default function ComponentForm({
                         ...defaultActionDom,
                         <ArrowUpOutlined
                           key="up_arrow"
-                          className="ml-[5px]"
+                          className="ml-1"
                           onClick={() => {
                             if (field.name === 0) {
                               action.move(field.name, count - 1);
@@ -313,7 +313,7 @@ export default function ComponentForm({
                         />,
                         <ArrowDownOutlined
                           key="down_arrow"
-                          className="ml-[5px]"
+                          className="ml-1"
                           onClick={() => {
                             if (field.name === count - 1) {
                               action.move(field.name, 0);
@@ -324,7 +324,7 @@ export default function ComponentForm({
                         />,
                         <CameraOutlined
                           key="camera"
-                          className="ml-[5px]"
+                          className="ml-1"
                           onClick={() => {
                             const component: 基本或衍生部件 =
                               formRef.current?.getFieldsValue();

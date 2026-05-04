@@ -9,12 +9,12 @@ import {
   Statistic,
   Typography,
 } from "antd";
+import type { 求解器配置, 配置 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { load } from "js-yaml";
 import { nanoid } from "nanoid";
 import { useState } from "react";
 import { useAtomValueUnwrapped, 如前端输入原子, 求解器原子 } from "~/atoms";
-import type { 求解器配置, 配置 } from "hanzi-chai";
 import { basePath, exportYAML, thread } from "~/utils";
 import type { WorkerOutput } from "~/worker";
 
@@ -184,7 +184,7 @@ export default function Optimizer() {
         size="small"
         dataSource={result}
         bordered
-        className="max-h-[300px] overflow-y-scroll"
+        className="max-h-75 overflow-y-scroll"
         renderItem={({ date, config }, index) => (
           <List.Item
             key={index}

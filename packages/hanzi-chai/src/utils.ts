@@ -3,12 +3,10 @@ import type { 动态组装条目, 组装条目 } from "./assembly.js";
 import type { 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
 import type {
-  元素,
   兼容字形自定义,
   决策,
   决策空间,
   字形自定义,
-  字集指示,
   广义码位,
   码位,
   非空广义安排,
@@ -27,8 +25,7 @@ import type {
   绘制,
   衍生部件数据,
 } from "./data.js";
-import type { 原始字库 } from "./primitive.js";
-import { type 字符, 字集过滤查找表 } from "./unicode.js";
+import type { 字符 } from "./unicode.js";
 
 // Result 类型定义
 export type Ok<T> = { ok: true; value: T; warning?: string };
@@ -294,7 +291,7 @@ export const 合并字符串 = <T extends 广义码位>(keys: T[]) => {
 };
 
 const 展开决策值 = (
-  mapping: Record<元素, 非空广义安排>,
+  mapping: Record<string, 非空广义安排>,
   key: string,
 ): Result<string, Error> => {
   const value = mapping[key];

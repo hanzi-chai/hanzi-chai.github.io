@@ -1,14 +1,14 @@
 import "@antv/s2-react/dist/s2-react.min.css";
-import { useAtomValue } from "jotai";
-import {
-  如编码结果原子,
-  默认目标类型原子,
-  部分目标类型名称映射,
-  useAtomValueUnwrapped,
-} from "~/atoms";
-import { 指法标签列表, type 部分目标类型 } from "hanzi-chai";
 import { Flex, Select } from "antd";
+import { 指法标签列表, type 部分目标类型 } from "hanzi-chai";
+import { useAtomValue } from "jotai";
 import { useState } from "react";
+import {
+  useAtomValueUnwrapped,
+  如编码结果原子,
+  部分目标类型名称映射,
+  默认目标类型原子,
+} from "~/atoms";
 
 interface LevelMetric {
   length: number;

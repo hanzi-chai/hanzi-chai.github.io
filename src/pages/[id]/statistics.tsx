@@ -268,9 +268,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       key: `density-${i}`,
       render: (items: Set<string>[]) => (
         <Popover
-          content={
-            <div className="max-w-[400px]">{[...items[i]!].join("、")}</div>
-          }
+          content={<div className="max-w-100">{[...items[i]!].join("、")}</div>}
         >
           <span>{items[i]?.size ?? 0}</span>
         </Popover>

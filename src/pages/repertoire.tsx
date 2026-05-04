@@ -1,8 +1,8 @@
 import { Flex, Layout, Skeleton, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { type 区块, 区块列表 } from "hanzi-chai";
 import { Suspense } from "react";
 import { useAtomValue, 原始字库数据原子 } from "~/atoms";
-import { type 区块, 区块列表 } from "hanzi-chai";
 
 export default function Repertoire() {
   const repertoire = useAtomValue(原始字库数据原子);

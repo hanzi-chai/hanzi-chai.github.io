@@ -215,7 +215,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         <Radio.Group
           value={step}
           onChange={(e) => setStep(e.target.value as 0)}
-          className="min-w-[200px]"
+          className="min-w-50"
         >
           <Radio.Button value={0}>部件拆分</Radio.Button>
           <Radio.Button value={1}>复合体拆分</Radio.Button>

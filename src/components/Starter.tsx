@@ -1,18 +1,18 @@
-import { Button } from "antd";
-import {
-  StarterType,
-  classifierTypes,
-  createConfig,
-  encoderTypes,
-  keyboardTypes,
-} from "~/templates";
-import type { 配置 } from "hanzi-chai";
-import { nanoid } from "nanoid";
 import {
   ModalForm,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
+import { Button } from "antd";
+import type { 配置 } from "hanzi-chai";
+import { nanoid } from "nanoid";
+import {
+  classifierTypes,
+  createConfig,
+  encoderTypes,
+  keyboardTypes,
+  type StarterType,
+} from "~/templates";
 
 export default function Starter({
   addConfig,

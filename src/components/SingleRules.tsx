@@ -1,29 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Connection, Node, Edge } from "reactflow";
+import type { Edge, Node } from "reactflow";
 import ReactFlow, {
-  useNodesState,
-  useEdgesState,
-  useReactFlow,
   Background,
   BackgroundVariant,
   Controls,
-  addEdge,
   ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
 } from "reactflow";
-import { useAtom, 源映射原子, 条件映射原子 } from "~/atoms";
+import { useAtom, 条件映射原子, 源映射原子 } from "~/atoms";
 import "reactflow/dist/style.css";
-import { SourceNode, ConditionNode } from "./Node";
-import type { SourceData, ConditionData } from "./graph";
-import {
-  makeSourceNode,
-  makeConditionNode,
-  getLayoutedElements,
-  makeEdge,
-  CacheContext,
-} from "./graph";
-import DetailEditor from "./DetailEditor";
 import { Button, Modal } from "antd";
-import { 条件节点配置, 源节点配置 } from "hanzi-chai";
+import type { 条件节点配置, 源节点配置 } from "hanzi-chai";
+import DetailEditor from "./DetailEditor";
+import type { ConditionData, SourceData } from "./graph";
+import {
+  CacheContext,
+  getLayoutedElements,
+  makeConditionNode,
+  makeEdge,
+  makeSourceNode,
+} from "./graph";
+import { ConditionNode, SourceNode } from "./Node";
 
 const initializeGraph = (
   sources: Record<string, 源节点配置>,
@@ -58,7 +56,6 @@ function EncoderGraph({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const { fitView } = useReactFlow<SourceData | ConditionData>();
   const [sources, setSources] = useAtom(源映射原子);
   const [conditions, setConditions] = useAtom(条件映射原子);
   const [cachedSources, setCachedSources] = useState(sources);

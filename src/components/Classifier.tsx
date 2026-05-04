@@ -1,5 +1,6 @@
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { Button, Flex, notification, Space } from "antd";
+import type { 笔画名称 } from "hanzi-chai";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import {
@@ -9,7 +10,6 @@ import {
   分类器自定义原子,
 } from "~/atoms";
 import BorderItem from "~/components/BorderItem";
-import type { 笔画名称 } from "hanzi-chai";
 
 function Draggable({ name }: { name: string }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -33,7 +33,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
   return (
     <Flex
       ref={setNodeRef}
-      className={`${isOver ? "text-green-500" : ""} min-h-[48px] bg-[#bae0ff] flex-1 p-2`}
+      className={`${isOver ? "text-green-500" : ""} min-h-12 bg-[#bae0ff] flex-1 p-2`}
       gap="small"
       wrap="wrap"
     >

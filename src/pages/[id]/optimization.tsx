@@ -8,6 +8,7 @@ import {
   Switch,
   Typography,
 } from "antd";
+import type { 层级权重, 码长权重, 部分权重 } from "hanzi-chai";
 import { useAtom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { range } from "lodash-es";
@@ -21,7 +22,6 @@ import {
   EditorRow,
   Select,
 } from "~/components/Utils";
-import type { 层级权重, 码长权重, 部分权重 } from "hanzi-chai";
 import { 数字 } from "~/utils";
 
 const AtomicObjective = ({
@@ -34,7 +34,7 @@ const AtomicObjective = ({
   onChange: (n: number | undefined) => void;
 }) => {
   return (
-    <Form.Item label={title} className="!mb-0">
+    <Form.Item label={title} className="mb-0!">
       <Flex justify="space-between">
         <InputNumber
           className="w-16"
@@ -98,7 +98,7 @@ const ListObjective = ({
           <Form.Item
             key={index}
             label={weightTitles[index]}
-            className={`!mb-0${weightTitles[index] === "备用" ? " !hidden" : ""}`}
+            className={`!mb-0${weightTitles[index] === "备用" ? " hidden!" : ""}`}
           >
             <InputNumber
               className="w-16"
@@ -132,7 +132,7 @@ const LevelObjective = ({
   return (
     <Flex justify="space-between">
       <Flex gap="small">
-        <Form.Item label="码长" className="!mb-0">
+        <Form.Item label="码长" className="mb-0!">
           <Select
             value={level.length}
             options={range(10).map((x) => ({
@@ -144,7 +144,7 @@ const LevelObjective = ({
             }}
           />
         </Form.Item>
-        <Form.Item label="频率权重" className="!mb-0">
+        <Form.Item label="频率权重" className="mb-0!">
           <InputNumber
             className="w-16"
             value={level.frequency}
@@ -172,7 +172,7 @@ const TierObjective = ({
   return (
     <Flex vertical gap="small">
       <Flex justify="space-between">
-        <Form.Item className="!mb-0">
+        <Form.Item className="mb-0!">
           <Select
             value={tier.top !== undefined}
             options={[
@@ -239,7 +239,7 @@ const TierObjective = ({
             remove={() =>
               update({
                 ...tier,
-                levels: levels.filter((x, i) => i !== subindex),
+                levels: levels.filter((_, i) => i !== subindex),
               })
             }
           />

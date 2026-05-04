@@ -1,5 +1,3 @@
-import { focusAtom } from "jotai-optics";
-import { atom, 编码配置原子 } from ".";
 import type {
   优先简码,
   构词规则,
@@ -9,7 +7,9 @@ import type {
   部分权重,
   部分目标类型,
 } from "hanzi-chai";
+import { focusAtom } from "jotai-optics";
 import { range } from "lodash-es";
+import { atom, 编码配置原子 } from ".";
 
 export const 最大码长原子 = focusAtom(编码配置原子, (o) =>
   o.prop("max_length"),

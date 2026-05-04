@@ -1,6 +1,3 @@
-import { Form, Space, Button } from "antd";
-import { useAtom, 构词配置原子 } from "~/atoms";
-import { 多字词长度列表, type 构词规则 } from "hanzi-chai";
 import {
   ModalForm,
   ProFormCascader,
@@ -10,6 +7,9 @@ import {
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
+import { Button, Form, Space } from "antd";
+import { 多字词长度列表, type 构词规则 } from "hanzi-chai";
+import { useAtom, 构词配置原子 } from "~/atoms";
 
 const defaultRules: 构词规则[] = [
   { length_equal: 2, formula: "AaAbBaBb" },

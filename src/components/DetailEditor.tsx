@@ -1,5 +1,5 @@
-import { Panel } from "reactflow";
 import { Cascader, Flex, Form, Select, Typography } from "antd";
+import TextArea from "antd/es/input/TextArea";
 import {
   type 一元运算符,
   一元运算符列表,
@@ -11,11 +11,11 @@ import {
   转列表,
   运算符列表,
 } from "hanzi-chai";
-import TextArea from "antd/es/input/TextArea";
+import { Panel } from "reactflow";
 import {
   useAtomValue,
-  拼写运算自定义原子,
   字母表原子,
+  拼写运算自定义原子,
   自定义分析数据库,
 } from "~/atoms";
 
@@ -128,17 +128,13 @@ export default function DetailEditor({
   ];
   return (
     <Panel position="top-right">
-      <Flex
-        vertical
-        gap="small"
-        className="w-[240px] h-[240px] bg-white rounded-lg p-4"
-      >
-        <Typography.Title level={4} className="!m-0">
+      <Flex vertical gap="small" className="w-60 h-60 bg-white rounded-lg p-4">
+        <Typography.Title level={4} className="m-0!">
           编辑节点 {selected}
         </Typography.Title>
-        <Form.Item className="!m-0" label="取码">
+        <Form.Item className="m-0!" label="取码">
           <Cascader
-            className="w-[128px]"
+            className="w-32"
             value={转列表(data.object!)}
             options={options}
             onChange={(event) => {
@@ -148,7 +144,7 @@ export default function DetailEditor({
           />
         </Form.Item>
         {!("operator" in data) && (
-          <Form.Item className="!m-0" label="码数">
+          <Form.Item className="m-0!" label="码数">
             <Select
               value={data.index}
               options={[-1, 0, 1, 2, 3].map((v) => ({
@@ -165,7 +161,7 @@ export default function DetailEditor({
         )}
         {"operator" in data && (
           <>
-            <Form.Item className="!m-0" label="判断">
+            <Form.Item className="m-0!" label="判断">
               <Select
                 value={data.operator}
                 options={运算符列表.map((v) => ({
@@ -186,10 +182,10 @@ export default function DetailEditor({
               />
             </Form.Item>
             {"value" in data && (
-              <Form.Item className="!m-0" label="取值">
+              <Form.Item className="m-0!" label="取值">
                 <TextArea
                   rows={3}
-                  className="w-[128px]"
+                  className="w-32"
                   value={data.value}
                   onChange={(event) =>
                     setData({ ...data, value: event.target.value })
@@ -199,10 +195,10 @@ export default function DetailEditor({
             )}
           </>
         )}
-        <Form.Item className="!m-0" label="备注">
+        <Form.Item className="m-0!" label="备注">
           <TextArea
             rows={2}
-            className="w-[128px]"
+            className="w-32"
             placeholder="添加备注..."
             value={data.notes}
             onChange={(event) =>

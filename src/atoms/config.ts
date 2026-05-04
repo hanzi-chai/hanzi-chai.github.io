@@ -1,11 +1,4 @@
-import { atom } from "jotai";
-import { atomWithLocation } from "jotai-location";
-import { focusAtom } from "jotai-optics";
-import { withHistory } from "jotai-history";
-import { atomWithStorage } from "jotai/utils";
-import { atomFamily } from "jotai-family";
 import {
-  默认优化配置,
   type 分析配置,
   type 图示配置,
   type 基本信息,
@@ -14,8 +7,15 @@ import {
   type 编码配置,
   type 配置,
   type 键盘配置,
+  默认优化配置,
 } from "hanzi-chai";
-import { defaultConfig, examples, type Example } from "~/templates";
+import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { atomFamily } from "jotai-family";
+import { withHistory } from "jotai-history";
+import { atomWithLocation } from "jotai-location";
+import { focusAtom } from "jotai-optics";
+import { defaultConfig, type Example, examples } from "~/templates";
 
 export const 位置原子 = atomWithLocation();
 

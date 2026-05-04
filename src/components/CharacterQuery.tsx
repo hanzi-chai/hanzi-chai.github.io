@@ -4,10 +4,10 @@ import {
   QueryFilter,
 } from "@ant-design/pro-components";
 import { Form } from "antd";
+import { 结构描述字符列表 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { debounce } from "lodash-es";
 import { 全部标签原子 } from "~/atoms";
-import { 结构描述字符列表 } from "hanzi-chai";
 import type { 字符过滤器参数 } from "~/utils";
 import CharacterSelect from "./CharacterSelect";
 
@@ -22,7 +22,7 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
     <QueryFilter<字符过滤器参数>
       onValuesChange={async (_, values) => debounced(values)}
       submitter={false}
-      className="max-w-[1080px]"
+      className="max-w-270"
       autoFocusFirstInput={false}
     >
       <ProFormText label="Unicode" name="unicode" />

@@ -1,7 +1,7 @@
 import { Col, Row, Statistic, Typography } from "antd";
+import { 是归并 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { 决策原子 } from "~/atoms";
-import { 是归并 } from "hanzi-chai";
 
 interface Count {
   笔画: number;

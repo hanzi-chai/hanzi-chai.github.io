@@ -1,5 +1,5 @@
-import { Input } from "antd";
 import SearchOutlined from "@ant-design/icons/SearchOutlined";
+import { Input } from "antd";
 
 interface StrokeSearchProps {
   setSequence: (s: string) => void;

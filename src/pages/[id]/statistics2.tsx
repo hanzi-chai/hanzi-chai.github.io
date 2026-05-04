@@ -8,6 +8,7 @@ import {
   ProFormSwitch,
 } from "@ant-design/pro-components";
 import { Flex, Form, Skeleton, Switch, Table, Typography } from "antd";
+import { 反序列化, 序列化, type 码表条目, type 部分目标类型 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { range, sum, sumBy } from "lodash-es";
 import { Suspense, useState } from "react";
@@ -21,7 +22,6 @@ import {
   默认当量原子,
   默认目标类型原子,
 } from "~/atoms";
-import { 反序列化, 序列化, type 码表条目, type 部分目标类型 } from "hanzi-chai";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
 import { CodePositionDisplay } from "~/components/Utils";
@@ -149,7 +149,7 @@ const KeyboardItem = ({
   return (
     <Flex
       vertical
-      className="w-12 h-12 rounded-[4px] py-1 px-2 justify-between items-center"
+      className="w-12 h-12 rounded-sm py-1 px-2 justify-between items-center"
       style={{ backgroundColor: color }}
     >
       <span className="self-start">{name}</span>
@@ -582,7 +582,7 @@ const DuplicationDistribution = () => {
     <>
       <Flex align="baseline" gap="large">
         <Typography.Title level={3}>重码分布</Typography.Title>
-        <Form.Item label="仅一字词" valuePropName="checked" className="!mb-0">
+        <Form.Item label="仅一字词" valuePropName="checked" className="mb-0!">
           <Switch checked={仅一字词} onChange={set仅一字词} />
         </Form.Item>
       </Flex>

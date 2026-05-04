@@ -1,17 +1,19 @@
-import { useState } from "react";
 import { Button, Flex } from "antd";
+import { 合并字符串, type 码位 } from "hanzi-chai";
+import { useState } from "react";
 import {
-  useAtomValue,
   useAddAtom,
+  useAtomValue,
   决策原子,
   字母表原子,
+  当前元素原子,
   编码类型原子,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
-import { 合并字符串, 码位 } from "hanzi-chai";
 
-export default function ElementAdder({ element }: { element?: string }) {
+export default function ElementAdder() {
+  const element = useAtomValue(当前元素原子);
   const alphabet = useAtomValue(字母表原子);
   const mapping_type = useAtomValue(编码类型原子);
   const [main, setMain] = useState<string | undefined>(undefined);
@@ -44,7 +46,7 @@ export default function ElementAdder({ element }: { element?: string }) {
           disabled={element === undefined}
           onClick={() => {
             const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
-            addMapping(element!, 合并字符串(slice));
+            addMapping(element!.toString(), 合并字符串(slice));
           }}
         >
           添加
@@ -56,7 +58,7 @@ export default function ElementAdder({ element }: { element?: string }) {
         <Button
           type="primary"
           disabled={element === undefined || main === undefined}
-          onClick={() => addMapping(element!, { element: main! })}
+          onClick={() => addMapping(element!.toString(), { element: main! })}
         >
           归并
         </Button>

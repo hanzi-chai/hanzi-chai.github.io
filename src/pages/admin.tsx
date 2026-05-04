@@ -1,13 +1,13 @@
-import { 原始字库数据, 原始汉字数据 } from "hanzi-chai";
 import { Layout } from "antd";
+import type { 原始字库数据, 原始汉字数据 } from "hanzi-chai";
+import { useSetAtom } from "jotai";
+import { useEffect } from "react";
+import { list } from "~/api";
+import { 原始可编辑字库数据原子 } from "~/atoms";
 import CharacterTable from "~/components/CharacterTable";
 import { useChaifenTitle } from "~/utils";
-import { list, listAll } from "~/api";
-import { useEffect } from "react";
-import { useSetAtom } from "jotai";
-import { 原始可编辑字库数据原子 } from "~/atoms";
 
-const checkIDsInData = (data: 原始汉字数据[]) => {
+const _checkIDsInData = (data: 原始汉字数据[]) => {
   const reverseGF3001Map = new Map<
     number,
     { unicode: number; name: string | null }[]

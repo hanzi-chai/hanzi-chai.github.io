@@ -9,6 +9,18 @@ import {
   Select,
 } from "antd";
 import type { MenuProps } from "antd/lib";
+import {
+  创建原始汉字数据,
+  type 原始字库数据,
+  type 原始汉字数据,
+  type 字形数据,
+  type 校验原始汉字数据,
+  模拟全等,
+  模拟基本部件,
+  模拟复合体,
+  模拟拼接部件,
+  模拟衍生部件,
+} from "hanzi-chai";
 import { isInteger } from "lodash-es";
 import * as O from "optics-ts/standalone";
 import type { ForwardedRef } from "react";
@@ -34,18 +46,6 @@ import {
   远程原子,
 } from "~/atoms";
 import { DeleteButton, NumberInput } from "~/components/Utils";
-import {
-  创建原始汉字数据,
-  type 原始字库数据,
-  type 原始汉字数据,
-  type 字形数据,
-  type 校验原始汉字数据,
-  模拟全等,
-  模拟基本部件,
-  模拟复合体,
-  模拟拼接部件,
-  模拟衍生部件,
-} from "hanzi-chai";
 import { errorFeedback } from "~/utils";
 import CharacterSelect from "./CharacterSelect";
 import ComponentForm, { IdentityForm } from "./ComponentForm";

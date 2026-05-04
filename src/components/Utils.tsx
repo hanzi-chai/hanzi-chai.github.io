@@ -12,14 +12,25 @@ import {
   Tooltip,
   Upload,
 } from "antd";
-import { 二笔, type 元素识别结果, 单笔, 字符, type 码位 } from "hanzi-chai";
+import {
+  二笔,
+  type 元素,
+  单笔,
+  字符,
+  拼音元素,
+  未知元素,
+  type 码位,
+  自定义元素,
+} from "hanzi-chai";
 import type { ComponentProps, MouseEventHandler } from "react";
 import {
+  useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
   别名显示原子,
   如私用区图形原子,
   强类型元素列表原子,
+  当前元素原子,
   键盘原子,
 } from "~/atoms";
 import BorderItem from "./BorderItem";
@@ -32,7 +43,7 @@ export const EditorRow = ({ className, ...props }: RowProps) => (
 
 export const EditorColumn = ({ className, ...props }: ColProps) => (
   <Col
-    className={`gutter-row h-full overflow-y-auto flex flex-col px-[16px] ${className ?? ""}`}
+    className={`gutter-row h-full overflow-y-auto flex flex-col px-4 ${className ?? ""}`}
     {...props}
   />
 );
@@ -42,17 +53,17 @@ export const NumberInput = (({
   ...props
 }: ComponentProps<typeof InputNumber>) => (
   <InputNumber
-    className={`!w-[48px] [&_.ant-input-number-input]:!px-[8px] [&_.ant-input-number-input]:!py-[4px] ${className ?? ""}`}
+    className={`w-12! [&_.ant-input-number-input]:px-2! [&_.ant-input-number-input]:py-1! ${className ?? ""}`}
     {...props}
   />
-)) as unknown as typeof InputNumber;
+)) as typeof InputNumber;
 
 export const Select = (({
   className,
   ...props
 }: ComponentProps<typeof _Select>) => (
-  <_Select className={`w-[96px] ${className ?? ""}`} {...props} />
-)) as unknown as typeof _Select;
+  <_Select className={`w-24 ${className ?? ""}`} {...props} />
+)) as typeof _Select;
 
 export const Uploader = ({
   action,
@@ -135,11 +146,11 @@ export const ElementDisplay = ({
   hideTypeNames,
   ...rest
 }: {
-  element: 元素识别结果;
+  element: 元素;
   hideTypeNames?: boolean;
 } & ComponentProps<"span">) => {
-  if (typeof element === "string") {
-    const text = hideTypeNames ? element.split("-").at(-1)! : element;
+  if (element instanceof 拼音元素 || element instanceof 自定义元素) {
+    const text = hideTypeNames ? element.元素 : element.获取名称();
     return <span {...rest}>{text}</span>;
   }
   if (element instanceof 单笔 || element instanceof 二笔) {
@@ -149,7 +160,7 @@ export const ElementDisplay = ({
   if (element instanceof 字符) {
     return <CharacterDisplay {...rest} character={element} />;
   }
-  return <span {...rest}>未知元素</span>;
+  return <span {...rest}>{element.获取名称()}</span>;
 };
 
 export const CharacterDisplay = ({
@@ -178,7 +189,7 @@ export const ElementPositionDisplay = ({
   element,
   index,
 }: {
-  element: 元素识别结果;
+  element: 元素;
   index: number;
 }) => {
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
@@ -195,16 +206,13 @@ export const CodePositionDisplay = ({ element }: { element: 码位 }) => {
   if (typeof element === "string") {
     return <span>{element}</span>;
   } else {
-    const e = 强类型元素列表.get(element.element) ?? element.element;
+    const e =
+      强类型元素列表.get(element.element) ?? new 未知元素(element.element);
     return <ElementPositionDisplay element={e} index={element.index} />;
   }
 };
 
-export const BoxedElementWithTooltip = ({
-  element,
-}: {
-  element: 元素识别结果;
-}) => {
+export const BoxedElementWithTooltip = ({ element }: { element: 元素 }) => {
   const display = useAtomValue(别名显示原子);
   const core = (
     <BorderItem
@@ -218,19 +226,10 @@ export const BoxedElementWithTooltip = ({
   return core;
 };
 
-interface ElementProps {
-  element: string | 字符;
-  setElement?: (s: string | 字符 | undefined) => void;
-  currentElement?: string | 字符;
-}
-
-export const CharacterWithTooltip = ({
-  element,
-  setElement,
-  currentElement,
-}: ElementProps) => {
+export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
   const keyboard = useAtomValue(键盘原子);
   const { mapping } = keyboard;
+  const [currentElement, setElement] = useAtom(当前元素原子);
   const type =
     element === currentElement
       ? "primary"
@@ -239,10 +238,11 @@ export const CharacterWithTooltip = ({
         : "default";
   const display = useAtomValue(别名显示原子);
   if (typeof element === "string") return element;
+  if (!(element instanceof 字符)) return element.获取名称();
   const core = (
     <Item
       onClick={() =>
-        setElement?.(element === currentElement ? undefined : element)
+        setElement(element === currentElement ? undefined : element)
       }
       type={type}
     >

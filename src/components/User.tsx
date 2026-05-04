@@ -1,7 +1,7 @@
-import { Button, Flex, Typography, notification } from "antd";
-import { post } from "~/api";
-import { md5 } from "js-md5";
 import { ModalForm, ProFormText } from "@ant-design/pro-components";
+import { Button, Flex, notification, Typography } from "antd";
+import { md5 } from "js-md5";
+import { post } from "~/api";
 
 interface Signin {
   id: string;

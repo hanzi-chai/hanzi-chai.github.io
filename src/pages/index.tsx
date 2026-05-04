@@ -10,6 +10,7 @@ import {
   Typography,
 } from "antd";
 import type { MenuProps } from "antd/lib";
+import type { 基本信息, 示例配置, 配置 } from "hanzi-chai";
 import { load } from "js-yaml";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
@@ -18,7 +19,6 @@ import Changelog from "~/components/changelog/ChangelogDrawer";
 import Starter from "~/components/Starter";
 import User from "~/components/User";
 import { DeleteButton, Uploader } from "~/components/Utils";
-import type { 基本信息, 示例配置, 配置 } from "hanzi-chai";
 import { type Example, examples } from "~/templates";
 import { useChaifenTitle, validateConfig } from "~/utils";
 
@@ -35,9 +35,9 @@ const ListItem = ({
     <Flex align="center" justify="space-between" className="w-full">
       <Link
         to={`/${id}`}
-        className="cursor-pointer p-[12px] rounded-lg flex-1 overflow-hidden text-ellipsis whitespace-nowrap hover:bg-[#f5f5f5] transition-colors duration-300"
+        className="cursor-pointer p-3 rounded-lg flex-1 overflow-hidden text-ellipsis whitespace-nowrap hover:bg-[#f5f5f5] transition-colors duration-300"
       >
-        <Typography.Title level={5} className="!m-0">
+        <Typography.Title level={5} className="m-0!">
           {info.name + (info.version ? ` (${info.version})` : "")}
         </Typography.Title>
         <Typography.Text>{info.description}</Typography.Text>
@@ -197,7 +197,7 @@ export default function HomeLayout() {
           alt="favicon"
           src="/icon.webp"
         />
-        <Typography.Title className="!m-0">汉字自动拆分系统</Typography.Title>
+        <Typography.Title className="m-0!">汉字自动拆分系统</Typography.Title>
         <Flex>
           <Tag>v{APP_VERSION}</Tag>
           <Changelog />

@@ -1,3 +1,4 @@
+import { type 优先简码, type 字符, 识别符 } from "hanzi-chai";
 import {
   useAtom,
   useAtomValue,
@@ -7,7 +8,6 @@ import {
   最大码长原子,
 } from "~/atoms";
 import { Select } from "~/components/Utils";
-import { type 优先简码, type 字符, 识别符 } from "hanzi-chai";
 
 interface 校验优先简码 extends Omit<优先简码, "word"> {
   word: 字符[];

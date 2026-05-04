@@ -1,5 +1,5 @@
 import { Button, Flex, Modal, Pagination, Typography } from "antd";
-import type { 字符 } from "hanzi-chai";
+import type { 元素, 字符 } from "hanzi-chai";
 import { useState } from "react";
 import {
   useAtomValue,
@@ -12,19 +12,13 @@ import StrokeSearch from "./CharacterSearch";
 import Classifier from "./Classifier";
 import { CharacterWithTooltip } from "./Utils";
 
-interface PoolProps {
-  element?: string | 字符;
-  setElement: (s: string | 字符 | undefined) => void;
-  content: string[] | 字符[];
-  name: string;
-}
-
 export default function ElementPool({
-  element,
-  setElement,
+  type,
   content,
-  name,
-}: PoolProps) {
+}: {
+  type: string;
+  content: 元素[];
+}) {
   const [page, setPage] = useState(1);
   const pageSize = 100;
   const [input, setInput] = useState("");
@@ -34,7 +28,7 @@ export default function ElementPool({
   const 笔顺过滤 = new 字符过滤器({ sequence: input }, sequenceMap);
   const 直接过滤 = new 字符过滤器({ name: input }, sequenceMap);
   const filtered =
-    name === "字根"
+    type === "字根"
       ? content.filter((char) => {
           const ch = char as 字符;
           const data = determinedRepertoire.查询(ch);
@@ -45,8 +39,8 @@ export default function ElementPool({
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
   return (
     <Flex vertical gap="middle" align="center">
-      {name === "字根" && <StrokeSearch setSequence={setInput} />}
-      {name === "笔画" && (
+      {type === "字根" && <StrokeSearch setSequence={setInput} />}
+      {type === "笔画" && (
         <>
           <Typography.Text>
             您需要首先将笔画分为若干个类别，然后将代表类别的数字放到键盘上。
@@ -62,14 +56,9 @@ export default function ElementPool({
           </Modal>
         </>
       )}
-      <Flex wrap="wrap" className="p-[8px] border border-black w-full">
+      <Flex wrap="wrap" className="p-2 border border-black w-full">
         {range.map((x) => (
-          <CharacterWithTooltip
-            key={JSON.stringify(x)}
-            element={x}
-            currentElement={element}
-            setElement={setElement}
-          />
+          <CharacterWithTooltip key={JSON.stringify(x)} element={x} />
         ))}
       </Flex>
       {filtered.length > pageSize && (

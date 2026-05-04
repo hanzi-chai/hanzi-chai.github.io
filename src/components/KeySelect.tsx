@@ -4,7 +4,6 @@ import { useAtomValue } from "jotai";
 import {
   useAtomValueUnwrapped,
   决策原子,
-  原始字库原子,
   变量规则映射原子,
   如笔顺映射原子,
   字母表原子,

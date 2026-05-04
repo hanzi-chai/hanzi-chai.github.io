@@ -3,6 +3,7 @@ import { Button, Flex, Form, Popover } from "antd";
 import {
   type 基本分析,
   type 复合体,
+  未知元素,
   部件,
   type 默认部件分析,
 } from "hanzi-chai";
@@ -13,7 +14,7 @@ import {
   useRemoveAtom,
   动态分析原子,
   动态自定义拆分原子,
-  原始字库原子,
+  强类型元素列表原子,
   自定义拆分原子,
 } from "~/atoms";
 import { InlineRender } from "./ComponentForm";
@@ -129,15 +130,15 @@ export default function ResultSummary({
   if ("被覆盖拆分方式" in analysis && analysis.被覆盖拆分方式) {
     字根序列 = analysis.被覆盖拆分方式.拆分方式.map((x) => x.字根);
   }
-  const customize = useAtomValue(自定义拆分原子);
-  const remove = useRemoveAtom(自定义拆分原子);
-  const dynamic = useAtomValue(动态分析原子);
-  const dynamicCustomize = useAtomValue(动态自定义拆分原子);
-  const removeDynamic = useRemoveAtom(动态自定义拆分原子);
+  const 是否动态分析 = useAtomValue(动态分析原子);
+  const 自定义分析 = useAtomValue(自定义拆分原子);
+  const 移除自定义分析 = useRemoveAtom(自定义拆分原子);
+  const 动态自定义分析 = useAtomValue(动态自定义拆分原子);
+  const 移除动态自定义分析 = useRemoveAtom(动态自定义拆分原子);
   const 索引 = glyph instanceof 部件 ? glyph.获取索引() : "";
-  const overrideRootSeries = customize[索引];
-  const overrideDynamicSeries = dynamicCustomize[索引];
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 自定义字根序列 = 自定义分析[索引];
+  const 自定义字根序列列表 = 动态自定义分析[索引];
+  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small">
@@ -150,22 +151,22 @@ export default function ResultSummary({
             </Flex>
           );
         })}
-        {overrideRootSeries && (
+        {自定义字根序列 && (
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
-            {overrideRootSeries.map((x, i) => {
-              const 字符 = 原始字库.校验(x)?.character;
+            {自定义字根序列.map((x, i) => {
+              const 字符 = 强类型元素列表.get(x) ?? new 未知元素(x);
               return <BoxedElementWithTooltip key={i} element={字符 ?? x} />;
             })}
           </Flex>
         )}
-        {overrideDynamicSeries && (
+        {自定义字根序列列表 && (
           <Flex gap="small" align="center" wrap="wrap">
             <span>（自定义组：）</span>
-            {overrideDynamicSeries.map((x, i) => (
+            {自定义字根序列列表.map((x, i) => (
               <Flex key={i} align="center">
                 {x.map((y, j) => {
-                  const 字符 = 原始字库.校验(y)?.character;
+                  const 字符 = 强类型元素列表.get(y) ?? new 未知元素(y);
                   return (
                     <BoxedElementWithTooltip key={j} element={字符 ?? y} />
                   );
@@ -178,13 +179,15 @@ export default function ResultSummary({
       </Flex>
       {glyph instanceof 部件 && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
-          {overrideRootSeries && (
-            <Button onClick={() => remove(索引)}>取消自定义</Button>
+          {自定义字根序列 && (
+            <Button onClick={() => 移除自定义分析(索引)}>取消自定义</Button>
           )}
-          {overrideDynamicSeries && (
-            <Button onClick={() => removeDynamic(索引)}>取消自定义组</Button>
+          {自定义字根序列列表 && (
+            <Button onClick={() => 移除动态自定义分析(索引)}>
+              取消自定义组
+            </Button>
           )}
-          {"全部拆分方式" in analysis && dynamic && (
+          {"全部拆分方式" in analysis && 是否动态分析 && (
             <Popover
               title="自定义动态拆分"
               trigger="click"
@@ -192,7 +195,7 @@ export default function ResultSummary({
                 <DynamicCustomize
                   component={glyph}
                   initialValues={
-                    dynamicCustomize[索引] ??
+                    动态自定义分析[索引] ??
                     analysis.全部拆分方式
                       .filter((x) => x.可用)
                       .map((x) => x.拆分方式.map((y) => y.字根.获取名称()))
@@ -210,7 +213,7 @@ export default function ResultSummary({
               <Customize
                 component={glyph}
                 initialValues={
-                  overrideRootSeries ?? 字根序列.map((x) => x.获取名称())
+                  自定义字根序列 ?? 字根序列.map((x) => x.获取名称())
                 }
               />
             }
