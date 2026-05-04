@@ -14,7 +14,7 @@ import {
   Statistic,
   Switch,
 } from "antd";
-import { CollapseProps } from "antd/lib";
+import type { CollapseProps } from "antd/lib";
 import {
   优先表,
   type 动态字形分析结果,
@@ -234,13 +234,13 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
                 全部自定义拆分[k] = [v];
               }
             }
-            for (const [部件, 字根序列列表] of Object.entries(动态自定义拆分)) {
+            for (const [部件, 字根序列列表] of Object.entries(全部自定义拆分)) {
               const last = 字根序列列表[字根序列列表.length - 1];
               if (!last) continue;
               if (last.some((x) => !是必要字根(x))) {
                 notification.warning({
                   message: "存在不合法的自定义拆分",
-                  description: `部件 ${部件} 的自定义拆分中包含非必要字根 ${last
+                  description: `部件 ${display(原始字库.校验(部件)!.character)} 的自定义拆分中包含非必要字根 ${last
                     .filter((x) => !是必要字根(x))
                     .join("、")}，请修改后重试`,
                 });

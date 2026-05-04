@@ -12,8 +12,9 @@ const { 天 } = 部件图形库;
 const env: 拆分环境 = {
   部件图形: 天!,
   二进制字根映射: new Map(),
-  分析配置: {},
   字根决策: new Map(),
+  强字根列表: [],
+  弱字根列表: [],
 };
 
 const length = new 根少优先();
@@ -62,7 +63,6 @@ describe("attaching", () => {
 
 describe("select", () => {
   it("should select the correct scheme for 天", () => {
-    console.log(配置);
     const a = 天!.给出部件分析(配置);
     if (!a.ok) {
       console.error(a.error);

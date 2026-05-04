@@ -71,7 +71,7 @@
     "reactflow": "^11.11.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
+    "@biomejs/biome": "2.4.14",
     "@emotion/react": "^11.14.0",
     "@jsdevtools/version-bump-prompt": "^6.1.0",
     "@mdx-js/react": "^3.1.1",
@@ -93,8 +93,8 @@
     "fs-extra": "^11.3.3",
     "jotai-devtools": "^0.13.0",
     "less": "^4.5.1",
-    "pre-commit": "^1.2.2",
-    "rollup-plugin-visualizer": "^6.0.5",
+    "pre-commit": "^2.0.0",
+    "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.1.10",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",

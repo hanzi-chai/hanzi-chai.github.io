@@ -1,13 +1,21 @@
 import { isEqual } from "lodash-es";
 import { 图形盒子 } from "./affine.js";
 import { type 分类器, 合并分类器 } from "./classifier.js";
-import { 部件 } from "./component.js";
+import { 部件, 默认退化配置 } from "./component.js";
 import { 复合体 } from "./compound.js";
-import type { 决策, 决策空间, 分析配置, 安排, 条件 } from "./config.js";
+import type {
+  决策,
+  决策空间,
+  分析配置,
+  安排,
+  条件,
+  退化配置,
+} from "./config.js";
 import type { 复合体数据 } from "./data.js";
 import { 二笔, 单笔, 识别元素 } from "./element.js";
 import type { 原始字库 } from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
+import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符 } from "./unicode.js";
 import { ok, type Result, type 源标签 } from "./utils.js";
 
@@ -71,7 +79,6 @@ interface 字形分析基本配置 {
 }
 
 interface 字形分析配置 {
-  分析配置: 分析配置; // 原始分析配置
   字根决策: Map<字根, 安排>;
   可选字根: Set<字根>;
   分类器: 分类器; // 已经填充过默认值
@@ -79,6 +86,10 @@ interface 字形分析配置 {
   复合体字根映射: Map<复合体, 部件>;
   自定义分析映射: Map<部件, 字根[]>;
   动态自定义分析映射: Map<部件, 字根[][]>;
+  退化配置: 退化配置;
+  筛选器列表: [string, 筛选器][];
+  强字根列表: 字根[];
+  弱字根列表: 字根[];
 }
 
 export class 优先表<T extends object> {
@@ -252,8 +263,31 @@ class 字库 {
       }
       动态自定义分析映射.set(部件, 字根列表列表);
     }
+    for (const [部件, 字根列表] of 自定义分析映射) {
+      if (!动态自定义分析映射.has(部件)) {
+        动态自定义分析映射.set(部件, [字根列表]);
+      }
+    }
+    const 筛选器列表: [string, 筛选器][] = [];
+    for (const name of 分析配置.selector ?? 默认筛选器列表) {
+      const 筛选器 = 获取注册表().创建筛选器(name);
+      if (筛选器) {
+        筛选器列表.push([name, 筛选器]);
+      }
+    }
+    const 强字根列表: 字根[] = [];
+    for (const name of 分析配置.strong ?? []) {
+      const 字根 = 字根名称映射.get(name);
+      if (字根) 强字根列表.push(字根);
+    }
+    const 弱字根列表: 字根[] = [];
+    for (const name of 分析配置.weak ?? []) {
+      const 字根 = 字根名称映射.get(name);
+      if (字根) 弱字根列表.push(字根);
+    }
     return ok({
-      分析配置,
+      退化配置: 分析配置.degenerator ?? 默认退化配置,
+      筛选器列表,
       分类器,
       字根决策,
       可选字根,
@@ -261,6 +295,8 @@ class 字库 {
       复合体字根映射,
       自定义分析映射,
       动态自定义分析映射,
+      强字根列表,
+      弱字根列表,
     });
   }
 
@@ -320,24 +356,24 @@ class 字库 {
 
   准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>, 原始字库: 原始字库) {
     const { 分析配置, 决策, 决策空间 } = base;
-    const config = this.准备字形分析配置(分析配置, 决策, 决策空间, 原始字库);
-    if (!config.ok) return config;
-    const configValue = config.value;
+    const 如配置 = this.准备字形分析配置(分析配置, 决策, 决策空间, 原始字库);
+    if (!如配置.ok) return 如配置;
+    const 配置 = 如配置.value;
     const 待分析部件集合 = this.获取待分析部件(汉字集合);
     const 部件分析器 = 获取注册表().创建部件分析器(
       分析配置.component_analyzer || "默认",
-      configValue,
+      配置,
     )!;
     const 复合体分析器 = 获取注册表().创建复合体分析器(
       分析配置.compound_analyzer || "默认",
-      configValue,
+      配置,
     )!;
     return ok({
       待分析部件集合,
       部件分析器,
       复合体分析器,
-      字根部件列表: configValue.部件字根列表,
-      复合体字根映射: configValue.复合体字根映射,
+      字根部件列表: 配置.部件字根列表,
+      复合体字根映射: 配置.复合体字根映射,
     });
   }
 
@@ -371,18 +407,10 @@ class 字库 {
     }
     分析配置.复合体分析器.部件分析结果 = 部件分析结果;
     const 分析结果 = new Map<字符, 基本分析[]>();
-    const 当前标签集合 = new Set(base.字形来源列表);
     for (const 字符 of 汉字集合) {
       const 结果列表: 基本分析[] = [];
       const 字形列表 = this.查询字形(字符) ?? [];
-      const 已存在标签集合 = new Set<源标签>();
       for (const 字形 of 字形列表) {
-        const 剩余有效标签集合 = 字形.标签集合.difference(已存在标签集合);
-        const 选取 =
-          字形.用户自定义 ||
-          剩余有效标签集合.intersection(当前标签集合).size > 0;
-        if (!选取) continue;
-        [...字形.标签集合].map((x) => 已存在标签集合.add(x));
         if (字形 instanceof 部件) {
           const 分析 = 部件分析结果.get(字形)!;
           结果列表.push(分析);
@@ -430,18 +458,10 @@ class 字库 {
       字符,
       (优先表<基本部件分析> | 优先表<基本复合体分析>)[]
     >();
-    const 当前标签集合 = new Set(base.字形来源列表);
     for (const 字符 of 汉字集合) {
       const 结果列表: (优先表<基本部件分析> | 优先表<基本复合体分析>)[] = [];
       const 字形列表 = this.查询字形(字符) ?? [];
-      const 已存在标签集合 = new Set<源标签>();
       for (const 字形 of 字形列表) {
-        const 剩余有效标签集合 = 字形.标签集合.difference(已存在标签集合);
-        const 选取 =
-          字形.用户自定义 ||
-          剩余有效标签集合.intersection(当前标签集合).size > 0;
-        if (!选取) continue;
-        [...字形.标签集合].map((x) => 已存在标签集合.add(x));
         if (字形 instanceof 部件) {
           const 分析 = 动态部件分析结果.get(字形)!;
           结果列表.push(分析);
@@ -460,12 +480,12 @@ class 字库 {
   }
 }
 
-export { 字库 };
 export type {
-  基本分析,
-  基本部件分析,
-  基本复合体分析,
-  字形分析结果,
   动态字形分析结果,
+  基本分析,
+  基本复合体分析,
+  基本部件分析,
+  字形分析结果,
   字形分析配置,
 };
+export { 字库 };

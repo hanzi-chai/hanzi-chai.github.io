@@ -15,6 +15,7 @@ import {
   ok,
   type Result,
   标准化自定义,
+  type 源标签,
   type 自定义分析,
   type 自定义分析映射,
   解析当量映射,
@@ -113,7 +114,12 @@ export function 获取字库(config: 配置): Result<字库, Error> {
   const 原始字库 = 获取原始字库(Object.values(用户原始字库数据));
   const 自定义字形 = config.data?.glyph_customization ?? {};
   const 变换器列表 = config.data?.transformers ?? [];
-  const 字库或错误 = 原始字库.确定(标准化自定义(自定义字形), 变换器列表);
+  const 字形来源列表 = (config.data?.glyph_sources ?? []) as 源标签[];
+  const 字库或错误 = 原始字库.确定(
+    标准化自定义(自定义字形),
+    变换器列表,
+    字形来源列表,
+  );
   if (!字库或错误.ok) {
     return 字库或错误;
   }

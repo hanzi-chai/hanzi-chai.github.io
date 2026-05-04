@@ -317,7 +317,7 @@ class 部件 {
   给出部件分析(配置: 字形分析配置): Result<默认部件分析, Error> {
     const 当前字根 = new Set(配置.字根决策.keys());
     const 必要字根 = 当前字根.difference(配置.可选字根);
-    const 退化配置 = 配置.分析配置?.degenerator ?? 默认退化配置;
+    const 退化配置 = 配置.退化配置;
     const 二进制字根映射 = this.生成二进制字根映射(
       配置.部件字根列表,
       退化配置,
@@ -383,23 +383,16 @@ class 部件 {
       二进制字根映射,
       ...配置,
     };
-    const 筛选器列表: [string, 筛选器][] = [];
-    for (const name of 配置.分析配置.selector ?? 默认筛选器列表) {
-      const 筛选器 = 获取注册表().创建筛选器(name);
-      if (筛选器) {
-        筛选器列表.push([name, 筛选器]);
-      }
-    }
     const 拆分方式与评价列表 = 拆分方式列表.map((拆分方式) => {
       const 评价: Map<string, number[]> = new Map();
-      for (const [name, 筛选器] of 筛选器列表) {
+      for (const [name, 筛选器] of 配置.筛选器列表) {
         const 取值 = 筛选器.评价(拆分方式, environment);
         评价.set(name, 取值);
       }
       return { 拆分方式, 评价, 可用: false };
     });
     拆分方式与评价列表.sort((a, b) => {
-      for (const [name, _] of 筛选器列表) {
+      for (const [name, _] of 配置.筛选器列表) {
         const aValue = a.评价.get(name)!;
         const bValue = b.评价.get(name)!;
         if (是小于(aValue, bValue)) return -1;

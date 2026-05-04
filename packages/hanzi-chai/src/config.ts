@@ -1,6 +1,7 @@
 import type { 笔画名称 } from "./classifier.js";
 import type { 原始汉字数据, 字形数据, 结构描述字符 } from "./data.js";
 import type { 取码对象 } from "./element.js";
+import type { 源标签 } from "./utils.js";
 
 // config.info begin
 export interface 基本信息 {
@@ -30,7 +31,7 @@ export interface 数据配置 {
   repertoire?: Record<string, 原始汉字数据>;
   glyph_customization?: 兼容字形自定义;
   transformers?: 变换器[];
-  glyph_sources?: string[];
+  glyph_sources?: 源标签[];
 }
 
 export type 兼容字形自定义 = Record<string, 字形数据 | 字形数据[]>;

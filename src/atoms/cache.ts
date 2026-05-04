@@ -208,7 +208,8 @@ export const 如字库原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 字形自定义 = get(标准字形自定义原子);
   const 变换器列表 = get(变换器列表原子);
-  return 原始字库.确定(字形自定义, 变换器列表);
+  const 字形来源列表 = get(字形来源列表原子);
+  return 原始字库.确定(字形自定义, 变换器列表, 字形来源列表);
 });
 
 export const 如私用区图形原子 = atom(async (get) => {

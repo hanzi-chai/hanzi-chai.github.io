@@ -30,7 +30,7 @@ export function 编码渲染({ code, rank }: { code: string; rank: number }) {
   );
 }
 
-const ExportAssembly = () => {
+export const ExportAssembly = () => {
   const 组装结果 = useAtomValueUnwrapped(如组装结果与优先简码原子);
   return (
     <Button
@@ -51,7 +51,7 @@ const ExportAssembly = () => {
   );
 };
 
-const ExportDynamicAssembly = () => {
+export const ExportDynamicAssembly = () => {
   const 组装结果 = useAtomValueUnwrapped(如动态组装结果与优先简码原子);
   return (
     <Button

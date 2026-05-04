@@ -1,10 +1,11 @@
-import { focusAtom } from "jotai-optics";
 import type {
   兼容字形自定义,
   原始汉字数据,
   变换器,
   字集指示,
+  源标签,
 } from "hanzi-chai";
+import { focusAtom } from "jotai-optics";
 import { 数据配置原子 } from ".";
 
 export const 用户原始字库数据原子 = focusAtom(数据配置原子, (o) =>
@@ -24,5 +25,5 @@ export const 变换器列表原子 = focusAtom(数据配置原子, (o) =>
 );
 
 export const 字形来源列表原子 = focusAtom(数据配置原子, (o) =>
-  o.prop("glyph_sources").valueOr(["G"] as string[]),
+  o.prop("glyph_sources").valueOr(["G"] as 源标签[]),
 );

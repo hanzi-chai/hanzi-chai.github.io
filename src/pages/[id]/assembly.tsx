@@ -1,12 +1,12 @@
-import { Suspense } from "react";
 import { Flex, Skeleton } from "antd";
-import SingleRules from "~/components/SingleRules";
+import { Suspense } from "react";
+import { ErrorBoundary } from "~/components/Error";
+import MetricTable from "~/components/MetricTable";
 import MultipleRules from "~/components/MultipleRules";
+import SelectRules from "~/components/SelectRules";
 import SequenceTable from "~/components/SequenceTable";
 import ShortCodeRules from "~/components/ShortCodeRules";
-import SelectRules from "~/components/SelectRules";
-import MetricTable from "~/components/MetricTable";
-import { ErrorBoundary } from "~/components/Error";
+import SingleRules from "~/components/SingleRules";
 import { useChaifenTitle } from "~/utils";
 
 const ConfigureRules = () => {

@@ -23,8 +23,9 @@ type 拆分方式 = 拆分字根信息[];
 interface 拆分环境 {
   部件图形: 部件;
   二进制字根映射: Map<number, 字根>;
-  分析配置: 分析配置;
   字根决策: Map<字根, 安排>;
+  强字根列表: 字根[];
+  弱字根列表: 字根[];
 }
 
 interface 筛选器 {
@@ -131,11 +132,8 @@ class 非形近根 implements 筛选器 {
  */
 class 多强字根 implements 筛选器 {
   static readonly type = "多强字根";
-  评价(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
-    const 强字根列表 = analysis?.strong || [];
-    const count = scheme.filter((x) =>
-      强字根列表.includes(x.字根.获取名称()),
-    ).length;
+  评价(scheme: 拆分方式, { 强字根列表 }: 拆分环境) {
+    const count = scheme.filter((x) => 强字根列表.includes(x.字根)).length;
     return [-count];
   }
 }
@@ -147,9 +145,8 @@ class 多强字根 implements 筛选器 {
  */
 class 少弱字根 implements 筛选器 {
   static readonly type = "少弱字根";
-  评价(scheme: 拆分方式, { 分析配置: analysis }: 拆分环境) {
-    const weak = analysis?.weak || [];
-    const count = scheme.filter((x) => weak.includes(x.字根.获取名称())).length;
+  评价(scheme: 拆分方式, { 弱字根列表 }: 拆分环境) {
+    const count = scheme.filter((x) => 弱字根列表.includes(x.字根)).length;
     return [count];
   }
 }
