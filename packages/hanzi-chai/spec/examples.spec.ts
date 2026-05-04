@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { 获取字库, 获取字形分析结果, 获取拼音分析结果, 获取组装结果, 获取词典, 读取配置, 配置 } from "../src/index.js";
+import { 获取字库, 获取字形分析结果, 获取拼音分析结果, 获取组装结果, 获取原始词典, 读取配置, 配置 } from "../src/index.js";
 import { readdirSync } from "fs";
 import { 获取数据 } from "./index.js";
 
 const { 原始字库 } = 获取数据();
 
 describe("E2E", () => {
-  const 词典 = 获取词典(undefined, 原始字库);
+  const 词典 = 获取原始词典(undefined, 原始字库);
   const configs: 配置[] = [];
   for (const path of readdirSync("../../examples")) {
     if (!path.endsWith(".yaml")) {

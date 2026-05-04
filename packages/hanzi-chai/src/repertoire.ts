@@ -100,15 +100,15 @@ export class 优先表<T extends object> {
   }
 }
 
-export function 贝叶斯推断<T extends object, U extends object>(
-  优先表列表: 带条件<T>[][],
-  reducer: (a: T[]) => U,
+export function 贝叶斯推断<Ts extends object[], U extends object>(
+  优先表列表: { [K in keyof Ts]: 带条件<Ts[K] & object>[] },
+  reducer: (a: Ts) => U,
 ): 带条件<U>[] {
-  const recurse = (l: 带条件<T>[][]): 带条件<{ array: T[] }>[] => {
+  const recurse = (l: 带条件<object>[][]): 带条件<{ array: object[] }>[] => {
     if (l.length === 1) return l[0]!.map((x) => ({ ...x, array: [x] }));
     const 前一个表 = recurse(l.slice(0, -1));
     const 当前表 = l.at(-1)!;
-    const 结果列表: 带条件<{ array: T[] }>[] = [];
+    const 结果列表: 带条件<{ array: object[] }>[] = [];
     for (const 前一个项 of 前一个表) {
       for (const 当前项 of 当前表) {
         const 合并项 = { array: [...前一个项.array, 当前项] };
@@ -128,8 +128,8 @@ export function 贝叶斯推断<T extends object, U extends object>(
     }
     return 结果列表;
   };
-  const 结果列表 = recurse(优先表列表).map((x) => ({
-    ...reducer(x.array),
+  const 结果列表 = recurse(优先表列表 as 带条件<object>[][]).map((x) => ({
+    ...reducer(x.array as Ts),
     条件列表: x.条件列表,
   }));
   return 结果列表;

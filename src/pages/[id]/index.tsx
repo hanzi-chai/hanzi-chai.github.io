@@ -5,6 +5,7 @@ import {
 } from "@ant-design/pro-components";
 import { Button, Flex, Input, Select, Typography } from "antd";
 import {
+  type 原始词典,
   type 基本信息,
   type 字集指示,
   字集过滤查找表,
@@ -13,10 +14,10 @@ import {
   序列化词典,
   序列化键位频率目标,
   type 当量映射,
+  解析原始词典,
   解析当量映射,
   解析自定义元素,
   解析键位分布目标,
-  type 词典,
   读取表格,
   type 键位分布目标,
 } from "hanzi-chai";
@@ -30,18 +31,20 @@ import {
   原始字库原子,
   基本信息原子,
   字集指示原子,
+  用户原始词典原子,
   用户当量映射原子,
-  用户词典原子,
   用户键位分布目标原子,
   自定义分析数据库,
+  默认原始词典原子,
   默认当量原子,
-  默认词典原子,
   默认键位分布目标原子,
 } from "~/atoms";
 import { EditorColumn, EditorRow, Uploader } from "~/components/Utils";
 import { exportTSV, useChaifenTitle } from "~/utils";
 
-function AssetUploader<V extends 当量映射 | 键位分布目标 | 词典 | string[]>({
+function AssetUploader<
+  V extends 当量映射 | 键位分布目标 | 原始词典 | string[],
+>({
   atom,
   defaultAtom,
   title,
@@ -254,9 +257,9 @@ export default function Index() {
               &nbsp;注音，未收录则标记为无音。
             </span>
           }
-          atom={用户词典原子}
-          defaultAtom={默认词典原子}
-          parser={(x) => 原始字库.解析词典(x)}
+          atom={用户原始词典原子}
+          defaultAtom={默认原始词典原子}
+          parser={解析原始词典}
           dumper={序列化词典}
         />
         <AssetUploader

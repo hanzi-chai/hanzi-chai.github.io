@@ -17,6 +17,7 @@ import {
   default_err,
   ok,
   type Result,
+  type 原始词典,
   所有源标签,
   排列组合,
   是源标签,
@@ -490,38 +491,46 @@ class 原始字库 {
     return 查找表;
   }
 
-  解析词典(tsv: string[][]): 词典 {
+  校验词典(原始词典: 原始词典): 词典 {
     const result: 词典 = [];
-    for (const [word, pinyin_s, frequency_s] of tsv) {
-      if (
-        word === undefined ||
-        pinyin_s === undefined ||
-        frequency_s === undefined
-      )
-        continue;
-      const pinyin = pinyin_s.split(" ");
-      const frequency = Number(frequency_s);
-      if (Number.isNaN(frequency)) continue;
-      const chars: 字符[] = [];
-      for (const char of Array.from(word)) {
-        const charInstance = this.校验(char)?.character;
-        if (charInstance) {
-          chars.push(charInstance);
+    for (const { 词, ...rest } of 原始词典) {
+      const 字符列表: 字符[] = [];
+      let valid = true;
+      for (const 字符 of [...词]) {
+        const 字符实例 = this.校验(字符)?.character;
+        if (字符实例) {
+          字符列表.push(字符实例);
+        } else {
+          valid = false;
         }
       }
-      result.push({ 词: chars, 拼音: pinyin, 频率: frequency });
+      if (valid) result.push({ 词: 字符列表, ...rest });
     }
     return result;
   }
 
-  获取汉字集合(词典: 词典, 字集指示: 字集指示): Set<字符> {
+  过滤词典(词典: 词典, 字集指示: 字集指示): 词典 {
     const 过滤函数 = 字集过滤查找表[字集指示]!;
+    const result: 词典 = [];
+    for (const 条目 of 词典) {
+      let valid = true;
+      for (const 汉字 of 条目.词) {
+        const 汉字数据 = this.查询(汉字);
+        if (!汉字数据) continue;
+        if (!过滤函数(汉字数据.character, 汉字数据)) valid = false;
+      }
+      if (valid) result.push(条目);
+    }
+    return result;
+  }
+
+  获取汉字集合(词典: 词典): Set<字符> {
     const 字符集合 = new Set<字符>();
     for (const { 词 } of 词典) {
       for (const 汉字 of 词) {
         const 汉字数据 = this.查询(汉字);
         if (!汉字数据) continue;
-        if (过滤函数(汉字数据.character, 汉字数据)) 字符集合.add(汉字);
+        字符集合.add(汉字);
       }
     }
     return 字符集合;

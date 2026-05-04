@@ -316,7 +316,7 @@ export default function MappingSpace() {
                 <Flex key={name} align="center">
                   <Popover
                     title="编辑决策空间"
-                    trigger={["hover", "click"]}
+                    trigger="click"
                     content={<RulesForm name={name} />}
                   >
                     <BorderItem>

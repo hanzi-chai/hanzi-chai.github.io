@@ -14,10 +14,12 @@ import type { 字库, 字形分析结果 } from "./repertoire.js";
 import {
   ok,
   type Result,
+  type 原始词典,
   标准化自定义,
   type 源标签,
   type 自定义分析,
   type 自定义分析映射,
+  解析原始词典,
   解析当量映射,
   解析键位分布目标,
   type 词典,
@@ -72,8 +74,8 @@ export function 获取原始字库(自定义字库: 原始汉字数据[] = []): 
   return new 原始字库([...原始字库数据, ...自定义字库]);
 }
 
-export function 获取词典(路径: string | undefined, 原始字库: 原始字库): 词典 {
-  return 读取数据文件("dictionary.txt", (x) => 原始字库.解析词典(x), 路径);
+export function 获取原始词典(路径: string | undefined): 原始词典 {
+  return 读取数据文件("dictionary.txt", 解析原始词典, 路径);
 }
 
 export function 获取键位分布目标(路径?: string): 键位分布目标 {
@@ -129,7 +131,7 @@ export function 获取字库(config: 配置): Result<字库, Error> {
 export function 获取字形分析结果(
   config: 配置,
   repertoire: 字库,
-  词典: 词典,
+  过滤词典: 词典,
   原始字库: 原始字库,
 ) {
   const 字形分析配置 = {
@@ -138,10 +140,7 @@ export function 获取字形分析结果(
     决策空间: config.form.mapping_space ?? {},
     字形来源列表: config.data?.glyph_sources ?? [],
   };
-  const characters = 原始字库.获取汉字集合(
-    词典,
-    config.data?.character_set ?? "minimal",
-  );
+  const characters = 原始字库.获取汉字集合(过滤词典);
   return repertoire.分析(字形分析配置, characters, 原始字库);
 }
 

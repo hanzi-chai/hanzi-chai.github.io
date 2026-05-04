@@ -145,7 +145,9 @@ interface 键位频率目标 {
 }
 
 export type 词典条目 = { 词: 字符[]; 拼音: string[]; 频率: number };
+export type 原始词典条目 = Omit<词典条目, "词"> & { 词: string };
 export type 词典 = 词典条目[];
+export type 原始词典 = 原始词典条目[];
 export type 频率映射 = Map<string, number>;
 export type 键位分布目标 = Map<string, 键位频率目标>;
 export type 当量映射 = Map<string, number>;
@@ -222,14 +224,27 @@ export const 序列化当量映射 = (mapping: 当量映射): string[][] => {
   return result;
 };
 
-export function 序列化词典(词典: 词典): string[][] {
+export function 解析原始词典(tsv: string[][]): 原始词典 {
+  const result: 原始词典条目[] = [];
+  for (const [word, pinyin_s, frequency_s] of tsv) {
+    if (
+      word === undefined ||
+      pinyin_s === undefined ||
+      frequency_s === undefined
+    )
+      continue;
+    const pinyin = pinyin_s.split(" ");
+    const frequency = Number(frequency_s);
+    if (Number.isNaN(frequency)) continue;
+    result.push({ 词: word, 拼音: pinyin, 频率: frequency });
+  }
+  return result;
+}
+
+export function 序列化词典(词典: 原始词典): string[][] {
   const result: string[][] = [];
   for (const { 词, 拼音, 频率 } of 词典) {
-    result.push([
-      词.map((c) => c.toString()).join(""),
-      拼音.join(" "),
-      频率.toString(),
-    ]);
+    result.push([词, 拼音.join(" "), 频率.toString()]);
   }
   return result;
 }

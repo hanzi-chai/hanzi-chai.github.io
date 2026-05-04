@@ -2,6 +2,7 @@ import type {
   元素,
   原始字库数据,
   原始汉字数据,
+  原始词典,
   字符,
   当量映射,
   条件,
@@ -10,7 +11,6 @@ import type {
   组装条目,
   组装配置,
   自定义分析,
-  词典,
   键位分布目标,
 } from "hanzi-chai";
 import {
@@ -32,6 +32,7 @@ import {
   结构描述字符列表,
   结构符元素,
   自定义元素,
+  解析原始词典,
   解析当量映射,
   解析键位分布目标,
   识别元素,
@@ -41,6 +42,7 @@ import {
   默认拼音分析器,
 } from "hanzi-chai";
 import { atom } from "jotai";
+import { unwrap } from "jotai/utils";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
 import pako from "pako";
@@ -126,10 +128,9 @@ export const 原始字库数据原子 = atom(async () => {
 
 export const 原始可编辑字库数据原子 = atom({} as 原始字库数据);
 
-export const 默认词典原子 = atom(async (get) => {
+export const 默认原始词典原子 = atom(async () => {
   const content = await 拉取资源("dictionary.txt");
-  const 原始字库 = await get(原始字库原子);
-  return 原始字库.解析词典(读取表格(content));
+  return 解析原始词典(读取表格(content));
 });
 
 export const 默认键位分布目标原子 = atom(async () => {
@@ -143,9 +144,9 @@ export const 默认当量原子 = atom(async () => {
 });
 
 // 用户数据存储
-const 用户词典数据库 = new MiniDb<词典>({ name: "词典" });
+const 用户原始词典数据库 = new MiniDb<原始词典>({ name: "原始词典" });
 
-export const 用户词典原子 = 用户词典数据库.item("user_dictionary");
+export const 用户原始词典原子 = 用户原始词典数据库.item("user_dictionary");
 
 const 用户键位分布目标数据库 = new MiniDb<键位分布目标>({
   name: "键位分布目标",
@@ -162,9 +163,22 @@ export const 自定义分析数据库 = new MiniDb<自定义分析>({ name: "自
 
 export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 
-export const 词典原子 = atom(async (get) => {
-  const 词典 = get(用户词典原子) ?? (await get(默认词典原子));
+export const 原始词典原子 = atom(async (get) => {
+  const 词典 = get(用户原始词典原子) ?? (await get(默认原始词典原子));
   return 词典;
+});
+
+export const 词典原子 = atom(async (get) => {
+  const 原始词典 = await get(原始词典原子);
+  const 原始字库 = await get(原始字库原子);
+  return 原始字库.校验词典(原始词典);
+});
+
+export const 过滤词典原子 = atom(async (get) => {
+  const 词典 = await get(词典原子);
+  const 原始字库 = await get(原始字库原子);
+  const 字集指示 = get(字集指示原子);
+  return 原始字库.过滤词典(词典, 字集指示);
 });
 
 export const 自定义元素映射原子 = atom(async (get) => {
@@ -174,10 +188,9 @@ export const 自定义元素映射原子 = atom(async (get) => {
 });
 
 export const 汉字集合原子 = atom(async (get) => {
-  const 词典 = await get(词典原子);
+  const 词典 = await get(过滤词典原子);
   const 原始字库 = await get(原始字库原子);
-  const 字集指示 = get(字集指示原子);
-  return 原始字库.获取汉字集合(词典, 字集指示);
+  return 原始字库.获取汉字集合(词典);
 });
 
 export const 原始字库原子 = atom(async (get) => {
@@ -374,7 +387,9 @@ export const 按首码分组决策原子 = atom((get) => {
   return ok(分组决策);
 });
 
-export const 强类型元素列表原子 = atom(async (get) => {
+const 原始字库同步原子 = unwrap(原始字库原子, (prev) => prev);
+
+export const 强类型元素列表原子 = atom((get) => {
   const 决策 = get(决策原子);
   const 决策空间 = get(决策空间原子);
   const 当前元素列表 = Object.keys(决策);
@@ -382,8 +397,9 @@ export const 强类型元素列表原子 = atom(async (get) => {
     (x) => !当前元素列表.includes(x),
   );
   const 分类器 = get(分类器原子);
-  const 原始字库 = await get(原始字库原子);
+  const 原始字库 = get(原始字库同步原子);
   const result: Map<string, 元素> = new Map();
+  if (!原始字库) return result;
   for (const 元素 of [...当前元素列表, ...可选元素列表]) {
     result.set(
       元素,
@@ -399,7 +415,7 @@ export const 拼写运算查找表原子 = atom((get) => {
 });
 
 export const 拼音元素映射原子 = atom(async (get) => {
-  const 词典 = await get(词典原子);
+  const 词典 = await get(原始词典原子);
   const 音节集合 = new Set<string>();
   for (const { 拼音 } of Object.values(词典)) {
     拼音.map((p) => 音节集合.add(p));
@@ -449,7 +465,7 @@ export const 如动态字形分析结果原子 = atom(async (get) => {
 export const 拼音分析结果原子 = atom(async (get) => {
   const 源映射 = get(源映射原子);
   const 拼写运算查找表 = get(拼写运算查找表原子);
-  const 词典 = await get(词典原子);
+  const 词典 = await get(过滤词典原子);
   return 分析拼音(源映射, 拼写运算查找表, 词典);
 });
 
