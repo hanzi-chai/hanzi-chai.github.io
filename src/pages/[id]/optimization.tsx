@@ -226,6 +226,13 @@ const TierObjective = ({
             update({ ...tier, duplication: value });
           }}
         />
+        <AtomicObjective
+          title="选重平方权重"
+          value={tier.duplication_squared}
+          onChange={(value) => {
+            update({ ...tier, duplication_squared: value });
+          }}
+        />
         {levels.map((l, subindex) => (
           <LevelObjective
             key={subindex}

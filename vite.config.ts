@@ -76,7 +76,7 @@ export default defineConfig(({ mode, command }) => {
             if (id.includes("lodash")) return "lodash";
             if (id.includes("js-yaml")) return "yaml";
             if (id.includes("js-md5")) return "md5";
-            if (id.includes("reactflow")) return "reactflow";
+            if (id.includes("@xyflow")) return "xyflow";
             if (id.includes("antd")) return "antd";
             if (id.includes("@antv/g2")) return "g2";
             if (id.includes("@antv/g")) return "g";

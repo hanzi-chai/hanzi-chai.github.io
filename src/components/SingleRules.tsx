@@ -1,19 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Edge, Node } from "reactflow";
-import ReactFlow, {
+import {
   Background,
   BackgroundVariant,
   Controls,
+  ReactFlow,
   ReactFlowProvider,
-  useEdgesState,
-  useNodesState,
-} from "reactflow";
-import { useAtom, 条件映射原子, 源映射原子 } from "~/atoms";
-import "reactflow/dist/style.css";
+} from "@xyflow/react";
+import { useEffect, useMemo, useState } from "react";
+import { atom, useAtom, 条件映射原子, 源映射原子 } from "~/atoms";
+import "@xyflow/react/dist/style.css";
 import { Button, Modal } from "antd";
 import type { 条件节点配置, 源节点配置 } from "hanzi-chai";
 import DetailEditor from "./DetailEditor";
-import type { ConditionData, SourceData } from "./graph";
+import type { CNode, SNode } from "./graph";
 import {
   CacheContext,
   getLayoutedElements,
@@ -33,8 +31,8 @@ const initializeGraph = (
   const conditionNodes = Object.entries(conditions).map(([id, data]) =>
     makeConditionNode(data, id),
   );
-  const initialNodes: Node[] = [...sourceNodes, ...conditionNodes];
-  const initialEdges: Edge[] = [];
+  const initialNodes: (SNode | CNode)[] = [...sourceNodes, ...conditionNodes];
+  const initialEdges = [];
   for (const [id, { next }] of Object.entries(sources)) {
     next && initialEdges.push(makeEdge(id, next));
   }
@@ -49,6 +47,8 @@ const initializeGraph = (
   return [layoutNodes, layoutEdges] as const;
 };
 
+export const selectedAtom = atom<string | undefined>(undefined);
+
 function EncoderGraph({
   open,
   setOpen,
@@ -60,8 +60,8 @@ function EncoderGraph({
   const [conditions, setConditions] = useAtom(条件映射原子);
   const [cachedSources, setCachedSources] = useState(sources);
   const [cachedConditions, setCachedConditions] = useState(conditions);
+  const [selected, setSelected] = useAtom(selectedAtom);
 
-  // 每次打开 Modal 时，从原子状态重置缓存，确保取消后再次打开不会丢失数据
   useEffect(() => {
     if (open) {
       setCachedSources(sources);
@@ -69,50 +69,20 @@ function EncoderGraph({
     }
   }, [open]);
 
-  const [initialNodes, initialEdges] = initializeGraph(
-    cachedSources,
-    cachedConditions,
-  );
-  const [nodes, setNodes, onNodesChange] = useNodesState<
-    SourceData | ConditionData
-  >(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const nodeTypes = useMemo(
-    () => ({ source: SourceNode, condition: ConditionNode }),
-    [],
-  );
-  const [selected, setSelected] = useState<string | undefined>(undefined);
-
-  const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
-    nodes[0] && setSelected(nodes[0].id);
-  }, []);
-
-  useEffect(() => {
-    const [reinitNodes, reinitEdges] = initializeGraph(
+  const [nodes, edges] = useMemo(() => {
+    const [layoutNodes, layoutEdges] = initializeGraph(
       cachedSources,
       cachedConditions,
     );
-    setNodes(reinitNodes);
-    setEdges(reinitEdges);
-  }, [cachedSources, cachedConditions, setNodes, setEdges]);
+    return [
+      layoutNodes.map((node) => ({ ...node, selected: node.id === selected })),
+      layoutEdges,
+    ] as const;
+  }, [cachedSources, cachedConditions, selected]);
 
-  const context = useMemo(
-    () => ({
-      sources: cachedSources,
-      setSources: setCachedSources,
-      conditions: cachedConditions,
-      setConditions: setCachedConditions,
-      selected,
-      setSelected,
-    }),
-    [
-      cachedSources,
-      setCachedSources,
-      cachedConditions,
-      setCachedConditions,
-      selected,
-      setSelected,
-    ],
+  const nodeTypes = useMemo(
+    () => ({ source: SourceNode, condition: ConditionNode }),
+    [],
   );
 
   return (
@@ -128,14 +98,19 @@ function EncoderGraph({
       width={1080}
     >
       <div className="h-[70vh]">
-        <CacheContext.Provider value={context}>
+        <CacheContext.Provider
+          value={{
+            sources: cachedSources,
+            setSources: setCachedSources,
+            conditions: cachedConditions,
+            setConditions: setCachedConditions,
+          }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onSelectionChange={onSelectionChange}
+            onNodeClick={(_, node) => setSelected(node.id)}
             onPaneClick={() => setSelected(undefined)}
             nodeDragThreshold={10000}
             fitView

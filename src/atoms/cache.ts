@@ -425,7 +425,7 @@ export const 拼音元素映射原子 = atom(async (get) => {
   for (const [类别, 拼写运算] of 拼写运算查找表) {
     const 元素集合 = new Set<string>();
     for (const s of 音节集合) {
-      const res = 默认拼音分析器.应用拼写运算(类别, 拼写运算, s);
+      const res = 默认拼音分析器.应用拼写运算(拼写运算, s);
       元素集合.add(res);
     }
     拼音元素映射.set(

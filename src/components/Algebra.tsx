@@ -34,8 +34,11 @@ export default function Algebra({
       form={form}
       autoFocusFirstInput
       modalProps={{
-        destroyOnClose: true,
+        destroyOnHidden: true,
         onCancel: () => {},
+      }}
+      onOpenChange={(open) => {
+        if (open) form.setFieldsValue(initialValues ?? { name: "", rules: [] });
       }}
       initialValues={initialValues}
       onFinish={async (values) => {

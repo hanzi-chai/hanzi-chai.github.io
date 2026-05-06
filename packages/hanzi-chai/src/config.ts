@@ -254,6 +254,7 @@ export type 指法权重 = (number | null)[];
 export interface 层级权重 {
   top?: number;
   duplication?: number;
+  duplication_squared?: number;
   levels?: 码长权重[];
   fingering?: 指法权重;
 }

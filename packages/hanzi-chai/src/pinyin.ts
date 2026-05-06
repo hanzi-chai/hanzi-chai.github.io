@@ -61,8 +61,8 @@ class 默认拼音分析器 implements 拼音分析器 {
       if (!音节结果) {
         音节结果 = new Map<string, string>();
         for (const [名称, 规则列表] of this.拼写运算映射.entries()) {
-          const 变换后 = 默认拼音分析器.应用拼写运算(名称, 规则列表, 音节);
-          音节结果.set(名称, 变换后);
+          const 变换后 = 默认拼音分析器.应用拼写运算(规则列表, 音节);
+          音节结果.set(名称, `${名称}-${变换后}`);
         }
         this.音节表缓存.set(音节, 音节结果);
       }
@@ -71,7 +71,7 @@ class 默认拼音分析器 implements 拼音分析器 {
     return ok(元素映射列表);
   }
 
-  static 应用拼写运算(名称: string, 规则列表: 运算规则[], 音节: string) {
+  static 应用拼写运算(规则列表: 运算规则[], 音节: string) {
     let 结果 = 音节;
     for (const { type, from, to } of 规则列表) {
       switch (type) {
@@ -86,7 +86,7 @@ class 默认拼音分析器 implements 拼音分析器 {
           break;
       }
     }
-    return `${名称}-${结果}`;
+    return 结果;
   }
 }
 

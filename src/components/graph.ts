@@ -1,3 +1,4 @@
+import type { Edge, Node } from "@xyflow/react";
 import type {
   一元条件配置,
   二元条件配置,
@@ -7,15 +8,12 @@ import type {
 import { 加 } from "hanzi-chai";
 import { sum } from "lodash-es";
 import { createContext } from "react";
-import type { Edge, Node } from "reactflow";
 
 export const CacheContext = createContext<{
   sources: Record<string, 源节点配置>;
   setSources: (sources: Record<string, 源节点配置>) => void;
   conditions: Record<string, 条件节点配置>;
   setConditions: (conditions: Record<string, 条件节点配置>) => void;
-  selected: string | undefined;
-  setSelected: (selected: string | undefined) => void;
 }>({} as any);
 
 export type SourceData = Omit<源节点配置, "next">;

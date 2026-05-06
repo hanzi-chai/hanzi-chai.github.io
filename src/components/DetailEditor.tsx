@@ -11,7 +11,7 @@ import {
   转列表,
   运算符列表,
 } from "hanzi-chai";
-import { Panel } from "reactflow";
+import { Panel } from "@xyflow/react";
 import {
   useAtomValue,
   字母表原子,

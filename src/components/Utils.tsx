@@ -237,8 +237,14 @@ export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
         ? "link"
         : "default";
   const display = useAtomValue(别名显示原子);
-  if (typeof element === "string") return element;
-  if (!(element instanceof 字符)) return element.获取名称();
+  const text =
+    typeof element === "string" ? (
+      element
+    ) : !(element instanceof 字符) ? (
+      element.获取名称()
+    ) : (
+      <CharacterDisplay character={element} />
+    );
   const core = (
     <Item
       onClick={() =>
@@ -246,9 +252,10 @@ export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
       }
       type={type}
     >
-      {<CharacterDisplay character={element} />}
+      {text}
     </Item>
   );
+  if (!(element instanceof 字符)) return core;
   const title = element.是私用区()
     ? `${display(element)} ${element.十六进制()}`
     : element.十六进制();
