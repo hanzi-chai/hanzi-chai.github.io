@@ -1,3 +1,4 @@
+import { Panel } from "@xyflow/react";
 import { Cascader, Flex, Form, Select, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {
@@ -11,13 +12,13 @@ import {
   转列表,
   运算符列表,
 } from "hanzi-chai";
-import { Panel } from "@xyflow/react";
 import {
   useAtomValue,
   字母表原子,
   拼写运算自定义原子,
   自定义分析数据库,
 } from "~/atoms";
+import { 数字 } from "~/utils";
 
 interface Option {
   value: string | number;
@@ -58,7 +59,7 @@ export default function DetailEditor({
       label: "字根",
       children: genericIndices.map((v) => ({
         value: v,
-        label: `第 ${v.toString()} 根`,
+        label: `第${数字(v)}根`,
       })),
     },
     {
@@ -66,10 +67,10 @@ export default function DetailEditor({
       label: "笔画",
       children: genericIndices.map((v) => ({
         value: v,
-        label: `第 ${v.toString()} 根`,
+        label: `第${数字(v)}根`,
         children: genericIndices.map((v) => ({
           value: v,
-          label: `第 ${v.toString()} 笔`,
+          label: `第${数字(v)}笔`,
         })),
       })),
     },
@@ -78,7 +79,7 @@ export default function DetailEditor({
       label: "二笔",
       children: genericIndices.map((v) => ({
         value: v,
-        label: `第 ${v.toString()} 根`,
+        label: `第${数字(v)}根`,
         children: genericIndices.map((v) => {
           return {
             value: v,
@@ -112,7 +113,7 @@ export default function DetailEditor({
         children: genericIndices.map((v) => {
           return {
             value: v,
-            label: `第 ${v.toString()} 元`,
+            label: `第${数字(v)}元`,
           };
         }),
       })),

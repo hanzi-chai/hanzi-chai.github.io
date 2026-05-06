@@ -4,10 +4,13 @@ import { 字符, 序列化, 总序列化, type 码位, 识别符 } from "hanzi-c
 import { range } from "lodash-es";
 import { type ReactNode, useState } from "react";
 import {
+  useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
+  优先简码原子,
   优先简码映射原子,
   动态分析原子,
+  原始字库同步原子,
   如动态组装结果与优先简码原子,
   如笔顺映射原子,
   如组装结果与优先简码原子,
@@ -18,8 +21,7 @@ import {
   联合结果原子,
 } from "~/atoms";
 import { exportTSV, exportYAML } from "~/utils";
-import ProrityShortCodeSelector from "./ProrityShortCodeSelector";
-import { CodePositionDisplay } from "./Utils";
+import { CodePositionDisplay, Select } from "./Utils";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
   return (
@@ -215,11 +217,79 @@ const getColumnEnumFilterProps = (
   ),
 });
 
+interface PendingChange {
+  level: number;
+  word: 字符[];
+  sources: string[][];
+}
+
+function CommitShortCodeButton({
+  pendingChanges,
+  onCommit,
+}: {
+  pendingChanges: Map<string, PendingChange>;
+  onCommit: () => void;
+}) {
+  const [优先简码列表, set优先简码] = useAtom(优先简码原子);
+  const 原始字库 = useAtomValue(原始字库同步原子);
+
+  const getEntryHash = (entry: { word: string; sources: string[][] }) => {
+    if (!原始字库) return null;
+    const chars: 字符[] = [];
+    for (const c of entry.word) {
+      const ch = 原始字库.校验(c);
+      if (!ch) return null;
+      chars.push(ch.character);
+    }
+    return 识别符(chars, entry.sources);
+  };
+
+  const commit = () => {
+    if (!原始字库 || pendingChanges.size === 0) return;
+    let newList = [...优先简码列表];
+    for (const [hash, { level, word, sources }] of pendingChanges) {
+      if (level === -1) {
+        newList = newList.filter((entry) => getEntryHash(entry) !== hash);
+      } else {
+        const idx = newList.findIndex((entry) => getEntryHash(entry) === hash);
+        if (idx >= 0) {
+          newList = newList.map((entry, i) =>
+            i === idx ? { ...entry, level } : entry,
+          );
+        } else {
+          newList.push({
+            word: word.map((c) => c.toString()).join(""),
+            sources,
+            level,
+          });
+        }
+      }
+    }
+    set优先简码(newList);
+    onCommit();
+  };
+
+  const count = pendingChanges.size;
+  return (
+    <Space>
+      <Button disabled={count === 0} onClick={onCommit}>
+        重置 ({count})
+      </Button>
+      <Button type="primary" disabled={count === 0} onClick={commit}>
+        确认 ({count})
+      </Button>
+    </Space>
+  );
+}
+
 export default function SequenceTable() {
   const 最大码长 = useAtomValue(最大码长原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
   const 优先简码映射 = useAtomValue(优先简码映射原子);
   const 动态分析 = useAtomValue(动态分析原子);
+  const [pendingChanges, setPendingChanges] = useState<
+    Map<string, PendingChange>
+  >(new Map());
 
   const dataSource = 联合结果.map((x, i) => ({
     ...x,
@@ -320,10 +390,31 @@ export default function SequenceTable() {
       key: "action",
       width: 128,
       render: (_, record) => {
+        const hash = 识别符(record.词, record.拼音来源列表);
+        const committedLevel = 优先简码映射.get(hash) ?? -1;
+        const pending = pendingChanges.get(hash);
+        const effectiveLevel =
+          pending !== undefined ? pending.level : committedLevel;
         return (
-          <ProrityShortCodeSelector
-            词={record.词}
-            拼音来源列表={record.拼音来源列表}
+          <Select
+            size="small"
+            value={effectiveLevel}
+            className={
+              pending !== undefined ? "outline outline-orange-400 rounded" : ""
+            }
+            options={[-1, ...Array(最大码长 + 1).keys()].map((x) => ({
+              label: x === -1 ? "默认" : x.toString(),
+              value: x,
+            }))}
+            onChange={(value) => {
+              const newMap = new Map(pendingChanges);
+              newMap.set(hash, {
+                level: value,
+                word: record.词,
+                sources: record.拼音来源列表,
+              });
+              setPendingChanges(newMap);
+            }}
           />
         );
       },
@@ -371,6 +462,11 @@ export default function SequenceTable() {
         <ExportAssembly key={1} />,
         动态分析 && <ExportDynamicAssembly key={2} />,
         <ExportCode key={3} />,
+        <CommitShortCodeButton
+          key={4}
+          pendingChanges={pendingChanges}
+          onCommit={() => setPendingChanges(new Map())}
+        />,
       ]}
     />
   );

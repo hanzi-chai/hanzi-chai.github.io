@@ -229,8 +229,10 @@ export interface 编码条目 {
 export type 编码结果 = 编码条目[];
 
 export const 数字 = (n: number) => {
-  const 汉字数字 = "零一二三四五六七八九";
-  return 汉字数字[n] || n.toString();
+  const absn = n >= 0 ? n : -n;
+  const 汉字数字 = "零一二三四五六七八九十";
+  const 绝对值 = 汉字数字[absn] || absn.toString();
+  return n >= 0 ? 绝对值 : `负${绝对值}`;
 }
 
 export const 颜色插值 = (color1: string, color2: string, percent: number) => {

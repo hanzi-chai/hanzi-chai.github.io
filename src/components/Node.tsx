@@ -108,7 +108,8 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   const createSourceNode: Creator = (etype) => ({
     key: `create-source-${etype}`,
     label: `添加子源节点${etype ? `（${renderType[etype]}）` : ""}`,
-    onClick: () =>
+    onClick: (e) => {
+      e.domEvent.stopPropagation();
       apply((s, c) => {
         const newId = getNewId(s, "s");
         const newSources = sortObject({
@@ -122,13 +123,15 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
           newConditions[id] = { ...newConditions[id]!, [etype]: newId };
         }
         return [newSources, newConditions, newId];
-      }),
+      });
+    },
   });
 
   const createConditionNode: Creator = (etype) => ({
     key: `create-condition-${etype}`,
     label: `添加子条件节点${etype ? `（${renderType[etype]}）` : ""}`,
-    onClick: () =>
+    onClick: (e) => {
+      e.domEvent.stopPropagation();
       apply((s, c) => {
         const newId = getNewId(c, "c");
         const newSources = { ...s };
@@ -147,13 +150,15 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
           newConditions[id] = { ...newConditions[id]!, [etype]: newId };
         }
         return [newSources, newConditions, newId];
-      }),
+      });
+    },
   });
 
   const deleteNodeOnly: MenuItemType = {
     key: "delete-only",
     label: "删除本节点",
-    onClick: () =>
+    onClick: (e) => {
+      e.domEvent.stopPropagation();
       apply((s, c) => {
         const newSources = { ...s };
         const newConditions = { ...c };
@@ -161,13 +166,15 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
         delete newSources[id];
         delete newConditions[id];
         return [newSources, newConditions, undefined];
-      }),
+      });
+    },
   };
 
   const deleteNodeAndChildren: MenuItemType = {
     key: "delete-all",
     label: "删除本节点和后代节点",
-    onClick: () =>
+    onClick: (e) => {
+      e.domEvent.stopPropagation();
       apply((s, c) => {
         const newSources = { ...s };
         const newConditions = { ...c };
@@ -188,13 +195,15 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
         }
         relinkParent(newSources, newConditions, null);
         return [newSources, newConditions, undefined];
-      }),
+      });
+    },
   };
 
   const insertParentSourceNode: MenuItemType = {
     key: "insert-parent-source",
     label: "插入父源节点",
-    onClick: () =>
+    onClick: (e) => {
+      e.domEvent.stopPropagation();
       apply((s, c) => {
         const newId = getNewId(s, "s");
         const newSources = sortObject({
@@ -211,13 +220,15 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
           if (value.negative === id) value.negative = newId;
         }
         return [newSources, newConditions, newId];
-      }),
+      });
+    },
   };
 
   const insertParentConditionNode: MenuItemType = {
     key: "insert-parent-condition",
     label: "插入父条件节点",
-    onClick: () =>
+    onClick: (e) => {
+      e.domEvent.stopPropagation();
       apply((s, c) => {
         const newId = getNewId(c, "c");
         const newSources = { ...s };
@@ -239,7 +250,8 @@ const ContextMenu = ({ id, children }: PropsWithChildren<{ id: string }>) => {
           if (value.negative === id) value.negative = newId;
         }
         return [newSources, newConditions, newId];
-      }),
+      });
+    },
   };
 
   const items: (MenuItemType | MenuItemGroupType)[] = [];
