@@ -1,4 +1,4 @@
-import type { 原始汉字数据, 字形数据 } from "hanzi-chai";
+import type { 原始汉字数据, 字形描述 } from "hanzi-chai";
 
 export interface 原始汉字模型 {
   unicode: number;
@@ -56,7 +56,7 @@ const glyphForward = (c: any) => {
   }
 };
 
-const glyphReverse = (c: 字形数据) => {
+const glyphReverse = (c: 字形描述) => {
   if (c.type === "basic_component") {
     return c;
   } else if (c.type === "derived_component" || c.type === "identity") {
@@ -83,7 +83,7 @@ export function 转模型(character: 原始汉字数据): 原始汉字模型 {
 }
 
 interface PUA {
-  type: 字形数据["type"];
+  type: 字形描述["type"];
   name: string;
 }
 

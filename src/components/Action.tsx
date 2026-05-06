@@ -13,7 +13,7 @@ import {
   创建原始汉字数据,
   type 原始字库数据,
   type 原始汉字数据,
-  type 字形数据,
+  type 字形描述,
   type 校验原始汉字数据,
   模拟全等,
   模拟基本部件,
@@ -53,7 +53,7 @@ import CompoundForm from "./CompoundForm";
 
 interface CreateProps {
   charOrName: string;
-  type: 字形数据["type"];
+  type: 字形描述["type"];
 }
 
 export const Create = forwardRef(
@@ -339,7 +339,7 @@ export const EditGlyph = ({ character }: { character: 校验原始汉字数据 }
   const name = String.fromCodePoint(character.unicode);
   const isCustomization = !remote && 原始字库.校验(name) !== undefined;
   const 自定义列表 = 标准字形自定义[name] ?? [];
-  const onFinish = async (component: 字形数据) => {
+  const onFinish = async (component: 字形描述) => {
     if (isCustomization) {
       addCustomization(name, 自定义列表.concat(component));
       return true;

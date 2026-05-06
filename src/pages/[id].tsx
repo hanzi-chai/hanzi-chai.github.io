@@ -101,9 +101,7 @@ function EditorLayout() {
       </Layout.Sider>
       <Layout className="h-screen">
         <Header isCollapsed={isCollapsed} />
-        <Layout.Content
-          className={`${isCollapsed ? "ml-14.5" : "ml-40"} py-2.5 px-6 h-full overflow-y-auto`}
-        >
+        <Layout.Content className={`ml-12 py-2.5 px-6 h-full overflow-y-auto`}>
           <Suspense fallback={<CusSpin tip="加载标签页…" />}>
             <Outlet />
           </Suspense>

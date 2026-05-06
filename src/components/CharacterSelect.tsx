@@ -67,10 +67,10 @@ export default function CharacterSelect(props: ItemSelectProps) {
             <span className="text-[0.8em]">{字符实例.十六进制()}</span>
           </span>
         ) as React.ReactNode,
-        length: 笔顺映射.get(字符实例)?.length ?? 0,
+        strokes: 笔顺映射.get(字符实例) ?? [],
       }));
-    let minResults = allResults.filter(
-      ({ length }) => length === input.length,
+    let minResults = allResults.filter(({ strokes }) =>
+      strokes.some((x) => x === input),
     ).length;
     if (includeVariables) {
       const num = parseInt(input, 10);
@@ -78,7 +78,7 @@ export default function CharacterSelect(props: ItemSelectProps) {
         allResults.unshift({
           value: JSON.stringify({ id: num }),
           label: getLabel({ id: num }),
-          length: 0,
+          strokes: [],
         });
         minResults += 1;
       }

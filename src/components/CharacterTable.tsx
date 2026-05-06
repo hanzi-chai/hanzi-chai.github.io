@@ -1,5 +1,6 @@
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import {
+  Badge,
   Checkbox,
   Flex,
   FloatButton,
@@ -15,10 +16,10 @@ import type { TourProps } from "antd/lib";
 import type {
   原始字库,
   原始汉字数据,
-  字形数据,
+  字形描述,
   校验原始汉字数据,
 } from "hanzi-chai";
-import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
+import { 区块列表, type 字符, 所有源标签, 是源标签 } from "hanzi-chai";
 import * as O from "optics-ts/standalone";
 import { useRef, useState } from "react";
 import { remoteUpdate } from "~/api";
@@ -29,7 +30,8 @@ import {
   useAtomValueUnwrapped,
   useRemoveAtom,
   原始可编辑字库数据原子,
-  原始字库原子,
+  原始字库同步原子,
+  如字库原子,
   如排序字库数据原子,
   如笔顺映射原子,
   字形来源列表原子,
@@ -76,8 +78,8 @@ export const 字形编辑器 = ({
   原始字库,
 }: {
   字: 字符;
-  字形: 字形数据;
-  回调: (v: 字形数据) => Promise<boolean>;
+  字形: 字形描述;
+  回调: (v: 字形描述) => Promise<boolean>;
   只读: boolean;
   原始字库: 原始字库;
 }) => {
@@ -136,10 +138,11 @@ export const 字形数据更新器 = ({
   const { glyphs, unicode } = character;
   const 字 = String.fromCodePoint(unicode);
   const 远程 = useAtomValue(远程原子);
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(原始字库同步原子);
   const 用户原始字库数据 = useAtomValue(用户原始字库数据原子);
   const 添加用户汉字 = useAddAtom(用户原始字库数据原子);
   const 添加汉字 = useAddAtom(原始可编辑字库数据原子);
+  if (!原始字库) return null;
   const inlineUpdate = async (newCharacter: 原始汉字数据) => {
     if (用户原始字库数据[字] !== undefined) {
       添加用户汉字(字, newCharacter);
@@ -156,7 +159,7 @@ export const 字形数据更新器 = ({
     <Flex gap="small">
       {glyphs.map((x, i) => {
         const lens = O.compose("glyphs", O.at(i));
-        const 回调 = (values: 字形数据) => {
+        const 回调 = (values: 字形描述) => {
           const newGlyphs = O.set(
             O.compose("glyphs", O.appendTo),
             values,
@@ -193,16 +196,16 @@ export const 字形数据自定义器 = ({
   const 添加自定义字形 = useAddAtom(字形自定义原子);
   const 删除自定义字形 = useRemoveAtom(字形自定义原子);
   const 标准字形自定义 = useAtomValue(标准字形自定义原子);
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(原始字库同步原子);
   const 字 = String.fromCodePoint(character.unicode);
   const 自定义字形列表 = 标准字形自定义[字];
   const 只读 = false;
   // 把变换生成的也视为自定义
-  if (自定义字形列表 === undefined) return null;
+  if (!原始字库 || 自定义字形列表 === undefined) return null;
   return (
     <Flex gap="small">
       {自定义字形列表.map((x, i) => {
-        const 回调 = async (values: 字形数据) => {
+        const 回调 = async (values: 字形描述) => {
           const 新列表 = 自定义字形列表.map((item, index) =>
             index === i ? values : item,
           );
@@ -236,7 +239,8 @@ export const 字形数据自定义器 = ({
 };
 
 export default function CharacterTable() {
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(原始字库同步原子);
+  const 字库 = useAtomValueUnwrapped(如字库原子);
   const 排序字库数据 = useAtomValueUnwrapped(如排序字库数据原子);
   const 字形自定义 = useAtomValue(标准字形自定义原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
@@ -247,7 +251,7 @@ export default function CharacterTable() {
 
   const dataSource: 校验原始汉字数据[] = [];
   for (const c of 排序字库数据) {
-    const data = 原始字库.查询(c);
+    const data = 原始字库?.查询(c);
     if (!data) continue;
     if (filter.过滤(c, data)) {
       dataSource.push(data);
@@ -341,7 +345,7 @@ export default function CharacterTable() {
   };
 
   const glyphs: Column = {
-    title: "系统字形",
+    title: "系统描述",
     render: (_, character) => <字形数据更新器 character={character} />,
     sorter: (a, b) => {
       const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
@@ -355,9 +359,20 @@ export default function CharacterTable() {
   };
 
   const customGlyphColumn: Column = {
-    title: "自定义字形",
+    title: "自定义描述",
     render: (_, character) => <字形数据自定义器 character={character} />,
     width: 128,
+  };
+
+  const renderedGlyphColumn: Column = {
+    title: "字形列表",
+    render: (_, character) => (
+      <Flex gap="small">
+        {字库
+          .查询字形(character.character)
+          ?.map((x) => [...x.标签集合].join(""))}
+      </Flex>
+    ),
   };
 
   const ambiguous: Column = {

@@ -100,29 +100,53 @@ export class 优先表<T extends object> {
   }
 }
 
+type 内部带条件 = { 条件列表: 条件[]; 排除: 条件[]; array: object[] };
+
+function 预处理优先表(列表: 带条件<object>[]): 内部带条件[] {
+  return 列表.map((entry, i) => {
+    const 排除: 条件[] = [];
+    for (let j = 0; j < i; j++) {
+      const 差集 = 列表[j]!.条件列表.filter(
+        (c) => !entry.条件列表.some((e) => isEqual(c, e)),
+      );
+      if (差集.length === 1 && !排除.some((e) => isEqual(e, 差集[0]!))) {
+        排除.push(差集[0]!);
+      }
+    }
+    return { ...entry, 排除, array: [entry] };
+  });
+}
+
 export function 贝叶斯推断<Ts extends object[], U extends object>(
   优先表列表: { [K in keyof Ts]: 带条件<Ts[K] & object>[] },
   reducer: (a: Ts) => U,
 ): 带条件<U>[] {
-  const recurse = (l: 带条件<object>[][]): 带条件<{ array: object[] }>[] => {
-    if (l.length === 1) return l[0]!.map((x) => ({ ...x, array: [x] }));
+  const recurse = (l: 带条件<object>[][]): 内部带条件[] => {
+    if (l.length === 1) return 预处理优先表(l[0]!);
     const 前一个表 = recurse(l.slice(0, -1));
-    const 当前表 = l.at(-1)!;
-    const 结果列表: 带条件<{ array: object[] }>[] = [];
+    const 当前表 = 预处理优先表(l.at(-1)!);
+    const 结果列表: 内部带条件[] = [];
     for (const 前一个项 of 前一个表) {
       for (const 当前项 of 当前表) {
-        const 合并项 = { array: [...前一个项.array, 当前项] };
+        const 合并负 = [...前一个项.排除, ...当前项.排除];
+        const 合并正 = [...前一个项.条件列表, ...当前项.条件列表];
+        if (合并正.some((c) => 合并负.some((e) => isEqual(c, e)))) continue;
         const 扩充条件列表 = [...前一个项.条件列表];
+        const 合并项: 内部带条件 = {
+          array: [...前一个项.array, ...当前项.array],
+          条件列表: 扩充条件列表,
+          排除: 合并负,
+        };
         if (蕴含(前一个项.条件列表, 当前项.条件列表)) {
-          结果列表.push({ ...合并项, 条件列表: 扩充条件列表 });
+          结果列表.push(合并项);
           break;
         } else {
           for (const 条件 of 当前项.条件列表) {
-            if (!前一个项.条件列表.some((c) => isEqual(c, 条件))) {
+            if (!扩充条件列表.some((c) => isEqual(c, 条件))) {
               扩充条件列表.push(条件);
             }
           }
-          结果列表.push({ ...合并项, 条件列表: 扩充条件列表 });
+          结果列表.push(合并项);
         }
       }
     }
@@ -216,7 +240,6 @@ class 字库 {
             const 真部件 = new 部件(
               字根字符,
               字根字形.标签集合,
-              字根字形.用户自定义,
               图形盒子.value.获取笔画列表(),
             );
             部件字根列表.push(真部件);

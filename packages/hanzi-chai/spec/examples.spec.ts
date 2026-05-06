@@ -6,7 +6,8 @@ import { 获取数据 } from "./index.js";
 const { 原始字库 } = 获取数据();
 
 describe("E2E", () => {
-  const 词典 = 获取原始词典(undefined, 原始字库);
+  const 原始词典 = 获取原始词典(undefined);
+  const 词典 = 原始字库.校验词典(原始词典);
   const configs: 配置[] = [];
   for (const path of readdirSync("../../examples")) {
     if (!path.endsWith(".yaml")) {

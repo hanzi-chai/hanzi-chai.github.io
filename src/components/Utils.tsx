@@ -62,7 +62,7 @@ export const Select = (({
   className,
   ...props
 }: ComponentProps<typeof _Select>) => (
-  <_Select className={`w-24 ${className ?? ""}`} {...props} />
+  <_Select className={`w-24! ${className ?? ""}`} {...props} />
 )) as typeof _Select;
 
 export const Uploader = ({
@@ -194,7 +194,7 @@ export const ElementPositionDisplay = ({
 }) => {
   const superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹";
   return (
-    <span>
+    <span className="flex flex-nowrap justify-baseline leading-none">
       <ElementDisplay element={element} />
       {index ? superscripts[index] : ""}
     </span>

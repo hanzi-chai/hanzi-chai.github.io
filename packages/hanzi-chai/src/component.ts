@@ -48,7 +48,6 @@ class 部件 {
   constructor(
     public 字符: 字符,
     public 标签集合: 源标签集合,
-    public 用户自定义: boolean,
     public 矢量图形: 矢量图形数据,
   ) {
     this.笔画列表 = 矢量图形.map((x) => new 笔画图形(x));

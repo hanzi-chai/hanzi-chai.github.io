@@ -9,7 +9,6 @@ import {
 import { Button, Flex, Popover, Select, Typography } from "antd";
 import type { 决策生成器规则, 安排描述 } from "hanzi-chai";
 import { sortBy } from "lodash-es";
-import { useState } from "react";
 import {
   useAddAtom,
   useAtom,
@@ -29,7 +28,6 @@ import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, ElementDisplay, NumberInput } from "~/components/Utils";
 import BorderItem from "./BorderItem";
-import CharacterSelect from "./CharacterSelect";
 import ValueEditor from "./Value";
 
 const ValueDescriptionEditor = ({
@@ -258,10 +256,7 @@ export default function MappingSpace() {
   const mapping = useAtomValue(决策原子);
   const mappingSpace = useAtomValue(决策空间原子);
   const setMappingSpace = useSetAtom(决策空间原子);
-  const addMappingSpace = useAddAtom(决策空间原子);
   const dynamic = useAtomValue(动态分析原子);
-  const [character, setCharacter] = useState<string | undefined>(undefined);
-  const alphabet = useAtomValue(字母表原子);
   const currentElement = useAtomValue(当前元素原子);
   const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   return (
@@ -271,38 +266,27 @@ export default function MappingSpace() {
         <MappingVariablesForm />
         <MappingGeneratorsForm />
         {dynamic && (
-          <>
-            <Button
-              onClick={() => {
-                const idles = Object.entries(mappingSpace).filter(
-                  ([name]) => mapping[name] === undefined,
-                );
-                const ms = structuredClone(mappingSpace);
-                for (const [name] of idles) {
-                  delete ms[name];
-                }
-                const sortedIdles = sortBy(
-                  idles,
-                  ([name]) => name.codePointAt(0)!,
-                );
-                for (const [name, value] of sortedIdles) {
-                  ms[name] = value;
-                }
-                setMappingSpace(ms);
-              }}
-            >
-              对未选取元素排序
-            </Button>
-            <CharacterSelect value={character} onChange={setCharacter} />
-            <Button
-              onClick={() =>
-                addMappingSpace(character!, [{ value: alphabet[0]!, score: 0 }])
+          <Button
+            onClick={() => {
+              const idles = Object.entries(mappingSpace).filter(
+                ([name]) => mapping[name] === undefined,
+              );
+              const ms = structuredClone(mappingSpace);
+              for (const [name] of idles) {
+                delete ms[name];
               }
-              disabled={character === undefined}
-            >
-              添加备选元素
-            </Button>
-          </>
+              const sortedIdles = sortBy(
+                idles,
+                ([name]) => name.codePointAt(0)!,
+              );
+              for (const [name, value] of sortedIdles) {
+                ms[name] = value;
+              }
+              setMappingSpace(ms);
+            }}
+          >
+            对未选取元素排序
+          </Button>
         )}
       </Flex>
       {dynamic && (

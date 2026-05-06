@@ -218,6 +218,7 @@ export default function Debugger() {
                 <Space size="small" wrap key={i}>
                   {x.元素序列.map((element, index) => (
                     <BorderItem
+                      className="max-w-8!"
                       key={index}
                       onClick={
                         typeof element === "object"

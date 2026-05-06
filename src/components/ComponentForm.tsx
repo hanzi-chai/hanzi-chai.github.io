@@ -21,6 +21,7 @@ import type { BaseOptionType } from "antd/es/select";
 import type {
   全等数据,
   基本部件数据,
+  源标签,
   矢量笔画数据,
   笔画名称,
   笔画数据,
@@ -238,7 +239,7 @@ export default function ComponentForm({
                 let glyph = new 图形盒子();
                 const rendered = 原始字库.渲染字形(
                   current,
-                  { ...component, user: false, tags: new Set() },
+                  { ...component, tags: new Set(["G" as 源标签]) },
                   字库,
                 );
                 if (rendered.ok) {
@@ -330,7 +331,7 @@ export default function ComponentForm({
                               formRef.current?.getFieldsValue();
                             const rendered = 原始字库.渲染字形(
                               current,
-                              { ...component, user: false, tags: new Set() },
+                              { ...component, tags: new Set(["G" as 源标签]) },
                               字库,
                             );
                             if (!rendered.ok) return;

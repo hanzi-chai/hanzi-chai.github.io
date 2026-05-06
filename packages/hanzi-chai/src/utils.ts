@@ -17,7 +17,7 @@ import type {
   向量,
   基本部件数据,
   复合体数据,
-  字形数据,
+  字形描述,
   引用笔画数据,
   拼接部件数据,
   矢量笔画数据,
@@ -118,13 +118,13 @@ export const 模拟复合体 = (operator: 结构描述字符): 复合体数据 =
 });
 
 export const 是基本或衍生部件 = (
-  glyph: 字形数据,
+  glyph: 字形描述,
 ): glyph is 基本部件数据 | 衍生部件数据 =>
   glyph.type === "basic_component" || glyph.type === "derived_component";
 
 export const 创建原始汉字数据 = (
   unicode: number,
-  glyphs: 字形数据[],
+  glyphs: 字形描述[],
   name: string | null = null,
 ): 原始汉字数据 => ({
   unicode,
@@ -413,8 +413,7 @@ export const 添加优先简码 = <T extends 组装条目 | 动态组装条目>(
   return result;
 };
 
-export const 是源标签 = (tag: string): tag is 源标签 =>
-  /^[GHTJKNVMSBU]$/.test(tag);
+export const 是源标签 = (tag: string): tag is 源标签 => /^[A-Z].*$/.test(tag);
 
 export const 所有源标签 = [
   "G",
@@ -428,9 +427,9 @@ export const 所有源标签 = [
   "S",
   "B",
   "U",
-] as const;
+] as 源标签[];
 
-export type 源标签 = (typeof 所有源标签)[number];
+export type 源标签 = string & { __brand: "source" };
 
 export type 源标签集合 = Set<源标签>;
 

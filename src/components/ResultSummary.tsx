@@ -17,6 +17,7 @@ import {
   强类型元素列表原子,
   自定义拆分原子,
 } from "~/atoms";
+import { 数字 } from "~/utils";
 import { InlineRender } from "./ComponentForm";
 import ElementSelect from "./ElementSelect";
 import { BoxedElementWithTooltip, CharacterWithTooltip } from "./Utils";
@@ -141,8 +142,11 @@ export default function ResultSummary({
   const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   return (
     <Flex gap="middle" justify="space-between">
-      <Flex onClick={(e) => e.stopPropagation()} gap="small">
+      <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
         <CharacterWithTooltip element={glyph.字符} />
+        {glyph instanceof 部件 && glyph.index !== 0 && (
+          <span>之{数字(glyph.index)}</span>
+        )}
         {字根序列.map((x, index) => {
           const element = x instanceof 部件 ? x.字符 : x;
           return (

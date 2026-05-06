@@ -170,16 +170,16 @@ export interface 全等数据 {
 /**
  * 一个字形可以是复合体、部件或全等
  */
-export type 字形数据 =
+export type 字形描述 =
   | 基本部件数据
   | 衍生部件数据
   | 拼接部件数据
   | 复合体数据
   | 全等数据;
 
-export type 带标签<T> = Omit<T, "tags"> & { user: boolean; tags: 源标签集合 };
+export type 带标签<T> = Omit<T, "tags"> & { tags: 源标签集合 };
 
-export type 标签字形数据 =
+export type 标签字形描述 =
   | 带标签<基本部件数据>
   | 带标签<衍生部件数据>
   | 带标签<拼接部件数据>
@@ -204,7 +204,7 @@ export interface 原始汉字数据 {
   name: string | null;
   gf0014_id: number | null;
   gf3001_id: number | null;
-  glyphs: 字形数据[];
+  glyphs: 字形描述[];
   ambiguous: boolean;
 }
 

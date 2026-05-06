@@ -5,7 +5,8 @@ import {
   模拟拼接部件,
   模拟衍生部件,
   是基本或衍生部件,
-  字符
+  字符,
+  解析原始词典
 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
@@ -45,6 +46,6 @@ describe("数据工具", () => {
 describe("其他", () => {
   it("解析词典", () => {
     const text = [["的", "de5", "100"]]; // Example TSV
-    expect(原始字库.解析词典(text)).toEqual([{ 词: [{ 码位: 0x7684 }], 拼音: ["de5"], 频率: 100 }]);
+    expect(解析原始词典(text)).toEqual([{ 词: "的", 拼音: ["de5"], 频率: 100 }]);
   });
 });

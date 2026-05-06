@@ -20,6 +20,7 @@ import {
   type 动态字形分析结果,
   单笔,
   type 基本分析,
+  type 基本部件分析,
   type 字形分析结果,
   type 字根,
   type 字符,
@@ -178,7 +179,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     if (过滤必要字根 && 是必要字根(字符串)) continue;
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
-        const r = 分析 as 默认部件分析 | 基本分析;
+        const r = 分析 as 默认部件分析 | 基本部件分析;
         if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 单笔)
           continue;
         部件分析内容.push({
@@ -187,7 +188,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
           children:
             "全部拆分方式" in r ? (
               <ResultDetail
-                character={字}
+                glyph={分析.部件}
                 data={r.全部拆分方式}
                 map={r.字根笔画映射}
               />

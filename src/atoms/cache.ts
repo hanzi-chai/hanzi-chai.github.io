@@ -387,7 +387,7 @@ export const 按首码分组决策原子 = atom((get) => {
   return ok(分组决策);
 });
 
-const 原始字库同步原子 = unwrap(原始字库原子, (prev) => prev);
+export const 原始字库同步原子 = unwrap(原始字库原子, (prev) => prev);
 
 export const 强类型元素列表原子 = atom((get) => {
   const 决策 = get(决策原子);

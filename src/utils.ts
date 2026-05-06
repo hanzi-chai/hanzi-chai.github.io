@@ -1,4 +1,4 @@
-import { 字符, type 原始汉字数据, type 字形数据, type 结构描述字符, type 配置 } from "hanzi-chai";
+import { 字符, type 原始汉字数据, type 字形描述, type 结构描述字符, type 配置 } from "hanzi-chai";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -180,7 +180,7 @@ export class 字符过滤器 {
     return result;
   }
 
-  匹配字形(glyph: 字形数据) {
+  匹配字形(glyph: 字形描述) {
     const { tag, operator, part } = this.过滤条件;
     let result = true;
     if (tag) result &&= (glyph.tags ?? []).includes(tag);

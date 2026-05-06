@@ -3,6 +3,7 @@ import { 区间 } from "./bezier.js";
 import type {
   向量,
   复合体数据,
+  拼接部件数据,
   矢量图形数据,
   矢量笔画数据,
   结构描述字符,
@@ -157,12 +158,12 @@ class 图形盒子 {
 
   /**
    * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
-   * @param 复合体 - 复合体数据
+   * @param 数据 - 复合体数据 或 拼接部件数据
    * @param 部分列表 - 各部分渲染后的 SVG 图形
    * @returns 合并后的 SVG 图形
    */
-  static 仿射合并(复合体: 复合体数据, 部分列表: 图形盒子[]) {
-    const { operator, order, parameters } = 复合体;
+  static 仿射合并(数据: 复合体数据 | 拼接部件数据, 部分列表: 图形盒子[]) {
+    const { operator, order, parameters } = 数据;
     const 变换后图形列表: 矢量图形数据[] = [];
     let 新横向区间 = new 区间(0, 100);
     let 新纵向区间 = new 区间(0, 100);
