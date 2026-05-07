@@ -109,7 +109,7 @@ export default function CompoundForm({
                 const compound = props as 复合体数据;
                 const 字形列表 = 原始字库.渲染字形(
                   character,
-                  { ...compound, tags: new Set(所有源标签) },
+                  { ...compound, tags: new Set(所有源标签), compat: false },
                   字库,
                 );
                 if (!字形列表.ok) {

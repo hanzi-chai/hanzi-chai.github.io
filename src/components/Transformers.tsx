@@ -26,10 +26,10 @@ function serialize(模式: 节点, 原始字库: 原始字库): ReactNode {
   }
   if ("id" in 模式) return "①②③④⑤⑥⑦⑧⑨⑩"[模式.id - 1] || `{${模式.id}}`;
   return (
-    <span>
+    <>
       {模式.operator}
       {模式.operandList.map((operand) => serialize(operand, 原始字库))}
-    </span>
+    </>
   );
 }
 
@@ -250,6 +250,7 @@ const TransformersForm = () => {
                 // biome-ignore lint/a11y/noStaticElementInteractions: reason
                 // biome-ignore lint/a11y/useKeyWithClickEvents: reason
                 <span
+                  className="flex flex-nowrap leading-none"
                   onClick={() => {
                     const form = formRef.current;
                     if (!form) return;

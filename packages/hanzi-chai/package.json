@@ -1,6 +1,6 @@
 {
   "name": "hanzi-chai",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "提取自主仓库的汉字拆分/编码核心算法包",
   "type": "module",
   "exports": {

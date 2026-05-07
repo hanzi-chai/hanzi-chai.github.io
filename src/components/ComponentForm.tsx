@@ -239,7 +239,11 @@ export default function ComponentForm({
                 let glyph = new 图形盒子();
                 const rendered = 原始字库.渲染字形(
                   current,
-                  { ...component, tags: new Set(["G" as 源标签]) },
+                  {
+                    ...component,
+                    tags: new Set(["G" as 源标签]),
+                    compat: false,
+                  },
                   字库,
                 );
                 if (rendered.ok) {
@@ -331,7 +335,11 @@ export default function ComponentForm({
                               formRef.current?.getFieldsValue();
                             const rendered = 原始字库.渲染字形(
                               current,
-                              { ...component, tags: new Set(["G" as 源标签]) },
+                              {
+                                ...component,
+                                tags: new Set(["G" as 源标签]),
+                                compat: false,
+                              },
                               字库,
                             );
                             if (!rendered.ok) return;

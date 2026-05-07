@@ -177,7 +177,7 @@ export type 字形描述 =
   | 复合体数据
   | 全等数据;
 
-export type 带标签<T> = Omit<T, "tags"> & { tags: 源标签集合 };
+export type 带标签<T> = Omit<T, "tags"> & { tags: 源标签集合; compat: boolean };
 
 export type 标签字形描述 =
   | 带标签<基本部件数据>

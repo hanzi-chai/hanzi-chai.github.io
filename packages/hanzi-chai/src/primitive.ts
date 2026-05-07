@@ -98,7 +98,8 @@ class 原始字库 {
       for (const 描述 of 用户描述映射.get(character) ?? []) {
         let 来源集合 = new Set((描述.tags ?? []).filter(是源标签));
         if (来源集合.size === 0) 来源集合 = new Set(所有源标签);
-        描述列表.push({ ...描述, tags: 来源集合 });
+        const 是兼容码 = 已有来源.intersection(来源集合).size > 0;
+        描述列表.push({ ...描述, tags: 来源集合, compat: 是兼容码 });
         [...来源集合].map((x) => 已有来源.add(x));
       }
       for (const 描述 of glyphs) {
@@ -106,7 +107,7 @@ class 原始字库 {
         if (来源集合.size === 0) 来源集合 = new Set(所有源标签);
         const 独立来源集合 = 来源集合.difference(已有来源);
         if (独立来源集合.size > 0) {
-          描述列表.push({ ...描述, tags: 独立来源集合 });
+          描述列表.push({ ...描述, tags: 独立来源集合, compat: false });
           [...独立来源集合].map((x) => 已有来源.add(x));
         }
       }
@@ -177,7 +178,12 @@ class 原始字库 {
       }
       if (字形列表.length === 0) {
         字形列表.push(
-          new 部件(字符, new Set([所有源标签[0]!]), 模拟基本部件().strokes),
+          new 部件(
+            字符,
+            new Set([所有源标签[0]!]),
+            false,
+            模拟基本部件().strokes,
+          ),
         );
       }
       字库实例.添加(字符, 字形列表);
@@ -196,7 +202,7 @@ class 原始字库 {
       let index = 0;
       过滤后字形列表.forEach((x) => {
         if (x instanceof 部件) {
-          x.index = index;
+          x.字形序号 = index;
           index += 1;
         }
       });
@@ -358,7 +364,9 @@ class 原始字库 {
     字库: 字库,
   ): Result<字形[], Error> {
     if (字形数据.type === "basic_component") {
-      return ok([new 部件(字符实例, 字形数据.tags, 字形数据.strokes)]);
+      return ok([
+        new 部件(字符实例, 字形数据.tags, 字形数据.compat, 字形数据.strokes),
+      ]);
     } else if (
       字形数据.type === "identity" ||
       字形数据.type === "derived_component"
@@ -382,12 +390,15 @@ class 原始字库 {
         const 字形 = 引用字形列表[索引]!;
         if (字形数据.type === "identity") {
           if (字形 instanceof 部件) {
-            字形列表.push(new 部件(字符实例, 标签集合, 字形.矢量图形));
+            字形列表.push(
+              new 部件(字符实例, 标签集合, 字形数据.compat, 字形.矢量图形),
+            );
           } else {
             字形列表.push(
               new 复合体(
                 字符实例,
                 标签集合,
+                字形数据.compat,
                 字形.结构描述字符,
                 字形.部分列表,
                 字形.笔顺,
@@ -413,7 +424,9 @@ class 原始字库 {
               笔画列表.push(x);
             }
           });
-          字形列表.push(new 部件(字符实例, 标签集合, 笔画列表));
+          字形列表.push(
+            new 部件(字符实例, 标签集合, 字形数据.compat, 笔画列表),
+          );
         }
       }
       return ok(字形列表);
@@ -457,6 +470,7 @@ class 原始字库 {
           const 新字形 = new 复合体(
             字符实例,
             标签集合,
+            字形数据.compat,
             字形数据.operator,
             部分列表,
             字形数据.order ?? 默认笔顺,
@@ -477,7 +491,9 @@ class 原始字库 {
           const 笔画列表 = 图形盒子
             .仿射合并({ ...字形数据, tags: [] }, 图形盒子列表)
             .获取笔画列表();
-          字形列表.push(new 部件(字符实例, 字形数据.tags, 笔画列表));
+          字形列表.push(
+            new 部件(字符实例, 字形数据.tags, 字形数据.compat, 笔画列表),
+          );
         }
       }
       return ok(字形列表);

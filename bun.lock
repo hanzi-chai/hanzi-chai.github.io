@@ -28,7 +28,7 @@
         "jotai-optics": "^0.4.0",
         "js-md5": "^0.8.3",
         "js-yaml": "^4.1.1",
-        "libchai": "^0.3.8",
+        "libchai": "0.3.9",
         "lodash-es": "^4.17.23",
         "nanoid": "^5.1.6",
         "optics-ts": "^2.4.1",
@@ -1139,7 +1139,7 @@
 
     "less": ["less@4.6.4", "", { "dependencies": { "copy-anything": "^3.0.5", "parse-node-version": "^1.0.1" }, "optionalDependencies": { "errno": "^0.1.1", "graceful-fs": "^4.1.2", "image-size": "~0.5.0", "make-dir": "^2.1.0", "mime": "^1.4.1", "needle": "^3.1.0", "source-map": "~0.6.0" }, "bin": { "lessc": "bin/lessc" } }, "sha512-OJmO5+HxZLLw0RLzkqaNHzcgEAQG7C0y3aMbwtCzIUFZsLMNNq/1IdAdHEycQ58CwUO3jPTHmoN+tE5I7FQxNg=="],
 
-    "libchai": ["libchai@0.3.8", "", {}, "sha512-x6JzEQ5liRDwP3XsFfpafmRJOaGNaxA605GSWEGqdKp8bLkbT/X4qVF+yz9YjcsawHM3+8gggzJXQ6wnRbpV+Q=="],
+    "libchai": ["libchai@0.3.9", "", {}, "sha512-cimyGLg2e5hFGHB7LwuEuJE9f9Qz2uVNN15UAcpIkD32Bd5hGL4zIAwXPO25C0fpmxh2LcPAGgiW0O5RLsJSug=="],
 
     "lightningcss": ["lightningcss@1.32.0", "", { "dependencies": { "detect-libc": "^2.0.3" }, "optionalDependencies": { "lightningcss-android-arm64": "1.32.0", "lightningcss-darwin-arm64": "1.32.0", "lightningcss-darwin-x64": "1.32.0", "lightningcss-freebsd-x64": "1.32.0", "lightningcss-linux-arm-gnueabihf": "1.32.0", "lightningcss-linux-arm64-gnu": "1.32.0", "lightningcss-linux-arm64-musl": "1.32.0", "lightningcss-linux-x64-gnu": "1.32.0", "lightningcss-linux-x64-musl": "1.32.0", "lightningcss-win32-arm64-msvc": "1.32.0", "lightningcss-win32-x64-msvc": "1.32.0" } }, "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ=="],
 

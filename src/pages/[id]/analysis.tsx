@@ -17,9 +17,9 @@ import {
 import type { CollapseProps } from "antd/lib";
 import {
   优先表,
+  type 冰雪飞花复合体分析,
   type 动态字形分析结果,
   单笔,
-  type 基本分析,
   type 基本部件分析,
   type 字形分析结果,
   type 字根,
@@ -36,6 +36,7 @@ import {
   useAtomValueUnwrapped,
   决策原子,
   决策空间原子,
+  分析配置原子,
   别名显示原子,
   动态分析原子,
   动态自定义拆分原子,
@@ -145,6 +146,7 @@ const ExportDynamicAnalysis = () => {
 
 const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
+  const 分析配置 = useAtomValue(分析配置原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
@@ -183,7 +185,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 单笔)
           continue;
         部件分析内容.push({
-          key: `${字符串}-${分析.部件.index}`,
+          key: `${字符串}-${分析.部件.字形序号}`,
           label: <ResultSummary glyph={分析.部件} analysis={分析} />,
           children:
             "全部拆分方式" in r ? (
@@ -226,6 +228,34 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         >
           导出拆分
         </Button>
+        {分析配置.component_analyzer === "冰雪飞花" && (
+          <Button
+            onClick={() => {
+              const tsv: string[][] = [];
+              const map: Record<string, string> = {
+                1: "一",
+                2: "丨",
+                3: "丿",
+                4: "丶",
+                5: "乙",
+              };
+              for (const [char, result] of 字形分析结果.分析结果) {
+                const 部首 = (result[0] as 冰雪飞花复合体分析).部首;
+                let 部首字符串 = "〇";
+                if (部首) {
+                  部首字符串 =
+                    部首 instanceof 部件
+                      ? display(部首.字符)
+                      : map[部首.获取名称()]!;
+                }
+                tsv.push([char.toString(), 部首字符串]);
+              }
+              exportTSV(tsv, "部首.txt");
+            }}
+          >
+            导出部首
+          </Button>
+        )}
         {动态分析 && <ExportDynamicAnalysis />}
         <Button
           onClick={() => {

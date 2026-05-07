@@ -144,8 +144,8 @@ export default function ResultSummary({
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
         <CharacterWithTooltip element={glyph.字符} />
-        {glyph instanceof 部件 && glyph.index !== 0 && (
-          <span>之{数字(glyph.index)}</span>
+        {glyph instanceof 部件 && glyph.字形序号 !== 0 && (
+          <span>之{数字(glyph.字形序号)}</span>
         )}
         {字根序列.map((x, index) => {
           const element = x instanceof 部件 ? x.字符 : x;
