@@ -8,6 +8,7 @@ import type {
   决策空间,
   分析配置,
   安排,
+  安排描述,
   条件,
   退化配置,
 } from "./config.js";
@@ -80,6 +81,7 @@ interface 字形分析基本配置 {
 
 interface 字形分析配置 {
   字根决策: Map<字根, 安排>;
+  字根决策空间: Map<字根, 安排描述[]>;
   可选字根: Set<字根>;
   分类器: 分类器; // 已经填充过默认值
   部件字根列表: 部件[];
@@ -211,6 +213,7 @@ class 字库 {
     原始字库: 原始字库,
   ): Result<字形分析配置, Error> {
     const 字根决策 = new Map<字根, 安排>();
+    const 字根决策空间 = new Map<字根, 安排描述[]>();
     const 可选字根 = new Set<字根>();
     const 分类器 = 合并分类器(分析配置.classifier);
     const 全部元素 = new Set(Object.keys(决策).concat(Object.keys(决策空间)));
@@ -250,6 +253,7 @@ class 字库 {
         }
       }
       for (const 字根 of 所有字根) {
+        字根决策空间.set(字根, 安排列表 ?? []);
         if (安排) 字根决策.set(字根, 安排);
         if (安排 === undefined || 安排列表?.some((x) => x.value == null)) {
           可选字根.add(字根);
@@ -314,6 +318,7 @@ class 字库 {
       筛选器列表,
       分类器,
       字根决策,
+      字根决策空间,
       可选字根,
       部件字根列表,
       复合体字根映射,
