@@ -427,13 +427,13 @@ class 字库 {
       部件分析结果.set(部件, 分析.value);
     }
     // 对冰雪飞花，把从复合体转出的部件也分析一下
-    if (base.分析配置.component_analyzer === "冰雪飞花") {
-      for (const [_, 部件] of 分析配置.复合体字根映射) {
-        const 分析 = 分析配置.部件分析器.分析(部件);
-        if (!分析.ok) return 分析;
-        部件分析结果.set(部件, 分析.value);
-      }
-    }
+    // if (base.分析配置.component_analyzer === "冰雪飞花") {
+    //   for (const [_, 部件] of 分析配置.复合体字根映射) {
+    //     const 分析 = 分析配置.部件分析器.分析(部件);
+    //     if (!分析.ok) return 分析;
+    //     部件分析结果.set(部件, 分析.value);
+    //   }
+    // }
     分析配置.复合体分析器.部件分析结果 = 部件分析结果;
     const 分析结果 = new Map<字符, 基本分析[]>();
     for (const 字符 of 汉字集合) {
