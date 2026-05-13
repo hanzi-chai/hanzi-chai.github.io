@@ -552,48 +552,59 @@ export const 如动态组装结果与优先简码原子 = atom(async (get) => {
   return ok(添加优先简码(如动态组装结果.value, 优先简码映射));
 });
 
+type 序列化组装结果 = {
+  词: string;
+  全部元素序列: { 元素序列: 元素位或编码[]; 条件列表: 条件[] }[];
+  频率: number;
+  简码长度?: number;
+};
+
+export const 如导出组装结果原子 = atom(async (get) => {
+  const 序列化词列表: 序列化组装结果[] = [];
+  const 词列表 = await get(如组装结果与优先简码原子);
+  if (!词列表.ok) return 词列表;
+  词列表.value.forEach((x) => {
+    const { 元素序列, ...rest } = x;
+    序列化词列表.push({
+      ...rest,
+      词: x.词.map((v) => v.获取名称()).join(""),
+      全部元素序列: [
+        { 元素序列: x.元素序列.元素序列.map(下转换), 条件列表: [] },
+      ],
+    });
+  });
+  return ok(序列化词列表);
+});
+
+export const 如导出动态组装结果原子 = atom(async (get) => {
+  const 序列化词列表: 序列化组装结果[] = [];
+  const 词列表 = await get(如动态组装结果与优先简码原子);
+  if (!词列表.ok) return 词列表;
+  词列表.value.forEach((x) => {
+    const { 元素序列, ...rest } = x;
+    序列化词列表.push({
+      ...rest,
+      词: x.词.map((v) => v.获取名称()).join(""),
+      全部元素序列: [...x.元素序列].map((x) => ({
+        元素序列: x.元素序列.map(下转换),
+        条件列表: x.条件列表,
+      })),
+    });
+  });
+  return ok(序列化词列表);
+});
+
 export const 如前端输入原子 = atom(async (get) => {
   const 配置 = get(配置原子);
   const 动态分析 = get(动态分析原子);
-
-  const 序列化词列表: {
-    词: string;
-    全部元素序列: { 元素序列: 元素位或编码[]; 条件列表: 条件[] }[];
-    频率: number;
-    简码长度?: number;
-  }[] = [];
-  if (动态分析) {
-    const 词列表 = await get(如动态组装结果与优先简码原子);
-    if (!词列表.ok) return 词列表;
-    词列表.value.forEach((x) => {
-      const { 元素序列, ...rest } = x;
-      序列化词列表.push({
-        ...rest,
-        词: x.词.map((v) => v.获取名称()).join(""),
-        全部元素序列: [...x.元素序列].map((x) => ({
-          元素序列: x.元素序列.map(下转换),
-          条件列表: x.条件列表,
-        })),
-      });
-    });
-  } else {
-    const 词列表 = await get(如组装结果与优先简码原子);
-    if (!词列表.ok) return 词列表;
-    词列表.value.forEach((x) => {
-      const { 元素序列, ...rest } = x;
-      序列化词列表.push({
-        ...rest,
-        词: x.词.map((v) => v.获取名称()).join(""),
-        全部元素序列: [
-          { 元素序列: x.元素序列.元素序列.map(下转换), 条件列表: [] },
-        ],
-      });
-    });
-  }
+  const 序列化词列表 = 动态分析
+    ? await get(如导出动态组装结果原子)
+    : await get(如导出组装结果原子);
+  if (!序列化词列表.ok) return 序列化词列表;
 
   return ok({
     配置,
-    词列表: 序列化词列表,
+    词列表: 序列化词列表.value,
     原始键位分布信息:
       get(用户键位分布目标原子) ?? (await get(默认键位分布目标原子)),
     原始当量信息: get(用户当量映射原子) ?? (await get(默认当量原子)),

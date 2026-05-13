@@ -95,7 +95,6 @@ export default function Debugger() {
   const 原始字库 = useAtomValue(原始字库原子);
   const characters = useAtomValue(汉字集合原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
-  const 决策 = useAtomValue(强类型决策原子);
   const [外部码表, 设置外部码表] = useAtom(
     码表数据库.item(config.info?.name ?? "方案"),
   );
@@ -104,10 +103,7 @@ export default function Debugger() {
   const [校对方向, 设置校对方向] = useAtom(校对方向原子);
   const [码表格式, 设置码表格式] = useState<码表格式>("char_tab_code");
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedElement, setSelectedElement] = useState<{
-    name: 元素;
-    keys: any;
-  } | null>(null);
+  const [selectedElement, setSelectedElement] = useState<元素 | null>(null);
   const 字符是部件: 过滤 = (c, _) => {
     return characters.has(c) && repertoire.查询字形(c)?.some(是部件) === true;
   };
@@ -138,12 +134,9 @@ export default function Debugger() {
   }
 
   // 处理点击元素的函数
-  const handleElementClick = (elementName: 元素) => {
-    const keys = 决策.get(elementName);
-    if (keys) {
-      setSelectedElement({ name: elementName, keys });
-      setModalOpen(true);
-    }
+  const handleElementClick = (element: 元素) => {
+    setSelectedElement(element);
+    setModalOpen(true);
   };
 
   const 获取状态 = (编码列表: string[], 编码: string): 校对结果 => {
@@ -323,8 +316,7 @@ export default function Debugger() {
       >
         {selectedElement && (
           <ElementDetail
-            keys={selectedElement.keys}
-            element={selectedElement.name}
+            element={selectedElement}
             onClose={() => setModalOpen(false)}
           />
         )}

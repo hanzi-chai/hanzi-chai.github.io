@@ -280,7 +280,7 @@ const 组装 = (
   const 去重后组装结果: 组装条目[] = [];
   const 索引映射 = new Map<string, number>();
   for (const 组装 of 组装结果) {
-    const hash = `${组装.词}:${总序列化(组装.元素序列.元素序列)}`;
+    const hash = `${组装.词.map((x) => x.获取名称()).join("")}:${总序列化(组装.元素序列.元素序列)}`;
     const 索引 = 索引映射.get(hash);
     if (索引 !== undefined) {
       const 上一个组装 = 去重后组装结果[索引]!;
@@ -339,7 +339,7 @@ const 动态组装 = (
   const 去重后组装结果: 动态组装条目[] = [];
   const 索引映射 = new Map<string, number>();
   for (const 组装 of 组装结果) {
-    const hash = `${组装.词}:${[...组装.元素序列].map((x) => 总序列化(x.元素序列)).join(",")}`;
+    const hash = `${组装.词.map((x) => x.获取名称()).join("")}:${[...组装.元素序列].map((x) => 总序列化(x.元素序列)).join(",")}`;
     const 索引 = 索引映射.get(hash);
     if (索引 !== undefined) {
       const 上一个组装 = 去重后组装结果[索引]!;

@@ -60,11 +60,9 @@ import {
 import ValueEditor from "./Value";
 
 export const ElementDetail = ({
-  keys,
   element,
   onClose,
 }: {
-  keys: 强类型非空安排;
   element: 元素;
   onClose: () => void;
 }) => {
@@ -75,6 +73,7 @@ export const ElementDetail = ({
   const alphabet = useAtomValue(字母表原子);
   const gf0014 = useAtomValue(GF0014映射原子);
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
+  const keys = mapping.get(element)!;
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
@@ -213,7 +212,6 @@ export const AdjustableElementGroup = ({
         onOpenChange={setOpenPopover}
         content={
           <ElementDetail
-            keys={value}
             element={element}
             onClose={() => setOpenPopover(false)}
           />
@@ -244,7 +242,6 @@ export const AdjustableElementGroup = ({
           }
           content={
             <ElementDetail
-              keys={{ element: to }}
               element={from}
               onClose={() =>
                 setOpenAffiliatePopover(

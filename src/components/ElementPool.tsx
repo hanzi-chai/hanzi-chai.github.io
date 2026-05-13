@@ -55,7 +55,7 @@ export default function ElementPool({
               checked={显示康熙部首}
               onChange={(e) => 设置康熙部首(e.target.checked)}
             />
-            显示部首补充：
+            &nbsp; 显示部首补充：
             <Checkbox
               checked={显示部首补充}
               onChange={(e) => 设置部首补充(e.target.checked)}
