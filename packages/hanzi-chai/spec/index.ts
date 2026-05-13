@@ -14,7 +14,7 @@ export const 获取数据 = () => {
   for (const { 字符, 字形列表 } of 字库) {
     for (const 字形 of 字形列表) {
       if (字形 instanceof 部件) {
-        部件图形库[字符.toString()] = 字形;
+        部件图形库[字符.获取名称()] = 字形;
         break;
       }
     }

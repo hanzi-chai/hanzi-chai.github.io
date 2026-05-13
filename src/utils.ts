@@ -166,7 +166,7 @@ export class 字符过滤器 {
     let result = true;
     const { name, unicode } = this.过滤条件;
     if (name) {
-      result &&= (数据.name ?? "").includes(name) || 汉字.toString().includes(name);
+      result &&= (数据.name ?? "").includes(name) || 汉字.获取名称().includes(name);
     }
     if (this.sequenceRegex !== undefined) {
       result &&= 笔顺列表.some(s => this.sequenceRegex!.test(s));

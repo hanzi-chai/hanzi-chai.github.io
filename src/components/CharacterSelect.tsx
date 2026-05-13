@@ -5,7 +5,7 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   原始字库原子,
-  如排序字库数据原子,
+  如按笔顺排序字符原子,
   如笔顺映射原子,
 } from "~/atoms";
 import { CharacterDisplay, Select } from "./Utils";
@@ -21,7 +21,7 @@ function getLabel(value: { id: number }) {
 
 export default function CharacterSelect(props: ItemSelectProps) {
   const { customFilter, includeVariables, ...rest } = props;
-  const 字符列表 = useAtomValueUnwrapped(如排序字库数据原子);
+  const 字符列表 = useAtomValueUnwrapped(如按笔顺排序字符原子);
   const [data, setData] = useState<SelectProps["options"]>([]);
   const value = props.value;
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
@@ -55,12 +55,12 @@ export default function CharacterSelect(props: ItemSelectProps) {
         const 别名 = 原始字库.查询(字符实例)?.name ?? "";
         return (
           笔顺映射.get(字符实例)?.some((s) => s.startsWith(input)) ||
-          字符实例.toString() === input ||
+          字符实例.获取名称() === input ||
           别名.includes(input)
         );
       })
       .map((字符实例) => ({
-        value: 字符实例.toString(),
+        value: 字符实例.获取名称(),
         label: (
           <span className="flex gap-1">
             <CharacterDisplay character={字符实例} />

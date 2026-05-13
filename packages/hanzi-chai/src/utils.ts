@@ -1,30 +1,45 @@
 import { range } from "lodash-es";
 import type { 动态组装条目, 组装条目 } from "./assembly.js";
-import type { 笔画名称 } from "./classifier.js";
+import type { 分类器, 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
-import type {
-  兼容字形自定义,
-  决策,
-  决策空间,
-  字形自定义,
-  广义码位,
-  码位,
-  非空广义安排,
+import {
+  type 元素位或编码,
+  type 兼容字形自定义,
+  type 决策,
+  type 决策空间,
+  type 字形自定义,
+  type 安排,
+  type 安排描述,
+  type 广义安排,
+  type 拼写运算,
+  是变量,
+  type 非空安排,
 } from "./config.js";
-import type {
-  全等数据,
-  原始汉字数据,
-  向量,
-  基本部件数据,
-  复合体数据,
-  字形描述,
-  引用笔画数据,
-  拼接部件数据,
-  矢量笔画数据,
-  结构描述字符,
-  绘制,
-  衍生部件数据,
+import {
+  type 全等数据,
+  type 原始汉字数据,
+  type 向量,
+  type 基本部件数据,
+  type 复合体数据,
+  type 字形描述,
+  type 引用笔画数据,
+  type 拼接部件数据,
+  type 矢量笔画数据,
+  type 结构描述字符,
+  结构描述字符列表,
+  type 绘制,
+  type 衍生部件数据,
 } from "./data.js";
+import {
+  二笔,
+  type 元素,
+  拼音元素,
+  未知元素,
+  笔画,
+  结构符元素,
+  type 自定义元素,
+} from "./element.js";
+import { 应用拼写运算, type 拼音分析映射 } from "./pinyin.js";
 import type { 字符 } from "./unicode.js";
 
 // Result 类型定义
@@ -249,6 +264,15 @@ export function 序列化词典(词典: 原始词典): string[][] {
   return result;
 }
 
+export function 解析笔画数据(tsv: string[][]) {
+  const 笔画数据 = new Map<string, string>();
+  for (const [char, strokes] of tsv) {
+    if (char === undefined || strokes === undefined) continue;
+    笔画数据.set(char, strokes);
+  }
+  return 笔画数据;
+}
+
 export function 解析自定义元素(tsv: string[][]): Record<string, string[]> {
   const result: Record<string, string[]> = {};
   for (const [key, values_s] of tsv) {
@@ -272,21 +296,24 @@ export function 解析码表(tsv: string[][]): 码表条目[] {
   return result;
 }
 
-export const 序列化 = (key?: 码位) => {
+export const 序列化 = (key?: 强类型元素位或编码) => {
   if (key === undefined) {
     return "ε";
   } else if (typeof key === "string") {
     return key;
   } else {
-    return `${key.element}.${key.index}`;
+    return `${key.element.获取名称()}.${key.index}`;
   }
 };
 
-export const 总序列化 = (keys: (码位 | undefined)[]) => {
+export const 总序列化 = (keys: (强类型元素位或编码 | undefined)[]) => {
   return keys.map(序列化).join(" ");
 };
 
-export const 反序列化 = (key: string): Result<码位 | undefined, Error> => {
+export const 反序列化 = (
+  key: string,
+  map: Map<string, 元素>,
+): Result<强类型元素位或编码 | undefined, Error> => {
   if (key === "ε") {
     return ok(undefined);
   } else if (key.includes(".")) {
@@ -295,21 +322,253 @@ export const 反序列化 = (key: string): Result<码位 | undefined, Error> => 
     if (element === undefined || index_s === undefined || Number.isNaN(index)) {
       return default_err(`无法反序列化码位: ${key}`);
     }
-    return ok({ element: element, index });
+    return ok({ element: map.get(element)!, index });
   } else {
     return ok(key);
   }
 };
 
-export const 合并字符串 = <T extends 广义码位>(keys: T[]) => {
+export const 计算拼音分析与元素映射 = (
+  词典: 词典,
+  拼写运算查找表: Map<string, 拼写运算>,
+) => {
+  const 音节集合 = new Set<string>();
+  for (const { 拼音 } of 词典) {
+    拼音.map((p) => 音节集合.add(p));
+  }
+  const 拼音元素映射: Map<string, 拼音元素[]> = new Map();
+  const 拼音分析映射: 拼音分析映射 = new Map();
+  for (const [类型, 拼写运算] of 拼写运算查找表) {
+    const 元素名称映射 = new Map<string, 拼音元素>();
+    for (const 音节 of 音节集合) {
+      const 元素名称 = 应用拼写运算(拼写运算, 音节);
+      const 元素 = 元素名称映射.get(元素名称) ?? new 拼音元素(类型, 元素名称);
+      if (!元素名称映射.has(元素名称)) 元素名称映射.set(元素名称, 元素);
+      const 拼音分析 = 拼音分析映射.get(音节) ?? new Map<string, 拼音元素>();
+      拼音分析.set(类型, 元素);
+      拼音分析映射.set(音节, 拼音分析);
+    }
+    const 元素列表 = [...元素名称映射.values()].sort((a, b) =>
+      a.获取名称().localeCompare(b.获取名称()),
+    );
+    拼音元素映射.set(类型, 元素列表);
+  }
+  return { 拼音元素映射, 拼音分析映射 };
+};
+
+export const 计算全部合法元素与元素映射 = (
+  字符列表: 字符[],
+  分类器: 分类器,
+  拼音元素映射: Map<string, 拼音元素[]>,
+  自定义元素映射: Map<string, 自定义元素[]>,
+) => {
+  const 全部笔画类别 = [...new Set(Object.values(分类器))].sort(
+    (a, b) => a - b,
+  );
+  const 笔画列表: 笔画[] = [];
+  for (const n of 全部笔画类别) {
+    笔画列表.push(笔画.创建(n));
+  }
+  const 二笔列表: 二笔[] = [];
+  for (const n1 of 全部笔画类别) {
+    for (const n2 of [0, ...全部笔画类别]) {
+      二笔列表.push(二笔.创建(n1, n2));
+    }
+  }
+  const 结构符元素列表 = 结构描述字符列表.map((x) => new 结构符元素(x));
+  const 名称映射: Map<string, 元素> = new Map();
+  const 普通元素: 元素[] = [
+    ...字符列表,
+    ...笔画列表,
+    ...二笔列表,
+    ...结构符元素列表,
+  ];
+  for (const 元素 of 普通元素) {
+    名称映射.set(元素.获取名称(), 元素);
+  }
+  for (const [_, 元素列表] of 拼音元素映射) {
+    for (const 元素 of 元素列表) 名称映射.set(元素.获取名称(), 元素);
+  }
+  for (const [_, 元素列表] of 自定义元素映射) {
+    for (const 元素 of 元素列表) 名称映射.set(元素.获取名称(), 元素);
+  }
+  return {
+    字符列表,
+    笔画列表,
+    二笔列表,
+    结构符元素列表,
+    拼音元素映射,
+    自定义元素映射,
+    名称映射,
+  };
+};
+
+export const 合并字符串 = <T extends 强类型广义引用>(keys: T[]) => {
   return keys.every((x) => typeof x === "string") ? keys.join("") : keys;
 };
 
+export function 构建强类型决策与决策空间(
+  决策: 决策,
+  决策空间: 决策空间,
+  元素名称映射: Map<string, 元素>,
+) {
+  const 强类型决策 = new Map<元素, 强类型非空安排>();
+  const 强类型决策空间 = new Map<元素, 强类型安排描述[]>();
+  const 当前元素名称映射 = new Map<string, 元素>(元素名称映射);
+  for (const 元素名称 of Object.keys(决策).concat(Object.keys(决策空间))) {
+    const 元素 = 元素名称映射.get(元素名称);
+    if (!元素) {
+      当前元素名称映射.set(元素名称, new 未知元素(元素名称));
+    }
+  }
+  for (const [元素名称, 安排] of Object.entries(决策)) {
+    const 元素 = 当前元素名称映射.get(元素名称)!;
+    const 强安排 = 恢复安排(安排, 当前元素名称映射) as 强类型安排 | undefined;
+    if (!强安排) continue;
+    强类型决策.set(元素, 强安排);
+  }
+  for (const [元素名称, 安排描述列表] of Object.entries(决策空间)) {
+    const 元素 = 当前元素名称映射.get(元素名称)!;
+    const 强安排描述列表: 强类型安排描述[] = [];
+    for (const { value, score, condition } of 安排描述列表) {
+      const 强安排 = 恢复安排(value, 当前元素名称映射);
+      if (!强安排) continue;
+      if (condition) {
+        const new_condition: 强类型条件[] = [];
+        let valid = true;
+        for (const { element, op, value } of condition) {
+          const 依赖元素 = 当前元素名称映射.get(element);
+          if (!依赖元素) {
+            valid = false;
+            break;
+          }
+          const 依赖安排 = 恢复安排(value, 当前元素名称映射) as
+            | 强类型安排
+            | undefined;
+          if (!依赖安排) {
+            valid = false;
+            break;
+          }
+          new_condition.push({ element: 依赖元素, op, value: 依赖安排 });
+        }
+        if (valid) {
+          强安排描述列表.push({
+            value: 强安排,
+            score,
+            condition: new_condition,
+          });
+        }
+      } else {
+        强安排描述列表.push({ value: 强安排, score });
+      }
+    }
+    强类型决策空间.set(元素, 强安排描述列表);
+  }
+  return { 决策: 强类型决策, 决策空间: 强类型决策空间 };
+}
+
+export function 序列化安排(安排: 强类型广义安排): 广义安排 {
+  if (安排 === null) return null;
+  if (typeof 安排 === "string") return 安排;
+  if (Array.isArray(安排)) {
+    return 安排.map((x) => {
+      if (typeof x === "string" || x === null) return x;
+      if (是强类型变量(x)) return x;
+      return { element: x.element.获取名称(), index: x.index };
+    });
+  }
+  return { element: 安排.element.获取名称() };
+}
+
+export function 序列化强类型决策(决策: 强类型决策): 决策 {
+  const 基本决策: 决策 = {};
+  for (const [元素, 安排] of 决策) {
+    基本决策[元素.获取名称()] = 序列化安排(安排) as 非空安排;
+  }
+  return 基本决策;
+}
+
+export function 序列化强类型决策空间(决策空间: 强类型决策空间): 决策空间 {
+  const 基本决策空间: 决策空间 = {};
+  for (const [元素, 安排描述列表] of 决策空间) {
+    基本决策空间[元素.获取名称()] = 安排描述列表.map(
+      ({ value, score, condition }) => {
+        const 基本描述: 安排描述 = { value: 序列化安排(value), score };
+        if (condition) {
+          基本描述.condition = condition.map(({ element, op, value }) => ({
+            element: element.获取名称(),
+            op,
+            value: 序列化安排(value) as 安排,
+          }));
+        }
+        return 基本描述;
+      },
+    );
+  }
+  return 基本决策空间;
+}
+
+export function 线性化决策(m: 强类型决策): Result<Map<元素, string>, Error> {
+  const result = new Map<元素, string>();
+  for (const key of m.keys()) {
+    const value = 展开决策值(m, key);
+    if (!value.ok) return value;
+    result.set(key, value.value);
+  }
+  return ok(result);
+}
+
+export function 获取所有被归并元素(mapping: 强类型决策, name: 元素) {
+  const visit = (parent: 元素, name: 元素, output: any[]) => {
+    output.push({ from: name, to: parent });
+    const children = [...mapping]
+      .filter(([, to]) => 是强类型归并(to) && to.element === name)
+      .map(([x]) => x);
+    children.map((child) => visit(name, child, output));
+  };
+  const result: { from: 元素; to: 元素 }[] = [];
+  // use pre-dfs to get all affiliates
+  [...mapping].forEach(([key, value]) => {
+    if (是强类型归并(value) && value.element === name) {
+      visit(name, key, result);
+    }
+  });
+  return result;
+}
+
+export function 计算当前或潜在长度(
+  决策: 强类型决策,
+  决策空间: 强类型决策空间,
+): Result<Map<元素, number>, Error> {
+  const 增广决策: Map<元素, 强类型非空安排> = new Map(决策);
+  for (const [key, 安排列表] of 决策空间) {
+    if (!增广决策.has(key)) {
+      const v = 安排列表.find((x) => x.value !== null);
+      if (v === undefined) return default_err("");
+      const value = v.value;
+      if (value === null) return default_err("");
+      if (是强类型归并(value)) 增广决策.set(key, value);
+      else {
+        增广决策.set(key, [...value].map((_) => "a").join());
+      }
+    }
+  }
+  const 线性化 = 线性化决策(增广决策);
+  if (!线性化.ok) return 线性化;
+  return ok(
+    new Map(
+      [...线性化.value].map(([k, v]) => {
+        return [k, v.length];
+      }),
+    ),
+  );
+}
+
 const 展开决策值 = (
-  mapping: Record<string, 非空广义安排>,
-  key: string,
+  mapping: Map<元素, Exclude<强类型广义安排, null>>,
+  key: 元素,
 ): Result<string, Error> => {
-  const value = mapping[key];
+  const value = mapping.get(key);
   if (value === undefined) {
     return default_err(`决策中不存在键: ${key}`);
   }
@@ -337,53 +596,84 @@ const 展开决策值 = (
   }
 };
 
-export const 展开决策 = (mapping: 决策): Result<Map<string, string>, Error> => {
-  const result = new Map<string, string>();
-  for (const key of Object.keys(mapping)) {
-    const value = 展开决策值(mapping, key);
-    if (!value.ok) return value;
-    result.set(key, value.value);
-  }
-  return ok(result);
+export type 强类型元素位或编码 = string | { element: 元素; index: number };
+
+export const 下转换 = (c: 强类型元素位或编码) => {
+  return typeof c === "string"
+    ? c
+    : { element: c.element.获取名称(), index: c.index };
 };
 
-export const 计算当前或潜在长度 = (
-  mapping: 决策,
-  mapping_space: 决策空间,
-): Result<Map<string, number>, Error> => {
-  const result = new Map<string, number>();
-  for (const key of Object.keys(mapping)) {
-    const value = 展开决策值(mapping, key);
-    if (!value.ok) return value;
-    result.set(key, value.value.length);
-  }
-  const 增广决策: Record<string, 非空广义安排> = { ...mapping };
-  for (const [key, value] of Object.entries(mapping_space)) {
-    if (!(key in 增广决策)) {
-      const v = value.find((x) => x.value !== null);
-      if (v !== undefined) {
-        增广决策[key] = v.value as 非空广义安排;
+export type 强类型广义引用 = 强类型元素位或编码 | null | { variable: string };
+
+export type 强类型安排 = 强类型非空安排 | null;
+
+export type 强类型非空安排 = string | 强类型元素位或编码[] | { element: 元素 };
+
+export type 强类型广义安排 =
+  | string
+  | 强类型广义引用[]
+  | { element: 元素 }
+  | null;
+
+export type 强类型非归并安排 = string | 强类型元素位或编码[];
+
+export type 强类型决策 = Map<元素, 强类型非空安排>;
+
+export type 强类型决策空间 = Map<元素, 强类型安排描述[]>;
+
+export const 是强类型归并 = (a: 强类型广义安排): a is { element: 元素 } => {
+  return typeof a === "object" && a !== null && "element" in a;
+};
+
+export const 是强类型变量 = (a: 强类型广义引用): a is { variable: string } => {
+  return typeof a === "object" && a !== null && "variable" in a;
+};
+
+export function 恢复安排(
+  安排: 广义安排,
+  映射: Map<string, 元素>,
+): 强类型广义安排 | undefined {
+  if (安排 === null) return null;
+  if (typeof 安排 === "string") return 安排;
+  if (Array.isArray(安排)) {
+    const ret: 强类型广义引用[] = [];
+    for (const x of 安排) {
+      if (typeof x === "string" || x === null) ret.push(x);
+      else if (是变量(x)) ret.push(x);
+      else {
+        const 元素 = 映射.get(x.element);
+        if (!元素) return undefined;
+        ret.push({ element: 元素, index: x.index });
       }
     }
+    return ret;
   }
-  for (const key of Object.keys(增广决策)) {
-    if (!result.has(key)) {
-      const value = 展开决策值(增广决策, key);
-      if (!value.ok) return value;
-      result.set(key, value.value.length);
-    }
-  }
-  return ok(result);
-};
+  const 元素 = 映射.get(安排.element);
+  if (!元素) return undefined;
+  return { element: 元素 };
+}
+
+export interface 强类型安排描述 {
+  value: 强类型广义安排;
+  score: number;
+  condition?: 强类型条件[];
+}
+
+export interface 强类型条件 {
+  element: 元素;
+  op: "是" | "不是";
+  value: 强类型安排;
+}
 
 export const 识别符 = (词: 字符[], 拼音来源列表: string[][]) => {
   const 拼音列表 = 拼音来源列表.map((list) => list.join(" "));
-  return `${词.map((c) => c.toString()).join("")}-${拼音列表.join(",")}`;
+  return `${词.map((c) => c.获取名称()).join("")}-${拼音列表.join(",")}`;
 };
 
 export type 自定义分析 = Record<string, string[]>;
 
-export type 自定义分析映射 = Map<字符, 自定义分析>;
+export type 自定义分析映射 = Map<字符, Map<string, 自定义元素[]>>;
 
 export const 排列组合 = <T>(array: T[][]): T[][] => {
   if (array.length === 0) return [[]];

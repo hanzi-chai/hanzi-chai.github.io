@@ -3,22 +3,22 @@ import { 图形盒子 } from "./affine.js";
 import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 部件, 默认退化配置 } from "./component.js";
 import { 复合体 } from "./compound.js";
-import type {
-  决策,
-  决策空间,
-  分析配置,
-  安排,
-  安排描述,
-  条件,
-  退化配置,
-} from "./config.js";
+import type { 分析配置, 条件, 退化配置 } from "./config.js";
 import type { 复合体数据 } from "./data.js";
-import { 二笔, 单笔, 识别元素 } from "./element.js";
+import { 二笔, type 元素, 笔画 } from "./element.js";
 import type { 原始字库 } from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符 } from "./unicode.js";
-import { ok, type Result } from "./utils.js";
+import {
+  ok,
+  type Result,
+  type 强类型决策,
+  type 强类型决策空间,
+  type 强类型安排,
+  type 强类型安排描述,
+  线性化决策,
+} from "./utils.js";
 
 export type 字形 = 部件 | 复合体;
 
@@ -30,7 +30,7 @@ export function 是复合体(字形: 字形): 字形 is 复合体 {
   return 字形 instanceof 复合体;
 }
 
-export type 字根 = 单笔 | 二笔 | 部件;
+export type 字根 = 笔画 | 二笔 | 部件;
 
 interface 基本部件分析 {
   类型: "部件";
@@ -74,14 +74,17 @@ interface 动态字形分析结果<
 
 interface 字形分析基本配置 {
   分析配置: 分析配置;
-  决策: 决策;
-  决策空间: 决策空间;
+  决策: 强类型决策;
+  决策空间: 强类型决策空间;
   字形来源列表: string[];
 }
 
 interface 字形分析配置 {
-  字根决策: Map<字根, 安排>;
-  字根决策空间: Map<字根, 安排描述[]>;
+  决策: 强类型决策;
+  决策空间: 强类型决策空间;
+  线性化决策: Map<元素, string>;
+  字根决策: Map<字根, 强类型安排>;
+  字根决策空间: Map<字根, 强类型安排描述[]>;
   可选字根: Set<字根>;
   分类器: 分类器; // 已经填充过默认值
   部件字根列表: 部件[];
@@ -208,31 +211,25 @@ class 字库 {
 
   准备字形分析配置(
     分析配置: 分析配置,
-    决策: 决策,
-    决策空间: 决策空间,
+    决策: 强类型决策,
+    决策空间: 强类型决策空间,
     原始字库: 原始字库,
   ): Result<字形分析配置, Error> {
-    const 字根决策 = new Map<字根, 安排>();
-    const 字根决策空间 = new Map<字根, 安排描述[]>();
+    const 字根决策 = new Map<字根, 强类型安排>();
+    const 字根决策空间 = new Map<字根, 强类型安排描述[]>();
     const 可选字根 = new Set<字根>();
     const 分类器 = 合并分类器(分析配置.classifier);
-    const 全部元素 = new Set(Object.keys(决策).concat(Object.keys(决策空间)));
+    const 全部元素 = new Set<元素>([...决策.keys(), ...决策空间.keys()]);
     const 部件字根列表: 部件[] = [];
     const 复合体字根映射: Map<复合体, 部件> = new Map();
     for (const 元素 of 全部元素) {
-      const 安排 = 决策[元素];
-      const 安排列表 = 决策空间[元素];
+      const 安排 = 决策.get(元素);
+      const 安排列表 = 决策空间.get(元素) ?? [];
       const 所有字根: 字根[] = [];
-      const 识别结果 = 识别元素(
-        元素,
-        分类器,
-        (s) => 原始字库.校验(s)?.character,
-      );
-      if (识别结果 instanceof 单笔 || 识别结果 instanceof 二笔) {
-        所有字根.push(识别结果);
-      } else if (识别结果 instanceof 字符) {
-        const 字根字符 = 识别结果;
-        const 字形列表 = this.查询字形(字根字符) ?? [];
+      if (元素 instanceof 笔画 || 元素 instanceof 二笔) {
+        所有字根.push(元素);
+      } else if (元素 instanceof 字符) {
+        const 字形列表 = this.查询字形(元素) ?? [];
         for (const 字根字形 of 字形列表) {
           if (字根字形 instanceof 部件) {
             部件字根列表.push(字根字形);
@@ -241,7 +238,7 @@ class 字库 {
             const 图形盒子 = this.递归渲染复合体(字根字形);
             if (!图形盒子.ok) return 图形盒子;
             const 真部件 = new 部件(
-              字根字符,
+              元素,
               字根字形.标签集合,
               字根字形.兼容,
               图形盒子.value.获取笔画列表(),
@@ -253,7 +250,7 @@ class 字库 {
         }
       }
       for (const 字根 of 所有字根) {
-        字根决策空间.set(字根, 安排列表 ?? []);
+        字根决策空间.set(字根, 安排列表);
         if (安排) 字根决策.set(字根, 安排);
         if (安排 === undefined || 安排列表?.some((x) => x.value == null)) {
           可选字根.add(字根);
@@ -313,7 +310,12 @@ class 字库 {
       const 字根 = 字根名称映射.get(name);
       if (字根) 弱字根列表.push(字根);
     }
+    const 线性化 = 线性化决策(决策);
+    if (!线性化.ok) return 线性化;
     return ok({
+      决策,
+      决策空间,
+      线性化决策: 线性化.value,
       退化配置: 分析配置.degenerator ?? 默认退化配置,
       筛选器列表,
       分类器,

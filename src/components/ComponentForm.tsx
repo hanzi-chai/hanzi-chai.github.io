@@ -208,7 +208,7 @@ export default function ComponentForm({
     if (component === undefined) return false;
     while (component?.type === "derived_component") {
       const source: string = component.source;
-      if (source === current.toString()) return false;
+      if (source === current.获取名称()) return false;
       component = 原始字库.校验(source)?.glyphs.find(是基本或衍生部件);
     }
     return true;
@@ -484,7 +484,7 @@ export function IdentityForm({
         <Form.Item name="source" label="源字">
           <CharacterSelect
             className="w-24"
-            customFilter={([x]) => x !== current.toString()}
+            customFilter={([x]) => x !== current.获取名称()}
           />
         </Form.Item>
       </ProFormGroup>

@@ -1,13 +1,21 @@
 import { Button, Flex, notification } from "antd";
-import { 合并字符串, type 广义码位, 是变量, type 码位 } from "hanzi-chai";
+import {
+  type 元素,
+  合并字符串,
+  type 强类型元素位或编码,
+  type 强类型广义引用,
+  是强类型变量,
+} from "hanzi-chai";
 import { useState } from "react";
 import {
-  useAddAtom,
   useAtomValue,
-  决策原子,
-  决策空间原子,
+  useAtomValueUnwrapped,
+  useMapAddAtom,
+  全部合法元素原子,
   动态分析原子,
   字母表原子,
+  强类型决策原子,
+  强类型决策空间原子,
   当前元素原子,
   编码类型原子,
 } from "~/atoms";
@@ -17,12 +25,18 @@ import KeySelect from "./KeySelect";
 export default function ElementAdder() {
   const element = useAtomValue(当前元素原子);
   const alphabet = useAtomValue(字母表原子);
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   const mapping_type = useAtomValue(编码类型原子);
   const dynamic = useAtomValue(动态分析原子);
-  const [main, setMain] = useState<string | undefined>(undefined);
-  const [keys, setKeys] = useState<广义码位[]>([alphabet[0]!, "", "", ""]);
-  const addMapping = useAddAtom(决策原子);
-  const addMappingSpace = useAddAtom(决策空间原子);
+  const [main, setMain] = useState<元素 | undefined>(undefined);
+  const [keys, setKeys] = useState<强类型广义引用[]>([
+    alphabet[0]!,
+    "",
+    "",
+    "",
+  ]);
+  const addMapping = useMapAddAtom(强类型决策原子);
+  const addMappingSpace = useMapAddAtom(强类型决策空间原子);
   return (
     <>
       <Flex justify="center" align="center" gap="small" wrap>
@@ -36,7 +50,7 @@ export default function ElementAdder() {
               onChange={(event) =>
                 setKeys((keys) =>
                   keys.map((v, i) => {
-                    return i === index ? (event as 码位) : v;
+                    return i === index ? (event as 强类型元素位或编码) : v;
                   }),
                 )
               }
@@ -51,9 +65,9 @@ export default function ElementAdder() {
           disabled={element === undefined}
           onClick={() => {
             const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
-            const filteredSlice: 码位[] = [];
+            const filteredSlice: 强类型元素位或编码[] = [];
             for (const x of slice) {
-              if (是变量(x) || x === null) {
+              if (是强类型变量(x) || x === null) {
                 notification.error({
                   message: "不能将变量或占位符添加到当前决策中",
                 });
@@ -61,7 +75,7 @@ export default function ElementAdder() {
               }
               filteredSlice.push(x);
             }
-            addMapping(element!.toString(), 合并字符串(filteredSlice));
+            addMapping(element!, 合并字符串(filteredSlice));
           }}
         >
           添加
@@ -72,9 +86,7 @@ export default function ElementAdder() {
             disabled={element === undefined}
             onClick={() => {
               const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
-              addMappingSpace(element!.toString(), [
-                { value: slice, score: 0 },
-              ]);
+              addMappingSpace(element!, [{ value: slice, score: 0 }]);
             }}
           >
             备选
@@ -83,11 +95,14 @@ export default function ElementAdder() {
       </Flex>
       <Flex justify="center" align="center" gap="small">
         <span>设置归并</span>
-        <ElementSelect value={undefined} onChange={(event) => setMain(event)} />
+        <ElementSelect
+          value={笔画列表[0]!}
+          onChange={(event) => setMain(event)}
+        />
         <Button
           type="primary"
           disabled={element === undefined || main === undefined}
-          onClick={() => addMapping(element!.toString(), { element: main! })}
+          onClick={() => addMapping(element!, { element: main! })}
         >
           添加
         </Button>
@@ -96,7 +111,7 @@ export default function ElementAdder() {
             type="primary"
             disabled={element === undefined || main === undefined}
             onClick={() => {
-              addMappingSpace(element!.toString(), [
+              addMappingSpace(element!, [
                 { value: { element: main! }, score: 0 },
               ]);
             }}

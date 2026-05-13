@@ -11,6 +11,7 @@ import type {
   矢量图形数据,
   笔画块,
 } from "./data.js";
+import { 自定义元素 } from "./element.js";
 import { 字库, type 字形 } from "./repertoire.js";
 import { 字符, 字集过滤查找表 } from "./unicode.js";
 import {
@@ -225,7 +226,7 @@ class 原始字库 {
       if (!如子部分) return false;
       const 子部分 = 如子部分;
       if (typeof 子模式 === "string") {
-        if (子部分.toString() !== 子模式) return false;
+        if (子部分.获取名称() !== 子模式) return false;
       } else if ("id" in 子模式) {
         const id = 子模式.id;
         const 已绑定 = 变量映射.get(id);
@@ -282,12 +283,12 @@ class 原始字库 {
       const result = this.替换(部分, 变量映射, 辅助字符映射);
       if (!result.ok) return result;
       if (result.value instanceof 字符) {
-        部分列表.push(result.value.toString());
+        部分列表.push(result.value.获取名称());
       } else {
         const 如码位 = 字符.获取自由字符();
         if (!如码位.ok) return 如码位;
         辅助字符映射.set(如码位.value, [result.value]);
-        部分列表.push(如码位.value.toString());
+        部分列表.push(如码位.value.获取名称());
       }
     }
     const 复合体: 复合体数据 = {
@@ -500,18 +501,30 @@ class 原始字库 {
     }
   }
 
-  校验自定义映射(自定义元素集合: Record<string, 自定义分析>): 自定义分析映射 {
-    const 查找表: 自定义分析映射 = new Map();
+  校验自定义映射(自定义元素集合: Record<string, 自定义分析>) {
+    const 自定义分析映射: 自定义分析映射 = new Map();
+    const 自定义元素映射 = new Map<string, 自定义元素[]>();
     for (const [类别, 映射] of Object.entries(自定义元素集合)) {
-      for (const [汉字, 元素列表] of Object.entries(映射)) {
+      const 元素名称映射 = new Map<string, 自定义元素>();
+      for (const [汉字, 元素名称列表] of Object.entries(映射)) {
         const 字符实例 = this.校验(汉字);
         if (!字符实例) continue;
-        const 记录 = 查找表.get(字符实例.character) ?? {};
-        记录[类别] = 元素列表;
-        查找表.set(字符实例.character, 记录);
+        const 记录 =
+          自定义分析映射.get(字符实例.character) ??
+          new Map<string, 自定义元素[]>();
+        const 元素列表: 自定义元素[] = [];
+        for (const 元素名称 of 元素名称列表) {
+          const 元素 =
+            元素名称映射.get(元素名称) ?? new 自定义元素(类别, 元素名称);
+          元素列表.push(元素);
+          if (!元素名称映射.has(元素名称)) 元素名称映射.set(元素名称, 元素);
+        }
+        记录.set(类别, 元素列表);
+        自定义分析映射.set(字符实例.character, 记录);
       }
+      自定义元素映射.set(类别, [...元素名称映射.values()]);
     }
-    return 查找表;
+    return { 自定义分析映射, 自定义元素映射 };
   }
 
   校验词典(原始词典: 原始词典): 词典 {

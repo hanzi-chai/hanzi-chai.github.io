@@ -1,7 +1,7 @@
 import type { 组装器, 组装配置 } from "./assembly.js";
 import type { 部件分析器 } from "./component.js";
 import type { 复合体分析器 } from "./compound.js";
-import type { 拼音分析器, 拼音分析配置 } from "./pinyin.js";
+import type { 拼音分析器, 拼音分析映射 } from "./pinyin.js";
 import type { 字形分析配置 } from "./repertoire.js";
 import type { 筛选器 } from "./selector.js";
 
@@ -12,7 +12,7 @@ interface 构造器<配置, 组件> {
 
 type 部件分析构造器 = 构造器<字形分析配置, 部件分析器>;
 type 复合体分析构造器 = 构造器<字形分析配置, 复合体分析器>;
-type 拼音分析构造器 = 构造器<拼音分析配置, 拼音分析器>;
+type 拼音分析构造器 = 构造器<拼音分析映射, 拼音分析器>;
 type 组装器构造器 = 构造器<组装配置, 组装器>;
 type 筛选器构造器 = 构造器<undefined, 筛选器>;
 
@@ -44,7 +44,7 @@ class 注册表 {
     this.复合体分析器映射.set(复合体分析器.type, 复合体分析器);
   }
 
-  创建拼音分析器(名称: string, 配置: 拼音分析配置): 拼音分析器 | undefined {
+  创建拼音分析器(名称: string, 配置: 拼音分析映射): 拼音分析器 | undefined {
     const 构造器 = this.拼音分析器映射.get(名称);
     return 构造器 ? new 构造器(配置) : undefined;
   }

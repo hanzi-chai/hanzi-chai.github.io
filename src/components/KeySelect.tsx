@@ -1,19 +1,25 @@
 import type { BaseOptionType } from "antd/es/select";
-import { 字符, type 广义码位, 是变量, 是归并 } from "hanzi-chai";
+import {
+  字符,
+  type 广义码位,
+  type 强类型广义引用,
+  是变量,
+  是强类型归并,
+} from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import {
   useAtomValueUnwrapped,
-  决策原子,
+  全部合法元素原子,
   变量规则映射原子,
   如笔顺映射原子,
   字母表原子,
-  强类型元素列表原子,
+  强类型决策原子,
 } from "~/atoms";
 import { ElementPositionDisplay, Select } from "./Utils";
 
 export interface KeySelectProps {
-  value: 广义码位;
-  onChange: (k: 广义码位) => void;
+  value: 强类型广义引用;
+  onChange: (k: 强类型广义引用) => void;
   allowEmpty?: boolean;
   allowAlphabets?: boolean;
   allowElements?: boolean;
@@ -45,19 +51,16 @@ export default function KeySelect({
     value: JSON.stringify(x),
   }));
   if (allowAlphabets) keyOptions.push(...alphabetOptions);
-  const mapping = useAtomValue(决策原子);
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
-  const referenceOptions = Object.entries(mapping).flatMap(
-    ([element, mapped]) => {
-      const 强类型元素 = 强类型元素列表.get(element);
-      if (是归并(mapped) || !强类型元素) return [];
-      const length = mapped.length;
-      return [...Array(length).keys()].map((index) => ({
-        label: <ElementPositionDisplay element={强类型元素} index={index} />,
-        value: JSON.stringify({ element, index }),
-      }));
-    },
-  );
+  const mapping = useAtomValue(强类型决策原子);
+  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
+  const referenceOptions = [...mapping].flatMap(([element, mapped]) => {
+    if (是强类型归并(mapped)) return [];
+    const length = mapped.length;
+    return [...Array(length).keys()].map((index) => ({
+      label: <ElementPositionDisplay element={element} index={index} />,
+      value: JSON.stringify({ element: element.获取名称(), index }),
+    }));
+  });
   if (allowElements) keyOptions.push(...referenceOptions);
   const variables = useAtomValue(变量规则映射原子);
   const variableOptions = Object.keys(variables).map((key) => ({
@@ -88,7 +91,7 @@ export default function KeySelect({
         if ("variable" in key) {
           return key.variable.includes(input);
         }
-        const 元素 = 强类型元素列表.get(key.element);
+        const 元素 = 名称映射.get(key.element);
         if (!元素) return false;
         const 匹配序列 =
           元素 instanceof 字符 &&
@@ -115,8 +118,8 @@ export default function KeySelect({
         if (typeof bk === "string") {
           return 1;
         }
-        const cha = 强类型元素列表.get(ak.element);
-        const chb = 强类型元素列表.get(bk.element);
+        const cha = 名称映射.get(ak.element);
+        const chb = 名称映射.get(bk.element);
         if (cha instanceof 字符 && chb instanceof 字符) {
           const aSequence = 笔顺映射.get(cha)?.[0] ?? "";
           const bSequence = 笔顺映射.get(chb)?.[0] ?? "";

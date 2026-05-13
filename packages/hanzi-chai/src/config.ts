@@ -117,15 +117,15 @@ export interface 决策生成器规则 {
 
 export type 元素位 = { element: string; index: number };
 
-export type 码位 = string | 元素位;
+export type 元素位或编码 = string | 元素位;
 
-export type 安排 = null | string | 码位[] | { element: string };
+export type 安排 = null | string | 元素位或编码[] | { element: string };
 
 export type 非空安排 = Exclude<安排, null>;
 
 export type 变量安排 = { variable: string };
 
-export type 广义码位 = 码位 | 变量安排 | null;
+export type 广义码位 = 元素位或编码 | 变量安排 | null;
 
 export function 是变量(key: 广义码位): key is 变量安排 {
   return typeof key === "object" && key !== null && "variable" in key;

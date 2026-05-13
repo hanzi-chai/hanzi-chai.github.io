@@ -13,33 +13,37 @@ import {
   Typography,
 } from "antd";
 import {
-  type 决策,
+  type 元素,
   可打印字符列表,
-  是归并,
+  type 字符,
+  type 强类型非归并安排,
+  type 强类型非空安排,
+  是强类型归并,
   是部件,
+  获取所有被归并元素,
   读取表格,
-  type 非空安排,
 } from "hanzi-chai";
 import { sortBy } from "lodash-es";
 import { type ComponentProps, memo, useState } from "react";
 import {
-  useAddAtom,
+  GF0014映射原子,
   useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
-  useRemoveAtom,
+  useMapAddAtom,
+  useMapRemoveAtom,
   useSetAtom,
+  全部合法元素原子,
   决策原子,
-  决策空间原子,
   别名显示原子,
   原始字库原子,
-  type 名称与安排,
   如字库原子,
   字母表原子,
-  平铺决策原子,
-  强类型元素列表原子,
+  强类型决策原子,
+  强类型决策空间原子,
+  强类型线性化决策原子,
+  强类型翻转决策原子,
   当前元素原子,
-  按首码分组决策原子,
   编码类型原子,
   键盘原子,
 } from "~/atoms";
@@ -55,76 +59,57 @@ import {
 } from "./Utils";
 import ValueEditor from "./Value";
 
-const visit = (parent: string, name: string, output: any[], mapping: 决策) => {
-  output.push({ from: name, to: parent });
-  const children = Object.entries(mapping)
-    .filter(([, to]) => 是归并(to) && to.element === name)
-    .map(([x]) => x);
-  children.map((child) => visit(name, child, output, mapping));
-};
-
-export const getAffiliates = (name: string, mapping: 决策) => {
-  const result: { from: string; to: string }[] = [];
-  // use pre-dfs to get all affiliates
-  Object.entries(mapping).forEach(([key, value]) => {
-    if (是归并(value) && value.element === name) {
-      visit(name, key, result, mapping);
-    }
-  });
-  return result;
-};
-
 export const ElementDetail = ({
   keys,
-  name,
+  element,
   onClose,
 }: {
-  keys: 非空安排;
-  name: string;
+  keys: 强类型非空安排;
+  element: 元素;
   onClose: () => void;
 }) => {
-  const addMapping = useAddAtom(决策原子);
-  const removeMapping = useRemoveAtom(决策原子);
-  const mapping = useAtomValue(决策原子);
-  const affiliates = getAffiliates(name, mapping);
+  const addMapping = useMapAddAtom(强类型决策原子);
+  const removeMapping = useMapRemoveAtom(强类型决策原子);
+  const mapping = useAtomValue(强类型决策原子);
+  const affiliates = 获取所有被归并元素(mapping, element);
   const alphabet = useAtomValue(字母表原子);
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
-  const element = 强类型元素列表.get(name);
+  const gf0014 = useAtomValue(GF0014映射原子);
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
-  const [currentValue, setCurrentValue] = useState<非空安排>(keys);
-  const [otherValue, setOtherValue] = useState<非空安排>(
-    是归并(keys) ? alphabet[0]! : { element: "1" },
+  const [currentValue, setCurrentValue] = useState<强类型非空安排>(keys);
+  const [otherValue, setOtherValue] = useState<强类型非空安排>(
+    是强类型归并(keys) ? alphabet[0]! : { element: 笔画列表[0]! },
   );
 
   // 只有在用户点击「确定」时才更新字根表
   const handleConfirm = () => {
     if (currentValue === null) {
       if (affiliates.length === 0) {
-        removeMapping(name);
+        removeMapping(element);
         onClose();
       } else {
         notification.error({ message: "无法删除有归并关系的元素" });
       }
     } else {
-      addMapping(name, currentValue);
+      addMapping(element, currentValue);
       onClose();
     }
   };
 
   const handleDelete = () => {
-    const referenced: string[] = [];
-    for (const [k, v] of Object.entries(mapping)) {
-      if (是归并(v)) {
-        if (v.element === name) referenced.push(k);
+    const referenced: 元素[] = [];
+    for (const [k, v] of mapping) {
+      if (是强类型归并(v)) {
+        if (v.element === element) referenced.push(k);
       } else if (Array.isArray(v)) {
-        if (v.some((x) => typeof x === "object" && x.element === name))
+        if (v.some((x) => typeof x === "object" && x.element === element))
           referenced.push(k);
       }
     }
     if (referenced.length === 0) {
-      removeMapping(name);
+      removeMapping(element);
       onClose();
     } else {
       notification.error({
@@ -132,7 +117,7 @@ export const ElementDetail = ({
           <span>
             无法删除元素，因为元素被其他元素引用：
             {referenced.map((x) => (
-              <ElementDisplay key={x} element={强类型元素列表.get(x)!} />
+              <ElementDisplay key={x.获取名称()} element={x} />
             ))}
           </span>
         ),
@@ -149,7 +134,7 @@ export const ElementDetail = ({
         <ValueEditor
           value={currentValue}
           onChange={(newValue) => {
-            setCurrentValue(newValue as 非空安排);
+            setCurrentValue(newValue as 强类型非空安排);
           }}
           isCurrent
         />
@@ -161,13 +146,13 @@ export const ElementDetail = ({
         <ValueEditor
           value={otherValue}
           onChange={(newValue) => {
-            setOtherValue(newValue as 非空安排);
+            setOtherValue(newValue as 强类型非空安排);
           }}
           isCurrent
         />
         <Button
           onClick={() => {
-            addMapping(name, otherValue);
+            addMapping(element, otherValue);
             onClose();
           }}
         >
@@ -175,7 +160,10 @@ export const ElementDetail = ({
         </Button>
       </Flex>
       <Divider size="small" />
-      <RulesForm name={name} />
+      {gf0014.has(element as 字符) && (
+        <div>GF0014: {gf0014.get(element as 字符)!.pinyin.join(",")}</div>
+      )}
+      <RulesForm element={element} />
     </Flex>
   );
 };
@@ -196,24 +184,25 @@ export const ElementLabelWrapper = ({
 );
 
 export const AdjustableElementGroup = ({
-  名称: name,
-  安排: code,
+  element,
+  value,
   displayMode,
-}: 名称与安排 & { displayMode?: boolean }) => {
-  const mapping = useAtomValue(决策原子);
-  const affiliates = getAffiliates(name, mapping);
+}: {
+  element: 元素;
+  value: 强类型非归并安排;
+  displayMode?: boolean;
+}) => {
+  const mapping = useAtomValue(强类型决策原子);
+  const affiliates = 获取所有被归并元素(mapping, element);
   const currentElement = useAtomValue(当前元素原子);
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
-  const mappingSpace = useAtomValue(决策空间原子);
-  const isOptional = (name: string) =>
-    mappingSpace[name]?.some((x) => x.value === null) ?? false;
-  const rest = code.slice(1);
+  const mappingSpace = useAtomValue(强类型决策空间原子);
+  const isOptional = (e: 元素) =>
+    mappingSpace.get(e)?.some((x) => x.value === null) ?? false;
+  const rest = value.slice(1);
   const [openPopover, setOpenPopover] = useState(false);
   const [openAffiliatePopover, setOpenAffiliatePopover] = useState<
-    Record<string, boolean>
-  >({});
-  const element = 强类型元素列表.get(name);
-  if (!element) return null;
+    Map<元素, boolean>
+  >(new Map());
 
   return (
     <Flex align="center">
@@ -224,8 +213,8 @@ export const AdjustableElementGroup = ({
         onOpenChange={setOpenPopover}
         content={
           <ElementDetail
-            keys={code}
-            name={name}
+            keys={value}
+            element={element}
             onClose={() => setOpenPopover(false)}
           />
         }
@@ -235,7 +224,9 @@ export const AdjustableElementGroup = ({
             element={element}
             hideTypeNames={displayMode}
             className={
-              !displayMode && isOptional(name) ? "text-[#9d9d9d]" : "text-black"
+              !displayMode && isOptional(element)
+                ? "text-[#9d9d9d]"
+                : "text-black"
             }
           />
         </ElementLabelWrapper>
@@ -245,31 +236,32 @@ export const AdjustableElementGroup = ({
           key={`${from}-${to}`}
           title="编辑决策"
           trigger="click"
-          open={openAffiliatePopover[from] ?? false}
+          open={openAffiliatePopover.get(from) ?? false}
           onOpenChange={(open) =>
-            setOpenAffiliatePopover({ ...openAffiliatePopover, [from]: open })
+            setOpenAffiliatePopover(
+              new Map([...openAffiliatePopover, [from, open]]),
+            )
           }
           content={
             <ElementDetail
               keys={{ element: to }}
-              name={from}
+              element={from}
               onClose={() =>
-                setOpenAffiliatePopover({
-                  ...openAffiliatePopover,
-                  [from]: false,
-                })
+                setOpenAffiliatePopover(
+                  new Map([...openAffiliatePopover, [from, false]]),
+                )
               }
             />
           }
         >
           <ElementLabelWrapper
-            $shouldHighlight={强类型元素列表.get(from) === currentElement}
+            $shouldHighlight={from === currentElement}
             className="text-[0.85em]"
           >
             <ElementDisplay
-              key={from}
+              key={from.获取名称()}
               hideTypeNames={displayMode}
-              element={强类型元素列表.get(from)!}
+              element={from}
               className={
                 !displayMode && isOptional(from)
                   ? "text-[#9d9d9d]"
@@ -388,9 +380,16 @@ const MappingUploader = ({
 };
 
 const MappingExporter = () => {
-  const flatMapping = useAtomValueUnwrapped(平铺决策原子);
+  const flatMapping = useAtomValueUnwrapped(强类型线性化决策原子);
   return (
-    <Button onClick={() => exportTSV([...flatMapping], "键盘映射.txt")}>
+    <Button
+      onClick={() =>
+        exportTSV(
+          [...flatMapping].map(([k, v]) => [k.获取名称(), v]),
+          "键盘映射.txt",
+        )
+      }
+    >
       导出键盘映射
     </Button>
   );
@@ -509,7 +508,13 @@ const MappingHeader = () => {
 };
 
 const MappingRow = memo(
-  ({ symbol, elements }: { symbol: string; elements: 名称与安排[] }) => {
+  ({
+    symbol,
+    elements,
+  }: {
+    symbol: string;
+    elements: { 元素: 元素; 安排: 强类型非归并安排 }[];
+  }) => {
     const [alphabet, setAlphabet] = useAtom(字母表原子);
     return (
       <Flex className="border-t border-[#aaa]">
@@ -529,8 +534,12 @@ const MappingRow = memo(
         />
         <Item>{symbol}</Item>
         <Flex align="center" wrap="wrap" gap="small">
-          {elements.map(({ 名称, 安排 }) => (
-            <AdjustableElementGroup key={名称} 名称={名称} 安排={安排} />
+          {elements.map(({ 元素, 安排 }) => (
+            <AdjustableElementGroup
+              key={元素.获取名称()}
+              element={元素}
+              value={安排}
+            />
           ))}
         </Flex>
       </Flex>
@@ -539,14 +548,14 @@ const MappingRow = memo(
 );
 
 export default function MappingComponent() {
-  const reversedMapping = useAtomValueUnwrapped(按首码分组决策原子);
+  const 翻转决策 = useAtomValueUnwrapped(强类型翻转决策原子);
 
   return (
     <Flex vertical gap="small">
       <MappingHeader />
       <List
-        dataSource={[...reversedMapping]}
-        renderItem={([key, roots]: [string, 名称与安排[]]) => (
+        dataSource={[...翻转决策]}
+        renderItem={([key, roots]) => (
           <MappingRow key={key} symbol={key} elements={roots} />
         )}
       />

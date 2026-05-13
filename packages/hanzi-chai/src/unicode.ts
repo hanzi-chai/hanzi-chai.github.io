@@ -218,7 +218,7 @@ export class 字符 {
     return ok(新字符实例);
   }
 
-  toString(): string {
+  获取名称(): string {
     return String.fromCodePoint(this.码位);
   }
 

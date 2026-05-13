@@ -19,11 +19,11 @@ import {
   优先表,
   type 冰雪飞花复合体分析,
   type 动态字形分析结果,
-  单笔,
   type 基本部件分析,
   type 字形分析结果,
   type 字根,
   type 字符,
+  笔画,
   获取注册表,
   部件,
   默认分类器,
@@ -74,7 +74,7 @@ const 导出字形分析结果 = (
       .join(" ");
   for (const char of characters) {
     const analysis = 分析结果.get(char) ?? [];
-    const head = [char.toString()];
+    const head = [char.获取名称()];
     for (const 字形分析 of analysis) {
       if (字形分析 instanceof 优先表) {
         tsv.push([
@@ -174,7 +174,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   })[] = [];
   const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
   for (const [字, 分析列表] of 分析结果) {
-    const 字符串 = 字.toString();
+    const 字符串 = 字.获取名称();
     if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])
       continue;
     if (!过滤器.过滤(字, 原始字库.查询(字)!)) continue;
@@ -182,7 +182,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
         const r = 分析 as 默认部件分析 | 基本部件分析;
-        if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 单笔)
+        if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 笔画)
           continue;
         部件分析内容.push({
           key: `${字符串}-${分析.部件.字形序号}`,
@@ -248,7 +248,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
                       ? display(部首.字符)
                       : map[部首.获取名称()]!;
                 }
-                tsv.push([char.toString(), 部首字符串]);
+                tsv.push([char.获取名称(), 部首字符串]);
               }
               exportTSV(tsv, "部首.txt");
             }}

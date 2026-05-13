@@ -11,10 +11,11 @@ import type { ComponentProps } from "react";
 import {
   useAddAtom,
   useAtomValue,
+  useAtomValueUnwrapped,
   useRemoveAtom,
+  全部合法元素原子,
   动态分析原子,
   动态自定义拆分原子,
-  强类型元素列表原子,
   自定义拆分原子,
 } from "~/atoms";
 import { 数字 } from "~/utils";
@@ -54,6 +55,7 @@ const Customize = ({
       >
         {(meta) => (
           <Form.Item noStyle {...meta}>
+            {/* @ts-ignore */}
             <ElementSelect className="w-24" onlyRootsAndStrokes />
           </Form.Item>
         )}
@@ -107,6 +109,7 @@ const DynamicCustomize = ({
         >
           {(meta) => (
             <Form.Item noStyle {...meta}>
+              {/* @ts-ignore */}
               <ElementSelect
                 className="w-24"
                 onlyRootsAndStrokes
@@ -131,6 +134,7 @@ export default function ResultSummary({
   if ("被覆盖拆分方式" in analysis && analysis.被覆盖拆分方式) {
     字根序列 = analysis.被覆盖拆分方式.拆分方式.map((x) => x.字根);
   }
+  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 是否动态分析 = useAtomValue(动态分析原子);
   const 自定义分析 = useAtomValue(自定义拆分原子);
   const 移除自定义分析 = useRemoveAtom(自定义拆分原子);
@@ -139,7 +143,6 @@ export default function ResultSummary({
   const 索引 = glyph instanceof 部件 ? glyph.获取索引() : "";
   const 自定义字根序列 = 自定义分析[索引];
   const 自定义字根序列列表 = 动态自定义分析[索引];
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
@@ -159,7 +162,7 @@ export default function ResultSummary({
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
             {自定义字根序列.map((x, i) => {
-              const 字符 = 强类型元素列表.get(x) ?? new 未知元素(x);
+              const 字符 = 名称映射.get(x) ?? new 未知元素(x);
               return <BoxedElementWithTooltip key={i} element={字符 ?? x} />;
             })}
           </Flex>
@@ -170,7 +173,7 @@ export default function ResultSummary({
             {自定义字根序列列表.map((x, i) => (
               <Flex key={i} align="center">
                 {x.map((y, j) => {
-                  const 字符 = 强类型元素列表.get(y) ?? new 未知元素(y);
+                  const 字符 = 名称映射.get(y) ?? new 未知元素(y);
                   return (
                     <BoxedElementWithTooltip key={j} element={字符 ?? y} />
                   );

@@ -18,7 +18,7 @@ import {
   图示配置原子,
   基本信息原子,
   字母表原子,
-  按首码分组决策原子,
+  强类型翻转决策原子,
 } from "~/atoms";
 import { AdjustableElementGroup } from "~/components/Mapping";
 import { useChaifenTitle } from "~/utils";
@@ -36,7 +36,7 @@ const KeyboardArea = ({ children }: { children?: ReactNode }) => (
 const Keyboard = () => {
   const diagram = useAtomValue(图示配置原子);
   const { contents, layout } = diagram;
-  const reversedMapping = useAtomValueUnwrapped(按首码分组决策原子);
+  const reversedMapping = useAtomValueUnwrapped(强类型翻转决策原子);
   const processedConents = contents.map((content) => {
     if (content.type === "element") {
       let match: RegExp | undefined;
@@ -74,14 +74,14 @@ const Keyboard = () => {
                 } else if (type === "element") {
                   const mapped = reversedMapping.get(key);
                   if (mapped) {
-                    for (const { 名称, 安排 } of mapped) {
-                      if (value.match && !value.match.test(名称)) {
+                    for (const { 元素, 安排 } of mapped) {
+                      if (value.match && !value.match.test(元素.获取名称())) {
                         continue;
                       }
                       boxes.push(
                         <AdjustableElementGroup
-                          名称={名称}
-                          安排={安排}
+                          element={元素}
+                          value={安排}
                           displayMode
                         />,
                       );

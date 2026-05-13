@@ -1,7 +1,7 @@
 import type { 曲线关系 } from "./bezier.js";
 import type { 部件 } from "./component.js";
-import { type 安排, 是归并 } from "./config.js";
 import type { 字根 } from "./repertoire.js";
+import { type 强类型安排, 是强类型归并 } from "./utils.js";
 
 const 默认筛选器列表: string[] = [
   "结构完整",
@@ -23,7 +23,7 @@ type 拆分方式 = 拆分字根信息[];
 interface 拆分环境 {
   部件图形: 部件;
   二进制字根映射: Map<number, 字根>;
-  字根决策: Map<字根, 安排>;
+  字根决策: Map<字根, 强类型安排>;
   强字根列表: 字根[];
   弱字根列表: 字根[];
 }
@@ -117,7 +117,7 @@ class 非形近根 implements 筛选器 {
     let 形近根数量 = 0;
     for (const { 字根 } of scheme) {
       const value = 字根决策.get(字根);
-      if (value && 是归并(value)) {
+      if (value && 是强类型归并(value)) {
         形近根数量 += 1;
       }
     }

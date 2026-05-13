@@ -15,11 +15,10 @@ import {
 import {
   二笔,
   type 元素,
-  单笔,
   字符,
+  type 强类型元素位或编码,
   拼音元素,
-  未知元素,
-  type 码位,
+  笔画,
   自定义元素,
 } from "hanzi-chai";
 import type { ComponentProps, MouseEventHandler } from "react";
@@ -29,7 +28,6 @@ import {
   useAtomValueUnwrapped,
   别名显示原子,
   如私用区图形原子,
-  强类型元素列表原子,
   当前元素原子,
   键盘原子,
 } from "~/atoms";
@@ -153,7 +151,7 @@ export const ElementDisplay = ({
     const text = hideTypeNames ? element.元素 : element.获取名称();
     return <span {...rest}>{text}</span>;
   }
-  if (element instanceof 单笔 || element instanceof 二笔) {
+  if (element instanceof 笔画 || element instanceof 二笔) {
     const name = element.获取名称();
     return <span {...rest}>{name}</span>;
   }
@@ -174,7 +172,7 @@ export const CharacterDisplay = ({
   if (!character.是私用区() || glyph === undefined) {
     return (
       <span {...rest} className={`whitespace-nowrap ${rest.className ?? ""}`}>
-        {character.toString()}
+        {character.获取名称()}
       </span>
     );
   }
@@ -201,14 +199,17 @@ export const ElementPositionDisplay = ({
   );
 };
 
-export const CodePositionDisplay = ({ element }: { element: 码位 }) => {
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
+export const CodePositionDisplay = ({
+  element,
+}: {
+  element: 强类型元素位或编码;
+}) => {
   if (typeof element === "string") {
     return <span>{element}</span>;
   } else {
-    const e =
-      强类型元素列表.get(element.element) ?? new 未知元素(element.element);
-    return <ElementPositionDisplay element={e} index={element.index} />;
+    return (
+      <ElementPositionDisplay element={element.element} index={element.index} />
+    );
   }
 };
 
@@ -216,7 +217,7 @@ export const BoxedElementWithTooltip = ({ element }: { element: 元素 }) => {
   const display = useAtomValue(别名显示原子);
   const core = (
     <BorderItem
-      onClick={() => navigator.clipboard.writeText(element.toString())}
+      onClick={() => navigator.clipboard.writeText(element.获取名称())}
     >
       <ElementDisplay element={element} />
     </BorderItem>
@@ -233,7 +234,7 @@ export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
   const type =
     element === currentElement
       ? "primary"
-      : mapping[element.toString()]
+      : mapping[element.获取名称()]
         ? "link"
         : "default";
   const display = useAtomValue(别名显示原子);

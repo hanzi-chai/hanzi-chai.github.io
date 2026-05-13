@@ -1,6 +1,12 @@
 import { type ProColumns, ProTable } from "@ant-design/pro-components";
 import { Button, Checkbox, Flex, Input, Space } from "antd";
-import { 字符, 序列化, 总序列化, type 码位, 识别符 } from "hanzi-chai";
+import {
+  字符,
+  序列化,
+  type 强类型元素位或编码,
+  总序列化,
+  识别符,
+} from "hanzi-chai";
 import { range } from "lodash-es";
 import { type ReactNode, useState } from "react";
 import {
@@ -9,18 +15,14 @@ import {
   useAtomValueUnwrapped,
   优先简码原子,
   优先简码映射原子,
-  动态分析原子,
   原始字库同步原子,
-  如动态组装结果与优先简码原子,
   如笔顺映射原子,
-  如组装结果与优先简码原子,
   如编码结果原子,
-  强类型元素列表原子,
   最大码长原子,
   type 联合条目,
   联合结果原子,
 } from "~/atoms";
-import { exportTSV, exportYAML } from "~/utils";
+import { exportTSV } from "~/utils";
 import { CodePositionDisplay, Select } from "./Utils";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
@@ -31,48 +33,6 @@ export function 编码渲染({ code, rank }: { code: string; rank: number }) {
     </span>
   );
 }
-
-export const ExportAssembly = () => {
-  const 组装结果 = useAtomValueUnwrapped(如组装结果与优先简码原子);
-  return (
-    <Button
-      onClick={() => {
-        const result = 组装结果.map(({ 词, 元素序列, 频率, 简码长度 }) => {
-          return {
-            词: 词.map((c) => c.toString()).join(""),
-            元素序列: 元素序列.元素序列,
-            频率,
-            简码长度,
-          };
-        });
-        exportYAML(result, "elements", 1);
-      }}
-    >
-      导出元素序列表
-    </Button>
-  );
-};
-
-export const ExportDynamicAssembly = () => {
-  const 组装结果 = useAtomValueUnwrapped(如动态组装结果与优先简码原子);
-  return (
-    <Button
-      onClick={() => {
-        const result = 组装结果.map(({ 词, 元素序列, 频率, 简码长度 }) => {
-          return {
-            词: 词.map((c) => c.toString()).join(""),
-            全部元素序列: [...元素序列],
-            频率,
-            简码长度,
-          };
-        });
-        exportYAML(result, "elements", 1);
-      }}
-    >
-      导出动态元素序列表
-    </Button>
-  );
-};
 
 const ExportCode = () => {
   const [code] = useAtomValueUnwrapped(如编码结果原子);
@@ -125,7 +85,7 @@ const getColumnSearchProps = (
     const regex = new RegExp(value as string);
     const entry = record[dataIndex];
     const text = Array.isArray(entry)
-      ? entry.map((x) => x.toString()).join("")
+      ? entry.map((x) => x.获取名称()).join("")
       : entry;
     return regex.test(text);
   },
@@ -138,22 +98,20 @@ const EnumFilterDropdown = ({
   confirm,
   clearFilters,
 }: {
-  allValues: Map<string, { element: 码位; node: ReactNode }>;
+  allValues: Map<string, { element: 强类型元素位或编码; node: ReactNode }>;
   setSelectedKeys: (keys: React.Key[]) => void;
   selectedKeys: React.Key[];
   confirm: () => void;
   clearFilters?: () => void;
 }) => {
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   const [search, setSearch] = useState("");
   const filteredKeys = [...allValues]
     .sort(([a], [b]) => a.localeCompare(b))
     .filter(([key, { element }]) => {
       const 匹配元素 = key.includes(search);
       if (typeof element === "string") return 匹配元素;
-      const 元素 = 强类型元素列表.get(element.element);
-      if (!元素) return 匹配元素;
+      const 元素 = element.element;
       const 匹配序列 =
         元素 instanceof 字符 &&
         笔顺映射.get(元素)?.some((s) => s.startsWith(search));
@@ -199,7 +157,7 @@ const EnumFilterDropdown = ({
 };
 
 const getColumnEnumFilterProps = (
-  allValues: Map<string, { element: 码位; node: ReactNode }>,
+  allValues: Map<string, { element: 强类型元素位或编码; node: ReactNode }>,
 ): Pick<ProColumns<联合条目>, "filterDropdown"> => ({
   filterDropdown: ({
     setSelectedKeys,
@@ -258,7 +216,7 @@ function CommitShortCodeButton({
           );
         } else {
           newList.push({
-            word: word.map((c) => c.toString()).join(""),
+            word: word.map((c) => c.获取名称()).join(""),
             sources,
             level,
           });
@@ -286,7 +244,6 @@ export default function SequenceTable() {
   const 最大码长 = useAtomValue(最大码长原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
   const 优先简码映射 = useAtomValue(优先简码映射原子);
-  const 动态分析 = useAtomValue(动态分析原子);
   const [pendingChanges, setPendingChanges] = useState<
     Map<string, PendingChange>
   >(new Map());
@@ -307,7 +264,7 @@ export default function SequenceTable() {
       width: 96,
       ...getColumnSearchProps("词"),
       render: (_, record) => (
-        <span>{record.词.map((c) => c.toString()).join("")}</span>
+        <span>{record.词.map((c) => c.获取名称()).join("")}</span>
       ),
     },
     {
@@ -347,8 +304,10 @@ export default function SequenceTable() {
   ];
 
   for (const i of Array(最大码长).keys()) {
-    const allValues: Map<string, { element: 码位; node: ReactNode }> =
-      new Map();
+    const allValues: Map<
+      string,
+      { element: 强类型元素位或编码; node: ReactNode }
+    > = new Map();
     for (const { 元素序列 } of dataSource) {
       const element = 元素序列.元素序列[i];
       if (element !== undefined) {
@@ -459,8 +418,6 @@ export default function SequenceTable() {
       search={false}
       defaultSize="small"
       toolBarRender={() => [
-        <ExportAssembly key={1} />,
-        动态分析 && <ExportDynamicAssembly key={2} />,
         <ExportCode key={3} />,
         <CommitShortCodeButton
           key={4}

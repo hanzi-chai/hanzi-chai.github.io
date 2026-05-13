@@ -7,21 +7,22 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Flex, Popover, Select, Typography } from "antd";
-import type { 决策生成器规则, 安排描述 } from "hanzi-chai";
+import type { 元素, 决策生成器规则, 强类型安排描述 } from "hanzi-chai";
 import { sortBy } from "lodash-es";
 import {
-  useAddAtom,
   useAtom,
   useAtomValue,
-  useRemoveAtom,
+  useAtomValueUnwrapped,
+  useMapAddAtom,
+  useMapRemoveAtom,
   useSetAtom,
-  决策原子,
+  全部合法元素原子,
   决策生成器配置原子,
-  决策空间原子,
   动态分析原子,
   变量规则映射原子,
   字母表原子,
-  强类型元素列表原子,
+  强类型决策原子,
+  强类型决策空间原子,
   当前元素原子,
 } from "~/atoms";
 import ElementSelect from "~/components/ElementSelect";
@@ -37,12 +38,13 @@ const ValueDescriptionEditor = ({
   allowPlaceholder,
   disableDelete,
 }: {
-  value: 安排描述;
-  onChange: (newValue: 安排描述 | undefined) => void;
+  value: 强类型安排描述;
+  onChange: (newValue: 强类型安排描述 | undefined) => void;
   allowVariables?: boolean;
   allowPlaceholder?: boolean;
   disableDelete?: boolean;
 }) => {
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   const currentCondition = value.condition ?? [];
   const updateCondition = (index: number, key: string, update: any) => {
     onChange({
@@ -74,7 +76,7 @@ const ValueDescriptionEditor = ({
             onChange({
               ...value,
               condition: currentCondition.concat([
-                { element: "1", op: "不是", value: null },
+                { element: 笔画列表[0]!, op: "不是", value: null },
               ]),
             })
           }
@@ -122,16 +124,17 @@ const ValueDescriptionEditor = ({
   );
 };
 
-export const RulesForm = ({ name }: { name: string }) => {
+export const RulesForm = ({ element }: { element: 元素 }) => {
   const alphabet = useAtomValue(字母表原子);
-  const mappingSpace = useAtomValue(决策空间原子);
-  const addMappingSpace = useAddAtom(决策空间原子);
-  const removeMappingSpace = useRemoveAtom(决策空间原子);
-  const values = mappingSpace[name] ?? [];
-  const creators = {
+  const mappingSpace = useAtomValue(强类型决策空间原子);
+  const addMappingSpace = useMapAddAtom(强类型决策空间原子);
+  const removeMappingSpace = useMapRemoveAtom(强类型决策空间原子);
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
+  const values = mappingSpace.get(element) ?? [];
+  const creators: Record<string, () => 强类型安排描述> = {
     禁用: () => ({ value: null, score: 0 }),
     键位: () => ({ value: alphabet[0]!, score: 0 }),
-    归并: () => ({ value: { element: "1" }, score: 0 }),
+    归并: () => ({ value: { element: 笔画列表[0]! }, score: 0 }),
   };
   return (
     <Flex vertical gap="middle">
@@ -142,16 +145,16 @@ export const RulesForm = ({ name }: { name: string }) => {
           onChange={(newValue) => {
             if (newValue === undefined) {
               if (values.length === 1) {
-                removeMappingSpace(name);
+                removeMappingSpace(element);
               } else {
                 addMappingSpace(
-                  name,
+                  element,
                   values.filter((_, i) => i !== index),
                 );
               }
             } else {
               addMappingSpace(
-                name,
+                element,
                 values.map((v, i) => (i === index ? newValue : v)),
               );
             }
@@ -163,7 +166,7 @@ export const RulesForm = ({ name }: { name: string }) => {
         {Object.entries(creators).map(([creatorType, creator]) => (
           <Button
             key={creatorType}
-            onClick={() => addMappingSpace(name, values.concat(creator()))}
+            onClick={() => addMappingSpace(element, values.concat(creator()))}
           >
             添加{creatorType}
           </Button>
@@ -253,12 +256,11 @@ const MappingGeneratorsForm = () => {
 };
 
 export default function MappingSpace() {
-  const mapping = useAtomValue(决策原子);
-  const mappingSpace = useAtomValue(决策空间原子);
-  const setMappingSpace = useSetAtom(决策空间原子);
+  const mapping = useAtomValue(强类型决策原子);
+  const mappingSpace = useAtomValue(强类型决策空间原子);
+  const setMappingSpace = useSetAtom(强类型决策空间原子);
   const dynamic = useAtomValue(动态分析原子);
   const currentElement = useAtomValue(当前元素原子);
-  const 强类型元素列表 = useAtomValue(强类型元素列表原子);
   return (
     <Flex vertical gap="middle">
       <Typography.Title level={3}>决策空间</Typography.Title>
@@ -268,19 +270,19 @@ export default function MappingSpace() {
         {dynamic && (
           <Button
             onClick={() => {
-              const idles = Object.entries(mappingSpace).filter(
-                ([name]) => mapping[name] === undefined,
+              const idles = [...mappingSpace].filter(
+                ([element]) => mapping.get(element) === undefined,
               );
               const ms = structuredClone(mappingSpace);
               for (const [name] of idles) {
-                delete ms[name];
+                ms.delete(name);
               }
               const sortedIdles = sortBy(
                 idles,
-                ([name]) => name.codePointAt(0)!,
+                ([name]) => name.获取名称().codePointAt(0)!,
               );
               for (const [name, value] of sortedIdles) {
-                ms[name] = value;
+                ms.set(name, value);
               }
               setMappingSpace(ms);
             }}
@@ -291,17 +293,15 @@ export default function MappingSpace() {
       </Flex>
       {dynamic && (
         <Flex wrap="wrap" gap="small">
-          {Object.keys(mappingSpace)
-            .filter((name) => mapping[name] === undefined)
-            .map((name) => {
-              const element = 强类型元素列表.get(name);
-              if (!element) return null;
+          {[...mappingSpace.keys()]
+            .filter((name) => mapping.get(name) === undefined)
+            .map((element) => {
               return (
-                <Flex key={name} align="center">
+                <Flex key={element.获取名称()} align="center">
                   <Popover
                     title="编辑决策空间"
                     trigger="click"
-                    content={<RulesForm name={name} />}
+                    content={<RulesForm element={element} />}
                   >
                     <BorderItem>
                       <ElementLabelWrapper

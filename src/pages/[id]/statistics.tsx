@@ -16,13 +16,14 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { 码位, 组装条目 } from "hanzi-chai";
-import { 反序列化, 序列化 } from "hanzi-chai";
+import type { 元素位或编码, 强类型元素位或编码, 组装条目 } from "hanzi-chai";
+import { 下转换, 反序列化, 序列化 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { isEqual, range, sumBy } from "lodash-es";
 import { Suspense, useState } from "react";
 import {
   useAtomValueUnwrapped,
+  全部合法元素原子,
   如带归并组装结果原子,
   字母表原子,
   最大码长原子,
@@ -49,13 +50,13 @@ const 分析原始重码 = (
   分析配置: AnalyzerForm,
   result: 组装条目[],
   maxLength: number,
-  合并组列表: 码位[][] = [],
+  合并组列表: 强类型元素位或编码[][] = [],
 ) => {
   const 反向映射 = new Map<string, string[]>();
   const 相关结果 = filterRelevant(result, 分析配置);
   for (const 条目 of 相关结果) {
     const { 词, 元素序列 } = 条目;
-    const 处理后元素序列: (码位 | undefined)[] = [];
+    const 处理后元素序列: (强类型元素位或编码 | undefined)[] = [];
     for (const i of range(maxLength)) {
       if (分析配置.position.includes(i)) {
         const 码位 = 元素序列.元素序列[i];
@@ -69,11 +70,13 @@ const 分析原始重码 = (
         处理后元素序列.push("*");
       }
     }
-    const summary = JSON.stringify(处理后元素序列);
+    const summary = JSON.stringify(
+      处理后元素序列.map((x) => (x ? 下转换(x) : x)),
+    );
     反向映射.set(
       summary,
       (反向映射.get(summary) || []).concat(
-        词.map((c) => c.toString()).join(""),
+        词.map((c) => c.获取名称()).join(""),
       ),
     );
   }
@@ -165,13 +168,19 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
     .sort((a, b) => b[1].length - a[1].length)
     .map(([name, items]) => ({ name, items }));
   const lengths = dataSource.map((x) => x.items.length);
+  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const columns: ColumnsType<Density> = [
     {
       title: "元素序列",
       dataIndex: "name",
       key: "name",
       render: (_, { name }) => {
-        const elements: (码位 | undefined)[] = JSON.parse(name);
+        const raw_elements: (元素位或编码 | undefined)[] = JSON.parse(name);
+        const elements = raw_elements.map((x) =>
+          typeof x === "object"
+            ? { element: 名称映射.get(x.element)!, index: x.index }
+            : x,
+        );
         return (
           <Space>
             {elements.map((element, i) => (
@@ -230,6 +239,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const reverseMap = new Map<string, Set<string>[]>();
   const relevant = filterRelevant(assemblyResult, analyzer);
+  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   for (const assembly of relevant) {
     const { 词, 元素序列 } = assembly;
     元素序列.元素序列.forEach((x, i) => {
@@ -239,7 +249,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
           key,
           range(maxLength).map(() => new Set()),
         );
-      reverseMap.get(key)?.[i]?.add(词.map((c) => c.toString()).join("")) ??
+      reverseMap.get(key)?.[i]?.add(词.map((c) => c.获取名称()).join("")) ??
         null;
     });
   }
@@ -256,7 +266,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
       dataIndex: "name",
       key: "name",
       render: (_, record) => {
-        const element = 反序列化(record.name)!;
+        const element = 反序列化(record.name, 名称映射)!;
         if (!element.ok) return record.name;
         return <CodePositionDisplay element={element.value!} />;
       },
@@ -309,7 +319,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
 const MarginalFirstOrderDuplication = () => {
   const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const maxLength = useAtomValue(最大码长原子);
-  const [合并组列表, 设置合并组列表] = useState([] as 码位[][]);
+  const [合并组列表, 设置合并组列表] = useState([] as 强类型元素位或编码[][]);
   const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
     type: "single",
     position: range(0, maxLength),
@@ -330,7 +340,7 @@ const MarginalFirstOrderDuplication = () => {
     <>
       <Typography.Title level={3}>边际一阶重码计算</Typography.Title>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
-      <ProForm<{ content: { content: 码位[] }[] }>
+      <ProForm<{ content: { content: 强类型元素位或编码[] }[] }>
         layout="horizontal"
         submitter={false}
         initialValues={{ content: 合并组列表.map((x) => ({ content: x })) }}
@@ -345,7 +355,7 @@ const MarginalFirstOrderDuplication = () => {
             icon: false,
           }}
           creatorRecord={() => ({
-            content: [{ element: "1", index: 0 } satisfies 码位],
+            content: [{ element: "1", index: 0 } satisfies 元素位或编码],
           })}
         >
           <MyProFormList
@@ -356,7 +366,9 @@ const MarginalFirstOrderDuplication = () => {
               style: { width: "unset" },
             }}
             itemRender={InlineRender}
-            creatorRecord={() => ({ element: "1", index: 0 }) satisfies 码位}
+            creatorRecord={() =>
+              ({ element: "1", index: 0 }) satisfies 元素位或编码
+            }
             copyIconProps={false}
           >
             {(meta) => (

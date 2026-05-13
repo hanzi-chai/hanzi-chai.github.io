@@ -1,6 +1,5 @@
 import { QuestionCircleOutlined } from "@ant-design/icons";
 import {
-  Badge,
   Checkbox,
   Flex,
   FloatButton,
@@ -19,7 +18,7 @@ import type {
   字形描述,
   校验原始汉字数据,
 } from "hanzi-chai";
-import { 区块列表, type 字符, 所有源标签, 是源标签 } from "hanzi-chai";
+import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
 import * as O from "optics-ts/standalone";
 import { useRef, useState } from "react";
 import { remoteUpdate } from "~/api";
@@ -32,7 +31,7 @@ import {
   原始可编辑字库数据原子,
   原始字库同步原子,
   如字库原子,
-  如排序字库数据原子,
+  如按笔顺排序字符原子,
   如笔顺映射原子,
   字形来源列表原子,
   字形自定义原子,
@@ -241,7 +240,7 @@ export const 字形数据自定义器 = ({
 export default function CharacterTable() {
   const 原始字库 = useAtomValue(原始字库同步原子);
   const 字库 = useAtomValueUnwrapped(如字库原子);
-  const 排序字库数据 = useAtomValueUnwrapped(如排序字库数据原子);
+  const 排序字库数据 = useAtomValueUnwrapped(如按笔顺排序字符原子);
   const 字形自定义 = useAtomValue(标准字形自定义原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const [filterProps, setFilterProps] = useState<字符过滤器参数>({});
@@ -406,7 +405,7 @@ export default function CharacterTable() {
     onFilter: (value, record) => {
       const customized =
         record.character.是用户私用区() ||
-        字形自定义[record.character.toString()] !== undefined;
+        字形自定义[record.character.获取名称()] !== undefined;
       return value === 1 ? customized : !customized;
     },
   };

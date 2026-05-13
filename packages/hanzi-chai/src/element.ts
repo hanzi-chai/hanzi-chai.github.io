@@ -1,51 +1,26 @@
 import type { 默认汉字分析 } from "./assembly.js";
-import { type 分类器, 默认分类器 } from "./classifier.js";
-import type {
-  条件节点配置,
-  源节点配置,
-  码位,
-  运算符,
-  键盘配置,
-} from "./config.js";
+import { 默认分类器 } from "./classifier.js";
+import { 部件 } from "./component.js";
+import type { 条件节点配置, 源节点配置, 运算符, 键盘配置 } from "./config.js";
 import type { 结构描述字符 } from "./data.js";
 import type { 字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
-import { 展开决策, 计算当前或潜在长度 } from "./utils.js";
+import {
+  type 强类型元素位或编码,
+  type 强类型决策,
+  type 强类型决策空间,
+  线性化决策,
+  计算当前或潜在长度,
+} from "./utils.js";
 
 export type 元素 =
   | 字符
-  | 单笔
+  | 笔画
   | 二笔
   | 结构符元素
   | 拼音元素
   | 自定义元素
   | 未知元素;
-
-export function 识别元素(
-  元素: string,
-  分类器: 分类器,
-  查找汉字: (s: string) => 字符 | undefined,
-): 元素 {
-  const 数字集合 = Object.values(分类器).map(String);
-  if (元素.length === 1 && 数字集合.includes(元素)) {
-    return 单笔.创建(Number(元素));
-  }
-  const [ch1, ch2] = [...元素];
-  if (
-    元素.length === 2 &&
-    ch1 &&
-    ch2 &&
-    数字集合.includes(ch1) &&
-    数字集合.includes(ch2)
-  ) {
-    return 二笔.创建(Number(ch1), Number(ch2));
-  }
-  const 字符实例 = 查找汉字(元素);
-  if (字符实例) {
-    return 字符实例;
-  }
-  return new 未知元素(元素);
-}
 
 export class 结构符元素 {
   constructor(private operator: 结构描述字符) {}
@@ -85,13 +60,13 @@ export class 未知元素 {
   }
 }
 
-export class 单笔 {
-  static pool: Map<number, 单笔> = new Map();
+export class 笔画 {
+  static pool: Map<number, 笔画> = new Map();
   static 创建(笔画类别: number) {
-    if (!单笔.pool.has(笔画类别)) {
-      单笔.pool.set(笔画类别, new 单笔(笔画类别));
+    if (!笔画.pool.has(笔画类别)) {
+      笔画.pool.set(笔画类别, new 笔画(笔画类别));
     }
-    return 单笔.pool.get(笔画类别)!;
+    return 笔画.pool.get(笔画类别)!;
   }
   private constructor(private 笔画类别: number) {}
   获取名称() {
@@ -271,20 +246,20 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
 }
 
 export class 取码器 {
-  private 最终映射: Map<string, string>;
-  private 当前或潜在长度: Map<string, number>;
+  private 最终映射: Map<元素, string>;
+  private 当前或潜在长度: Map<元素, number>;
   private 谓词表: Record<
     运算符,
     (
-      target: string | undefined,
+      target: 元素 | undefined,
       value: string | null,
-      totalMapping: Map<string, string>,
+      totalMapping: Map<元素, string>,
     ) => boolean
   > = {
-    是: (t, v) => t === v,
-    不是: (t, v) => t !== v,
-    匹配: (t, v) => t !== undefined && new RegExp(v!).test(t),
-    不匹配: (t, v) => t !== undefined && !new RegExp(v!).test(t),
+    是: (t, v) => t?.获取名称() === v,
+    不是: (t, v) => t?.获取名称() !== v,
+    匹配: (t, v) => t !== undefined && new RegExp(v!).test(t.获取名称()),
+    不匹配: (t, v) => t !== undefined && !new RegExp(v!).test(t.获取名称()),
     编码匹配: (t, v, m) => t !== undefined && new RegExp(v!).test(m.get(t)!),
     编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!).test(m.get(t)!),
     存在: (t) => t !== undefined,
@@ -293,13 +268,14 @@ export class 取码器 {
 
   constructor(
     private keyboard: 键盘配置,
+    private 决策: 强类型决策,
+    private 决策空间: 强类型决策空间,
     private sources: Record<string, 源节点配置>,
     private conditions: Record<string, 条件节点配置>,
     private max_length: number,
   ) {
-    const { mapping, mapping_space } = keyboard;
-    const expanded = 展开决策(mapping);
-    const 当前或潜在长度 = 计算当前或潜在长度(mapping, mapping_space ?? {});
+    const expanded = 线性化决策(决策);
+    const 当前或潜在长度 = 计算当前或潜在长度(决策, 决策空间);
     if (!expanded.ok) {
       throw new Error(`键盘映射展开失败: ${expanded.error}`);
     }
@@ -311,9 +287,8 @@ export class 取码器 {
   }
 
   取码(汉字分析: 默认汉字分析) {
-    const 字母表 = Array.from(this.keyboard.alphabet ?? "");
     let 节点: string | null = "s0";
-    const 码位序列: 码位[] = [];
+    const 码位序列: 强类型元素位或编码[] = [];
     while (节点) {
       if (节点.startsWith("s")) {
         const 源: 源节点配置 = this.sources[节点]!;
@@ -325,9 +300,9 @@ export class 取码器 {
         const 元素 = this.寻找(object!, 汉字分析);
         if (元素 === undefined) {
           // 如果找不到该元素，跳过
-        } else if (字母表.includes(元素)) {
+        } else if (元素 instanceof 未知元素) {
           // 如果是固定编码，直接加入
-          码位序列.push(元素);
+          码位序列.push(元素.获取名称());
         } else {
           const 长度 = this.当前或潜在长度.get(元素) ?? 0;
           // 如果没有定义指标，就是全取；否则检查指标是否有效并取
@@ -354,26 +329,26 @@ export class 取码器 {
     return 码位序列.slice(0, this.max_length ?? 码位序列.length);
   }
 
-  寻找(object: 取码对象, result: 默认汉字分析) {
+  寻找(object: 取码对象, result: 默认汉字分析): 元素 | undefined {
     const { 拼写运算, 字根序列 } = result;
     let root: 字根 | undefined;
     let strokes: number[];
     let name: string;
     let stroke1: number | undefined;
     let stroke2: number | undefined;
-    let special: string[] | undefined;
+    let special: 元素[] | undefined;
     switch (object.type) {
       case "汉字":
-        return result.汉字.toString();
+        return result.汉字;
       case "固定":
-        return object.key;
+        return new 未知元素(object.key);
       case "字音":
         name = object.subtype;
         return 拼写运算.get(name);
       case "字根":
         root = signedIndex(字根序列, object.rootIndex);
         if (root === undefined) return undefined;
-        return root.获取名称();
+        return root instanceof 部件 ? root.字符 : root;
       case "笔画":
       case "二笔":
         root = signedIndex(字根序列, object.rootIndex);
@@ -381,7 +356,7 @@ export class 取码器 {
         strokes = root.获取笔画序列(默认分类器);
         if (object.type === "笔画") {
           const number = signedIndex(strokes, object.strokeIndex);
-          return number?.toString();
+          return number ? 笔画.创建(number) : undefined;
         }
         stroke1 = signedIndex(
           strokes,
@@ -389,16 +364,16 @@ export class 取码器 {
         );
         if (stroke1 === undefined) return undefined;
         stroke2 = signedIndex(strokes, object.strokeIndex * 2);
-        return [stroke1, stroke2 ?? 0].join("");
+        return 二笔.创建(stroke1, stroke2 ?? 0);
       case "结构":
-        return "结构" in result ? result.结构 : undefined;
+        return "结构" in result ? new 结构符元素(result.结构) : undefined;
       case "自定义":
         return signedIndex(
-          result.自定义元素[object.subtype] ?? [],
+          result.自定义元素.get(object.subtype) ?? [],
           object.rootIndex,
         );
       default:
-        special = (result as any)[object.type] as string[];
+        special = (result as any)[object.type] as 元素[];
         if (!Array.isArray(special)) return undefined;
         return signedIndex(special, object.index);
     }

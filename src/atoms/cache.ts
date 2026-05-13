@@ -1,12 +1,16 @@
 import type {
   元素,
+  元素位或编码,
   原始字库数据,
   原始汉字数据,
   原始词典,
   字符,
+  强类型元素位或编码,
+  强类型决策,
+  强类型决策空间,
+  强类型非归并安排,
   当量映射,
   条件,
-  码位,
   码表条目,
   组装条目,
   组装配置,
@@ -15,37 +19,36 @@ import type {
 } from "hanzi-chai";
 import {
   ok,
-  二笔,
+  下转换,
   分析拼音,
   动态组装,
-  单笔,
   原始字库,
   合并拼写运算,
   图形盒子,
-  展开决策,
-  拼音元素,
-  是归并,
+  序列化强类型决策,
+  序列化强类型决策空间,
+  是强类型归并,
   是部件,
+  构建强类型决策与决策空间,
   标准化自定义,
   添加优先简码,
+  线性化决策,
   组装,
-  结构描述字符列表,
-  结构符元素,
-  自定义元素,
   解析原始词典,
   解析当量映射,
   解析键位分布目标,
-  识别元素,
+  计算全部合法元素与元素映射,
+  计算拼音分析与元素映射,
   识别符,
   读取表格,
   默认分类器,
-  默认拼音分析器,
 } from "hanzi-chai";
 import { atom } from "jotai";
 import { unwrap } from "jotai/utils";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
 import pako from "pako";
+import type { SetStateAction } from "react";
 import type { Metric } from "~/components/MetricTable";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
 import { getDataPath } from "~/version";
@@ -59,7 +62,6 @@ import {
   变换器列表原子,
   字形来源列表原子,
   字形自定义原子,
-  字母表原子,
   字集指示原子,
   拼写运算自定义原子,
   最大码长原子,
@@ -207,10 +209,22 @@ export const 原始字库原子 = atom(async (get) => {
   ]);
 });
 
+export const GF0014映射原子 = atom(async (get) => {
+  const tsv = 读取表格(await 拉取资源("gf0014.txt"));
+  const map = new Map<字符, { gf0014_id: number; pinyin: string[] }>();
+  const 原始字库 = await get(原始字库原子);
+  for (const { character, gf0014_id } of 原始字库) {
+    if (gf0014_id !== null) {
+      map.set(character, { gf0014_id, pinyin: tsv[gf0014_id - 1] ?? [] });
+    }
+  }
+  return map;
+});
+
 export const 别名显示原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   return (字符实例: 字符) => {
-    if (!字符实例.是私用区()) return 字符实例.toString();
+    if (!字符实例.是私用区()) return 字符实例.获取名称();
     const name = 原始字库.查询(字符实例)?.name;
     return name ?? "丢失的字根";
   };
@@ -262,7 +276,7 @@ export const 如笔顺映射原子 = atom(async (get) => {
   return ok(result);
 });
 
-export const 如排序字库数据原子 = atom(async (get) => {
+export const 如按笔顺排序字符原子 = atom(async (get) => {
   const 原始字库 = await get(原始字库原子);
   const 如笔顺映射 = await get(如笔顺映射原子);
   if (!如笔顺映射.ok) return 如笔顺映射;
@@ -296,117 +310,80 @@ export const 下一个可用的码位原子 = atom((get) => {
 
 export const 全部合法元素原子 = atom(async (get) => {
   const 分类器 = get(分类器原子);
-  const 拼音元素映射 = await get(拼音元素映射原子);
-  const 自定义分析列表 = get(自定义分析数据库.entries);
-  const 如字符列表 = await get(如排序字库数据原子);
+  const { 拼音元素映射 } = await get(拼音元素映射原子);
+  const { 自定义元素映射 } = await get(自定义元素映射原子);
+  const 如字符列表 = await get(如按笔顺排序字符原子);
   if (!如字符列表.ok) return 如字符列表;
   const 字符列表 = 如字符列表.value;
-  const 如笔顺映射 = await get(如笔顺映射原子);
-  if (!如笔顺映射.ok) return 如笔顺映射;
-  const 笔顺映射 = 如笔顺映射.value;
-  const 排序汉字 = 字符列表
-    .filter((k) => 笔顺映射.get(k)?.[0]?.length !== 1)
-    .filter((k) => k.区块() !== "kangxi");
-  const 全部笔画类别 = [...new Set(Object.values(分类器))].sort(
-    (a, b) => a - b,
+  return ok(
+    计算全部合法元素与元素映射(字符列表, 分类器, 拼音元素映射, 自定义元素映射),
   );
-  const 全部笔画列表: 单笔[] = [];
-  for (const n of 全部笔画类别) {
-    全部笔画列表.push(单笔.创建(n));
-  }
-  const 全部二笔列表: 二笔[] = [];
-  for (const n1 of 全部笔画类别) {
-    for (const n2 of [0, ...全部笔画类别]) {
-      全部二笔列表.push(二笔.创建(n1, n2));
-    }
-  }
-  const 自定义元素映射: Map<string, 自定义元素[]> = new Map();
-  for (const [类型, 自定义分析] of 自定义分析列表) {
-    const 全部元素 = new Set(Object.values(自定义分析).flat());
-    自定义元素映射.set(
-      类型,
-      [...全部元素].sort().map((x) => new 自定义元素(类型, x)),
-    );
-  }
-  return ok({
-    字根: 排序汉字,
-    笔画: 全部笔画列表,
-    二笔: 全部二笔列表,
-    结构: 结构描述字符列表.map((x) => new 结构符元素(x)),
-    字音: 拼音元素映射,
-    自定义: 自定义元素映射,
-  });
 });
 
 export const 当前元素原子 = atom<元素 | undefined>(undefined);
 
-export const 平铺决策原子 = atom((get) => {
-  const 决策 = get(决策原子);
-  return 展开决策(决策);
-});
-
-export interface 名称与安排 {
-  名称: string;
-  安排: string | 码位[];
-}
-
-export const 按首码分组决策原子 = atom((get) => {
-  const 决策 = get(决策原子);
-  const 引用孩子映射 = new Map<string, string[]>();
-  const 根节点 = new Map<string, string>();
-  // 建反向映射
-  for (const [node, 安排] of Object.entries(决策)) {
-    if (是归并(安排)) continue;
-    const 首码 = 安排[0];
-    if (!首码) continue;
-    if (typeof 首码 === "string") {
-      根节点.set(node, 首码);
-    } else {
-      if (!引用孩子映射.has(首码.element)) {
-        引用孩子映射.set(首码.element, []);
-      }
-      引用孩子映射.get(首码.element)!.push(node);
-    }
-  }
-  const 字母表 = get(字母表原子);
-  const 分组决策 = new Map<string, 名称与安排[]>(
-    [...字母表].map((x) => [x, []]),
-  );
-  function dfs(名称: string, 首码: string) {
-    const 安排 = 决策[名称];
-    if (!安排 || 是归并(安排)) return;
-    分组决策.get(首码)?.push({ 名称, 安排 });
-    for (const 孩子 of 引用孩子映射.get(名称) ?? []) {
-      dfs(孩子, 首码);
-    }
-  }
-  // 每棵树依次 DFS
-  for (const [名称, 首码] of 根节点) {
-    dfs(名称, 首码);
-  }
-  return ok(分组决策);
-});
-
 export const 原始字库同步原子 = unwrap(原始字库原子, (prev) => prev);
 
-export const 强类型元素列表原子 = atom((get) => {
+export const 强类型决策与决策空间原子 = atom(async (get) => {
   const 决策 = get(决策原子);
   const 决策空间 = get(决策空间原子);
-  const 当前元素列表 = Object.keys(决策);
-  const 可选元素列表 = Object.keys(决策空间 ?? {}).filter(
-    (x) => !当前元素列表.includes(x),
+  const 全部合法元素 = await get(全部合法元素原子);
+  if (!全部合法元素.ok) return 全部合法元素;
+  return ok(
+    构建强类型决策与决策空间(决策, 决策空间, 全部合法元素.value.名称映射),
   );
-  const 分类器 = get(分类器原子);
-  const 原始字库 = get(原始字库同步原子);
-  const result: Map<string, 元素> = new Map();
-  if (!原始字库) return result;
-  for (const 元素 of [...当前元素列表, ...可选元素列表]) {
-    result.set(
-      元素,
-      识别元素(元素, 分类器, (s) => 原始字库.校验(s)?.character),
-    );
+});
+
+const 强类型决策与决策空间同步原子 = unwrap(
+  强类型决策与决策空间原子,
+  (prev) => prev,
+);
+
+const 空决策: 强类型决策 = new Map();
+const 空决策空间: 强类型决策空间 = new Map();
+
+export const 强类型决策原子 = atom(
+  (get) => {
+    const r = get(强类型决策与决策空间同步原子);
+    return r?.ok ? r.value.决策 : 空决策;
+  },
+  (get, set, action: SetStateAction<强类型决策>) => {
+    const current = get(强类型决策原子);
+    const next = typeof action === "function" ? action(current) : action;
+    set(决策原子, 序列化强类型决策(next));
+  },
+);
+
+export const 强类型决策空间原子 = atom(
+  (get) => {
+    const r = get(强类型决策与决策空间同步原子);
+    return r?.ok ? r.value.决策空间 : 空决策空间;
+  },
+  (get, set, action: SetStateAction<强类型决策空间>) => {
+    const current = get(强类型决策空间原子);
+    const next = typeof action === "function" ? action(current) : action;
+    set(决策空间原子, 序列化强类型决策空间(next));
+  },
+);
+
+export const 强类型线性化决策原子 = atom(async (get) => {
+  const 决策 = await get(强类型决策与决策空间原子);
+  if (!决策.ok) return 决策;
+  return 线性化决策(决策.value.决策);
+});
+
+export const 强类型翻转决策原子 = atom(async (get) => {
+  const 决策与决策空间 = await get(强类型决策与决策空间原子);
+  const 线性化决策 = await get(强类型线性化决策原子);
+  if (!决策与决策空间.ok) return 决策与决策空间;
+  if (!线性化决策.ok) return 线性化决策;
+  const 翻转决策 = new Map<string, { 元素: 元素; 安排: 强类型非归并安排 }[]>();
+  for (const [元素, 安排] of 决策与决策空间.value.决策) {
+    if (是强类型归并(安排)) continue;
+    const 第一码 = 线性化决策.value.get(元素)?.[0] ?? "a";
+    翻转决策.set(第一码, (翻转决策.get(第一码) ?? []).concat([{ 元素, 安排 }]));
   }
-  return result;
+  return ok(翻转决策);
 });
 
 export const 拼写运算查找表原子 = atom((get) => {
@@ -415,71 +392,68 @@ export const 拼写运算查找表原子 = atom((get) => {
 });
 
 export const 拼音元素映射原子 = atom(async (get) => {
-  const 词典 = await get(原始词典原子);
-  const 音节集合 = new Set<string>();
-  for (const { 拼音 } of Object.values(词典)) {
-    拼音.map((p) => 音节集合.add(p));
-  }
+  const 词典 = await get(词典原子);
   const 拼写运算查找表 = get(拼写运算查找表原子);
-  const 拼音元素映射: Map<string, 拼音元素[]> = new Map();
-  for (const [类别, 拼写运算] of 拼写运算查找表) {
-    const 元素集合 = new Set<string>();
-    for (const s of 音节集合) {
-      const res = 默认拼音分析器.应用拼写运算(拼写运算, s);
-      元素集合.add(res);
-    }
-    拼音元素映射.set(
-      类别,
-      [...元素集合].sort().map((x) => new 拼音元素(类别, x)),
-    );
-  }
-  return 拼音元素映射;
+  return 计算拼音分析与元素映射(词典, 拼写运算查找表);
 });
 
-export const 字形分析配置原子 = atom((get) => {
+export const 字形分析配置原子 = atom(async (get) => {
   const 分析配置 = get(分析配置原子);
-  const 决策 = get(决策原子);
-  const 决策空间 = get(决策空间原子);
+  const 强类型决策与决策空间 = await get(强类型决策与决策空间原子);
+  if (!强类型决策与决策空间.ok) return 强类型决策与决策空间;
   const 字形来源列表 = get(字形来源列表原子);
-  return { 分析配置, 决策, 决策空间, 字形来源列表 };
+  const { 决策, 决策空间 } = 强类型决策与决策空间.value;
+  return ok({
+    分析配置,
+    决策,
+    决策空间,
+    字形来源列表,
+  });
 });
 
 export const 如字形分析结果原子 = atom(async (get) => {
   const 如字库 = await get(如字库原子);
   if (!如字库.ok) return 如字库;
-  const 字形分析配置 = get(字形分析配置原子);
+  const 字形分析配置 = await get(字形分析配置原子);
+  if (!字形分析配置.ok) return 字形分析配置;
   const 汉字集合 = await get(汉字集合原子);
   const 原始字库 = await get(原始字库原子);
-  return 如字库.value.分析(字形分析配置, 汉字集合, 原始字库);
+  return 如字库.value.分析(字形分析配置.value, 汉字集合, 原始字库);
 });
 
 export const 如动态字形分析结果原子 = atom(async (get) => {
   const 如字库 = await get(如字库原子);
   if (!如字库.ok) return 如字库;
-  const 字形分析配置 = get(字形分析配置原子);
+  const 字形分析配置 = await get(字形分析配置原子);
+  if (!字形分析配置.ok) return 字形分析配置;
   const 汉字集合 = await get(汉字集合原子);
   const 原始字库 = await get(原始字库原子);
-  return 如字库.value.动态分析(字形分析配置, 汉字集合, 原始字库);
+  return 如字库.value.动态分析(字形分析配置.value, 汉字集合, 原始字库);
 });
 
 export const 拼音分析结果原子 = atom(async (get) => {
-  const 源映射 = get(源映射原子);
-  const 拼写运算查找表 = get(拼写运算查找表原子);
+  const { 拼音分析映射: 音节表 } = await get(拼音元素映射原子);
   const 词典 = await get(过滤词典原子);
-  return 分析拼音(源映射, 拼写运算查找表, 词典);
+  return 分析拼音(音节表, 词典);
 });
 
 export const 组装配置原子 = atom(async (get) => {
-  const config: Omit<组装配置, "额外信息"> = {
+  const { 自定义分析映射 } = await get(自定义元素映射原子);
+  const 决策与决策空间 = await get(强类型决策与决策空间原子);
+  if (!决策与决策空间.ok) return 决策与决策空间;
+  const { 决策, 决策空间 } = 决策与决策空间.value;
+  const config: 组装配置 = {
     源映射: get(源映射原子),
     条件映射: get(条件映射原子),
     组装器: get(组装器原子),
     构词规则列表: get(构词配置原子),
     最大码长: get(最大码长原子),
     键盘配置: get(键盘原子),
-    自定义分析映射: await get(自定义元素映射原子),
+    自定义分析映射,
+    决策,
+    决策空间,
   };
-  return config;
+  return ok(config);
 });
 
 export const 如组装结果原子 = atom(async (get) => {
@@ -488,17 +462,19 @@ export const 如组装结果原子 = atom(async (get) => {
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
   const config = await get(组装配置原子);
-  const result = 组装(config, 拼音分析结果, 字形分析结果);
+  if (!config.ok) return config;
+  const result = 组装(config.value, 拼音分析结果, 字形分析结果);
   return result;
 });
 
 export const 如带归并组装结果原子 = atom(async (get) => {
   const 如组装结果 = await get(如组装结果原子);
   if (!如组装结果.ok) return 如组装结果;
-  const 决策 = get(决策原子);
+  const 决策与决策空间 = await get(强类型决策与决策空间原子);
+  if (!决策与决策空间.ok) return 决策与决策空间;
   const 带归并组装结果: 组装条目[] = [];
   for (const 条目 of 如组装结果.value) {
-    const 新元素序列: 码位[] = [];
+    const 新元素序列: 强类型元素位或编码[] = [];
     for (const 码位 of 条目.元素序列.元素序列) {
       if (typeof 码位 === "string") {
         新元素序列.push(码位);
@@ -509,9 +485,9 @@ export const 如带归并组装结果原子 = atom(async (get) => {
         while (true) {
           i += 1;
           if (i > 100) break; // 防止死循环
-          const 安排 = 决策[当前码位.element];
+          const 安排 = 决策与决策空间.value.决策.get(当前码位.element);
           if (!安排) continue;
-          if (是归并(安排)) {
+          if (是强类型归并(安排)) {
             // 如果当前元素是归并的，更新元素为归并元素，位置不变
             当前码位 = { ...当前码位, element: 安排.element };
           } else if (Array.isArray(安排)) {
@@ -537,7 +513,8 @@ export const 如动态组装结果原子 = atom(async (get) => {
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
   const config = await get(组装配置原子);
-  const result = 动态组装(config, 拼音分析结果, 字形分析结果);
+  if (!config.ok) return config;
+  const result = 动态组装(config.value, 拼音分析结果, 字形分析结果);
   return result;
 });
 
@@ -581,7 +558,7 @@ export const 如前端输入原子 = atom(async (get) => {
 
   const 序列化词列表: {
     词: string;
-    全部元素序列: { 元素序列: 码位[]; 条件列表: 条件[] }[];
+    全部元素序列: { 元素序列: 元素位或编码[]; 条件列表: 条件[] }[];
     频率: number;
     简码长度?: number;
   }[] = [];
@@ -592,8 +569,11 @@ export const 如前端输入原子 = atom(async (get) => {
       const { 元素序列, ...rest } = x;
       序列化词列表.push({
         ...rest,
-        词: x.词.map((v) => v.toString()).join(""),
-        全部元素序列: [...x.元素序列],
+        词: x.词.map((v) => v.获取名称()).join(""),
+        全部元素序列: [...x.元素序列].map((x) => ({
+          元素序列: x.元素序列.map(下转换),
+          条件列表: x.条件列表,
+        })),
       });
     });
   } else {
@@ -603,8 +583,10 @@ export const 如前端输入原子 = atom(async (get) => {
       const { 元素序列, ...rest } = x;
       序列化词列表.push({
         ...rest,
-        词: x.词.map((v) => v.toString()).join(""),
-        全部元素序列: [{ 元素序列: x.元素序列.元素序列, 条件列表: [] }],
+        词: x.词.map((v) => v.获取名称()).join(""),
+        全部元素序列: [
+          { 元素序列: x.元素序列.元素序列.map(下转换), 条件列表: [] },
+        ],
       });
     });
   }

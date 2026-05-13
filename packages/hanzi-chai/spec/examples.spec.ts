@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { 获取字库, 获取字形分析结果, 获取拼音分析结果, 获取组装结果, 获取原始词典, 读取配置, 配置 } from "../src/index.js";
+import { 获取字库, 获取字形分析结果, 获取拼音分析结果, 获取组装结果, 获取原始词典, 读取配置, 配置, 计算拼音分析与元素映射, 合并拼写运算, 获取决策与决策空间 } from "../src/index.js";
 import { readdirSync } from "fs";
 import { 获取数据 } from "./index.js";
 
@@ -23,12 +23,14 @@ describe("E2E", () => {
       if (!字库.ok) {
         throw 字库.error;
       }
-      const 拼音分析 = 获取拼音分析结果(配置, 词典);
+      const { 拼音分析映射} = 计算拼音分析与元素映射(词典, 合并拼写运算());
+      const 拼音分析 = 获取拼音分析结果(拼音分析映射, 词典);
       const 字形分析 = 获取字形分析结果(配置, 字库.value, 词典, 原始字库);
       if (!字形分析.ok) {
         throw 字形分析.error;
       }
-      const res = 获取组装结果(配置, 拼音分析, 字形分析.value);
+      const { 决策, 决策空间 } = 获取决策与决策空间(配置, 字库.value, 词典, 原始字库);
+      const res = 获取组装结果(配置, 决策, 决策空间 , 拼音分析, 字形分析.value);
       expect(res).toBeDefined();
     });
   }

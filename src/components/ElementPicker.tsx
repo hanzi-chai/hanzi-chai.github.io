@@ -79,7 +79,14 @@ export default function ElementPicker() {
     "字根",
   ]);
   const elements = useAtomValueUnwrapped(全部合法元素原子);
-  const { 字根, 二笔, 笔画, 结构, 字音, 自定义 } = elements;
+  const {
+    字符列表: 字根,
+    二笔列表: 二笔,
+    笔画列表: 笔画,
+    结构符元素列表: 结构,
+    拼音元素映射: 字音,
+    自定义元素映射: 自定义,
+  } = elements;
   const [一级类型, 二级类型] = 类型列表;
   let 当前元素列表: 元素[];
   if (一级类型 === "字形") {

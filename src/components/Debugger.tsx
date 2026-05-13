@@ -11,6 +11,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
+  type 元素,
   type 字集指示,
   字集过滤查找表,
   字集过滤选项,
@@ -22,9 +23,9 @@ import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import {
   useAtomValueUnwrapped,
-  决策原子,
   原始字库原子,
   如字库原子,
+  强类型决策原子,
   汉字集合原子,
   码表数据库,
   type 联合条目,
@@ -94,7 +95,7 @@ export default function Debugger() {
   const 原始字库 = useAtomValue(原始字库原子);
   const characters = useAtomValue(汉字集合原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
-  const 决策 = useAtomValue(决策原子);
+  const 决策 = useAtomValue(强类型决策原子);
   const [外部码表, 设置外部码表] = useAtom(
     码表数据库.item(config.info?.name ?? "方案"),
   );
@@ -104,7 +105,7 @@ export default function Debugger() {
   const [码表格式, 设置码表格式] = useState<码表格式>("char_tab_code");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<{
-    name: string;
+    name: 元素;
     keys: any;
   } | null>(null);
   const 字符是部件: 过滤 = (c, _) => {
@@ -129,7 +130,7 @@ export default function Debugger() {
 
   const 内部编码映射 = new Map<string, 联合条目[]>();
   for (const x of 联合结果) {
-    const 字符串 = x.词.map((x) => x.toString()).join("");
+    const 字符串 = x.词.map((x) => x.获取名称()).join("");
     if (!内部编码映射.has(字符串)) {
       内部编码映射.set(字符串, []);
     }
@@ -137,8 +138,8 @@ export default function Debugger() {
   }
 
   // 处理点击元素的函数
-  const handleElementClick = (elementName: string) => {
-    const keys = 决策[elementName];
+  const handleElementClick = (elementName: 元素) => {
+    const keys = 决策.get(elementName);
     if (keys) {
       setSelectedElement({ name: elementName, keys });
       setModalOpen(true);
@@ -164,7 +165,7 @@ export default function Debugger() {
   let dataSource: 校对条目[] = [];
   if (校对方向 === "forward") {
     for (const { 词, 全码, 元素序列 } of 联合结果) {
-      const 字符串 = 词.map((x) => x.toString()).join("");
+      const 字符串 = 词.map((x) => x.获取名称()).join("");
       if (!合法(字符串)) continue;
       const 参考编码列表 = 外部编码映射.get(字符串) ?? [];
       const 状态 = 获取状态(参考编码列表, 全码);
@@ -323,7 +324,7 @@ export default function Debugger() {
         {selectedElement && (
           <ElementDetail
             keys={selectedElement.keys}
-            name={selectedElement.name}
+            element={selectedElement.name}
             onClose={() => setModalOpen(false)}
           />
         )}

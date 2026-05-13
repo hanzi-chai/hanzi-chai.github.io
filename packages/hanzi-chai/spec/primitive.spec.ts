@@ -12,7 +12,7 @@ describe("e2e test", () => {
     for (const { 字符, 字形列表 } of 字库) {
       if (!字符.是基本区汉字()) continue;
       for (const glyph of 字形列表) {
-        result.set(字符.toString(), glyph.获取笔画序列(默认分类器).join(""));
+        result.set(字符.获取名称(), glyph.获取笔画序列(默认分类器).join(""));
         break;
       }
     }

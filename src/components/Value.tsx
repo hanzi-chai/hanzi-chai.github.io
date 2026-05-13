@@ -1,7 +1,17 @@
 import { Flex, Select, Space } from "antd";
-import { 合并字符串, type 广义安排, type 广义码位, 是归并 } from "hanzi-chai";
+import {
+  合并字符串,
+  type 强类型广义安排,
+  type 强类型广义引用,
+  是强类型归并,
+} from "hanzi-chai";
 import { useAtomValue } from "jotai";
-import { 字母表原子, 编码类型原子 } from "~/atoms";
+import {
+  useAtomValueUnwrapped,
+  全部合法元素原子,
+  字母表原子,
+  编码类型原子,
+} from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 
@@ -11,8 +21,8 @@ const KeysEditor = ({
   allowVariables,
   allowPlaceholder,
 }: {
-  value: string | 广义码位[];
-  onChange: (newValue: string | 广义码位[]) => void;
+  value: string | 强类型广义引用[];
+  onChange: (newValue: string | 强类型广义引用[]) => void;
   allowVariables?: boolean;
   allowPlaceholder?: boolean;
 }) => {
@@ -55,14 +65,16 @@ const ValueEditor = ({
   allowPlaceholder,
   isCurrent,
 }: {
-  value: 广义安排;
-  onChange: (newValue: 广义安排) => void;
+  value: 强类型广义安排;
+  onChange: (newValue: 强类型广义安排) => void;
   allowVariables?: boolean;
   allowPlaceholder?: boolean;
   isCurrent?: boolean;
 }) => {
   const alphabet = useAtomValue(字母表原子);
-  const currentType = value === null ? "禁用" : 是归并(value) ? "归并" : "键位";
+  const { 笔画列表: 笔画 } = useAtomValueUnwrapped(全部合法元素原子);
+  const currentType =
+    value === null ? "禁用" : 是强类型归并(value) ? "归并" : "键位";
   return (
     <Flex gap="small">
       <Select<ValueType>
@@ -71,7 +83,7 @@ const ValueEditor = ({
           if (newValue === "禁用") {
             onChange(null);
           } else if (newValue === "归并") {
-            onChange({ element: "1" });
+            onChange({ element: 笔画[0]! });
           } else {
             onChange(alphabet[0]!);
           }
@@ -83,13 +95,11 @@ const ValueEditor = ({
         ]}
         disabled={isCurrent}
       />
-      {是归并(value) ? (
+      {是强类型归并(value) ? (
         <ElementSelect
           includeOptional
           value={value.element}
-          onChange={(newValue) => {
-            onChange({ element: newValue });
-          }}
+          onChange={(newValue) => onChange({ element: newValue })}
         />
       ) : value !== null ? (
         <KeysEditor
