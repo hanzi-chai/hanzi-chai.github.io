@@ -3,15 +3,15 @@ import { useAtomValue } from "jotai";
 import {
   useAtomValueUnwrapped,
   全部合法元素原子,
-  决策原子,
   如笔顺映射原子,
+  强类型决策原子,
+  强类型决策空间原子,
 } from "~/atoms";
 import { ElementDisplay, Select } from "./Utils";
 
 interface ElementSelectProps {
   value: 元素;
   onChange: (e: 元素) => void;
-  customFilter?: (s: string) => boolean;
   includeOptional?: boolean;
   onlyRootsAndStrokes?: boolean; // 仅显示字根和笔画
 }
@@ -19,28 +19,19 @@ interface ElementSelectProps {
 export default function ElementSelect(
   props: ElementSelectProps & { className?: string; allowClear?: boolean },
 ) {
-  const {
-    value,
-    onChange,
-    customFilter,
-    onlyRootsAndStrokes,
-    includeOptional,
-    ...rest
-  } = props;
-  const 决策 = useAtomValue(决策原子);
+  const { value, onChange, onlyRootsAndStrokes, includeOptional, ...rest } =
+    props;
+  const 决策 = useAtomValue(强类型决策原子);
+  const 决策空间 = useAtomValue(强类型决策空间原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
-  let 名称与元素列表 = [...名称映射];
+  let 全部元素 = [...new Set([...决策.keys(), ...决策空间.keys()])];
+  全部元素.sort((a, b) => a.获取名称().localeCompare(b.获取名称()));
   if (!includeOptional) {
-    名称与元素列表 = 名称与元素列表.filter(([k]) => 决策[k] !== undefined);
+    全部元素 = 全部元素.filter((x) => 决策.get(x) !== undefined);
   }
   if (onlyRootsAndStrokes) {
-    名称与元素列表 = 名称与元素列表.filter(
-      ([_, v]) => v instanceof 字符 || v instanceof 笔画,
-    );
-  }
-  if (customFilter) {
-    名称与元素列表 = 名称与元素列表.filter(([k]) => customFilter(k));
+    全部元素 = 全部元素.filter((x) => x instanceof 字符 || x instanceof 笔画);
   }
   return (
     <Select
@@ -51,8 +42,8 @@ export default function ElementSelect(
       }}
       showSearch
       placeholder="输入元素名称或笔画搜索"
-      options={名称与元素列表.map(([k, v]) => ({
-        value: k,
+      options={全部元素.map((v) => ({
+        value: v.获取名称(),
         label: <ElementDisplay element={v} />,
       }))}
       filterOption={(input, option) => {

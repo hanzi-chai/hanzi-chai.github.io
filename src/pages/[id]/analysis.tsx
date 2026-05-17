@@ -34,8 +34,6 @@ import {
   useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
-  决策原子,
-  决策空间原子,
   分析配置原子,
   别名显示原子,
   动态分析原子,
@@ -45,6 +43,8 @@ import {
   如动态字形分析结果原子,
   如字形分析结果原子,
   如笔顺映射原子,
+  强类型决策原子,
+  强类型决策空间原子,
   汉字集合原子,
   自定义拆分原子,
   部件分析器原子,
@@ -162,13 +162,13 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     ...Object.keys(自定义拆分),
     ...Object.keys(动态自定义拆分),
   ]);
-  const 决策 = useAtomValue(决策原子);
+  const 决策 = useAtomValue(强类型决策原子);
   const [过滤必要字根, 设置过滤必要字根] = useState(true);
   const 过滤器 = new 字符过滤器(filter, 笔顺映射);
-  const 决策空间 = useAtomValue(决策空间原子);
+  const 决策空间 = useAtomValue(强类型决策空间原子);
   const [只显示自定义, 设置只显示自定义] = useState(false);
-  const 是必要字根 = (k: string) =>
-    决策[k] && (决策空间[k] ?? []).every((x) => x.value !== null);
+  const 是必要字根 = (e: 字符) =>
+    决策.get(e) && (决策空间.get(e) ?? []).every((x) => x.value !== null);
   const 部件分析内容: (NonNullable<CollapseProps["items"]>[number] & {
     sequence: number[];
   })[] = [];
@@ -178,7 +178,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])
       continue;
     if (!过滤器.过滤(字, 原始字库.查询(字)!)) continue;
-    if (过滤必要字根 && 是必要字根(字符串)) continue;
+    if (过滤必要字根 && 是必要字根(字)) continue;
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
         const r = 分析 as 默认部件分析 | 基本部件分析;
@@ -268,11 +268,11 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
             for (const [部件, 字根序列列表] of Object.entries(全部自定义拆分)) {
               const last = 字根序列列表[字根序列列表.length - 1];
               if (!last) continue;
-              if (last.some((x) => !是必要字根(x))) {
+              if (last.some((x) => !是必要字根(原始字库.校验(x)!.character))) {
                 notification.warning({
                   message: "存在不合法的自定义拆分",
                   description: `部件 ${display(原始字库.校验(部件)!.character)} 的自定义拆分中包含非必要字根 ${last
-                    .filter((x) => !是必要字根(x))
+                    .filter((x) => !是必要字根(原始字库.校验(x)!.character))
                     .join("、")}，请修改后重试`,
                 });
                 return;

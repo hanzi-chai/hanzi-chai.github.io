@@ -15,13 +15,14 @@ import {
 import {
   type 元素,
   可打印字符列表,
-  type 字符,
+  字符,
   type 强类型非归并安排,
   type 强类型非空安排,
   是强类型归并,
   是部件,
   获取所有被归并元素,
   读取表格,
+  默认分类器,
 } from "hanzi-chai";
 import { sortBy } from "lodash-es";
 import { type ComponentProps, memo, useState } from "react";
@@ -34,7 +35,6 @@ import {
   useMapRemoveAtom,
   useSetAtom,
   全部合法元素原子,
-  决策原子,
   别名显示原子,
   原始字库原子,
   如字库原子,
@@ -45,7 +45,6 @@ import {
   强类型翻转决策原子,
   当前元素原子,
   编码类型原子,
-  键盘原子,
 } from "~/atoms";
 import { exportTSV } from "~/utils";
 import Item from "./Item";
@@ -325,32 +324,32 @@ const MappingUploader = ({
 }) => {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const 原始字库 = useAtomValue(原始字库原子);
-  const setMapping = useSetAtom(决策原子);
+  const setMapping = useSetAtom(强类型决策原子);
   const mappingType = useAtomValue(编码类型原子);
   const alphabet = useAtomValue(字母表原子);
   return (
     <Uploader
       action={(result) => {
-        const record: Record<string, string> = {};
+        const record = new Map<元素, string>();
         const tsv = 读取表格(result);
         const unknownKeys: string[] = [];
         const unknownValues: string[] = [];
         for (const line of tsv) {
           const [key, value] = line;
           if (key === undefined || value === undefined) continue;
-          const ch = 原始字库.校验(key);
+          const ch = 原始字库.校验(key)?.character;
           if (!ch) {
             unknownKeys.push(key);
             continue;
           }
-          const glyphs = repertoire.查询字形(ch.character);
-          if (glyphs === undefined || ch.character.是私用区()) {
+          const glyphs = repertoire.查询字形(ch);
+          if (glyphs === undefined || ch.是私用区()) {
             unknownKeys.push(key);
             continue;
           }
           let isSingleStroke = false;
           for (const glyph of glyphs) {
-            if (是部件(glyph) && glyph._笔画列表().length === 1) {
+            if (是部件(glyph) && glyph.获取笔画序列(默认分类器).length === 1) {
               unknownKeys.push(key);
               isSingleStroke = true;
               break;
@@ -361,9 +360,9 @@ const MappingUploader = ({
             unknownValues.push(key);
             continue;
           }
-          record[key] = value.slice(0, mappingType);
+          record.set(ch, value.slice(0, mappingType));
         }
-        setMapping((mapping) => ({ ...mapping, ...record }));
+        setMapping((mapping) => new Map([...mapping, ...record]));
         setImportResult({
           success: Object.keys(record).length,
           unknownKeys,
@@ -393,22 +392,20 @@ const MappingExporter = () => {
 };
 
 const PUAExporter = () => {
-  const mapping = useAtomValue(决策原子);
+  const mapping = useAtomValue(强类型决策原子);
   const display = useAtomValue(别名显示原子);
-  const 原始字库 = useAtomValue(原始字库原子);
   return (
     <Button
       onClick={() => {
-        const output: string[][] = [];
-        for (const key of Object.keys(mapping)) {
-          const ch = 原始字库.校验(key)?.character;
-          if (!ch) continue;
-          if (ch.是私用区()) {
-            output.push([key, ch.十六进制(), display(ch)]);
-          }
+        const 私用区字符列表 = [...mapping.keys()].filter(
+          (x) => x instanceof 字符 && x.是私用区(),
+        ) as 字符[];
+        私用区字符列表.sort((a, b) => a.toNumber() - b.toNumber());
+        const tsv: string[][] = [];
+        for (const 字符 of 私用区字符列表) {
+          tsv.push([字符.获取名称(), 字符.十六进制(), display(字符)]);
         }
-        const sorted = sortBy(output, (x) => x[0]!.codePointAt(0));
-        exportTSV(sorted, "PUA 映射.txt");
+        exportTSV(tsv, "PUA 映射.txt");
       }}
     >
       导出 PUA 映射
@@ -421,8 +418,6 @@ const MappingHeader = () => {
   const [char, setChar] = useState<string | undefined>(undefined);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [mappingType, setMappingType] = useAtom(编码类型原子);
-  const mapping = useAtomValue(决策原子);
-  const [keyboard, setKeyboard] = useAtom(键盘原子);
   const [alphabet, setAlphabet] = useAtom(字母表原子);
   return (
     <>
@@ -481,25 +476,6 @@ const MappingHeader = () => {
         <PUAExporter />
       </Flex>
       {importResult && <ImportResultAlert {...importResult} />}
-      {Object.keys(keyboard.grouping ?? {}).length > 0 && (
-        <Button
-          type="primary"
-          onClick={() => {
-            const newMapping = { ...mapping };
-            for (const [key, value] of Object.entries(
-              keyboard.grouping ?? {},
-            )) {
-              newMapping[key] = { element: value };
-            }
-            const newKeyboard = { ...keyboard, mapping: newMapping };
-            delete newKeyboard.grouping;
-            setKeyboard(newKeyboard);
-            notification.success({ message: "迁移完成" });
-          }}
-        >
-          当前方案中存在旧版的归并元素配置，请点击此处一键迁移
-        </Button>
-      )}
     </>
   );
 };

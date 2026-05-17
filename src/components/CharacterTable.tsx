@@ -363,7 +363,7 @@ export default function CharacterTable() {
     width: 128,
   };
 
-  const renderedGlyphColumn: Column = {
+  const _renderedGlyphColumn: Column = {
     title: "字形列表",
     render: (_, character) => (
       <Flex gap="small">

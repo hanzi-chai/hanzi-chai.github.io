@@ -3,7 +3,7 @@ import * as A from "antd";
 
 //#region ChangelogDrawer default component
 export type ChangelogDrawerProps = {};
-export default function ChangelogDrawer(props: ChangelogDrawerProps) {
+export default function ChangelogDrawer(_props: ChangelogDrawerProps) {
   const Content = React.lazy(() => import("./changelog.mdx"));
   const [open, setOpen] = useState(false);
 

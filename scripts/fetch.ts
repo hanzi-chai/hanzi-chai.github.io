@@ -26,6 +26,12 @@ const models: 原始汉字模型[] = await fetch(`${apiEndpoint}repertoire/all`)
 );
 const repertoire: 原始汉字数据[] = models.map(从模型构建);
 
+for (const { unicode, name } of repertoire) {
+  if (0xe000 <= unicode && unicode <= 0xffff) {
+    console.log(unicode.toString(16).toUpperCase(), name);
+  }
+}
+
 // Compress the repertoire data
 const output = pako.deflate(JSON.stringify(repertoire));
 writeFileSync(`${nodeOutputDir}/repertoire.json.deflate`, output);

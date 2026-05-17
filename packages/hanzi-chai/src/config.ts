@@ -102,8 +102,6 @@ export interface 键盘配置 {
   mapping_space?: 决策空间;
   mapping_variables?: Record<string, 变量规则>;
   mapping_generators?: 决策生成器规则[];
-  // Deprecated, use mapping instead
-  grouping?: Record<string, string>;
 }
 
 export interface 变量规则 {
