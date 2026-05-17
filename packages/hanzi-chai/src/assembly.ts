@@ -1,3 +1,4 @@
+import type { 分类器 } from "./classifier.js";
 import { 部件, type 默认部件分析 } from "./component.js";
 import type { 星空键道复合体分析, 默认复合体分析 } from "./compound.js";
 import {
@@ -107,6 +108,7 @@ interface 组装配置 {
   组装器?: string;
   键盘配置: 键盘配置;
   自定义分析映射: 自定义分析映射;
+  分类器: 分类器;
 }
 
 interface 元素序列 {
@@ -169,12 +171,12 @@ class 默认组装器 extends 按规则构词 {
   constructor(private 配置: 组装配置) {
     super(配置);
     this.取码器 = new 取码器(
-      this.配置.键盘配置,
       this.配置.决策,
       this.配置.决策空间,
       this.配置.源映射,
       this.配置.条件映射,
       this.配置.最大码长,
+      this.配置.分类器,
     );
   }
 

@@ -188,6 +188,7 @@ export function 获取组装结果(
     组装器: 配置.encoder.assembler,
     键盘配置: 配置.form,
     自定义分析映射: 自定义分析结果,
+    分类器: 合并分类器(配置.analysis?.classifier),
   };
   const res = 组装(组装配置, 拼音分析结果, 字形分析结果);
   return res;

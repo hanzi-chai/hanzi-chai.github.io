@@ -269,7 +269,7 @@ export const AdjustableElementGroup = ({
       ))}
       {
         /* 第二码及之后的编码 */ rest.length > 0 && (
-          <span className="text-[0.85em] pl-0.5">
+          <span className="text-[0.85em] pl-0.5 flex items-baseline">
             {typeof rest === "string"
               ? rest
               : rest.map((x, i) => {

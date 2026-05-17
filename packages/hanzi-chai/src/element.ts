@@ -1,7 +1,7 @@
 import type { 默认汉字分析 } from "./assembly.js";
-import { 默认分类器 } from "./classifier.js";
+import type { 分类器 } from "./classifier.js";
 import { 部件 } from "./component.js";
-import type { 条件节点配置, 源节点配置, 运算符, 键盘配置 } from "./config.js";
+import type { 条件节点配置, 源节点配置, 运算符 } from "./config.js";
 import type { 结构描述字符 } from "./data.js";
 import type { 字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
@@ -267,12 +267,12 @@ export class 取码器 {
   };
 
   constructor(
-    private keyboard: 键盘配置,
-    private 决策: 强类型决策,
-    private 决策空间: 强类型决策空间,
+    决策: 强类型决策,
+    决策空间: 强类型决策空间,
     private sources: Record<string, 源节点配置>,
     private conditions: Record<string, 条件节点配置>,
     private max_length: number,
+    private 分类器: 分类器,
   ) {
     const expanded = 线性化决策(决策);
     const 当前或潜在长度 = 计算当前或潜在长度(决策, 决策空间);
@@ -353,7 +353,7 @@ export class 取码器 {
       case "二笔":
         root = signedIndex(字根序列, object.rootIndex);
         if (root === undefined) return undefined;
-        strokes = root.获取笔画序列(默认分类器);
+        strokes = root.获取笔画序列(this.分类器);
         if (object.type === "笔画") {
           const number = signedIndex(strokes, object.strokeIndex);
           return number ? 笔画.创建(number) : undefined;

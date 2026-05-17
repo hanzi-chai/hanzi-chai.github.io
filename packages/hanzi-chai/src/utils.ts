@@ -432,7 +432,7 @@ export function 构建强类型决策与决策空间(
     const 强安排描述列表: 强类型安排描述[] = [];
     for (const { value, score, condition } of 安排描述列表) {
       const 强安排 = 恢复安排(value, 当前元素名称映射);
-      if (!强安排) continue;
+      if (强安排 === undefined) continue;
       if (condition) {
         const new_condition: 强类型条件[] = [];
         let valid = true;
@@ -445,7 +445,7 @@ export function 构建强类型决策与决策空间(
           const 依赖安排 = 恢复安排(value, 当前元素名称映射) as
             | 强类型安排
             | undefined;
-          if (!依赖安排) {
+          if (依赖安排 === undefined) {
             valid = false;
             break;
           }
@@ -544,9 +544,11 @@ export function 计算当前或潜在长度(
   for (const [key, 安排列表] of 决策空间) {
     if (!增广决策.has(key)) {
       const v = 安排列表.find((x) => x.value !== null);
-      if (v === undefined) return default_err("");
+      if (v === undefined)
+        return default_err(`元素 ${key.获取名称()} 在决策空间中没有非空安排`);
       const value = v.value;
-      if (value === null) return default_err("");
+      if (value === null)
+        return default_err(`元素 ${key.获取名称()} 在决策空间中没有非空安排`);
       if (是强类型归并(value)) 增广决策.set(key, value);
       else {
         增广决策.set(key, [...value].map((_) => "a").join());

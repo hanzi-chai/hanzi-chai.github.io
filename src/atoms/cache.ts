@@ -62,6 +62,7 @@ import {
   变换器列表原子,
   字形来源列表原子,
   字形自定义原子,
+  字母表原子,
   字集指示原子,
   拼写运算自定义原子,
   最大码长原子,
@@ -375,13 +376,18 @@ export const 强类型线性化决策原子 = atom(async (get) => {
 export const 强类型翻转决策原子 = atom(async (get) => {
   const 决策与决策空间 = await get(强类型决策与决策空间原子);
   const 线性化决策 = await get(强类型线性化决策原子);
+  const 字母表 = get(字母表原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
   if (!线性化决策.ok) return 线性化决策;
   const 翻转决策 = new Map<string, { 元素: 元素; 安排: 强类型非归并安排 }[]>();
+  // 要求决策的第一码必须在字母表中
+  for (const 字母 of [...字母表]) {
+    翻转决策.set(字母, []);
+  }
   for (const [元素, 安排] of 决策与决策空间.value.决策) {
     if (是强类型归并(安排)) continue;
     const 第一码 = 线性化决策.value.get(元素)?.[0] ?? "a";
-    翻转决策.set(第一码, (翻转决策.get(第一码) ?? []).concat([{ 元素, 安排 }]));
+    翻转决策.get(第一码)?.push({ 元素, 安排 });
   }
   return ok(翻转决策);
 });
@@ -441,6 +447,7 @@ export const 组装配置原子 = atom(async (get) => {
   const { 自定义分析映射 } = await get(自定义元素映射原子);
   const 决策与决策空间 = await get(强类型决策与决策空间原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
+  const 分类器 = get(分类器原子);
   const { 决策, 决策空间 } = 决策与决策空间.value;
   const config: 组装配置 = {
     源映射: get(源映射原子),
@@ -452,6 +459,7 @@ export const 组装配置原子 = atom(async (get) => {
     自定义分析映射,
     决策,
     决策空间,
+    分类器,
   };
   return ok(config);
 });

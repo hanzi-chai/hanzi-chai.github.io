@@ -4,6 +4,7 @@ import {
   type 广义码位,
   type 强类型广义引用,
   是变量,
+  是强类型变量,
   是强类型归并,
 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
@@ -71,14 +72,33 @@ export default function KeySelect({
   if (allowPlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
+  let selectValue: string;
+  if (typeof value === "string" || value === null || 是强类型变量(value)) {
+    selectValue = JSON.stringify(value);
+  } else {
+    selectValue = JSON.stringify({
+      element: value.element.获取名称(),
+      index: value.index,
+    });
+  }
   return (
     <Select
       showSearch
       placeholder="输入搜索"
       options={keyOptions}
       className="min-w-24"
-      value={JSON.stringify(value)}
-      onChange={(raw) => onChange(JSON.parse(raw))}
+      value={selectValue}
+      onChange={(raw) => {
+        const parsed: 广义码位 = JSON.parse(raw);
+        if (typeof parsed === "string" || parsed === null || 是变量(parsed)) {
+          onChange(parsed);
+        } else {
+          const element = 名称映射.get(parsed.element);
+          if (element) {
+            onChange({ element, index: parsed.index });
+          }
+        }
+      }}
       filterOption={(input, option) => {
         if (option === undefined) return false;
         const key: 广义码位 = JSON.parse(option.value);

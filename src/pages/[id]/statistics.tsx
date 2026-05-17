@@ -71,7 +71,7 @@ const 分析原始重码 = (
       }
     }
     const summary = JSON.stringify(
-      处理后元素序列.map((x) => (x ? 下转换(x) : x)),
+      处理后元素序列.map((x) => (x !== undefined ? 下转换(x) : "ε")),
     );
     反向映射.set(
       summary,
