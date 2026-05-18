@@ -37,6 +37,7 @@ import {
   全部合法元素原子,
   别名显示原子,
   原始字库原子,
+  基本信息原子,
   如字库原子,
   字母表原子,
   强类型决策原子,
@@ -73,6 +74,7 @@ export const ElementDetail = ({
   const gf0014 = useAtomValue(GF0014映射原子);
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   const keys = mapping.get(element)!;
+  const { name } = useAtomValue(基本信息原子);
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
@@ -158,7 +160,7 @@ export const ElementDetail = ({
         </Button>
       </Flex>
       <Divider size="small" />
-      {gf0014.has(element as 字符) && (
+      {name === "冰雪飞花" && gf0014.has(element as 字符) && (
         <div>GF0014: {gf0014.get(element as 字符)!.pinyin.join(",")}</div>
       )}
       <RulesForm element={element} />
@@ -230,7 +232,7 @@ export const AdjustableElementGroup = ({
       </Popover>
       {affiliates.map(({ from, to }) => (
         <Popover
-          key={`${from}-${to}`}
+          key={`${from.获取名称()}-${to.获取名称()}`}
           title="编辑决策"
           trigger="click"
           open={openAffiliatePopover.get(from) ?? false}

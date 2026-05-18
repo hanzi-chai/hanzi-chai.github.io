@@ -336,6 +336,7 @@ const MarginalFirstOrderDuplication = () => {
   rmAfter.forEach((items) => {
     if (items.length > 1) items.map((x) => szAfter.add(x));
   });
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   return (
     <>
       <Typography.Title level={3}>边际一阶重码计算</Typography.Title>
@@ -355,7 +356,9 @@ const MarginalFirstOrderDuplication = () => {
             icon: false,
           }}
           creatorRecord={() => ({
-            content: [{ element: "1", index: 0 } satisfies 元素位或编码],
+            content: [
+              { element: 笔画列表[0]!, index: 0 } satisfies 强类型元素位或编码,
+            ],
           })}
         >
           <MyProFormList
@@ -367,7 +370,7 @@ const MarginalFirstOrderDuplication = () => {
             }}
             itemRender={InlineRender}
             creatorRecord={() =>
-              ({ element: "1", index: 0 }) satisfies 元素位或编码
+              ({ element: 笔画列表[0]!, index: 0 }) satisfies 强类型元素位或编码
             }
             copyIconProps={false}
           >

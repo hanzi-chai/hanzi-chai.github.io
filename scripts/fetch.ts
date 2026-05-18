@@ -43,6 +43,7 @@ for (const filename of [
   "distribution",
   "equivalence",
   "tygf",
+  "gf0014",
 ]) {
   const url = `${assetsEndpoint}${filename}.txt`;
   try {
