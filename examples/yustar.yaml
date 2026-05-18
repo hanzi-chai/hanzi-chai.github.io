@@ -655,8 +655,6 @@ form:
       element: 母
     :
       element: 大
-    :
-      element: 大
     :
       element: 卅
     :
@@ -713,8 +711,6 @@ form:
       element: 爿
     :
       element: 小
-    :
-      element: 夫
     攵:
       element: 夊
     :
@@ -737,22 +733,12 @@ form:
       element: 乂
     :
       element: 鹿
-    :
-      element: 高
-    :
-      element: 合
     :
       element: 丰
-    :
-      element: 月
-    :
-      element: 丩
     丱:
       element: 丩
     :
       element: 八
-    :
-      element: 丌
     :
       element: 木
     冊:
@@ -767,10 +753,6 @@ form:
       element: 鳥
     卌:
       element: 卅
-    :
-      element: 卅
-    :
-      element: 夕
     :
       element: 臣
     :
@@ -783,10 +765,6 @@ form:
       element: 千
     尙:
       element: 尚
-    :
-      element: 片
-    :
-      element: 爿
     :
       element: 卜
     :
@@ -797,24 +775,16 @@ form:
       element: 食
     :
       element: 馬
-    :
-      element: 米
     :
       element: 彳
     :
       element: 士
-    :
-      element: 㐄
     :
       element: 彐
-    :
-      element: 合
     :
       element: 虎
     虍:
       element: 虎
-    :
-      element: 忄
     :
       element: 羊
     :
@@ -841,10 +811,36 @@ form:
       element: 艮
     :
       element: 儿
-    :
-      element: 戈
     釒:
       element: 金
+    :
+      element: 
+    :
+      element: 戈
+    :
+      element: 丌
+    :
+      element: 丩
+    :
+      element: 卅
+    :
+      element: 夕
+    :
+      element: 
+    :
+      element: 忄
+    :
+      element: 米
+    :
+      element: 
+    :
+      element: 合
+    :
+      element: 合
+    :
+      element: 片
+    :
+      element: 爿
   mapping_type: 2
   mapping_space: {}
 encoder:
@@ -962,7 +958,7 @@ data:
     襄:
       type: compound
       operator: ⿱
-      operandList: [, ]
+      operandList: [, ]
     :
       type: compound
       tags: [横向包夹]
@@ -976,9 +972,7 @@ data:
       operandList: [儿, ]
       order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
     龠:
-      type: compound
-      operator: ⿱
-      operandList: [, ]
+      - {type: compound, operator: ⿱, operandList: [, ]}
     衷:
       type: compound
       operator: ⿳
@@ -1041,9 +1035,7 @@ data:
       operator: ⿱
       operandList: [, ]
     :
-      type: compound
-      operator: ⿱
-      operandList: [, ]
+      - {type: compound, operator: ⿱, operandList: [, ]}
     䘮:
       type: compound
       operator: ⿱
@@ -1088,7 +1080,7 @@ data:
     󲜬:
       type: spliced_component
       operator: ⿻
-      operandList: [, 丷]
+      operandList: [, 丷]
     卿:
       type: compound
       tags: [横向包夹]
@@ -1118,132 +1110,16 @@ data:
       - {type: derived_component, source: 戈, strokes: [{feature: 点, start: [34, 11], curveList: [{command: c, parameterList: [1, 2, 1, 3, 1, 5]}]}, {feature: 横, start: [23, 16], curveList: [{command: h, parameterList: [20]}]}, {feature: 点, start: [27, 24], curveList: [{command: c, parameterList: [1, 3, 1, 5, 1, 6]}]}, {feature: 撇, start: [41, 24], curveList: [{command: c, parameterList: [0, 2, -1, 4, -2, 6]}]}, {feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}
   tags: []
   repertoire:
-    :
-      unicode: 61440
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [亠, 吅]}]
-      ambiguous: false
-      name: 襄字头
-    :
-      unicode: 61443
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [亼, ]}]
-      ambiguous: false
-      name: 龠字头
     :
       unicode: 61444
       tygf: 0
       gb2312: 0
       gf0014_id: null
       readings: []
-      glyphs: [{type: derived_component, source: 亙, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
+      glyphs: []
       ambiguous: false
       name: 亙无二
-    :
-      unicode: 61445
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 虛字底无横
-    :
-      unicode: 61446
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 亚, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 亚三
-    :
-      unicode: 61447
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 5}]}]
-      ambiguous: false
-      name: 帶字头无横
-    :
-      unicode: 61448
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 宐字底无横
-    :
-      unicode: 61449
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 華字心
-    :
-      unicode: 61450
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 0}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 6}]}]
-      ambiguous: false
-      name: 淵字边左
-    :
-      unicode: 61451
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 1}, {feature: reference, index: 4}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
-      ambiguous: false
-      name: 淵字边右
-    :
-      unicode: 61452
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 粛, strokes: [{feature: reference, index: 3}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}]}]
-      ambiguous: false
-      name: 粛字心
-    :
-      unicode: 61453
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 枾字边心
-    :
-      unicode: 61454
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [亼, 吅]}]
-      ambiguous: false
-      name: 㵸字旁头
-    :
-      unicode: 61455
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 㣺, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 㣺无丶
+      character: {码位: 61444}
     :
       unicode: 61441
       tygf: 0
@@ -1252,7 +1128,7 @@ data:
       gf3001_id: null
       ambiguous: false
       name: 戈无一
-      glyphs: [{type: derived_component, source: 戈, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
+      glyphs: []
       character: {码位: 61441}
   character_set: basic
   glyph_sources:

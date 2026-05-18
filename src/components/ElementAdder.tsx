@@ -28,7 +28,7 @@ export default function ElementAdder() {
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   const mapping_type = useAtomValue(编码类型原子);
   const dynamic = useAtomValue(动态分析原子);
-  const [main, setMain] = useState<元素 | undefined>(undefined);
+  const [main, setMain] = useState<元素>(笔画列表[0]!);
   const [keys, setKeys] = useState<强类型广义引用[]>([
     alphabet[0]!,
     "",
@@ -95,10 +95,7 @@ export default function ElementAdder() {
       </Flex>
       <Flex justify="center" align="center" gap="small">
         <span>设置归并</span>
-        <ElementSelect
-          value={笔画列表[0]!}
-          onChange={(event) => setMain(event)}
-        />
+        <ElementSelect value={main} onChange={setMain} />
         <Button
           type="primary"
           disabled={element === undefined || main === undefined}

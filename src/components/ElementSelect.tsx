@@ -38,6 +38,7 @@ export default function ElementSelect(
       value={value.获取名称()}
       onChange={(s) => {
         const 元素 = 名称映射.get(s);
+        console.log(s, 元素);
         if (元素) onChange(元素);
       }}
       showSearch
