@@ -1,7 +1,6 @@
-import { Flex, Layout, Skeleton, Table, Typography } from "antd";
+import { Flex, Layout, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { type 区块, 区块列表 } from "hanzi-chai";
-import { Suspense } from "react";
 import { useAtomValue, 原始字库数据原子 } from "~/atoms";
 
 export default function Repertoire() {
@@ -58,15 +57,13 @@ export default function Repertoire() {
   return (
     <Layout>
       <Flex vertical justify="center" align="center">
-        <Suspense fallback={<Skeleton />}>
-          <Typography.Title>自动拆分系统收字情况</Typography.Title>
-          <Table
-            columns={columns}
-            dataSource={区块列表}
-            rowKey="name"
-            pagination={{ pageSize: 50 }}
-          />
-        </Suspense>
+        <Typography.Title>自动拆分系统收字情况</Typography.Title>
+        <Table
+          columns={columns}
+          dataSource={区块列表}
+          rowKey="name"
+          pagination={{ pageSize: 50 }}
+        />
       </Flex>
     </Layout>
   );

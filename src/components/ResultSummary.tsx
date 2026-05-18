@@ -1,13 +1,12 @@
-import { ProForm, ProFormList } from "@ant-design/pro-components";
-import { Button, Flex, Form, Popover } from "antd";
+import { Button, Flex, Popover } from "antd";
 import {
+  type 元素,
   type 基本分析,
   type 复合体,
-  未知元素,
   部件,
   type 默认部件分析,
 } from "hanzi-chai";
-import type { ComponentProps } from "react";
+import { useState } from "react";
 import {
   useAddAtom,
   useAtomValue,
@@ -16,110 +15,137 @@ import {
   全部合法元素原子,
   动态分析原子,
   动态自定义拆分原子,
+  强类型自定义分析原子,
   自定义拆分原子,
 } from "~/atoms";
 import { 数字 } from "~/utils";
-import { InlineRender } from "./ComponentForm";
 import ElementSelect from "./ElementSelect";
-import { BoxedElementWithTooltip, CharacterWithTooltip } from "./Utils";
+import {
+  BoxedElementWithTooltip,
+  CharacterWithTooltip,
+  DeleteButton,
+  PlusButton,
+} from "./Utils";
 
 const Customize = ({
   component,
   initialValues,
 }: {
   component: 部件;
-  initialValues: string[];
+  initialValues: 元素[];
 }) => {
   const add = useAddAtom(自定义拆分原子);
-  const 索引 = component.获取索引();
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
+  const [content, setContent] = useState<元素[]>(initialValues);
   return (
-    <ProForm<{ content: string[] }>
-      title={component.获取名称()}
-      layout="horizontal"
-      initialValues={{ content: initialValues }}
-      onFinish={async ({ content }) => {
-        add(索引, content);
-        return true;
-      }}
-    >
-      <ProFormList
-        name="content"
-        creatorButtonProps={{
-          creatorButtonText: "添加",
-          icon: false,
-          style: { width: "unset" },
-        }}
-        itemRender={InlineRender}
-        creatorRecord={() => "1"}
-        copyIconProps={false}
-      >
-        {(meta) => (
-          <Form.Item noStyle {...meta}>
-            {/* @ts-ignore */}
-            <ElementSelect className="w-24" onlyRootsAndStrokes />
-          </Form.Item>
-        )}
-      </ProFormList>
-    </ProForm>
+    <Flex vertical gap="small">
+      <Flex gap="small" wrap="wrap">
+        {content.map((x, i) => (
+          <Flex key={i} align="center">
+            <ElementSelect
+              className="w-24"
+              onlyRootsAndStrokes
+              value={x}
+              onChange={(v) =>
+                setContent(content.map((c, j) => (j === i ? v : c)))
+              }
+            />
+            <DeleteButton
+              onClick={() => setContent(content.filter((_, j) => j !== i))}
+            />
+          </Flex>
+        ))}
+        <PlusButton onClick={() => setContent([...content, 笔画列表[0]!])} />
+      </Flex>
+      <Flex gap="small">
+        <Button
+          type="primary"
+          onClick={() =>
+            add(
+              component.获取索引(),
+              content.map((x) => x.获取名称()),
+            )
+          }
+        >
+          提交
+        </Button>
+      </Flex>
+    </Flex>
   );
 };
-
-export const MyProFormList = (props: ComponentProps<typeof ProFormList>) => (
-  <ProFormList
-    className={`result-summary-list ${props.className ?? ""}`}
-    {...props}
-  />
-);
 
 const DynamicCustomize = ({
   component,
   initialValues,
 }: {
   component: 部件;
-  initialValues: string[][];
+  initialValues: 元素[][];
 }) => {
   const add = useAddAtom(动态自定义拆分原子);
-  const 索引 = component.获取索引();
+  const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
+  const [content, setContent] = useState<元素[][]>(initialValues);
   return (
-    <ProForm<{ content: { content: string[] }[] }>
-      title={component.获取名称()}
-      layout="horizontal"
-      initialValues={{
-        content: initialValues.map((x) => ({ content: x })),
-      }}
-      onFinish={async ({ content }) => {
-        add(
-          索引,
-          content.map((x) => x.content),
-        );
-        return true;
-      }}
-    >
-      <MyProFormList name="content">
-        <MyProFormList
-          name="content"
-          creatorButtonProps={{
-            creatorButtonText: "添加",
-            icon: false,
-            style: { width: "unset" },
-          }}
-          itemRender={InlineRender}
-          creatorRecord={() => "1"}
-          copyIconProps={false}
-        >
-          {(meta) => (
-            <Form.Item noStyle {...meta}>
-              {/* @ts-ignore */}
+    <Flex vertical gap="small">
+      {content.map((group, i) => (
+        <Flex key={i} gap="small" align="center" wrap="wrap">
+          {group.map((x, j) => (
+            <Flex key={j} align="center">
               <ElementSelect
                 className="w-24"
                 onlyRootsAndStrokes
                 includeOptional
+                value={x}
+                onChange={(v) =>
+                  setContent(
+                    content.map((g, gi) =>
+                      gi === i ? g.map((c, ci) => (ci === j ? v : c)) : g,
+                    ),
+                  )
+                }
               />
-            </Form.Item>
-          )}
-        </MyProFormList>
-      </MyProFormList>
-    </ProForm>
+              <DeleteButton
+                onClick={() =>
+                  setContent(
+                    content.map((g, gi) =>
+                      gi === i ? g.filter((_, ci) => ci !== j) : g,
+                    ),
+                  )
+                }
+              />
+            </Flex>
+          ))}
+          <PlusButton
+            onClick={() =>
+              setContent(
+                content.map((g, gi) => (gi === i ? [...g, 笔画列表[0]!] : g)),
+              )
+            }
+          />
+          <Button
+            size="small"
+            onClick={() => setContent(content.filter((_, gi) => gi !== i))}
+          >
+            删除组
+          </Button>
+        </Flex>
+      ))}
+      <Flex gap="small">
+        <Button onClick={() => setContent([...content, [笔画列表[0]!]])}>
+          添加组
+        </Button>
+        <Button
+          type="primary"
+          onClick={() =>
+            add(
+              component.获取索引(),
+              content.map((g) => g.map((x) => x.获取名称())),
+            )
+          }
+        >
+          提交
+        </Button>
+      </Flex>
+    </Flex>
   );
 };
 
@@ -134,15 +160,16 @@ export default function ResultSummary({
   if ("被覆盖拆分方式" in analysis && analysis.被覆盖拆分方式) {
     字根序列 = analysis.被覆盖拆分方式.拆分方式.map((x) => x.字根);
   }
-  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 是否动态分析 = useAtomValue(动态分析原子);
-  const 自定义分析 = useAtomValue(自定义拆分原子);
+  const { 自定义分析映射, 动态自定义分析映射 } = useAtomValueUnwrapped(
+    强类型自定义分析原子,
+  );
   const 移除自定义分析 = useRemoveAtom(自定义拆分原子);
-  const 动态自定义分析 = useAtomValue(动态自定义拆分原子);
   const 移除动态自定义分析 = useRemoveAtom(动态自定义拆分原子);
-  const 索引 = glyph instanceof 部件 ? glyph.获取索引() : "";
-  const 自定义字根序列 = 自定义分析[索引];
-  const 自定义字根序列列表 = 动态自定义分析[索引];
+  const 自定义字根序列 =
+    glyph instanceof 部件 ? 自定义分析映射.get(glyph) : undefined;
+  const 自定义字根序列列表 =
+    glyph instanceof 部件 ? 动态自定义分析映射.get(glyph) : undefined;
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
@@ -162,8 +189,7 @@ export default function ResultSummary({
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
             {自定义字根序列.map((x, i) => {
-              const 字符 = 名称映射.get(x) ?? new 未知元素(x);
-              return <BoxedElementWithTooltip key={i} element={字符 ?? x} />;
+              return <BoxedElementWithTooltip key={i} element={x} />;
             })}
           </Flex>
         )}
@@ -173,10 +199,7 @@ export default function ResultSummary({
             {自定义字根序列列表.map((x, i) => (
               <Flex key={i} align="center">
                 {x.map((y, j) => {
-                  const 字符 = 名称映射.get(y) ?? new 未知元素(y);
-                  return (
-                    <BoxedElementWithTooltip key={j} element={字符 ?? y} />
-                  );
+                  return <BoxedElementWithTooltip key={j} element={y} />;
                 })}
                 ・
               </Flex>
@@ -187,10 +210,12 @@ export default function ResultSummary({
       {glyph instanceof 部件 && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {自定义字根序列 && (
-            <Button onClick={() => 移除自定义分析(索引)}>取消自定义</Button>
+            <Button onClick={() => 移除自定义分析(glyph.获取索引())}>
+              取消自定义
+            </Button>
           )}
           {自定义字根序列列表 && (
-            <Button onClick={() => 移除动态自定义分析(索引)}>
+            <Button onClick={() => 移除动态自定义分析(glyph.获取索引())}>
               取消自定义组
             </Button>
           )}
@@ -202,10 +227,14 @@ export default function ResultSummary({
                 <DynamicCustomize
                   component={glyph}
                   initialValues={
-                    动态自定义分析[索引] ??
+                    自定义字根序列列表 ??
                     analysis.全部拆分方式
                       .filter((x) => x.可用)
-                      .map((x) => x.拆分方式.map((y) => y.字根.获取名称()))
+                      .map((x) =>
+                        x.拆分方式.map((y) =>
+                          y.字根 instanceof 部件 ? y.字根.字符 : y.字根,
+                        ),
+                      )
                   }
                 />
               }
@@ -220,7 +249,8 @@ export default function ResultSummary({
               <Customize
                 component={glyph}
                 initialValues={
-                  自定义字根序列 ?? 字根序列.map((x) => x.获取名称())
+                  自定义字根序列 ??
+                  字根序列.map((x) => (x instanceof 部件 ? x.字符 : x))
                 }
               />
             }

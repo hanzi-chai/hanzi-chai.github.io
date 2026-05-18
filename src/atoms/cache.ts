@@ -1,57 +1,51 @@
-import type {
-  元素,
-  元素位或编码,
-  原始字库数据,
-  原始汉字数据,
-  原始词典,
-  字符,
-  强类型元素位或编码,
-  强类型决策,
-  强类型决策空间,
-  强类型非归并安排,
-  当量映射,
-  条件,
-  码表条目,
-  组装条目,
-  组装配置,
-  自定义分析,
-  键位分布目标,
-} from "hanzi-chai";
 import {
   ok,
   下转换,
+  二笔,
+  type 元素,
+  type 元素位或编码,
   分析拼音,
   动态组装,
   原始字库,
+  type 原始字库数据,
+  type 原始词典,
   合并拼写运算,
   图形盒子,
+  字符,
   序列化强类型决策,
   序列化强类型决策空间,
+  type 强类型元素位或编码,
+  type 强类型决策,
+  type 强类型决策空间,
+  type 强类型非归并安排,
+  type 当量映射,
   是强类型归并,
   是部件,
+  type 条件,
   构建强类型决策与决策空间,
   标准化自定义,
   添加优先简码,
+  type 码表条目,
+  笔画,
   线性化决策,
   组装,
-  解析原始词典,
-  解析当量映射,
-  解析键位分布目标,
+  type 组装条目,
+  type 组装配置,
+  type 自定义分析,
   计算全部合法元素与元素映射,
   计算拼音分析与元素映射,
   识别符,
-  读取表格,
+  type 部件,
+  type 键位分布目标,
   默认分类器,
 } from "hanzi-chai";
 import { atom } from "jotai";
-import { unwrap } from "jotai/utils";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
-import pako from "pako";
 import type { SetStateAction } from "react";
 import type { Metric } from "~/components/MetricTable";
+import { get预加载数据 } from "~/preload";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
-import { getDataPath } from "~/version";
 import {
   优先简码原子,
   决策原子,
@@ -59,6 +53,7 @@ import {
   分析配置原子,
   分类器原子,
   动态分析原子,
+  动态自定义拆分原子,
   变换器列表原子,
   字形来源列表原子,
   字形自定义原子,
@@ -71,48 +66,11 @@ import {
   源映射原子,
   用户原始字库数据原子,
   组装器原子,
+  自定义拆分原子,
   键盘原子,
   默认目标原子,
 } from ".";
 import { 位置原子, 配置原子 } from "./config";
-
-const 资源缓存: Record<string, string> = {};
-
-export async function 拉取资源(文件名: string) {
-  // 检查缓存
-  if (文件名 in 资源缓存) {
-    return 资源缓存[文件名]!;
-  }
-  try {
-    const 响应 = await fetch(getDataPath(文件名));
-    if (!响应.ok) {
-      throw new Error(`获取资源失败: ${文件名}, 状态码: ${响应.status}`);
-    }
-    let 文本: string;
-    if (文件名.endsWith(".deflate")) {
-      文本 = await 处理压缩文件(文件名, 响应);
-    } else {
-      文本 = await 响应.text();
-    }
-    // 缓存结果
-    资源缓存[文件名] = 文本;
-    return 文本;
-  } catch (error) {
-    console.error(`处理资源时出错: ${文件名}`, error);
-    throw error;
-  }
-}
-
-async function 处理压缩文件(filename: string, response: Response) {
-  const name = filename.replace(/\.deflate$/, "");
-  const arrayBuffer = await response.arrayBuffer();
-  try {
-    const content = pako.inflate(arrayBuffer, { to: "string" });
-    return content;
-  } catch {
-    throw new Error(`解压文件失败: ${name}`);
-  }
-}
 
 // 服务器资源
 
@@ -121,30 +79,19 @@ export const 远程原子 = atom((get) => {
   return location.pathname === "/admin" || location.hash === "#/admin";
 });
 
-export const 原始字库数据原子 = atom(async () => {
-  const content = await 拉取资源("repertoire.json.deflate");
-  const data: 原始汉字数据[] = JSON.parse(content);
-  return Object.fromEntries(
-    data.map((x) => [String.fromCodePoint(x.unicode), x]),
-  );
-});
+export const 原始字库数据原子 = atom(
+  (): 原始字库数据 => get预加载数据().原始字库数据,
+);
 
 export const 原始可编辑字库数据原子 = atom({} as 原始字库数据);
 
-export const 默认原始词典原子 = atom(async () => {
-  const content = await 拉取资源("dictionary.txt");
-  return 解析原始词典(读取表格(content));
-});
+export const 默认原始词典原子 = atom((): 原始词典 => get预加载数据().原始词典);
 
-export const 默认键位分布目标原子 = atom(async () => {
-  const content = await 拉取资源("distribution.txt");
-  return 解析键位分布目标(读取表格(content));
-});
+export const 默认键位分布目标原子 = atom(
+  (): 键位分布目标 => get预加载数据().键位分布目标,
+);
 
-export const 默认当量原子 = atom(async () => {
-  const content = await 拉取资源("equivalence.txt");
-  return 解析当量映射(读取表格(content));
-});
+export const 默认当量原子 = atom((): 当量映射 => get预加载数据().当量映射);
 
 // 用户数据存储
 const 用户原始词典数据库 = new MiniDb<原始词典>({ name: "原始词典" });
@@ -166,43 +113,42 @@ export const 自定义分析数据库 = new MiniDb<自定义分析>({ name: "自
 
 export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 
-export const 原始词典原子 = atom(async (get) => {
-  const 词典 = get(用户原始词典原子) ?? (await get(默认原始词典原子));
-  return 词典;
+export const 原始词典原子 = atom((get) => {
+  return get(用户原始词典原子) ?? get(默认原始词典原子);
 });
 
-export const 词典原子 = atom(async (get) => {
-  const 原始词典 = await get(原始词典原子);
-  const 原始字库 = await get(原始字库原子);
-  return 原始字库.校验词典(原始词典);
+export const 词典原子 = atom((get) => {
+  const 原始词典 = get(原始词典原子);
+  const 字库 = get(原始字库原子);
+  return 字库.校验词典(原始词典);
 });
 
-export const 过滤词典原子 = atom(async (get) => {
-  const 词典 = await get(词典原子);
-  const 原始字库 = await get(原始字库原子);
+export const 过滤词典原子 = atom((get) => {
+  const 词典 = get(词典原子);
+  const 字库 = get(原始字库原子);
   const 字集指示 = get(字集指示原子);
-  return 原始字库.过滤词典(词典, 字集指示);
+  return 字库.过滤词典(词典, 字集指示);
 });
 
-export const 自定义元素映射原子 = atom(async (get) => {
+export const 自定义元素映射原子 = atom((get) => {
   const 自定义元素集合 = get(自定义分析数据库.entries);
-  const 原始字库 = await get(原始字库原子);
-  return 原始字库.校验自定义映射(Object.fromEntries(自定义元素集合));
+  const 字库 = get(原始字库原子);
+  return 字库.校验自定义映射(Object.fromEntries(自定义元素集合));
 });
 
-export const 汉字集合原子 = atom(async (get) => {
-  const 词典 = await get(过滤词典原子);
-  const 原始字库 = await get(原始字库原子);
-  return 原始字库.获取汉字集合(词典);
+export const 汉字集合原子 = atom((get) => {
+  const 词典 = get(过滤词典原子);
+  const 字库 = get(原始字库原子);
+  return 字库.获取汉字集合(词典);
 });
 
-export const 原始字库原子 = atom(async (get) => {
+export const 原始字库原子 = atom((get) => {
   const 远程 = get(远程原子);
   if (远程) {
     const 原始字库数据 = get(原始可编辑字库数据原子);
     return new 原始字库(Object.values(原始字库数据));
   }
-  const 原始字库数据 = await get(原始字库数据原子);
+  const 原始字库数据 = get(原始字库数据原子);
   const 用户原始字库数据 = get(用户原始字库数据原子);
   return new 原始字库([
     ...Object.values(原始字库数据),
@@ -210,11 +156,11 @@ export const 原始字库原子 = atom(async (get) => {
   ]);
 });
 
-export const GF0014映射原子 = atom(async (get) => {
-  const tsv = 读取表格(await 拉取资源("gf0014.txt"));
+export const GF0014映射原子 = atom((get) => {
+  const tsv = get预加载数据().GF0014;
   const map = new Map<字符, { gf0014_id: number; pinyin: string[] }>();
-  const 原始字库 = await get(原始字库原子);
-  for (const { character, gf0014_id } of 原始字库) {
+  const 字库 = get(原始字库原子);
+  for (const { character, gf0014_id } of 字库) {
     if (gf0014_id !== null) {
       map.set(character, { gf0014_id, pinyin: tsv[gf0014_id - 1] ?? [] });
     }
@@ -223,11 +169,11 @@ export const GF0014映射原子 = atom(async (get) => {
   return map;
 });
 
-export const 别名显示原子 = atom(async (get) => {
-  const 原始字库 = await get(原始字库原子);
+export const 别名显示原子 = atom((get) => {
+  const 字库 = get(原始字库原子);
   return (字符实例: 字符) => {
     if (!字符实例.是私用区()) return 字符实例.获取名称();
-    const name = 原始字库.查询(字符实例)?.name;
+    const name = 字库.查询(字符实例)?.name;
     return name ?? "丢失的字根";
   };
 });
@@ -237,16 +183,16 @@ export const 标准字形自定义原子 = atom((get) => {
   return 标准化自定义(字形自定义);
 });
 
-export const 如字库原子 = atom(async (get) => {
-  const 原始字库 = await get(原始字库原子);
+export const 如字库原子 = atom((get) => {
+  const 字库 = get(原始字库原子);
   const 字形自定义 = get(标准字形自定义原子);
   const 变换器列表 = get(变换器列表原子);
   const 字形来源列表 = get(字形来源列表原子);
-  return 原始字库.确定(字形自定义, 变换器列表, 字形来源列表);
+  return 字库.确定(字形自定义, 变换器列表, 字形来源列表);
 });
 
-export const 如私用区图形原子 = atom(async (get) => {
-  const 如字库 = await get(如字库原子);
+export const 如私用区图形原子 = atom((get) => {
+  const 如字库 = get(如字库原子);
   if (!如字库.ok) return 如字库;
   const 字库 = 如字库.value;
   const result = new Map<字符, 图形盒子>();
@@ -265,8 +211,8 @@ export const 如私用区图形原子 = atom(async (get) => {
   return ok(result);
 });
 
-export const 如笔顺映射原子 = atom(async (get) => {
-  const 如字库 = await get(如字库原子);
+export const 如笔顺映射原子 = atom((get) => {
+  const 如字库 = get(如字库原子);
   if (!如字库.ok) return 如字库;
   const result = new Map<字符, string[]>();
   for (const { 字符, 字形列表 } of 如字库.value) {
@@ -278,20 +224,20 @@ export const 如笔顺映射原子 = atom(async (get) => {
   return ok(result);
 });
 
-export const 如按笔顺排序字符原子 = atom(async (get) => {
-  const 原始字库 = await get(原始字库原子);
-  const 如笔顺映射 = await get(如笔顺映射原子);
+export const 如按笔顺排序字符原子 = atom((get) => {
+  const 字库 = get(原始字库原子);
+  const 如笔顺映射 = get(如笔顺映射原子);
   if (!如笔顺映射.ok) return 如笔顺映射;
   const 笔顺映射 = 如笔顺映射.value;
-  const 全部字符 = [...原始字库].map((x) => x.character);
+  const 全部字符 = [...字库].map((x) => x.character);
   const result = sortBy(全部字符, (c) => 笔顺映射.get(c)?.[0]?.length ?? 0);
   return ok(result);
 });
 
-export const 全部标签原子 = atom(async (get) => {
-  const 原始字库 = await get(原始字库原子);
+export const 全部标签原子 = atom((get) => {
+  const 字库 = get(原始字库原子);
   const 标签数量映射 = new Map<string, number>();
-  for (const { glyphs } of 原始字库) {
+  for (const { glyphs } of 字库) {
     for (const { tags } of glyphs) {
       tags?.map((s) => 标签数量映射.set(s, (标签数量映射.get(s) ?? 0) + 1));
     }
@@ -310,11 +256,11 @@ export const 下一个可用的码位原子 = atom((get) => {
   return 0xffff;
 });
 
-export const 全部合法元素原子 = atom(async (get) => {
+export const 全部合法元素原子 = atom((get) => {
   const 分类器 = get(分类器原子);
-  const { 拼音元素映射 } = await get(拼音元素映射原子);
-  const { 自定义元素映射 } = await get(自定义元素映射原子);
-  const 如字符列表 = await get(如按笔顺排序字符原子);
+  const { 拼音元素映射 } = get(拼音元素映射原子);
+  const { 自定义元素映射 } = get(自定义元素映射原子);
+  const 如字符列表 = get(如按笔顺排序字符原子);
   if (!如字符列表.ok) return 如字符列表;
   const 字符列表 = 如字符列表.value;
   return ok(
@@ -324,30 +270,25 @@ export const 全部合法元素原子 = atom(async (get) => {
 
 export const 当前元素原子 = atom<元素 | undefined>(undefined);
 
-export const 原始字库同步原子 = unwrap(原始字库原子, (prev) => prev);
+export const 原始字库同步原子 = 原始字库原子;
 
-export const 强类型决策与决策空间原子 = atom(async (get) => {
+export const 强类型决策与决策空间原子 = atom((get) => {
   const 决策 = get(决策原子);
   const 决策空间 = get(决策空间原子);
-  const 全部合法元素 = await get(全部合法元素原子);
+  const 全部合法元素 = get(全部合法元素原子);
   if (!全部合法元素.ok) return 全部合法元素;
   return ok(
     构建强类型决策与决策空间(决策, 决策空间, 全部合法元素.value.名称映射),
   );
 });
 
-const 强类型决策与决策空间同步原子 = unwrap(
-  强类型决策与决策空间原子,
-  (prev) => prev,
-);
-
 const 空决策: 强类型决策 = new Map();
 const 空决策空间: 强类型决策空间 = new Map();
 
 export const 强类型决策原子 = atom(
   (get) => {
-    const r = get(强类型决策与决策空间同步原子);
-    return r?.ok ? r.value.决策 : 空决策;
+    const r = get(强类型决策与决策空间原子);
+    return r.ok ? r.value.决策 : 空决策;
   },
   (get, set, action: SetStateAction<强类型决策>) => {
     const current = get(强类型决策原子);
@@ -358,8 +299,8 @@ export const 强类型决策原子 = atom(
 
 export const 强类型决策空间原子 = atom(
   (get) => {
-    const r = get(强类型决策与决策空间同步原子);
-    return r?.ok ? r.value.决策空间 : 空决策空间;
+    const r = get(强类型决策与决策空间原子);
+    return r.ok ? r.value.决策空间 : 空决策空间;
   },
   (get, set, action: SetStateAction<强类型决策空间>) => {
     const current = get(强类型决策空间原子);
@@ -369,27 +310,25 @@ export const 强类型决策空间原子 = atom(
 );
 
 export const 强类型线性化决策原子 = atom((get) => {
-  const 决策 = get(强类型决策与决策空间同步原子);
-  if (!决策) return ok(new Map<元素, string>());
+  const 决策 = get(强类型决策与决策空间原子);
   if (!决策.ok) return 决策;
   return 线性化决策(决策.value.决策);
 });
 
 export const 强类型翻转决策原子 = atom((get) => {
   const 翻转决策 = new Map<string, { 元素: 元素; 安排: 强类型非归并安排 }[]>();
-  const 决策与决策空间 = get(强类型决策与决策空间同步原子);
-  if (!决策与决策空间) return ok(翻转决策);
-  const 线性化决策 = get(强类型线性化决策原子);
-  const 字母表 = get(字母表原子);
+  const 决策与决策空间 = get(强类型决策与决策空间原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
-  if (!线性化决策.ok) return 线性化决策;
+  const 线性化决策结果 = get(强类型线性化决策原子);
+  const 字母表 = get(字母表原子);
+  if (!线性化决策结果.ok) return 线性化决策结果;
   // 要求决策的第一码必须在字母表中
   for (const 字母 of [...字母表]) {
     翻转决策.set(字母, []);
   }
   for (const [元素, 安排] of 决策与决策空间.value.决策) {
     if (是强类型归并(安排)) continue;
-    const 第一码 = 线性化决策.value.get(元素)?.[0] ?? "a";
+    const 第一码 = 线性化决策结果.value.get(元素)?.[0] ?? "a";
     翻转决策.get(第一码)?.push({ 元素, 安排 });
   }
   return ok(翻转决策);
@@ -400,55 +339,101 @@ export const 拼写运算查找表原子 = atom((get) => {
   return 合并拼写运算(拼写运算自定义);
 });
 
-export const 拼音元素映射原子 = atom(async (get) => {
-  const 词典 = await get(词典原子);
+export const 拼音元素映射原子 = atom((get) => {
+  const 词典 = get(词典原子);
   const 拼写运算查找表 = get(拼写运算查找表原子);
   return 计算拼音分析与元素映射(词典, 拼写运算查找表);
 });
 
-export const 字形分析配置原子 = atom(async (get) => {
+export const 强类型自定义分析原子 = atom((get) => {
+  const 如字库 = get(如字库原子);
+  if (!如字库.ok) return 如字库;
+  const 字库 = 如字库.value;
+  const 原始字库 = get(原始字库原子);
+  const 全部合法元素 = get(全部合法元素原子);
+  if (!全部合法元素.ok) return 全部合法元素;
+  const { 名称映射 } = 全部合法元素.value;
+  const 自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[]> = new Map();
+  const 动态自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[][]> = new Map();
+  for (const [key, value] of Object.entries(get(自定义拆分原子))) {
+    const 部件实例 = 字库.找到部件(key, 原始字库);
+    if (!部件实例) continue;
+    const 字根列表: (字符 | 笔画 | 二笔)[] = [];
+    for (const 字根名称 of value) {
+      const 字根 = 名称映射.get(字根名称);
+      if (字根 instanceof 笔画 || 字根 instanceof 二笔 || 字根 instanceof 字符)
+        字根列表.push(字根);
+    }
+    自定义分析映射.set(部件实例, 字根列表);
+  }
+  for (const [key, value] of Object.entries(get(动态自定义拆分原子))) {
+    const 部件实例 = 字库.找到部件(key, 原始字库);
+    if (!部件实例) continue;
+    const 字根列表列表: (字符 | 笔画 | 二笔)[][] = [];
+    for (const 字根名称列表 of value) {
+      const 字根列表: (字符 | 笔画 | 二笔)[] = [];
+      for (const 字根名称 of 字根名称列表) {
+        const 字根 = 名称映射.get(字根名称);
+        if (
+          字根 instanceof 笔画 ||
+          字根 instanceof 二笔 ||
+          字根 instanceof 字符
+        )
+          字根列表.push(字根);
+      }
+      字根列表列表.push(字根列表);
+    }
+    动态自定义分析映射.set(部件实例, 字根列表列表);
+  }
+  return ok({ 自定义分析映射, 动态自定义分析映射 });
+});
+
+export const 字形分析配置原子 = atom((get) => {
   const 分析配置 = get(分析配置原子);
-  const 强类型决策与决策空间 = await get(强类型决策与决策空间原子);
+  const 强类型决策与决策空间 = get(强类型决策与决策空间原子);
   if (!强类型决策与决策空间.ok) return 强类型决策与决策空间;
   const 字形来源列表 = get(字形来源列表原子);
   const { 决策, 决策空间 } = 强类型决策与决策空间.value;
+  const 强类型自定义分析 = get(强类型自定义分析原子);
+  if (!强类型自定义分析.ok) return 强类型自定义分析;
+  const { 自定义分析映射, 动态自定义分析映射 } = 强类型自定义分析.value;
   return ok({
     分析配置,
     决策,
     决策空间,
+    自定义分析映射,
+    动态自定义分析映射,
     字形来源列表,
   });
 });
 
-export const 如字形分析结果原子 = atom(async (get) => {
-  const 如字库 = await get(如字库原子);
+export const 如字形分析结果原子 = atom((get) => {
+  const 如字库 = get(如字库原子);
   if (!如字库.ok) return 如字库;
-  const 字形分析配置 = await get(字形分析配置原子);
+  const 字形分析配置 = get(字形分析配置原子);
   if (!字形分析配置.ok) return 字形分析配置;
-  const 汉字集合 = await get(汉字集合原子);
-  const 原始字库 = await get(原始字库原子);
-  return 如字库.value.分析(字形分析配置.value, 汉字集合, 原始字库);
+  const 汉字集合 = get(汉字集合原子);
+  return 如字库.value.分析(字形分析配置.value, 汉字集合);
 });
 
-export const 如动态字形分析结果原子 = atom(async (get) => {
-  const 如字库 = await get(如字库原子);
+export const 如动态字形分析结果原子 = atom((get) => {
+  const 如字库 = get(如字库原子);
   if (!如字库.ok) return 如字库;
-  const 字形分析配置 = await get(字形分析配置原子);
+  const 字形分析配置 = get(字形分析配置原子);
   if (!字形分析配置.ok) return 字形分析配置;
-  const 汉字集合 = await get(汉字集合原子);
-  const 原始字库 = await get(原始字库原子);
-  return 如字库.value.动态分析(字形分析配置.value, 汉字集合, 原始字库);
+  const 汉字集合 = get(汉字集合原子);
+  return 如字库.value.动态分析(字形分析配置.value, 汉字集合);
 });
 
-export const 拼音分析结果原子 = atom(async (get) => {
-  const { 拼音分析映射: 音节表 } = await get(拼音元素映射原子);
-  const 词典 = await get(过滤词典原子);
+export const 拼音分析结果原子 = atom((get) => {
+  const { 拼音分析映射: 音节表 } = get(拼音元素映射原子);
+  const 词典 = get(过滤词典原子);
   return 分析拼音(音节表, 词典);
 });
 
-export const 组装配置原子 = atom(async (get) => {
-  const { 自定义分析映射 } = await get(自定义元素映射原子);
-  const 决策与决策空间 = await get(强类型决策与决策空间原子);
+export const 组装配置原子 = atom((get) => {
+  const { 自定义分析映射 } = get(自定义元素映射原子);
+  const 决策与决策空间 = get(强类型决策与决策空间原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
   const 分类器 = get(分类器原子);
   const { 决策, 决策空间 } = 决策与决策空间.value;
@@ -467,21 +452,21 @@ export const 组装配置原子 = atom(async (get) => {
   return ok(config);
 });
 
-export const 如组装结果原子 = atom(async (get) => {
-  const 拼音分析结果 = await get(拼音分析结果原子);
-  const 如字形分析结果 = await get(如字形分析结果原子);
+export const 如组装结果原子 = atom((get) => {
+  const 拼音分析结果 = get(拼音分析结果原子);
+  const 如字形分析结果 = get(如字形分析结果原子);
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
-  const config = await get(组装配置原子);
+  const config = get(组装配置原子);
   if (!config.ok) return config;
   const result = 组装(config.value, 拼音分析结果, 字形分析结果);
   return result;
 });
 
-export const 如带归并组装结果原子 = atom(async (get) => {
-  const 如组装结果 = await get(如组装结果原子);
+export const 如带归并组装结果原子 = atom((get) => {
+  const 如组装结果 = get(如组装结果原子);
   if (!如组装结果.ok) return 如组装结果;
-  const 决策与决策空间 = await get(强类型决策与决策空间原子);
+  const 决策与决策空间 = get(强类型决策与决策空间原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
   const 带归并组装结果: 组装条目[] = [];
   for (const 条目 of 如组装结果.value) {
@@ -518,25 +503,25 @@ export const 如带归并组装结果原子 = atom(async (get) => {
   return ok(带归并组装结果);
 });
 
-export const 如动态组装结果原子 = atom(async (get) => {
-  const 拼音分析结果 = await get(拼音分析结果原子);
-  const 如字形分析结果 = await get(如动态字形分析结果原子);
+export const 如动态组装结果原子 = atom((get) => {
+  const 拼音分析结果 = get(拼音分析结果原子);
+  const 如字形分析结果 = get(如动态字形分析结果原子);
   if (!如字形分析结果.ok) return 如字形分析结果;
   const 字形分析结果 = 如字形分析结果.value;
-  const config = await get(组装配置原子);
+  const config = get(组装配置原子);
   if (!config.ok) return config;
   const result = 动态组装(config.value, 拼音分析结果, 字形分析结果);
   return result;
 });
 
-export const 优先简码映射原子 = atom(async (get) => {
-  const 原始字库 = await get(原始字库原子);
+export const 优先简码映射原子 = atom((get) => {
+  const 字库 = get(原始字库原子);
   const 优先简码列表 = get(优先简码原子);
   const map = new Map<string, number>();
   for (const { word, sources, level } of 优先简码列表) {
     const chars: 字符[] = [];
     for (const char of word) {
-      const charInstance = 原始字库.校验(char);
+      const charInstance = 字库.校验(char);
       if (!charInstance) {
         console.warn(`优先简码中的字符不在字库中: ${char}`);
         continue;
@@ -549,17 +534,17 @@ export const 优先简码映射原子 = atom(async (get) => {
   return map;
 });
 
-export const 如组装结果与优先简码原子 = atom(async (get) => {
-  const 如组装结果 = await get(如组装结果原子);
+export const 如组装结果与优先简码原子 = atom((get) => {
+  const 如组装结果 = get(如组装结果原子);
   if (!如组装结果.ok) return 如组装结果;
-  const 优先简码映射 = await get(优先简码映射原子);
+  const 优先简码映射 = get(优先简码映射原子);
   return ok(添加优先简码(如组装结果.value, 优先简码映射));
 });
 
-export const 如动态组装结果与优先简码原子 = atom(async (get) => {
-  const 如动态组装结果 = await get(如动态组装结果原子);
+export const 如动态组装结果与优先简码原子 = atom((get) => {
+  const 如动态组装结果 = get(如动态组装结果原子);
   if (!如动态组装结果.ok) return 如动态组装结果;
-  const 优先简码映射 = await get(优先简码映射原子);
+  const 优先简码映射 = get(优先简码映射原子);
   return ok(添加优先简码(如动态组装结果.value, 优先简码映射));
 });
 
@@ -570,9 +555,9 @@ type 序列化组装结果 = {
   简码长度?: number;
 };
 
-export const 如导出组装结果原子 = atom(async (get) => {
+export const 如导出组装结果原子 = atom((get) => {
   const 序列化词列表: 序列化组装结果[] = [];
-  const 词列表 = await get(如组装结果与优先简码原子);
+  const 词列表 = get(如组装结果与优先简码原子);
   if (!词列表.ok) return 词列表;
   词列表.value.forEach((x) => {
     const { 元素序列, ...rest } = x;
@@ -587,9 +572,9 @@ export const 如导出组装结果原子 = atom(async (get) => {
   return ok(序列化词列表);
 });
 
-export const 如导出动态组装结果原子 = atom(async (get) => {
+export const 如导出动态组装结果原子 = atom((get) => {
   const 序列化词列表: 序列化组装结果[] = [];
-  const 词列表 = await get(如动态组装结果与优先简码原子);
+  const 词列表 = get(如动态组装结果与优先简码原子);
   if (!词列表.ok) return 词列表;
   词列表.value.forEach((x) => {
     const { 元素序列, ...rest } = x;
@@ -605,26 +590,25 @@ export const 如导出动态组装结果原子 = atom(async (get) => {
   return ok(序列化词列表);
 });
 
-export const 如前端输入原子 = atom(async (get) => {
+export const 如前端输入原子 = atom((get) => {
   const 配置 = get(配置原子);
   const 动态分析 = get(动态分析原子);
   const 序列化词列表 = 动态分析
-    ? await get(如导出动态组装结果原子)
-    : await get(如导出组装结果原子);
+    ? get(如导出动态组装结果原子)
+    : get(如导出组装结果原子);
   if (!序列化词列表.ok) return 序列化词列表;
 
   return ok({
     配置,
     词列表: 序列化词列表.value,
-    原始键位分布信息:
-      get(用户键位分布目标原子) ?? (await get(默认键位分布目标原子)),
-    原始当量信息: get(用户当量映射原子) ?? (await get(默认当量原子)),
+    原始键位分布信息: get(用户键位分布目标原子) ?? get(默认键位分布目标原子),
+    原始当量信息: get(用户当量映射原子) ?? get(默认当量原子),
   });
 });
 
 export const 如编码结果原子 = atom(async (get) => {
   const 默认目标 = get(默认目标原子);
-  const 如前端输入 = await get(如前端输入原子);
+  const 如前端输入 = get(如前端输入原子);
   if (!如前端输入.ok) return 如前端输入;
   const result = await thread.spawn<[编码结果, Metric]>("encode", [
     如前端输入.value,
@@ -636,7 +620,7 @@ export const 如编码结果原子 = atom(async (get) => {
 export interface 联合条目 extends 组装条目, Omit<编码条目, "词"> {}
 
 export const 联合结果原子 = atom(async (get) => {
-  const 如组装结果 = await get(如组装结果原子);
+  const 如组装结果 = get(如组装结果原子);
   if (!如组装结果.ok) return 如组装结果;
   const 如编码结果 = await get(如编码结果原子);
   if (!如编码结果.ok) return 如编码结果;

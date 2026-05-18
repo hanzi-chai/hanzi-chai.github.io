@@ -519,7 +519,11 @@ export function 线性化决策(m: 强类型决策): Result<Map<元素, string>,
 }
 
 export function 获取所有被归并元素(mapping: 强类型决策, name: 元素) {
-  const visit = (parent: 元素, name: 元素, output: any[]) => {
+  const visit = (
+    parent: 元素,
+    name: 元素,
+    output: { from: 元素; to: 元素 }[],
+  ) => {
     output.push({ from: name, to: parent });
     const children = [...mapping]
       .filter(([, to]) => 是强类型归并(to) && to.element === name)

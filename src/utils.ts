@@ -172,7 +172,7 @@ export class 字符过滤器 {
       result &&= 笔顺列表.some(s => this.sequenceRegex!.test(s));
     }
     if (unicode) {
-      let hex_str = 汉字.十六进制();
+      let hex_str = 汉字.toNumber().toString(16);
       let dec_str = 汉字.toNumber().toString(10);
       result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
     }

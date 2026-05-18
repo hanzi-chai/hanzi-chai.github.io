@@ -1,9 +1,8 @@
 import init, { Web } from "libchai";
-import { 组装, 字库, 动态组装 } from "hanzi-chai";
 import axios from "axios";
 
 export interface WorkerInput {
-  type: "sync" | "encode" | "evaluate" | "optimize" | "analysis" | "dynamic_analysis" | "assembly" | "dynamic_assembly";
+  type: "sync" | "encode" | "evaluate" | "optimize";
   data: any;
 }
 
@@ -82,22 +81,6 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
   let result: any;
   try {
     switch (event.data.type) {
-      case "analysis":
-        result = new 字库(data[0]).分析(data[1], data[2], data[3]);
-        port.postMessage({ type: "success", result });
-        break;
-      case "dynamic_analysis":
-        result = new 字库(data[0]).动态分析(data[1], data[2], data[3]);
-        port.postMessage({ type: "success", result });
-        break;
-      case "assembly":
-        result = 组装(data[0], data[1], data[2]);
-        port.postMessage({ type: "success", result });
-        break;
-      case "dynamic_assembly":
-        result = 动态组装(data[0], data[1], data[2]);
-        port.postMessage({ type: "success", result });
-        break;
       case "encode":
         if (import.meta.env.MODE === "CLIENT") {
           await apiCall("sync", data[0]);

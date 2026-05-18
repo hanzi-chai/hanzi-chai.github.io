@@ -1,31 +1,32 @@
-import React, { useState } from "react";
-import * as A from "antd";
+import { Button, Drawer } from "antd";
+import React, { Suspense, useState } from "react";
+
+const Content = React.lazy(() => import("./changelog.mdx"));
 
 //#region ChangelogDrawer default component
 export type ChangelogDrawerProps = {};
 export default function ChangelogDrawer(_props: ChangelogDrawerProps) {
-  const Content = React.lazy(() => import("./changelog.mdx"));
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <A.Button type="link" size="small" onClick={() => setOpen(true)}>
+      <Button type="link" size="small" onClick={() => setOpen(true)}>
         更新历史
-      </A.Button>
-      <A.Drawer
+      </Button>
+      <Drawer
         title="更新历史"
         onClose={() => setOpen(false)}
         closable
-        destroyOnClose
+        destroyOnHidden
         placement="right"
         open={open}
       >
-        <React.Suspense fallback="Loading...">
+        <Suspense fallback="Loading...">
           <div className="prose">
             <Content />
           </div>
-        </React.Suspense>
-      </A.Drawer>
+        </Suspense>
+      </Drawer>
     </>
   );
 }

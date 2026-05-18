@@ -15,6 +15,7 @@ import {
   Flex,
   Layout,
   Menu,
+  Skeleton,
   Tooltip,
   Typography,
 } from "antd";
@@ -22,7 +23,7 @@ import { Suspense, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useAtomValue, 基本信息原子 } from "~/atoms";
 import ConfigManager from "~/components/ConfigManager";
-import CusSpin from "~/components/CustomSpin";
+import { isDataReady, 预加载 } from "~/preload";
 import { examples } from "~/templates";
 import { getCurrentId } from "~/utils";
 
@@ -53,12 +54,27 @@ const Header = ({ isCollapsed: _ }: { isCollapsed: boolean }) => {
   );
 };
 
-function EditorLayout() {
+let _preloadPromise: Promise<void> | null = null;
+
+function PreloadGuard({ children }: { children: React.ReactNode }) {
+  if (!isDataReady()) {
+    _preloadPromise ??= 预加载();
+    throw _preloadPromise;
+  }
+  return <>{children}</>;
+}
+
+export default function EditorLayout() {
+  const id = getCurrentId();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const relativePath = pathname.split("/").slice(2).join("/");
-
   const [isCollapsed, setCollapsed] = useState(false);
+
+  if (!(id in localStorage || id in examples)) {
+    return <Empty description="无方案数据" />;
+  }
+
   return (
     <Layout hasSider>
       <Layout.Sider
@@ -102,25 +118,13 @@ function EditorLayout() {
       <Layout className="h-screen">
         <Header isCollapsed={isCollapsed} />
         <Layout.Content className={`ml-12 py-2.5 px-6 h-full overflow-y-auto`}>
-          <Suspense fallback={<CusSpin tip="加载标签页…" />}>
-            <Outlet />
+          <Suspense fallback={<Skeleton active />}>
+            <PreloadGuard>
+              <Outlet />
+            </PreloadGuard>
           </Suspense>
         </Layout.Content>
       </Layout>
     </Layout>
-  );
-}
-
-export default function Contextualized() {
-  const id = getCurrentId();
-
-  if (!(id in localStorage || id in examples)) {
-    return <Empty description="无方案数据" />;
-  }
-
-  return (
-    <Suspense fallback={<CusSpin tip="加载JSON数据…" />}>
-      <EditorLayout />
-    </Suspense>
   );
 }

@@ -5,8 +5,7 @@ import {
   createHashRouter,
   RouterProvider,
 } from "react-router";
-import { ConfigProvider } from "antd";
-import CusSpin from "~/components/CustomSpin";
+import { ConfigProvider, Skeleton } from "antd";
 import ErrorResult from "./components/Error";
 import AutoRoute from "~react-pages";
 import { useHashRouter } from "./utils";
@@ -35,7 +34,7 @@ createRoot(document.getElementById("root")!).render(
         },
       }}
     >
-      <Suspense fallback={<CusSpin tip="加载APP…" />}>
+      <Suspense fallback={<Skeleton active />}>
         <RouterProvider router={router} />
       </Suspense>
     </ConfigProvider>

@@ -6,6 +6,7 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 import {
+  Button,
   Flex,
   Form,
   Popover,
@@ -28,10 +29,12 @@ import {
   字母表原子,
   最大码长原子,
 } from "~/atoms";
-import { InlineRender } from "~/components/ComponentForm";
 import KeySelect from "~/components/KeySelect";
-import { MyProFormList } from "~/components/ResultSummary";
-import { CodePositionDisplay } from "~/components/Utils";
+import {
+  CodePositionDisplay,
+  DeleteButton,
+  PlusButton,
+} from "~/components/Utils";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
 
 const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
@@ -337,52 +340,70 @@ const MarginalFirstOrderDuplication = () => {
     if (items.length > 1) items.map((x) => szAfter.add(x));
   });
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
+  const defaultItem = (): 强类型元素位或编码 => ({
+    element: 笔画列表[0]!,
+    index: 0,
+  });
   return (
     <>
       <Typography.Title level={3}>边际一阶重码计算</Typography.Title>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
-      <ProForm<{ content: { content: 强类型元素位或编码[] }[] }>
-        layout="horizontal"
-        submitter={false}
-        initialValues={{ content: 合并组列表.map((x) => ({ content: x })) }}
-        onValuesChange={async (_, { content }) =>
-          设置合并组列表(content.map((x) => x.content))
-        }
-      >
-        <MyProFormList
-          name="content"
-          creatorButtonProps={{
-            creatorButtonText: "添加一组合并",
-            icon: false,
-          }}
-          creatorRecord={() => ({
-            content: [
-              { element: 笔画列表[0]!, index: 0 } satisfies 强类型元素位或编码,
-            ],
-          })}
+      <Flex vertical gap="small">
+        {合并组列表.map((group, i) => (
+          <Flex key={i} gap="small" align="center" wrap="wrap">
+            {group.map((item, j) => (
+              <Flex key={j} align="center" gap="small">
+                <KeySelect
+                  allowElements
+                  value={item}
+                  onChange={(v) =>
+                    设置合并组列表(
+                      合并组列表.map((g, gi) =>
+                        gi === i
+                          ? g.map((c, ci) =>
+                              ci === j ? (v as 强类型元素位或编码) : c,
+                            )
+                          : g,
+                      ),
+                    )
+                  }
+                />
+                <DeleteButton
+                  onClick={() =>
+                    设置合并组列表(
+                      合并组列表.map((g, gi) =>
+                        gi === i ? g.filter((_, ci) => ci !== j) : g,
+                      ),
+                    )
+                  }
+                />
+              </Flex>
+            ))}
+            <PlusButton
+              onClick={() =>
+                设置合并组列表(
+                  合并组列表.map((g, gi) =>
+                    gi === i ? [...g, defaultItem()] : g,
+                  ),
+                )
+              }
+            />
+            <Button
+              size="small"
+              onClick={() =>
+                设置合并组列表(合并组列表.filter((_, gi) => gi !== i))
+              }
+            >
+              删除组
+            </Button>
+          </Flex>
+        ))}
+        <Button
+          onClick={() => 设置合并组列表([...合并组列表, [defaultItem()]])}
         >
-          <MyProFormList
-            name="content"
-            creatorButtonProps={{
-              creatorButtonText: "添加",
-              icon: false,
-              style: { width: "unset" },
-            }}
-            itemRender={InlineRender}
-            creatorRecord={() =>
-              ({ element: 笔画列表[0]!, index: 0 }) satisfies 强类型元素位或编码
-            }
-            copyIconProps={false}
-          >
-            {(meta) => (
-              <Form.Item noStyle {...meta}>
-                {/* @ts-ignore */}
-                <KeySelect allowElements />
-              </Form.Item>
-            )}
-          </MyProFormList>
-        </MyProFormList>
-      </ProForm>
+          添加一组合并
+        </Button>
+      </Flex>
       <Typography.Paragraph>
         将增加重码：
         {[...szAfter].filter((x) => !szBefore.has(x)).join("、")}

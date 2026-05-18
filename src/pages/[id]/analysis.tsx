@@ -9,13 +9,13 @@ import {
   Radio,
   Row,
   Select,
-  Skeleton,
   Space,
   Statistic,
   Switch,
 } from "antd";
 import type { CollapseProps } from "antd/lib";
 import {
+  type 二笔,
   优先表,
   type 冰雪飞花复合体分析,
   type 动态字形分析结果,
@@ -29,7 +29,7 @@ import {
   默认分类器,
   type 默认部件分析,
 } from "hanzi-chai";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import {
   useAtom,
   useAtomValue,
@@ -37,7 +37,6 @@ import {
   分析配置原子,
   别名显示原子,
   动态分析原子,
-  动态自定义拆分原子,
   原始字库原子,
   复合体分析器原子,
   如动态字形分析结果原子,
@@ -45,8 +44,8 @@ import {
   如笔顺映射原子,
   强类型决策原子,
   强类型决策空间原子,
+  强类型自定义分析原子,
   汉字集合原子,
-  自定义拆分原子,
   部件分析器原子,
 } from "~/atoms";
 import CharacterQuery from "~/components/CharacterQuery";
@@ -156,31 +155,39 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(别名显示原子);
-  const 自定义拆分 = useAtomValue(自定义拆分原子);
-  const 动态自定义拆分 = useAtomValue(动态自定义拆分原子);
+  const { 自定义分析映射, 动态自定义分析映射 } = useAtomValueUnwrapped(
+    强类型自定义分析原子,
+  );
   const 全部自定义字符 = new Set([
-    ...Object.keys(自定义拆分),
-    ...Object.keys(动态自定义拆分),
+    ...自定义分析映射.keys(),
+    ...动态自定义分析映射.keys(),
   ]);
   const 决策 = useAtomValue(强类型决策原子);
   const [过滤必要字根, 设置过滤必要字根] = useState(true);
   const 过滤器 = new 字符过滤器(filter, 笔顺映射);
   const 决策空间 = useAtomValue(强类型决策空间原子);
   const [只显示自定义, 设置只显示自定义] = useState(false);
-  const 是必要字根 = (e: 字符) =>
-    决策.get(e) && (决策空间.get(e) ?? []).every((x) => x.value !== null);
+  const 是必要字根 = (e: 笔画 | 二笔 | 字符) => {
+    return (
+      决策.get(e) && (决策空间.get(e) ?? []).every((x) => x.value !== null)
+    );
+  };
   const 部件分析内容: (NonNullable<CollapseProps["items"]>[number] & {
     sequence: number[];
   })[] = [];
   const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
   for (const [字, 分析列表] of 分析结果) {
     const 字符串 = 字.获取名称();
-    if (只显示自定义 && !自定义拆分[字符串] && !动态自定义拆分[字符串])
-      continue;
     if (!过滤器.过滤(字, 原始字库.查询(字)!)) continue;
     if (过滤必要字根 && 是必要字根(字)) continue;
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
+        if (
+          只显示自定义 &&
+          !自定义分析映射.get(分析.部件) &&
+          !动态自定义分析映射.get(分析.部件)
+        )
+          continue;
         const r = 分析 as 默认部件分析 | 基本部件分析;
         if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 笔画)
           continue;
@@ -259,20 +266,20 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         {动态分析 && <ExportDynamicAnalysis />}
         <Button
           onClick={() => {
-            const 全部自定义拆分 = { ...动态自定义拆分 };
-            for (const [k, v] of Object.entries(自定义拆分)) {
-              if (全部自定义拆分[k] === undefined) {
-                全部自定义拆分[k] = [v];
+            const 全部自定义拆分 = new Map(动态自定义分析映射);
+            for (const [k, v] of 自定义分析映射) {
+              if (全部自定义拆分.get(k) === undefined) {
+                全部自定义拆分.set(k, [v]);
               }
             }
-            for (const [部件, 字根序列列表] of Object.entries(全部自定义拆分)) {
+            for (const [部件, 字根序列列表] of 全部自定义拆分) {
               const last = 字根序列列表[字根序列列表.length - 1];
               if (!last) continue;
-              if (last.some((x) => !是必要字根(原始字库.校验(x)!.character))) {
+              if (last.some((x) => !是必要字根(x))) {
                 notification.warning({
                   message: "存在不合法的自定义拆分",
-                  description: `部件 ${display(原始字库.校验(部件)!.character)} 的自定义拆分中包含非必要字根 ${last
-                    .filter((x) => !是必要字根(原始字库.校验(x)!.character))
+                  description: `部件 ${display(部件.字符)} 的自定义拆分中包含非必要字根 ${last
+                    .filter((x) => !是必要字根(x))
                     .join("、")}，请修改后重试`,
                 });
                 return;
@@ -355,9 +362,7 @@ export default function Analysis() {
         <ConfigureRules />
       </Flex>
       <CharacterQuery setFilter={setFilter} />
-      <Suspense fallback={<Skeleton active />}>
-        <AnalysisResults filter={filter} />
-      </Suspense>
+      <AnalysisResults filter={filter} />
     </Flex>
   );
 }

@@ -76,6 +76,8 @@ interface 字形分析基本配置 {
   分析配置: 分析配置;
   决策: 强类型决策;
   决策空间: 强类型决策空间;
+  自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[]>;
+  动态自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[][]>;
   字形来源列表: string[];
 }
 
@@ -213,7 +215,8 @@ class 字库 {
     分析配置: 分析配置,
     决策: 强类型决策,
     决策空间: 强类型决策空间,
-    原始字库: 原始字库,
+    自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[]>,
+    动态自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[][]>,
   ): Result<字形分析配置, Error> {
     const 字根决策 = new Map<字根, 强类型安排>();
     const 字根决策空间 = new Map<字根, 强类型安排描述[]>();
@@ -257,42 +260,42 @@ class 字库 {
         }
       }
     }
-    const 字根名称映射 = new Map(
-      [...字根决策.keys()].map((x) => [x.获取名称(), x] as const),
-    );
-    const 自定义分析映射: Map<部件, 字根[]> = new Map();
-    const 动态自定义分析映射: Map<部件, 字根[][]> = new Map();
-    for (const [key, value] of Object.entries(分析配置.customize ?? {})) {
-      const 部件 = this.找到部件(key, 原始字库);
-      if (!部件) continue;
+    const 全部字根 = [...字根决策空间.keys()];
+    const 新自定义分析映射 = new Map<部件, 字根[]>();
+    const 新动态自定义分析映射 = new Map<部件, 字根[][]>();
+    for (const [部件实例, 元素列表] of 自定义分析映射) {
       const 字根列表: 字根[] = [];
-      for (const 字根名称 of value) {
-        const 字根 = 字根名称映射.get(字根名称);
-        if (字根) 字根列表.push(字根);
-      }
-      自定义分析映射.set(部件, 字根列表);
-    }
-    for (const [key, value] of Object.entries(
-      分析配置.dynamic_customize ?? {},
-    )) {
-      const 部件 = this.找到部件(key, 原始字库);
-      if (!部件) continue;
-      const 字根列表列表: 字根[][] = [];
-      for (const 字根名称列表 of value) {
-        const 字根列表: 字根[] = [];
-        for (const 字根名称 of 字根名称列表) {
-          const 字根 = 字根名称映射.get(字根名称);
+      for (const 元素 of 元素列表) {
+        if (元素 instanceof 笔画 || 元素 instanceof 二笔) 字根列表.push(元素);
+        else {
+          const 字根 = 全部字根.find(
+            (x) => x instanceof 部件 && x.字符 === 元素,
+          );
           if (字根) 字根列表.push(字根);
+        }
+      }
+      新自定义分析映射.set(部件实例, 字根列表);
+    }
+    for (const [部件实例, 元素列表列表] of 动态自定义分析映射) {
+      const 字根列表列表: 字根[][] = [];
+      for (const 元素列表 of 元素列表列表) {
+        const 字根列表: 字根[] = [];
+        for (const 元素 of 元素列表) {
+          if (元素 instanceof 笔画 || 元素 instanceof 二笔) 字根列表.push(元素);
+          else {
+            const 字根 = 全部字根.find(
+              (x) => x instanceof 部件 && x.字符 === 元素,
+            );
+            if (字根) 字根列表.push(字根);
+          }
         }
         字根列表列表.push(字根列表);
       }
-      动态自定义分析映射.set(部件, 字根列表列表);
+      新动态自定义分析映射.set(部件实例, 字根列表列表);
     }
-    for (const [部件, 字根列表] of 自定义分析映射) {
-      if (!动态自定义分析映射.has(部件)) {
-        动态自定义分析映射.set(部件, [字根列表]);
-      }
-    }
+    const 字根名称映射 = new Map(
+      [...字根决策.keys()].map((x) => [x.获取名称(), x] as const),
+    );
     const 筛选器列表: [string, 筛选器][] = [];
     for (const name of 分析配置.selector ?? 默认筛选器列表) {
       const 筛选器 = 获取注册表().创建筛选器(name);
@@ -324,8 +327,8 @@ class 字库 {
       可选字根,
       部件字根列表,
       复合体字根映射,
-      自定义分析映射,
-      动态自定义分析映射,
+      自定义分析映射: 新自定义分析映射,
+      动态自定义分析映射: 新动态自定义分析映射,
       强字根列表,
       弱字根列表,
     });
@@ -385,9 +388,16 @@ class 字库 {
     );
   }
 
-  准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>, 原始字库: 原始字库) {
-    const { 分析配置, 决策, 决策空间 } = base;
-    const 如配置 = this.准备字形分析配置(分析配置, 决策, 决策空间, 原始字库);
+  准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>) {
+    const { 分析配置, 决策, 决策空间, 自定义分析映射, 动态自定义分析映射 } =
+      base;
+    const 如配置 = this.准备字形分析配置(
+      分析配置,
+      决策,
+      决策空间,
+      自定义分析映射,
+      动态自定义分析映射,
+    );
     if (!如配置.ok) return 如配置;
     const 配置 = 如配置.value;
     const 待分析部件集合 = this.获取待分析部件(汉字集合);
@@ -417,9 +427,8 @@ class 字库 {
   分析(
     base: 字形分析基本配置,
     汉字集合: Set<字符>,
-    原始字库: 原始字库,
   ): Result<字形分析结果, Error> {
-    const 分析配置或错误 = this.准备分析(base, 汉字集合, 原始字库);
+    const 分析配置或错误 = this.准备分析(base, 汉字集合);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
     const 部件分析结果 = new Map<部件, 基本部件分析>();
@@ -473,9 +482,8 @@ class 字库 {
   动态分析(
     base: 字形分析基本配置,
     汉字集合: Set<字符>,
-    原始字库: 原始字库,
   ): Result<动态字形分析结果, Error> {
-    const 分析配置或错误 = this.准备分析(base, 汉字集合, 原始字库);
+    const 分析配置或错误 = this.准备分析(base, 汉字集合);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
     const 动态部件分析结果 = new Map<部件, 优先表<基本部件分析>>();
