@@ -368,19 +368,21 @@ export const 强类型决策空间原子 = atom(
   },
 );
 
-export const 强类型线性化决策原子 = atom(async (get) => {
-  const 决策 = await get(强类型决策与决策空间原子);
+export const 强类型线性化决策原子 = atom((get) => {
+  const 决策 = get(强类型决策与决策空间同步原子);
+  if (!决策) return ok(new Map<元素, string>());
   if (!决策.ok) return 决策;
   return 线性化决策(决策.value.决策);
 });
 
-export const 强类型翻转决策原子 = atom(async (get) => {
-  const 决策与决策空间 = await get(强类型决策与决策空间原子);
-  const 线性化决策 = await get(强类型线性化决策原子);
+export const 强类型翻转决策原子 = atom((get) => {
+  const 翻转决策 = new Map<string, { 元素: 元素; 安排: 强类型非归并安排 }[]>();
+  const 决策与决策空间 = get(强类型决策与决策空间同步原子);
+  if (!决策与决策空间) return ok(翻转决策);
+  const 线性化决策 = get(强类型线性化决策原子);
   const 字母表 = get(字母表原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
   if (!线性化决策.ok) return 线性化决策;
-  const 翻转决策 = new Map<string, { 元素: 元素; 安排: 强类型非归并安排 }[]>();
   // 要求决策的第一码必须在字母表中
   for (const 字母 of [...字母表]) {
     翻转决策.set(字母, []);

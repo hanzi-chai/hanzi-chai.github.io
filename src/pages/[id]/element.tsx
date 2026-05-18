@@ -1,4 +1,5 @@
-import { Flex } from "antd";
+import { Flex, Skeleton } from "antd";
+import { Suspense } from "react";
 import ElementPicker from "~/components/ElementPicker";
 import Mapping from "~/components/Mapping";
 import { useChaifenTitle } from "~/utils";
@@ -7,8 +8,10 @@ export default function Element() {
   useChaifenTitle("元素");
   return (
     <Flex gap="large">
-      <ElementPicker />
-      <Mapping />
+      <Suspense fallback={<Skeleton />}>
+        <ElementPicker />
+        <Mapping />
+      </Suspense>
     </Flex>
   );
 }

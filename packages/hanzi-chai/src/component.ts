@@ -183,9 +183,9 @@ class 部件 {
         const 新部分和 = 部分和 + 字根;
         const 新逆向累积和 = 逆向累积和.map((x) => x + 字根);
         const 新拆分方式 = 拆分方式.concat(字根);
-        if (新逆向累积和.some((x) => 区间和.has(x))) {
-          continue;
-        }
+        // if (新逆向累积和.some((x) => 区间和.has(x))) {
+        //   continue;
+        // }
         新逆向累积和.push(字根);
         if (新部分和 === 全部二进制) {
           const res = 新拆分方式.map((v) => ({
@@ -758,7 +758,6 @@ interface 冰雪飞花部件分析 extends 默认部件分析 {
 }
 
 class 冰雪飞花分析器 {
-  static instance: 冰雪飞花分析器;
   public 可选字根 = new Set<字根>();
   public 可选字根与必要一般字根 = new Set<字根>();
   public 小集合 = /[eiuoav;/]/;
@@ -827,10 +826,7 @@ class 冰雪飞花分析器 {
   }
 
   static 创建(配置: 字形分析配置): 冰雪飞花分析器 {
-    if (!冰雪飞花分析器.instance) {
-      冰雪飞花分析器.instance = new 冰雪飞花分析器(配置);
-    }
-    return 冰雪飞花分析器.instance;
+    return new 冰雪飞花分析器(配置);
   }
 }
 
