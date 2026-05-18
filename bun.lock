@@ -20,7 +20,7 @@
         "axios": "^1.13.4",
         "deep-object-diff": "^1.1.9",
         "hanzi-chai": "*",
-        "jotai": "^2.17.0",
+        "jotai": "^2.20.0",
         "jotai-family": "^1.0.1",
         "jotai-history": "^0.5.0",
         "jotai-location": "^0.6.2",
@@ -58,7 +58,7 @@
         "@types/react-dom": "18",
         "@vitejs/plugin-react-swc": "^4.2.2",
         "fs-extra": "^11.3.3",
-        "jotai-devtools": "^0.13.0",
+        "jotai-devtools": "^0.14.0",
         "less": "^4.5.1",
         "pre-commit": "^2.0.0",
         "rollup-plugin-visualizer": "^7.0.1",
@@ -72,7 +72,7 @@
     },
     "packages/hanzi-chai": {
       "name": "hanzi-chai",
-      "version": "0.3.8",
+      "version": "0.3.9",
       "dependencies": {
         "d3-array": "^3.0.2",
         "js-yaml": "^4.1.0",
@@ -1103,9 +1103,9 @@
 
     "jiti": ["jiti@2.6.1", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ=="],
 
-    "jotai": ["jotai@2.19.1", "", { "peerDependencies": { "@babel/core": ">=7.0.0", "@babel/template": ">=7.0.0", "@types/react": ">=17.0.0", "react": ">=17.0.0" }, "optionalPeers": ["@babel/core", "@babel/template", "@types/react", "react"] }, "sha512-sqm9lVZiqBHZH8aSRk32DSiZDHY3yUIlulXYn9GQj7/LvoUdYXSMti7ZPJGo+6zjzKFt5a25k/I6iBCi43PJcw=="],
+    "jotai": ["jotai@2.20.0", "", { "peerDependencies": { "@babel/core": ">=7.0.0", "@babel/template": ">=7.0.0", "@types/react": ">=17.0.0", "react": ">=17.0.0" }, "optionalPeers": ["@babel/core", "@babel/template", "@types/react", "react"] }, "sha512-b5GAqgmXmXzB4WPaTH26ppk9Sl7AA9WSQX7yfdM+gJ1rFROiWcVbi97gFuN/yVCojOcbcvop2sfLL+fjxW0JVg=="],
 
-    "jotai-devtools": ["jotai-devtools@0.13.1", "", { "dependencies": { "@mantine/code-highlight": "7.17.4", "@mantine/core": "7.17.4", "@mantine/hooks": "7.17.4", "@redux-devtools/extension": "^3.3.0", "clsx": "^2.1.1", "javascript-stringify": "^2.1.0", "jsondiffpatch": "^0.5.0", "react-base16-styling": "^0.9.1", "react-error-boundary": "^5.0.0", "react-json-tree": "^0.18.0", "react-resizable-panels": "2.1.7" }, "peerDependencies": { "jotai": ">=2.14.0", "react": ">=17.0.0" } }, "sha512-nd7W5+Pcf/W6d9wNVX+ao4qkjdLUBTbgSXIeQ9+SEvQ79dU2qrqZ/3TkKWC9Ie7gss+En6mxkU70iuuLJS2cMg=="],
+    "jotai-devtools": ["jotai-devtools@0.14.0", "", { "dependencies": { "@mantine/code-highlight": "7.17.4", "@mantine/core": "7.17.4", "@mantine/hooks": "7.17.4", "@redux-devtools/extension": "^3.3.0", "clsx": "^2.1.1", "javascript-stringify": "^2.1.0", "jsondiffpatch": "^0.5.0", "react-base16-styling": "^0.9.1", "react-error-boundary": "^5.0.0", "react-json-tree": "^0.18.0", "react-resizable-panels": "2.1.7" }, "peerDependencies": { "jotai": ">=2.20.0", "react": ">=17.0.0" } }, "sha512-vtUE3hlcZJeBpaziPMu07jB0kWu5MWUsGAsYBUUFBbTcE8Tzumb2+ZV6lPrIgEAJmVg5ZD1vf73URDzdgoKZaw=="],
 
     "jotai-family": ["jotai-family@1.0.1", "", { "peerDependencies": { "jotai": ">=2.9.0" } }, "sha512-Zb/79GNDhC/z82R+6qTTpeKW4l4H6ZCApfF5W8G4SH37E4mhbysU7r8DkP0KX94hWvjB/6lt/97nSr3wB+64Zg=="],
 

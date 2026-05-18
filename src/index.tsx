@@ -9,7 +9,8 @@ import { ConfigProvider, Skeleton } from "antd";
 import ErrorResult from "./components/Error";
 import AutoRoute from "~react-pages";
 import { useHashRouter } from "./utils";
-
+import { DevTools } from "jotai-devtools";
+import 'jotai-devtools/styles.css';
 import "./index.css";
 
 const idpath = AutoRoute.find((v) => v.path === ":id");
@@ -35,6 +36,7 @@ createRoot(document.getElementById("root")!).render(
       }}
     >
       <Suspense fallback={<Skeleton active />}>
+        <DevTools />
         <RouterProvider router={router} />
       </Suspense>
     </ConfigProvider>

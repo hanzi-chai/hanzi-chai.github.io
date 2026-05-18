@@ -20,7 +20,6 @@ import {
   type 强类型非空安排,
   是强类型归并,
   是部件,
-  获取所有被归并元素,
   读取表格,
   默认分类器,
 } from "hanzi-chai";
@@ -35,6 +34,7 @@ import {
   useMapRemoveAtom,
   useSetAtom,
   全部合法元素原子,
+  决策图原子,
   别名显示原子,
   原始字库原子,
   基本信息原子,
@@ -69,7 +69,8 @@ export const ElementDetail = ({
   const addMapping = useMapAddAtom(强类型决策原子);
   const removeMapping = useMapRemoveAtom(强类型决策原子);
   const mapping = useAtomValue(强类型决策原子);
-  const affiliates = 获取所有被归并元素(mapping, element);
+  const 决策图 = useAtomValueUnwrapped(决策图原子);
+  const affiliates = 决策图.获取被归并元素(element);
   const alphabet = useAtomValue(字母表原子);
   const gf0014 = useAtomValue(GF0014映射原子);
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
@@ -192,8 +193,8 @@ export const AdjustableElementGroup = ({
   value: 强类型非归并安排;
   displayMode?: boolean;
 }) => {
-  const mapping = useAtomValue(强类型决策原子);
-  const affiliates = 获取所有被归并元素(mapping, element);
+  const 决策图 = useAtomValueUnwrapped(决策图原子);
+  const affiliates = 决策图.获取被归并元素(element);
   const currentElement = useAtomValue(当前元素原子);
   const mappingSpace = useAtomValue(强类型决策空间原子);
   const isOptional = (e: 元素) =>

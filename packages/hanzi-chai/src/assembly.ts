@@ -101,6 +101,7 @@ class 组词器 {
 interface 组装配置 {
   决策: 强类型决策;
   决策空间: 强类型决策空间;
+  线性化决策: Map<元素, string>;
   源映射: Record<string, 源节点配置>;
   条件映射: Record<string, 条件节点配置>;
   构词规则列表: 构词规则[];
@@ -173,6 +174,7 @@ class 默认组装器 extends 按规则构词 {
     this.取码器 = new 取码器(
       this.配置.决策,
       this.配置.决策空间,
+      this.配置.线性化决策,
       this.配置.源映射,
       this.配置.条件映射,
       this.配置.最大码长,

@@ -9,7 +9,6 @@ import {
   type 强类型元素位或编码,
   type 强类型决策,
   type 强类型决策空间,
-  线性化决策,
   计算当前或潜在长度,
 } from "./utils.js";
 
@@ -246,7 +245,6 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
 }
 
 export class 取码器 {
-  private 最终映射: Map<元素, string>;
   private 当前或潜在长度: Map<元素, number>;
   private 谓词表: Record<
     运算符,
@@ -269,20 +267,16 @@ export class 取码器 {
   constructor(
     决策: 强类型决策,
     决策空间: 强类型决策空间,
+    private 线性化决策: Map<元素, string>,
     private sources: Record<string, 源节点配置>,
     private conditions: Record<string, 条件节点配置>,
     private max_length: number,
     private 分类器: 分类器,
   ) {
-    const expanded = 线性化决策(决策);
     const 当前或潜在长度 = 计算当前或潜在长度(决策, 决策空间);
-    if (!expanded.ok) {
-      throw new Error(`键盘映射展开失败: ${expanded.error}`);
-    }
     if (!当前或潜在长度.ok) {
       throw new Error(`键盘映射长度计算失败: ${当前或潜在长度.error}`);
     }
-    this.最终映射 = expanded.value;
     this.当前或潜在长度 = 当前或潜在长度.value;
   }
 
@@ -393,8 +387,8 @@ export class 取码器 {
     const target = this.寻找(object, result);
     const fn = this.谓词表[operator];
     if ("value" in condition) {
-      return fn(target, condition.value, this.最终映射);
+      return fn(target, condition.value, this.线性化决策);
     }
-    return fn(target, null, this.最终映射);
+    return fn(target, null, this.线性化决策);
   }
 }

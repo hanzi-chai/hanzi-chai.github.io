@@ -4,6 +4,7 @@ import {
   二笔,
   type 元素,
   type 元素位或编码,
+  决策图,
   分析拼音,
   动态组装,
   原始字库,
@@ -27,7 +28,6 @@ import {
   添加优先简码,
   type 码表条目,
   笔画,
-  线性化决策,
   组装,
   type 组装条目,
   type 组装配置,
@@ -309,10 +309,16 @@ export const 强类型决策空间原子 = atom(
   },
 );
 
-export const 强类型线性化决策原子 = atom((get) => {
+export const 决策图原子 = atom((get) => {
   const 决策 = get(强类型决策与决策空间原子);
   if (!决策.ok) return 决策;
-  return 线性化决策(决策.value.决策);
+  return ok(new 决策图(决策.value.决策));
+});
+
+export const 强类型线性化决策原子 = atom((get) => {
+  const 图 = get(决策图原子);
+  if (!图.ok) return 图;
+  return 图.value.线性化();
 });
 
 export const 强类型翻转决策原子 = atom((get) => {
@@ -397,10 +403,14 @@ export const 字形分析配置原子 = atom((get) => {
   const 强类型自定义分析 = get(强类型自定义分析原子);
   if (!强类型自定义分析.ok) return 强类型自定义分析;
   const { 自定义分析映射, 动态自定义分析映射 } = 强类型自定义分析.value;
+  const 如线性化决策 = get(强类型线性化决策原子);
+  if (!如线性化决策.ok) return 如线性化决策;
+  const 线性化决策 = 如线性化决策.value;
   return ok({
     分析配置,
     决策,
     决策空间,
+    线性化决策,
     自定义分析映射,
     动态自定义分析映射,
     字形来源列表,
@@ -437,9 +447,13 @@ export const 组装配置原子 = atom((get) => {
   if (!决策与决策空间.ok) return 决策与决策空间;
   const 分类器 = get(分类器原子);
   const { 决策, 决策空间 } = 决策与决策空间.value;
+  const 如线性化决策 = get(强类型线性化决策原子);
+  if (!如线性化决策.ok) return 如线性化决策;
+  const 线性化决策 = 如线性化决策.value;
   const config: 组装配置 = {
     源映射: get(源映射原子),
     条件映射: get(条件映射原子),
+    线性化决策,
     组装器: get(组装器原子),
     构词规则列表: get(构词配置原子),
     最大码长: get(最大码长原子),
