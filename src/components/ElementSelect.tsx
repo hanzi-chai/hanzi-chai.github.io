@@ -1,5 +1,4 @@
 import { type 元素, 字符, 笔画 } from "hanzi-chai";
-import { useAtomValue } from "jotai";
 import {
   useAtomValueUnwrapped,
   全部合法元素原子,
@@ -21,8 +20,8 @@ export default function ElementSelect(
 ) {
   const { value, onChange, onlyRootsAndStrokes, includeOptional, ...rest } =
     props;
-  const 决策 = useAtomValue(强类型决策原子);
-  const 决策空间 = useAtomValue(强类型决策空间原子);
+  const 决策 = useAtomValueUnwrapped(强类型决策原子);
+  const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   let 全部元素 = [...new Set([...决策.keys(), ...决策空间.keys()])];

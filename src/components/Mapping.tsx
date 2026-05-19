@@ -68,7 +68,7 @@ export const ElementDetail = ({
 }) => {
   const addMapping = useMapAddAtom(强类型决策原子);
   const removeMapping = useMapRemoveAtom(强类型决策原子);
-  const mapping = useAtomValue(强类型决策原子);
+  const mapping = useAtomValueUnwrapped(强类型决策原子);
   const 决策图 = useAtomValueUnwrapped(决策图原子);
   const affiliates = 决策图.获取被归并元素(element);
   const alphabet = useAtomValue(字母表原子);
@@ -196,7 +196,7 @@ export const AdjustableElementGroup = ({
   const 决策图 = useAtomValueUnwrapped(决策图原子);
   const affiliates = 决策图.获取被归并元素(element);
   const currentElement = useAtomValue(当前元素原子);
-  const mappingSpace = useAtomValue(强类型决策空间原子);
+  const mappingSpace = useAtomValueUnwrapped(强类型决策空间原子);
   const isOptional = (e: 元素) =>
     mappingSpace.get(e)?.some((x) => x.value === null) ?? false;
   const rest = value.slice(1);
@@ -327,6 +327,7 @@ const MappingUploader = ({
 }) => {
   const repertoire = useAtomValueUnwrapped(如字库原子);
   const 原始字库 = useAtomValue(原始字库原子);
+  const mapping = useAtomValueUnwrapped(强类型决策原子);
   const setMapping = useSetAtom(强类型决策原子);
   const mappingType = useAtomValue(编码类型原子);
   const alphabet = useAtomValue(字母表原子);
@@ -365,7 +366,7 @@ const MappingUploader = ({
           }
           record.set(ch, value.slice(0, mappingType));
         }
-        setMapping((mapping) => new Map([...mapping, ...record]));
+        setMapping(new Map([...mapping, ...record]));
         setImportResult({
           success: Object.keys(record).length,
           unknownKeys,
@@ -395,7 +396,7 @@ const MappingExporter = () => {
 };
 
 const PUAExporter = () => {
-  const mapping = useAtomValue(强类型决策原子);
+  const mapping = useAtomValueUnwrapped(强类型决策原子);
   const display = useAtomValue(别名显示原子);
   return (
     <Button

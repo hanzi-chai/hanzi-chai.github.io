@@ -12,18 +12,18 @@ import {
   type 原始词典,
   合并拼写运算,
   图形盒子,
-  字符,
+  type 字符,
   序列化强类型决策,
   序列化强类型决策空间,
   type 强类型元素位或编码,
   type 强类型决策,
   type 强类型决策空间,
-  type 强类型非归并安排,
   type 当量映射,
   是强类型归并,
   是部件,
   type 条件,
   构建强类型决策与决策空间,
+  构建强类型自定义分析,
   标准化自定义,
   添加优先简码,
   type 码表条目,
@@ -42,7 +42,6 @@ import {
 import { atom } from "jotai";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
-import type { SetStateAction } from "react";
 import type { Metric } from "~/components/MetricTable";
 import { get预加载数据 } from "~/preload";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
@@ -282,30 +281,23 @@ export const 强类型决策与决策空间原子 = atom((get) => {
   );
 });
 
-const 空决策: 强类型决策 = new Map();
-const 空决策空间: 强类型决策空间 = new Map();
-
 export const 强类型决策原子 = atom(
   (get) => {
     const r = get(强类型决策与决策空间原子);
-    return r.ok ? r.value.决策 : 空决策;
+    return r.ok ? ok(r.value.决策) : r;
   },
-  (get, set, action: SetStateAction<强类型决策>) => {
-    const current = get(强类型决策原子);
-    const next = typeof action === "function" ? action(current) : action;
-    set(决策原子, 序列化强类型决策(next));
+  (_, set, action: 强类型决策) => {
+    set(决策原子, 序列化强类型决策(action));
   },
 );
 
 export const 强类型决策空间原子 = atom(
   (get) => {
     const r = get(强类型决策与决策空间原子);
-    return r.ok ? r.value.决策空间 : 空决策空间;
+    return r.ok ? ok(r.value.决策空间) : r;
   },
-  (get, set, action: SetStateAction<强类型决策空间>) => {
-    const current = get(强类型决策空间原子);
-    const next = typeof action === "function" ? action(current) : action;
-    set(决策空间原子, 序列化强类型决策空间(next));
+  (_, set, action: 强类型决策空间) => {
+    set(决策空间原子, 序列化强类型决策空间(action));
   },
 );
 
@@ -322,22 +314,10 @@ export const 强类型线性化决策原子 = atom((get) => {
 });
 
 export const 强类型翻转决策原子 = atom((get) => {
-  const 翻转决策 = new Map<string, { 元素: 元素; 安排: 强类型非归并安排 }[]>();
-  const 决策与决策空间 = get(强类型决策与决策空间原子);
-  if (!决策与决策空间.ok) return 决策与决策空间;
-  const 线性化决策结果 = get(强类型线性化决策原子);
+  const 决策图结果 = get(决策图原子);
+  if (!决策图结果.ok) return 决策图结果;
   const 字母表 = get(字母表原子);
-  if (!线性化决策结果.ok) return 线性化决策结果;
-  // 要求决策的第一码必须在字母表中
-  for (const 字母 of [...字母表]) {
-    翻转决策.set(字母, []);
-  }
-  for (const [元素, 安排] of 决策与决策空间.value.决策) {
-    if (是强类型归并(安排)) continue;
-    const 第一码 = 线性化决策结果.value.get(元素)?.[0] ?? "a";
-    翻转决策.get(第一码)?.push({ 元素, 安排 });
-  }
-  return ok(翻转决策);
+  return 决策图结果.value.生成翻转决策(字母表);
 });
 
 export const 拼写运算查找表原子 = atom((get) => {
@@ -359,39 +339,16 @@ export const 强类型自定义分析原子 = atom((get) => {
   const 全部合法元素 = get(全部合法元素原子);
   if (!全部合法元素.ok) return 全部合法元素;
   const { 名称映射 } = 全部合法元素.value;
-  const 自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[]> = new Map();
-  const 动态自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[][]> = new Map();
-  for (const [key, value] of Object.entries(get(自定义拆分原子))) {
-    const 部件实例 = 字库.找到部件(key, 原始字库);
-    if (!部件实例) continue;
-    const 字根列表: (字符 | 笔画 | 二笔)[] = [];
-    for (const 字根名称 of value) {
-      const 字根 = 名称映射.get(字根名称);
-      if (字根 instanceof 笔画 || 字根 instanceof 二笔 || 字根 instanceof 字符)
-        字根列表.push(字根);
-    }
-    自定义分析映射.set(部件实例, 字根列表);
-  }
-  for (const [key, value] of Object.entries(get(动态自定义拆分原子))) {
-    const 部件实例 = 字库.找到部件(key, 原始字库);
-    if (!部件实例) continue;
-    const 字根列表列表: (字符 | 笔画 | 二笔)[][] = [];
-    for (const 字根名称列表 of value) {
-      const 字根列表: (字符 | 笔画 | 二笔)[] = [];
-      for (const 字根名称 of 字根名称列表) {
-        const 字根 = 名称映射.get(字根名称);
-        if (
-          字根 instanceof 笔画 ||
-          字根 instanceof 二笔 ||
-          字根 instanceof 字符
-        )
-          字根列表.push(字根);
-      }
-      字根列表列表.push(字根列表);
-    }
-    动态自定义分析映射.set(部件实例, 字根列表列表);
-  }
-  return ok({ 自定义分析映射, 动态自定义分析映射 });
+  const 自定义分析 = get(自定义拆分原子);
+  const 动态自定义拆分 = get(动态自定义拆分原子);
+  const 结果 = 构建强类型自定义分析(
+    字库,
+    原始字库,
+    名称映射,
+    自定义分析,
+    动态自定义拆分,
+  );
+  return ok(结果);
 });
 
 export const 字形分析配置原子 = atom((get) => {

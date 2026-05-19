@@ -52,7 +52,7 @@ export default function KeySelect({
     value: JSON.stringify(x),
   }));
   if (allowAlphabets) keyOptions.push(...alphabetOptions);
-  const mapping = useAtomValue(强类型决策原子);
+  const mapping = useAtomValueUnwrapped(强类型决策原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const referenceOptions = [...mapping].flatMap(([element, mapped]) => {
     if (是强类型归并(mapped)) return [];

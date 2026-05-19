@@ -32,24 +32,24 @@ export function useRemoveAtom<K extends string, V>(
 }
 
 export function useMapAddAtom<K, V>(
-  atom: WritableAtom<Map<K, V>, [SetStateAction<Map<K, V>>], void>,
+  atom: WritableAtom<Result<Map<K, V>, Error>, [Map<K, V>], void>,
 ) {
   const set = useSetAtom(atom);
+  const val = useAtomValueUnwrapped(atom);
   return (key: K, value: V) => {
-    set((prev) => new Map(prev).set(key, value));
+    set(new Map(val).set(key, value));
   };
 }
 
 export function useMapRemoveAtom<K, V>(
-  atom: WritableAtom<Map<K, V>, [SetStateAction<Map<K, V>>], void>,
+  atom: WritableAtom<Result<Map<K, V>, Error>, [Map<K, V>], void>,
 ) {
   const set = useSetAtom(atom);
+  const val = useAtomValueUnwrapped(atom);
   return (key: K) => {
-    set((prev) => {
-      const next = new Map(prev);
-      next.delete(key);
-      return next;
-    });
+    const next = new Map(val);
+    next.delete(key);
+    set(next);
   };
 }
 

@@ -126,7 +126,7 @@ const ValueDescriptionEditor = ({
 
 export const RulesForm = ({ element }: { element: 元素 }) => {
   const alphabet = useAtomValue(字母表原子);
-  const mappingSpace = useAtomValue(强类型决策空间原子);
+  const mappingSpace = useAtomValueUnwrapped(强类型决策空间原子);
   const addMappingSpace = useMapAddAtom(强类型决策空间原子);
   const removeMappingSpace = useMapRemoveAtom(强类型决策空间原子);
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
@@ -256,8 +256,8 @@ const MappingGeneratorsForm = () => {
 };
 
 export default function MappingSpace() {
-  const mapping = useAtomValue(强类型决策原子);
-  const mappingSpace = useAtomValue(强类型决策空间原子);
+  const mapping = useAtomValueUnwrapped(强类型决策原子);
+  const mappingSpace = useAtomValueUnwrapped(强类型决策空间原子);
   const setMappingSpace = useSetAtom(强类型决策空间原子);
   const dynamic = useAtomValue(动态分析原子);
   const currentElement = useAtomValue(当前元素原子);

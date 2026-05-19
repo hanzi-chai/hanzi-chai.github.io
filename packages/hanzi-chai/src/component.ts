@@ -165,6 +165,7 @@ class 部件 {
     全部字根二进制列表: number[],
     必要字根二进制集合: Set<number>,
     二进制字根映射: Map<number, 字根>,
+    剪枝 = false,
   ) {
     const 拆分方式列表: 拆分方式[] = [];
     const 全部二进制 = (1 << this.笔画数()) - 1;
@@ -183,9 +184,9 @@ class 部件 {
         const 新部分和 = 部分和 + 字根;
         const 新逆向累积和 = 逆向累积和.map((x) => x + 字根);
         const 新拆分方式 = 拆分方式.concat(字根);
-        // if (新逆向累积和.some((x) => 区间和.has(x))) {
-        //   continue;
-        // }
+        if (剪枝 && 新逆向累积和.some((x) => 区间和.has(x))) {
+          continue;
+        }
         新逆向累积和.push(字根);
         if (新部分和 === 全部二进制) {
           const res = 新拆分方式.map((v) => ({

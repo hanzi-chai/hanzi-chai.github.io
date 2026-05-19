@@ -16,7 +16,7 @@ describe("pruning", () => {
   });
 
   it("generate the correct schemes for 中", () => {
-    const schemes = 中.生成拆分列表(roots, new Set(roots), new Map());
+    const schemes = 中.生成拆分列表(roots, new Set(roots), new Map(), true);
     expect(schemes).toHaveLength(3);
   });
 });

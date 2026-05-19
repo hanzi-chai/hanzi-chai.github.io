@@ -8,8 +8,7 @@ import {
   结构符元素,
   自定义元素,
 } from "hanzi-chai";
-import { useAtomValue } from "jotai";
-import { 强类型决策原子 } from "~/atoms";
+import { useAtomValueUnwrapped, 强类型决策原子 } from "~/atoms";
 
 interface Count {
   笔画: number;
@@ -60,7 +59,7 @@ const ElementSubCounter = ({
 };
 
 export default function ElementCounter() {
-  const mapping = useAtomValue(强类型决策原子);
+  const mapping = useAtomValueUnwrapped(强类型决策原子);
   const allElements = [...mapping.keys()];
   const mainElements = allElements.filter(
     (e) => !是强类型归并(mapping.get(e)!),

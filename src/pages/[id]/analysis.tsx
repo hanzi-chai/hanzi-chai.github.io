@@ -162,10 +162,10 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
     ...自定义分析映射.keys(),
     ...动态自定义分析映射.keys(),
   ]);
-  const 决策 = useAtomValue(强类型决策原子);
+  const 决策 = useAtomValueUnwrapped(强类型决策原子);
   const [过滤必要字根, 设置过滤必要字根] = useState(true);
   const 过滤器 = new 字符过滤器(filter, 笔顺映射);
-  const 决策空间 = useAtomValue(强类型决策空间原子);
+  const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
   const [只显示自定义, 设置只显示自定义] = useState(false);
   const 是必要字根 = (e: 笔画 | 二笔 | 字符) => {
     return (

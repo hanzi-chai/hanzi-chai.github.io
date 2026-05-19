@@ -9,6 +9,7 @@ import { 组装, type 组装配置 } from "./assembly.js";
 import { 合并分类器 } from "./classifier.js";
 import type { 配置 } from "./config.js";
 import type { 原始汉字数据 } from "./data.js";
+import type { 元素 } from "./element.js";
 import {
   分析拼音,
   合并拼写运算,
@@ -20,10 +21,12 @@ import type { 字库, 字形分析结果 } from "./repertoire.js";
 import {
   ok,
   type Result,
+  决策图,
   type 原始词典,
   type 强类型决策,
   type 强类型决策空间,
   构建强类型决策与决策空间,
+  构建强类型自定义分析,
   标准化自定义,
   type 源标签,
   type 自定义分析,
@@ -153,17 +156,31 @@ export function 获取字形分析结果(
   配置: 配置,
   字库: 字库,
   词典: 词典,
+  名称映射: Map<string, 元素>,
   原始字库: 原始字库,
 ) {
   const { 决策, 决策空间 } = 获取决策与决策空间(配置, 字库, 词典, 原始字库);
+  const 如线性化决策 = new 决策图(决策).线性化();
+  if (!如线性化决策.ok) throw 如线性化决策.error;
+  const 线性化决策 = 如线性化决策.value;
+  const { 自定义分析映射, 动态自定义分析映射 } = 构建强类型自定义分析(
+    字库,
+    原始字库,
+    名称映射,
+    配置.analysis?.customize ?? {},
+    配置.analysis?.dynamic_customize ?? {},
+  );
   const 字形分析配置 = {
     决策,
     决策空间,
+    自定义分析映射,
+    动态自定义分析映射,
     分析配置: 配置.analysis ?? {},
     字形来源列表: 配置.data?.glyph_sources ?? [],
+    线性化决策,
   };
   const 汉字集合 = 原始字库.获取汉字集合(词典);
-  return 字库.分析(字形分析配置, 汉字集合, 原始字库);
+  return 字库.分析(字形分析配置, 汉字集合);
 }
 
 export function 获取拼音分析结果(拼音分析映射: 拼音分析映射, 词典: 词典) {
@@ -174,6 +191,7 @@ export function 获取组装结果(
   配置: 配置,
   决策: 强类型决策,
   决策空间: 强类型决策空间,
+  线性化决策: Map<元素, string>,
   拼音分析结果: 拼音分析结果,
   字形分析结果: 字形分析结果,
   自定义分析结果: 自定义分析映射 = new Map(),
@@ -181,6 +199,7 @@ export function 获取组装结果(
   const 组装配置: 组装配置 = {
     决策,
     决策空间,
+    线性化决策,
     最大码长: 配置.encoder.max_length,
     源映射: 配置.encoder.sources,
     条件映射: 配置.encoder.conditions,
