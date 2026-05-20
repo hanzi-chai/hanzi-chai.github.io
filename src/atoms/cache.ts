@@ -164,7 +164,6 @@ export const GF0014映射原子 = atom((get) => {
       map.set(character, { gf0014_id, pinyin: tsv[gf0014_id - 1] ?? [] });
     }
   }
-  console.log(map);
   return map;
 });
 

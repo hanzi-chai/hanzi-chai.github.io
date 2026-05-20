@@ -1,9 +1,11 @@
-import { Flex, Layout, Table, Typography } from "antd";
+import { Flex, Layout, Skeleton, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { type 区块, 区块列表 } from "hanzi-chai";
+import { Suspense } from "react";
 import { useAtomValue, 原始字库数据原子 } from "~/atoms";
+import { PreloadGuard } from "./[id]";
 
-export default function Repertoire() {
+function Repertoire() {
   const repertoire = useAtomValue(原始字库数据原子);
   const unicodes = Object.keys(repertoire).map((key) => key.codePointAt(0)!);
   for (const unicode of unicodes) {
@@ -55,16 +57,26 @@ export default function Repertoire() {
   ];
 
   return (
+    <Flex vertical justify="center" align="center">
+      <Typography.Title>自动拆分系统收字情况</Typography.Title>
+      <Table
+        columns={columns}
+        dataSource={区块列表}
+        rowKey="name"
+        pagination={{ pageSize: 50 }}
+      />
+    </Flex>
+  );
+}
+
+export default function RepertoirePage() {
+  return (
     <Layout>
-      <Flex vertical justify="center" align="center">
-        <Typography.Title>自动拆分系统收字情况</Typography.Title>
-        <Table
-          columns={columns}
-          dataSource={区块列表}
-          rowKey="name"
-          pagination={{ pageSize: 50 }}
-        />
-      </Flex>
+      <Suspense fallback={<Skeleton active />}>
+        <PreloadGuard>
+          <Repertoire />
+        </PreloadGuard>
+      </Suspense>
     </Layout>
   );
 }

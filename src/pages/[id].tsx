@@ -56,7 +56,7 @@ const Header = ({ isCollapsed: _ }: { isCollapsed: boolean }) => {
 
 let _preloadPromise: Promise<void> | null = null;
 
-function PreloadGuard({ children }: { children: React.ReactNode }) {
+export function PreloadGuard({ children }: { children: React.ReactNode }) {
   if (!isDataReady()) {
     _preloadPromise ??= 预加载();
     throw _preloadPromise;
