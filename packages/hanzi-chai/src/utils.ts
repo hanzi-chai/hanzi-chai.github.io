@@ -671,17 +671,17 @@ export class 决策图 {
     };
     for (const [元素, 安排] of this.安排表) {
       if (是强类型归并(安排)) continue;
-      let 纯字母安排: string | undefined;
+      let 第一位字母: string | undefined;
       if (typeof 安排 === "string") {
-        纯字母安排 = 安排;
+        第一位字母 = 安排.slice(0, 1);
       } else if (Array.isArray(安排)) {
-        if (安排.every((x) => typeof x === "string")) {
-          纯字母安排 = 安排.join("");
+        const 第一位 = 安排[0];
+        if (typeof 第一位 === "string") {
+          第一位字母 = 第一位;
         }
       }
-      if (纯字母安排) {
-        const first_char = 纯字母安排[0] ?? "";
-        const group = 翻转决策.get(first_char);
+      if (第一位字母) {
+        const group = 翻转决策.get(第一位字母);
         if (group) {
           group.push(...收集元素({ 元素, 安排 }));
         }
