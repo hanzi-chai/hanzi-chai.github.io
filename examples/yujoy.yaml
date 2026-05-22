@@ -1319,7 +1319,6 @@ data:
       operator: ⿴
       operandList: [卯, "\ue01c"]
       order: [{index: 0, strokes: 3}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-  tags: []
   repertoire:
     "\uf000":
       unicode: 61440

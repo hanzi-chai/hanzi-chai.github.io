@@ -165,7 +165,7 @@ class 原始字库 {
       const s = new Set(拓扑排序汉字.map((x) => x.字符));
       const missing = [...描述列表映射.keys()].filter((x) => !s.has(x));
       return default_err(
-        `存在循环依赖的字符: ${missing.slice(0, 100).join(", ")}，共 ${missing.length} 个`,
+        `存在循环依赖的字符: ${missing.slice(0, 100).map(x => x.获取名称()).join(", ")}，共 ${missing.length} 个`,
       );
     }
     // 3. 将字形数据转化为字形

@@ -24,8 +24,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && cp -r src/data dist/data",
-    "test": "vitest",
-    "testui": "vitest --ui --coverage",
+    "test": "bun test ./spec/*.spec.ts",
+    "test:all": "bun test spec",
     "prepublishOnly": "npm run build",
     "postversion": "node -e \"const fs=require('fs');const r=JSON.parse(fs.readFileSync('../../package.json','utf8'));r.version=require('./package.json').version;fs.writeFileSync('../../package.json',JSON.stringify(r,null,2)+'\\n');\""
   },
@@ -39,11 +39,8 @@
     "@types/d3-array": "^3.2.2",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^25.9.0",
     "@types/pako": "^2.0.4",
-    "@vitest/coverage-v8": "^4.1.6",
-    "@vitest/ui": "^4.1.6",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "bun-types": "latest",
+    "typescript": "^6.0.3"
   }
 }

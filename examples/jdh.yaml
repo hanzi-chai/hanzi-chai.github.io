@@ -102,10 +102,6 @@ data:
       tags: [中竖截断]
       operator: ⿱
       operandList: [千, 黑]
-  tags:
-    - 赢字框
-    - 辩字框
-    - 玨框
 analysis:
   degenerator:
     feature:

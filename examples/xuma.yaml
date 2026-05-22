@@ -1147,12 +1147,6 @@ data:
       type: compound
       operator: ⿴
       operandList: [㗊, 頁]
-  tags:
-    - 行框
-    - 衣框
-    - 微字框
-    - 纵向包夹
-    - 戈部截断
   repertoire:
     "\uf003":
       unicode: 61443

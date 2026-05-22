@@ -889,8 +889,6 @@ encoder:
     - length_in_range: [4, 10]
       formula: AaBaCaZa
 data:
-  tags:
-    - 行框
   repertoire:
     "\uf000":
       unicode: 61440
@@ -1552,7 +1550,7 @@ data:
     𣇸:
       type: compound
       operator: ⿳
-      operandList: [󰮀, 人, 日]
+      operandList: [𠦄, 人, 日]
     𣞼:
       type: compound
       operator: ⿰
@@ -1876,7 +1874,7 @@ data:
     𬽍:
       type: compound
       operator: ⿳
-      operandList: [亠, 卄, 󱰥]
+      operandList: [亠, 卄, 一]
     󲸫:
       type: compound
       operator: ⿰
@@ -1960,7 +1958,7 @@ data:
     𱷟:
       type: compound
       operator: ⿱
-      operandList: [穴, 󳢪]
+      operandList: [穴, 一]
     𡕩:
       type: compound
       operator: ⿳
@@ -1972,7 +1970,7 @@ data:
     𱐵:
       type: compound
       operator: ⿰
-      operandList: [󳖚, 力]
+      operandList: [一, 力]
     𥥗:
       type: compound
       operator: ⿱
@@ -1980,7 +1978,7 @@ data:
     𱀹:
       type: compound
       operator: ⿰
-      operandList: [阝, 󳔶]
+      operandList: [阝, 一]
     𭻿:
       type: compound
       operator: ⿻
@@ -1988,7 +1986,7 @@ data:
     𱌣:
       type: compound
       operator: ⿰
-      operandList: [齒, 󳕰]
+      operandList: [齒, 一]
     󲛶:
       type: compound
       operator: ⿻

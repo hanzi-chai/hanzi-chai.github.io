@@ -530,10 +530,6 @@ data:
       type: compound
       operator: ⿱
       operandList: ["\ue0a0", 疋]
-  tags:
-    - 赢字框
-    - 腾字框
-    - 彀字框
   repertoire:
     "\uf000":
       unicode: 61440

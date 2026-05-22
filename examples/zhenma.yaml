@@ -955,5 +955,3 @@ data:
       type: compound
       operator: ⿴
       operandList: ["\ue0af", 车]
-  tags:
-    - 行框

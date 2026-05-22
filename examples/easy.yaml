@@ -246,12 +246,6 @@ data:
       type: compound
       operator: ⿻
       operandList: [大, 㸚]
-  tags:
-    - 兴字底
-    - 赢字框
-    - 微字框
-    - 同字心
-    - 戈部截断
 analysis:
   classifier:
     横折钩: 7

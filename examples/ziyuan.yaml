@@ -993,9 +993,6 @@ data:
       operator: ⿴
       operandList: ["\ue0e3", 米]
       order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-  tags:
-    - 衣框
-    - 同字心
   repertoire: {}
 algebra:
   二字母:

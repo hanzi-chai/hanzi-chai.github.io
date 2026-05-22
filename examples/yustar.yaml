@@ -1108,7 +1108,6 @@ data:
     :
       - {type: derived_component, source: 戈, strokes: [{feature: 点, start: [34, 11], curveList: [{command: c, parameterList: [1, 2, 1, 3, 1, 5]}]}, {feature: 横, start: [23, 16], curveList: [{command: h, parameterList: [20]}]}, {feature: 点, start: [27, 24], curveList: [{command: c, parameterList: [1, 3, 1, 5, 1, 6]}]}, {feature: 撇, start: [41, 24], curveList: [{command: c, parameterList: [0, 2, -1, 4, -2, 6]}]}, {feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}
       - {type: derived_component, source: 戈, strokes: [{feature: 点, start: [34, 11], curveList: [{command: c, parameterList: [1, 2, 1, 3, 1, 5]}]}, {feature: 横, start: [23, 16], curveList: [{command: h, parameterList: [20]}]}, {feature: 点, start: [27, 24], curveList: [{command: c, parameterList: [1, 3, 1, 5, 1, 6]}]}, {feature: 撇, start: [41, 24], curveList: [{command: c, parameterList: [0, 2, -1, 4, -2, 6]}]}, {feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}
-  tags: []
   repertoire:
     :
       unicode: 61444

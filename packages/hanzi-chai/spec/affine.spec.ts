@@ -1,6 +1,6 @@
 import type { 复合体数据, 矢量图形数据 } from "../src/data.js";
 import { 图形盒子 } from "../src/affine.js";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 describe("仿射变换", () => {
   it("合并部件", () => {

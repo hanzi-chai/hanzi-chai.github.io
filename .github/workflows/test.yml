@@ -22,4 +22,4 @@ jobs:
         run: |
           bun install
           bun run fetch
-          bun run --filter hanzi-chai test
+          bun run --filter hanzi-chai test:all

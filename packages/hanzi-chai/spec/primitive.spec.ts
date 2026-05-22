@@ -1,11 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { 矢量图形数据, 默认分类器, 获取通用规范汉字笔画数据, 获取CJK汉字笔画数据 } from "../src/index.js";
+import { describe, expect, it, beforeAll } from "bun:test";
+import { 默认分类器, 获取通用规范汉字笔画数据, 获取CJK汉字笔画数据 } from "../src/index.js";
+import type { 字库 as 字库类型 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
-const { 字库, 原始字库 } = 获取数据();
+let 字库: 字库类型;
 
-describe("e2e test", () => {
-  it("checks stroke orders are correct", { timeout: 50000 }, () => {
+beforeAll(() => {
+  ({ 字库 } = 获取数据());
+});
+
+describe("笔顺数据验证", () => {
+  it("基本区汉字的笔顺应基本正确", { timeout: 50000 }, () => {
     const tygf = 获取通用规范汉字笔画数据();
     const cjk = 获取CJK汉字笔画数据();
     const result = new Map<string, string>();
