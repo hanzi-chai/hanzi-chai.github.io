@@ -4,7 +4,7 @@ import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import type { 条件, 退化配置 } from "./config.js";
 import type { 矢量图形数据, 结构描述字符 } from "./data.js";
-import { 二笔, type 元素, 笔画 } from "./element.js";
+import { 二笔, type 元素, 未知元素, 笔画 } from "./element.js";
 import { 排序, 是共线, 是小于 } from "./math.js";
 import {
   优先表,
@@ -602,30 +602,31 @@ class 二笔部件分析器 extends 部件分析器<基本部件分析> {
   }
 }
 
-function 计算张码补码(字根序列: 字根[], 分类器: 分类器, 结构符?: 结构描述字符) {
+function 计算张码补码(
+  字根序列: 字根[],
+  分类器: 分类器,
+  结构符?: 结构描述字符,
+): 二笔 {
   // 在补码时，竖钩视为竖，横折弯钩视为折
-  const coalesce = [0, 1, 2, 3, 4, 5, 2, 5];
-  const first = 字根序列[0]!.获取笔画序列(分类器);
-  const last = 字根序列[字根序列.length - 1]!.获取笔画序列(分类器);
-  const firstfirst = coalesce[first[0]!]!;
-  const lastlast = coalesce[last.at(-1)!]!;
+  const 笔画合并 = [0, 1, 2, 3, 4, 5, 2, 5];
+  const 首根笔顺 = 字根序列[0]!.获取笔画序列(分类器);
+  const 末根笔顺 = 字根序列.at(-1)!.获取笔画序列(分类器);
+  const 首根首笔 = 笔画合并[首根笔顺[0]!]!;
+  const 末根末笔 = 笔画合并[末根笔顺.at(-1)!]!;
   // 单笔画补码用 61 表示
-  if (字根序列.length === 1 && first.length === 1) {
-    return "61";
+  if (字根序列.length === 1 && 首根笔顺.length === 1) {
+    return 二笔.创建(6, 1);
   }
-  // 并型和左下围，首 + 末
-  // 其他情况，末 + 首
-  if (结构符 !== undefined) {
-    return /[⿰⿲⿺]/.test(结构符)
-      ? `${firstfirst}${lastlast}`
-      : `${lastlast}${firstfirst}`;
-  }
-  return `${lastlast}${firstfirst}`;
+  // 并型和左下围，首 + 末；其他情况，末 + 首
+  const 补码顺取 = /[⿰⿲⿺]/.test(结构符 ?? "");
+  return 补码顺取
+    ? 二笔.创建(首根首笔, 末根末笔)
+    : 二笔.创建(末根末笔, 首根首笔);
 }
 
 interface 张码部件分析 extends 默认部件分析 {
-  补码: [string];
-  为准码元: ["true" | "false"];
+  补码: 二笔;
+  准码元: 未知元素;
 }
 
 class 张码部件分析器 extends 部件分析器<张码部件分析> {
@@ -634,21 +635,50 @@ class 张码部件分析器 extends 部件分析器<张码部件分析> {
     super();
   }
 
-  分析(部件: 部件) {
-    const 基本分析或错误 = 部件.给出部件分析(this.配置);
-    if (!基本分析或错误.ok) return 基本分析或错误;
-    const 基本分析 = 基本分析或错误.value;
-    const 补码 = 计算张码补码(基本分析.字根序列, this.配置.分类器);
-    const 存在相交 = 基本分析.当前拆分方式.评价.get("能连不交")?.[0];
-    const 为准码元 =
-      基本分析.当前拆分方式.拆分方式.length === 2 && 存在相交 && 存在相交 > 0
-        ? "true"
-        : "false";
+  伪造当前拆分方式(_: 部件, 字根序列: 字根[]) {
+    return {
+      拆分方式: 字根序列.map((x) => ({
+        字根: x,
+        笔画索引: [0], // 为了让复合体执行笔顺能通过。
+        笔画二进制表示: 0,
+      })),
+      评价: new Map(),
+      可用: true,
+    };
+  }
+
+  添加张码特殊分析(分析: 默认部件分析) {
+    const 补码 = 计算张码补码(分析.字根序列, this.配置.分类器);
+    const 存在相交 = 分析.当前拆分方式.评价.get("能连不交")?.[0] ?? 0;
+    const 准码元 = 分析.当前拆分方式.拆分方式.length === 2 && 存在相交 > 0;
     return ok({
-      ...基本分析,
-      补码: [补码] as [string],
-      为准码元: [为准码元] as ["true" | "false"],
+      ...分析,
+      补码,
+      准码元: 准码元 ? new 未知元素("true") : new 未知元素("false"),
     });
+  }
+
+  分析(部件: 部件) {
+    const 如分析 = 部件.给出部件分析(this.配置);
+    if (!如分析.ok) return 如分析;
+    const 分析 = 如分析.value;
+    const 自定义字根序列 = this.配置.自定义分析映射.get(部件);
+    if (自定义字根序列 === undefined) return this.添加张码特殊分析(分析);
+    const 新分析: 默认部件分析 = {
+      ...分析,
+      字根序列: 自定义字根序列,
+      被覆盖拆分方式: 分析.当前拆分方式,
+    };
+    // 尝试在所有拆分方式中找到与自定义字根序列完全匹配的一种，如果找到了，就把它设为当前拆分方式
+    const 当前拆分方式 = 新分析.全部拆分方式.find((x) => {
+      return isEqual(
+        x.拆分方式.map((y) => y.字根.获取名称()),
+        自定义字根序列.map((y) => y.获取名称()),
+      );
+    });
+    新分析.当前拆分方式 =
+      当前拆分方式 ?? this.伪造当前拆分方式(部件, 自定义字根序列);
+    return this.添加张码特殊分析(新分析);
   }
 
   动态分析(_: 部件) {

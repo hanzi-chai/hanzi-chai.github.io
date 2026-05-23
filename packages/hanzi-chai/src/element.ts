@@ -144,7 +144,7 @@ interface 自定义取码 extends 基本 {
 
 interface 特殊取码 extends 基本 {
   type: "特殊";
-  index: number;
+  subtype: string;
 }
 
 export type 取码对象 =
@@ -178,7 +178,7 @@ export const 摘要 = (object: 取码对象) => {
     case "自定义":
       return `${object.subtype} ${object.rootIndex}`;
     default:
-      return `${object.type} ${object.index}`;
+      return `${object.type} ${object.subtype}`;
   }
 };
 
@@ -201,7 +201,7 @@ export const 转列表 = (object: 取码对象): (string | number)[] => {
     case "自定义":
       return [...list, object.subtype, object.rootIndex];
     default:
-      return [...list, object.index];
+      return [...list, object.subtype];
   }
 };
 
@@ -236,7 +236,7 @@ export const 从列表生成 = (value: (string | number)[]): 取码对象 => {
         rootIndex: value[2] as number,
       };
     default:
-      return { type, index: value[1] as number };
+      return { type, subtype: value[1] as string };
   }
 };
 
@@ -330,7 +330,7 @@ export class 取码器 {
     let name: string;
     let stroke1: number | undefined;
     let stroke2: number | undefined;
-    let special: 元素[] | undefined;
+    let special: 元素 | undefined;
     switch (object.type) {
       case "汉字":
         return result.汉字;
@@ -367,9 +367,8 @@ export class 取码器 {
           object.rootIndex,
         );
       default:
-        special = (result as any)[object.type] as 元素[];
-        if (!Array.isArray(special)) return undefined;
-        return signedIndex(special, object.index);
+        special = (result as any)[object.subtype] as 元素;
+        return special;
     }
   }
 

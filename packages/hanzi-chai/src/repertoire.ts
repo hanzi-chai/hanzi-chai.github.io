@@ -380,7 +380,7 @@ class 字库 {
         {
           type: "compound",
           operator: 复合体.结构描述字符,
-          parameters: {},
+          order: 复合体.笔顺,
         } as 复合体数据,
         图形盒子列表,
       ),
