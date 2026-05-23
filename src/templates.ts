@@ -190,7 +190,7 @@ export const createConfig = (starter: StarterType): 配置 => {
   }
 
   return {
-    version: "0.3",
+    version: "0.4",
     source: null,
     info: {
       name: starter.name,
