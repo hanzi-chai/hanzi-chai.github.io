@@ -1,4 +1,4 @@
-version: '0.4'
+version: '0.3'
 source: zhangma
 info:
   name: 张码
@@ -14,6 +14,7 @@ analysis:
     no_cross: false
     feature:
       捺: 点
+      横: 提
   selector:
     - 根少优先
     - 结构完整
@@ -181,6 +182,9 @@ analysis:
     戌:
       - 戈
       - 
+    孑:
+      - 了
+      - '1'
   component_analyzer: 张码
   compound_analyzer: 张码
 form:
@@ -541,8 +545,6 @@ form:
       element: 人
     亽:
       element: 人
-    :
-      element: 人
     车:
       element: 車
     :
@@ -625,8 +627,6 @@ form:
       element: 小
     :
       element: 水
-    :
-      element: 鸟
     :
       element: 土
     :
@@ -657,28 +657,28 @@ form:
       element: 十
     :
       element: 
-    :
-      element: 
     :
       element: 八
     :
       element: 
     :
       element: 爪
-    :
-      element: 厂
     :
       element: 
-    :
-      element: 三
-    :
-      element: 戈
-    :
-      element: 丩
     :
       element: 巾
     :
       element: 氺
+    :
+      element: 
+    :
+      element: 丆
+    :
+      element: 戈
+    :
+      element: 丩
+    :
+      element: 
 encoder:
   max_length: 4
   auto_select_length: 4
@@ -780,76 +780,10 @@ encoder:
       value: 'true'
 data:
   character_set: gb2312
-  repertoire:
-    :
-      unicode: 61440
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [宀, ]}]
-      ambiguous: false
-      name: 寒字头无八
-    :
-      unicode: 61441
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 乌, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 乌省
-    :
-      unicode: 61442
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
-      ambiguous: false
-      name: 衣省无丿
-    :
-      unicode: 61443
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 豕, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
-      ambiguous: false
-      name: 豕二
-    :
-      unicode: 61444
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: , strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 段字旁无段二
-    :
-      unicode: 61445
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 戋, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 戋无一
-      character: {码位: 61445}
-    :
-      unicode: 61446
-      tygf: 0
-      gb2312: 0
-      gf0014_id: null
-      readings: []
-      glyphs: [{type: derived_component, source: 爿, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
-      ambiguous: false
-      name: 爿二
+  repertoire: {}
   glyph_customization:
     :
-      type: compound
-      operator: ⿱
-      operandList: [, 八]
+      - {type: compound, operator: ⿱, operandList: [, 八]}
     兆:
       type: compound
       operator: ⿴
