@@ -11,6 +11,7 @@ import longma from "../examples/longma.yaml";
 import easy from "../examples/easy.yaml";
 import yustar from "../examples/yustar.yaml";
 import yujoy from "../examples/yujoy.yaml";
+import yuling from "../examples/yuling.yaml";
 import tianma from "../examples/tianma.yaml";
 import zhengma from "../examples/zhengma.yaml";
 import zhenma from "../examples/zhenma.yaml";
@@ -41,6 +42,7 @@ export type Example =
   | "xuma"
   | "yustar"
   | "yujoy"
+  | "yuling"
   | "zhangma"
   | "zhengma"
   | "zhenma";
@@ -62,6 +64,7 @@ export const examples = {
   xuma,
   yustar,
   yujoy,
+  yuling,
   zhangma,
   zhengma,
   zhenma,
@@ -91,6 +94,7 @@ export const keyboardTypes = [
   "字源",
   "星陈",
   "卿云",
+  "灵明",
   "郑码",
   "真码",
   "张码",
@@ -113,6 +117,7 @@ const keyboardMap: Record<KeyboardTypes, 键盘配置> = {
   字源: examples.ziyuan.form,
   星陈: examples.yustar.form,
   卿云: examples.yujoy.form,
+  灵明: examples.yuling.form,
   郑码: examples.zhengma.form,
   真码: examples.zhenma.form,
   张码: examples.zhangma.form,
@@ -144,6 +149,7 @@ export const encoderTypes = [
   "双编形码（易码）",
   "双编形码（星陈）",
   "双编形码（卿云）",
+  "双编形码（灵明）",
   "双编形码（虎码）",
   "双编形码（天码）",
 ] as const;
@@ -166,6 +172,7 @@ const encoderMap: Record<EncoderTypes, 编码配置> = {
   "双编形码（易码）": examples.easy.encoder,
   "双编形码（星陈）": examples.yustar.encoder,
   "双编形码（卿云）": examples.yujoy.encoder,
+  "双编形码（灵明）": examples.yuling.encoder,
   "双编形码（虎码）": examples.huma.encoder,
   "双编形码（天码）": examples.tianma.encoder,
 };
