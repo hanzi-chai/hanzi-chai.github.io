@@ -1,9 +1,10 @@
-import { range } from "lodash-es";
+import { isEqual, range } from "lodash-es";
 import type { 动态组装条目, 组装条目 } from "./assembly.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
 import type { 部件 } from "./component.js";
 import {
+  type 元素位,
   type 兼容字形自定义,
   type 决策,
   type 决策空间,
@@ -11,8 +12,13 @@ import {
   type 安排,
   type 安排描述,
   type 广义安排,
+  type 广义码位,
   type 拼写运算,
   是变量,
+  是归并,
+  type 条件,
+  type 生成配置,
+  type 配置,
   type 非空安排,
 } from "./config.js";
 import {
@@ -852,4 +858,125 @@ export const 标准化自定义 = (字形自定义: 兼容字形自定义) => {
     }
   }
   return 标准字形自定义;
+};
+
+export const 生成 = (config: 配置): 生成配置 => {
+  const mapping = config.form.mapping;
+  const mapping_space = config.form.mapping_space ?? {};
+  const variables = config.form.mapping_variables ?? {};
+  const generators = config.form.mapping_generators ?? [];
+
+  const space: 决策空间 = structuredClone(mapping_space);
+
+  // Step 1: 合并初始决策
+  // Every element in mapping must have an entry in space
+  for (const name of Object.keys(mapping)) {
+    if (!(name in space)) space[name] = [];
+  }
+  // Each element's current mapping value must appear in its space list
+  for (const [name, arrangements] of Object.entries(space)) {
+    const current: 广义安排 = mapping[name] ?? null;
+    if (!arrangements.some((a) => isEqual(a.value, current))) {
+      arrangements.unshift({ value: current, score: 0.0 });
+    }
+  }
+
+  // Step 2: 应用生成器
+  for (const { regex, value } of generators) {
+    const 模式 = new RegExp(regex);
+    for (const [元素名称, 安排列表] of Object.entries(space)) {
+      if (!模式.test(元素名称)) continue;
+      const 安排描述 = structuredClone(value);
+      const 生成器安排 = 安排描述.value;
+      if (Array.isArray(生成器安排)) {
+        // For each existing Basic/Advanced arrangement, synthesize a new one using the template
+        const 合成安排列表: 广义码位[][] = [];
+        for (const 安排 of 安排列表) {
+          const ev = 安排.value;
+          if (typeof ev !== "string" && !Array.isArray(ev)) continue;
+          const 约化安排: 广义码位[] = typeof ev === "string" ? [...ev] : ev;
+          let valid = true;
+          const combined: 广义码位[] = [];
+          for (const [i, tpl] of 生成器安排.entries()) {
+            const cur = 约化安排[i];
+            if (cur === undefined) {
+              valid = false;
+              break;
+            }
+            // Variable placeholders may only substitute ASCII (string) keys
+            if (typeof cur !== "string" && 是变量(tpl)) {
+              valid = false;
+              break;
+            }
+            // null in template means placeholder: keep existing value
+            combined.push(tpl === null ? cur : tpl);
+          }
+          if (!valid) continue;
+          if (!合成安排列表.some((v) => isEqual(v, combined)))
+            合成安排列表.push(combined);
+        }
+        for (const value of 合成安排列表) {
+          安排列表.push({ ...安排描述, value });
+        }
+      } else {
+        安排列表.push(安排描述);
+      }
+    }
+  }
+
+  // Step 3: 展开变量 — replace Variable placeholders with all possible concrete values
+  for (const 安排列表 of Object.values(space)) {
+    const 队列 = [...安排列表];
+    安排列表.length = 0;
+    while (队列.length > 0) {
+      const item = 队列.shift()!;
+      const value = item.value;
+      let expanded = false;
+      if (Array.isArray(value)) {
+        for (const [i, key] of value.entries()) {
+          if (是变量(key)) {
+            for (const varValue of variables[key.variable]?.keys ?? []) {
+              const newKeys = [...value];
+              newKeys[i] = varValue;
+              队列.push({ ...item, value: newKeys });
+            }
+            expanded = true;
+            break;
+          }
+        }
+      }
+      if (!expanded) 安排列表.push(item);
+    }
+  }
+
+  // Step 4: 补充存在性条件 — arrangements referencing other elements require those elements to be non-null
+  for (const 安排列表 of Object.values(space)) {
+    for (const 安排 of 安排列表) {
+      const referenced = new Set<string>();
+      const value = 安排.value;
+      if (是归并(value)) {
+        referenced.add(value.element);
+      } else if (Array.isArray(value)) {
+        for (const key of value) {
+          if (
+            typeof key === "object" &&
+            key !== null &&
+            "element" in key &&
+            "index" in key
+          )
+            referenced.add((key as 元素位).element);
+        }
+      }
+      if (referenced.size === 0) continue;
+      const newConditions: 条件[] = [...referenced].map((element) => ({
+        element,
+        op: "不是" as const,
+        value: null,
+      }));
+      if (安排.condition) 安排.condition.push(...newConditions);
+      else 安排.condition = newConditions;
+    }
+  }
+
+  return { ...config, generated_mapping_space: space };
 };

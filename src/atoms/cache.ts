@@ -1,7 +1,6 @@
 import {
   ok,
   下转换,
-  二笔,
   type 元素,
   type 元素位或编码,
   决策图,
@@ -26,8 +25,8 @@ import {
   构建强类型自定义分析,
   标准化自定义,
   添加优先简码,
+  生成,
   type 码表条目,
-  笔画,
   组装,
   type 组装条目,
   type 组装配置,
@@ -35,7 +34,6 @@ import {
   计算全部合法元素与元素映射,
   计算拼音分析与元素映射,
   识别符,
-  type 部件,
   type 键位分布目标,
   默认分类器,
 } from "hanzi-chai";
@@ -561,7 +559,7 @@ export const 如导出动态组装结果原子 = atom((get) => {
 });
 
 export const 如前端输入原子 = atom((get) => {
-  const 配置 = get(配置原子);
+  const 配置 = 生成(get(配置原子));
   const 动态分析 = get(动态分析原子);
   const 序列化词列表 = 动态分析
     ? get(如导出动态组装结果原子)

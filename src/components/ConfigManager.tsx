@@ -1,5 +1,5 @@
 import { Button, Flex, notification } from "antd";
-import type { 配置 } from "hanzi-chai";
+import { 生成, type 配置 } from "hanzi-chai";
 import { REDO, UNDO } from "jotai-history";
 import { load } from "js-yaml";
 import { useAtom, 配置历史原子, 配置原子 } from "~/atoms";
@@ -21,6 +21,7 @@ export default function ConfigManager() {
       <Button onClick={() => roundTestConfig(config)}>环行</Button>
       <Uploader text="替换" action={(s) => setConfig(load(s) as 配置)} />
       <Button onClick={() => exportYAML(config, filename)}>导出</Button>
+      <Button onClick={() => exportYAML(生成(config), filename)}>生成</Button>
       {source && (
         <Button onClick={() => setConfig(examples[source as Example])}>
           重置

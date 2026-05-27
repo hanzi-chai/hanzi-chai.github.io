@@ -360,3 +360,7 @@ export interface 配置 {
 }
 
 export type 示例配置 = Required<配置>;
+
+export interface 生成配置 extends 配置 {
+  generated_mapping_space: 决策空间;
+}
