@@ -36,7 +36,7 @@ createRoot(document.getElementById("root")!).render(
       }}
     >
       <Suspense fallback={<Skeleton active />}>
-        <DevTools />
+        {/* <DevTools /> */}
         <RouterProvider router={router} />
       </Suspense>
     </ConfigProvider>

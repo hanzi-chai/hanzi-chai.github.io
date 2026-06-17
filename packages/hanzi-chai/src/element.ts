@@ -360,7 +360,8 @@ export class 取码器 {
         stroke2 = signedIndex(strokes, object.strokeIndex * 2);
         return 二笔.创建(stroke1, stroke2 ?? 0);
       case "结构":
-        return "结构" in result ? new 结构符元素(result.结构) : undefined;
+        console.log(result);
+        return "结构" in result ? result.结构 : undefined;
       case "自定义":
         return signedIndex(
           result.自定义元素.get(object.subtype) ?? [],

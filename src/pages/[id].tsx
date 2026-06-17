@@ -10,7 +10,6 @@ import SettingOutlined from "@ant-design/icons/SettingOutlined";
 import type { MenuProps } from "antd";
 import {
   Avatar,
-  Button,
   Empty,
   Flex,
   Layout,
@@ -43,7 +42,7 @@ const items: MenuProps["items"] = [
 const Header = ({ isCollapsed: _ }: { isCollapsed: boolean }) => {
   const info = useAtomValue(基本信息原子);
   return (
-    <Layout.Header className={`h-12! place-content-center!`}>
+    <Layout.Header className={`h-12! place-content-center! px-8!`}>
       <Flex justify="space-between" align="center">
         <Typography.Title level={2} className="m-0! font-normal! text-xl!">
           {info?.name ?? "未命名"}
@@ -91,18 +90,16 @@ export default function EditorLayout() {
             placement={isCollapsed ? "right" : "bottom"}
             color="rgb(196,144,84)"
           >
-            <Link to="/">
-              <Button
-                type="text"
-                className={`${isCollapsed ? "h-12!" : "h-16!"} mx-2! text-[#999]! flex flex-col`}
-              >
-                <Avatar shape="square" src="/icon.webp" className="shrink-0" />
-                {isCollapsed ? null : (
-                  <div className="mt-0.5 tracking-[1px] text-xs">
-                    汉字自动拆分系统
-                  </div>
-                )}
-              </Button>
+            <Link
+              to="/"
+              className={`flex flex-col items-center w-full py-4!`}
+            >
+              <Avatar shape="square" src="/icon.webp" className={`${isCollapsed ? "h-8! w-8!" : "h-12! w-12!"} shrink-0`} />
+              {isCollapsed ? null : (
+                <div className="mt-4 tracking-[1px] text-[#999]!">
+                  汉字自动拆分系统
+                </div>
+              )}
             </Link>
           </Tooltip>
           <Menu
@@ -117,7 +114,7 @@ export default function EditorLayout() {
       </Layout.Sider>
       <Layout className="h-screen">
         <Header isCollapsed={isCollapsed} />
-        <Layout.Content className={`ml-12 py-2.5 px-6 h-full overflow-y-auto`}>
+        <Layout.Content className={`py-2.5 px-6 h-full overflow-y-auto`}>
           <Suspense fallback={<Skeleton active />}>
             <PreloadGuard>
               <Outlet />
