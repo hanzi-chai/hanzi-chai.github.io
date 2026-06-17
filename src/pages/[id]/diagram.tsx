@@ -42,7 +42,7 @@ const Keyboard = () => {
       let match: RegExp | undefined;
       if (content.match) {
         try {
-          match = new RegExp(content.match);
+          match = new RegExp(content.match, "u");
         } catch {}
       }
       return { ...content, match };

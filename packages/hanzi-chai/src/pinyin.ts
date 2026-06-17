@@ -59,10 +59,10 @@ export function 应用拼写运算(规则列表: 运算规则[], 音节: string)
   for (const { type, from, to } of 规则列表) {
     switch (type) {
       case "xform":
-        结果 = 结果.replace(new RegExp(from), to);
+        结果 = 结果.replace(new RegExp(from, "u"), to);
         break;
       case "xlit":
-        结果 = 结果.replace(new RegExp(`[${from}]`), (s) => {
+        结果 = 结果.replace(new RegExp(`[${from}]`, "u"), (s) => {
           const index = from.indexOf(s);
           return to[index] || "";
         });

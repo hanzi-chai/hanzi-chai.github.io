@@ -82,7 +82,7 @@ const getColumnSearchProps = (
     </Flex>
   ),
   onFilter: (value, record) => {
-    const regex = new RegExp(value as string);
+    const regex = new RegExp(value as string, "u");
     const entry = record[dataIndex];
     const text = Array.isArray(entry)
       ? entry.map((x) => x.获取名称()).join("")

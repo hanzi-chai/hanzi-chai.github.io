@@ -256,10 +256,10 @@ export class 取码器 {
   > = {
     是: (t, v) => t?.获取名称() === v,
     不是: (t, v) => t?.获取名称() !== v,
-    匹配: (t, v) => t !== undefined && new RegExp(v!).test(t.获取名称()),
-    不匹配: (t, v) => t !== undefined && !new RegExp(v!).test(t.获取名称()),
-    编码匹配: (t, v, m) => t !== undefined && new RegExp(v!).test(m.get(t)!),
-    编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!).test(m.get(t)!),
+    匹配: (t, v) => t !== undefined && new RegExp(v!, "u").test(t.获取名称()),
+    不匹配: (t, v) => t !== undefined && !new RegExp(v!, "u").test(t.获取名称()),
+    编码匹配: (t, v, m) => t !== undefined && new RegExp(v!, "u").test(m.get(t)!),
+    编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!, "u").test(m.get(t)!),
     存在: (t) => t !== undefined,
     不存在: (t) => t === undefined,
   };

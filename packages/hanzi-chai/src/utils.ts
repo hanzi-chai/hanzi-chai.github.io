@@ -883,7 +883,7 @@ export const 生成 = (config: 配置): 生成配置 => {
 
   // Step 2: 应用生成器
   for (const { regex, value } of generators) {
-    const 模式 = new RegExp(regex);
+    const 模式 = new RegExp(regex, "u");
     for (const [元素名称, 安排列表] of Object.entries(space)) {
       if (!模式.test(元素名称)) continue;
       const 安排描述 = structuredClone(value);

@@ -156,7 +156,7 @@ export class 字符过滤器 {
   constructor(private 过滤条件: 字符过滤器参数, private 笔顺映射: Map<字符, string[]>) {
     if (过滤条件.sequence) {
       try {
-        this.sequenceRegex = new RegExp(过滤条件.sequence);
+        this.sequenceRegex = new RegExp(过滤条件.sequence, "u");
       } catch { }
     }
   }
