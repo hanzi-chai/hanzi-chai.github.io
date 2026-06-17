@@ -529,7 +529,8 @@ const DuplicationDistribution = () => {
           const k1 = 序列化(first.元素序列.元素序列[i]);
           const k2 = 序列化(second.元素序列.元素序列[i]);
           if (k1 === k2) continue;
-          const key = `${k1} ${k2}`;
+          const [ck1, ck2] = [k1, k2].sort() as [string, string];
+          const key = `${ck1} ${ck2}`;
           const previous = pairMap.get(key) ?? [];
           previous.push(pair);
           pairMap.set(key, previous);

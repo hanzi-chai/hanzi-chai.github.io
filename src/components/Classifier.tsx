@@ -33,7 +33,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
   return (
     <Flex
       ref={setNodeRef}
-      className={`${isOver ? "text-green-500" : ""} min-h-12 bg-[#bae0ff] flex-1 p-2`}
+      className={`${isOver ? "text-green-500" : ""} min-h-12 bg-[#bae0ff] flex-1 p-2! flex!`}
       gap="small"
       wrap="wrap"
     >
