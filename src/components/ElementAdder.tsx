@@ -21,6 +21,7 @@ import {
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
+import RootRecommendation from "./RootRecommendation";
 
 export default function ElementAdder() {
   const element = useAtomValue(当前元素原子);
@@ -60,10 +61,8 @@ export default function ElementAdder() {
             />
           );
         })}
-        <Button
-          type="primary"
-          disabled={element === undefined}
-          onClick={() => {
+        <RootRecommendation
+          onConfirm={() => {
             const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
             const filteredSlice: 强类型元素位或编码[] = [];
             for (const x of slice) {
@@ -77,9 +76,7 @@ export default function ElementAdder() {
             }
             addMapping(element!, 合并字符串(filteredSlice));
           }}
-        >
-          添加
-        </Button>
+        />
         {dynamic && (
           <Button
             type="primary"
@@ -96,13 +93,9 @@ export default function ElementAdder() {
       <Flex justify="center" align="center" gap="small">
         <span>设置归并</span>
         <ElementSelect value={main} onChange={setMain} />
-        <Button
-          type="primary"
-          disabled={element === undefined || main === undefined}
-          onClick={() => addMapping(element!, { element: main! })}
-        >
-          添加
-        </Button>
+        <RootRecommendation
+          onConfirm={() => addMapping(element!, { element: main })}
+        />
         {dynamic && (
           <Button
             type="primary"

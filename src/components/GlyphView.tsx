@@ -280,6 +280,7 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
   return (
     <svg
       role="img"
+      style={{ display: "inline" }}
       aria-label="strokes view"
       ref={svgRef}
       xmlns="http://www.w3.org/2000/svg"

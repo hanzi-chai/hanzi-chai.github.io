@@ -1,7 +1,9 @@
 import { Button, Checkbox, Flex, Modal, Pagination, Typography } from "antd";
 import type { 元素, 字符 } from "hanzi-chai";
+import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import {
+  useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
   原始字库原子,
@@ -11,6 +13,10 @@ import { 字符过滤器 } from "~/utils";
 import StrokeSearch from "./CharacterSearch";
 import Classifier from "./Classifier";
 import { CharacterWithTooltip } from "./Utils";
+
+const 使用康熙部首原子 = atomWithStorage("使用康熙部首", false);
+const 使用部首补充原子 = atomWithStorage("使用部首补充", false);
+const 相似字根推荐原子 = atomWithStorage("相似字根推荐", true);
 
 export default function ElementPool({
   type,
@@ -27,11 +33,9 @@ export default function ElementPool({
   const [isOpen, setOpen] = useState(false);
   const 笔顺过滤 = new 字符过滤器({ sequence: input }, sequenceMap);
   const 直接过滤 = new 字符过滤器({ name: input }, sequenceMap);
-  const [显示康熙部首, 设置康熙部首] = useState(false);
-  const [显示部首补充, 设置部首补充] = useState(false);
-  // const 过滤字符列表 = 字符列表
-  //   .filter((k) => )
-  //   .filter((k) => k.区块() !== "kangxi");
+  const [显示康熙部首, 设置康熙部首] = useAtom(使用康熙部首原子);
+  const [显示部首补充, 设置部首补充] = useAtom(使用部首补充原子);
+  const [推荐相似字根, 设置推荐相似字根] = useAtom(相似字根推荐原子);
   const filtered =
     type === "字根"
       ? content.filter((元素) => {
@@ -59,6 +63,13 @@ export default function ElementPool({
             <Checkbox
               checked={显示部首补充}
               onChange={(e) => 设置部首补充(e.target.checked)}
+            />
+          </Flex>
+          <Flex>
+            推荐相似字根：
+            <Checkbox
+              checked={推荐相似字根}
+              onChange={(e) => 设置推荐相似字根(e.target.checked)}
             />
           </Flex>
           <StrokeSearch setSequence={setInput} />
