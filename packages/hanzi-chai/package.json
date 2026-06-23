@@ -23,7 +23,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp -r src/data dist/data",
+    "build": "tsc -p tsconfig.build.json && node -e \"require('fs').cpSync('src/data', 'dist/data', { recursive: true, force: true })\"",
     "test": "bun test ./spec/*.spec.ts",
     "test:all": "bun test spec",
     "prepublishOnly": "npm run build",

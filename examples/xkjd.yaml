@@ -6,7 +6,6 @@ info:
   version: '6.0'
   description: 单字三码起顶、词组四码起顶的双拼词顶功方案
 analysis:
-  compound_analyzer: 星空键道
   classifier: {}
   degenerator:
     no_cross: true
@@ -272,6 +271,7 @@ form:
       element: 水
   mapping_type: 2
 encoder:
+  assembler: 星空键道
   max_length: 6
   auto_select_length: 4
   short_code:

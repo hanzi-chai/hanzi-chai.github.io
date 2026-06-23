@@ -1,11 +1,13 @@
-import { Button, Flex, Skeleton } from "antd";
-import { useAtomValue } from "jotai";
+import { Button, Flex, Select, Skeleton } from "antd";
+import { 获取注册表 } from "hanzi-chai";
+import { useAtom, useAtomValue } from "jotai";
 import { Suspense } from "react";
 import {
   useAtomValueUnwrapped,
   动态分析原子,
   如导出动态组装结果原子,
   如导出组装结果原子,
+  组装器原子,
 } from "~/atoms";
 import { ErrorBoundary } from "~/components/Error";
 import MetricTable from "~/components/MetricTable";
@@ -36,8 +38,21 @@ export const ExportDynamicAssembly = () => {
 
 const ConfigureRules = () => {
   const 动态分析 = useAtomValue(动态分析原子);
+  const [组装器, 设置组装器] = useAtom(组装器原子);
+  const 注册表 = 获取注册表();
   return (
     <Flex gap="middle" justify="center">
+      <Flex align="center">
+        组装器：
+        <Select
+          value={组装器}
+          onChange={设置组装器}
+          options={[...注册表.组装器映射.keys()].map((x) => ({
+            label: x,
+            value: x,
+          }))}
+        />
+      </Flex>
       <SingleRules />
       <MultipleRules />
       <SelectRules />

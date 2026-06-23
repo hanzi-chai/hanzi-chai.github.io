@@ -71,7 +71,7 @@
     "react-router": "^7.15.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.15",
+    "@biomejs/biome": "2.5.0",
     "@emotion/react": "^11.14.0",
     "@jsdevtools/version-bump-prompt": "^6.1.0",
     "@mdx-js/react": "^3.1.1",
