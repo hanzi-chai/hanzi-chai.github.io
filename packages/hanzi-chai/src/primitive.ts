@@ -216,7 +216,7 @@ class 原始字库 {
    * 在数据库上匹配模式到某个键（按需展开并递归调用自身），
    * 变量绑定为子键字符串。
    */
-  模式匹配(字形: 字形描述, 模式: 模式, 变量映射: 变量映射) {
+  模式匹配(字形: 字形描述, 模式: 模式, 变量映射: 变量映射): 字形 is 复合体数据 {
     if (字形.type !== "compound") return false;
     if (模式.operator !== 字形.operator) return false;
     if (模式.operandList.length !== 字形.operandList.length) return false;
@@ -263,6 +263,7 @@ class 原始字库 {
    * - 嵌套 pattern 递归生成子键
    */
   替换(
+    原字形: 复合体数据,
     项: 节点,
     变量映射: 变量映射,
     辅助字符映射: Map<字符, 字形描述[]>,
@@ -280,7 +281,7 @@ class 原始字库 {
     // 当前项是个模式
     const 部分列表: string[] = [];
     for (const 部分 of 项.operandList) {
-      const result = this.替换(部分, 变量映射, 辅助字符映射);
+      const result = this.替换(原字形, 部分, 变量映射, 辅助字符映射);
       if (!result.ok) return result;
       if (result.value instanceof 字符) {
         部分列表.push(result.value.获取名称());
@@ -292,9 +293,10 @@ class 原始字库 {
       }
     }
     const 复合体: 复合体数据 = {
-      type: "compound",
+      ...原字形,
       operator: 项.operator,
       operandList: 部分列表,
+      order: undefined,
     };
     return ok(复合体);
   }
@@ -310,7 +312,7 @@ class 原始字库 {
         for (const 变换器 of 变换器列表) {
           const 变量映射: 变量映射 = new Map();
           if (this.模式匹配(字形, 变换器.from, 变量映射)) {
-            const 新字形 = this.替换(变换器.to, 变量映射, 辅助字符映射);
+            const 新字形 = this.替换(字形, 变换器.to, 变量映射, 辅助字符映射);
             if (!新字形.ok) return 新字形;
             if (新字形.value instanceof 字符)
               return default_err("Unexpected string result");
