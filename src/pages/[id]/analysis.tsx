@@ -102,6 +102,7 @@ const ConfigureRules = () => {
       <Switch checked={动态分析} onChange={设置动态分析} />
       部件分析器：
       <Select
+        className="min-w-24"
         value={部件分析器}
         onChange={设置部件分析器}
         options={[...注册表.部件分析器映射.keys()].map((x) => ({
@@ -111,6 +112,7 @@ const ConfigureRules = () => {
       />
       复合体分析器：
       <Select
+        className="min-w-24"
         value={复合体分析器}
         onChange={设置复合体分析器}
         options={[...注册表.复合体分析器映射.keys()].map((x) => ({

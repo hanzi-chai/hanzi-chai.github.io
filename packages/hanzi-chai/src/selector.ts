@@ -52,6 +52,37 @@ class 取大优先 implements 筛选器 {
 }
 
 /**
+ * 规则：倒序取大
+ *
+ * 让顺序靠后的字根尽量取到更多的笔画
+ */
+class 倒序取大 implements 筛选器 {
+  static readonly type = "倒序取大";
+  评价(scheme: 拆分方式) {
+    const reversedScheme = [...scheme].reverse();
+    return reversedScheme.map((x) => -x.笔画索引.length);
+  }
+}
+
+/**
+ * 规则：首末取大
+ *
+ * 让顺序首位和末位的字根尽量取到更多的笔画，其余次之
+ */
+class 首末取大 implements 筛选器 {
+  static readonly type = "首末取大";
+  评价(scheme: 拆分方式) {
+    let rearrangedScheme = [...scheme];
+    if (rearrangedScheme.length > 2) {
+      const first = rearrangedScheme.shift()!;
+      const last = rearrangedScheme.pop()!;
+      rearrangedScheme = [first, last, ...rearrangedScheme];
+    }
+    return rearrangedScheme.map((x) => -x.笔画索引.length);
+  }
+}
+
+/**
  * 规则：取小优先
  *
  * 让顺序靠前的字根尽量取到更少的笔画
@@ -278,6 +309,7 @@ class 结构完整 implements 筛选器 {
 
 export type { 拆分方式, 拆分环境, 筛选器 };
 export {
+  倒序取大,
   全符笔顺,
   取大优先,
   取小优先,
@@ -290,5 +322,6 @@ export {
   能连不交,
   连续笔顺,
   非形近根,
+  首末取大,
   默认筛选器列表,
 };

@@ -6,6 +6,7 @@ import type { 条件, 退化配置 } from "./config.js";
 import type { 矢量图形数据, 结构描述字符 } from "./data.js";
 import { 二笔, type 元素, 未知元素, 笔画 } from "./element.js";
 import { 排序, 是共线, 是小于 } from "./math.js";
+import { 获取注册表 } from "./registry.js";
 import {
   优先表,
   type 基本部件分析,
@@ -549,6 +550,56 @@ class 默认部件分析器 extends 部件分析器<默认部件分析> {
   }
 }
 
+interface 首末取大部件分析 extends 基本部件分析 {
+  正序取大字根序列: 字根[];
+  逆序取大字根序列: 字根[];
+}
+
+class 首末取大部件分析器 extends 部件分析器<首末取大部件分析> {
+  static readonly type = "首末取大";
+  private 正序取大分析器: 默认部件分析器;
+  private 逆序取大分析器: 默认部件分析器;
+
+  constructor(private 配置: 字形分析配置) {
+    super();
+    const 注册表 = 获取注册表();
+    const 正序取大配置: 字形分析配置 = {
+      ...配置,
+      筛选器列表: 配置.筛选器列表.map(([name, 筛选器]) => {
+        if (name === "首末取大")
+          return ["取大优先", 注册表.创建筛选器("取大优先")!];
+        return [name, 筛选器];
+      }),
+    };
+    const 逆序取大配置: 字形分析配置 = {
+      ...配置,
+      筛选器列表: 配置.筛选器列表.map(([name, 筛选器]) => {
+        if (name === "首末取大")
+          return ["倒序取大", 注册表.创建筛选器("倒序取大")!];
+        return [name, 筛选器];
+      }),
+    };
+    this.正序取大分析器 = new 默认部件分析器(正序取大配置);
+    this.逆序取大分析器 = new 默认部件分析器(逆序取大配置);
+  }
+
+  分析(部件: 部件) {
+    const 如结果 = 部件.给出部件分析(this.配置);
+    if (!如结果.ok) return 如结果;
+    const 分析 = 如结果.value;
+    const 如正序取大分析 = this.正序取大分析器.分析(部件);
+    if (!如正序取大分析.ok) return 如正序取大分析;
+    const 如逆序取大分析 = this.逆序取大分析器.分析(部件);
+    if (!如逆序取大分析.ok) return 如逆序取大分析;
+    const 结果: 首末取大部件分析 = {
+      ...分析,
+      正序取大字根序列: 如正序取大分析.value.字根序列,
+      逆序取大字根序列: 如逆序取大分析.value.字根序列,
+    };
+    return ok(结果);
+  }
+}
+
 class 二笔部件分析器 extends 部件分析器<基本部件分析> {
   static readonly type = "二笔";
   constructor(private 配置: 字形分析配置) {
@@ -983,6 +1034,7 @@ export type {
   逸码拆分方式,
   逸码部件分析,
   部件分析器,
+  首末取大部件分析,
   默认部件分析,
 };
 export {
@@ -993,5 +1045,6 @@ export {
   计算张码补码,
   逸码部件分析器,
   部件,
+  首末取大部件分析器,
   默认部件分析器,
 };
