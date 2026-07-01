@@ -1,6 +1,6 @@
 import { Button, Popconfirm } from "antd";
-import { 字符 } from "hanzi-chai";
-import { useAtomValue } from "jotai";
+import { 字符, type 强类型非空安排 } from "hanzi-chai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   useAtomValueUnwrapped,
   useMapAddAtom,
@@ -46,7 +46,7 @@ const GROUPS = [
 ];
 
 interface RootRecommendationProps {
-  onConfirm: () => void;
+  value?: 强类型非空安排;
 }
 
 /**
@@ -55,7 +55,7 @@ interface RootRecommendationProps {
  * 否则保留原有的按钮交互
  */
 export default function RootRecommendation({
-  onConfirm,
+  value,
 }: RootRecommendationProps) {
   const 当前元素 = useAtomValue(当前元素原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
@@ -79,13 +79,11 @@ export default function RootRecommendation({
     }
   }
   const addMapping = useMapAddAtom(强类型决策原子);
+  const 决策快照 = useAtomValueUnwrapped(强类型决策原子);
+  const set决策 = useSetAtom(强类型决策原子);
 
   const children = (
-    <Button
-      type="primary"
-      disabled={当前元素 === undefined}
-      onClick={onConfirm}
-    >
+    <Button type="primary" disabled={当前元素 === undefined || value === undefined} onClick={() => addMapping(当前元素!, value!)}>
       添加
     </Button>
   );
@@ -116,16 +114,18 @@ export default function RootRecommendation({
         </div>
       }
       onConfirm={() => {
-        onConfirm();
+        const next = new Map(决策快照);
+        next.set(当前元素, value!);
         for (const 元素 of 元素列表) {
-          addMapping(元素, { element: 当前元素 });
+          next.set(元素, { element: 当前元素 });
         }
+        set决策(next);
       }}
-      onCancel={onConfirm}
+      onCancel={() => addMapping(当前元素, value!)}
       okText="是，一并添加"
       cancelText="否，只添加当前"
     >
-      <Button type="primary">添加</Button>
+      <Button type="primary" disabled={当前元素 === undefined || value === undefined}>添加</Button>
     </Popconfirm>
   );
 }

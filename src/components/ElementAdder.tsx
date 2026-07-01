@@ -1,9 +1,10 @@
-import { Button, Flex, notification } from "antd";
+import { Button, Flex } from "antd";
 import {
   type 元素,
   合并字符串,
   type 强类型元素位或编码,
   type 强类型广义引用,
+  type 强类型非空安排,
   是强类型变量,
 } from "hanzi-chai";
 import { useState } from "react";
@@ -14,7 +15,6 @@ import {
   全部合法元素原子,
   动态分析原子,
   字母表原子,
-  强类型决策原子,
   强类型决策空间原子,
   当前元素原子,
   编码类型原子,
@@ -36,8 +36,21 @@ export default function ElementAdder() {
     "",
     "",
   ]);
-  const addMapping = useMapAddAtom(强类型决策原子);
   const addMappingSpace = useMapAddAtom(强类型决策空间原子);
+  const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
+  const filteredSlice: 强类型元素位或编码[] = [];
+  let isSliceValid = true;
+  let value: 强类型非空安排 | undefined;
+  for (const x of slice) {
+    if (是强类型变量(x) || x === null) {
+      isSliceValid = false;
+      break;
+    }
+    filteredSlice.push(x);
+  }
+  if (isSliceValid) {
+    value = 合并字符串(filteredSlice);
+  }
   return (
     <>
       <Flex justify="center" align="center" gap="small" wrap>
@@ -61,26 +74,11 @@ export default function ElementAdder() {
             />
           );
         })}
-        <RootRecommendation
-          onConfirm={() => {
-            const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
-            const filteredSlice: 强类型元素位或编码[] = [];
-            for (const x of slice) {
-              if (是强类型变量(x) || x === null) {
-                notification.error({
-                  message: "不能将变量或占位符添加到当前决策中",
-                });
-                return;
-              }
-              filteredSlice.push(x);
-            }
-            addMapping(element!, 合并字符串(filteredSlice));
-          }}
-        />
+        <RootRecommendation value={value} />
         {dynamic && (
           <Button
             type="primary"
-            disabled={element === undefined}
+            disabled={element === undefined || value === undefined}
             onClick={() => {
               const slice = keys.slice(0, mapping_type).filter((x) => x !== "");
               addMappingSpace(element!, [{ value: slice, score: 0 }]);
@@ -93,9 +91,7 @@ export default function ElementAdder() {
       <Flex justify="center" align="center" gap="small">
         <span>设置归并</span>
         <ElementSelect value={main} onChange={setMain} />
-        <RootRecommendation
-          onConfirm={() => addMapping(element!, { element: main })}
-        />
+        <RootRecommendation value={{ element: main }} />
         {dynamic && (
           <Button
             type="primary"
