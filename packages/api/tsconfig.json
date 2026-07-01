@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ESNext"],
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "paths": {
+      "hanzi-chai": ["../hanzi-chai/src/main.ts"]
+    },
+    "types": [
+      "@cloudflare/workers-types",
+      "@types/node"
+    ],
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}

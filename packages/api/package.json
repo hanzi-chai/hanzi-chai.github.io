@@ -1,0 +1,26 @@
+{
+  "name": "chai-data",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "start": "wrangler dev",
+    "format": "bunx --bun @biomejs/biome format --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.1",
+    "@cloudflare/workers-types": "^4.20260701.1",
+    "@types/node": "^26.0.1",
+    "axios": "^1.18.1",
+    "dotenv": "^17.4.2",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.106.0"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "@tsndr/cloudflare-worker-jwt": "^3.2.1",
+    "hanzi-chai": "*",
+    "itty-cors": "^0.3.7",
+    "itty-router": "^5.0.24"
+  }
+}

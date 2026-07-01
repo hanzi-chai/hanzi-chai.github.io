@@ -35,6 +35,8 @@
     "build:CF": "bun run build:pkg && vite build --mode CF",
     "build:CLIENT": "bun run build:pkg && vite build --mode CLIENT",
     "build": "bun run fetch && bun run build:CF",
+    "start:api": "bun run --filter chai-data start",
+    "deploy:api": "bun run --filter chai-data deploy",
     "publish": "bump --tag --commit --push"
   },
   "dependencies": {

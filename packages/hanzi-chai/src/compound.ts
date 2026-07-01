@@ -10,7 +10,7 @@ import {
   type 首末取大部件分析,
   type 默认部件分析,
 } from "./component.js";
-import type { 笔画块, 结构描述字符 } from "./data.js";
+import type { 旧笔画块, 结构描述字符 } from "./data.js";
 import { 二笔, 未知元素, 结构符元素 } from "./element.js";
 import {
   优先表,
@@ -37,7 +37,7 @@ class 复合体 {
     public 兼容: boolean,
     public 结构描述字符: 结构描述字符,
     public 部分列表: 字形[],
-    public 笔顺: 笔画块[],
+    public 笔顺: 旧笔画块[],
   ) {
     this.笔画列表 = this.计算笔画列表(笔顺, 部分列表);
   }
@@ -50,7 +50,7 @@ class 复合体 {
    *
    * @returns SVG 图形或错误
    */
-  计算笔画列表(笔顺: 笔画块[], 部分列表: 字形[]): 笔画名称[] {
+  计算笔画列表(笔顺: 旧笔画块[], 部分列表: 字形[]): 笔画名称[] {
     const 各部分笔画列表: 笔画名称[][] = [];
     for (const 字形 of 部分列表) {
       if (字形 instanceof 部件) {
@@ -166,7 +166,7 @@ abstract class 复合体分析器<
       字根序列: 字根[];
       部件分析?: 部件分析;
     }[],
-    笔顺: 笔画块[],
+    笔顺: 旧笔画块[],
   ): 字根[] {
     const 已取笔画数列表 = 部分结果列表.map(() => 0);
     const 字根序列: 字根[] = [];

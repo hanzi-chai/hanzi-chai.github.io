@@ -4,7 +4,7 @@ import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 部件, 默认退化配置 } from "./component.js";
 import { 复合体 } from "./compound.js";
 import type { 分析配置, 条件, 退化配置 } from "./config.js";
-import type { 复合体数据 } from "./data.js";
+import type { 旧复合体数据 } from "./data.js";
 import { 二笔, type 元素, 笔画 } from "./element.js";
 import type { 原始字库 } from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
@@ -381,7 +381,7 @@ class 字库 {
           type: "compound",
           operator: 复合体.结构描述字符,
           order: 复合体.笔顺,
-        } as 复合体数据,
+        } as 旧复合体数据,
         图形盒子列表,
       ),
     );

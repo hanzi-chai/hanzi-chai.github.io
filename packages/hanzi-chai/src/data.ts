@@ -24,71 +24,6 @@ export type 绘制 =
 
 export type 向量 = N2;
 
-/**
- * SVG 笔画
- * feature: 笔画的种类
- * start: 笔画的起点
- * curveList: 笔画的命令列表
- */
-export interface 矢量笔画数据 {
-  feature: 笔画名称;
-  start: 向量;
-  curveList: 绘制[];
-}
-
-/**
- * 引用笔画
- * index: 源字中笔画的索引
- */
-export interface 引用笔画数据 {
-  feature: "reference";
-  index: number;
-}
-
-/**
- * SVG 字形是一系列 SVG 笔画的列表
- */
-export type 矢量图形数据 = 矢量笔画数据[];
-
-/**
- * 广义的笔画，包括 SVG 笔画和引用笔画
- */
-export type 笔画数据 = 矢量笔画数据 | 引用笔画数据;
-
-/**
- * 基本部件 BasicComponent
- * tags: 部件的标签
- * strokes: 部件包含的 SVG 笔画
- */
-export interface 基本部件数据 {
-  type: "basic_component";
-  tags?: string[];
-  strokes: 矢量笔画数据[];
-}
-
-/**
- * 派生部件 DerivedComponent
- * tags: 部件的标签
- * source: 部件的源字
- * strokes: 部件包含的 SVG 笔画或引用笔画
- *
- * 引用的笔画的内容需要在渲染时从源字中获取
- */
-export interface 衍生部件数据 {
-  type: "derived_component";
-  tags?: string[];
-  source: string;
-  strokes: 笔画数据[];
-}
-
-/**
- * 拼接部件 SplicedComponent
- * 与复合体相同，但作为部件使用
- */
-export interface 拼接部件数据 extends Omit<复合体数据, "type"> {
-  type: "spliced_component";
-}
-
 export const 结构描述字符列表 = [
   "⿰",
   "⿱",
@@ -117,11 +52,125 @@ export const 结构描述字符列表 = [
 export type 结构描述字符 = (typeof 结构描述字符列表)[number];
 
 /**
+ * SVG 笔画
+ * feature: 笔画的种类
+ * start: 笔画的起点
+ * curveList: 笔画的命令列表
+ */
+export interface 矢量笔画数据 {
+  feature: 笔画名称;
+  start: 向量;
+  curveList: 绘制[];
+}
+
+/**
+ * SVG 字形是一系列 SVG 笔画的列表
+ */
+export type 矢量图形数据 = 矢量笔画数据[];
+
+export type 字形来源数据 = { id: number; source: string[] };
+
+export interface 字符数据 {
+  unicode: number;
+  glyphs: 字形来源数据[];
+  name?: string;
+  tygf?: 1 | 2 | 3;
+  gb2312?: 1 | 2;
+  ambiguous?: 1;
+}
+
+interface 字形数据基础 {
+  id: number;
+  gf0014_id?: number;
+  gf3001_id?: number;
+}
+
+export interface 引用数据 {
+  id: number;
+  xbegin?: number;
+  ybegin?: number;
+  xend?: number;
+  yend?: number;
+}
+
+export interface 引用笔画块数据 {
+  index: number;
+  from?: number;
+  to?: number;
+}
+
+export interface 部件数据 extends 字形数据基础 {
+  type: "component";
+  operator?: 结构描述字符;
+  references?: 引用数据[];
+  strokes: (矢量笔画数据 | 引用笔画块数据)[];
+}
+
+export interface 复合体数据 extends 字形数据基础 {
+  type: "compound";
+  operator: 结构描述字符;
+  references: 引用数据[];
+  strokes?: 引用笔画块数据[];
+}
+
+export type 字形数据 = 部件数据 | 复合体数据;
+
+// legacy
+
+/**
+ * 引用笔画
+ * index: 源字中笔画的索引
+ */
+export interface 旧引用笔画数据 {
+  feature: "reference";
+  index: number;
+}
+
+/**
+ * 广义的笔画，包括 SVG 笔画和引用笔画
+ */
+export type 旧笔画数据 = 矢量笔画数据 | 旧引用笔画数据;
+
+/**
+ * 基本部件 BasicComponent
+ * tags: 部件的标签
+ * strokes: 部件包含的 SVG 笔画
+ */
+export interface 旧基本部件数据 {
+  type: "basic_component";
+  tags?: string[];
+  strokes: 矢量笔画数据[];
+}
+
+/**
+ * 派生部件 DerivedComponent
+ * tags: 部件的标签
+ * source: 部件的源字
+ * strokes: 部件包含的 SVG 笔画或引用笔画
+ *
+ * 引用的笔画的内容需要在渲染时从源字中获取
+ */
+export interface 旧衍生部件数据 {
+  type: "derived_component";
+  tags?: string[];
+  source: string;
+  strokes: 旧笔画数据[];
+}
+
+/**
+ * 拼接部件 SplicedComponent
+ * 与复合体相同，但作为部件使用
+ */
+export interface 旧拼接部件数据 extends Omit<旧复合体数据, "type"> {
+  type: "spliced_component";
+}
+
+/**
  * 笔画块
  * index: 部分的索引
  * strokes: 笔画块包含的笔画数，0 表示该笔画块包含所有剩余的笔画
  */
-export interface 笔画块 {
+export interface 旧笔画块 {
   index: number;
   strokes: number;
 }
@@ -133,7 +182,7 @@ export interface 笔画块 {
  * gap3: 第三部分复合体和之前的间距
  * scale3: 第三部分复合体的缩放比例
  */
-export interface 复合体参数 {
+export interface 旧复合体参数 {
   gap2?: number;
   scale2?: number;
   gap3?: number;
@@ -147,13 +196,13 @@ export interface 复合体参数 {
  * tags: 复合体的标签
  * order: 笔画块的顺序
  */
-export interface 复合体数据 {
+export interface 旧复合体数据 {
   type: "compound";
   tags?: string[];
   operator: 结构描述字符;
   operandList: string[];
-  order?: 笔画块[];
-  parameters?: 复合体参数;
+  order?: 旧笔画块[];
+  parameters?: 旧复合体参数;
 }
 
 /**
@@ -161,7 +210,7 @@ export interface 复合体数据 {
  * source: 全等的源字
  * tags: 全等的标签
  */
-export interface 全等数据 {
+export interface 旧全等数据 {
   type: "identity";
   tags?: string[];
   source: string;
@@ -171,20 +220,20 @@ export interface 全等数据 {
  * 一个字形可以是复合体、部件或全等
  */
 export type 字形描述 =
-  | 基本部件数据
-  | 衍生部件数据
-  | 拼接部件数据
-  | 复合体数据
-  | 全等数据;
+  | 旧基本部件数据
+  | 旧衍生部件数据
+  | 旧拼接部件数据
+  | 旧复合体数据
+  | 旧全等数据;
 
 export type 带标签<T> = Omit<T, "tags"> & { tags: 源标签集合; compat: boolean };
 
 export type 标签字形描述 =
-  | 带标签<基本部件数据>
-  | 带标签<衍生部件数据>
-  | 带标签<拼接部件数据>
-  | 带标签<复合体数据>
-  | 带标签<全等数据>;
+  | 带标签<旧基本部件数据>
+  | 带标签<旧衍生部件数据>
+  | 带标签<旧拼接部件数据>
+  | 带标签<旧复合体数据>
+  | 带标签<旧全等数据>;
 
 /**
  * 原始字符 PrimitiveCharacter

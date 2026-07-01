@@ -22,19 +22,19 @@ import {
   type 非空安排,
 } from "./config.js";
 import {
-  type 全等数据,
   type 原始汉字数据,
   type 向量,
-  type 基本部件数据,
-  type 复合体数据,
   type 字形描述,
-  type 引用笔画数据,
-  type 拼接部件数据,
+  type 旧全等数据,
+  type 旧基本部件数据,
+  type 旧复合体数据,
+  type 旧引用笔画数据,
+  type 旧拼接部件数据,
+  type 旧衍生部件数据,
   type 矢量笔画数据,
   type 结构描述字符,
   结构描述字符列表,
   type 绘制,
-  type 衍生部件数据,
 } from "./data.js";
 import {
   二笔,
@@ -76,7 +76,7 @@ type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
   : _TupleOf<T, N, [T, ...R]>;
 
 // 模拟函数
-export const 模拟引用笔画 = (): 引用笔画数据 => ({
+export const 模拟引用笔画 = (): 旧引用笔画数据 => ({
   feature: "reference",
   index: 0,
 });
@@ -107,34 +107,34 @@ export const 模拟矢量笔画 = (
   };
 };
 
-export const 模拟空基本部件 = (): 基本部件数据 => ({
+export const 模拟空基本部件 = (): 旧基本部件数据 => ({
   type: "basic_component",
   strokes: [],
 });
 
-export const 模拟基本部件 = (): 基本部件数据 => ({
+export const 模拟基本部件 = (): 旧基本部件数据 => ({
   type: "basic_component",
   strokes: [模拟矢量笔画("横")],
 });
 
-export const 模拟衍生部件 = (): 衍生部件数据 => ({
+export const 模拟衍生部件 = (): 旧衍生部件数据 => ({
   type: "derived_component",
   source: "一",
   strokes: [模拟引用笔画()],
 });
 
-export const 模拟拼接部件 = (): 拼接部件数据 => ({
+export const 模拟拼接部件 = (): 旧拼接部件数据 => ({
   type: "spliced_component",
   operator: "⿰",
   operandList: ["一", "丨"],
 });
 
-export const 模拟全等 = (): 全等数据 => ({
+export const 模拟全等 = (): 旧全等数据 => ({
   type: "identity",
   source: "一",
 });
 
-export const 模拟复合体 = (operator: 结构描述字符): 复合体数据 => ({
+export const 模拟复合体 = (operator: 结构描述字符): 旧复合体数据 => ({
   type: "compound",
   operator,
   operandList: ["一", "一"],
@@ -142,7 +142,7 @@ export const 模拟复合体 = (operator: 结构描述字符): 复合体数据 =
 
 export const 是基本或衍生部件 = (
   glyph: 字形描述,
-): glyph is 基本部件数据 | 衍生部件数据 =>
+): glyph is 旧基本部件数据 | 旧衍生部件数据 =>
   glyph.type === "basic_component" || glyph.type === "derived_component";
 
 export const 创建原始汉字数据 = (

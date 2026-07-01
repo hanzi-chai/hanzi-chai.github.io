@@ -5,11 +5,11 @@ import { 复合体 } from "./compound.js";
 import type { 变换器, 字形自定义, 字集指示, 模式, 节点 } from "./config.js";
 import type {
   原始汉字数据,
-  复合体数据,
   字形描述,
+  旧复合体数据,
+  旧笔画块,
   标签字形描述,
   矢量图形数据,
-  笔画块,
 } from "./data.js";
 import { 自定义元素 } from "./element.js";
 import { 字库, type 字形 } from "./repertoire.js";
@@ -165,7 +165,10 @@ class 原始字库 {
       const s = new Set(拓扑排序汉字.map((x) => x.字符));
       const missing = [...描述列表映射.keys()].filter((x) => !s.has(x));
       return default_err(
-        `存在循环依赖的字符: ${missing.slice(0, 100).map(x => x.获取名称()).join(", ")}，共 ${missing.length} 个`,
+        `存在循环依赖的字符: ${missing
+          .slice(0, 100)
+          .map((x) => x.获取名称())
+          .join(", ")}，共 ${missing.length} 个`,
       );
     }
     // 3. 将字形数据转化为字形
@@ -216,7 +219,11 @@ class 原始字库 {
    * 在数据库上匹配模式到某个键（按需展开并递归调用自身），
    * 变量绑定为子键字符串。
    */
-  模式匹配(字形: 字形描述, 模式: 模式, 变量映射: 变量映射): 字形 is 复合体数据 {
+  模式匹配(
+    字形: 字形描述,
+    模式: 模式,
+    变量映射: 变量映射,
+  ): 字形 is 旧复合体数据 {
     if (字形.type !== "compound") return false;
     if (模式.operator !== 字形.operator) return false;
     if (模式.operandList.length !== 字形.operandList.length) return false;
@@ -263,7 +270,7 @@ class 原始字库 {
    * - 嵌套 pattern 递归生成子键
    */
   替换(
-    原字形: 复合体数据,
+    原字形: 旧复合体数据,
     项: 节点,
     变量映射: 变量映射,
     辅助字符映射: Map<字符, 字形描述[]>,
@@ -292,7 +299,7 @@ class 原始字库 {
         部分列表.push(如码位.value.获取名称());
       }
     }
-    const 复合体: 复合体数据 = {
+    const 复合体: 旧复合体数据 = {
       ...原字形,
       operator: 项.operator,
       operandList: 部分列表,
@@ -464,7 +471,7 @@ class 原始字库 {
         for (const [部分索引, 字形索引] of 组合.entries()) {
           部分列表.push(引用字形列表的列表[部分索引]![字形索引]!);
         }
-        const 默认笔顺: 笔画块[] = 部分列表.map((_, index) => ({
+        const 默认笔顺: 旧笔画块[] = 部分列表.map((_, index) => ({
           index,
           strokes: 0,
         }));
