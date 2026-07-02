@@ -1,17 +1,13 @@
-import type { 原始汉字模型 } from "../../schema/types";
-import { IRequest } from "itty-router";
-import { Ctx, Env } from "../dto/context";
-import { Err, ErrCode, Ok, Result } from "../error/error";
+import type { IRequest } from "itty-router";
+import type { 原始汉字模型 } from "../../scripts/utils";
+import type { Ctx, Env } from "../dto/context";
 import { DataList } from "../dto/list";
+import { loadString } from "../dto/load";
+import { Err, ErrCode, Ok, type Result } from "../error/error";
 import { Model } from "../model/repertoire";
-import { loadNumber, loadString } from "../dto/load";
-import { Schema, Validator } from "@cfworker/json-schema";
-import schema from "../../schema/schema.json";
 
-const validateCharacter = new Validator(schema.definitions.Character as Schema);
-
-export async function validateUnicode(request: IRequest, env: Env, ctx: Ctx) {
-  const unicode = parseInt(request.params["unicode"]);
+export async function validateUnicode(request: IRequest, _env: Env, ctx: Ctx) {
+  const unicode = parseInt(request.params.unicode, 10);
   if (!Number.isInteger(unicode)) {
     // TODO: 增加具体范围
     return new Err(ErrCode.ParamInvalid, "Unicode不正确");
@@ -19,9 +15,9 @@ export async function validateUnicode(request: IRequest, env: Env, ctx: Ctx) {
   ctx.unicode = unicode;
 }
 
-export async function checkExist(request: IRequest, env: Env, ctx: Ctx) {
+export async function checkExist(_request: IRequest, env: Env, ctx: Ctx) {
   // 记录是否已存在
-  let exist = await Model.exist(env, ctx.unicode);
+  const exist = await Model.exist(env, ctx.unicode);
   if (!Ok(exist)) {
     return exist;
   }
@@ -31,8 +27,8 @@ export async function checkExist(request: IRequest, env: Env, ctx: Ctx) {
 }
 
 // 记录是否已存在
-export async function checkNotExist(request: IRequest, env: Env, ctx: Ctx) {
-  let exist = await Model.exist(env, ctx.unicode);
+export async function checkNotExist(_request: IRequest, env: Env, ctx: Ctx) {
+  const exist = await Model.exist(env, ctx.unicode);
   if (!Ok(exist)) {
     return exist;
   }
@@ -41,7 +37,7 @@ export async function checkNotExist(request: IRequest, env: Env, ctx: Ctx) {
   }
 }
 
-export async function ListAll(request: Request, env: Env) {
+export async function ListAll(_request: Request, env: Env) {
   const { results } = await env.CHAI.prepare("SELECT * FROM repertoire").all();
   return results;
 }
@@ -62,8 +58,8 @@ export async function List(
 
   var list = new DataList<原始汉字模型>();
   list.total = result;
-  list.page = parseInt(loadString(page)) || 1;
-  list.size = parseInt(loadString(size)) || 20;
+  list.page = parseInt(loadString(page), 10) || 1;
+  list.size = parseInt(loadString(size), 10) || 20;
 
   if (list.total > (list.page - 1) * list.size) {
     // 本页有数据时, 查询数据
@@ -84,7 +80,7 @@ export async function List(
 
 /** GET:/repertoire/:unicode */
 export async function Info(
-  request: IRequest,
+  _request: IRequest,
   env: Env,
   ctx: Ctx,
 ): Promise<Result<原始汉字模型>> {
@@ -120,7 +116,7 @@ export async function CreateBatch(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  let glyph: 原始汉字模型[] = await request.json();
+  const glyph: 原始汉字模型[] = await request.json();
   return await Model.createBatch(env, glyph);
 }
 
@@ -159,7 +155,7 @@ type Lookup = { unicode: number; glyphs: string };
 
 /** DELETE:/repertoire/:unicode */
 export async function Delete(
-  request: IRequest,
+  _request: IRequest,
   env: Env,
   ctx: Ctx,
 ): Promise<Result<boolean>> {
@@ -167,7 +163,7 @@ export async function Delete(
     `SELECT unicode, glyphs FROM repertoire`,
   ).all<Lookup>();
   const regex = new RegExp(`(?<!\\d)${ctx.unicode}(?!\\d)`);
-  let hint: Lookup | undefined = undefined;
+  let hint: Lookup | undefined;
   for (const result of results) {
     if (regex.test(result.glyphs)) {
       hint = result;
@@ -208,7 +204,7 @@ export async function UpdateBatch(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  let glyph: 原始汉字模型[] = await request.json();
+  const glyph: 原始汉字模型[] = await request.json();
   return await Model.updateBatch(env, glyph);
 }
 

@@ -1,7 +1,7 @@
 import type {
   兼容字形自定义,
   原始汉字数据,
-  变换器,
+  字形拼写运算,
   字集指示,
   源标签,
 } from "hanzi-chai";
@@ -21,7 +21,7 @@ export const 字形自定义原子 = focusAtom(数据配置原子, (o) =>
 );
 
 export const 变换器列表原子 = focusAtom(数据配置原子, (o) =>
-  o.prop("transformers").valueOr([] as 变换器[]),
+  o.prop("transformers").valueOr([] as 字形拼写运算[]),
 );
 
 export const 字形来源列表原子 = focusAtom(数据配置原子, (o) =>

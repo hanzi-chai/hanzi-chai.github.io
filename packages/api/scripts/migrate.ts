@@ -138,7 +138,7 @@ function resolve(
         } as 字形数据;
         字形数据列表.push(newGlyph);
       }
-      id_sources.push({ id, source: glyph.tags ?? [] });
+      id_sources.push({ id, sources: glyph.tags ?? [] });
     }
   }
 

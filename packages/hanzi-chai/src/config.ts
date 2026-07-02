@@ -1,5 +1,9 @@
 import type { 笔画名称 } from "./classifier.js";
-import type { 原始汉字数据, 字形描述, 结构描述字符 } from "./data.js";
+import type {
+  基本字形数据,
+  字符数据,
+  结构描述字符,
+} from "./data.js";
 import type { 取码对象 } from "./element.js";
 import type { 源标签 } from "./utils.js";
 
@@ -26,27 +30,51 @@ export const 字集指示列表 = [
 ] as const;
 export type 字集指示 = (typeof 字集指示列表)[number];
 
+export type 补丁操作 =
+  | { type: "delete" }
+  | { type: "update"; id: number }
+  | { type: "insert"; id: number };
+
+export type 字符数据补丁 = {
+  sources: string[];
+} & 补丁操作;
+
 export interface 数据配置 {
   character_set?: 字集指示;
-  repertoire?: Record<string, 原始汉字数据>;
-  glyph_customization?: 兼容字形自定义;
-  transformers?: 变换器[];
+  characters?: 字符数据[];
+  character_customization?: Record<string, 字符数据补丁[]>;
+  glyphs?: 基本字形数据[];
+  glyph_algebra?: 字形拼写运算[];
   glyph_sources?: 源标签[];
 }
 
-export type 兼容字形自定义 = Record<string, 字形描述 | 字形描述[]>;
+export type 字形自定义 = Record<string, 字符数据补丁[]>;
 
-export type 字形自定义 = Record<string, 字形描述[]>;
+export type 字形拼写运算 =
+  | {
+      type: "xform" | "derive";
+      from: 模式;
+      to: 模式;
+    }
+  | {
+      type: "erase";
+      from: 模式;
+    };
 
-export interface 变换器 {
-  from: 模式;
-  to: 模式;
-}
+/**
+ * 它本质上是树上的正则表达式。其中，ID 和 Operator 匹配特定字形 ID 或结构符，而 IDVariable 和 OperatorVariable 匹配一系列的字形 ID 或结构符。如果提供了 `id_set` 或 `operator_set`，则只匹配集合内的字形 ID 或结构符；否则，视为匹配任何字形 ID 或结构符。
+ */
+export type 模式 =
+  | ID
+  | IDVariable
+  | {
+      operator: 结构描述字符 | OperatorVariable;
+      references: (ID | IDVariable)[];
+    };
 
-export interface 模式 {
-  operator: 结构描述字符;
-  operandList: 节点[];
-}
+type ID = number;
+type IDVariable = { variable: number; id_set?: ID[] };
+type OperatorVariable = { variable: number; opearator_set?: 结构描述字符[] };
 
 export type 节点 = 模式 | 结构变量 | string;
 

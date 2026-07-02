@@ -1,5 +1,5 @@
 import type { 字集指示 } from "./config.js";
-import type { 原始汉字数据 } from "./data.js";
+import type { 字符数据 } from "./data.js";
 import { default_err, ok, type Result } from "./utils.js";
 
 export interface 区块 {
@@ -291,14 +291,14 @@ export class 字符 {
 
 export const 字集过滤查找表: Record<
   字集指示,
-  (k: 字符, v: 原始汉字数据) => boolean
+  (k: 字符, v: 字符数据) => boolean
 > = {
-  minimal: (_, v) => v.gb2312 > 0 && v.tygf > 0,
-  gb2312: (_, v) => v.gb2312 > 0,
-  general: (_, v) => v.tygf > 0,
-  basic: (k, v) => v.tygf > 0 || k.是基本区汉字(),
-  extended: (k, v) => v.tygf > 0 || k.是汉字(),
-  supplement: (k, v) => v.tygf > 0 || k.是汉字() || k.是汉字补充(),
+  minimal: (_, v) => v.gb2312 !== undefined && v.tygf !== undefined,
+  gb2312: (_, v) => v.gb2312 !== undefined,
+  general: (_, v) => v.tygf !== undefined,
+  basic: (k, v) => v.tygf !== undefined || k.是基本区汉字(),
+  extended: (k, v) => v.tygf !== undefined || k.是汉字(),
+  supplement: (k, v) => v.tygf !== undefined || k.是汉字() || k.是汉字补充(),
   panlingual: (k, _) => !k.是私用区(),
   maximal: (_, __) => true,
 };

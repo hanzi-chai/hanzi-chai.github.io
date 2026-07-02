@@ -5,10 +5,8 @@ import { 笔画表示方式 } from "./classifier.js";
 import type { 部件 } from "./component.js";
 import {
   type 元素位,
-  type 兼容字形自定义,
   type 决策,
   type 决策空间,
-  type 字形自定义,
   type 安排,
   type 安排描述,
   type 广义安排,
@@ -847,18 +845,6 @@ export const 所有源标签 = [
 export type 源标签 = string & { __brand: "source" };
 
 export type 源标签集合 = Set<源标签>;
-
-export const 标准化自定义 = (字形自定义: 兼容字形自定义) => {
-  const 标准字形自定义: 字形自定义 = {};
-  for (const [char, value] of Object.entries(字形自定义)) {
-    if (Array.isArray(value)) {
-      标准字形自定义[char] = value;
-    } else {
-      标准字形自定义[char] = [value];
-    }
-  }
-  return 标准字形自定义;
-};
 
 export const 生成 = (config: 配置): 生成配置 => {
   const mapping = config.form.mapping;

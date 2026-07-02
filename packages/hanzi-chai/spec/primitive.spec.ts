@@ -10,12 +10,14 @@ beforeAll(() => {
 });
 
 describe("笔顺数据验证", () => {
-  it("基本区汉字的笔顺应基本正确", { timeout: 50000 }, () => {
+  it("基本区汉字的笔顺应基本正确", () => {
     const tygf = 获取通用规范汉字笔画数据();
     const cjk = 获取CJK汉字笔画数据();
     const result = new Map<string, string>();
-    for (const { 字符, 字形列表 } of 字库) {
+    for (const [字符] of 字库) {
       if (!字符.是基本区汉字()) continue;
+      const 字形列表 = 字库.查询字形(字符);
+      if (!字形列表) continue;
       for (const glyph of 字形列表) {
         result.set(字符.获取名称(), glyph.获取笔画序列(默认分类器).join(""));
         break;

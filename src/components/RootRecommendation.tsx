@@ -54,9 +54,7 @@ interface RootRecommendationProps {
  * 如果当前元素是特殊字根（非笔画的字符），则显示 Popconfirm 询问用户是否需要推荐其他字根
  * 否则保留原有的按钮交互
  */
-export default function RootRecommendation({
-  value,
-}: RootRecommendationProps) {
+export default function RootRecommendation({ value }: RootRecommendationProps) {
   const 当前元素 = useAtomValue(当前元素原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 原始字库 = useAtomValue(原始字库原子);
@@ -83,7 +81,11 @@ export default function RootRecommendation({
   const set决策 = useSetAtom(强类型决策原子);
 
   const children = (
-    <Button type="primary" disabled={当前元素 === undefined || value === undefined} onClick={() => addMapping(当前元素!, value!)}>
+    <Button
+      type="primary"
+      disabled={当前元素 === undefined || value === undefined}
+      onClick={() => addMapping(当前元素!, value!)}
+    >
       添加
     </Button>
   );
@@ -125,7 +127,12 @@ export default function RootRecommendation({
       okText="是，一并添加"
       cancelText="否，只添加当前"
     >
-      <Button type="primary" disabled={当前元素 === undefined || value === undefined}>添加</Button>
+      <Button
+        type="primary"
+        disabled={当前元素 === undefined || value === undefined}
+      >
+        添加
+      </Button>
     </Popconfirm>
   );
 }

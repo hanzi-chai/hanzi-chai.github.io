@@ -12,56 +12,60 @@ import type {
 import { 加 } from "./math.js";
 
 class 仿射变换 {
-  static id = new 仿射变换(1, 1);
-  static left = new 仿射变换(0.5, 1);
-  static right = new 仿射变换(0.5, 1, [50, 0]);
-  static top = new 仿射变换(1, 0.5);
-  static bottom = new 仿射变换(1, 0.5, [0, 50]);
-  static leftThird = new 仿射变换(0.33, 1);
-  static centerThird = new 仿射变换(0.33, 1, [33, 0]);
-  static rightThird = new 仿射变换(0.33, 1, [66, 0]);
-  static topThird = new 仿射变换(1, 0.33);
-  static middleThird = new 仿射变换(1, 0.33, [0, 33]);
-  static bottomThird = new 仿射变换(1, 0.33, [0, 66]);
+  static id = new 仿射变换(new 区间(0, 100), new 区间(0, 100));
+  static left = new 仿射变换(new 区间(0, 50), new 区间(0, 100));
+  static right = new 仿射变换(new 区间(50, 100), new 区间(0, 100));
+  static top = new 仿射变换(new 区间(0, 100), new 区间(0, 50));
+  static bottom = new 仿射变换(new 区间(0, 100), new 区间(50, 100));
+  static leftThird = new 仿射变换(new 区间(0, 33), new 区间(0, 100));
+  static centerThird = new 仿射变换(new 区间(33, 66), new 区间(0, 100));
+  static rightThird = new 仿射变换(new 区间(66, 99), new 区间(0, 100));
+  static topThird = new 仿射变换(new 区间(0, 100), new 区间(0, 33));
+  static middleThird = new 仿射变换(new 区间(0, 100), new 区间(33, 66));
+  static bottomThird = new 仿射变换(new 区间(0, 100), new 区间(66, 99));
   static 查找表: Record<结构描述字符, 仿射变换[]> = {
     "⿰": [仿射变换.left, 仿射变换.right],
     "⿱": [仿射变换.top, 仿射变换.bottom],
     "⿲": [仿射变换.leftThird, 仿射变换.centerThird, 仿射变换.rightThird],
     "⿳": [仿射变换.topThird, 仿射变换.middleThird, 仿射变换.bottomThird],
-    "⿴": [仿射变换.id, new 仿射变换(0.5, 0.5, [25, 25])],
-    "⿵": [仿射变换.id, new 仿射变换(0.5, 0.5, [25, 40])],
-    "⿶": [仿射变换.id, new 仿射变换(0.5, 0.5, [25, 10])],
-    "⿷": [仿射变换.id, new 仿射变换(0.5, 0.5, [40, 25])],
-    "⿸": [仿射变换.id, new 仿射变换(0.5, 0.5, [40, 40])],
-    "⿹": [仿射变换.id, new 仿射变换(0.5, 0.5, [10, 40])],
-    "⿺": [仿射变换.id, new 仿射变换(0.5, 0.5, [40, 10])],
-    "⿼": [仿射变换.id, new 仿射变换(0.5, 0.5, [10, 25])],
-    "⿽": [仿射变换.id, new 仿射变换(0.5, 0.5, [10, 10])],
+    "⿴": [仿射变换.id, new 仿射变换(new 区间(25, 75), new 区间(25, 75))],
+    "⿵": [仿射变换.id, new 仿射变换(new 区间(25, 75), new 区间(40, 90))],
+    "⿶": [仿射变换.id, new 仿射变换(new 区间(25, 75), new 区间(10, 60))],
+    "⿷": [仿射变换.id, new 仿射变换(new 区间(40, 90), new 区间(25, 75))],
+    "⿸": [仿射变换.id, new 仿射变换(new 区间(40, 90), new 区间(40, 90))],
+    "⿹": [仿射变换.id, new 仿射变换(new 区间(10, 60), new 区间(40, 90))],
+    "⿺": [仿射变换.id, new 仿射变换(new 区间(40, 90), new 区间(10, 60))],
+    "⿼": [仿射变换.id, new 仿射变换(new 区间(10, 60), new 区间(25, 75))],
+    "⿽": [仿射变换.id, new 仿射变换(new 区间(10, 60), new 区间(10, 60))],
     "⿻": [仿射变换.id, 仿射变换.id],
     "⿾": [仿射变换.id],
     "⿿": [仿射变换.id],
   };
 
-  public constructor(
-    private 横向缩放: number,
-    private 纵向缩放: number,
-    private 平移: 向量 = [0, 0],
-  ) {}
+  private readonly 横向缩放: number;
+  private readonly 纵向缩放: number;
+  private readonly 平移: 向量;
+
+  public constructor(x区间: 区间, y区间: 区间) {
+    this.横向缩放 = x区间.长度() / 100;
+    this.纵向缩放 = y区间.长度() / 100;
+    this.平移 = [x区间.起点(), y区间.起点()];
+  }
 
   public 变换线段(动作: 绘制): 绘制 {
     const 新动作: 绘制 = cloneDeep(动作);
     switch (新动作.command) {
       case "h":
-        新动作.parameterList[0] *= this.横向缩放;
+        新动作.parameterList[0] = Math.round(新动作.parameterList[0] * this.横向缩放);
         break;
       case "v":
-        新动作.parameterList[0] *= this.纵向缩放;
+        新动作.parameterList[0] = Math.round(新动作.parameterList[0] * this.纵向缩放);
         break;
       case "c":
       case "z":
         for (const index of [0, 2, 4] as const) {
-          新动作.parameterList[index] *= this.横向缩放;
-          新动作.parameterList[index + 1]! *= this.纵向缩放;
+          新动作.parameterList[index] = Math.round(新动作.parameterList[index] * this.横向缩放);
+          新动作.parameterList[index + 1]! = Math.round(新动作.parameterList[index + 1]! * this.纵向缩放);
         }
         break;
     }
@@ -70,7 +74,10 @@ class 仿射变换 {
 
   public 变换笔画(笔画: 矢量笔画数据): 矢量笔画数据 {
     const [x, y] = 笔画.start;
-    const start = 加([x * this.横向缩放, y * this.纵向缩放] as 向量, this.平移);
+    const start = 加(
+      [Math.round(x * this.横向缩放), Math.round(y * this.纵向缩放)] as 向量,
+      this.平移,
+    );
     const 新笔画 = {
       ...笔画,
       start,
@@ -191,12 +198,18 @@ class 图形盒子 {
         let 变换: 仿射变换;
         if (是左右结构) {
           const 横向平移 = 新横向区间.终点() + 间隔 - 横向区间.起点();
-          变换 = new 仿射变换(1, 1, [横向平移, 0]);
+          变换 = new 仿射变换(
+            new 区间(横向平移, 横向平移 + 100),
+            new 区间(0, 100),
+          );
           新横向区间.延长(区间增加);
           新纵向区间 = 新纵向区间.取并集(纵向区间);
         } else {
           const 纵向平移 = 新纵向区间.终点() + 间隔 - 纵向区间.起点();
-          变换 = new 仿射变换(1, 1, [0, 纵向平移]);
+          变换 = new 仿射变换(
+            new 区间(0, 100),
+            new 区间(纵向平移, 纵向平移 + 100),
+          );
           新纵向区间.延长(区间增加);
           新横向区间 = 新横向区间.取并集(横向区间);
         }
@@ -228,4 +241,4 @@ class 图形盒子 {
   }
 }
 
-export { 图形盒子 };
+export { 仿射变换, 图形盒子 };

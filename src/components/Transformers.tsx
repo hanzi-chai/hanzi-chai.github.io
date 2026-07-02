@@ -7,7 +7,7 @@ import {
 import { Button, Dropdown, Flex, Select } from "antd";
 import {
   type 原始字库,
-  type 变换器,
+  type 字形拼写运算,
   type 结构变量,
   结构描述字符列表,
   type 节点,
@@ -33,7 +33,7 @@ function serialize(模式: 节点, 原始字库: 原始字库): ReactNode {
   );
 }
 
-const 示例列表: 变换器[] = [
+const 示例列表: 字形拼写运算[] = [
   {
     from: {
       operator: "⿱",
@@ -139,7 +139,7 @@ const 示例列表: 变换器[] = [
   },
 ];
 
-const getDummyTransformer = (): 变换器 => {
+const getDummyTransformer = (): 字形拼写运算 => {
   return {
     from: { operator: "⿰", operandList: ["一", "一"] },
     to: { operator: "⿱", operandList: ["一", "一"] },
@@ -222,7 +222,7 @@ const TransformersForm = () => {
       trigger={<Button>编辑变换器</Button>}
       initialValues={{ content: transformers }}
       onFinish={async (v) => {
-        setTransformers(v.content as 变换器[]);
+        setTransformers(v.content as 字形拼写运算[]);
         return true;
       }}
       formRef={formRef}
@@ -254,7 +254,7 @@ const TransformersForm = () => {
                   onClick={() => {
                     const form = formRef.current;
                     if (!form) return;
-                    const list: 变换器[] = form.getFieldValue("content") || [];
+                    const list: 字形拼写运算[] = form.getFieldValue("content") || [];
                     form.setFieldValue("content", [...list, 示例]);
                   }}
                 >

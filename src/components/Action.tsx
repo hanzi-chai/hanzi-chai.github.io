@@ -14,7 +14,7 @@ import {
   type 原始字库数据,
   type 原始汉字数据,
   type 字形描述,
-  type 校验原始汉字数据,
+  type 校验字符数据,
   模拟全等,
   模拟基本部件,
   模拟复合体,
@@ -329,7 +329,7 @@ export const Delete = ({ unicode }: { unicode: number }) => {
   );
 };
 
-export const EditGlyph = ({ character }: { character: 校验原始汉字数据 }) => {
+export const EditGlyph = ({ character }: { character: 校验字符数据 }) => {
   const remote = useAtomValue(远程原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const add = useAddAtom(原始可编辑字库数据原子);

@@ -16,7 +16,7 @@ import type {
   原始字库,
   原始汉字数据,
   字形描述,
-  校验原始汉字数据,
+  校验字符数据,
 } from "hanzi-chai";
 import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
 import * as O from "optics-ts/standalone";
@@ -59,7 +59,7 @@ import {
   DeleteButton,
 } from "./Utils";
 
-type Column = ColumnType<校验原始汉字数据>;
+type Column = ColumnType<校验字符数据>;
 
 const typenames = {
   basic_component: "基本部件",
@@ -132,7 +132,7 @@ export const 字形编辑器 = ({
 export const 字形数据更新器 = ({
   character,
 }: {
-  character: 校验原始汉字数据;
+  character: 校验字符数据;
 }) => {
   const { glyphs, unicode } = character;
   const 字 = String.fromCodePoint(unicode);
@@ -190,7 +190,7 @@ export const 字形数据更新器 = ({
 export const 字形数据自定义器 = ({
   character,
 }: {
-  character: 校验原始汉字数据;
+  character: 校验字符数据;
 }) => {
   const 添加自定义字形 = useAddAtom(字形自定义原子);
   const 删除自定义字形 = useRemoveAtom(字形自定义原子);
@@ -248,7 +248,7 @@ export default function CharacterTable() {
   const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
   const filter = new 字符过滤器(filterProps, 笔顺映射);
 
-  const dataSource: 校验原始汉字数据[] = [];
+  const dataSource: 校验字符数据[] = [];
   for (const c of 排序字库数据) {
     const data = 原始字库?.查询(c);
     if (!data) continue;
@@ -455,7 +455,7 @@ export default function CharacterTable() {
     gb2312,
     ambiguous,
   ];
-  const columns: ColumnsType<校验原始汉字数据> = remote
+  const columns: ColumnsType<校验字符数据> = remote
     ? adminColumns
     : userColumns;
   return (
@@ -480,7 +480,7 @@ export default function CharacterTable() {
         <Create onCreate={() => {}} ref={ref3} />
       </Flex>
       <div ref={ref1}>
-        <Table<校验原始汉字数据>
+        <Table<校验字符数据>
           dataSource={dataSource}
           columns={columns}
           size="small"

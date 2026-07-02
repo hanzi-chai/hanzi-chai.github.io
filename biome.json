@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["src/*/**", "packages/hanzi-chai/src/*"],
+    "includes": ["src/*/**", "packages/*/src/**"],
     "ignoreUnknown": false
   },
   "formatter": {

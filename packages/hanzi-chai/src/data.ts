@@ -68,7 +68,7 @@ export interface 矢量笔画数据 {
  */
 export type 矢量图形数据 = 矢量笔画数据[];
 
-export type 字形来源数据 = { id: number; source: string[] };
+export type 字形来源数据 = { id: number; sources: string[] };
 
 export interface 字符数据 {
   unicode: number;
@@ -106,6 +106,11 @@ export interface 部件数据 extends 字形数据基础 {
   strokes: (矢量笔画数据 | 引用笔画块数据)[];
 }
 
+export interface 基本部件数据 extends 字形数据基础 {
+  type: "component";
+  strokes: 矢量笔画数据[];
+}
+
 export interface 复合体数据 extends 字形数据基础 {
   type: "compound";
   operator: 结构描述字符;
@@ -114,6 +119,8 @@ export interface 复合体数据 extends 字形数据基础 {
 }
 
 export type 字形数据 = 部件数据 | 复合体数据;
+
+export type 基本字形数据 = 基本部件数据 | 复合体数据;
 
 // legacy
 

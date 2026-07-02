@@ -33,15 +33,15 @@ const g = (ns: number[]): 拆分方式 => ns.map((n) => ({
 }));
 
 beforeAll(() => {
-  const { 字库, 部件图形库 } = 获取数据();
-  const { 名称映射 } = 计算全部合法元素与元素映射([...字库].map(({ 字符 }) => 字符), 默认分类器, new Map(), new Map());
+  const { 原始字库, 字库, 部件图形库 } = 获取数据();
+  const { 名称映射 } = 计算全部合法元素与元素映射([...字库].map(([字符]) => 字符), 默认分类器, new Map(), new Map());
   const { 决策, 决策空间 } = 构建强类型决策与决策空间({ "1": "f", "二": "d", "人": "s", "大": "a" }, {}, 名称映射);
   const 线性化决策 = new 决策图(决策).线性化();
   if (!线性化决策.ok) throw new Error("Failed to linearize decision graph");
   const result = 字库.准备字形分析配置({}, 决策, 决策空间, 线性化决策.value, new Map(), new Map());
   if (!result.ok) throw new Error("Failed to prepare analysis config");
   配置 = result.value;
-  天 = 部件图形库.天;
+  天 = 部件图形库.get(原始字库.校验("天")!.character);
   env = {
     部件图形: 天!,
     二进制字根映射: new Map(),

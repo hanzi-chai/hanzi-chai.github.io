@@ -1,5 +1,5 @@
 import { expect, it, beforeAll } from "bun:test";
-import { 合并拼写运算, 字符, 计算拼音分析与元素映射, 默认拼音分析器 } from "../src/index.js";
+import { 合并拼写运算, 字符, 计算拼音分析与元素映射, 默认拼音分析器, 拼音元素} from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 let 拼音分析器: 默认拼音分析器;
@@ -16,5 +16,5 @@ it("能够分析拼音", () => {
   if (!有.ok) throw 有.error;
   const 结果 = 拼音分析器.分析([有.value], ["you3"]);
   if (!结果.ok) throw 结果.error;
-  expect(结果.value[0]!.get("韵母")).toEqual({ 类型: "韵母", 元素: "iou" });
+  expect(结果.value[0]!.get("韵母")).toEqual(new 拼音元素("韵母", "iou"));
 });

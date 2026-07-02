@@ -90,11 +90,12 @@ export default function EditorLayout() {
             placement={isCollapsed ? "right" : "bottom"}
             color="rgb(196,144,84)"
           >
-            <Link
-              to="/"
-              className={`flex flex-col items-center w-full py-4!`}
-            >
-              <Avatar shape="square" src="/icon.webp" className={`${isCollapsed ? "h-8! w-8!" : "h-12! w-12!"} shrink-0`} />
+            <Link to="/" className={`flex flex-col items-center w-full py-4!`}>
+              <Avatar
+                shape="square"
+                src="/icon.webp"
+                className={`${isCollapsed ? "h-8! w-8!" : "h-12! w-12!"} shrink-0`}
+              />
               {isCollapsed ? null : (
                 <div className="mt-4 tracking-[1px] text-[#999]!">
                   汉字自动拆分系统

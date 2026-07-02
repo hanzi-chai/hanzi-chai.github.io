@@ -1,9 +1,8 @@
 import type { 默认汉字分析 } from "./assembly.js";
 import type { 分类器 } from "./classifier.js";
-import { 部件 } from "./component.js";
 import type { 条件节点配置, 源节点配置, 运算符 } from "./config.js";
 import type { 结构描述字符 } from "./data.js";
-import type { 字根 } from "./repertoire.js";
+import { type 字根, 部件字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 import {
   type 强类型元素位或编码,
@@ -257,9 +256,12 @@ export class 取码器 {
     是: (t, v) => t?.获取名称() === v,
     不是: (t, v) => t?.获取名称() !== v,
     匹配: (t, v) => t !== undefined && new RegExp(v!, "u").test(t.获取名称()),
-    不匹配: (t, v) => t !== undefined && !new RegExp(v!, "u").test(t.获取名称()),
-    编码匹配: (t, v, m) => t !== undefined && new RegExp(v!, "u").test(m.get(t)!),
-    编码不匹配: (t, v, m) => t !== undefined && !new RegExp(v!, "u").test(m.get(t)!),
+    不匹配: (t, v) =>
+      t !== undefined && !new RegExp(v!, "u").test(t.获取名称()),
+    编码匹配: (t, v, m) =>
+      t !== undefined && new RegExp(v!, "u").test(m.get(t)!),
+    编码不匹配: (t, v, m) =>
+      t !== undefined && !new RegExp(v!, "u").test(m.get(t)!),
     存在: (t) => t !== undefined,
     不存在: (t) => t === undefined,
   };
@@ -342,7 +344,7 @@ export class 取码器 {
       case "字根":
         root = signedIndex(字根序列, object.rootIndex);
         if (root === undefined) return undefined;
-        return root instanceof 部件 ? root.字符 : root;
+        return root instanceof 部件字根 ? root.字符 : root;
       case "笔画":
       case "二笔":
         root = signedIndex(字根序列, object.rootIndex);
