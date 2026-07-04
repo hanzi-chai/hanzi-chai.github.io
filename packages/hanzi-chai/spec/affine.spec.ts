@@ -1,13 +1,15 @@
-import type { 旧复合体数据, 矢量图形数据 } from "../src/data.js";
+import type { 矢量图形数据 } from "../src/data.js";
 import { 图形盒子 } from "../src/affine.js";
 import { describe, expect, it } from "bun:test";
+import { 复合体树数据 } from "../src/primitive.js";
 
 describe("仿射变换", () => {
   it("合并部件", () => {
-    const 复合体: 旧复合体数据 = {
+    const 复合体: 复合体树数据 = {
+      id: 1,
       type: "compound",
       operator: "⿰",
-      operandList: ["甲", "乙"],
+      references: [],
     };
     const 甲 = 图形盒子.从笔画列表构建([
       {
@@ -40,13 +42,14 @@ describe("仿射变换", () => {
   });
 
   it("合并带有笔顺信息的部件", () => {
-    const 复合体: 旧复合体数据 = {
+    const 复合体: 复合体树数据 = {
+      id: 2,
       type: "compound",
       operator: "⿴",
-      operandList: ["甲", "乙"],
-      order: [
-        { index: 1, strokes: 1 },
-        { index: 0, strokes: 0 },
+      references: [],
+      strokes: [
+        { index: 1 },
+        { index: 0},
       ],
     };
     const 甲 = 图形盒子.从笔画列表构建([

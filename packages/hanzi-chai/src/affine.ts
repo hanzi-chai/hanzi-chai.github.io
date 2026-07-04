@@ -2,14 +2,13 @@ import { cloneDeep } from "lodash-es";
 import { 区间 } from "./bezier.js";
 import type {
   向量,
-  旧复合体数据,
-  旧拼接部件数据,
   矢量图形数据,
   矢量笔画数据,
   结构描述字符,
   绘制,
 } from "./data.js";
 import { 加 } from "./math.js";
+import type { 复合体树数据 } from "./primitive.js";
 
 class 仿射变换 {
   static id = new 仿射变换(new 区间(0, 100), new 区间(0, 100));
@@ -56,16 +55,24 @@ class 仿射变换 {
     const 新动作: 绘制 = cloneDeep(动作);
     switch (新动作.command) {
       case "h":
-        新动作.parameterList[0] = Math.round(新动作.parameterList[0] * this.横向缩放);
+        新动作.parameterList[0] = Math.round(
+          新动作.parameterList[0] * this.横向缩放,
+        );
         break;
       case "v":
-        新动作.parameterList[0] = Math.round(新动作.parameterList[0] * this.纵向缩放);
+        新动作.parameterList[0] = Math.round(
+          新动作.parameterList[0] * this.纵向缩放,
+        );
         break;
       case "c":
       case "z":
         for (const index of [0, 2, 4] as const) {
-          新动作.parameterList[index] = Math.round(新动作.parameterList[index] * this.横向缩放);
-          新动作.parameterList[index + 1]! = Math.round(新动作.parameterList[index + 1]! * this.纵向缩放);
+          新动作.parameterList[index] = Math.round(
+            新动作.parameterList[index] * this.横向缩放,
+          );
+          新动作.parameterList[index + 1]! = Math.round(
+            新动作.parameterList[index + 1]! * this.纵向缩放,
+          );
         }
         break;
     }
@@ -165,76 +172,27 @@ class 图形盒子 {
 
   /**
    * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
-   * @param 数据 - 复合体数据 或 拼接部件数据
+   * @param 复合体 - 复合体数据
    * @param 部分列表 - 各部分渲染后的 SVG 图形
    * @returns 合并后的 SVG 图形
    */
-  static 仿射合并(数据: 旧复合体数据 | 旧拼接部件数据, 部分列表: 图形盒子[]) {
-    const { operator, order, parameters } = 数据;
+  static 仿射合并(复合体: 复合体树数据, 部分列表: 图形盒子[]) {
+    const { operator, strokes } = 复合体;
     const 变换后图形列表: 矢量图形数据[] = [];
-    let 新横向区间 = new 区间(0, 100);
-    let 新纵向区间 = new 区间(0, 100);
-    if (["⿰", "⿲", "⿱", "⿳"].includes(operator)) {
-      // 上下、上中下、左右、左中右，直接拼接
-      const 是左右结构 = ["⿰", "⿲"].includes(operator);
-      for (const [
-        index,
-        { 笔画列表, 横向区间, 纵向区间 },
-      ] of 部分列表.entries()) {
-        if (index === 0) {
-          变换后图形列表.push(structuredClone(笔画列表));
-          新横向区间 = new 区间(横向区间.起点(), 横向区间.终点());
-          新纵向区间 = new 区间(纵向区间.起点(), 纵向区间.终点());
-          continue;
-        }
-        let 间隔 = 20;
-        if (index === 1 && parameters?.gap2 !== undefined) {
-          间隔 = parameters.gap2;
-        } else if (index === 2 && parameters?.gap3 !== undefined) {
-          间隔 = parameters.gap3;
-        }
-        const 主轴长度 = 是左右结构 ? 横向区间.长度() : 纵向区间.长度();
-        const 区间增加 = 间隔 + 主轴长度;
-        let 变换: 仿射变换;
-        if (是左右结构) {
-          const 横向平移 = 新横向区间.终点() + 间隔 - 横向区间.起点();
-          变换 = new 仿射变换(
-            new 区间(横向平移, 横向平移 + 100),
-            new 区间(0, 100),
-          );
-          新横向区间.延长(区间增加);
-          新纵向区间 = 新纵向区间.取并集(纵向区间);
-        } else {
-          const 纵向平移 = 新纵向区间.终点() + 间隔 - 纵向区间.起点();
-          变换 = new 仿射变换(
-            new 区间(0, 100),
-            new 区间(纵向平移, 纵向平移 + 100),
-          );
-          新纵向区间.延长(区间增加);
-          新横向区间 = 新横向区间.取并集(横向区间);
-        }
-        变换后图形列表.push(变换.变换笔画列表(笔画列表));
-      }
-    } else {
-      // 包围或结构，暂时还没有优化拼接的算法，用原来的仿射变换算法
-      for (const [index, 变换] of 仿射变换.查找表[operator].entries()) {
-        const 变换后图形 = 变换.变换笔画列表(部分列表[index]!.笔画列表);
-        变换后图形列表.push(变换后图形);
-      }
+    const 新横向区间 = new 区间(0, 100);
+    const 新纵向区间 = new 区间(0, 100);
+    for (const [index, 变换] of 仿射变换.查找表[operator].entries()) {
+      const 变换后图形 = 变换.变换笔画列表(部分列表[index]!.笔画列表);
+      变换后图形列表.push(变换后图形);
     }
     const 合并图形: 矢量图形数据 = [];
-    if (order === undefined) {
+    if (strokes === undefined) {
       合并图形.push(...变换后图形列表.flat());
     } else {
-      for (const { index, strokes } of order) {
+      for (const { index, from, to } of strokes) {
         const 笔画列表 = 变换后图形列表[index];
         if (笔画列表 === undefined) continue;
-        if (strokes === 0) {
-          合并图形.push(...笔画列表);
-        } else {
-          合并图形.push(...笔画列表.slice(0, strokes));
-          变换后图形列表[index] = 笔画列表.slice(strokes);
-        }
+        合并图形.push(...笔画列表.slice(from, to));
       }
     }
     return new 图形盒子(合并图形, 新横向区间, 新纵向区间);

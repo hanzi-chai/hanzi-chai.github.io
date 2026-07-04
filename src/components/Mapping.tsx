@@ -26,7 +26,6 @@ import {
 import { sortBy } from "lodash-es";
 import { type ComponentProps, memo, useState } from "react";
 import {
-  GF0014映射原子,
   useAtom,
   useAtomValue,
   useAtomValueUnwrapped,
@@ -37,7 +36,6 @@ import {
   决策图原子,
   别名显示原子,
   原始字库原子,
-  基本信息原子,
   如字库原子,
   字母表原子,
   强类型决策原子,
@@ -72,10 +70,8 @@ export const ElementDetail = ({
   const 决策图 = useAtomValueUnwrapped(决策图原子);
   const affiliates = 决策图.获取被归并元素(element);
   const alphabet = useAtomValue(字母表原子);
-  const gf0014 = useAtomValue(GF0014映射原子);
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   const keys = mapping.get(element)!;
-  const { name } = useAtomValue(基本信息原子);
 
   // 将修改先保存在本地，而非立即触发 addMapping。
   // 如此，用户可以调整多个编码而不会每次都刷新字根表
@@ -161,9 +157,6 @@ export const ElementDetail = ({
         </Button>
       </Flex>
       <Divider size="small" />
-      {name === "冰雪飞花" && gf0014.has(element as 字符) && (
-        <div>GF0014: {gf0014.get(element as 字符)!.pinyin.join(",")}</div>
-      )}
       <RulesForm element={element} />
     </Flex>
   );
@@ -325,7 +318,7 @@ const MappingUploader = ({
 }: {
   setImportResult: (a: any) => void;
 }) => {
-  const repertoire = useAtomValueUnwrapped(如字库原子);
+  const repertoire = useAtomValue(如字库原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const mapping = useAtomValueUnwrapped(强类型决策原子);
   const setMapping = useSetAtom(强类型决策原子);

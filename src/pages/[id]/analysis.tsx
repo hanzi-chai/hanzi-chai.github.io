@@ -26,6 +26,7 @@ import {
   笔画,
   获取注册表,
   部件,
+  部件字根,
   默认分类器,
   type 默认部件分析,
 } from "hanzi-chai";
@@ -40,24 +41,24 @@ import {
   原始字库原子,
   复合体分析器原子,
   如动态字形分析结果原子,
+  如字库原子,
   如字形分析结果原子,
-  如笔顺映射原子,
   强类型决策原子,
   强类型决策空间原子,
   强类型自定义分析原子,
   汉字集合原子,
   部件分析器原子,
 } from "~/atoms";
-import CharacterQuery from "~/components/CharacterQuery";
 import Degenerator from "~/components/Degenerator";
+import CharacterQuery from "~/components/FilterForm";
 import ResultDetail from "~/components/ResultDetail";
 import ResultSummary from "~/components/ResultSummary";
 import Selector from "~/components/Selector";
 import {
   exportTSV,
   useChaifenTitle,
-  字符过滤器,
-  type 字符过滤器参数,
+  字符字形过滤器,
+  type 过滤器参数,
 } from "~/utils";
 
 const 导出字形分析结果 = (
@@ -69,7 +70,7 @@ const 导出字形分析结果 = (
   const tsv: string[][] = [];
   const 序列化 = (l: 字根[]) =>
     l
-      .map((z) => (z instanceof 部件 ? display(z.字符) : z.获取名称()))
+      .map((z) => (z instanceof 部件字根 ? display(z.字符) : z.获取名称()))
       .join(" ");
   for (const char of characters) {
     const analysis = 分析结果.get(char) ?? [];
@@ -145,11 +146,11 @@ const ExportDynamicAnalysis = () => {
   );
 };
 
-const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
+const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
   const 分析配置 = useAtomValue(分析配置原子);
   const 原始字库 = useAtomValue(原始字库原子);
-  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
+  const 字库 = useAtomValue(如字库原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
   const { 分析结果 } = 字形分析结果;
   const 动态分析 = useAtomValue(动态分析原子);
@@ -166,7 +167,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   ]);
   const 决策 = useAtomValueUnwrapped(强类型决策原子);
   const [过滤必要字根, 设置过滤必要字根] = useState(true);
-  const 过滤器 = new 字符过滤器(filter, 笔顺映射);
+  const 过滤器 = new 字符字形过滤器(filter);
   const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
   const [只显示自定义, 设置只显示自定义] = useState(false);
   const 是必要字根 = (e: 笔画 | 二笔 | 字符) => {
@@ -180,7 +181,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
   const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
   for (const [字, 分析列表] of 分析结果) {
     const 字符串 = 字.获取名称();
-    if (!过滤器.过滤(字, 原始字库.查询(字)!)) continue;
+    if (!过滤器.过滤字符(字, 原始字库.查询(字)!, 字库)) continue;
     if (过滤必要字根 && 是必要字根(字)) continue;
     for (const [i, 分析] of 分析列表.entries()) {
       if (分析.类型 === "部件") {
@@ -194,7 +195,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
         if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 笔画)
           continue;
         部件分析内容.push({
-          key: `${字符串}-${分析.部件.字形序号}`,
+          key: 分析.部件.id,
           label: <ResultSummary glyph={分析.部件} analysis={分析} />,
           children:
             "全部拆分方式" in r ? (
@@ -253,7 +254,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
                 let 部首字符串 = "〇";
                 if (部首) {
                   部首字符串 =
-                    部首 instanceof 部件
+                    部首 instanceof 部件字根
                       ? display(部首.字符)
                       : map[部首.获取名称()]!;
                 }
@@ -280,7 +281,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
               if (last.some((x) => !是必要字根(x))) {
                 notification.warning({
                   message: "存在不合法的自定义拆分",
-                  description: `部件 ${display(部件.字符)} 的自定义拆分中包含非必要字根 ${last
+                  description: `部件 ${部件.id} 的自定义拆分中包含非必要字根 ${last
                     .filter((x) => !是必要字根(x))
                     .join("、")}，请修改后重试`,
                 });
@@ -356,7 +357,7 @@ const AnalysisResults = ({ filter }: { filter: 字符过滤器参数 }) => {
 
 export default function Analysis() {
   useChaifenTitle("拆分");
-  const [filter, setFilter] = useState<字符过滤器参数>({});
+  const [filter, setFilter] = useState<过滤器参数>({});
 
   return (
     <Flex vertical align="center" gap="middle" className="px-8">

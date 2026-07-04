@@ -12,7 +12,7 @@ import {
   useAtomValueUnwrapped,
   全部合法元素原子,
   变量规则映射原子,
-  如笔顺映射原子,
+  如字库原子,
   字母表原子,
   强类型决策原子,
 } from "~/atoms";
@@ -43,6 +43,7 @@ export default function KeySelect({
   allowVariables,
   allowPlaceholder,
 }: KeySelectProps) {
+  const 字库 = useAtomValue(如字库原子);
   const keyOptions: BaseOptionType[] = allowEmpty
     ? [{ label: "无", value: JSON.stringify("") }]
     : [];
@@ -71,7 +72,6 @@ export default function KeySelect({
   if (allowVariables) keyOptions.push(...variableOptions);
   if (allowPlaceholder)
     keyOptions.push({ label: "占位符", value: JSON.stringify(null) });
-  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   let selectValue: string;
   if (typeof value === "string" || value === null || 是强类型变量(value)) {
     selectValue = JSON.stringify(value);
@@ -115,7 +115,7 @@ export default function KeySelect({
         if (!元素) return false;
         const 匹配序列 =
           元素 instanceof 字符 &&
-          笔顺映射.get(元素)?.some((s) => s.startsWith(input));
+          字库.查询字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
         const 匹配元素 = key.element.includes(input);
         return 匹配序列 || 匹配元素;
       }}
@@ -141,8 +141,8 @@ export default function KeySelect({
         const cha = 名称映射.get(ak.element);
         const chb = 名称映射.get(bk.element);
         if (cha instanceof 字符 && chb instanceof 字符) {
-          const aSequence = 笔顺映射.get(cha)?.[0] ?? "";
-          const bSequence = 笔顺映射.get(chb)?.[0] ?? "";
+          const aSequence = 字库.查询字形(cha)?.[0]?.标准笔顺 ?? "";
+          const bSequence = 字库.查询字形(chb)?.[0]?.标准笔顺 ?? "";
           return aSequence.length - bSequence.length;
         }
         return ak.element.localeCompare(bk.element);

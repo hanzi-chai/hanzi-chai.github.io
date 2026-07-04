@@ -4,6 +4,7 @@ import {
   type 基本分析,
   type 复合体,
   部件,
+  部件字根,
   type 默认部件分析,
 } from "hanzi-chai";
 import { useState } from "react";
@@ -18,11 +19,10 @@ import {
   强类型自定义分析原子,
   自定义拆分原子,
 } from "~/atoms";
-import { 数字 } from "~/utils";
 import ElementSelect from "./ElementSelect";
+import { StrokesView } from "./GlyphView";
 import {
   BoxedElementWithTooltip,
-  CharacterWithTooltip,
   DeleteButton,
   PlusButton,
 } from "./Utils";
@@ -62,7 +62,7 @@ const Customize = ({
           type="primary"
           onClick={() =>
             add(
-              component.获取索引(),
+              component.id.toString(),
               content.map((x) => x.获取名称()),
             )
           }
@@ -137,7 +137,7 @@ const DynamicCustomize = ({
           type="primary"
           onClick={() =>
             add(
-              component.获取索引(),
+              component.id.toString(),
               content.map((g) => g.map((x) => x.获取名称())),
             )
           }
@@ -173,12 +173,9 @@ export default function ResultSummary({
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
-        <CharacterWithTooltip element={glyph.字符} />
-        {glyph instanceof 部件 && glyph.字形序号 !== 0 && (
-          <span>之{数字(glyph.字形序号)}</span>
-        )}
+        <StrokesView glyph={glyph.图形盒子} />
         {字根序列.map((x, index) => {
-          const element = x instanceof 部件 ? x.字符 : x;
+          const element = x instanceof 部件字根 ? x.字符 : x;
           return (
             <Flex key={index} align="center">
               <BoxedElementWithTooltip element={element} />
@@ -210,12 +207,12 @@ export default function ResultSummary({
       {glyph instanceof 部件 && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {自定义字根序列 && (
-            <Button onClick={() => 移除自定义分析(glyph.获取索引())}>
+            <Button onClick={() => 移除自定义分析(glyph.id.toString())}>
               取消自定义
             </Button>
           )}
           {自定义字根序列列表 && (
-            <Button onClick={() => 移除动态自定义分析(glyph.获取索引())}>
+            <Button onClick={() => 移除动态自定义分析(glyph.id.toString())}>
               取消自定义组
             </Button>
           )}
@@ -232,7 +229,7 @@ export default function ResultSummary({
                       .filter((x) => x.可用)
                       .map((x) =>
                         x.拆分方式.map((y) =>
-                          y.字根 instanceof 部件 ? y.字根.字符 : y.字根,
+                          y.字根 instanceof 部件字根 ? y.字根.字符 : y.字根,
                         ),
                       )
                   }
@@ -250,7 +247,7 @@ export default function ResultSummary({
                 component={glyph}
                 initialValues={
                   自定义字根序列 ??
-                  字根序列.map((x) => (x instanceof 部件 ? x.字符 : x))
+                  字根序列.map((x) => (x instanceof 部件字根 ? x.字符 : x))
                 }
               />
             }

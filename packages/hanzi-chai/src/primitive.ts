@@ -71,6 +71,10 @@ class 原始字库 {
     return this.字符表.values();
   }
 
+  字形迭代器(): Iterator<基本字形数据> {
+    return this.字形表.values();
+  }
+
   查询(字符实例: 字符): 校验字符数据 | undefined {
     return this.字符表.get(字符实例.toNumber());
   }
@@ -232,6 +236,9 @@ class 原始字库 {
     for (const 字符数据 of this.字符表.values()) {
       const glyphs: 字形单一来源数据[] = [];
       for (const 来源数据 of 字符数据.glyphs) {
+        if (来源数据.sources.length === 0) {
+          来源数据.sources.push("G");
+        }
         for (const source of 来源数据.sources) {
           glyphs.push({ id: 来源数据.id, source });
         }
@@ -245,13 +252,13 @@ class 原始字库 {
     }
 
     // 3. 新字形 ID 分配器
-    let 新ID计数器 = 30 * 2 ** 15;
+    let 新ID计数器 = 0xf0000; // 占位符 ID 起始值
     const 取新ID = () => 新ID计数器++;
 
     // 4. 对每个字符应用拼写运算
     for (const 字形列表历史 of 字符查找表.values()) {
-      let glyphs = 字形列表历史.original!;
-      for (const [index, 运算] of 拼写运算列表.entries()) {
+      let glyphs = 字形列表历史.original;
+      for (const 运算 of 拼写运算列表) {
         const nextGlyphs: 字形单一来源数据[] = [];
         for (const 来源数据 of glyphs) {
           const 字形 = 字形查找表.get(来源数据.id);
@@ -297,13 +304,17 @@ class 原始字库 {
                 break;
               }
             }
+          } else {
+            nextGlyphs.push(来源数据);
           }
         }
-        字形列表历史.steps[index] = nextGlyphs;
+        字形列表历史.steps.push(nextGlyphs);
         glyphs = nextGlyphs;
       }
-      const finalIndex = 拼写运算列表.length - 1;
-      字形列表历史.final = [...字形列表历史.steps[finalIndex]!];
+      字形列表历史.final =
+        字形列表历史.steps.length > 0
+          ? 字形列表历史.steps.at(-1)!
+          : 字形列表历史.original;
     }
 
     // 5. 对每个字符应用字形自定义补丁
@@ -351,6 +362,9 @@ class 原始字库 {
       字形列表历史.filtered = 字形列表历史.final.filter((来源数据) =>
         字形来源列表.includes(来源数据.source),
       );
+      if (字形列表历史.filtered.length === 0) {
+        字形列表历史.filtered = 字形列表历史.final.slice(0, 1);
+      }
     }
 
     return new 字库(字符查找表, 字形查找表);

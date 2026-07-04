@@ -1,11 +1,12 @@
 import { describe, expect, it, beforeAll } from "bun:test";
-import type { 部件 } from "../src/index.js";
+import type { 部件, 字符, 原始字库 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
-let 部件图形库: Record<string, 部件>;
+let 部件图形库: Map<字符, 部件>;
+let 原始字库实例: 原始字库;
 
 beforeAll(() => {
-  ({ 部件图形库 } = 获取数据());
+  ({ 部件图形库, 原始字库: 原始字库实例 } = 获取数据());
 });
 
 describe("剪枝", () => {
@@ -14,7 +15,7 @@ describe("剪枝", () => {
   let 中: 部件;
 
   beforeAll(() => {
-    中 = 部件图形库.中!;
+    中 = 部件图形库.get(原始字库实例.校验("中")!.character)!;
   });
 
   it("生成正确的区间和", () => {

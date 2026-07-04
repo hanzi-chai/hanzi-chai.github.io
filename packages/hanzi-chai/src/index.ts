@@ -25,7 +25,6 @@ import {
   type 强类型决策空间,
   构建强类型决策与决策空间,
   构建强类型自定义分析,
-  type 源标签,
   type 自定义分析,
   type 自定义分析映射,
   解析原始词典,
@@ -128,7 +127,7 @@ export function 获取字库(配置: 配置) {
   const 原始字库 = 获取原始字库(自定义字符列表, 自定义字形列表);
   const 字形自定义 = 配置.data?.character_customization ?? {};
   const 拼写运算列表 = 配置.data?.glyph_algebra ?? [];
-  const 字形来源列表 = (配置.data?.glyph_sources ?? []) as 源标签[];
+  const 字形来源列表 = (配置.data?.glyph_sources ?? []);
   return 原始字库.确定(字形自定义, 拼写运算列表, 字形来源列表);
 }
 

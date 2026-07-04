@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { mean, round, sortBy, sum } from "lodash-es";
+import { listEquivalence } from "~/api";
 
 // Abramowitz & Stegun approximation, max error 1.5e-7
 function erf(x: number): number {
@@ -22,7 +23,6 @@ function std(data: number[]): number {
   );
 }
 import { exit } from "node:process";
-import { get } from "~/api";
 import { range } from "lodash-es";
 
 export interface EquivalenceData {
@@ -257,7 +257,7 @@ let data: EquivalenceData[];
 if (existsSync("scripts/data.json")) {
   data = JSON.parse(readFileSync("scripts/data.json", "utf-8"));
 } else {
-  const res = await get<EquivalenceData[], undefined>("equivalence");
+  const res = await listEquivalence();
   if ("err" in res) exit(1);
   data = res;
   writeFileSync("scripts/data.json", JSON.stringify(data, null, 2));

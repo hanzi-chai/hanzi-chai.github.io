@@ -1,6 +1,11 @@
 import { Button, Flex, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { type 字根, type 拆分方式与评价, 部件 } from "hanzi-chai";
+import {
+  type 字根,
+  type 拆分方式与评价,
+  type 部件,
+  部件字根,
+} from "hanzi-chai";
 import { useAddAtom, 自定义拆分原子 } from "~/atoms";
 import { BoxedElementWithTooltip } from "./Utils";
 
@@ -25,7 +30,7 @@ export default function ResultDetail({
           {拆分方式.map(({ 字根 }, index) => (
             <BoxedElementWithTooltip
               key={index}
-              element={字根 instanceof 部件 ? 字根.字符 : 字根}
+              element={字根 instanceof 部件字根 ? 字根.字符 : 字根}
             />
           ))}
           {可用 && <span>［备选］</span>}
@@ -59,7 +64,7 @@ export default function ResultDetail({
       <Button
         onClick={() =>
           addCustomization(
-            glyph.获取索引(),
+            glyph.id.toString(),
             拆分方式.map((x) => x.字根.获取名称()),
           )
         }
@@ -75,7 +80,9 @@ export default function ResultDetail({
         <span>包含字根</span>
         {[...map].map(([s, v]) => (
           <Space key={s.获取名称()}>
-            <BoxedElementWithTooltip element={s instanceof 部件 ? s.字符 : s} />
+            <BoxedElementWithTooltip
+              element={s instanceof 部件字根 ? s.字符 : s}
+            />
             <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>
         ))}

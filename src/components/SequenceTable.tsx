@@ -15,8 +15,8 @@ import {
   useAtomValueUnwrapped,
   优先简码原子,
   优先简码映射原子,
-  原始字库同步原子,
-  如笔顺映射原子,
+  原始字库原子,
+  如字库原子,
   如编码结果原子,
   最大码长原子,
   type 联合条目,
@@ -104,7 +104,7 @@ const EnumFilterDropdown = ({
   confirm: () => void;
   clearFilters?: () => void;
 }) => {
-  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
+  const 字库 = useAtomValue(如字库原子);
   const [search, setSearch] = useState("");
   const filteredKeys = [...allValues]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -114,7 +114,7 @@ const EnumFilterDropdown = ({
       const 元素 = element.element;
       const 匹配序列 =
         元素 instanceof 字符 &&
-        笔顺映射.get(元素)?.some((s) => s.startsWith(search));
+        字库.查询字形(元素)?.some((s) => s.标准笔顺.startsWith(search));
       return 匹配序列 || 匹配元素;
     });
   return (
@@ -189,7 +189,7 @@ function CommitShortCodeButton({
   onCommit: () => void;
 }) {
   const [优先简码列表, set优先简码] = useAtom(优先简码原子);
-  const 原始字库 = useAtomValue(原始字库同步原子);
+  const 原始字库 = useAtomValue(原始字库原子);
 
   const getEntryHash = (entry: { word: string; sources: string[][] }) => {
     if (!原始字库) return null;

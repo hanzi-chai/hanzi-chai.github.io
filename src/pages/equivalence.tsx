@@ -13,7 +13,7 @@ import { mean, random, range, shuffle } from "lodash-es";
 import { nanoid } from "nanoid";
 import type { ComponentProps, PropsWithChildren, SetStateAction } from "react";
 import { useEffect, useState } from "react";
-import { get, post } from "~/api";
+import { createEquivalence, listEquivalence } from "~/api";
 import User, { getUser } from "~/components/User";
 import { DeleteButton } from "~/components/Utils";
 import { exportJSON } from "~/utils";
@@ -61,7 +61,7 @@ function Ranking({ model }: { model: keyof typeof models }) {
 
   useEffect(() => {
     (async () => {
-      const data = await get<EquivalenceData[], undefined>("equivalence");
+      const data = await listEquivalence();
       if ("err" in data) return;
       const modelData = data.filter((d) => d.model === model);
       const modelDataByUser = new Map<string, number[]>();
@@ -536,7 +536,7 @@ const Equivalence = () => {
           };
           setLoading(true);
           const result = await Promise.race([
-            post<boolean, EquivalenceData>("equivalence", payload),
+            createEquivalence(payload),
             new Promise<boolean>((resolve) => {
               setTimeout(() => {
                 resolve(false);

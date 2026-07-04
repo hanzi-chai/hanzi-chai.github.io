@@ -1,12 +1,13 @@
 import { expect, describe, it, beforeAll } from "bun:test";
 import { 一次曲线, 三次曲线, 叉乘, 区间 } from "../src/index.js";
-import type { 绘制, 向量, Tuple, 笔画关系, 部件 } from "../src/index.js";
+import type { 绘制, 向量, Tuple, 笔画关系, 部件, 字符, 原始字库 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
-let 部件图形库: Record<string, 部件>;
+let 部件图形库: Map<字符, 部件>;
+let 原始字库实例: 原始字库;
 
 beforeAll(() => {
-  ({ 部件图形库 } = 获取数据());
+  ({ 部件图形库, 原始字库: 原始字库实例 } = 获取数据());
 });
 
 describe("区间关系", () => {
@@ -30,8 +31,10 @@ describe("一次曲线关系", () => {
   let s1: 一次曲线, s2: 一次曲线;
 
   beforeAll(() => {
-    [l, t, r, h, v, b] = 部件图形库.田!._笔画列表().flatMap((x) => x.curveList) as Tuple<一次曲线, 6>;
-    const [, _s1, _s2] = 部件图形库.艹!._笔画列表().flatMap((x) => x.curveList) as Tuple<一次曲线, 3>;
+    const 田 = 部件图形库.get(原始字库实例.校验("田")!.character)!;
+    [l, t, r, h, v, b] = 田._笔画列表().flatMap((x) => x.curveList) as Tuple<一次曲线, 6>;
+    const 艹 = 部件图形库.get(原始字库实例.校验("艹")!.character)!;
+    const [, _s1, _s2] = 艹._笔画列表().flatMap((x) => x.curveList) as Tuple<一次曲线, 3>;
     s1 = _s1!; s2 = _s2!;
   });
 
@@ -52,8 +55,8 @@ describe("一次曲线关系", () => {
 
 describe("三次曲线关系", () => {
   it("计算「天」中的所有关系", () => {
-    const { 天 } = 部件图形库;
-    const [c1, c2, c3, c4] = 天!._笔画列表().flatMap((x) => x.curveList) as [
+    const 天 = 部件图形库.get(原始字库实例.校验("天")!.character)!;
+    const [c1, c2, c3, c4] = 天._笔画列表().flatMap((x) => x.curveList) as [
       一次曲线,
       一次曲线,
       三次曲线,
@@ -66,15 +69,15 @@ describe("三次曲线关系", () => {
     expect(c3.计算关系(c4)).toEqual({ type: "连", first: "中", second: "前" });
   });
   it("计算「义」中的所有关系", () => {
-    const { 义 } = 部件图形库;
-    const [c1, c2, c3] = 义!._笔画列表().flatMap((x) => x.curveList) as Tuple<三次曲线, 3>;
+    const 义 = 部件图形库.get(原始字库实例.校验("义")!.character)!;
+    const [c1, c2, c3] = 义._笔画列表().flatMap((x) => x.curveList) as Tuple<三次曲线, 3>;
     expect(c1.计算关系(c2)).toEqual({ type: "平行", crossAxis: 0, mainAxis: -0.5 });
     expect(c1.计算关系(c3)).toEqual({ type: "平行", crossAxis: 0, mainAxis: -0.5 });
     expect(c2.计算关系(c3)).toEqual({ type: "交" });
   });
   it("计算「升」中的所有关系", () => {
-    const 升 = 部件图形库.升;
-    const [c1, c2, c3, c4] = 升!._笔画列表().flatMap((x) => x.curveList) as [
+    const 升 = 部件图形库.get(原始字库实例.校验("升")!.character)!;
+    const [c1, c2, c3, c4] = 升._笔画列表().flatMap((x) => x.curveList) as [
       三次曲线,
       一次曲线,
       三次曲线,
@@ -111,7 +114,7 @@ describe("工厂函数", () => {
 
 describe("拓扑结构计算", () => {
   it("计算「土」的拓扑结构", () => {
-    const { 土 } = 部件图形库;
+    const 土 = 部件图形库.get(原始字库实例.校验("土")!.character)!;
     const array: 笔画关系[][] = [
       [[], [{ type: "交" }], [{ type: "平行", mainAxis: 0, crossAxis: -1 }]],
       [[{ type: "交" }], [], [{ type: "连", first: "后", second: "中" }]],
@@ -121,6 +124,6 @@ describe("拓扑结构计算", () => {
         [],
       ],
     ];
-    expect(土!._拓扑()).toEqual({ matrix: array, orientedPairs: [[2, 0]] });
+    expect(土._拓扑()).toEqual({ matrix: array, orientedPairs: [[2, 0]] });
   });
 });

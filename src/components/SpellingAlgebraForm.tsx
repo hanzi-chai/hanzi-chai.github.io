@@ -11,24 +11,24 @@ import type { 运算规则 } from "hanzi-chai";
 import { 拼写运算查找表 } from "hanzi-chai";
 import { useAddAtom, 拼写运算自定义原子 } from "~/atoms";
 
-interface AlgebraForm {
+interface SpellingAlgebraFormProps {
   name: string;
   rules: 运算规则[];
 }
 
-export default function Algebra({
+export default function SpellingAlgebraForm({
   title,
   initialValues,
   disabled,
 }: {
   title: string;
-  initialValues?: AlgebraForm;
+  initialValues?: SpellingAlgebraFormProps;
   disabled?: boolean;
 }) {
-  const [form] = Form.useForm<AlgebraForm>();
+  const [form] = Form.useForm<SpellingAlgebraFormProps>();
   const addAlgebra = useAddAtom(拼写运算自定义原子);
   return (
-    <ModalForm<AlgebraForm>
+    <ModalForm<SpellingAlgebraFormProps>
       title={title}
       trigger={<Button disabled={disabled}>{title}</Button>}
       form={form}

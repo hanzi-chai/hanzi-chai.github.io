@@ -52,7 +52,6 @@
     "@xyflow/react": "^12.10.2",
     "ahooks": "^3.9.7",
     "antd": "^5.29.3",
-    "axios": "^1.16.1",
     "deep-object-diff": "^1.1.9",
     "hanzi-chai": "*",
     "jotai": "^2.20.0",

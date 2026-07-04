@@ -54,6 +54,10 @@ export default defineConfig(({ mode, command }) => {
     resolve: {
       alias: {
         "~/": `${path.resolve(__dirname, "src")}/`,
+        "@chai-api/client": path.resolve(
+          __dirname,
+          "packages/api/src/client.ts",
+        ),
         ...(isDev && {
           "hanzi-chai": path.resolve(
             __dirname,

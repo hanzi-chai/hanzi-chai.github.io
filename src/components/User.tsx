@@ -1,27 +1,15 @@
 import { ModalForm, ProFormText } from "@ant-design/pro-components";
 import { Button, Flex, notification, Typography } from "antd";
 import { md5 } from "js-md5";
-import { post } from "~/api";
-
-interface Signin {
-  id: string;
-  password: string;
-}
+import { login, type Signin, type Signup, signup, type UserData } from "~/api";
 
 const SigninForm = () => {
   return (
     <ModalForm<Signin>
       trigger={<Button type="primary">登录</Button>}
       title="登录"
-      onFinish={async (value) => {
-        const hashedValue = {
-          username: value.id,
-          password: md5.base64(value.password),
-        };
-        const response = await post<{ user: User; token: string }, any>(
-          "login",
-          hashedValue,
-        );
+      onFinish={async ({ id, password }) => {
+        const response = await login(id, md5.base64(password));
         if ("err" in response) {
           notification.error({
             message: "无法登录",
@@ -44,17 +32,6 @@ const SigninForm = () => {
   );
 };
 
-interface Signup extends Signin {
-  name: string;
-  email: string;
-}
-
-interface User extends Signup {
-  avatar: string;
-  role: 0 | 1 | 2;
-  status: 0 | 1;
-}
-
 const SignupForm = () => {
   return (
     <ModalForm<Signup>
@@ -62,7 +39,7 @@ const SignupForm = () => {
       title="注册"
       onFinish={async (value) => {
         const hashedValue = { ...value, password: md5.base64(value.password) };
-        const response = await post<true, Signup>("users", hashedValue);
+        const response = await signup(hashedValue);
         if (typeof response !== "boolean") {
           notification.error({
             message: "无法注册",
@@ -87,7 +64,7 @@ const SignupForm = () => {
 
 export const getUser = () => {
   return localStorage.getItem("user")
-    ? (JSON.parse(localStorage.getItem("user")!) as User)
+    ? (JSON.parse(localStorage.getItem("user")!) as UserData)
     : undefined;
 };
 

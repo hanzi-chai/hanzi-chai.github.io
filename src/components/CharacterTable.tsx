@@ -1,273 +1,93 @@
-import { QuestionCircleOutlined } from "@ant-design/icons";
-import {
-  Checkbox,
-  Flex,
-  FloatButton,
-  Form,
-  Layout,
-  Select,
-  Space,
-  Tour,
-} from "antd";
+import { Checkbox, Flex, Form, Layout, Space } from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
-import type { TourProps } from "antd/lib";
-import type {
-  原始字库,
-  原始汉字数据,
-  字形描述,
-  校验字符数据,
-} from "hanzi-chai";
-import { 区块列表, type 字符, 所有源标签 } from "hanzi-chai";
-import * as O from "optics-ts/standalone";
-import { useRef, useState } from "react";
-import { remoteUpdate } from "~/api";
+import { 区块列表, 是用户字符, type 校验字符数据 } from "hanzi-chai";
+import { createCharacter, removeCharacter } from "~/api";
 import {
-  useAddAtom,
   useAtom,
   useAtomValue,
-  useAtomValueUnwrapped,
-  useRemoveAtom,
-  原始可编辑字库数据原子,
-  原始字库同步原子,
+  下一个用户字符码位原子,
+  原始字库原子,
+  可编辑字符列表原子,
   如字库原子,
-  如按笔顺排序字符原子,
-  如笔顺映射原子,
   字形来源列表原子,
-  字形自定义原子,
-  标准字形自定义原子,
-  用户原始字库数据原子,
+  用户字符列表原子,
   远程原子,
 } from "~/atoms";
-import {
-  Create,
-  Delete,
-  EditGF,
-  EditGlyph,
-  Merge,
-  QuickPatchAmbiguous,
-  Rename,
-} from "~/components/Action";
-import { errorFeedback, 字符过滤器, type 字符过滤器参数 } from "~/utils";
-import CharacterQuery from "./CharacterQuery";
-import ComponentForm, { IdentityForm } from "./ComponentForm";
-import CompoundForm from "./CompoundForm";
-import TransformersForm from "./Transformers";
-import {
-  BoxedElementWithTooltip,
-  CharacterDisplay,
-  DeleteButton,
-} from "./Utils";
+import { errorFeedback } from "~/utils";
+import CharacterForm from "./CharacterForm";
+import GlyphAlgebraForm from "./GlyphAlgebraForm";
+import { StrokesView } from "./GlyphView";
+import SourceSelect from "./SourceSelect";
+import { BoxedElementWithTooltip, DeleteButton } from "./Utils";
+
+const CreateCharacter = () => {
+  const 远程 = useAtomValue(远程原子);
+  const [用户字符列表, set用户字符列表] = useAtom(用户字符列表原子);
+  const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
+  const 下一个用户字符码位 = useAtomValue(下一个用户字符码位原子);
+  return (
+    <CharacterForm
+      title="新建"
+      initialValues={{ unicode: 0, glyphs: [] }}
+      onFinish={async (record) => {
+        if (远程) {
+          const res = await createCharacter(record);
+          if (!errorFeedback(res)) {
+            set可编辑字符列表([...可编辑字符列表, record]);
+          }
+        } else {
+          const recordWithUnicode = { ...record, unicode: 下一个用户字符码位 };
+          set用户字符列表([...用户字符列表, recordWithUnicode]);
+        }
+        return true;
+      }}
+    />
+  );
+};
+
+const DeleteCharacter = ({ unicode }: { unicode: number }) => {
+  const 远程 = useAtomValue(远程原子);
+  const [用户字符列表, set用户字符列表] = useAtom(用户字符列表原子);
+  const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
+  return (
+    <DeleteButton
+      disabled={!远程 && !是用户字符(unicode)}
+      onClick={async () => {
+        if (!confirm(`确定删除字符 ${unicode} 吗？`)) return;
+        if (远程) {
+          const res = await removeCharacter(unicode);
+          if (!errorFeedback(res)) {
+            set可编辑字符列表(
+              可编辑字符列表.filter((x) => x.unicode !== unicode),
+            );
+          }
+        } else {
+          set用户字符列表(用户字符列表.filter((x) => x.unicode !== unicode));
+        }
+      }}
+    />
+  );
+};
 
 type Column = ColumnType<校验字符数据>;
 
-const typenames = {
-  basic_component: "基本部件",
-  derived_component: "衍生部件",
-  spliced_component: "拼接部件",
-  compound: "复合体",
-  identity: "全等",
-};
-
-export const 字形编辑器 = ({
-  字,
-  字形,
-  回调,
-  只读,
-  原始字库,
-}: {
-  字: 字符;
-  字形: 字形描述;
-  回调: (v: 字形描述) => Promise<boolean>;
-  只读: boolean;
-  原始字库: 原始字库;
-}) => {
-  const title =
-    字形.type === "compound" ? (
-      <Space>
-        <span>{字形.operator}</span>
-        {字形.operandList.map((y, index) => {
-          const ch = 原始字库.校验(y)?.character;
-          if (!ch) return null;
-          return <CharacterDisplay key={index} character={ch} />;
-        })}
-      </Space>
-    ) : (
-      typenames[字形.type]
-    );
-  if (字形.type === "compound" || 字形.type === "spliced_component") {
-    return (
-      <CompoundForm
-        title={title}
-        initialValues={字形}
-        character={字}
-        onFinish={回调}
-        primary
-        readonly={只读}
-      />
-    );
-  }
-  return 字形.type === "basic_component" ||
-    字形.type === "derived_component" ? (
-    <ComponentForm
-      title={title}
-      initialValues={字形}
-      current={字}
-      onFinish={回调}
-      primary
-      readonly={只读}
-    />
-  ) : (
-    <IdentityForm
-      title={title}
-      initialValues={字形}
-      current={字}
-      onFinish={回调}
-      primary
-      readonly={只读}
-    />
-  );
-};
-
-export const 字形数据更新器 = ({
-  character,
-}: {
-  character: 校验字符数据;
-}) => {
-  const { glyphs, unicode } = character;
-  const 字 = String.fromCodePoint(unicode);
-  const 远程 = useAtomValue(远程原子);
-  const 原始字库 = useAtomValue(原始字库同步原子);
-  const 用户原始字库数据 = useAtomValue(用户原始字库数据原子);
-  const 添加用户汉字 = useAddAtom(用户原始字库数据原子);
-  const 添加汉字 = useAddAtom(原始可编辑字库数据原子);
-  if (!原始字库) return null;
-  const inlineUpdate = async (newCharacter: 原始汉字数据) => {
-    if (用户原始字库数据[字] !== undefined) {
-      添加用户汉字(字, newCharacter);
-      return true;
-    }
-    const res = await remoteUpdate(newCharacter);
-    if (!errorFeedback(res)) {
-      添加汉字(字, newCharacter);
-    }
-    return true;
-  };
-  const 只读 = !远程 && 用户原始字库数据[字] === undefined;
-  return (
-    <Flex gap="small">
-      {glyphs.map((x, i) => {
-        const lens = O.compose("glyphs", O.at(i));
-        const 回调 = (values: 字形描述) => {
-          const newGlyphs = O.set(
-            O.compose("glyphs", O.appendTo),
-            values,
-            O.remove(lens, character),
-          );
-          return inlineUpdate(newGlyphs);
-        };
-        return (
-          <Flex key={i}>
-            <字形编辑器
-              字={character.character}
-              字形={x}
-              回调={回调}
-              只读={只读}
-              原始字库={原始字库}
-            />
-            {远程 || 用户原始字库数据[字] !== undefined ? (
-              <DeleteButton
-                onClick={() => inlineUpdate(O.remove(lens, character))}
-              />
-            ) : null}
-          </Flex>
-        );
-      })}
-    </Flex>
-  );
-};
-
-export const 字形数据自定义器 = ({
-  character,
-}: {
-  character: 校验字符数据;
-}) => {
-  const 添加自定义字形 = useAddAtom(字形自定义原子);
-  const 删除自定义字形 = useRemoveAtom(字形自定义原子);
-  const 标准字形自定义 = useAtomValue(标准字形自定义原子);
-  const 原始字库 = useAtomValue(原始字库同步原子);
-  const 字 = String.fromCodePoint(character.unicode);
-  const 自定义字形列表 = 标准字形自定义[字];
-  const 只读 = false;
-  // 把变换生成的也视为自定义
-  if (!原始字库 || 自定义字形列表 === undefined) return null;
-  return (
-    <Flex gap="small">
-      {自定义字形列表.map((x, i) => {
-        const 回调 = async (values: 字形描述) => {
-          const 新列表 = 自定义字形列表.map((item, index) =>
-            index === i ? values : item,
-          );
-          添加自定义字形(字, 新列表);
-          return true;
-        };
-        return (
-          <Flex key={i}>
-            <字形编辑器
-              字={character.character}
-              字形={x}
-              回调={回调}
-              只读={只读}
-              原始字库={原始字库}
-            />
-            <DeleteButton
-              onClick={() => {
-                const 新列表 = 自定义字形列表.filter((_, index) => index !== i);
-                if (新列表.length === 0) {
-                  删除自定义字形(字);
-                } else {
-                  添加自定义字形(字, 新列表);
-                }
-              }}
-            />
-          </Flex>
-        );
-      })}
-    </Flex>
-  );
-};
-
 export default function CharacterTable() {
-  const 原始字库 = useAtomValue(原始字库同步原子);
-  const 字库 = useAtomValueUnwrapped(如字库原子);
-  const 排序字库数据 = useAtomValueUnwrapped(如按笔顺排序字符原子);
-  const 字形自定义 = useAtomValue(标准字形自定义原子);
-  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
-  const [filterProps, setFilterProps] = useState<字符过滤器参数>({});
-  const remote = useAtomValue(远程原子);
+  const 原始字库 = useAtomValue(原始字库原子);
+  const 字库 = useAtomValue(如字库原子);
+  const 远程 = useAtomValue(远程原子);
   const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
-  const filter = new 字符过滤器(filterProps, 笔顺映射);
 
-  const dataSource: 校验字符数据[] = [];
-  for (const c of 排序字库数据) {
-    const data = 原始字库?.查询(c);
-    if (!data) continue;
-    if (filter.过滤(c, data)) {
-      dataSource.push(data);
-    }
-  }
+  const dataSource: 校验字符数据[] = [...原始字库];
 
   const unicodeColumn: Column = {
     title: "Unicode",
     dataIndex: "unicode",
-    render: (_, { unicode, character, name }) => {
+    render: (_, { character }) => {
       return (
         <Flex align="center" gap="small">
           <BoxedElementWithTooltip element={character} />
           {character.十六进制()}
-          {character.是私用区() && remote && (
-            <Rename unicode={unicode} name={name} />
-          )}
         </Flex>
       );
     },
@@ -285,7 +105,7 @@ export default function CharacterTable() {
     dataIndex: "tygf",
     width: 96,
     render: (_, record) => {
-      return <Checkbox checked={record.tygf > 0} />;
+      return <Checkbox checked={record.tygf !== undefined} />;
     },
     filters: [
       { text: "一级", value: 1 },
@@ -300,7 +120,7 @@ export default function CharacterTable() {
     title: "GB 2312",
     dataIndex: "gb2312",
     render: (_, record) => {
-      return <Checkbox checked={record.gb2312 > 0} />;
+      return <Checkbox checked={record.gb2312 !== undefined} />;
     },
     width: 96,
     filters: [
@@ -311,74 +131,39 @@ export default function CharacterTable() {
     onFilter: (value, record) => value === record.gb2312,
   };
 
-  const gf0014: Column = {
-    title: "GF0014",
-    dataIndex: "gf0014_id",
-    render: (_, record) => (
-      <EditGF
-        type="gf0014_id"
-        value={record.gf0014_id}
-        unicode={record.unicode}
-      />
-    ),
-    width: 96,
-    filters: [{ text: "只看非空", value: 1 }],
-    onFilter: (_, record) => record.gf0014_id !== null,
-    sorter: (a, b) => Number(a.gf0014_id) - Number(b.gf0014_id),
-  };
-
-  const gf3001: Column = {
-    title: "GF3001",
-    dataIndex: "gf3001_id",
-    render: (_, record) => (
-      <EditGF
-        type="gf3001_id"
-        value={record.gf3001_id}
-        unicode={record.unicode}
-      />
-    ),
-    width: 96,
-    filters: [{ text: "只看非空", value: 1 }],
-    onFilter: (_, record) => record.gf3001_id !== null,
-    sorter: (a, b) => Number(a.gf3001_id) - Number(b.gf3001_id),
-  };
-
   const glyphs: Column = {
-    title: "系统描述",
-    render: (_, character) => <字形数据更新器 character={character} />,
+    title: "字形列表",
+    dataIndex: "glyphs",
+    render: (_, character) => {
+      return (
+        <span>
+          {character.glyphs.map(({ id, sources }) => (
+            <span key={id}>
+              <StrokesView glyph={字库.获取字形(id)!.图形盒子} />(
+              {sources.join(", ")})
+            </span>
+          ))}
+        </span>
+      );
+    },
     sorter: (a, b) => {
       const [as, bs] = [JSON.stringify(a.glyphs), JSON.stringify(b.glyphs)];
       return as.localeCompare(bs);
     },
     sortDirections: ["ascend", "descend"],
-    filters: [{ text: "部件", value: 1 }],
-    onFilter: (_, record) => {
-      return record.glyphs.some((x) => x.type !== "compound");
-    },
   };
 
-  const customGlyphColumn: Column = {
-    title: "自定义描述",
-    render: (_, character) => <字形数据自定义器 character={character} />,
+  const patches: Column = {
+    title: "补丁列表",
+    render: (_) => null,
     width: 128,
-  };
-
-  const _renderedGlyphColumn: Column = {
-    title: "字形列表",
-    render: (_, character) => (
-      <Flex gap="small">
-        {字库
-          .查询字形(character.character)
-          ?.map((x) => [...x.标签集合].join(""))}
-      </Flex>
-    ),
   };
 
   const ambiguous: Column = {
     title: "歧义",
     dataIndex: "ambiguous",
     render: (_, record) => {
-      return <QuickPatchAmbiguous checked={record.ambiguous} record={record} />;
+      return <Checkbox checked={record.ambiguous === 1} />;
     },
     filters: [
       { text: "只看有歧义", value: 1 },
@@ -393,9 +178,14 @@ export default function CharacterTable() {
     key: "option",
     render: (_, record) => (
       <Space>
-        <EditGlyph character={record} />
-        {remote && <Merge unicode={record.unicode} />}
-        <Delete unicode={record.unicode} />
+        <CharacterForm
+          title="编辑"
+          initialValues={record}
+          onFinish={async () => {
+            return true;
+          }}
+        />
+        <DeleteCharacter unicode={record.unicode} />
       </Space>
     ),
     filters: [
@@ -403,61 +193,28 @@ export default function CharacterTable() {
       { text: "未编辑", value: 0 },
     ],
     onFilter: (value, record) => {
-      const customized =
-        record.character.是用户私用区() ||
-        字形自定义[record.character.获取名称()] !== undefined;
+      const customized = record.character.是用户私用区();
       return value === 1 ? customized : !customized;
     },
   };
-
-  const ref1 = useRef(null);
-  const ref2 = useRef(null);
-  const ref3 = useRef(null);
-
-  const [open, setOpen] = useState<boolean>(false);
-
-  const steps: TourProps["steps"] = [
-    {
-      title: "自定义",
-      description:
-        "这里存放了汉字编码所需要的字音和字形数据。一个字可能会有零个、一个或多个字音和字形表示，默认情况下所有的字音表示都会用于生成编码，但是字形表示中只有第一个会参与编码。对于字形，如果系统中的第一个不是您想要的，您可以通过点击「自定义」来选择系统中的其他字形用于编码，或者自己创建一个部件或者复合体表示。",
-      target: () => ref1.current,
-    },
-    {
-      title: "批量自定义",
-      description:
-        "除此之外，您还可以在下方的「通过标签来批量选择字形」中选择一系列标签，被标签选中的系统字形会优先参与编码（例如，若您选择标签「行框」，则所有如街、衔、衡等的汉字都会选择［⿻ 行 ？］的分部方式，而不是原本排在第一位的左中右分部方式）。被选中的字形会以框选的方式突出显示。",
-      target: () => ref2.current,
-    },
-    {
-      title: "新建",
-      description:
-        "最后，您还可以通过点击「新建」来添加系统中没有的字或者您需要的特殊字根。新加的条目位于表格的最上方。若这个字或字根不属于 CJK 基本集或者 CJK 扩展 A，则您需要输入它的别名，系统会给它安排一个 0xF000 开头的 PUA 码位存放。",
-      target: () => ref3.current,
-    },
-  ];
 
   const adminColumns = [
     unicodeColumn,
     tygfColumn,
     gb2312,
     glyphs,
-    gf3001,
-    gf0014,
     ambiguous,
     operations,
   ];
   const userColumns = [
     unicodeColumn,
     glyphs,
-    customGlyphColumn,
+    patches,
     operations,
     gb2312,
     ambiguous,
   ];
-  const columns: ColumnsType<校验字符数据> = remote
-    ? adminColumns
-    : userColumns;
+  const columns: ColumnsType<校验字符数据> = 远程 ? adminColumns : userColumns;
   return (
     <Flex
       component={Layout.Content}
@@ -466,36 +223,21 @@ export default function CharacterTable() {
       align="center"
       gap="small"
     >
-      <CharacterQuery setFilter={setFilterProps} />
-      <Flex gap="large" ref={ref2}>
+      <Flex gap="large">
         <Form.Item label="选择字形来源" className="m-0!">
-          <Select
-            mode="multiple"
-            options={所有源标签.map((x) => ({ label: x, value: x }))}
-            value={字形来源列表}
-            onChange={设置字形来源列表}
-          />
+          <SourceSelect value={字形来源列表} onChange={设置字形来源列表} />
         </Form.Item>
-        <TransformersForm />
-        <Create onCreate={() => {}} ref={ref3} />
+        <GlyphAlgebraForm />
+        <CreateCharacter />
       </Flex>
-      <div ref={ref1}>
-        <Table<校验字符数据>
-          dataSource={dataSource}
-          columns={columns}
-          size="small"
-          rowKey="unicode"
-          pagination={{ defaultPageSize: 50 }}
-          className="max-w-480"
-        />
-        <Tour open={open} onClose={() => setOpen(false)} steps={steps} />
-        <FloatButton
-          icon={<QuestionCircleOutlined />}
-          type="primary"
-          className="right-16"
-          onClick={() => setOpen(true)}
-        />
-      </div>
+      <Table<校验字符数据>
+        dataSource={dataSource}
+        columns={columns}
+        size="small"
+        rowKey="unicode"
+        pagination={{ defaultPageSize: 50 }}
+        className="max-w-480"
+      />
     </Flex>
   );
 }

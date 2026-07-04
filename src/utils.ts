@@ -1,4 +1,4 @@
-import { 字符, type 原始汉字数据, type 字形描述, type 结构描述字符, type 配置 } from "hanzi-chai";
+import { 字库, 字符, 字形, 字符数据, type 结构描述字符, type 配置, 复合体 } from "hanzi-chai";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -151,9 +151,9 @@ export const exportTSV = (data: string[][], filename: string) => {
   processExport(fileContent, filename);
 };
 
-export class 字符过滤器 {
+export class 字符字形过滤器 {
   private sequenceRegex: RegExp | undefined;
-  constructor(private 过滤条件: 字符过滤器参数, private 笔顺映射: Map<字符, string[]>) {
+  constructor(private 过滤条件: 过滤器参数) {
     if (过滤条件.sequence) {
       try {
         this.sequenceRegex = new RegExp(过滤条件.sequence, "u");
@@ -161,44 +161,44 @@ export class 字符过滤器 {
     }
   }
 
-  过滤(汉字: 字符, 数据: 原始汉字数据) {
-    const 笔顺列表 = this.笔顺映射.get(汉字) ?? [];
+  过滤字符(汉字: 字符, 数据: 字符数据, 字库: 字库) {
     let result = true;
-    const { name, unicode } = this.过滤条件;
+    const { name, unicode, source } = this.过滤条件;
     if (name) {
       result &&= (数据.name ?? "").includes(name) || 汉字.获取名称().includes(name);
-    }
-    if (this.sequenceRegex !== undefined) {
-      result &&= 笔顺列表.some(s => this.sequenceRegex!.test(s));
     }
     if (unicode) {
       let hex_str = 汉字.toNumber().toString(16);
       let dec_str = 汉字.toNumber().toString(10);
       result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
     }
-    result &&= 数据.glyphs.some((glyph) => this.匹配字形(glyph));
+    if (source) result &&= 数据.glyphs.some((glyph) => glyph.sources.includes(source));
+    const 字形列表 = 字库.查询字形(汉字) ?? [];
+    result &&= 字形列表.some((glyph) => this.过滤字形(glyph));
     return result;
   }
 
-  匹配字形(glyph: 字形描述) {
-    const { tag, operator, part } = this.过滤条件;
+  过滤字形(glyph: 字形) {
+    const { operator, part } = this.过滤条件;
     let result = true;
-    if (tag) result &&= (glyph.tags ?? []).includes(tag);
+    if (this.sequenceRegex !== undefined) {
+      result &&=this.sequenceRegex!.test(glyph.标准笔顺);
+    }
     if (operator) {
-      result &&= glyph.type === "compound" && glyph.operator === operator;
+      result &&= glyph instanceof 复合体 && glyph.结构描述字符 === operator;
     }
     if (part) {
-      result &&= glyph.type === "compound" && glyph.operandList.includes(part);
+      result &&= glyph instanceof 复合体 && glyph.部分列表.some((p) => p.id === Number(part));
     }
     return result;
   };
 }
 
-export interface 字符过滤器参数 {
+export interface 过滤器参数 {
   name?: string;
   sequence?: string;
   unicode?: string;
-  tag?: string;
+  source?: string;
   part?: string;
   operator?: 结构描述字符;
 }

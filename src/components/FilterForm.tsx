@@ -1,25 +1,25 @@
 import {
+  ProFormItem,
   ProFormSelect,
   ProFormText,
   QueryFilter,
 } from "@ant-design/pro-components";
-import { Form } from "antd";
-import { 结构描述字符列表 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { debounce } from "lodash-es";
-import { 全部标签原子 } from "~/atoms";
-import type { 字符过滤器参数 } from "~/utils";
-import CharacterSelect from "./CharacterSelect";
+import { 全部来源原子 } from "~/atoms";
+import type { 过滤器参数 } from "~/utils";
+import GlyphSelect from "./GlyphSelect";
+import OperatorSelect from "./OperatorSelect";
 
 interface StrokeSearchProps {
-  setFilter: (s: 字符过滤器参数) => void;
+  setFilter: (s: 过滤器参数) => void;
 }
 
-export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
-  const tags = useAtomValue(全部标签原子);
+export default function FilterForm({ setFilter }: StrokeSearchProps) {
+  const tags = useAtomValue(全部来源原子);
   const debounced = debounce(setFilter, 500);
   return (
-    <QueryFilter<字符过滤器参数>
+    <QueryFilter<过滤器参数>
       onValuesChange={async (_, values) => debounced(values)}
       submitter={false}
       className="max-w-270"
@@ -33,14 +33,12 @@ export default function CharacterQuery({ setFilter }: StrokeSearchProps) {
         name="tag"
         options={tags.map((x) => ({ label: x, value: x }))}
       />
-      <ProFormSelect
-        label="包含结构"
-        name="operator"
-        options={结构描述字符列表.map((x) => ({ label: x, value: x }))}
-      />
-      <Form.Item label="包含部分" name="part">
-        <CharacterSelect allowClear={true} />
-      </Form.Item>
+      <ProFormItem label="包含结构" name="operator">
+        <OperatorSelect />
+      </ProFormItem>
+      <ProFormItem label="包含部分" name="part">
+        <GlyphSelect />
+      </ProFormItem>
     </QueryFilter>
   );
 }

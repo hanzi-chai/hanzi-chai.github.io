@@ -6,7 +6,7 @@ export const 获取数据 = () => {
   const 词典 = 原始字库.校验词典(原始词典);
   const 字库 = 原始字库.确定({}, [], ["G"]);
   const 部件图形库: Map<字符, 部件> = new Map();
-  for (const [字符] of 字库) {
+  for (const [字符, 历史记录] of 字库) {
     for (const 字形 of 字库.查询字形(字符) ?? []) {
       if (字形 instanceof 部件) {
         部件图形库.set(字符, 字形);

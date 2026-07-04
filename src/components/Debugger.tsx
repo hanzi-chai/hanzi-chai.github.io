@@ -90,7 +90,7 @@ const 校对方向原子 = atomWithStorage(
 
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
-  const repertoire = useAtomValueUnwrapped(如字库原子);
+  const repertoire = useAtomValue(如字库原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const characters = useAtomValue(汉字集合原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);

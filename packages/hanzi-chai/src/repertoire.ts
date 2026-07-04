@@ -1,12 +1,10 @@
 import { isEqual } from "lodash-es";
-import { 图形盒子 } from "./affine.js";
 import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 部件, 默认退化配置 } from "./component.js";
 import { 复合体 } from "./compound.js";
 import type { 分析配置, 条件, 退化配置 } from "./config.js";
-import type { 旧复合体数据 } from "./data.js";
 import { 二笔, type 元素, 笔画 } from "./element.js";
-import type { 原始字库, 字形历史记录, 字形树数据 } from "./primitive.js";
+import type { 原始字库, 复合体树数据, 字形历史记录, 字形树数据 } from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符 } from "./unicode.js";
@@ -202,36 +200,65 @@ class 字库 {
     private 原始字形表: Map<number, 字形树数据>,
   ) {
     this.字形表 = new Map<number, 字形>();
+
+    // 第一趟：创建所有部件（叶子节点，无依赖）
     for (const 字形 of 原始字形表.values()) {
       if (字形.type === "component") {
         const 部件实例 = new 部件(字形.id, 字形.strokes);
         this.字形表.set(字形.id, 部件实例);
-      } else if (字形.type === "compound") {
-        const 复合体实例 = new 复合体(
-          字形.id,
-          字形.operator,
-          [],
-          字形.strokes ?? 字形.references.map((_, i) => ({ index: i })),
-        );
-        this.字形表.set(字形.id, 复合体实例);
       }
     }
-    // 处理复合体的部分列表
+
+    // 计算每个复合体的深度（依赖链长度），按深度排序后依次构造
+    const 深度缓存 = new Map<number, number>();
+    const 计算深度 = (id: number): number => {
+      const cached = 深度缓存.get(id);
+      if (cached !== undefined) return cached;
+      const 字形 = 原始字形表.get(id);
+      if (!字形 || 字形.type === "component") {
+        深度缓存.set(id, 0);
+        return 0;
+      }
+      let maxChildDepth = 0;
+      for (const ref of 字形.references) {
+        maxChildDepth = Math.max(maxChildDepth, 计算深度(ref.glyph.id));
+      }
+      const depth = maxChildDepth + 1;
+      深度缓存.set(id, depth);
+      return depth;
+    };
+
+    // 收集所有复合体并按深度排序（浅层优先）
+    const 复合体列表: 复合体树数据[] = [];
     for (const 字形 of 原始字形表.values()) {
       if (字形.type === "compound") {
-        const 复合体实例 = this.字形表.get(字形.id) as 复合体;
-        复合体实例.部分列表 = 字形.references.map((ref) => {
-          const 部件实例 = this.字形表.get(ref.glyph.id);
-          if (!部件实例) throw new Error(`部件 ${ref.glyph.id} 未找到`);
-          return 部件实例;
-        });
+        计算深度(字形.id); // 确保深度已缓存
+        复合体列表.push(字形);
       }
+    }
+    复合体列表.sort((a, b) => 深度缓存.get(a.id)! - 深度缓存.get(b.id)!);
+
+    // 按深度顺序构造复合体：此时所有部分一定已存在于字形表中
+    for (const 字形 of 复合体列表) {
+      const 部分列表 = 字形.references.map((ref) => {
+        const 字形实例 = this.字形表.get(ref.glyph.id);
+        if (!字形实例) throw new Error(`字形 ${ref.glyph.id} 未找到`);
+        return 字形实例;
+      });
+      const 复合体实例 = new 复合体(字形, 部分列表);
+      this.字形表.set(字形.id, 复合体实例);
     }
   }
 
   *[Symbol.iterator]() {
     for (const [字符实例, 历史记录] of this.字符表) {
       yield [字符实例, 历史记录] as const;
+    }
+  }
+
+  *字形迭代器() {
+    for (const [id, 字形实例] of this.字形表) {
+      yield [id, 字形实例] as const;
     }
   }
 
@@ -246,6 +273,10 @@ class 字库 {
       }
     }
     return 字形列表;
+  }
+
+  获取字形(id: number): 字形 | undefined {
+    return this.字形表.get(id);
   }
 
   找到部件(字符串: string, 原始字库: 原始字库): 部件 | undefined {
@@ -290,9 +321,7 @@ class 字库 {
             部件字根列表.push(字根实例);
             所有字根.push(字根实例);
           } else {
-            const 图形盒子 = this.递归渲染复合体(字根字形);
-            if (!图形盒子.ok) return 图形盒子;
-            const 部件字形 = new 部件(0, 图形盒子.value.获取笔画列表());
+            const 部件字形 = new 部件(0, 字根字形.图形盒子.获取笔画列表());
             const 字根实例 = new 部件字根(元素, 部件字形);
             部件字根列表.push(字根实例);
             复合体字根映射.set(字根字形, 字根实例);
@@ -400,38 +429,6 @@ class 字库 {
       }
     }
     return 待分析部件集合;
-  }
-
-  /**
-   * 将复合体递归渲染为 SVG 图形
-   *
-   * @param 复合体 - 复合体
-   * @param repertoire - 原始字符集
-   *
-   * @returns SVG 图形或错误
-   */
-  递归渲染复合体(复合体: 复合体): Result<图形盒子, Error> {
-    const 图形盒子列表: 图形盒子[] = [];
-    for (const 部分 of 复合体.部分列表) {
-      if (部分 instanceof 部件) {
-        const 盒子 = 图形盒子.从笔画列表构建(部分.矢量图形);
-        图形盒子列表.push(盒子);
-      } else {
-        const rendered = this.递归渲染复合体(部分);
-        if (!rendered.ok) return rendered;
-        图形盒子列表.push(rendered.value);
-      }
-    }
-    return ok(
-      图形盒子.仿射合并(
-        {
-          type: "compound",
-          operator: 复合体.结构描述字符,
-          order: 复合体.笔顺,
-        } as 旧复合体数据,
-        图形盒子列表,
-      ),
-    );
   }
 
   准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>) {

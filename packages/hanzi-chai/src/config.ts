@@ -5,7 +5,6 @@ import type {
   结构描述字符,
 } from "./data.js";
 import type { 取码对象 } from "./element.js";
-import type { 源标签 } from "./utils.js";
 
 // config.info begin
 export interface 基本信息 {
@@ -45,7 +44,7 @@ export interface 数据配置 {
   character_customization?: Record<string, 字符数据补丁[]>;
   glyphs?: 基本字形数据[];
   glyph_algebra?: 字形拼写运算[];
-  glyph_sources?: 源标签[];
+  glyph_sources?: string[];
 }
 
 export type 字形自定义 = Record<string, 字符数据补丁[]>;
@@ -69,18 +68,12 @@ export type 模式 =
   | IDVariable
   | {
       operator: 结构描述字符 | OperatorVariable;
-      references: (ID | IDVariable)[];
+      references: (ID | IDVariable | 模式)[];
     };
 
-type ID = number;
-type IDVariable = { variable: number; id_set?: ID[] };
-type OperatorVariable = { variable: number; opearator_set?: 结构描述字符[] };
-
-export type 节点 = 模式 | 结构变量 | string;
-
-export interface 结构变量 {
-  id: number;
-}
+export type ID = number;
+export type IDVariable = { variable: number; id_set?: ID[] };
+export type OperatorVariable = { variable: number; opearator_set?: 结构描述字符[] };
 
 // config.data end
 

@@ -1,8 +1,9 @@
 import { type 元素, 字符, 笔画 } from "hanzi-chai";
 import {
+  useAtomValue,
   useAtomValueUnwrapped,
   全部合法元素原子,
-  如笔顺映射原子,
+  如字库原子,
   强类型决策原子,
   强类型决策空间原子,
 } from "~/atoms";
@@ -22,7 +23,7 @@ export default function ElementSelect(
     props;
   const 决策 = useAtomValueUnwrapped(强类型决策原子);
   const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
-  const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
+  const 字库 = useAtomValue(如字库原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   let 全部元素 = [...new Set([...决策.keys(), ...决策空间.keys()])];
   全部元素.sort((a, b) => a.获取名称().localeCompare(b.获取名称()));
@@ -51,7 +52,7 @@ export default function ElementSelect(
         if (!元素) return false;
         const 匹配序列 =
           元素 instanceof 字符 &&
-          笔顺映射.get(元素)?.some((s) => s.startsWith(input));
+          字库.查询字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
         const 匹配元素 = option.value.includes(input);
         return 匹配序列 || 匹配元素;
       }}
@@ -59,8 +60,8 @@ export default function ElementSelect(
         const cha = 名称映射.get(a.value);
         const chb = 名称映射.get(b.value);
         if (cha instanceof 字符 && chb instanceof 字符) {
-          const seqa = 笔顺映射.get(cha)?.[0] ?? "";
-          const seqb = 笔顺映射.get(chb)?.[0] ?? "";
+          const seqa = 字库.查询字形(cha)?.[0]?.标准笔顺 ?? "";
+          const seqb = 字库.查询字形(chb)?.[0]?.标准笔顺 ?? "";
           return seqa.length - seqb.length;
         }
         return a.value.localeCompare(b.value);

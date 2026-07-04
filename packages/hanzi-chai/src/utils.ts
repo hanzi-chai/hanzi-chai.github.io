@@ -1,5 +1,7 @@
 import { isEqual, range } from "lodash-es";
+import { 仿射变换 } from "./affine.js";
 import type { 动态组装条目, 组装条目 } from "./assembly.js";
+import { 区间 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
 import type { 部件 } from "./component.js";
@@ -20,19 +22,17 @@ import {
   type 非空安排,
 } from "./config.js";
 import {
-  type 原始汉字数据,
   type 向量,
-  type 字形描述,
-  type 旧全等数据,
-  type 旧基本部件数据,
-  type 旧复合体数据,
-  type 旧引用笔画数据,
-  type 旧拼接部件数据,
-  type 旧衍生部件数据,
+  type 基本字形数据,
+  type 复合体数据,
+  type 字形数据,
+  type 引用数据,
+  type 引用笔画块数据,
   type 矢量笔画数据,
   type 结构描述字符,
   结构描述字符列表,
   type 绘制,
+  type 部件数据,
 } from "./data.js";
 import {
   二笔,
@@ -74,11 +74,6 @@ type _TupleOf<T, N extends number, R extends unknown[]> = R["length"] extends N
   : _TupleOf<T, N, [T, ...R]>;
 
 // 模拟函数
-export const 模拟引用笔画 = (): 旧引用笔画数据 => ({
-  feature: "reference",
-  index: 0,
-});
-
 export const 模拟矢量笔画 = (
   名称: 笔画名称,
   起点: 向量 = [0, 0],
@@ -104,59 +99,6 @@ export const 模拟矢量笔画 = (
     }),
   };
 };
-
-export const 模拟空基本部件 = (): 旧基本部件数据 => ({
-  type: "basic_component",
-  strokes: [],
-});
-
-export const 模拟基本部件 = (): 旧基本部件数据 => ({
-  type: "basic_component",
-  strokes: [模拟矢量笔画("横")],
-});
-
-export const 模拟衍生部件 = (): 旧衍生部件数据 => ({
-  type: "derived_component",
-  source: "一",
-  strokes: [模拟引用笔画()],
-});
-
-export const 模拟拼接部件 = (): 旧拼接部件数据 => ({
-  type: "spliced_component",
-  operator: "⿰",
-  operandList: ["一", "丨"],
-});
-
-export const 模拟全等 = (): 旧全等数据 => ({
-  type: "identity",
-  source: "一",
-});
-
-export const 模拟复合体 = (operator: 结构描述字符): 旧复合体数据 => ({
-  type: "compound",
-  operator,
-  operandList: ["一", "一"],
-});
-
-export const 是基本或衍生部件 = (
-  glyph: 字形描述,
-): glyph is 旧基本部件数据 | 旧衍生部件数据 =>
-  glyph.type === "basic_component" || glyph.type === "derived_component";
-
-export const 创建原始汉字数据 = (
-  unicode: number,
-  glyphs: 字形描述[],
-  name: string | null = null,
-): 原始汉字数据 => ({
-  unicode,
-  tygf: 0,
-  gb2312: 0,
-  gf0014_id: null,
-  gf3001_id: null,
-  ambiguous: false,
-  name,
-  glyphs,
-});
 
 // 输入输出便利函数
 interface 键位频率目标 {
@@ -826,26 +768,6 @@ export const 添加优先简码 = <T extends 组装条目 | 动态组装条目>(
   return result;
 };
 
-export const 是源标签 = (tag: string): tag is 源标签 => /^[A-Z].*$/.test(tag);
-
-export const 所有源标签 = [
-  "G",
-  "H",
-  "T",
-  "J",
-  "K",
-  "N",
-  "V",
-  "M",
-  "S",
-  "B",
-  "U",
-] as 源标签[];
-
-export type 源标签 = string & { __brand: "source" };
-
-export type 源标签集合 = Set<源标签>;
-
 export const 生成 = (config: 配置): 生成配置 => {
   const mapping = config.form.mapping;
   const mapping_space = config.form.mapping_space ?? {};
@@ -966,3 +888,161 @@ export const 生成 = (config: 配置): 生成配置 => {
 
   return { ...config, generated_mapping_space: space };
 };
+
+function isVectorStroke(s: 矢量笔画数据 | 引用笔画块数据): s is 矢量笔画数据 {
+  return "feature" in s;
+}
+
+export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[] {
+  const glyphMap = new Map<number, 字形数据>();
+  for (const g of glyphs) glyphMap.set(g.id, g);
+
+  const strokeCache = new Map<number, 矢量笔画数据[]>();
+  const resolving = new Set<number>();
+
+  function resolveGlyph(id: number): 矢量笔画数据[] {
+    const cached = strokeCache.get(id);
+    if (cached) return cached;
+    if (resolving.has(id)) throw new Error(`循环引用: glyph ${id}`);
+
+    const glyph = glyphMap.get(id);
+    if (!glyph) throw new Error(`字形 ${id} 不存在`);
+
+    resolving.add(id);
+    try {
+      let result: 矢量笔画数据[];
+      if (glyph.type === "compound") {
+        result = resolveCompound(glyph);
+      } else if (glyph.operator) {
+        result = resolveSplicedComponent(glyph);
+      } else {
+        result = resolveComponent(glyph);
+      }
+      strokeCache.set(id, result);
+      return result;
+    } finally {
+      resolving.delete(id);
+    }
+  }
+
+  function resolveComponent(glyph: 部件数据): 矢量笔画数据[] {
+    const result: 矢量笔画数据[] = [];
+    const refs = glyph.references ?? [];
+    const strokes =
+      glyph.strokes ??
+      refs.map((_, i) => ({ index: i, from: undefined, to: undefined }));
+    for (const stroke of strokes) {
+      if (isVectorStroke(stroke)) {
+        result.push(stroke);
+      } else {
+        const ref = refs[stroke.index];
+        if (!ref) continue;
+        const refStrokes = resolveGlyph(ref.id);
+        const from = stroke.from ?? 0;
+        const to = (stroke.to ?? refStrokes.length - 1) + 1;
+        result.push(...refStrokes.slice(from, to));
+      }
+    }
+    return result;
+  }
+
+  function transformRefStrokes(
+    strokes: 矢量笔画数据[],
+    ref: 引用数据,
+    operator: 结构描述字符,
+    index: number,
+  ): 矢量笔画数据[] {
+    const { xbegin, ybegin, xend, yend } = ref;
+    if (
+      xbegin !== undefined &&
+      ybegin !== undefined &&
+      xend !== undefined &&
+      yend !== undefined
+    ) {
+      const transform = new 仿射变换(
+        new 区间(xbegin, xend),
+        new 区间(ybegin, yend),
+      );
+      return transform.变换笔画列表(strokes);
+    }
+    const transforms = 仿射变换.查找表[operator];
+    if (transforms?.[index]) {
+      return transforms[index].变换笔画列表(strokes);
+    }
+    return strokes;
+  }
+
+  function resolveCompoundLike(
+    operator: 结构描述字符,
+    references: 引用数据[],
+    strokes: 引用笔画块数据[] | undefined,
+  ): 矢量笔画数据[] {
+    const partsStrokes = references.map((ref, i) => {
+      const resolved = resolveGlyph(ref.id);
+      return transformRefStrokes(resolved, ref, operator, i);
+    });
+
+    if (strokes && strokes.length > 0) {
+      const result: 矢量笔画数据[] = [];
+      const remaining = partsStrokes.map((s) => [...s]);
+      for (const item of strokes) {
+        const part = remaining[item.index];
+        if (!part) continue;
+        const from = item.from ?? 0;
+        const to = item.to ?? part.length;
+        result.push(...part.slice(from, to));
+        remaining[item.index] = part.slice(to);
+      }
+      return result;
+    }
+
+    return partsStrokes.flat();
+  }
+
+  function resolveCompound(glyph: 复合体数据): 矢量笔画数据[] {
+    return resolveCompoundLike(glyph.operator, glyph.references, glyph.strokes);
+  }
+
+  function resolveSplicedComponent(glyph: 部件数据): 矢量笔画数据[] {
+    const refs = glyph.references ?? [];
+    const strokes =
+      glyph.strokes ??
+      refs.map((_, i) => ({ index: i, from: undefined, to: undefined }));
+    const orderStrokes = strokes.filter(
+      (s) => !isVectorStroke(s),
+    ) as 引用笔画块数据[];
+    return resolveCompoundLike(
+      glyph.operator!,
+      glyph.references ?? [],
+      orderStrokes.length > 0 ? orderStrokes : undefined,
+    );
+  }
+
+  const result: 基本字形数据[] = [];
+  for (const glyph of glyphs) {
+    try {
+      if (glyph.type === "compound") {
+        // 复合体数据保持原样，不解引用
+        result.push(glyph);
+      } else {
+        // 部件数据：解引用所有引用笔画块数据
+        const strokes = resolveGlyph(glyph.id);
+        result.push({
+          id: glyph.id,
+          type: "component" as const,
+          strokes,
+          gf0014_id: glyph.gf0014_id,
+          gf3001_id: glyph.gf3001_id,
+          operator: undefined,
+          references: undefined,
+        });
+      }
+    } catch (e) {
+      console.warn(`跳过字形 ${glyph.id}: ${(e as Error).message}`);
+    }
+  }
+  return result;
+}
+
+export const 是用户字形 = (id: number) => id >= 0xf_0000 && id <= 0xf_ffff;
+export const 是用户字符 = (unicode: number) => unicode >= 0xf000 && unicode <= 0xf9ff;

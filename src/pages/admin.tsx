@@ -1,62 +1,35 @@
-import { Layout } from "antd";
-import type { 原始字库数据, 原始汉字数据 } from "hanzi-chai";
+import { Layout, Row } from "antd";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
-import { list } from "~/api";
-import { 原始可编辑字库数据原子 } from "~/atoms";
+import { listCharacters, listGlyphs } from "~/api";
+import { 可编辑字形列表原子, 可编辑字符列表原子 } from "~/atoms";
 import CharacterTable from "~/components/CharacterTable";
+import GlyphTable from "~/components/GlyphTable";
+import { EditorColumn } from "~/components/Utils";
 import { useChaifenTitle } from "~/utils";
-
-const _checkIDsInData = (data: 原始汉字数据[]) => {
-  const reverseGF3001Map = new Map<
-    number,
-    { unicode: number; name: string | null }[]
-  >();
-  const reverseGF0014Map = new Map<
-    number,
-    { unicode: number; name: string | null }[]
-  >();
-  data.forEach(({ gf3001_id, gf0014_id, unicode, name }) => {
-    if (gf3001_id) {
-      if (!reverseGF3001Map.has(gf3001_id)) reverseGF3001Map.set(gf3001_id, []);
-      reverseGF3001Map.get(gf3001_id)?.push({ unicode, name });
-    }
-    if (gf0014_id) {
-      if (!reverseGF0014Map.has(gf0014_id)) reverseGF0014Map.set(gf0014_id, []);
-      reverseGF0014Map.get(gf0014_id)?.push({ unicode, name });
-    }
-  });
-  for (let i = 1; i <= 560; ++i) {
-    const list = reverseGF3001Map.get(i);
-    if (list?.length !== 1)
-      console.log(`gf3001_id=${i} has ${list?.length ?? 0} items`, list);
-  }
-  for (let i = 1; i <= 514; ++i) {
-    const list = reverseGF0014Map.get(i);
-    if (list?.length !== 1)
-      console.log(`gf0014_id=${i} has ${list?.length ?? 0} items`, list);
-  }
-};
 
 export default function AdminLayout() {
   useChaifenTitle("管理");
-  const set = useSetAtom(原始可编辑字库数据原子);
+  const 设置字符列表 = useSetAtom(可编辑字符列表原子);
+  const 设置字形列表 = useSetAtom(可编辑字形列表原子);
 
   useEffect(() => {
-    list().then((data) => {
-      if ("err" in data) return;
-      const repertoire: 原始字库数据 = {};
-      for (const item of data) {
-        const name = String.fromCodePoint(item.unicode);
-        repertoire[name] = item;
-      }
-      set(repertoire);
-    });
+    listCharacters().then((data) => !("err" in data) && 设置字符列表(data));
+    listGlyphs().then((data) => !("err" in data) && 设置字形列表(data));
   }, []);
 
   return (
-    <Layout className="h-full">
-      <CharacterTable />
+    <Layout>
+      <Layout.Content>
+        <Row>
+          <EditorColumn span={12}>
+            <CharacterTable />
+          </EditorColumn>
+          <EditorColumn span={12}>
+            <GlyphTable />
+          </EditorColumn>
+        </Row>
+      </Layout.Content>
     </Layout>
   );
 }

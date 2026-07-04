@@ -1,5 +1,4 @@
 import init, { Web } from "libchai";
-import axios from "axios";
 
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize";
@@ -126,28 +125,29 @@ type ApiResponse = {
 
 async function apiCall(endpoint: any, data: any) {
   // console.log(`📡 ${endpoint} 请求:`, data);
-  let result = {};
-  await axios
-    .post(`/api/${endpoint}`, data, {
-      timeout: 60000,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-    .then((resp) => {
-      const data: ApiResponse = resp.data;
-      // console.log(`✅ ${endpoint} 响应:`, data);
-      if (data.type === "success") {
-        result = data.result;
-      }
-      if (data.type === "error") {
-        console.error(`❌ ${endpoint}:`, data.error);
-        throw new Error(data.error);
-      }
-    })
-    .catch((error) => {
-      console.error(`❌ ${endpoint}:`, error);
-      throw error;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  try {
+    const resp = await fetch(`/api/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      signal: controller.signal,
     });
-  return result;
+    const respData: ApiResponse = await resp.json();
+    // console.log(`✅ ${endpoint} 响应:`, respData);
+    if (respData.type === "success") {
+      return respData.result;
+    }
+    if (respData.type === "error") {
+      console.error(`❌ ${endpoint}:`, respData.error);
+      throw new Error(respData.error);
+    }
+    return {};
+  } catch (error) {
+    console.error(`❌ ${endpoint}:`, error);
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

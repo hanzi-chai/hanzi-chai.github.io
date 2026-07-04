@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "paths": {
       "~/*": ["./src/*"],
-      "hanzi-chai": ["./packages/hanzi-chai/src/main.ts"]
+      "hanzi-chai": ["./packages/hanzi-chai/src/main.ts"],
+      "@chai-api/client": ["./packages/api/src/client.ts"]
     },
     /* Bundler mode */
     "moduleResolution": "bundler",

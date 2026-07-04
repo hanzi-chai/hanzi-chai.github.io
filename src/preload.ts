@@ -1,6 +1,6 @@
 import type {
-  原始字库数据,
-  原始汉字数据,
+  字符数据,
+  基本字形数据,
   原始词典,
   当量映射,
   键位分布目标,
@@ -15,7 +15,8 @@ import pako from "pako";
 import { getDataPath } from "~/version";
 
 interface 预加载结果 {
-  原始字库数据: 原始字库数据;
+  字符列表: 字符数据[];
+  字形列表: 基本字形数据[];
   原始词典: 原始词典;
   键位分布目标: 键位分布目标;
   当量映射: 当量映射;
@@ -43,19 +44,18 @@ async function 拉取资源(文件名: string): Promise<string> {
 }
 
 export async function 预加载() {
-  const [字库内容, 词典内容, 分布内容, 当量内容, GF0014] = await Promise.all([
-    拉取资源("repertoire.json.deflate"),
+  const [字符内容, 字形内容, 词典内容, 分布内容, 当量内容, GF0014] = await Promise.all([
+    拉取资源("characters.json.deflate"),
+    拉取资源("glyphs.json.deflate"),
     拉取资源("dictionary.txt"),
     拉取资源("distribution.txt"),
     拉取资源("equivalence.txt"),
     拉取资源("gf0014.txt")
   ]);
 
-  const data: 原始汉字数据[] = JSON.parse(字库内容);
   _数据 = {
-    原始字库数据: Object.fromEntries(
-      data.map((x) => [String.fromCodePoint(x.unicode), x]),
-    ),
+    字符列表: JSON.parse(字符内容),
+    字形列表: JSON.parse(字形内容),
     原始词典: 解析原始词典(读取表格(词典内容)),
     键位分布目标: 解析键位分布目标(读取表格(分布内容)),
     当量映射: 解析当量映射(读取表格(当量内容)),

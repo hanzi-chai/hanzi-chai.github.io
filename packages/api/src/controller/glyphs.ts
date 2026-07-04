@@ -1,4 +1,4 @@
-import type { 字形数据 } from "hanzi-chai";
+import type { 字形数据, 结构描述字符 } from "hanzi-chai";
 import type { IRequest } from "itty-router";
 import type { Env } from "../dto/context";
 import { Err, ErrCode } from "../error/error";
@@ -6,7 +6,7 @@ import { Err, ErrCode } from "../error/error";
 const table = "glyphs";
 
 interface 字形模型 extends Pick<字形数据, "id" | "type"> {
-  operator: 字形数据["operator"] | null;
+  operator: 结构描述字符 | null;
   references: string | null; // JSON 字符串
   strokes: string | null; // JSON 字符串
   gf0014_id: number | null;
@@ -31,8 +31,8 @@ function 转模型(数据: 字形数据): 字形模型 {
   return {
     ...数据,
     operator: 数据.operator ?? null,
-    references: JSON.stringify(数据.references),
-    strokes: JSON.stringify(数据.strokes),
+    references: 数据.references ? JSON.stringify(数据.references) : null,
+    strokes: 数据.strokes ? JSON.stringify(数据.strokes) : null,
     gf0014_id: 数据.gf0014_id ?? null,
     gf3001_id: 数据.gf3001_id ?? null,
   };

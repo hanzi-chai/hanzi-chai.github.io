@@ -1,7 +1,8 @@
 import { bisectLeft, bisectRight } from "d3-array";
 import { isEqual, range } from "lodash-es";
+import { 图形盒子 } from "./affine.js";
 import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
-import type { 分类器, 笔画名称 } from "./classifier.js";
+import { type 分类器, type 笔画名称, 默认分类器 } from "./classifier.js";
 import type { 条件, 退化配置 } from "./config.js";
 import type { 矢量图形数据, 结构描述字符 } from "./data.js";
 import { 二笔, type 元素, 未知元素, 笔画 } from "./element.js";
@@ -50,6 +51,8 @@ const 笔画名称等价 = (退化器: 退化配置, s1: 笔画名称, s2: 笔�
 class 部件 {
   private 笔画列表: 笔画图形[];
   private 拓扑: 拓扑;
+  public 图形盒子: 图形盒子;
+  public 标准笔顺: string;
 
   constructor(
     public id: number,
@@ -57,6 +60,8 @@ class 部件 {
   ) {
     this.笔画列表 = 矢量图形.map((x) => new 笔画图形(x));
     this.拓扑 = new 拓扑(this.笔画列表);
+    this.图形盒子 = new 图形盒子(矢量图形);
+    this.标准笔顺 = this.获取笔画序列(默认分类器).join("");
   }
 
   _笔画列表() {
@@ -630,7 +635,10 @@ class 二笔部件分析器 extends 部件分析器<基本部件分析> {
     if (部件字根) {
       const 条件列表 = this.配置.可选字根.has(部件字根) ? [存在(部件字根)] : [];
       结果列表.push({ 类型: "部件", 字根序列: [部件字根], 部件, 条件列表 });
-      if (this.配置.字根决策.has(部件字根) && !this.配置.可选字根.has(部件字根)) {
+      if (
+        this.配置.字根决策.has(部件字根) &&
+        !this.配置.可选字根.has(部件字根)
+      ) {
         考虑隐式字根 = false;
       }
     }

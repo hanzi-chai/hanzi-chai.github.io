@@ -1,10 +1,13 @@
 import type {
   原始汉字模型,
   旧字形数据模型,
+  旧引用笔画数据,
+  旧笔画块,
+  旧笔画数据,
 } from "./utils";
 import { readFileSync, writeFileSync } from "node:fs";
 import { post } from "./utils";
-import { 字形数据, 字形来源数据, 字符数据, 引用笔画块数据, 旧引用笔画数据, 矢量笔画数据, 旧笔画块, 旧笔画数据, 部件数据 } from "hanzi-chai";
+import { 字形数据, 字形来源数据, 字符数据, 引用笔画块数据, 矢量笔画数据, 部件数据 } from "hanzi-chai";
 
 const 旧字符数据列表: 原始汉字模型[] = JSON.parse(
   readFileSync("data/repertoire.json", "utf-8"),

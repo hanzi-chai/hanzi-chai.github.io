@@ -1,5 +1,6 @@
 import { range, sortBy } from "lodash-es";
-import type { 分类器, 笔画名称 } from "./classifier.js";
+import { 图形盒子 } from "./affine.js";
+import { type 分类器, 默认分类器 } from "./classifier.js";
 import {
   冰雪飞花分析器,
   type 冰雪飞花部件分析,
@@ -12,6 +13,7 @@ import {
 } from "./component.js";
 import type { 引用笔画块数据, 结构描述字符 } from "./data.js";
 import { 二笔, 未知元素, 结构符元素 } from "./element.js";
+import type { 复合体树数据 } from "./primitive.js";
 import {
   优先表,
   type 基本复合体分析,
@@ -28,41 +30,24 @@ import {
 import { default_err, ok, type Result } from "./utils.js";
 
 class 复合体 {
-  private 笔画列表: 笔画名称[];
+  public id: number;
+  public 结构描述字符: 结构描述字符;
+  public 笔顺: 引用笔画块数据[];
+  public 图形盒子: 图形盒子;
+  public 标准笔顺: string;
 
   constructor(
-    public id: number,
-    public 结构描述字符: 结构描述字符,
+    数据: 复合体树数据,
     public 部分列表: 字形[],
-    public 笔顺: 引用笔画块数据[],
   ) {
-    this.笔画列表 = this.计算笔画列表(笔顺, 部分列表);
-  }
-
-  /**
-   * 将复合体递归渲染为 SVG 图形
-   *
-   * @param compound - 复合体
-   * @param repertoire - 原始字符集
-   *
-   * @returns SVG 图形或错误
-   */
-  计算笔画列表(笔顺: 引用笔画块数据[], 部分列表: 字形[]): 笔画名称[] {
-    const 各部分笔画列表: 笔画名称[][] = [];
-    for (const 字形 of 部分列表) {
-      if (字形 instanceof 部件) {
-        各部分笔画列表.push(字形.矢量图形.map((x) => x.feature));
-      } else {
-        各部分笔画列表.push(字形.笔画列表);
-      }
-    }
-    const merged: 笔画名称[] = [];
-    for (const { index, from, to } of 笔顺) {
-      const seq = 各部分笔画列表[index];
-      if (seq === undefined) continue;
-      merged.push(...seq.slice(from ?? 0, to ?? seq.length));
-    }
-    return merged;
+    this.id = 数据.id;
+    this.结构描述字符 = 数据.operator;
+    this.笔顺 = 数据.strokes ?? [];
+    this.图形盒子 = 图形盒子.仿射合并(
+      数据,
+      部分列表.map((x) => x.图形盒子),
+    );
+    this.标准笔顺 = this.获取笔画序列(默认分类器).join("");
   }
 
   按首笔排序部分(): 字形[] {
@@ -73,7 +58,7 @@ class 复合体 {
   }
 
   获取笔画序列(classifier: 分类器) {
-    return this.笔画列表.map((f) => classifier[f]);
+    return this.图形盒子.获取笔画列表().map((f) => classifier[f.feature]);
   }
 }
 
@@ -174,8 +159,7 @@ abstract class 复合体分析器<
         const { 当前拆分方式 } = 部件分析 as any as 默认部件分析;
         const toTake = 当前拆分方式.拆分方式.filter(
           (x) =>
-            x.笔画索引[0]! >= (from ?? 0) &&
-            x.笔画索引[0]! <= (to ?? Infinity),
+            x.笔画索引[0]! >= (from ?? 0) && x.笔画索引[0]! <= (to ?? Infinity),
         ).length;
         字根序列.push(...剩余部分字根序列.slice(0, toTake));
         剩余字根序列列表[index] = 剩余部分字根序列.slice(toTake);
@@ -634,8 +618,7 @@ class 张码复合体分析器 extends 复合体分析器<张码部件分析, �
         // 下包围和「竖折」笔画的左下包围优先取内部，其余取外部
         if (
           复合体.结构描述字符 === "⿶" ||
-          (复合体.结构描述字符 === "⿺" &&
-            复合体.部分列表[0]?.id === 0x31d7)
+          (复合体.结构描述字符 === "⿺" && 复合体.部分列表[0]?.id === 0x31d7)
         ) {
           for (const part of [...复合体.部分列表].reverse())
             分析.字根序列.push(...this.顺序取根(part));

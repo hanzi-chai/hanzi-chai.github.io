@@ -9,10 +9,10 @@ import {
   全部合法元素原子,
   拼写运算自定义原子,
 } from "~/atoms";
-import Algebra from "./Algebra";
 import ElementAdder from "./ElementAdder";
 import ElementCounter from "./ElementCounter";
 import ElementPool from "./ElementPool";
+import Algebra from "./SpellingAlgebraForm";
 
 const AlgebraEditor = ({
   type,
