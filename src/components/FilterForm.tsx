@@ -30,11 +30,11 @@ export default function FilterForm({ setFilter }: StrokeSearchProps) {
       <ProFormText label="笔画" name="sequence" />
       <ProFormSelect
         label="包含标签"
-        name="tag"
+        name="source"
         options={tags.map((x) => ({ label: x, value: x }))}
       />
       <ProFormItem label="包含结构" name="operator">
-        <OperatorSelect />
+        <OperatorSelect allowClear />
       </ProFormItem>
       <ProFormItem label="包含部分" name="part">
         <GlyphSelect />

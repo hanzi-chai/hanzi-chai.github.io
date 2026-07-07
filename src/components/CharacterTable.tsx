@@ -1,23 +1,30 @@
 import { Checkbox, Flex, Form, Layout, Space } from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
-import { 区块列表, 是用户字符, type 校验字符数据 } from "hanzi-chai";
-import { createCharacter, removeCharacter } from "~/api";
+import { 区块列表, 图形盒子, 是用户字符, type 校验字符数据 } from "hanzi-chai";
+import { useState } from "react";
+import { createCharacter, removeCharacter, updateCharacter } from "~/api";
 import {
   useAtom,
   useAtomValue,
+  useAtomValueUnwrapped,
   下一个用户字符码位原子,
   原始字库原子,
   可编辑字符列表原子,
-  如字库原子,
+  如按笔顺排序字符原子,
+  字库原子,
   字形来源列表原子,
+  字形自定义原子,
   用户字符列表原子,
   远程原子,
 } from "~/atoms";
-import { errorFeedback } from "~/utils";
+import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/utils";
 import CharacterForm from "./CharacterForm";
+import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
+import FilterForm from "./FilterForm";
 import GlyphAlgebraForm from "./GlyphAlgebraForm";
 import { StrokesView } from "./GlyphView";
+import PatchForm from "./PatchForm";
 import SourceSelect from "./SourceSelect";
 import { BoxedElementWithTooltip, DeleteButton } from "./Utils";
 
@@ -70,15 +77,57 @@ const DeleteCharacter = ({ unicode }: { unicode: number }) => {
   );
 };
 
+const EditOrPatchCharacter = ({ record }: { record: 校验字符数据 }) => {
+  const 远程 = useAtomValue(远程原子);
+  const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
+  const [用户字符列表, set用户字符列表] = useAtom(用户字符列表原子);
+
+  return 远程 || record.character.是用户私用区() ? (
+    <CharacterForm
+      title="编辑"
+      initialValues={record}
+      onFinish={async (values) => {
+        if (远程) {
+          const res = await updateCharacter(values);
+          if (!errorFeedback(res)) {
+            set可编辑字符列表(
+              可编辑字符列表.map((x) =>
+                x.unicode === values.unicode ? values : x,
+              ),
+            );
+          }
+        } else {
+          set用户字符列表(
+            用户字符列表.map((x) =>
+              x.unicode === values.unicode ? values : x,
+            ),
+          );
+        }
+        return true;
+      }}
+    />
+  ) : (
+    <PatchForm character={record.character} />
+  );
+};
+
 type Column = ColumnType<校验字符数据>;
 
 export default function CharacterTable() {
   const 原始字库 = useAtomValue(原始字库原子);
-  const 字库 = useAtomValue(如字库原子);
-  const 远程 = useAtomValue(远程原子);
+  const 字库 = useAtomValue(字库原子);
+  const 按笔顺排序字符 = useAtomValueUnwrapped(如按笔顺排序字符原子);
   const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
-
-  const dataSource: 校验字符数据[] = [...原始字库];
+  const 字形自定义 = useAtomValue(字形自定义原子);
+  const [filter, setFilter] = useState({} as 过滤器参数);
+  const 过滤器 = new 字符字形过滤器(filter);
+  const dataSource: 校验字符数据[] = [];
+  for (const character of 按笔顺排序字符) {
+    const data = 原始字库.查询(character);
+    if (!data) continue;
+    if (!过滤器.过滤字符(data.character, data, 字库)) continue;
+    dataSource.push(data);
+  }
 
   const unicodeColumn: Column = {
     title: "Unicode",
@@ -155,7 +204,29 @@ export default function CharacterTable() {
 
   const patches: Column = {
     title: "补丁列表",
-    render: (_) => null,
+    render: (_, record) => {
+      const 字符串 = record.character.获取名称();
+      const 补丁列表 = 字形自定义[字符串] ?? [];
+      const symbol = {
+        delete: "−",
+        insert: "+",
+        update: "±",
+      };
+      return (
+        <span>
+          {补丁列表.map((patch, index) => (
+            <span key={index}>
+              {symbol[patch.type]} ({patch.sources.join(", ")}){" "}
+              {patch.type === "delete" ? null : (
+                <StrokesView
+                  glyph={字库.获取字形(patch.id)?.图形盒子 ?? new 图形盒子()}
+                />
+              )}
+            </span>
+          ))}
+        </span>
+      );
+    },
     width: 128,
   };
 
@@ -178,13 +249,7 @@ export default function CharacterTable() {
     key: "option",
     render: (_, record) => (
       <Space>
-        <CharacterForm
-          title="编辑"
-          initialValues={record}
-          onFinish={async () => {
-            return true;
-          }}
-        />
+        <EditOrPatchCharacter record={record} />
         <DeleteCharacter unicode={record.unicode} />
       </Space>
     ),
@@ -193,37 +258,28 @@ export default function CharacterTable() {
       { text: "未编辑", value: 0 },
     ],
     onFilter: (value, record) => {
-      const customized = record.character.是用户私用区();
+      const customized =
+        record.character.是用户私用区() ||
+        (字形自定义[record.character.获取名称()]?.length ?? 0) > 0;
       return value === 1 ? customized : !customized;
     },
   };
 
-  const adminColumns = [
+  const columns: ColumnsType<校验字符数据> = [
     unicodeColumn,
     tygfColumn,
     gb2312,
     glyphs,
-    ambiguous,
-    operations,
-  ];
-  const userColumns = [
-    unicodeColumn,
-    glyphs,
     patches,
-    operations,
-    gb2312,
     ambiguous,
+    operations,
   ];
-  const columns: ColumnsType<校验字符数据> = 远程 ? adminColumns : userColumns;
+
   return (
-    <Flex
-      component={Layout.Content}
-      className="overflow-y-scroll"
-      vertical
-      align="center"
-      gap="small"
-    >
+    <Flex className="overflow-y-scroll" vertical align="center" gap="small">
+      <FilterForm setFilter={setFilter} />
       <Flex gap="large">
+        <CharacterGlyphSwitcher />
         <Form.Item label="选择字形来源" className="m-0!">
           <SourceSelect value={字形来源列表} onChange={设置字形来源列表} />
         </Form.Item>

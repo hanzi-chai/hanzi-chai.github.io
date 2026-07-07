@@ -1044,5 +1044,11 @@ export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[]
   return result;
 }
 
-export const 是用户字形 = (id: number) => id >= 0xf_0000 && id <= 0xf_ffff;
-export const 是用户字符 = (unicode: number) => unicode >= 0xf000 && unicode <= 0xf9ff;
+export const 生成字形起始点 = 0xe_0000;
+export const 生成字形终止点 = 0xe_ffff;
+export const 用户字形起始点 = 0xf_0000;
+export const 用户字形终止点 = 0xf_ffff;
+export const 是用户字形 = (id: number) => id >= 用户字形起始点 && id <= 用户字形终止点;
+export const 用户字符起始点 = 0xf000;
+export const 用户字符终止点 = 0xf8ff;
+export const 是用户字符 = (unicode: number) => unicode >= 用户字符起始点 && unicode <= 用户字符终止点;

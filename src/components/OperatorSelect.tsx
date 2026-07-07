@@ -14,5 +14,5 @@ export default function OperatorSelect<
   T extends 结构描述字符 | OperatorVariable,
 >({ includeVariables, ...rest }: OperatorSelectProps<T>) {
   const options = 结构描述字符列表.map((op) => ({ label: op, value: op }));
-  return <Select className="w-16!" options={options} {...rest} />;
+  return <Select options={options} {...rest} />;
 }

@@ -182,7 +182,7 @@ export class 字符字形过滤器 {
     const { operator, part } = this.过滤条件;
     let result = true;
     if (this.sequenceRegex !== undefined) {
-      result &&=this.sequenceRegex!.test(glyph.标准笔顺);
+      result &&= this.sequenceRegex!.test(glyph.标准笔顺);
     }
     if (operator) {
       result &&= glyph instanceof 复合体 && glyph.结构描述字符 === operator;

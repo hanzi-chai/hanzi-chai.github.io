@@ -1,6 +1,6 @@
-import { Env } from "../dto/context";
-import { Err, ErrCode, Result } from "../error/error";
+import type { Env } from "../dto/context";
 import { loadNumber, loadString } from "../dto/load";
+import { Err, ErrCode, type Result } from "../error/error";
 
 const tableUsers = "users";
 

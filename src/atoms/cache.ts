@@ -26,6 +26,10 @@ import {
   添加优先简码,
   生成,
   生成字形数据,
+  用户字形终止点,
+  用户字形起始点,
+  用户字符终止点,
+  用户字符起始点,
   type 码表条目,
   组装,
   type 组装条目,
@@ -193,7 +197,7 @@ export const 别名显示原子 = atom((get) => {
   };
 });
 
-export const 如字库原子 = atom((get) => {
+export const 字库原子 = atom((get) => {
   const 原始字库 = get(原始字库原子);
   const 字形自定义 = get(字形自定义原子);
   const 变换器列表 = get(字形拼写运算列表原子);
@@ -203,7 +207,7 @@ export const 如字库原子 = atom((get) => {
 
 export const 如按笔顺排序字符原子 = atom((get) => {
   const 原始字库 = get(原始字库原子);
-  const 字库 = get(如字库原子);
+  const 字库 = get(字库原子);
   const 全部字符 = [...原始字库].map((x) => x.character);
   const result = sortBy(全部字符, (c) => {
     const 首个字形 = (字库.查询字形(c) ?? [])[0];
@@ -226,19 +230,19 @@ export const 全部来源原子 = atom((get) => {
 export const 下一个用户字符码位原子 = atom((get) => {
   const 用户字符列表 = get(用户字符列表原子);
   const codes = new Set(用户字符列表.map((x) => x.unicode));
-  for (let i = 0xf000; i <= 0xf8ff; ++i) {
+  for (let i = 用户字符起始点; i <= 用户字符终止点; ++i) {
     if (!codes.has(i)) return i;
   }
-  return 0xffff;
+  throw new Error("用户字符码位已用尽");
 });
 
 export const 下一个用户字形ID原子 = atom((get) => {
   const 用户字形列表 = get(用户字形列表原子);
   const ids = new Set(用户字形列表.map((x) => x.id));
-  for (let i = 0xf0000; i <= 0x100000; ++i) {
+  for (let i = 用户字形起始点; i <= 用户字形终止点; ++i) {
     if (!ids.has(i)) return i;
   }
-  return 0xfffff;
+  throw new Error("用户字形ID已用尽");
 });
 
 export const 全部合法元素原子 = atom((get) => {
@@ -316,7 +320,7 @@ export const 拼音元素映射原子 = atom((get) => {
 });
 
 export const 强类型自定义分析原子 = atom((get) => {
-  const 字库 = get(如字库原子);
+  const 字库 = get(字库原子);
   const 原始字库 = get(原始字库原子);
   const 全部合法元素 = get(全部合法元素原子);
   if (!全部合法元素.ok) return 全部合法元素;
@@ -357,7 +361,7 @@ export const 字形分析配置原子 = atom((get) => {
 });
 
 export const 如字形分析结果原子 = atom((get) => {
-  const 字库 = get(如字库原子);
+  const 字库 = get(字库原子);
   const 字形分析配置 = get(字形分析配置原子);
   if (!字形分析配置.ok) return 字形分析配置;
   const 汉字集合 = get(汉字集合原子);
@@ -365,7 +369,7 @@ export const 如字形分析结果原子 = atom((get) => {
 });
 
 export const 如动态字形分析结果原子 = atom((get) => {
-  const 字库 = get(如字库原子);
+  const 字库 = get(字库原子);
   const 字形分析配置 = get(字形分析配置原子);
   if (!字形分析配置.ok) return 字形分析配置;
   const 汉字集合 = get(汉字集合原子);

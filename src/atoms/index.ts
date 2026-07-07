@@ -1,6 +1,7 @@
 import type { Result } from "hanzi-chai";
 import type { Atom, WritableAtom } from "jotai";
 import { useAtomValue, useSetAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import * as O from "optics-ts/standalone";
 import type { SetStateAction } from "react";
 
@@ -100,3 +101,8 @@ export function useAtomValueUnwrapped<T, E>(
   }
   return result.value;
 }
+
+export const repertoireTypeAtom = atomWithStorage<"character" | "glyph">(
+  "repertoire_page_type",
+  "character",
+);

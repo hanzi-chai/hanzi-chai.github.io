@@ -36,7 +36,7 @@ import {
   决策图原子,
   别名显示原子,
   原始字库原子,
-  如字库原子,
+  字库原子,
   字母表原子,
   强类型决策原子,
   强类型决策空间原子,
@@ -318,7 +318,7 @@ const MappingUploader = ({
 }: {
   setImportResult: (a: any) => void;
 }) => {
-  const repertoire = useAtomValue(如字库原子);
+  const repertoire = useAtomValue(字库原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const mapping = useAtomValueUnwrapped(强类型决策原子);
   const setMapping = useSetAtom(强类型决策原子);

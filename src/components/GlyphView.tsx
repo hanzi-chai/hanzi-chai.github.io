@@ -285,8 +285,8 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       ref={svgRef}
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
-      width="1em"
-      height="1em"
+      width="1.2em"
+      height="1.2em"
       viewBox={viewBox}
     >
       {strokes.map((stroke, strokeIndex) => {

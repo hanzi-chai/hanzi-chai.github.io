@@ -4,7 +4,12 @@ import { 部件, 默认退化配置 } from "./component.js";
 import { 复合体 } from "./compound.js";
 import type { 分析配置, 条件, 退化配置 } from "./config.js";
 import { 二笔, type 元素, 笔画 } from "./element.js";
-import type { 原始字库, 复合体树数据, 字形历史记录, 字形树数据 } from "./primitive.js";
+import type {
+  原始字库,
+  复合体树数据,
+  字形历史记录,
+  字形树数据,
+} from "./primitive.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符 } from "./unicode.js";
@@ -77,6 +82,8 @@ interface 字形分析结果<
   复合体分析 extends 基本复合体分析 = 基本复合体分析,
 > {
   分析结果: Map<字符, (部件分析 | 复合体分析)[]>;
+  部件分析结果: Map<部件, 部件分析>;
+  复合体分析结果: Map<复合体, 复合体分析>;
   字根部件列表: 部件字根[];
 }
 
@@ -85,6 +92,8 @@ interface 动态字形分析结果<
   复合体分析 extends 基本复合体分析 = 基本复合体分析,
 > {
   分析结果: Map<字符, (优先表<部件分析> | 优先表<复合体分析>)[]>;
+  部件分析结果: Map<部件, 优先表<部件分析>>;
+  复合体分析结果: Map<复合体, 优先表<复合体分析>>;
   字根部件列表: 部件字根[];
 }
 
@@ -412,8 +421,9 @@ class 字库 {
   /**
    * 确定需要分析的字符
    */
-  获取待分析部件(汉字列表: Set<字符>) {
+  获取待分析部件和复合体集合(汉字列表: Set<字符>) {
     const 待分析部件集合: Set<部件> = new Set();
+    const 待分析复合体集合: Set<复合体> = new Set();
     const recurse = (glyph: 字形) => {
       if (是部件(glyph)) 待分析部件集合.add(glyph);
       else {
@@ -426,9 +436,12 @@ class 字库 {
       const 字形列表 = this.查询字形(汉字) ?? [];
       for (const 字形 of 字形列表) {
         recurse(字形);
+        if (是复合体(字形)) {
+          待分析复合体集合.add(字形);
+        }
       }
     }
-    return 待分析部件集合;
+    return { 待分析部件集合, 待分析复合体集合 };
   }
 
   准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>) {
@@ -450,7 +463,8 @@ class 字库 {
     );
     if (!如配置.ok) return 如配置;
     const 配置 = 如配置.value;
-    const 待分析部件集合 = this.获取待分析部件(汉字集合);
+    const { 待分析部件集合, 待分析复合体集合 } =
+      this.获取待分析部件和复合体集合(汉字集合);
     const 部件分析器 = 获取注册表().创建部件分析器(
       分析配置.component_analyzer || "默认",
       配置,
@@ -461,6 +475,7 @@ class 字库 {
     )!;
     return ok({
       待分析部件集合,
+      待分析复合体集合,
       部件分析器,
       复合体分析器,
       字根部件列表: 配置.部件字根列表,
@@ -481,39 +496,37 @@ class 字库 {
     const 分析配置或错误 = this.准备分析(base, 汉字集合);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
-    const 部件分析结果 = new Map<部件, 基本部件分析>();
+    const { 部件分析结果 } = 分析配置.复合体分析器;
+    const 复合体分析结果 = new Map<复合体, 基本复合体分析>();
     for (const 部件 of 分析配置.待分析部件集合) {
       const 分析 = 分析配置.部件分析器.分析(部件);
       if (!分析.ok) return 分析;
       部件分析结果.set(部件, 分析.value);
     }
-    // 对冰雪飞花，把从复合体转出的部件也分析一下
-    // if (base.分析配置.component_analyzer === "冰雪飞花") {
-    //   for (const [_, 部件] of 分析配置.复合体字根映射) {
-    //     const 分析 = 分析配置.部件分析器.分析(部件);
-    //     if (!分析.ok) return 分析;
-    //     部件分析结果.set(部件, 分析.value);
-    //   }
-    // }
-    分析配置.复合体分析器.部件分析结果 = 部件分析结果;
+    for (const 复合体 of 分析配置.待分析复合体集合) {
+      const 分析 = 分析配置.复合体分析器.分析(复合体);
+      if (!分析.ok) return 分析;
+      复合体分析结果.set(复合体, 分析.value);
+    }
     const 分析结果 = new Map<字符, 基本分析[]>();
-    for (const 字符 of 汉字集合) {
-      const 结果列表: 基本分析[] = [];
-      const 字形列表 = this.查询字形(字符) ?? [];
+    for (const 汉字 of 汉字集合) {
+      const 字形列表 = this.查询字形(汉字) ?? [];
+      const 分析列表: 基本分析[] = [];
       for (const 字形 of 字形列表) {
-        if (字形 instanceof 部件) {
-          const 分析 = 部件分析结果.get(字形)!;
-          结果列表.push(分析);
-        } else {
-          const 分析 = 分析配置.复合体分析器.分析(字形);
-          if (!分析.ok) return 分析;
-          结果列表.push(分析.value);
+        if (是部件(字形)) {
+          const 分析 = 部件分析结果.get(字形);
+          if (分析) 分析列表.push(分析);
+        } else if (是复合体(字形)) {
+          const 分析 = 复合体分析结果.get(字形);
+          if (分析) 分析列表.push(分析);
         }
       }
-      分析结果.set(字符, 结果列表);
+      分析结果.set(汉字, 分析列表);
     }
     return ok({
       分析结果,
+      部件分析结果,
+      复合体分析结果,
       字根部件列表: 分析配置.字根部件列表,
     });
   }
@@ -531,34 +544,40 @@ class 字库 {
     const 分析配置或错误 = this.准备分析(base, 汉字集合);
     if (!分析配置或错误.ok) return 分析配置或错误;
     const 分析配置 = 分析配置或错误.value;
-    const 动态部件分析结果 = new Map<部件, 优先表<基本部件分析>>();
+    const { 动态部件分析结果 } = 分析配置.复合体分析器;
+    const 动态复合体分析结果 = new Map<复合体, 优先表<基本复合体分析>>();
     for (const 部件 of 分析配置.待分析部件集合) {
       const 分析 = 分析配置.部件分析器.动态分析(部件);
       if (!分析.ok) return 分析;
       动态部件分析结果.set(部件, 分析.value);
     }
-    分析配置.复合体分析器.动态部件分析结果 = 动态部件分析结果;
+    for (const 复合体 of 分析配置.待分析复合体集合) {
+      const 分析 = 分析配置.复合体分析器.动态分析(复合体);
+      if (!分析.ok) return 分析;
+      动态复合体分析结果.set(复合体, 分析.value);
+    }
     const 分析结果 = new Map<
       字符,
       (优先表<基本部件分析> | 优先表<基本复合体分析>)[]
     >();
-    for (const 字符 of 汉字集合) {
-      const 结果列表: (优先表<基本部件分析> | 优先表<基本复合体分析>)[] = [];
-      const 字形列表 = this.查询字形(字符) ?? [];
+    for (const 汉字 of 汉字集合) {
+      const 字形列表 = this.查询字形(汉字) ?? [];
+      const 分析列表: (优先表<基本部件分析> | 优先表<基本复合体分析>)[] = [];
       for (const 字形 of 字形列表) {
-        if (字形 instanceof 部件) {
-          const 分析 = 动态部件分析结果.get(字形)!;
-          结果列表.push(分析);
-        } else {
-          const 分析 = 分析配置.复合体分析器.动态分析(字形);
-          if (!分析.ok) return 分析;
-          结果列表.push(分析.value);
+        if (是部件(字形)) {
+          const 分析 = 动态部件分析结果.get(字形);
+          if (分析) 分析列表.push(分析);
+        } else if (是复合体(字形)) {
+          const 分析 = 动态复合体分析结果.get(字形);
+          if (分析) 分析列表.push(分析);
         }
       }
-      分析结果.set(字符, 结果列表);
+      分析结果.set(汉字, 分析列表);
     }
     return ok({
       分析结果,
+      部件分析结果: 动态部件分析结果,
+      复合体分析结果: 动态复合体分析结果,
       字根部件列表: 分析配置.字根部件列表,
     });
   }

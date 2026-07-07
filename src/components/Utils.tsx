@@ -25,9 +25,8 @@ import type { ComponentProps, MouseEventHandler } from "react";
 import {
   useAtom,
   useAtomValue,
-  useAtomValueUnwrapped,
   别名显示原子,
-  如字库原子,
+  字库原子,
   当前元素原子,
   键盘原子,
 } from "~/atoms";
@@ -170,7 +169,7 @@ export const CharacterDisplay = ({
 }: {
   character: 字符;
 } & ComponentProps<"span">) => {
-  const 字库 = useAtomValue(如字库原子);
+  const 字库 = useAtomValue(字库原子);
   const 图形 = 字库.查询字形(character)?.[0]?.图形盒子;
   if (!character.是私用区() || 图形 === undefined) {
     return (

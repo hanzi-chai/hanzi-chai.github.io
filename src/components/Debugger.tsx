@@ -24,7 +24,7 @@ import { useState } from "react";
 import {
   useAtomValueUnwrapped,
   原始字库原子,
-  如字库原子,
+  字库原子,
   汉字集合原子,
   码表数据库,
   type 联合条目,
@@ -90,7 +90,7 @@ const 校对方向原子 = atomWithStorage(
 
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
-  const repertoire = useAtomValue(如字库原子);
+  const repertoire = useAtomValue(字库原子);
   const 原始字库 = useAtomValue(原始字库原子);
   const characters = useAtomValue(汉字集合原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
@@ -211,7 +211,6 @@ export default function Debugger() {
                 <Space size="small" wrap key={i}>
                   {x.元素序列.map((element, index) => (
                     <BorderItem
-                      className="max-w-8!"
                       key={index}
                       onClick={
                         typeof element === "object"

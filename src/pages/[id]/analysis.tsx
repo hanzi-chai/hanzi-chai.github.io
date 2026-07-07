@@ -23,9 +23,8 @@ import {
   type 字形分析结果,
   type 字根,
   type 字符,
-  笔画,
+  type 笔画,
   获取注册表,
-  部件,
   部件字根,
   默认分类器,
   type 默认部件分析,
@@ -38,11 +37,10 @@ import {
   分析配置原子,
   别名显示原子,
   动态分析原子,
-  原始字库原子,
   复合体分析器原子,
   如动态字形分析结果原子,
-  如字库原子,
   如字形分析结果原子,
+  字库原子,
   强类型决策原子,
   强类型决策空间原子,
   强类型自定义分析原子,
@@ -62,7 +60,6 @@ import {
 } from "~/utils";
 
 const 导出字形分析结果 = (
-  characters: Set<字符>,
   a: 字形分析结果 | 动态字形分析结果,
   display: (s: 字符) => string,
 ) => {
@@ -72,18 +69,17 @@ const 导出字形分析结果 = (
     l
       .map((z) => (z instanceof 部件字根 ? display(z.字符) : z.获取名称()))
       .join(" ");
-  for (const char of characters) {
-    const analysis = 分析结果.get(char) ?? [];
-    const head = [char.获取名称()];
-    for (const 字形分析 of analysis) {
-      if (字形分析 instanceof 优先表) {
+  for (const [汉字, 分析列表] of 分析结果) {
+    const head = [汉字.获取名称()];
+    for (const 分析 of 分析列表) {
+      if (分析 instanceof 优先表) {
         tsv.push([
           ...head,
           // 动态分析以全角空格隔开
-          [...字形分析].map((x) => 序列化(x.字根序列)).join("　"),
+          [...分析].map((x) => 序列化(x.字根序列)).join("　"),
         ]);
       } else {
-        tsv.push([...head, 序列化(字形分析.字根序列)]);
+        tsv.push([...head, 序列化(分析.字根序列)]);
       }
     }
   }
@@ -136,11 +132,10 @@ const ConfigureRules = () => {
 };
 
 const ExportDynamicAnalysis = () => {
-  const 汉字集合 = useAtomValue(汉字集合原子);
   const display = useAtomValue(别名显示原子);
   const 动态分析结果 = useAtomValueUnwrapped(如动态字形分析结果原子);
   return (
-    <Button onClick={() => 导出字形分析结果(汉字集合, 动态分析结果, display)}>
+    <Button onClick={() => 导出字形分析结果(动态分析结果, display)}>
       导出动态拆分
     </Button>
   );
@@ -149,12 +144,9 @@ const ExportDynamicAnalysis = () => {
 const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   const [step, setStep] = useState(0 as 0 | 1);
   const 分析配置 = useAtomValue(分析配置原子);
-  const 原始字库 = useAtomValue(原始字库原子);
-  const 字库 = useAtomValue(如字库原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
-  const { 分析结果 } = 字形分析结果;
+  const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
   const 动态分析 = useAtomValue(动态分析原子);
-  const 汉字集合 = useAtomValue(汉字集合原子);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const display = useAtomValue(别名显示原子);
@@ -179,41 +171,36 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
     sequence: number[];
   })[] = [];
   const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
-  for (const [字, 分析列表] of 分析结果) {
-    const 字符串 = 字.获取名称();
-    if (!过滤器.过滤字符(字, 原始字库.查询(字)!, 字库)) continue;
-    if (过滤必要字根 && 是必要字根(字)) continue;
-    for (const [i, 分析] of 分析列表.entries()) {
-      if (分析.类型 === "部件") {
-        if (
-          只显示自定义 &&
-          !自定义分析映射.get(分析.部件) &&
-          !动态自定义分析映射.get(分析.部件)
-        )
-          continue;
-        const r = 分析 as 默认部件分析 | 基本部件分析;
-        if (分析.字根序列.length === 1 && 分析.字根序列[0] instanceof 笔画)
-          continue;
-        部件分析内容.push({
-          key: 分析.部件.id,
-          label: <ResultSummary glyph={分析.部件} analysis={分析} />,
-          children:
-            "全部拆分方式" in r ? (
-              <ResultDetail
-                glyph={分析.部件}
-                data={r.全部拆分方式}
-                map={r.字根笔画映射}
-              />
-            ) : undefined,
-          sequence: r.字根序列.flatMap((x) => x.获取笔画序列(默认分类器)),
-        });
-      } else {
-        复合体分析内容.push({
-          key: `${字符串}-${i}`,
-          label: <ResultSummary glyph={分析.复合体} analysis={分析} />,
-        });
-      }
-    }
+  for (const [部件, 分析] of 部件分析结果) {
+    if (!过滤器.过滤字形(部件)) continue;
+    if (
+      只显示自定义 &&
+      !自定义分析映射.get(部件) &&
+      !动态自定义分析映射.get(部件)
+    )
+      continue;
+    const r = 分析 as 默认部件分析 | 基本部件分析;
+    if (分析.字根序列.length === 1) continue;
+    部件分析内容.push({
+      key: 分析.部件.id,
+      label: <ResultSummary glyph={分析.部件} analysis={分析} />,
+      children:
+        "全部拆分方式" in r ? (
+          <ResultDetail
+            glyph={分析.部件}
+            data={r.全部拆分方式}
+            map={r.字根笔画映射}
+          />
+        ) : undefined,
+      sequence: r.字根序列.flatMap((x) => x.获取笔画序列(默认分类器)),
+    });
+  }
+  for (const [复合体, 复合体分析] of 复合体分析结果) {
+    if (!过滤器.过滤字形(复合体)) continue;
+    复合体分析内容.push({
+      key: 复合体.id,
+      label: <ResultSummary glyph={复合体} analysis={复合体分析} />,
+    });
   }
   部件分析内容.sort(
     (a, b) =>
@@ -233,9 +220,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
           <Radio.Button value={0}>部件拆分</Radio.Button>
           <Radio.Button value={1}>复合体拆分</Radio.Button>
         </Radio.Group>
-        <Button
-          onClick={() => 导出字形分析结果(汉字集合, 字形分析结果, display)}
-        >
+        <Button onClick={() => 导出字形分析结果(字形分析结果, display)}>
           导出拆分
         </Button>
         {分析配置.component_analyzer === "冰雪飞花" && (
@@ -249,8 +234,8 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
                 4: "丶",
                 5: "乙",
               };
-              for (const [char, result] of 字形分析结果.分析结果) {
-                const 部首 = (result[0] as 冰雪飞花复合体分析).部首;
+              for (const [复合体, result] of 字形分析结果.复合体分析结果) {
+                const 部首 = (result as 冰雪飞花复合体分析).部首;
                 let 部首字符串 = "〇";
                 if (部首) {
                   部首字符串 =
@@ -258,7 +243,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
                       ? display(部首.字符)
                       : map[部首.获取名称()]!;
                 }
-                tsv.push([char.获取名称(), 部首字符串]);
+                tsv.push([复合体.id.toString(), 部首字符串]);
               }
               exportTSV(tsv, "部首.txt");
             }}
@@ -306,13 +291,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
       </Flex>
       <Row className="w-4/5 items-center">
         <Col span={5}>
-          <Statistic
-            title="总部件数"
-            value={[...分析结果.values()].reduce(
-              (acc, val) => acc + val.filter((x) => x.类型 === "部件").length,
-              0,
-            )}
-          />
+          <Statistic title="总部件数" value={部件分析结果.size} />
         </Col>
         <Col span={5}>
           <Statistic title="需拆分部件数" value={部件分析内容.length} />

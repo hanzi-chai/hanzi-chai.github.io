@@ -2,7 +2,7 @@ import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { 部件, 默认退化配置 } from "hanzi-chai";
 import { useState } from "react";
-import { useAtomValueUnwrapped, 如字库原子 } from "~/atoms";
+import { useAtomValueUnwrapped, 字库原子 } from "~/atoms";
 import BorderItem from "~/components/BorderItem";
 import { CharacterDisplay } from "~/components/Utils";
 
@@ -117,7 +117,7 @@ import { CharacterDisplay } from "~/components/Utils";
 // };
 
 const DegeneratorTable = () => {
-  const repertoire = useAtomValueUnwrapped(如字库原子);
+  const repertoire = useAtomValueUnwrapped(字库原子);
   const components: 部件[] = [];
   for (const { 字形列表 } of repertoire) {
     for (const 字形 of 字形列表) {

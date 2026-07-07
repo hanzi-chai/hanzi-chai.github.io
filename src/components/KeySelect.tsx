@@ -12,7 +12,7 @@ import {
   useAtomValueUnwrapped,
   全部合法元素原子,
   变量规则映射原子,
-  如字库原子,
+  字库原子,
   字母表原子,
   强类型决策原子,
 } from "~/atoms";
@@ -43,7 +43,7 @@ export default function KeySelect({
   allowVariables,
   allowPlaceholder,
 }: KeySelectProps) {
-  const 字库 = useAtomValue(如字库原子);
+  const 字库 = useAtomValue(字库原子);
   const keyOptions: BaseOptionType[] = allowEmpty
     ? [{ label: "无", value: JSON.stringify("") }]
     : [];

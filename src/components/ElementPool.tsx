@@ -11,7 +11,7 @@ import {
 import type { 元素, 字符 } from "hanzi-chai";
 import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
-import { useAtom, useAtomValue, 原始字库原子, 如字库原子 } from "~/atoms";
+import { useAtom, useAtomValue, 原始字库原子, 字库原子 } from "~/atoms";
 import { 字符字形过滤器 } from "~/utils";
 import Classifier from "./Classifier";
 import { CharacterWithTooltip } from "./Utils";
@@ -31,27 +31,31 @@ export default function ElementPool({
   const pageSize = 100;
   const [input, setInput] = useState("");
   const 原始字库 = useAtomValue(原始字库原子);
-  const 字库 = useAtomValue(如字库原子);
+  const 字库 = useAtomValue(字库原子);
   const [isOpen, setOpen] = useState(false);
   const 笔顺过滤 = new 字符字形过滤器({ sequence: input });
   const 直接过滤 = new 字符字形过滤器({ name: input });
   const [显示康熙部首, 设置康熙部首] = useAtom(使用康熙部首原子);
   const [显示部首补充, 设置部首补充] = useAtom(使用部首补充原子);
   const [推荐相似字根, 设置推荐相似字根] = useAtom(相似字根推荐原子);
-  const filtered =
-    type === "字根"
-      ? content.filter((元素) => {
-          const ch = 元素 as 字符;
-          if (!显示康熙部首 && ch.区块() === "kangxi") return false;
-          if (!显示部首补充 && ch.区块() === "radicals-sup") return false;
-          const data = 原始字库.查询(ch);
-          if (!data) return false;
-          return (
-            笔顺过滤.过滤字符(ch, data, 字库) ||
-            直接过滤.过滤字符(ch, data, 字库)
-          );
-        })
-      : content;
+  let filtered = content;
+  if (type === "字根") {
+    filtered = content.filter((元素) => {
+      const ch = 元素 as 字符;
+      if (!显示康熙部首 && ch.区块() === "kangxi") return false;
+      if (!显示部首补充 && ch.区块() === "radicals-sup") return false;
+      const data = 原始字库.查询(ch);
+      if (!data) return false;
+      const 字形列表 = 字库.查询字形(ch) ?? [];
+      for (const 字形 of 字形列表) {
+        // 不允许单笔字根
+        if (字形.标准笔顺.length === 1) return false;
+      }
+      return (
+        笔顺过滤.过滤字符(ch, data, 字库) || 直接过滤.过滤字符(ch, data, 字库)
+      );
+    });
+  }
   const range = filtered.slice((page - 1) * pageSize, page * pageSize);
   return (
     <Flex vertical gap="middle" align="center">

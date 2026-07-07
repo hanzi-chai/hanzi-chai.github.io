@@ -3,7 +3,7 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   全部合法元素原子,
-  如字库原子,
+  字库原子,
   强类型决策原子,
   强类型决策空间原子,
 } from "~/atoms";
@@ -23,7 +23,7 @@ export default function ElementSelect(
     props;
   const 决策 = useAtomValueUnwrapped(强类型决策原子);
   const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
-  const 字库 = useAtomValue(如字库原子);
+  const 字库 = useAtomValue(字库原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   let 全部元素 = [...new Set([...决策.keys(), ...决策空间.keys()])];
   全部元素.sort((a, b) => a.获取名称().localeCompare(b.获取名称()));

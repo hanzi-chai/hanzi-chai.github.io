@@ -16,7 +16,14 @@ import type {
 import { 自定义元素 } from "./element.js";
 import { 字库 } from "./repertoire.js";
 import { 字符, 字集过滤查找表 } from "./unicode.js";
-import type { 原始词典, 自定义分析, 自定义分析映射, 词典 } from "./utils.js";
+import {
+  type 原始词典,
+  生成字形终止点,
+  生成字形起始点,
+  type 自定义分析,
+  type 自定义分析映射,
+  type 词典,
+} from "./utils.js";
 
 // 模式变量映射：记录模式匹配过程中变量的绑定
 interface 模式变量映射 {
@@ -71,8 +78,10 @@ class 原始字库 {
     return this.字符表.values();
   }
 
-  字形迭代器(): Iterator<基本字形数据> {
-    return this.字形表.values();
+  *字形迭代器() {
+    for (const 字形 of this.字形表.values()) {
+      yield 字形;
+    }
   }
 
   查询(字符实例: 字符): 校验字符数据 | undefined {
@@ -252,8 +261,13 @@ class 原始字库 {
     }
 
     // 3. 新字形 ID 分配器
-    let 新ID计数器 = 0xf0000; // 占位符 ID 起始值
-    const 取新ID = () => 新ID计数器++;
+    let 新ID计数器 = 生成字形起始点; // 占位符 ID 起始值
+    const 取新ID = () => {
+      if (新ID计数器 > 生成字形终止点) {
+        throw new Error("新字形 ID 超过范围");
+      }
+      return 新ID计数器++;
+    };
 
     // 4. 对每个字符应用拼写运算
     for (const 字形列表历史 of 字符查找表.values()) {

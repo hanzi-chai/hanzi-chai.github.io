@@ -42,7 +42,7 @@ class 复合体 {
   ) {
     this.id = 数据.id;
     this.结构描述字符 = 数据.operator;
-    this.笔顺 = 数据.strokes ?? [];
+    this.笔顺 = 数据.strokes ?? 部分列表.map((_, i) => ({ index: i }));
     this.图形盒子 = 图形盒子.仿射合并(
       数据,
       部分列表.map((x) => x.图形盒子),
@@ -95,6 +95,7 @@ abstract class 复合体分析器<
       return { 字根序列, 部件分析 };
     });
     const result = this.执行笔顺(部分结果列表, 字形.笔顺);
+    // const result = 部分结果列表.flatMap(x => x.字根序列);
     return result;
   }
 

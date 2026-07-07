@@ -15,5 +15,5 @@ export function loadNumber(value: any, defaultValue?: number): number {
 }
 
 export function asBoolean(value: any): boolean {
-  return value ? true : false;
+  return !!value;
 }

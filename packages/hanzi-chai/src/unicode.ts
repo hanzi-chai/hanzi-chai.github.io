@@ -1,6 +1,12 @@
 import type { 字集指示 } from "./config.js";
 import type { 字符数据 } from "./data.js";
-import { default_err, ok, type Result } from "./utils.js";
+import {
+  default_err,
+  ok,
+  type Result,
+  用户字形终止点,
+  用户字形起始点,
+} from "./utils.js";
 
 export interface 区块 {
   name: string; // 简洁的英文名，如 "cjk", "cjk-a"
@@ -285,7 +291,11 @@ export class 字符 {
 
   是用户私用区() {
     const block = this.区块();
-    return block === "pua" && this.码位 >= 0xf000;
+    return (
+      block === "pua" &&
+      this.码位 >= 用户字形起始点 &&
+      this.码位 <= 用户字形终止点
+    );
   }
 }
 

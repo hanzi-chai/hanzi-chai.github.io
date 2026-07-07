@@ -16,8 +16,8 @@ import {
   优先简码原子,
   优先简码映射原子,
   原始字库原子,
-  如字库原子,
   如编码结果原子,
+  字库原子,
   最大码长原子,
   type 联合条目,
   联合结果原子,
@@ -104,7 +104,7 @@ const EnumFilterDropdown = ({
   confirm: () => void;
   clearFilters?: () => void;
 }) => {
-  const 字库 = useAtomValue(如字库原子);
+  const 字库 = useAtomValue(字库原子);
   const [search, setSearch] = useState("");
   const filteredKeys = [...allValues]
     .sort(([a], [b]) => a.localeCompare(b))
