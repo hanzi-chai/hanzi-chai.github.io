@@ -17,6 +17,7 @@ const 来源替换 = new Map([
 for (const line of content.split("\n")) {
   if (line.startsWith("#") || line.trim() === "") continue;
   const [unicode_str, 字段, value] = line.split("\t");
+  if (unicode_str === undefined || 字段 === undefined || value === undefined) continue;
   const 码位 = parseInt(unicode_str.slice(2), 16);
   if (!(字段.startsWith("kIRG_") && 字段.endsWith("Source"))) continue;
   let 来源 = 字段.replace("kIRG_", "").replace("Source", "");

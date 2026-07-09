@@ -1,15 +1,12 @@
 import "dotenv/config";
-import type {
-  矢量笔画数据,
-  结构描述字符,
-} from "hanzi-chai";
-import { createClient } from "../src/client";
+import type { 矢量笔画数据, 结构描述字符 } from "hanzi-chai";
+import { createClient } from "../packages/api/src/client";
 
 const { get, post, put, del } = createClient(() => {
   return process.env.JWT ?? null;
 });
 
-export { get, post, put, del };
+export { del, get, post, put };
 
 // legacy
 
@@ -203,9 +200,12 @@ export interface 旧全等模型 {
   source: number;
 }
 
-export type 旧字形数据模型 = 旧基本部件数据
+export type 旧字形数据模型 =
+  | 旧基本部件数据
   | 旧衍生部件模型
-  | 旧拼接部件模型 | 旧复合体模型 | 旧全等模型;
+  | 旧拼接部件模型
+  | 旧复合体模型
+  | 旧全等模型;
 
 export interface 原始命名汉字数据 extends Omit<原始汉字数据, "unicode"> {
   name: string;

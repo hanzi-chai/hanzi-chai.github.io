@@ -15,11 +15,11 @@
     "allowJs": true,
     "checkJs": false,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "strictNullChecks": true,
     "noEmit": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "moduleDetection": "force"
+  },
+  "include": ["src"]
 }

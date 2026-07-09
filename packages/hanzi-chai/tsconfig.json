@@ -6,11 +6,11 @@
     "lib": ["ESNext"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "strictNullChecks": true,
-    "esModuleInterop": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "moduleDetection": "force",
     "types": ["bun-types"]
   },
   "include": [

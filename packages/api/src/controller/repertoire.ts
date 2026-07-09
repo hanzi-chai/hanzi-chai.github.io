@@ -1,5 +1,5 @@
 import type { IRequest } from "itty-router";
-import type { 原始汉字模型 } from "../../scripts/utils";
+import type { 原始汉字模型 } from "../../../../scripts/utils";
 import type { Ctx, Env } from "../dto/context";
 import { DataList } from "../dto/list";
 import { loadString } from "../dto/load";

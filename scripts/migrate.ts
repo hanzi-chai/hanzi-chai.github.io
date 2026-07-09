@@ -1,3 +1,12 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import type {
+  字形数据,
+  字形来源数据,
+  字符数据,
+  引用笔画块数据,
+  矢量笔画数据,
+  部件数据,
+} from "hanzi-chai";
 import type {
   原始汉字模型,
   旧字形数据模型,
@@ -5,9 +14,7 @@ import type {
   旧笔画块,
   旧笔画数据,
 } from "./utils";
-import { readFileSync, writeFileSync } from "node:fs";
 import { post } from "./utils";
-import { 字形数据, 字形来源数据, 字符数据, 引用笔画块数据, 矢量笔画数据, 部件数据 } from "hanzi-chai";
 
 const 旧字符数据列表: 原始汉字模型[] = JSON.parse(
   readFileSync("data/repertoire.json", "utf-8"),
@@ -36,7 +43,7 @@ const processOrders = (
     const result: 引用笔画块数据 = { index: block.index };
     result.from = cum[block.index];
     if (block.strokes > 0) {
-      cum[block.index] += block.strokes;
+      cum[block.index]! += block.strokes;
       result.to = cum[block.index];
     }
     return result;
@@ -49,14 +56,14 @@ const processStrokes = (
   const newStrokes: (矢量笔画数据 | 引用笔画块数据)[] = [];
   let i = 0;
   while (i < strokes.length) {
-    const stroke = strokes[i];
+    const stroke = strokes[i]!;
     if (stroke.feature === "reference") {
       const from = stroke.index;
       let to = stroke.index;
       i++;
       while (
         i < strokes.length &&
-        strokes[i].feature === "reference" &&
+        strokes[i]!.feature === "reference" &&
         (strokes[i] as 旧引用笔画数据).index === to + 1
       ) {
         to = (strokes[i] as 旧引用笔画数据).index;
@@ -105,7 +112,7 @@ function resolve(
       // Identity 字形：沿着 source 链解析，复用源字符的字形 ID
       // 每个 Identity 链使用独立的 visited 副本，避免不同链之间的干扰
       const parent = resolve(glyph.source, new Set(visited));
-      id_sources.push(parent[0]); // Identity 字形只会有一个源字符，所以取第一个即可
+      id_sources.push(parent[0]!); // Identity 字形只会有一个源字符，所以取第一个即可
     } else {
       // 非 Identity 字形：分配新 ID
       const id = nextId++;
@@ -122,7 +129,7 @@ function resolve(
           id,
           type: "component",
           strokes: processStrokes(glyph.strokes),
-          references: [{ id: parent[0].id }],
+          references: [{ id: parent[0]!.id }],
         };
         字形数据列表.push(newGlyph);
       } else if (
@@ -130,7 +137,7 @@ function resolve(
         glyph.type === "compound"
       ) {
         const parents = glyph.operandList.map(
-          (op) => resolve(op, new Set(visited))[0],
+          (op) => resolve(op, new Set(visited))[0]!,
         );
         const newGlyph = {
           id,

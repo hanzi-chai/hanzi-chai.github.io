@@ -53,6 +53,7 @@
     "ahooks": "^3.9.7",
     "antd": "^5.29.3",
     "deep-object-diff": "^1.1.9",
+    "dotenv": "^17.4.2",
     "hanzi-chai": "*",
     "jotai": "^2.20.0",
     "jotai-family": "^1.0.2",
