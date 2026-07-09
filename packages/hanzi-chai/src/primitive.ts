@@ -245,10 +245,8 @@ class 原始字库 {
     for (const 字符数据 of this.字符表.values()) {
       const glyphs: 字形单一来源数据[] = [];
       for (const 来源数据 of 字符数据.glyphs) {
-        if (来源数据.sources.length === 0) {
-          来源数据.sources.push("G");
-        }
-        for (const source of 来源数据.sources) {
+        const withDefault = 来源数据.sources.length === 0 ? ["G"] : 来源数据.sources;
+        for (const source of withDefault) {
           glyphs.push({ id: 来源数据.id, source });
         }
       }

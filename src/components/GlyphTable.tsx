@@ -1,11 +1,11 @@
-import { Flex, Space } from "antd";
+import { Button, Flex, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import type { 基本字形数据, 字形数据 } from "hanzi-chai";
+import type { 基本字形数据, 字形数据, 字符 } from "hanzi-chai";
 import { 是用户字形 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
-import { useState } from "react";
-import { createGlyph, removeGlyph } from "~/api";
+import { type ReactElement, useMemo, useState } from "react";
+import { createGlyph, removeGlyph, updateGlyph } from "~/api";
 import {
   下一个用户字形ID原子,
   原始字库原子,
@@ -21,7 +21,7 @@ import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
 import GlyphForm from "./GlyphForm";
 import { StrokesView } from "./GlyphView";
-import { DeleteButton } from "./Utils";
+import { CharacterDisplay, DeleteButton } from "./Utils";
 
 const CreateGlyph = () => {
   const 远程 = useAtomValue(远程原子);
@@ -30,7 +30,7 @@ const CreateGlyph = () => {
   const 下一个字形ID = useAtomValue(下一个用户字形ID原子);
   return (
     <GlyphForm
-      title="新建"
+      trigger={<Button>新建</Button>}
       initialValues={{ id: 0, type: "component", strokes: [] }}
       onFinish={async (record) => {
         if (远程) {
@@ -70,17 +70,25 @@ const DeleteGlyph = ({ id }: { id: number }) => {
   );
 };
 
-const EditOrRedrawGraph = ({ record }: { record: 字形数据 }) => {
+export const EditOrRedrawGraph = ({
+  record,
+  trigger,
+  initialChar,
+}: {
+  record: 字形数据;
+  trigger: ReactElement;
+  initialChar?: string;
+}) => {
   const 远程 = useAtomValue(远程原子);
   const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
   const [用户字形列表, set用户字形列表] = useAtom(用户字形列表原子);
   return (
     <GlyphForm
-      title="编辑"
+      trigger={trigger}
       initialValues={record}
       onFinish={async (values) => {
         if (远程) {
-          const res = await createGlyph(values);
+          const res = await updateGlyph(values);
           if (!errorFeedback(res)) {
             set可编辑字形列表(
               可编辑字形列表.map((x) => (x.id === values.id ? values : x)),
@@ -95,25 +103,40 @@ const EditOrRedrawGraph = ({ record }: { record: 字形数据 }) => {
         }
         return true;
       }}
+      initialChar={initialChar}
     />
   );
 };
 
 export default function GlyphTable() {
   const 原始字库 = useAtomValue(原始字库原子);
+  const 统一字形列表 = useAtomValue(统一字形列表原子);
   const 用户字形列表 = useAtomValue(用户字形列表原子);
   const 字库 = useAtomValue(字库原子);
   const [filter, setFilter] = useState<过滤器参数>({});
-  const 过滤器 = new 字符字形过滤器(filter);
-
-  const dataSource: 字形数据[] = [];
-  for (const 字形 of 原始字库.字形迭代器()) {
-    const 真字形 = 字库.获取字形(字形.id);
-    if (!真字形) continue;
-    if (过滤器.过滤字形(真字形)) {
-      dataSource.push(字形);
+  const 字形字符映射 = useMemo(() => {
+    const map = new Map<number, Set<字符>>();
+    for (const 字符 of 原始字库) {
+      for (const { id } of 字符.glyphs) {
+        if (!map.has(id)) map.set(id, new Set());
+        map.get(id)!.add(字符.character);
+      }
     }
-  }
+    return map;
+  }, [原始字库]);
+
+  const dataSource = useMemo(() => {
+    const 过滤器 = new 字符字形过滤器(filter);
+    const result: 字形数据[] = [];
+    for (const 字形 of 统一字形列表) {
+      const 真字形 = 字库.获取字形(字形.id);
+      if (!真字形) continue;
+      if (过滤器.过滤字形(真字形)) {
+        result.push(字形);
+      }
+    }
+    return result;
+  }, [统一字形列表, 字库, filter]);
 
   const columns: ColumnsType<字形数据 | 基本字形数据> = [
     {
@@ -121,14 +144,17 @@ export default function GlyphTable() {
       dataIndex: "id",
       sorter: (a, b) => a.id - b.id,
       sortDirections: ["ascend", "descend"],
-      render: (_, record) => (
-        <Flex className="flex-nowrap items-center gap-2">
-          <BorderItem>
-            <StrokesView glyph={字库.获取字形(record.id)!.图形盒子} />
-          </BorderItem>
-          {record.id}
-        </Flex>
-      ),
+      render: (_, record) => {
+        const 图形 = 字库.获取字形(record.id)?.图形盒子;
+        return (
+          <Flex className="flex-nowrap items-center gap-2">
+            <BorderItem>
+              {图形 ? <StrokesView glyph={图形} /> : null}
+            </BorderItem>
+            {record.id}
+          </Flex>
+        );
+      },
       width: 80,
     },
     {
@@ -197,10 +223,27 @@ export default function GlyphTable() {
       width: 96,
     },
     {
+      title: "涉及到字符",
+      render: (_, record) => {
+        const 字符列表 = 字形字符映射.get(record.id) ?? new Set();
+        return (
+          <span>
+            {Array.from(字符列表).map((x) => (
+              <Tooltip key={x.toNumber()} title={x.十六进制()}>
+                <BorderItem>
+                  <CharacterDisplay character={x} />
+                </BorderItem>
+              </Tooltip>
+            ))}
+          </span>
+        );
+      },
+    },
+    {
       title: "操作",
       render: (_, record) => (
         <Space>
-          <EditOrRedrawGraph record={record} />
+          <EditOrRedrawGraph record={record} trigger={<Button>编辑</Button>} />
           <DeleteGlyph id={record.id} />
         </Space>
       ),

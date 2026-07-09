@@ -11,7 +11,7 @@ import type React from "react";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 
 const Box = ({ children }: { children?: React.ReactNode }) => (
-  <div className="border border-black aspect-square w-100 h-100 text-[398px]">
+  <div className="border border-black aspect-square min-w-100 min-h-100 max-w-100 max-h-100 text-[348px] leading-none relative z-0">
     {children}
   </div>
 );
@@ -280,13 +280,13 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
   return (
     <svg
       role="img"
-      style={{ display: "inline" }}
+      className="inline align-baseline"
       aria-label="strokes view"
       ref={svgRef}
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
-      width="1.2em"
-      height="1.2em"
+      width="1em"
+      height="1em"
       viewBox={viewBox}
     >
       {strokes.map((stroke, strokeIndex) => {

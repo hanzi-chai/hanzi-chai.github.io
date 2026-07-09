@@ -2,6 +2,7 @@ import { cloneDeep } from "lodash-es";
 import { 区间 } from "./bezier.js";
 import type {
   向量,
+  引用笔画块数据,
   矢量图形数据,
   矢量笔画数据,
   结构描述字符,
@@ -44,6 +45,15 @@ class 仿射变换 {
   private readonly 横向缩放: number;
   private readonly 纵向缩放: number;
   private readonly 平移: 向量;
+
+  static 从边界创建(
+    xbegin: number,
+    ybegin: number,
+    xend: number,
+    yend: number,
+  ): 仿射变换 {
+    return new 仿射变换(new 区间(xbegin, xend), new 区间(ybegin, yend));
+  }
 
   public constructor(x区间: 区间, y区间: 区间) {
     this.横向缩放 = x区间.长度() / 100;
@@ -111,18 +121,8 @@ class 图形盒子 {
 
   确定笔画粗细和视窗(displayMode: boolean) {
     const strokeWidthPercentage = displayMode ? 0.01 : 0.07;
-    const xMin = this.横向区间.起点();
-    const xMax = this.横向区间.终点();
-    const yMin = this.纵向区间.起点();
-    const yMax = this.纵向区间.终点();
-    const padding = 10;
-    const xSpan = xMax - xMin + 2 * padding;
-    const ySpan = yMax - yMin + 2 * padding;
-    const maxSpan = Math.max(xSpan, ySpan);
-    const xMinFinal = (xMax + xMin) / 2 - maxSpan / 2;
-    const yMinFinal = (yMax + yMin) / 2 - maxSpan / 2;
-    const viewBox = `${xMinFinal} ${yMinFinal} ${maxSpan} ${maxSpan}`;
-    const strokeWidth = maxSpan * strokeWidthPercentage;
+    const viewBox = `0 0 100 100`;
+    const strokeWidth = 100 * strokeWidthPercentage;
     return { strokeWidth, viewBox };
   }
 
@@ -179,24 +179,37 @@ class 图形盒子 {
   static 仿射合并(复合体: 复合体树数据, 部分列表: 图形盒子[]) {
     const { operator, strokes } = 复合体;
     const 变换后图形列表: 矢量图形数据[] = [];
-    const 新横向区间 = new 区间(0, 100);
-    const 新纵向区间 = new 区间(0, 100);
     for (const [index, 变换] of 仿射变换.查找表[operator].entries()) {
       const 变换后图形 = 变换.变换笔画列表(部分列表[index]!.笔画列表);
       变换后图形列表.push(变换后图形);
     }
-    const 合并图形: 矢量图形数据 = [];
-    if (strokes === undefined) {
-      合并图形.push(...变换后图形列表.flat());
-    } else {
-      for (const { index, from, to } of strokes) {
-        const 笔画列表 = 变换后图形列表[index];
-        if (笔画列表 === undefined) continue;
-        合并图形.push(...笔画列表.slice(from, to));
-      }
-    }
-    return new 图形盒子(合并图形, 新横向区间, 新纵向区间);
+    const 合并图形 = 合并笔画顺序(变换后图形列表, strokes);
+    return new 图形盒子(合并图形, new 区间(0, 100), new 区间(0, 100));
   }
+}
+
+/**
+ * 按照笔画顺序描述合并多个部分的笔画列表。
+ * 当 strokes 为 undefined 或空时，直接拼接所有部分。
+ */
+export function 合并笔画顺序(
+  变换后图形列表: 矢量图形数据[],
+  strokes?: 引用笔画块数据[],
+): 矢量笔画数据[] {
+  if (!strokes || strokes.length === 0) {
+    return 变换后图形列表.flat();
+  }
+  const result: 矢量笔画数据[] = [];
+  const remaining = 变换后图形列表.map((s) => [...s]);
+  for (const item of strokes) {
+    const part = remaining[item.index];
+    if (!part) continue;
+    const from = item.from ?? 0;
+    const to = item.to ?? part.length - 1;
+    result.push(...part.slice(from, to + 1));
+    remaining[item.index] = part.slice(to + 1);
+  }
+  return result;
 }
 
 export { 仿射变换, 图形盒子 };

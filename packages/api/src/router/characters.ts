@@ -6,5 +6,6 @@ export const routerCharacters = Router({ base: "/characters" })
   .get("/:unicode", characters.Info)
   .post("/", characters.Create)
   .post("/batch", characters.CreateBatch)
+  .put("/batch", characters.UpdateBatch)
   .put("/:unicode", characters.Update)
   .delete("/:unicode", characters.Delete);

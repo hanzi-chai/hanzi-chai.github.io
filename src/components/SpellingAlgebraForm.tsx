@@ -1,12 +1,11 @@
-import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import {
   ModalForm,
   ProFormGroup,
-  ProFormList,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Form, notification, Space } from "antd";
+import ProFormListMovable from "./ProFormListMovable";
 import type { 运算规则 } from "hanzi-chai";
 import { 拼写运算查找表 } from "hanzi-chai";
 import { useAddAtom, 拼写运算自定义原子 } from "~/atoms";
@@ -69,36 +68,9 @@ export default function SpellingAlgebraForm({
           );
         })}
       </Space>
-      <ProFormList
+      <ProFormListMovable
         name="rules"
         label="拼写运算"
-        actionRender={(field, action, defaultActionDom, count) => {
-          return [
-            ...defaultActionDom,
-            <ArrowUpOutlined
-              key="up_arrow"
-              className="ml-1"
-              onClick={() => {
-                if (field.name === 0) {
-                  action.move(field.name, count - 1);
-                } else {
-                  action.move(field.name, field.name - 1);
-                }
-              }}
-            />,
-            <ArrowDownOutlined
-              key="down_arrow"
-              className="ml-1"
-              onClick={() => {
-                if (field.name === count - 1) {
-                  action.move(field.name, 0);
-                } else {
-                  action.move(field.name, field.name + 1);
-                }
-              }}
-            />,
-          ];
-        }}
       >
         <ProFormGroup key="group">
           <ProFormSelect
@@ -112,7 +84,7 @@ export default function SpellingAlgebraForm({
           <ProFormText name="from" label="运算输入" />
           <ProFormText name="to" label="运算输出" />
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
     </ModalForm>
   );
 }

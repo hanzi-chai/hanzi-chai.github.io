@@ -1,7 +1,7 @@
 import { isEqual, range } from "lodash-es";
-import { 仿射变换 } from "./affine.js";
+import { 仿射变换, 合并笔画顺序 } from "./affine.js";
 import type { 动态组装条目, 组装条目 } from "./assembly.js";
-import { 区间 } from "./bezier.js";
+
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
 import type { 部件 } from "./component.js";
@@ -889,8 +889,34 @@ export const 生成 = (config: 配置): 生成配置 => {
   return { ...config, generated_mapping_space: space };
 };
 
-function isVectorStroke(s: 矢量笔画数据 | 引用笔画块数据): s is 矢量笔画数据 {
+export function isVectorStroke(
+  s: 矢量笔画数据 | 引用笔画块数据,
+): s is 矢量笔画数据 {
   return "feature" in s;
+}
+
+export function transformRefStrokes(
+  strokes: 矢量笔画数据[],
+  ref: 引用数据,
+  operator: 结构描述字符,
+  index: number,
+): 矢量笔画数据[] {
+  const { xbegin, ybegin, xend, yend } = ref;
+  if (
+    xbegin !== undefined &&
+    ybegin !== undefined &&
+    xend !== undefined &&
+    yend !== undefined
+  ) {
+    return 仿射变换
+      .从边界创建(xbegin, ybegin, xend, yend)
+      .变换笔画列表(strokes);
+  }
+  const transform = 仿射变换.查找表[operator]?.[index];
+  if (transform) {
+    return transform.变换笔画列表(strokes);
+  }
+  return strokes;
 }
 
 export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[] {
@@ -914,7 +940,7 @@ export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[]
       if (glyph.type === "compound") {
         result = resolveCompound(glyph);
       } else if (glyph.operator) {
-        result = resolveSplicedComponent(glyph);
+        result = resolveComponentWithOperator(glyph);
       } else {
         result = resolveComponent(glyph);
       }
@@ -946,32 +972,6 @@ export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[]
     return result;
   }
 
-  function transformRefStrokes(
-    strokes: 矢量笔画数据[],
-    ref: 引用数据,
-    operator: 结构描述字符,
-    index: number,
-  ): 矢量笔画数据[] {
-    const { xbegin, ybegin, xend, yend } = ref;
-    if (
-      xbegin !== undefined &&
-      ybegin !== undefined &&
-      xend !== undefined &&
-      yend !== undefined
-    ) {
-      const transform = new 仿射变换(
-        new 区间(xbegin, xend),
-        new 区间(ybegin, yend),
-      );
-      return transform.变换笔画列表(strokes);
-    }
-    const transforms = 仿射变换.查找表[operator];
-    if (transforms?.[index]) {
-      return transforms[index].变换笔画列表(strokes);
-    }
-    return strokes;
-  }
-
   function resolveCompoundLike(
     operator: 结构描述字符,
     references: 引用数据[],
@@ -981,29 +981,14 @@ export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[]
       const resolved = resolveGlyph(ref.id);
       return transformRefStrokes(resolved, ref, operator, i);
     });
-
-    if (strokes && strokes.length > 0) {
-      const result: 矢量笔画数据[] = [];
-      const remaining = partsStrokes.map((s) => [...s]);
-      for (const item of strokes) {
-        const part = remaining[item.index];
-        if (!part) continue;
-        const from = item.from ?? 0;
-        const to = item.to ?? part.length;
-        result.push(...part.slice(from, to));
-        remaining[item.index] = part.slice(to);
-      }
-      return result;
-    }
-
-    return partsStrokes.flat();
+    return 合并笔画顺序(partsStrokes, strokes);
   }
 
   function resolveCompound(glyph: 复合体数据): 矢量笔画数据[] {
     return resolveCompoundLike(glyph.operator, glyph.references, glyph.strokes);
   }
 
-  function resolveSplicedComponent(glyph: 部件数据): 矢量笔画数据[] {
+  function resolveComponentWithOperator(glyph: 部件数据): 矢量笔画数据[] {
     const refs = glyph.references ?? [];
     const strokes =
       glyph.strokes ??
@@ -1020,25 +1005,22 @@ export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[]
 
   const result: 基本字形数据[] = [];
   for (const glyph of glyphs) {
-    try {
-      if (glyph.type === "compound") {
-        // 复合体数据保持原样，不解引用
-        result.push(glyph);
-      } else {
+    // 复合体数据保持原样，不解引用
+    if (glyph.type === "compound") {
+      result.push(glyph);
+    } else {
+      try {
         // 部件数据：解引用所有引用笔画块数据
         const strokes = resolveGlyph(glyph.id);
         result.push({
-          id: glyph.id,
-          type: "component" as const,
+          ...glyph,
           strokes,
-          gf0014_id: glyph.gf0014_id,
-          gf3001_id: glyph.gf3001_id,
           operator: undefined,
           references: undefined,
         });
+      } catch (e) {
+        console.warn(`跳过字形 ${glyph.id}: ${(e as Error).message}`);
       }
-    } catch (e) {
-      console.warn(`跳过字形 ${glyph.id}: ${(e as Error).message}`);
     }
   }
   return result;
@@ -1048,7 +1030,11 @@ export const 生成字形起始点 = 0xe_0000;
 export const 生成字形终止点 = 0xe_ffff;
 export const 用户字形起始点 = 0xf_0000;
 export const 用户字形终止点 = 0xf_ffff;
-export const 是用户字形 = (id: number) => id >= 用户字形起始点 && id <= 用户字形终止点;
+export const 是用户字形 = (id: number) =>
+  id >= 用户字形起始点 && id <= 用户字形终止点;
 export const 用户字符起始点 = 0xf000;
 export const 用户字符终止点 = 0xf8ff;
-export const 是用户字符 = (unicode: number) => unicode >= 用户字符起始点 && unicode <= 用户字符终止点;
+export const 是用户字符 = (unicode: number) =>
+  unicode >= 用户字符起始点 && unicode <= 用户字符终止点;
+
+export const 来源排序 = "GHTJKNVMSBU";

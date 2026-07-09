@@ -1,7 +1,3 @@
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-} from "@ant-design/icons";
 import type { ProFormInstance } from "@ant-design/pro-components";
 import {
   ModalForm,
@@ -9,7 +5,6 @@ import {
   ProFormDigit,
   ProFormGroup,
   ProFormItem,
-  ProFormList,
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Flex, Form, Typography } from "antd";
@@ -17,6 +12,7 @@ import type { 字符数据 } from "hanzi-chai";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import GlyphSelect from "./GlyphSelect";
+import ProFormListMovable from "./ProFormListMovable";
 import SourceSelect from "./SourceSelect";
 
 export default function CharacterForm({
@@ -55,36 +51,9 @@ export default function CharacterForm({
         <ProFormCheckbox name="ambiguous" label="模糊" />
       </Flex>
       <Typography.Title level={5}>字形</Typography.Title>
-      <ProFormList
+      <ProFormListMovable
         name="glyphs"
         alwaysShowItemLabel
-        actionRender={(field, action, defaultActionDom, count) => {
-          return [
-            ...defaultActionDom,
-            <ArrowUpOutlined
-              key="up_arrow"
-              className="ml-1"
-              onClick={() => {
-                if (field.name === 0) {
-                  action.move(field.name, count - 1);
-                } else {
-                  action.move(field.name, field.name - 1);
-                }
-              }}
-            />,
-            <ArrowDownOutlined
-              key="down_arrow"
-              className="ml-1"
-              onClick={() => {
-                if (field.name === count - 1) {
-                  action.move(field.name, 0);
-                } else {
-                  action.move(field.name, field.name + 1);
-                }
-              }}
-            />,
-          ];
-        }}
       >
         <ProFormGroup>
           <ProFormItem label="ID" name="id" className="m-0!">
@@ -94,7 +63,7 @@ export default function CharacterForm({
             <SourceSelect />
           </ProFormItem>
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
     </ModalForm>
   );
 }

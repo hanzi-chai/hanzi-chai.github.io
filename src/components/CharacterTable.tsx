@@ -1,8 +1,14 @@
-import { Checkbox, Flex, Form, Layout, Space } from "antd";
+import { Checkbox, Flex, Form, Space, Tooltip } from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
-import { 区块列表, 图形盒子, 是用户字符, type 校验字符数据 } from "hanzi-chai";
-import { useState } from "react";
+import {
+  区块列表,
+  图形盒子,
+  type 字形数据,
+  是用户字符,
+  type 校验字符数据,
+} from "hanzi-chai";
+import { useMemo, useState } from "react";
 import { createCharacter, removeCharacter, updateCharacter } from "~/api";
 import {
   useAtom,
@@ -16,17 +22,40 @@ import {
   字形来源列表原子,
   字形自定义原子,
   用户字符列表原子,
+  统一字形列表原子,
   远程原子,
 } from "~/atoms";
 import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/utils";
+import BorderItem from "./BorderItem";
 import CharacterForm from "./CharacterForm";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
 import GlyphAlgebraForm from "./GlyphAlgebraForm";
+import { EditOrRedrawGraph } from "./GlyphTable";
 import { StrokesView } from "./GlyphView";
 import PatchForm from "./PatchForm";
 import SourceSelect from "./SourceSelect";
 import { BoxedElementWithTooltip, DeleteButton } from "./Utils";
+
+const 字符表跳过码位 = new Set([
+  0x04e28, 0x04e36, 0x04e3f, 0x04e40, 0x04e41, 0x04e59, 0x04e5a, 0x04e5b,
+  0x0623d, 0x07481, 0x091d2, 0x0990a, 0x09fbb, 0x0f977, 0x0f9a8, 0x0fa0c,
+  0x0fa0d, 0x0fa10, 0x0fa12, 0x0fa15, 0x0fa16, 0x0fa17, 0x0fa18, 0x0fa19,
+  0x0fa1a, 0x0fa1b, 0x0fa1c, 0x0fa1d, 0x0fa1e, 0x0fa20, 0x0fa22, 0x0fa23,
+  0x0fa25, 0x0fa26, 0x0fa2a, 0x0fa2b, 0x0fa2c, 0x0fa2d, 0x0fa72, 0x0fa90,
+  0x0faa0, 0x20041, 0x20063, 0x2007d, 0x20087, 0x20088, 0x2008b, 0x200c9,
+  0x200ca, 0x200cb, 0x200cc, 0x200cd, 0x200d1, 0x200dc, 0x2010c, 0x2010e,
+  0x2010f, 0x20114, 0x2011e, 0x20120, 0x20541, 0x20627, 0x20695, 0x206a4,
+  0x2090e, 0x20953, 0x21fe8, 0x22397, 0x22398, 0x2298d, 0x22991, 0x233b3,
+  0x23d92, 0x24c12, 0x24d13, 0x24d14, 0x25ad7, 0x268dd, 0x268de, 0x26951,
+  0x26b60, 0x27c28, 0x27fb7, 0x2840b, 0x28e0f, 0x2967f, 0x29810, 0x2a6d9,
+  0x2b735, 0x2b738, 0x2b740, 0x2bda7, 0x2ceb0, 0x2cf00, 0x2cf02, 0x2d544,
+  0x2d80d, 0x2e4d7, 0x2f800, 0x2f802, 0x2f821, 0x2f836, 0x2f83e, 0x2f873,
+  0x2f882, 0x2f890, 0x2f8d4, 0x2f8d9, 0x2f8db, 0x2f918, 0x2f91a, 0x2f982,
+  0x2f98f, 0x2f9ac, 0x2f9b2, 0x2f9d7, 0x2fa17, 0x30001, 0x30002, 0x30004,
+  0x30009, 0x30020, 0x3002a, 0x3005c, 0x300e6, 0x3018a, 0x31350, 0x31f00,
+  0x329f1, 0x33473,
+]);
 
 const CreateCharacter = () => {
   const 远程 = useAtomValue(远程原子);
@@ -120,14 +149,26 @@ export default function CharacterTable() {
   const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
   const 字形自定义 = useAtomValue(字形自定义原子);
   const [filter, setFilter] = useState({} as 过滤器参数);
-  const 过滤器 = new 字符字形过滤器(filter);
-  const dataSource: 校验字符数据[] = [];
-  for (const character of 按笔顺排序字符) {
-    const data = 原始字库.查询(character);
-    if (!data) continue;
-    if (!过滤器.过滤字符(data.character, data, 字库)) continue;
-    dataSource.push(data);
-  }
+  const dataSource = useMemo(() => {
+    const 过滤器 = new 字符字形过滤器(filter);
+    const result: 校验字符数据[] = [];
+    for (const character of 按笔顺排序字符) {
+      const data = 原始字库.查询(character);
+      if (!data) continue;
+      if (!过滤器.过滤字符(data.character, data, 字库)) continue;
+      if (!字符表跳过码位.has(character.toNumber())) continue;
+      result.push(data);
+    }
+    return result;
+  }, [按笔顺排序字符, 原始字库, 字库, filter]);
+  const 统一字形列表 = useAtomValue(统一字形列表原子);
+  const 统一字形映射 = useMemo(() => {
+    const map = new Map<number, 字形数据>();
+    for (const glyph of 统一字形列表) {
+      map.set(glyph.id, glyph);
+    }
+    return map;
+  }, [统一字形列表]);
 
   const unicodeColumn: Column = {
     title: "Unicode",
@@ -188,8 +229,18 @@ export default function CharacterTable() {
         <span>
           {character.glyphs.map(({ id, sources }) => (
             <span key={id}>
-              <StrokesView glyph={字库.获取字形(id)!.图形盒子} />(
-              {sources.join(", ")})
+              <Tooltip title={id}>
+                <EditOrRedrawGraph
+                  record={统一字形映射.get(id)!}
+                  trigger={
+                    <BorderItem>
+                      <StrokesView glyph={字库.获取字形(id)!.图形盒子} />
+                    </BorderItem>
+                  }
+                  initialChar={character.character.获取名称()}
+                />
+              </Tooltip>
+              <sub className="px-1">{sources.join("")}</sub>
             </span>
           ))}
         </span>

@@ -21,6 +21,7 @@ import {
   type 当量映射,
   是强类型归并,
   type 条件,
+  来源排序,
   构建强类型决策与决策空间,
   构建强类型自定义分析,
   添加优先简码,
@@ -30,6 +31,7 @@ import {
   用户字形起始点,
   用户字符终止点,
   用户字符起始点,
+  type 矢量笔画数据,
   type 码表条目,
   组装,
   type 组装条目,
@@ -205,6 +207,15 @@ export const 字库原子 = atom((get) => {
   return 原始字库.确定(字形自定义, 变换器列表, 字形来源列表);
 });
 
+export const 矢量缓存原子 = atom((get) => {
+  const 字库 = get(字库原子);
+  const 矢量笔画缓存 = new Map<number, 矢量笔画数据[]>();
+  for (const [id, 字形] of 字库.字形迭代器()) {
+    矢量笔画缓存.set(id, 字形.图形盒子.获取笔画列表());
+  }
+  return 矢量笔画缓存;
+});
+
 export const 如按笔顺排序字符原子 = atom((get) => {
   const 原始字库 = get(原始字库原子);
   const 字库 = get(字库原子);
@@ -218,13 +229,13 @@ export const 如按笔顺排序字符原子 = atom((get) => {
 
 export const 全部来源原子 = atom((get) => {
   const 字库 = get(原始字库原子);
-  const 标签数量映射 = new Map<string, number>();
+  const 全部来源集合 = new Set<string>();
   for (const { glyphs } of 字库) {
     for (const { sources } of glyphs) {
-      sources.map((s) => 标签数量映射.set(s, (标签数量映射.get(s) ?? 0) + 1));
+      sources.map((s) => 全部来源集合.add(s));
     }
   }
-  return [...标签数量映射].sort((a, b) => b[1] - a[1]).map((x) => x[0]);
+  return sortBy(Array.from(全部来源集合), (s) => 来源排序.indexOf(s));
 });
 
 export const 下一个用户字符码位原子 = atom((get) => {

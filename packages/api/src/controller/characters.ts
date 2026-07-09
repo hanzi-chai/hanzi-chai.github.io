@@ -134,6 +134,33 @@ export async function Update(request: IRequest, env: Env) {
   return true;
 }
 
+/** PUT:/characters/batch */
+export async function UpdateBatch(request: IRequest, env: Env) {
+  let body: any[];
+  try {
+    body = await request.json();
+  } catch (err) {
+    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
+  }
+  try {
+    const statement = env.CHAI.prepare(
+      `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=?, ambiguous=? WHERE unicode=?`,
+    );
+    await env.CHAI.batch(
+      body.map((item: any) => {
+        const { unicode, tygf, gb2312, glyphs, name, ambiguous } = 转模型(item);
+        return statement.bind(tygf, gb2312, glyphs, name, ambiguous, unicode);
+      }),
+    );
+  } catch (err) {
+    return new Err(
+      ErrCode.DataUpdateFailed,
+      `批量更新失败（${(err as Error).message}）`,
+    );
+  }
+  return true;
+}
+
 /** DELETE:/characters/:unicode */
 export async function Delete(request: IRequest, env: Env) {
   const unicode = parseInt(request.params.unicode, 10);

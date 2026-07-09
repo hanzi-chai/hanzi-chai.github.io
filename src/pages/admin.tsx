@@ -14,8 +14,12 @@ export default function AdminLayout() {
   const 设置字形列表 = useSetAtom(可编辑字形列表原子);
 
   useEffect(() => {
-    listCharacters().then((data) => !("err" in data) && 设置字符列表(data));
-    listGlyphs().then((data) => !("err" in data) && 设置字形列表(data));
+    Promise.all([listCharacters(), listGlyphs()]).then(
+      ([字符数据, 字形数据]) => {
+        if (!("err" in 字符数据)) 设置字符列表(字符数据);
+        if (!("err" in 字形数据)) 设置字形列表(字形数据);
+      },
+    );
   }, []);
 
   return (

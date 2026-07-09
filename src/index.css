@@ -23,17 +23,17 @@
 }
 
 /* ComponentForm ModalForm 内部间距覆盖 */
-.component-form-modal .ant-pro-form-list-action {
+.glyph-form-modal .ant-pro-form-list-action {
   margin: 0;
 }
-.component-form-modal .ant-pro-form-list-item {
+.glyph-form-modal .ant-pro-form-list-item {
   justify-content: space-between !important;
   align-items: center !important;
 }
-.component-form-modal .ant-form-item {
+.glyph-form-modal .ant-form-item {
   margin-bottom: 8px;
 }
-.component-form-modal .ant-pro-form-list > .ant-form-item {
+.glyph-form-modal .ant-pro-form-list > .ant-form-item {
   margin-bottom: 0;
 }
 

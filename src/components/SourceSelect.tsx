@@ -12,6 +12,7 @@ export default function SourceSelect(props: SourceSelectProps) {
   return (
     <Select
       {...props}
+      className="min-w-16"
       mode="multiple"
       options={sources.map((source) => ({ label: source, value: source }))}
     />

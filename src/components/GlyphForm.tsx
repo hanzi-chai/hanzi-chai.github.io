@@ -1,8 +1,4 @@
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  CameraOutlined,
-} from "@ant-design/icons";
+import { CameraOutlined } from "@ant-design/icons";
 import type {
   ProFormInstance,
   ProFormListProps,
@@ -17,16 +13,31 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 import type { FormListFieldData, MenuProps } from "antd";
-import { Button, Dropdown, Flex, Form, Typography } from "antd";
+import { Button, Dropdown, Flex, Input, Typography } from "antd";
 import type { BaseOptionType } from "antd/es/select";
-import type { 字形数据, 引用数据, 笔画名称 } from "hanzi-chai";
-import { 模拟矢量笔画, 笔画表示方式 } from "hanzi-chai";
-import type { MutableRefObject, ReactNode } from "react";
-import { useRef } from "react";
+import {
+  isVectorStroke,
+  transformRefStrokes,
+  合并笔画顺序,
+  图形盒子,
+  type 字形数据,
+  type 引用数据,
+  type 引用笔画块数据,
+  模拟矢量笔画,
+  type 矢量图形数据,
+  type 矢量笔画数据,
+  type 笔画名称,
+  笔画表示方式,
+} from "hanzi-chai";
+import { useAtomValue } from "jotai";
+import type { MutableRefObject, ReactElement, ReactNode } from "react";
+import { useRef, useState } from "react";
+import { 矢量缓存原子 } from "~/atoms";
 import { 数字 } from "~/utils";
 import GlyphSelect from "./GlyphSelect";
-import { Box } from "./GlyphView";
+import { Box, StrokesView } from "./GlyphView";
 import OperatorSelect from "./OperatorSelect";
+import ProFormListMovable from "./ProFormListMovable";
 import { EditorColumn, EditorRow } from "./Utils";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
@@ -167,24 +178,92 @@ const StrokeForm = ({
   );
 };
 
+function 临时渲染(
+  glyph: 字形数据,
+  矢量缓存: Map<number, 矢量笔画数据[]>,
+): 图形盒子 {
+  const refs = glyph.references ?? [];
+
+  // 复合体或带结构描述字符的部件：按操作符对各部分做仿射变换后合并
+  if (glyph.type === "compound" || glyph.operator) {
+    const operator = glyph.operator ?? "⿰";
+    const partsStrokes: 矢量图形数据[] = [];
+    for (const [i, ref] of refs.entries()) {
+      const strokes = 矢量缓存.get(ref.id);
+      if (strokes) {
+        partsStrokes.push(transformRefStrokes(strokes, ref, operator, i));
+      }
+    }
+
+    // 提取笔顺信息（仅引用笔画块，过滤掉内联矢量笔画）
+    let orderStrokes: 引用笔画块数据[] | undefined;
+    if (glyph.strokes) {
+      const filtered = glyph.strokes.filter(
+        (s) => !isVectorStroke(s),
+      ) as 引用笔画块数据[];
+      if (filtered.length > 0) orderStrokes = filtered;
+    }
+
+    const merged = 合并笔画顺序(partsStrokes, orderStrokes);
+    return 图形盒子.从笔画列表构建(merged);
+  }
+
+  // 普通部件：按 strokes 顺序逐条处理，内联笔画直接保留，引用块查缓存后切片
+  const result: 矢量笔画数据[] = [];
+  const strokes =
+    glyph.strokes ??
+    refs.map((_, i) => ({ index: i, from: undefined, to: undefined }));
+
+  for (const stroke of strokes) {
+    if (isVectorStroke(stroke)) {
+      result.push(stroke);
+    } else {
+      const ref = refs[stroke.index];
+      if (!ref) continue;
+      const refStrokes = 矢量缓存.get(ref.id);
+      if (!refStrokes) continue;
+      const from = stroke.from ?? 0;
+      const to = (stroke.to ?? refStrokes.length - 1) + 1;
+      result.push(...refStrokes.slice(from, to));
+    }
+  }
+
+  return 图形盒子.从笔画列表构建(result);
+}
+
 export default function GlyphForm({
-  title,
+  trigger,
   initialValues,
   onFinish,
   readonly,
+  initialChar,
 }: {
-  title: ReactNode;
+  trigger: ReactElement;
   initialValues: 字形数据;
   onFinish: (c: 字形数据) => Promise<boolean>;
   readonly?: boolean;
+  initialChar?: string;
 }) {
-  const trigger = <Button>{title}</Button>;
   const formRef = useRef<ProFormInstance>(undefined);
-  const current: 字形数据 | undefined = formRef.current?.getFieldsValue();
+  const [fontChar, setFontChar] = useState<string | undefined>(undefined);
+  const 矢量缓存 = useAtomValue(矢量缓存原子);
   return (
     <ModalForm<字形数据>
-      className="component-form-modal"
-      title={title}
+      className="glyph-form-modal"
+      title={
+        <span>
+          编辑字形数据（参考：
+          <Input
+            className="inline! w-16!"
+            value={fontChar}
+            onChange={(e) => setFontChar(e.target.value)}
+          />
+          <Button size="small" onClick={() => setFontChar(initialChar)}>
+            加载
+          </Button>
+          ）
+        </span>
+      }
       layout="horizontal"
       omitNil={true}
       trigger={trigger}
@@ -199,7 +278,21 @@ export default function GlyphForm({
     >
       <EditorRow>
         <EditorColumn span={10} className="p-0!">
-          <Box>{JSON.stringify(current)}</Box>
+          <Box>
+            {fontChar && (
+              <div className="absolute top-0 left-0 right-0 bottom-0 text-[348px] leading-none text-red-400 font-extralight -z-10 font-[Noto_Sans_SC]">
+                {fontChar}
+              </div>
+            )}
+            <ProFormDependency
+              name={["type", "operator", "strokes", "references"]}
+            >
+              {(props) => {
+                const 图形盒子 = 临时渲染(props as 字形数据, 矢量缓存);
+                return <StrokesView glyph={图形盒子} displayMode />;
+              }}
+            </ProFormDependency>
+          </Box>
         </EditorColumn>
         <EditorColumn span={14}>
           <Flex align="flex-start" gap="large">
@@ -233,46 +326,22 @@ export default function GlyphForm({
             </ProFormGroup>
           </ProFormList>
           <Typography.Title level={5}>笔画</Typography.Title>
-          <ProFormList
+          <ProFormListMovable
             name="strokes"
             creatorButtonProps={false}
-            actionRender={(field, action, defaultActionDom, count) => {
-              return [
-                ...defaultActionDom,
-                <ArrowUpOutlined
-                  key="up_arrow"
-                  className="ml-1"
-                  onClick={() => {
-                    if (field.name === 0) {
-                      action.move(field.name, count - 1);
-                    } else {
-                      action.move(field.name, field.name - 1);
-                    }
-                  }}
-                />,
-                <ArrowDownOutlined
-                  key="down_arrow"
-                  className="ml-1"
-                  onClick={() => {
-                    if (field.name === count - 1) {
-                      action.move(field.name, 0);
-                    } else {
-                      action.move(field.name, field.name + 1);
-                    }
-                  }}
-                />,
-                <CameraOutlined
-                  key="camera"
-                  className="ml-1"
-                  onClick={() => {}}
-                />,
-              ];
-            }}
+            alwaysShowItemLabel
+            extraActions={[
+              <CameraOutlined
+                key="camera"
+                className="ml-1"
+                onClick={() => {}}
+              />,
+            ]}
           >
             {(meta) => (
               <StrokeForm maxIndex={10} formRef={formRef} meta={meta} />
             )}
-          </ProFormList>
+          </ProFormListMovable>
           <Flex justify="center" gap="middle">
             <Dropdown
               menu={{
@@ -293,13 +362,18 @@ export default function GlyphForm({
             <Dropdown
               menu={{
                 items: (initialValues.references ?? []).map((x) => ({
-                  key: x.id,
+                  key: x.id.toString(),
                   label: `引用 ${x.id}`,
                 })) as MenuProps["items"],
                 onClick: (item) => {
+                  const 引用笔画: 引用笔画块数据 = {
+                    index: Number(item.key),
+                    from: 0,
+                    to: 0,
+                  };
                   formRef.current?.setFieldValue(
                     "strokes",
-                    formRef.current?.getFieldValue("strokes")?.concat(),
+                    formRef.current?.getFieldValue("strokes")?.concat(引用笔画),
                   );
                 },
               }}
