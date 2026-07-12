@@ -1,6 +1,6 @@
 import type { 分类器 } from "./classifier.js";
 import type { 默认部件分析 } from "./component.js";
-import type { 星空键道复合体分析, 默认复合体分析 } from "./compound.js";
+import type { 星空键道复合体分析 } from "./compound.js";
 import {
   是归并,
   type 条件节点配置,
@@ -20,9 +20,11 @@ import type {
   动态字形分析结果,
   基本分析,
   基本复合体分析,
+  基本字符字形分析,
   基本部件分析,
   字形分析结果,
   带条件,
+  来源和兼容标记,
 } from "./repertoire.js";
 import { 优先表, 贝叶斯推断, 部件字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
@@ -42,7 +44,7 @@ import {
  * 代表了一个有字音、有字形的汉字的中间结果
  * 由拆分结果 [`ComponentResult`](#componentresult) 或 [`CompoundResult`](#compoundresult) 与字音组成
  */
-type 默认汉字分析 = (默认部件分析 | 默认复合体分析) & {
+type 基本汉字分析 = 基本字符字形分析 & {
   汉字: 字符;
   拼写运算: Map<string, 拼音元素>;
   自定义元素: Map<string, 自定义元素[]>;
@@ -93,7 +95,7 @@ class 组词器 {
         break;
       }
     }
-    if (matched) return ok({ 元素序列: result });
+    if (matched) return ok({ 元素序列: result, sources: [], compatible: true });
     else return default_err("没有匹配的组词规则");
   }
 }
@@ -112,7 +114,7 @@ interface 组装配置 {
   分类器: 分类器;
 }
 
-interface 元素序列 {
+interface 元素序列 extends 来源和兼容标记 {
   元素序列: 强类型元素位或编码[];
 }
 
@@ -184,16 +186,20 @@ class 默认组装器 extends 按规则构词 {
 
   一字词组装(
     汉字: 字符,
-    字形分析: 默认部件分析 | 默认复合体分析,
+    字形分析: 基本字符字形分析,
     拼写运算: Map<string, 拼音元素>,
   ) {
-    const 汉字分析: 默认汉字分析 = {
+    const 汉字分析: 基本汉字分析 = {
       汉字,
       拼写运算,
       ...字形分析,
       自定义元素: this.配置.自定义分析映射.get(汉字) ?? new Map(),
     };
-    return ok({ 元素序列: this.取码器.取码(汉字分析) });
+    return ok({
+      元素序列: this.取码器.取码(汉字分析),
+      sources: 字形分析.sources,
+      compatible: 字形分析.compatible,
+    });
   }
 }
 
@@ -214,7 +220,7 @@ class 星空键道组装器 extends 按规则构词<默认部件分析, 星空�
 
   一字词组装(
     _: 字符,
-    字形分析: 默认部件分析 | 星空键道复合体分析,
+    字形分析: (默认部件分析 | 星空键道复合体分析) & 来源和兼容标记,
     拼写运算: Map<string, 拼音元素>,
   ) {
     const 元素序列: 强类型元素位或编码[] = [
@@ -245,7 +251,11 @@ class 星空键道组装器 extends 按规则构词<默认部件分析, 星空�
       }
       元素序列.splice(2 + 4); // 一共最多取四个形码
     }
-    return ok({ 元素序列: 元素序列 });
+    return ok({
+      元素序列,
+      sources: 字形分析.sources,
+      compatible: 字形分析.compatible,
+    });
   }
 }
 
@@ -317,7 +327,7 @@ const 动态组装 = (
           if (!元素序列.ok) continue;
           tmp.push({ ...元素序列.value, 条件列表: 字形分析.条件列表 });
         }
-        元素序列列表.push(new 优先表(tmp));
+        元素序列列表.push(new 优先表(tmp, 分析优先表.sources, 分析优先表.compatible));
       }
     } else {
       const 各字字形分析: (优先表<基本部件分析> | 优先表<基本复合体分析>)[][] =
@@ -330,7 +340,9 @@ const 动态组装 = (
           组合.map((x) => [...x]),
           (组合一) => {
             const 组装值 = 组装器.多字词组装(词, 组合一, 元素映射);
-            return 组装值.ok ? 组装值.value : { 元素序列: [] };
+            return 组装值.ok
+              ? 组装值.value
+              : { 元素序列: [], sources: [], compatible: true };
           },
         );
         元素序列列表.push(new 优先表(tmp));
@@ -357,5 +369,11 @@ const 动态组装 = (
   return ok(去重后组装结果);
 };
 
-export type { 动态组装条目, 组装器, 组装条目, 组装配置, 默认汉字分析 };
+export type {
+  动态组装条目,
+  基本汉字分析 as 默认汉字分析,
+  组装器,
+  组装条目,
+  组装配置,
+};
 export { 动态组装, 星空键道组装器, 组装, 默认组装器 };

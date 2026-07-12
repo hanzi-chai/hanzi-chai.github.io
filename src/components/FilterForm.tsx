@@ -37,7 +37,7 @@ export default function FilterForm({ setFilter }: StrokeSearchProps) {
         <OperatorSelect allowClear />
       </ProFormItem>
       <ProFormItem label="包含部分" name="part">
-        <GlyphSelect />
+        <GlyphSelect allowClear />
       </ProFormItem>
     </QueryFilter>
   );

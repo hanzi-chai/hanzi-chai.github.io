@@ -13,7 +13,7 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 import type { FormListFieldData, MenuProps } from "antd";
-import { Button, Dropdown, Flex, Input, Typography } from "antd";
+import { Button, Dropdown, Flex, Input, notification, Typography } from "antd";
 import type { BaseOptionType } from "antd/es/select";
 import {
   isVectorStroke,
@@ -289,7 +289,35 @@ export default function GlyphForm({
             >
               {(props) => {
                 const 图形盒子 = 临时渲染(props as 字形数据, 矢量缓存);
-                return <StrokesView glyph={图形盒子} displayMode />;
+                return (
+                  <StrokesView
+                    glyph={图形盒子}
+                    setGlyph={(glyph) => {
+                      const prevStrokes: (矢量笔画数据 | 引用笔画块数据)[] =
+                        formRef.current?.getFieldValue("strokes") ?? [];
+                      const references: 引用数据[] = formRef.current?.getFieldValue("references") ?? [];
+                      const strokes = structuredClone(prevStrokes);
+                      let count = 0;
+                      for (let i = 0; i < strokes.length; i++) {
+                        const stroke = strokes[i]!;
+                        if (isVectorStroke(stroke)) {
+                          strokes[i] = glyph[count] ?? stroke;
+                          count++;
+                        } else {
+                          const ref = references[stroke.index];
+                          if (!ref) continue;
+                          const refStrokes = 矢量缓存.get(ref.id);
+                          if (!refStrokes) continue;
+                          const from = stroke.from ?? 0;
+                          const to = (stroke.to ?? refStrokes.length - 1) + 1;
+                          count += to - from;
+                        }
+                      }
+                      formRef.current?.setFieldValue("strokes", strokes);
+                    }}
+                    displayMode
+                  />
+                );
               }}
             </ProFormDependency>
           </Box>

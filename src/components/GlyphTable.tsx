@@ -16,12 +16,17 @@ import {
   远程原子,
 } from "~/atoms";
 import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/utils";
+import 拓扑排序ID列表 from "../../public/data/0.4.0/toposorted-glyph-ids.json";
 import BorderItem from "./BorderItem";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
 import GlyphForm from "./GlyphForm";
 import { StrokesView } from "./GlyphView";
 import { CharacterDisplay, DeleteButton } from "./Utils";
+
+// 构建 ID → 拓扑排序位置的映射，用于快速查找和排序
+const 拓扑排序ID集合 = new Set(拓扑排序ID列表);
+const 拓扑排序位置 = new Map(拓扑排序ID列表.map((id, i) => [id, i]));
 
 const CreateGlyph = () => {
   const 远程 = useAtomValue(远程原子);
@@ -129,12 +134,20 @@ export default function GlyphTable() {
     const 过滤器 = new 字符字形过滤器(filter);
     const result: 字形数据[] = [];
     for (const 字形 of 统一字形列表) {
+      // 只显示拓扑排序中的字形（部件 + 部件可达的复合体）
+      if (!拓扑排序ID集合.has(字形.id)) continue;
       const 真字形 = 字库.获取字形(字形.id);
       if (!真字形) continue;
       if (过滤器.过滤字形(真字形)) {
         result.push(字形);
       }
     }
+    // 按拓扑排序顺序排列：基础字形在前，引用其他字形的在后
+    result.sort(
+      (a, b) =>
+        (拓扑排序位置.get(a.id) ?? Infinity) -
+        (拓扑排序位置.get(b.id) ?? Infinity),
+    );
     return result;
   }, [统一字形列表, 字库, filter]);
 
@@ -230,7 +243,9 @@ export default function GlyphTable() {
           <span>
             {Array.from(字符列表).map((x) => (
               <Tooltip key={x.toNumber()} title={x.十六进制()}>
-                <BorderItem>
+                <BorderItem
+                  onClick={() => navigator.clipboard.writeText(x.获取名称())}
+                >
                   <CharacterDisplay character={x} />
                 </BorderItem>
               </Tooltip>

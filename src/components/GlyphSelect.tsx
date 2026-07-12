@@ -27,7 +27,6 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
       options={options}
       value={value}
       onChange={onChange}
-      allowClear={false}
       showSearch
       placeholder="笔画搜索"
       filterOption={false}

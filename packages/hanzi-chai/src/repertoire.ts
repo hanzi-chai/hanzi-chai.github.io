@@ -54,7 +54,6 @@ export class 部件字根 {
 export type 字根 = 笔画 | 二笔 | 部件字根;
 
 interface 基本部件分析 {
-  类型: "部件";
   字根序列: 字根[];
   部件: 部件;
 }
@@ -70,18 +69,24 @@ export const 存在 = (x: 字根): 条件 => ({
 });
 
 interface 基本复合体分析 {
-  类型: "复合体";
   字根序列: 字根[];
   复合体: 复合体;
 }
 
 type 基本分析 = 基本部件分析 | 基本复合体分析;
 
+export interface 来源和兼容标记 {
+  sources: string[];
+  compatible: boolean;
+}
+
+export type 基本字符字形分析 = 基本分析 & 来源和兼容标记;
+
 interface 字形分析结果<
   部件分析 extends 基本部件分析 = 基本部件分析,
   复合体分析 extends 基本复合体分析 = 基本复合体分析,
 > {
-  分析结果: Map<字符, (部件分析 | 复合体分析)[]>;
+  分析结果: Map<字符, ((部件分析 | 复合体分析) & 来源和兼容标记)[]>;
   部件分析结果: Map<部件, 部件分析>;
   复合体分析结果: Map<复合体, 复合体分析>;
   字根部件列表: 部件字根[];
@@ -126,7 +131,11 @@ interface 字形分析配置 {
 }
 
 export class 优先表<T extends object> {
-  constructor(private 列表: 带条件<T>[]) {}
+  constructor(
+    private 列表: 带条件<T>[],
+    public sources: string[] = [],
+    public compatible = false,
+  ) {}
 
   [Symbol.iterator]() {
     return this.列表[Symbol.iterator]();
@@ -201,15 +210,43 @@ function 蕴含(已有列表: 条件[], 目标列表: 条件[]): boolean {
   return true;
 }
 
+interface 字形信息 extends 来源和兼容标记 {
+  id: number;
+}
+
 class 字库 {
   private 字形表: Map<number, 字形>;
+  private 字符表: Map<字符, 字形信息[]>;
 
   constructor(
-    private 字符表: Map<字符, 字形历史记录>,
-    private 原始字形表: Map<number, 字形树数据>,
+    原始字符表: Map<字符, 字形历史记录>,
+    原始字形表: Map<number, 字形树数据>,
   ) {
-    this.字形表 = new Map<number, 字形>();
+    this.字符表 = new Map<字符, 字形信息[]>();
 
+    for (const [字符实例, { filtered }] of 原始字符表) {
+      const 字形信息列表: 字形信息[] = [];
+      for (const { id, source } of filtered) {
+        const isCompatible = 字形信息列表
+          .flatMap((info) => info.sources)
+          .includes(source);
+        const previousInfo = 字形信息列表.find(
+          (info) => info.id === id && info.compatible === isCompatible,
+        );
+        if (previousInfo) {
+          previousInfo.sources.push(source);
+        } else {
+          字形信息列表.push({
+            id,
+            sources: [source],
+            compatible: isCompatible,
+          });
+        }
+      }
+      this.字符表.set(字符实例, 字形信息列表);
+    }
+
+    this.字形表 = new Map<number, 字形>();
     // 第一趟：创建所有部件（叶子节点，无依赖）
     for (const 字形 of 原始字形表.values()) {
       if (字形.type === "component") {
@@ -272,10 +309,10 @@ class 字库 {
   }
 
   查询字形(字符: 字符): 字形[] | undefined {
-    const 历史记录 = this.字符表.get(字符);
-    if (!历史记录) return undefined;
+    const 字形信息列表 = this.字符表.get(字符);
+    if (!字形信息列表) return undefined;
     const 字形列表: 字形[] = [];
-    for (const 字形数据 of 历史记录.filtered) {
+    for (const 字形数据 of 字形信息列表) {
       const 字形实例 = this.字形表.get(字形数据.id);
       if (字形实例) {
         字形列表.push(字形实例);
@@ -508,17 +545,19 @@ class 字库 {
       if (!分析.ok) return 分析;
       复合体分析结果.set(复合体, 分析.value);
     }
-    const 分析结果 = new Map<字符, 基本分析[]>();
+    const 分析结果 = new Map<字符, 基本字符字形分析[]>();
     for (const 汉字 of 汉字集合) {
-      const 字形列表 = this.查询字形(汉字) ?? [];
-      const 分析列表: 基本分析[] = [];
-      for (const 字形 of 字形列表) {
+      const 字形列表 = this.字符表.get(汉字) ?? [];
+      const 分析列表: 基本字符字形分析[] = [];
+      for (const { id, ...rest } of 字形列表) {
+        const 字形 = this.字形表.get(id);
+        if (!字形) continue;
         if (是部件(字形)) {
           const 分析 = 部件分析结果.get(字形);
-          if (分析) 分析列表.push(分析);
+          if (分析) 分析列表.push({ ...分析, ...rest });
         } else if (是复合体(字形)) {
           const 分析 = 复合体分析结果.get(字形);
-          if (分析) 分析列表.push(分析);
+          if (分析) 分析列表.push({ ...分析, ...rest });
         }
       }
       分析结果.set(汉字, 分析列表);
@@ -556,20 +595,22 @@ class 字库 {
       if (!分析.ok) return 分析;
       动态复合体分析结果.set(复合体, 分析.value);
     }
-    const 分析结果 = new Map<
-      字符,
-      (优先表<基本部件分析> | 优先表<基本复合体分析>)[]
-    >();
+    type 分析结果类型 = 优先表<基本部件分析> | 优先表<基本复合体分析>;
+    const 分析结果 = new Map<字符, 分析结果类型[]>();
     for (const 汉字 of 汉字集合) {
-      const 字形列表 = this.查询字形(汉字) ?? [];
-      const 分析列表: (优先表<基本部件分析> | 优先表<基本复合体分析>)[] = [];
-      for (const 字形 of 字形列表) {
+      const 字形列表 = this.字符表.get(汉字) ?? [];
+      const 分析列表: 分析结果类型[] = [];
+      for (const { id, ...rest } of 字形列表) {
+        const 字形 = this.字形表.get(id);
+        if (!字形) continue;
         if (是部件(字形)) {
           const 分析 = 动态部件分析结果.get(字形);
-          if (分析) 分析列表.push(分析);
+          if (分析)
+            分析列表.push(new 优先表([...分析], rest.sources, rest.compatible));
         } else if (是复合体(字形)) {
           const 分析 = 动态复合体分析结果.get(字形);
-          if (分析) 分析列表.push(分析);
+          if (分析)
+            分析列表.push(new 优先表([...分析], rest.sources, rest.compatible));
         }
       }
       分析结果.set(汉字, 分析列表);

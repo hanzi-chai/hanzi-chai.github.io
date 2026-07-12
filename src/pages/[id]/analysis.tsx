@@ -40,11 +40,9 @@ import {
   复合体分析器原子,
   如动态字形分析结果原子,
   如字形分析结果原子,
-  字库原子,
   强类型决策原子,
   强类型决策空间原子,
   强类型自定义分析原子,
-  汉字集合原子,
   部件分析器原子,
 } from "~/atoms";
 import Degenerator from "~/components/Degenerator";
@@ -77,9 +75,16 @@ const 导出字形分析结果 = (
           ...head,
           // 动态分析以全角空格隔开
           [...分析].map((x) => 序列化(x.字根序列)).join("　"),
+          分析.sources.join(","),
+          分析.compatible ? "兼容" : "",
         ]);
       } else {
-        tsv.push([...head, 序列化(分析.字根序列)]);
+        tsv.push([
+          ...head,
+          序列化(分析.字根序列),
+          分析.sources.join(","),
+          分析.compatible ? "兼容" : "",
+        ]);
       }
     }
   }
