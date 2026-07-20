@@ -1,4 +1,4 @@
-import type { 默认汉字分析 } from "./assembly.js";
+import type { 基本汉字分析 } from "./assembly.js";
 import type { 分类器 } from "./classifier.js";
 import type { 条件节点配置, 源节点配置, 运算符 } from "./config.js";
 import type { 结构描述字符 } from "./data.js";
@@ -282,7 +282,7 @@ export class 取码器 {
     this.当前或潜在长度 = 当前或潜在长度.value;
   }
 
-  取码(汉字分析: 默认汉字分析) {
+  取码(汉字分析: 基本汉字分析) {
     let 节点: string | null = "s0";
     const 码位序列: 强类型元素位或编码[] = [];
     while (节点) {
@@ -325,7 +325,7 @@ export class 取码器 {
     return 码位序列.slice(0, this.max_length ?? 码位序列.length);
   }
 
-  寻找(object: 取码对象, result: 默认汉字分析): 元素 | undefined {
+  寻找(object: 取码对象, result: 基本汉字分析): 元素 | undefined {
     const { 拼写运算, 字根序列 } = result;
     let root: 字根 | undefined;
     let strokes: number[];
@@ -384,7 +384,7 @@ export class 取码器 {
    * @param extra - 额外信息
    * @param totalMapping - 映射
    */
-  满足(condition: 条件节点配置, result: 默认汉字分析) {
+  满足(condition: 条件节点配置, result: 基本汉字分析) {
     const { object, operator } = condition;
     const target = this.寻找(object, result);
     const fn = this.谓词表[operator];

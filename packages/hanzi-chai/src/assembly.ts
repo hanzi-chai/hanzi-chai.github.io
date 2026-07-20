@@ -112,6 +112,7 @@ interface 组装配置 {
   键盘配置: 键盘配置;
   自定义分析映射: 自定义分析映射;
   分类器: 分类器;
+  来源列表: string[];
 }
 
 interface 元素序列 extends 来源和兼容标记 {
@@ -277,14 +278,38 @@ const 组装 = (
         元素序列列表.push(元素序列.value);
       }
     } else {
-      const 各字字形分析: 基本分析[][] = [];
-      for (const 字 of 词) {
-        各字字形分析.push(分析结果.get(字) ?? []);
+      const 单一来源元素序列列表: (元素序列 & { hash: string })[] = [];
+      for (const 来源 of 配置.来源列表) {
+        const 各字字形分析: 基本字符字形分析[][] = [];
+        for (const 字 of 词) {
+          const 分析列表 = 分析结果.get(字) ?? [];
+          const 有效分析列表 = 分析列表.filter((x) => x.sources.includes(来源));
+          if (有效分析列表.length === 0) 有效分析列表.push(...分析列表.slice(0, 1));
+          各字字形分析.push(有效分析列表);
+        }
+        for (const 组合 of 排列组合(各字字形分析)) {
+          const 兼容 = 组合.some((x) => x.compatible);
+          const 元素序列 = 组装器.多字词组装(词, 组合, 元素映射);
+          if (!元素序列.ok) return 元素序列;
+          单一来源元素序列列表.push({
+            ...元素序列.value,
+            compatible: 兼容,
+            sources: [来源],
+            hash: 总序列化(元素序列.value.元素序列)
+          });
+        }
       }
-      for (const 组合 of 排列组合(各字字形分析)) {
-        const 元素序列 = 组装器.多字词组装(词, 组合, 元素映射);
-        if (!元素序列.ok) return 元素序列;
-        元素序列列表.push(元素序列.value);
+      const 索引映射 = new Map<string, number>();
+      for (const { hash, ...rest } of 单一来源元素序列列表) {
+        const 索引 = 索引映射.get(hash);
+        if (索引 !== undefined) {
+          const 上一个结果 = 元素序列列表[索引]!;
+          上一个结果.sources.push(...rest.sources);
+          上一个结果.compatible = 上一个结果.compatible && rest.compatible;
+        } else {
+          索引映射.set(hash, 元素序列列表.length);
+          元素序列列表.push(rest);
+        }
       }
     }
     for (const 元素序列 of 元素序列列表) {
@@ -327,7 +352,9 @@ const 动态组装 = (
           if (!元素序列.ok) continue;
           tmp.push({ ...元素序列.value, 条件列表: 字形分析.条件列表 });
         }
-        元素序列列表.push(new 优先表(tmp, 分析优先表.sources, 分析优先表.compatible));
+        元素序列列表.push(
+          new 优先表(tmp, 分析优先表.sources, 分析优先表.compatible),
+        );
       }
     } else {
       const 各字字形分析: (优先表<基本部件分析> | 优先表<基本复合体分析>)[][] =
@@ -369,11 +396,5 @@ const 动态组装 = (
   return ok(去重后组装结果);
 };
 
-export type {
-  动态组装条目,
-  基本汉字分析 as 默认汉字分析,
-  组装器,
-  组装条目,
-  组装配置,
-};
+export type { 动态组装条目, 基本汉字分析, 组装器, 组装条目, 组装配置 };
 export { 动态组装, 星空键道组装器, 组装, 默认组装器 };
