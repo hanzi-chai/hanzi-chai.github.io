@@ -51,6 +51,9 @@ export const createGlyph = (payload: 字形数据) =>
 export const updateGlyph = (payload: 字形数据) =>
   put<boolean>(`/glyphs/${payload.id}`, payload);
 
+export const replaceGlyph = (payload: { oldId: number; newId: number }) =>
+  put<boolean>("/glyphs", payload);
+
 export const removeGlyph = (id: number) => del<boolean>(`/glyphs/${id}`);
 
 export const listEquivalence = () => get<EquivalenceData[]>("/equivalence");

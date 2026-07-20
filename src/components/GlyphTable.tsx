@@ -1,15 +1,16 @@
-import { Button, Flex, Space, Tooltip } from "antd";
+import { Button, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import type { 基本字形数据, 字形数据, 字符 } from "hanzi-chai";
 import { 是用户字形 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { type ReactElement, useMemo, useState } from "react";
-import { createGlyph, removeGlyph, updateGlyph } from "~/api";
+import { createGlyph, removeGlyph, replaceGlyph, updateGlyph } from "~/api";
 import {
   下一个用户字形ID原子,
   原始字库原子,
   可编辑字形列表原子,
+  可编辑字符列表原子,
   字库原子,
   用户字形列表原子,
   统一字形列表原子,
@@ -21,6 +22,7 @@ import BorderItem from "./BorderItem";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
 import GlyphForm from "./GlyphForm";
+import GlyphSelect from "./GlyphSelect";
 import { StrokesView } from "./GlyphView";
 import { CharacterDisplay, DeleteButton } from "./Utils";
 
@@ -72,6 +74,58 @@ const DeleteGlyph = ({ id }: { id: number }) => {
         }
       }}
     />
+  );
+};
+
+const ReplaceGlyph = ({ id }: { id: number }) => {
+  const 远程 = useAtomValue(远程原子);
+  const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
+  const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
+  const [newId, setNewId] = useState<number>();
+
+  return (
+    <Popconfirm
+      title={`将所有对字形 ${id} 的引用替换为：`}
+      description={
+        <GlyphSelect
+          value={newId}
+          onChange={setNewId}
+          style={{ width: 160 }}
+        />
+      }
+      onConfirm={async () => {
+        if (newId === undefined || newId === id) return;
+        if (远程) {
+          const res = await replaceGlyph({ oldId: id, newId });
+          if (errorFeedback(res)) return;
+        }
+        set可编辑字符列表(
+          可编辑字符列表.map((c) => ({
+            ...c,
+            glyphs: c.glyphs.map((g) =>
+              g.id === id ? { ...g, id: newId } : g,
+            ),
+          })),
+        );
+        set可编辑字形列表(
+          可编辑字形列表
+            .map((g) =>
+              g.references
+                ? {
+                    ...g,
+                    references: g.references.map((r) =>
+                      r.id === id ? { ...r, id: newId } : r,
+                    ),
+                  }
+                : g,
+            ),
+        );
+      }}
+      onCancel={() => setNewId(undefined)}
+      okButtonProps={{ disabled: newId === undefined || newId === id }}
+    >
+      <Button>替换</Button>
+    </Popconfirm>
   );
 };
 
@@ -259,6 +313,7 @@ export default function GlyphTable() {
       render: (_, record) => (
         <Space>
           <EditOrRedrawGraph record={record} trigger={<Button>编辑</Button>} />
+          <ReplaceGlyph id={record.id} />
           <DeleteGlyph id={record.id} />
         </Space>
       ),

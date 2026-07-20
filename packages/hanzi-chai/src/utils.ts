@@ -898,8 +898,8 @@ export function isVectorStroke(
 export function transformRefStrokes(
   strokes: 矢量笔画数据[],
   ref: 引用数据,
-  operator: 结构描述字符,
-  index: number,
+  operator?: 结构描述字符,
+  index?: number,
 ): 矢量笔画数据[] {
   const { xbegin, ybegin, xend, yend } = ref;
   if (
@@ -912,6 +912,7 @@ export function transformRefStrokes(
       .从边界创建(xbegin, ybegin, xend, yend)
       .变换笔画列表(strokes);
   }
+  if (operator === undefined || index === undefined) return strokes;
   const transform = 仿射变换.查找表[operator]?.[index];
   if (transform) {
     return transform.变换笔画列表(strokes);
@@ -964,9 +965,10 @@ export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[]
         const ref = refs[stroke.index];
         if (!ref) continue;
         const refStrokes = resolveGlyph(ref.id);
+        const transformed = transformRefStrokes(refStrokes, ref);
         const from = stroke.from ?? 0;
         const to = (stroke.to ?? refStrokes.length - 1) + 1;
-        result.push(...refStrokes.slice(from, to));
+        result.push(...transformed.slice(from, to));
       }
     }
     return result;

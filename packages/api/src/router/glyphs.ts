@@ -6,5 +6,6 @@ export const routerGlyphs = Router({ base: "/glyphs" })
   .get("/:id", glyphs.Info)
   .post("/", glyphs.Create)
   .post("/batch", glyphs.CreateBatch)
+  .put("/", glyphs.ReplaceId)
   .put("/:id", glyphs.Update)
   .delete("/:id", glyphs.Delete);

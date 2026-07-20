@@ -1,4 +1,3 @@
-import { CameraOutlined } from "@ant-design/icons";
 import type {
   ProFormInstance,
   ProFormListProps,
@@ -13,7 +12,7 @@ import {
   ProFormSelect,
 } from "@ant-design/pro-components";
 import type { FormListFieldData, MenuProps } from "antd";
-import { Button, Dropdown, Flex, Input, notification, Typography } from "antd";
+import { Button, Dropdown, Flex, Input, Typography } from "antd";
 import type { BaseOptionType } from "antd/es/select";
 import {
   isVectorStroke,
@@ -94,6 +93,7 @@ const StrokeForm = ({
   formRef: MutableRefObject<ProFormInstance | undefined>;
   meta: FormListFieldData;
 }) => {
+  const 矢量缓存 = useAtomValue(矢量缓存原子);
   const referenceOptions: BaseOptionType[] = (references ?? []).map((x) => ({
     key: x.id,
     value: x.id,
@@ -171,6 +171,29 @@ const StrokeForm = ({
               }))}
               allowClear={false}
             />
+            <Button
+              onClick={() => {
+                const form = formRef.current;
+                if (!form) return;
+                const strokes: (矢量笔画数据 | 引用笔画块数据)[] =
+                  form.getFieldValue("strokes") ?? [];
+                const stroke = strokes[meta.name];
+                if (stroke === undefined || isVectorStroke(stroke)) return;
+                const newStrokes = structuredClone(strokes);
+                const references: 引用数据[] =
+                  form.getFieldValue("references") ?? [];
+                const ref = references[stroke.index];
+                if (!ref) return;
+                const refStrokes = 矢量缓存.get(ref.id);
+                if (!refStrokes) return;
+                const from = stroke.from ?? 0;
+                const to = (stroke.to ?? refStrokes.length - 1) + 1;
+                newStrokes.splice(meta.name, 1, ...refStrokes.slice(from, to));
+                formRef.current?.setFieldValue(["strokes"], newStrokes);
+              }}
+            >
+              快照
+            </Button>
           </Flex>
         )
       }
@@ -222,9 +245,10 @@ function 临时渲染(
       if (!ref) continue;
       const refStrokes = 矢量缓存.get(ref.id);
       if (!refStrokes) continue;
+      const transformed = transformRefStrokes(refStrokes, ref);
       const from = stroke.from ?? 0;
       const to = (stroke.to ?? refStrokes.length - 1) + 1;
-      result.push(...refStrokes.slice(from, to));
+      result.push(...transformed.slice(from, to));
     }
   }
 
@@ -247,6 +271,31 @@ export default function GlyphForm({
   const formRef = useRef<ProFormInstance>(undefined);
   const [fontChar, setFontChar] = useState<string | undefined>(undefined);
   const 矢量缓存 = useAtomValue(矢量缓存原子);
+
+  const setGlyph = (glyph: 矢量笔画数据[]) => {
+    const prevStrokes: (矢量笔画数据 | 引用笔画块数据)[] =
+      formRef.current?.getFieldValue("strokes") ?? [];
+    const references: 引用数据[] =
+      formRef.current?.getFieldValue("references") ?? [];
+    const strokes = structuredClone(prevStrokes);
+    let count = 0;
+    for (let i = 0; i < strokes.length; i++) {
+      const stroke = strokes[i]!;
+      if (isVectorStroke(stroke)) {
+        strokes[i] = glyph[count] ?? stroke;
+        count++;
+      } else {
+        const ref = references[stroke.index];
+        if (!ref) continue;
+        const refStrokes = 矢量缓存.get(ref.id);
+        if (!refStrokes) continue;
+        const from = stroke.from ?? 0;
+        const to = (stroke.to ?? refStrokes.length - 1) + 1;
+        count += to - from;
+      }
+    }
+    formRef.current?.setFieldValue("strokes", strokes);
+  };
   return (
     <ModalForm<字形数据>
       className="glyph-form-modal"
@@ -280,7 +329,7 @@ export default function GlyphForm({
         <EditorColumn span={10} className="p-0!">
           <Box>
             {fontChar && (
-              <div className="absolute top-0 left-0 right-0 bottom-0 text-[348px] leading-none text-red-400 font-extralight -z-10 font-[Noto_Sans_SC]">
+              <div className="absolute top-0 left-0 right-0 bottom-0 text-[348px] leading-none text-blue-400 font-extralight -z-10 font-[Noto_Sans_SC]">
                 {fontChar}
               </div>
             )}
@@ -292,29 +341,7 @@ export default function GlyphForm({
                 return (
                   <StrokesView
                     glyph={图形盒子}
-                    setGlyph={(glyph) => {
-                      const prevStrokes: (矢量笔画数据 | 引用笔画块数据)[] =
-                        formRef.current?.getFieldValue("strokes") ?? [];
-                      const references: 引用数据[] = formRef.current?.getFieldValue("references") ?? [];
-                      const strokes = structuredClone(prevStrokes);
-                      let count = 0;
-                      for (let i = 0; i < strokes.length; i++) {
-                        const stroke = strokes[i]!;
-                        if (isVectorStroke(stroke)) {
-                          strokes[i] = glyph[count] ?? stroke;
-                          count++;
-                        } else {
-                          const ref = references[stroke.index];
-                          if (!ref) continue;
-                          const refStrokes = 矢量缓存.get(ref.id);
-                          if (!refStrokes) continue;
-                          const from = stroke.from ?? 0;
-                          const to = (stroke.to ?? refStrokes.length - 1) + 1;
-                          count += to - from;
-                        }
-                      }
-                      formRef.current?.setFieldValue("strokes", strokes);
-                    }}
+                    setGlyph={setGlyph}
                     displayMode
                   />
                 );
@@ -334,11 +361,10 @@ export default function GlyphForm({
                 { label: "部件", value: "component" },
                 { label: "复合体", value: "compound" },
               ]}
-              disabled
               className="w-16"
             />
-            <ProFormItem label="结构" name="operator" className="w-24">
-              <OperatorSelect />
+            <ProFormItem label="结构" name="operator">
+              <OperatorSelect className="w-24" allowClear />
             </ProFormItem>
           </Flex>
           <Typography.Title level={5}>引用</Typography.Title>
@@ -358,13 +384,6 @@ export default function GlyphForm({
             name="strokes"
             creatorButtonProps={false}
             alwaysShowItemLabel
-            extraActions={[
-              <CameraOutlined
-                key="camera"
-                className="ml-1"
-                onClick={() => {}}
-              />,
-            ]}
           >
             {(meta) => (
               <StrokeForm maxIndex={10} formRef={formRef} meta={meta} />
@@ -387,26 +406,36 @@ export default function GlyphForm({
             >
               <Button>添加笔画</Button>
             </Dropdown>
-            <Dropdown
-              menu={{
-                items: (initialValues.references ?? []).map((x) => ({
-                  key: x.id.toString(),
-                  label: `引用 ${x.id}`,
-                })) as MenuProps["items"],
-                onClick: (item) => {
-                  const 引用笔画: 引用笔画块数据 = {
-                    index: Number(item.key),
-                    from: 0,
-                    to: 0,
-                  };
-                  formRef.current?.setFieldValue(
-                    "strokes",
-                    formRef.current?.getFieldValue("strokes")?.concat(引用笔画),
-                  );
-                },
+            <ProFormDependency name={["references"]}>
+              {({ references }) => {
+                const 引用数据列表: 引用数据[] = references ?? [];
+                return (
+                  <Dropdown
+                    menu={{
+                      items: 引用数据列表.map((x, i) => ({
+                        key: i.toString(),
+                        label: `引用 ${x.id}`,
+                      })) as MenuProps["items"],
+                      onClick: (item) => {
+                        const strokes =
+                          formRef.current?.getFieldValue("strokes") ?? [];
+                        const 引用笔画: 引用笔画块数据 = {
+                          index: Number(item.key),
+                          from: 0,
+                          to: 0,
+                        };
+                        formRef.current?.setFieldValue(
+                          "strokes",
+                          strokes.concat(引用笔画),
+                        );
+                      },
+                    }}
+                  >
+                    <Button>添加笔画引用</Button>
+                  </Dropdown>
+                );
               }}
-            ></Dropdown>
-            <Button>添加笔画引用</Button>
+            </ProFormDependency>
           </Flex>
         </EditorColumn>
       </EditorRow>

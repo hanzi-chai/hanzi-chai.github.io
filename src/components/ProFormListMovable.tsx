@@ -1,15 +1,11 @@
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import type { ProFormListProps } from "@ant-design/pro-components";
 import { ProFormList } from "@ant-design/pro-components";
-import type { ReactNode } from "react";
 
 export default function ProFormListMovable<T>({
   children,
-  extraActions,
   ...props
-}: ProFormListProps<T> & {
-  extraActions?: ReactNode[];
-}) {
+}: ProFormListProps<T>) {
   return (
     <ProFormList<T>
       {...props}
@@ -37,7 +33,6 @@ export default function ProFormListMovable<T>({
             }
           }}
         />,
-        ...(extraActions ?? []),
       ]}
     >
       {children}
