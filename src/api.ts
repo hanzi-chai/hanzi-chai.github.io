@@ -1,4 +1,4 @@
-import type { 字符数据, 字形数据 } from "hanzi-chai";
+import type { 字符数据, 基本字形数据 } from "hanzi-chai";
 import { createClient } from "@chai-api/client";
 import { EquivalenceData } from "./equivalence";
 export { endpoint, type 后端错误 } from "@chai-api/client";
@@ -43,12 +43,12 @@ export const batchUpdateCharacter = (payload: 字符数据[]) =>
 export const removeCharacter = (unicode: number) =>
   del<boolean>(`/characters/${unicode}`);
 
-export const listGlyphs = () => get<字形数据[]>("/glyphs");
+export const listGlyphs = () => get<基本字形数据[]>("/glyphs");
 
-export const createGlyph = (payload: 字形数据) =>
+export const createGlyph = (payload: 基本字形数据) =>
   post<number>("/glyphs", payload);
 
-export const updateGlyph = (payload: 字形数据) =>
+export const updateGlyph = (payload: 基本字形数据) =>
   put<boolean>(`/glyphs/${payload.id}`, payload);
 
 export const replaceGlyph = (payload: { oldId: number; newId: number }) =>

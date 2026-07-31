@@ -1,5 +1,5 @@
 import { range, sortBy } from "lodash-es";
-import { 图形盒子 } from "./affine.js";
+import type { 图形盒子 } from "./affine.js";
 import { type 分类器, 默认分类器 } from "./classifier.js";
 import {
   冰雪飞花分析器,
@@ -27,7 +27,7 @@ import {
   是部件,
   贝叶斯推断,
 } from "./repertoire.js";
-import { default_err, ok, type Result } from "./utils.js";
+import { default_err, ok, type Result, 仿射合并 } from "./utils.js";
 
 class 复合体 {
   public id: number;
@@ -43,9 +43,11 @@ class 复合体 {
     this.id = 数据.id;
     this.结构描述字符 = 数据.operator;
     this.笔顺 = 数据.strokes ?? 部分列表.map((_, i) => ({ index: i }));
-    this.图形盒子 = 图形盒子.仿射合并(
-      数据,
+    this.图形盒子 = 仿射合并(
       部分列表.map((x) => x.图形盒子),
+      数据.references,
+      数据.operator,
+      数据.strokes,
     );
     this.标准笔顺 = this.获取笔画序列(默认分类器).join("");
   }

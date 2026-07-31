@@ -400,6 +400,9 @@ class 区间 {
   延长(amount: number) {
     this.end += amount;
   }
+  toArray(): [number, number] {
+    return [this.start, this.end];
+  }
 }
 
 type 笔画关系 = 曲线关系[];

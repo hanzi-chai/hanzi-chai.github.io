@@ -48,7 +48,7 @@ type 字符数据单一补丁 = 补丁操作 & {
   source: string;
 };
 
-interface 解引用数据 extends Omit<引用数据, "id"> {
+interface 解引用数据 extends 引用数据 {
   glyph: 字形树数据;
 }
 
@@ -121,6 +121,7 @@ class 原始字库 {
       const 已解析 = this.解引用字形(引用字形, 最大深度 - 1);
       已解引用.push({
         ...rest,
+        id,
         glyph: 已解析,
       });
     }
@@ -208,7 +209,7 @@ class 原始字库 {
     for (const 子模式 of references) {
       const 子字形 = this.合成字形(子模式, 映射, 字形查找表, 取新ID);
       if (!子字形) return null;
-      子引用.push({ glyph: 子字形 });
+      子引用.push({ id: 子字形.id, glyph: 子字形 });
     }
     return {
       type: "compound",

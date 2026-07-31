@@ -1,7 +1,7 @@
-import { isEqual, range } from "lodash-es";
-import { 仿射变换, 合并笔画顺序 } from "./affine.js";
+import { isEqual, range, sumBy } from "lodash-es";
+import { 仿射变换, 图形盒子 } from "./affine.js";
 import type { 动态组装条目, 组装条目 } from "./assembly.js";
-
+import { 区间 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
 import type { 部件 } from "./component.js";
@@ -23,16 +23,13 @@ import {
 } from "./config.js";
 import {
   type 向量,
-  type 基本字形数据,
-  type 复合体数据,
-  type 字形数据,
   type 引用数据,
   type 引用笔画块数据,
+  type 矢量图形数据,
   type 矢量笔画数据,
   type 结构描述字符,
   结构描述字符列表,
   type 绘制,
-  type 部件数据,
 } from "./data.js";
 import {
   二笔,
@@ -93,6 +90,8 @@ export const 模拟矢量笔画 = (
         case "h":
         case "v":
           return { command, parameterList: [20] };
+        case "l":
+          return { command, parameterList: [20, 20] };
         default:
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
       }
@@ -895,137 +894,102 @@ export function isVectorStroke(
   return "feature" in s;
 }
 
-export function transformRefStrokes(
-  strokes: 矢量笔画数据[],
-  ref: 引用数据,
-  operator?: 结构描述字符,
-  index?: number,
+export function 切片(
+  笔画数据列表: 矢量笔画数据[],
+  引用笔画块: 引用笔画块数据,
 ): 矢量笔画数据[] {
-  const { xbegin, ybegin, xend, yend } = ref;
-  if (
-    xbegin !== undefined &&
-    ybegin !== undefined &&
-    xend !== undefined &&
-    yend !== undefined
-  ) {
-    return 仿射变换
-      .从边界创建(xbegin, ybegin, xend, yend)
-      .变换笔画列表(strokes);
-  }
-  if (operator === undefined || index === undefined) return strokes;
-  const transform = 仿射变换.查找表[operator]?.[index];
-  if (transform) {
-    return transform.变换笔画列表(strokes);
-  }
-  return strokes;
+  const from = 引用笔画块.from ?? 0;
+  const to = (引用笔画块.to ?? 笔画数据列表.length - 1) + 1;
+  return 笔画数据列表.slice(from, to);
 }
 
-export function 生成字形数据(glyphs: 字形数据[]): 基本字形数据[] {
-  const glyphMap = new Map<number, 字形数据>();
-  for (const g of glyphs) glyphMap.set(g.id, g);
-
-  const strokeCache = new Map<number, 矢量笔画数据[]>();
-  const resolving = new Set<number>();
-
-  function resolveGlyph(id: number): 矢量笔画数据[] {
-    const cached = strokeCache.get(id);
-    if (cached) return cached;
-    if (resolving.has(id)) throw new Error(`循环引用: glyph ${id}`);
-
-    const glyph = glyphMap.get(id);
-    if (!glyph) throw new Error(`字形 ${id} 不存在`);
-
-    resolving.add(id);
-    try {
-      let result: 矢量笔画数据[];
-      if (glyph.type === "compound") {
-        result = resolveCompound(glyph);
-      } else if (glyph.operator) {
-        result = resolveComponentWithOperator(glyph);
-      } else {
-        result = resolveComponent(glyph);
-      }
-      strokeCache.set(id, result);
-      return result;
-    } finally {
-      resolving.delete(id);
+/**
+ * 按照笔画顺序描述合并多个部分的笔画列表。
+ * 当 strokes 为 undefined 或空时，直接拼接所有部分。
+ */
+export function 合并笔画顺序(
+  变换后图形列表: 矢量图形数据[],
+  strokes?: (矢量笔画数据 | 引用笔画块数据)[],
+): 矢量笔画数据[] {
+  if (!strokes || strokes.length === 0) {
+    return 变换后图形列表.flat();
+  }
+  const result: 矢量笔画数据[] = [];
+  for (const item of strokes) {
+    if (isVectorStroke(item)) {
+      result.push(item);
+      continue;
     }
-  }
-
-  function resolveComponent(glyph: 部件数据): 矢量笔画数据[] {
-    const result: 矢量笔画数据[] = [];
-    const refs = glyph.references ?? [];
-    const strokes =
-      glyph.strokes ??
-      refs.map((_, i) => ({ index: i, from: undefined, to: undefined }));
-    for (const stroke of strokes) {
-      if (isVectorStroke(stroke)) {
-        result.push(stroke);
-      } else {
-        const ref = refs[stroke.index];
-        if (!ref) continue;
-        const refStrokes = resolveGlyph(ref.id);
-        const transformed = transformRefStrokes(refStrokes, ref);
-        const from = stroke.from ?? 0;
-        const to = (stroke.to ?? refStrokes.length - 1) + 1;
-        result.push(...transformed.slice(from, to));
-      }
-    }
-    return result;
-  }
-
-  function resolveCompoundLike(
-    operator: 结构描述字符,
-    references: 引用数据[],
-    strokes: 引用笔画块数据[] | undefined,
-  ): 矢量笔画数据[] {
-    const partsStrokes = references.map((ref, i) => {
-      const resolved = resolveGlyph(ref.id);
-      return transformRefStrokes(resolved, ref, operator, i);
-    });
-    return 合并笔画顺序(partsStrokes, strokes);
-  }
-
-  function resolveCompound(glyph: 复合体数据): 矢量笔画数据[] {
-    return resolveCompoundLike(glyph.operator, glyph.references, glyph.strokes);
-  }
-
-  function resolveComponentWithOperator(glyph: 部件数据): 矢量笔画数据[] {
-    const refs = glyph.references ?? [];
-    const strokes =
-      glyph.strokes ??
-      refs.map((_, i) => ({ index: i, from: undefined, to: undefined }));
-    const orderStrokes = strokes.filter(
-      (s) => !isVectorStroke(s),
-    ) as 引用笔画块数据[];
-    return resolveCompoundLike(
-      glyph.operator!,
-      glyph.references ?? [],
-      orderStrokes.length > 0 ? orderStrokes : undefined,
-    );
-  }
-
-  const result: 基本字形数据[] = [];
-  for (const glyph of glyphs) {
-    // 复合体数据保持原样，不解引用
-    if (glyph.type === "compound") {
-      result.push(glyph);
-    } else {
-      try {
-        // 部件数据：解引用所有引用笔画块数据
-        const strokes = resolveGlyph(glyph.id);
-        result.push({
-          ...glyph,
-          strokes,
-          operator: undefined,
-          references: undefined,
-        });
-      } catch (e) {
-        console.warn(`跳过字形 ${glyph.id}: ${(e as Error).message}`);
-      }
-    }
+    const part = 变换后图形列表[item.index];
+    if (!part) continue;
+    result.push(...切片(part, item));
   }
   return result;
+}
+
+function 弹性布局(区间列表: 区间[]) {
+  const 盒子总长度 = sumBy(区间列表, (x) => x.长度());
+  const 间隙 = Math.max((100 - 盒子总长度) / 区间列表.length, 10);
+  const 主轴长度 = 盒子总长度 + 间隙 * 区间列表.length;
+  const results: 区间[] = [];
+  for (const [index, item] of 区间列表.entries()) {
+    const 主轴起点 =
+      sumBy(区间列表.slice(0, index), (x) => x.长度()) + 间隙 * (index + 0.5);
+    const 主轴终点 = 主轴起点 + item.长度();
+    const 目标区间 = new 区间(
+      (主轴起点 / 主轴长度) * 100,
+      (主轴终点 / 主轴长度) * 100,
+    );
+    const 缩放 = 目标区间.长度() / item.长度();
+    const 平移 = 目标区间.起点() - item.起点() * 缩放;
+    results.push(new 区间(平移, 平移 + 100 * 缩放));
+  }
+  return results;
+}
+
+/**
+ * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
+ * @param 复合体 - 复合体数据
+ * @param 部分列表 - 各部分渲染后的 SVG 图形
+ * @returns 合并后的 SVG 图形
+ */
+export function 仿射合并(
+  部分列表: 图形盒子[],
+  references: 引用数据[],
+  operator?: 结构描述字符,
+  strokes?: (矢量笔画数据 | 引用笔画块数据)[],
+): 图形盒子 {
+  const 变换列表: 仿射变换[] = [];
+  let 布局结果: 区间[] = [];
+  if (/[⿰⿲]/.test(operator ?? "")) {
+    布局结果 = 弹性布局(部分列表.map((part) => part.横向区间));
+  } else if (/[⿱⿳]/.test(operator ?? "")) {
+    布局结果 = 弹性布局(部分列表.map((part) => part.纵向区间));
+  }
+  for (const [index, params] of references.entries()) {
+    let [xb, xe, yb, ye] = [0, 100, 0, 100];
+    if (operator === "⿰" || operator === "⿲") {
+      [xb, xe] = 布局结果[index]!.toArray();
+    } else if (operator === "⿱" || operator === "⿳") {
+      [yb, ye] = 布局结果[index]!.toArray();
+    } else if (operator !== undefined) {
+      const [xInterval, yInterval] =
+        仿射变换.查找表[operator][index] ?? 仿射变换.idp;
+      xb = xInterval.起点();
+      xe = xInterval.终点();
+      yb = yInterval.起点();
+      ye = yInterval.终点();
+    }
+    const xInterval = new 区间(params.xbegin ?? xb, params.xend ?? xe);
+    const yInterval = new 区间(params.ybegin ?? yb, params.yend ?? ye);
+    const 变换 = new 仿射变换(xInterval, yInterval);
+    变换列表.push(变换);
+  }
+  const 变换后图形列表 = 部分列表.map((part, index) =>
+    变换列表[index]!.变换笔画列表(part.获取笔画列表()),
+  );
+  const 合并图形 = 合并笔画顺序(变换后图形列表, strokes);
+  return new 图形盒子(合并图形);
 }
 
 export const 生成字形起始点 = 0xe_0000;

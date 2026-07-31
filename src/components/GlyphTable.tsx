@@ -2,7 +2,7 @@ import { Button, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import type { 基本字形数据, 字形数据, 字符 } from "hanzi-chai";
-import { 是用户字形 } from "hanzi-chai";
+import { isVectorStroke, 是用户字形 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { type ReactElement, useMemo, useState } from "react";
 import { createGlyph, removeGlyph, replaceGlyph, updateGlyph } from "~/api";
@@ -17,7 +17,6 @@ import {
   远程原子,
 } from "~/atoms";
 import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/utils";
-import 拓扑排序ID列表 from "../../public/data/0.4.0/toposorted-glyph-ids.json";
 import BorderItem from "./BorderItem";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
@@ -25,10 +24,6 @@ import GlyphForm from "./GlyphForm";
 import GlyphSelect from "./GlyphSelect";
 import { StrokesView } from "./GlyphView";
 import { CharacterDisplay, DeleteButton } from "./Utils";
-
-// 构建 ID → 拓扑排序位置的映射，用于快速查找和排序
-const 拓扑排序ID集合 = new Set(拓扑排序ID列表);
-const 拓扑排序位置 = new Map(拓扑排序ID列表.map((id, i) => [id, i]));
 
 const CreateGlyph = () => {
   const 远程 = useAtomValue(远程原子);
@@ -43,7 +38,8 @@ const CreateGlyph = () => {
         if (远程) {
           const res = await createGlyph(record);
           if (!errorFeedback(res)) {
-            set可编辑字形列表([...可编辑字形列表, record]);
+            const recordWithID = { ...record, id: res };
+            set可编辑字形列表([...可编辑字形列表, recordWithID]);
           }
         } else {
           const recordWithID = { ...record, id: 下一个字形ID };
@@ -87,11 +83,7 @@ const ReplaceGlyph = ({ id }: { id: number }) => {
     <Popconfirm
       title={`将所有对字形 ${id} 的引用替换为：`}
       description={
-        <GlyphSelect
-          value={newId}
-          onChange={setNewId}
-          style={{ width: 160 }}
-        />
+        <GlyphSelect value={newId} onChange={setNewId} style={{ width: 160 }} />
       }
       onConfirm={async () => {
         if (newId === undefined || newId === id) return;
@@ -108,17 +100,16 @@ const ReplaceGlyph = ({ id }: { id: number }) => {
           })),
         );
         set可编辑字形列表(
-          可编辑字形列表
-            .map((g) =>
-              g.references
-                ? {
-                    ...g,
-                    references: g.references.map((r) =>
-                      r.id === id ? { ...r, id: newId } : r,
-                    ),
-                  }
-                : g,
-            ),
+          可编辑字形列表.map((g) =>
+            g.references
+              ? {
+                  ...g,
+                  references: g.references.map((r) =>
+                    r.id === id ? { ...r, id: newId } : r,
+                  ),
+                }
+              : g,
+          ),
         );
       }}
       onCancel={() => setNewId(undefined)}
@@ -188,20 +179,12 @@ export default function GlyphTable() {
     const 过滤器 = new 字符字形过滤器(filter);
     const result: 字形数据[] = [];
     for (const 字形 of 统一字形列表) {
-      // 只显示拓扑排序中的字形（部件 + 部件可达的复合体）
-      if (!拓扑排序ID集合.has(字形.id)) continue;
       const 真字形 = 字库.获取字形(字形.id);
       if (!真字形) continue;
       if (过滤器.过滤字形(真字形)) {
         result.push(字形);
       }
     }
-    // 按拓扑排序顺序排列：基础字形在前，引用其他字形的在后
-    result.sort(
-      (a, b) =>
-        (拓扑排序位置.get(a.id) ?? Infinity) -
-        (拓扑排序位置.get(b.id) ?? Infinity),
-    );
     return result;
   }, [统一字形列表, 字库, filter]);
 
@@ -260,7 +243,7 @@ export default function GlyphTable() {
       render: (_, record) => {
         const summaries: string[] = [];
         for (const stroke of record.strokes ?? []) {
-          if ("feature" in stroke) {
+          if (isVectorStroke(stroke)) {
             summaries.push(stroke.feature);
           } else {
             summaries.push(

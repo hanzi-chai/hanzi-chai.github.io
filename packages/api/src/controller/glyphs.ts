@@ -1,7 +1,8 @@
-import type { 字形数据, 结构描述字符 } from "hanzi-chai";
+import type { 字形数据, 字符数据, 结构描述字符 } from "hanzi-chai";
 import type { IRequest } from "itty-router";
 import type { Env } from "../dto/context";
 import { Err, ErrCode } from "../error/error";
+import type { 字符模型 } from "./characters";
 
 const table = "glyphs";
 
@@ -59,6 +60,18 @@ export async function Info(request: IRequest, env: Env) {
   return 转数据(res);
 }
 
+async function getNextId(env: Env): Promise<number> {
+  const allIDs = await env.CHAI.prepare(`SELECT id FROM ${table}`).all<{
+    id: number;
+  }>();
+  const idSet = new Set(allIDs.results.map((item) => item.id));
+  let id = 1;
+  while (idSet.has(id)) {
+    id++;
+  }
+  return id;
+}
+
 /** POST:/glyphs */
 export async function Create(request: IRequest, env: Env) {
   let body: any;
@@ -67,8 +80,9 @@ export async function Create(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { id, type, operator, references, strokes, gf0014_id, gf3001_id } =
+  const { type, operator, references, strokes, gf0014_id, gf3001_id } =
     转模型(body);
+  const id = await getNextId(env);
   try {
     await env.CHAI.prepare(
       `INSERT INTO ${table} (id, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -155,34 +169,45 @@ export async function Update(request: IRequest, env: Env) {
   return true;
 }
 
+async function prepareReferenceSet(env: Env): Promise<Set<number>> {
+  // 检查是否被 characters 表的 glyphs 字段引用
+  const allCharacters = await env.CHAI.prepare(
+    `SELECT * FROM characters`,
+  ).all<字符模型>();
+
+  // 检查是否被 glyphs 表的 references 字段引用
+  const allGlyphs = await env.CHAI.prepare(
+    `SELECT * from ${table}`,
+  ).all<字形模型>();
+
+  const referenceSet = new Set<number>();
+  for (const character of allCharacters.results) {
+    const glyphs = JSON.parse(character.glyphs) as 字符数据["glyphs"];
+    for (const glyph of glyphs) {
+      referenceSet.add(glyph.id);
+    }
+  }
+  for (const glyph of allGlyphs.results) {
+    if (!glyph.references) continue;
+    const references =
+      (JSON.parse(glyph.references) as 字形数据["references"]) ?? [];
+    for (const ref of references) {
+      referenceSet.add(ref.id);
+    }
+  }
+  return referenceSet;
+}
+
 /** DELETE:/glyphs/:id */
 export async function Delete(request: IRequest, env: Env) {
   const id = parseInt(request.params.id, 10);
   if (!Number.isInteger(id)) return new Err(ErrCode.ParamInvalid, "ID不正确");
 
-  // 检查是否被 characters 表的 glyphs 字段引用
-  const charRef = await env.CHAI.prepare(
-    `SELECT unicode FROM characters WHERE glyphs LIKE ? OR glyphs LIKE ? LIMIT 1`,
-  )
-    .bind(`%"id":${id},%`, `%"id":${id}}%`)
-    .first<{ unicode: number }>();
-  if (charRef) {
+  const referenceSet = await prepareReferenceSet(env);
+  if (referenceSet.has(id)) {
     return new Err(
       ErrCode.DataDeleteFailed,
-      `无法删除：字形 ${id} 被字符 U+${charRef.unicode.toString(16).toUpperCase().padStart(4, "0")} 引用`,
-    );
-  }
-
-  // 检查是否被 glyphs 表的 references 字段引用
-  const glyphRef = await env.CHAI.prepare(
-    `SELECT id FROM glyphs WHERE (\`references\` LIKE ? OR \`references\` LIKE ?) AND id != ? LIMIT 1`,
-  )
-    .bind(`%"id":${id},%`, `%"id":${id}}%`, id)
-    .first<{ id: number }>();
-  if (glyphRef) {
-    return new Err(
-      ErrCode.DataDeleteFailed,
-      `无法删除：字形 ${id} 被字形 ${glyphRef.id} 引用`,
+      "删除失败：该字形被其他字形或字符引用",
     );
   }
 
@@ -192,6 +217,40 @@ export async function Delete(request: IRequest, env: Env) {
     return new Err(
       ErrCode.DataDeleteFailed,
       `删除失败（${(err as Error).message}）`,
+    );
+  }
+  return true;
+}
+
+export async function DeleteBatch(request: IRequest, env: Env) {
+  let body: { ids: number[] };
+  try {
+    body = await request.json();
+  } catch (err) {
+    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
+  }
+  const { ids } = body;
+  if (!Array.isArray(ids) || !ids.every((id) => Number.isInteger(id))) {
+    return new Err(ErrCode.ParamInvalid, "ID列表不正确");
+  }
+
+  const referenceSet = await prepareReferenceSet(env);
+  for (const id of ids) {
+    if (referenceSet.has(id)) {
+      return new Err(
+        ErrCode.DataDeleteFailed,
+        `删除失败：字形 ${id} 被其他字形或字符引用`,
+      );
+    }
+  }
+
+  try {
+    const statement = env.CHAI.prepare(`DELETE FROM ${table} WHERE id=?`);
+    await env.CHAI.batch(ids.map((id) => statement.bind(id)));
+  } catch (err) {
+    return new Err(
+      ErrCode.DataDeleteFailed,
+      `批量删除失败（${(err as Error).message}）`,
     );
   }
   return true;
@@ -223,7 +282,9 @@ export async function ReplaceId(request: IRequest, env: Env) {
     );
     const batch = chars
       .map((c) => {
-        const parsed: { id: number; sources: string[] }[] = JSON.parse(c.glyphs);
+        const parsed: { id: number; sources: string[] }[] = JSON.parse(
+          c.glyphs,
+        );
         let changed = false;
         for (const item of parsed) {
           if (item.id === oldId) {
@@ -249,8 +310,13 @@ export async function ReplaceId(request: IRequest, env: Env) {
     );
     const batch = glyphs
       .map((g) => {
-        const parsed: { id: number; xbegin?: number; ybegin?: number; xend?: number; yend?: number }[] =
-          JSON.parse(g.references);
+        const parsed: {
+          id: number;
+          xbegin?: number;
+          ybegin?: number;
+          xend?: number;
+          yend?: number;
+        }[] = JSON.parse(g.references);
         let changed = false;
         for (const item of parsed) {
           if (item.id === oldId) {

@@ -7,7 +7,6 @@
  */
 
 import { mkdirSync, writeFileSync } from "fs";
-import { 生成字形数据 } from "hanzi-chai";
 import pako from "pako";
 import { listCharacters, listGlyphs } from "../src/api";
 import { getLocalDataPath, VERSION } from "./version.js";
@@ -35,10 +34,9 @@ const glyphs = await listGlyphs();
 if ("err" in characters || "err" in glyphs) {
   throw new Error("无法从 API 获取数据，请检查网络连接或 API 状态。");
 }
-const resolvedGlyphs = 生成字形数据(glyphs);
 
 saveCompressedJson("characters", characters, true);
-saveCompressedJson("glyphs", resolvedGlyphs, true);
+saveCompressedJson("glyphs", glyphs, true);
 
 for (const filename of [
   "cjk",
@@ -56,7 +54,7 @@ for (const filename of [
     writeFileSync(`${nodeOutputDir}/${filename}.txt`, text);
     writeFileSync(`${webOutputDir}/${filename}.txt`, text);
     console.log(`已下载 ${filename}.txt`);
-  } catch (error) {
+  } catch {
     console.warn(`跳过 ${filename}.txt（服务器上不存在或者不可用）`);
   }
 }

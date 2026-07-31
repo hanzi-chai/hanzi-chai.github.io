@@ -9,8 +9,8 @@ import {
   原始字库,
   type 原始词典,
   合并拼写运算,
+  type 图形盒子,
   type 基本字形数据,
-  type 字形数据,
   type 字符,
   type 字符数据,
   序列化强类型决策,
@@ -26,12 +26,10 @@ import {
   构建强类型自定义分析,
   添加优先简码,
   生成,
-  生成字形数据,
   用户字形终止点,
   用户字形起始点,
   用户字符终止点,
   用户字符起始点,
-  type 矢量笔画数据,
   type 码表条目,
   组装,
   type 组装条目,
@@ -90,12 +88,7 @@ export const 字形列表原子 = atom(
 
 export const 可编辑字符列表原子 = atom([] as 字符数据[]);
 
-export const 可编辑字形列表原子 = atom([] as 字形数据[]);
-
-export const 生成字形列表原子 = atom((get) => {
-  const 可编辑字形列表 = get(可编辑字形列表原子);
-  return 生成字形数据(可编辑字形列表);
-});
+export const 可编辑字形列表原子 = atom([] as 基本字形数据[]);
 
 export const 默认原始词典原子 = atom((): 原始词典 => get预加载数据().原始词典);
 
@@ -165,8 +158,8 @@ export const 原始字库原子 = atom((get) => {
   const 远程 = get(远程原子);
   if (远程) {
     const 字符列表 = get(可编辑字符列表原子);
-    const 字形列表 = get(生成字形列表原子);
-    return new 原始字库(Object.values(字符列表), Object.values(字形列表));
+    const 字形列表 = get(可编辑字形列表原子);
+    return new 原始字库(字符列表, 字形列表);
   }
   const 字符列表 = get(字符列表原子);
   const 用户字符列表 = get(用户字符列表原子);
@@ -207,13 +200,13 @@ export const 字库原子 = atom((get) => {
   return 原始字库.确定(字形自定义, 变换器列表, 字形来源列表);
 });
 
-export const 矢量缓存原子 = atom((get) => {
+export const 图形盒子缓存原子 = atom((get) => {
   const 字库 = get(字库原子);
-  const 矢量笔画缓存 = new Map<number, 矢量笔画数据[]>();
+  const 图形盒子缓存 = new Map<number, 图形盒子>();
   for (const [id, 字形] of 字库.字形迭代器()) {
-    矢量笔画缓存.set(id, 字形.图形盒子.获取笔画列表());
+    图形盒子缓存.set(id, 字形.图形盒子);
   }
-  return 矢量笔画缓存;
+  return 图形盒子缓存;
 });
 
 export const 如按笔顺排序字符原子 = atom((get) => {

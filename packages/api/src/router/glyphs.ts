@@ -8,4 +8,5 @@ export const routerGlyphs = Router({ base: "/glyphs" })
   .post("/batch", glyphs.CreateBatch)
   .put("/", glyphs.ReplaceId)
   .put("/:id", glyphs.Update)
+  .delete("/", glyphs.DeleteBatch)
   .delete("/:id", glyphs.Delete);

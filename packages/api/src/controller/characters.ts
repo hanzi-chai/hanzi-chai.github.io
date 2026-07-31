@@ -5,7 +5,7 @@ import { Err, ErrCode } from "../error/error";
 
 const table = "characters";
 
-interface 字符模型 extends Pick<字符数据, "unicode"> {
+export interface 字符模型 extends Pick<字符数据, "unicode"> {
   tygf: 1 | 2 | 3 | null;
   gb2312: 1 | 2 | null;
   ambiguous: 1 | null;

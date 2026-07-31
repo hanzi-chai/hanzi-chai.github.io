@@ -175,48 +175,6 @@ const Control = ({ stroke, strokeIndex, setIndex }: ControlProps) => {
   );
 };
 
-const Rectangles = ({
-  stroke,
-  strokeWidth,
-}: {
-  stroke: 矢量笔画数据;
-  strokeWidth: number;
-}) => {
-  const { curveList } = new 笔画图形(stroke);
-  const firstCommand = stroke.curveList[0]?.command;
-  const lastCommand = stroke.curveList.at(-1)?.command;
-  const [firstCurveStart, _] = curveList[0]!.获取起点和终点();
-  const [__, lastCurveEnd] = curveList.at(-1)!.获取起点和终点();
-  const shouldDrawFist =
-    (firstCommand === "h" || firstCommand === "v") &&
-    !stroke.feature.endsWith("提");
-  const shouldDrawLast =
-    (lastCommand === "h" || lastCommand === "v") &&
-    !stroke.feature.endsWith("提");
-  return (
-    <>
-      {shouldDrawFist && (
-        <rect
-          fill="currentColor"
-          x={firstCurveStart[0] - strokeWidth / 2}
-          y={firstCurveStart[1] - strokeWidth / 2}
-          width={strokeWidth}
-          height={strokeWidth}
-        />
-      )}
-      {shouldDrawLast && (
-        <rect
-          fill="currentColor"
-          x={lastCurveEnd[0] - strokeWidth / 2}
-          y={lastCurveEnd[1] - strokeWidth / 2}
-          width={strokeWidth}
-          height={strokeWidth}
-        />
-      )}
-    </>
-  );
-};
-
 const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [index, setIndex] = useState<PointIndex | null>(null);
@@ -292,12 +250,12 @@ const StrokesView = ({ glyph, setGlyph, displayMode }: StrokesViewProps) => {
       {strokes.map((stroke, strokeIndex) => {
         return (
           <g key={strokeIndex}>
-            <Rectangles stroke={stroke} strokeWidth={strokeWidth} />
             <path
               d={processPath(stroke)}
               stroke="currentColor"
               strokeWidth={strokeWidth}
-              fill="none"
+              fill="transparent"
+              strokeLinecap="square"
             />
             {setGlyph && (
               <Control

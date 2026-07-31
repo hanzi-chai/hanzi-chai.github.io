@@ -15,6 +15,7 @@ export type 绘制 =
       command: "h" | "v";
       parameterList: N1;
     }
+  | { command: "l"; parameterList: N2 }
   | {
       command: "c" | "z";
       parameterList: N6;

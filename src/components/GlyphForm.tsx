@@ -16,14 +16,14 @@ import { Button, Dropdown, Flex, Input, Typography } from "antd";
 import type { BaseOptionType } from "antd/es/select";
 import {
   isVectorStroke,
-  transformRefStrokes,
-  合并笔画顺序,
+  仿射合并,
+  切片,
   图形盒子,
+  type 基本字形数据,
   type 字形数据,
   type 引用数据,
   type 引用笔画块数据,
   模拟矢量笔画,
-  type 矢量图形数据,
   type 矢量笔画数据,
   type 笔画名称,
   笔画表示方式,
@@ -31,7 +31,7 @@ import {
 import { useAtomValue } from "jotai";
 import type { MutableRefObject, ReactElement, ReactNode } from "react";
 import { useRef, useState } from "react";
-import { 矢量缓存原子 } from "~/atoms";
+import { 图形盒子缓存原子 } from "~/atoms";
 import { 数字 } from "~/utils";
 import GlyphSelect from "./GlyphSelect";
 import { Box, StrokesView } from "./GlyphView";
@@ -93,7 +93,7 @@ const StrokeForm = ({
   formRef: MutableRefObject<ProFormInstance | undefined>;
   meta: FormListFieldData;
 }) => {
-  const 矢量缓存 = useAtomValue(矢量缓存原子);
+  const 矢量缓存 = useAtomValue(图形盒子缓存原子);
   const referenceOptions: BaseOptionType[] = (references ?? []).map((x) => ({
     key: x.id,
     value: x.id,
@@ -175,21 +175,14 @@ const StrokeForm = ({
               onClick={() => {
                 const form = formRef.current;
                 if (!form) return;
-                const strokes: (矢量笔画数据 | 引用笔画块数据)[] =
-                  form.getFieldValue("strokes") ?? [];
+                const glyph: 字形数据 = form.getFieldsValue();
+                const strokes = glyph.strokes ?? [];
                 const stroke = strokes[meta.name];
                 if (stroke === undefined || isVectorStroke(stroke)) return;
+                const 渲染结果 = 临时渲染(glyph, 矢量缓存).获取笔画列表();
                 const newStrokes = structuredClone(strokes);
-                const references: 引用数据[] =
-                  form.getFieldValue("references") ?? [];
-                const ref = references[stroke.index];
-                if (!ref) return;
-                const refStrokes = 矢量缓存.get(ref.id);
-                if (!refStrokes) return;
-                const from = stroke.from ?? 0;
-                const to = (stroke.to ?? refStrokes.length - 1) + 1;
-                newStrokes.splice(meta.name, 1, ...refStrokes.slice(from, to));
-                formRef.current?.setFieldValue(["strokes"], newStrokes);
+                newStrokes.splice(meta.name, 1, ...切片(渲染结果, stroke));
+                formRef.current?.setFieldValue("strokes", newStrokes);
               }}
             >
               快照
@@ -202,57 +195,14 @@ const StrokeForm = ({
 };
 
 function 临时渲染(
-  glyph: 字形数据,
-  矢量缓存: Map<number, 矢量笔画数据[]>,
+  字形: 字形数据,
+  图形盒子缓存: Map<number, 图形盒子>,
 ): 图形盒子 {
-  const refs = glyph.references ?? [];
-
-  // 复合体或带结构描述字符的部件：按操作符对各部分做仿射变换后合并
-  if (glyph.type === "compound" || glyph.operator) {
-    const operator = glyph.operator ?? "⿰";
-    const partsStrokes: 矢量图形数据[] = [];
-    for (const [i, ref] of refs.entries()) {
-      const strokes = 矢量缓存.get(ref.id);
-      if (strokes) {
-        partsStrokes.push(transformRefStrokes(strokes, ref, operator, i));
-      }
-    }
-
-    // 提取笔顺信息（仅引用笔画块，过滤掉内联矢量笔画）
-    let orderStrokes: 引用笔画块数据[] | undefined;
-    if (glyph.strokes) {
-      const filtered = glyph.strokes.filter(
-        (s) => !isVectorStroke(s),
-      ) as 引用笔画块数据[];
-      if (filtered.length > 0) orderStrokes = filtered;
-    }
-
-    const merged = 合并笔画顺序(partsStrokes, orderStrokes);
-    return 图形盒子.从笔画列表构建(merged);
-  }
-
-  // 普通部件：按 strokes 顺序逐条处理，内联笔画直接保留，引用块查缓存后切片
-  const result: 矢量笔画数据[] = [];
-  const strokes =
-    glyph.strokes ??
-    refs.map((_, i) => ({ index: i, from: undefined, to: undefined }));
-
-  for (const stroke of strokes) {
-    if (isVectorStroke(stroke)) {
-      result.push(stroke);
-    } else {
-      const ref = refs[stroke.index];
-      if (!ref) continue;
-      const refStrokes = 矢量缓存.get(ref.id);
-      if (!refStrokes) continue;
-      const transformed = transformRefStrokes(refStrokes, ref);
-      const from = stroke.from ?? 0;
-      const to = (stroke.to ?? refStrokes.length - 1) + 1;
-      result.push(...transformed.slice(from, to));
-    }
-  }
-
-  return 图形盒子.从笔画列表构建(result);
+  const 引用列表 = 字形.references ?? [];
+  const 部分列表 = 引用列表.map(
+    (x) => 图形盒子缓存.get(x.id) ?? new 图形盒子(),
+  );
+  return 仿射合并(部分列表, 引用列表, 字形.operator, 字形.strokes);
 }
 
 export default function GlyphForm({
@@ -264,13 +214,13 @@ export default function GlyphForm({
 }: {
   trigger: ReactElement;
   initialValues: 字形数据;
-  onFinish: (c: 字形数据) => Promise<boolean>;
+  onFinish: (c: 基本字形数据) => Promise<boolean>;
   readonly?: boolean;
   initialChar?: string;
 }) {
   const formRef = useRef<ProFormInstance>(undefined);
   const [fontChar, setFontChar] = useState<string | undefined>(undefined);
-  const 矢量缓存 = useAtomValue(矢量缓存原子);
+  const 矢量缓存 = useAtomValue(图形盒子缓存原子);
 
   const setGlyph = (glyph: 矢量笔画数据[]) => {
     const prevStrokes: (矢量笔画数据 | 引用笔画块数据)[] =
@@ -287,11 +237,9 @@ export default function GlyphForm({
       } else {
         const ref = references[stroke.index];
         if (!ref) continue;
-        const refStrokes = 矢量缓存.get(ref.id);
+        const refStrokes = 矢量缓存.get(ref.id)?.获取笔画列表();
         if (!refStrokes) continue;
-        const from = stroke.from ?? 0;
-        const to = (stroke.to ?? refStrokes.length - 1) + 1;
-        count += to - from;
+        count += 切片(refStrokes, stroke).length;
       }
     }
     formRef.current?.setFieldValue("strokes", strokes);
@@ -317,7 +265,19 @@ export default function GlyphForm({
       omitNil={true}
       trigger={trigger}
       initialValues={initialValues}
-      onFinish={onFinish}
+      onFinish={(glyph) => {
+        if (glyph.type === "compound") return onFinish(glyph);
+        const strokes = 临时渲染(glyph, 矢量缓存).获取笔画列表();
+        return onFinish({
+          id: glyph.id,
+          gf0014_id: glyph.gf0014_id,
+          gf3001_id: glyph.gf3001_id,
+          type: "component",
+          strokes,
+          operator: undefined,
+          references: undefined,
+        });
+      }}
       readonly={readonly}
       submitter={readonly ? false : undefined}
       modalProps={{
@@ -362,6 +322,7 @@ export default function GlyphForm({
                 { label: "复合体", value: "compound" },
               ]}
               className="w-16"
+              allowClear={false}
             />
             <ProFormItem label="结构" name="operator">
               <OperatorSelect className="w-24" allowClear />
@@ -373,10 +334,34 @@ export default function GlyphForm({
               <ProFormItem name="id">
                 <GlyphSelect />
               </ProFormItem>
-              <ProFormDigit name="xbegin" label="x0" width={56} />
-              <ProFormDigit name="ybegin" label="y0" width={56} />
-              <ProFormDigit name="xend" label="x1" width={56} />
-              <ProFormDigit name="yend" label="y1" width={56} />
+              <ProFormDigit
+                name="xbegin"
+                label="x0"
+                width={56}
+                min={-100}
+                max={200}
+              />
+              <ProFormDigit
+                name="ybegin"
+                label="y0"
+                width={56}
+                min={-100}
+                max={200}
+              />
+              <ProFormDigit
+                name="xend"
+                label="x1"
+                width={56}
+                min={-100}
+                max={200}
+              />
+              <ProFormDigit
+                name="yend"
+                label="y1"
+                width={56}
+                min={-100}
+                max={200}
+              />
             </ProFormGroup>
           </ProFormList>
           <Typography.Title level={5}>笔画</Typography.Title>
@@ -386,7 +371,7 @@ export default function GlyphForm({
             alwaysShowItemLabel
           >
             {(meta) => (
-              <StrokeForm maxIndex={10} formRef={formRef} meta={meta} />
+              <StrokeForm maxIndex={12} formRef={formRef} meta={meta} />
             )}
           </ProFormListMovable>
           <Flex justify="center" gap="middle">
