@@ -9,7 +9,7 @@
 import { mkdirSync, writeFileSync } from "fs";
 import pako from "pako";
 import { listCharacters, listGlyphs } from "../src/api";
-import { getLocalDataPath, VERSION } from "./version.js";
+import { getLocalDataPath, VERSION } from "./utils.js";
 
 function saveCompressedJson(filename: string, data: unknown, debug = false) {
   const jsonString = JSON.stringify(data);

@@ -8,4 +8,6 @@ export const routerCharacters = Router({ base: "/characters" })
   .post("/batch", characters.CreateBatch)
   .put("/batch", characters.UpdateBatch)
   .put("/:unicode", characters.Update)
+  .delete("/", characters.DeleteAll)
+  .delete("/batch", characters.DeleteBatch)
   .delete("/:unicode", characters.Delete);

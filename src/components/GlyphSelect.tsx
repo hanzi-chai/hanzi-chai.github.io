@@ -2,9 +2,9 @@ import { Select } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 import type { SelectProps } from "antd/lib";
 import { type IDVariable, 部件 } from "hanzi-chai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAtomValue, 字库原子 } from "~/atoms";
-import { StrokesView } from "./GlyphView";
+import GlyphView from "./GlyphView";
 
 type GlyphValue = number | IDVariable;
 
@@ -21,6 +21,25 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
   const 字库 = useAtomValue(字库原子);
   const [options, setOptions] = useState<DefaultOptionType[]>([]);
 
+  useEffect(() => {
+    if (typeof value !== "number") return;
+    const 字形 = 字库.获取字形(value);
+    if (!字形) return;
+    setOptions([
+      {
+        value: value,
+        label: (
+          <span>
+            <GlyphView glyph={字形.图形盒子} />
+            <span className="text-xs">
+              ({value}, {字形 instanceof 部件 ? "部件" : "复合体"})
+            </span>
+          </span>
+        ),
+      },
+    ]);
+  }, [value, 字库]);
+
   return (
     <Select
       {...rest}
@@ -34,6 +53,9 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
         if (input.length === 0) {
           setOptions([]);
           return;
+        } else if (!/^\d+$/.test(input)) {
+          setOptions([]);
+          return;
         }
         const 选项笔顺列表: (DefaultOptionType & { strokes: string })[] = [];
         for (const [id, 字形] of 字库.字形迭代器()) {
@@ -44,7 +66,7 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
               strokes: 字形.标准笔顺,
               label: (
                 <span>
-                  <StrokesView glyph={字形.图形盒子} />
+                  <GlyphView glyph={字形.图形盒子} />
                   <span className="text-xs">
                     ({id}, {typename})
                   </span>

@@ -32,7 +32,7 @@ import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
 import GlyphAlgebraForm from "./GlyphAlgebraForm";
 import { EditOrRedrawGraph } from "./GlyphTable";
-import { StrokesView } from "./GlyphView";
+import GlyphView from "./GlyphView";
 import PatchForm from "./PatchForm";
 import SourceSelect from "./SourceSelect";
 import { BoxedElementWithTooltip, DeleteButton } from "./Utils";
@@ -213,7 +213,7 @@ export default function CharacterTable() {
                   record={统一字形映射.get(id)!}
                   trigger={
                     <BorderItem>
-                      <StrokesView glyph={字库.获取字形(id)!.图形盒子} />
+                      <GlyphView glyph={字库.获取字形(id)!.图形盒子} />
                     </BorderItem>
                   }
                   initialChar={character.character.获取名称()}
@@ -248,7 +248,7 @@ export default function CharacterTable() {
             <span key={index}>
               {symbol[patch.type]} ({patch.sources.join(", ")}){" "}
               {patch.type === "delete" ? null : (
-                <StrokesView
+                <GlyphView
                   glyph={字库.获取字形(patch.id)?.图形盒子 ?? new 图形盒子()}
                 />
               )}

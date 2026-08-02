@@ -20,7 +20,7 @@ import {
   自定义拆分原子,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
-import { StrokesView } from "./GlyphView";
+import GlyphView from "./GlyphView";
 import {
   BoxedElementWithTooltip,
   DeleteButton,
@@ -173,7 +173,7 @@ export default function ResultSummary({
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
-        <StrokesView glyph={glyph.图形盒子} />
+        <GlyphView glyph={glyph.图形盒子} />
         {字根序列.map((x, index) => {
           const element = x instanceof 部件字根 ? x.字符 : x;
           return (

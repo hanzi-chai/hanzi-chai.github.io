@@ -29,7 +29,7 @@ export default function FilterForm({ setFilter }: StrokeSearchProps) {
       <ProFormText label="名称" name="name" />
       <ProFormText label="笔画" name="sequence" />
       <ProFormSelect
-        label="包含标签"
+        label="包含来源"
         name="source"
         options={tags.map((x) => ({ label: x, value: x }))}
       />

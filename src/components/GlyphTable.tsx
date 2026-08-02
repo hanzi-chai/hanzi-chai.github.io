@@ -22,7 +22,7 @@ import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
 import GlyphForm from "./GlyphForm";
 import GlyphSelect from "./GlyphSelect";
-import { StrokesView } from "./GlyphView";
+import GlyphView from "./GlyphView";
 import { CharacterDisplay, DeleteButton } from "./Utils";
 
 const CreateGlyph = () => {
@@ -174,6 +174,24 @@ export default function GlyphTable() {
     }
     return map;
   }, [原始字库]);
+  const gf0014set = new Set(
+    Array(514)
+      .keys()
+      .map((x) => x + 1),
+  );
+  const gf3001set = new Set(
+    Array(560)
+      .keys()
+      .map((x) => x + 1),
+  );
+  for (const 字形 of 统一字形列表) {
+    if (字形.gf0014_id) {
+      gf0014set.delete(字形.gf0014_id);
+    }
+    if (字形.gf3001_id) {
+      gf3001set.delete(字形.gf3001_id);
+    }
+  }
 
   const dataSource = useMemo(() => {
     const 过滤器 = new 字符字形过滤器(filter);
@@ -185,7 +203,11 @@ export default function GlyphTable() {
         result.push(字形);
       }
     }
-    return result;
+    return result.sort(
+      (a, b) =>
+        字库.获取字形(a.id)!.标准笔顺.length -
+        字库.获取字形(b.id)!.标准笔顺.length,
+    );
   }, [统一字形列表, 字库, filter]);
 
   const columns: ColumnsType<字形数据 | 基本字形数据> = [
@@ -198,9 +220,7 @@ export default function GlyphTable() {
         const 图形 = 字库.获取字形(record.id)?.图形盒子;
         return (
           <Flex className="flex-nowrap items-center gap-2">
-            <BorderItem>
-              {图形 ? <StrokesView glyph={图形} /> : null}
-            </BorderItem>
+            <BorderItem>{图形 ? <GlyphView glyph={图形} /> : null}</BorderItem>
             {record.id}
           </Flex>
         );
@@ -231,8 +251,24 @@ export default function GlyphTable() {
     },
     {
       title: "引用",
-      render: (_, record) =>
-        (record.references ?? []).map((x) => x.id).join(", "),
+      render: (_, record) => {
+        const ids = (record.references ?? []).map((x) => x.id);
+        return (
+          <Flex>
+            {ids.map((id) => {
+              const 字形 = 字库.获取字形(id);
+              if (!字形) return null;
+              return (
+                <Tooltip key={id} title={`ID: ${id}`}>
+                  <BorderItem>
+                    <GlyphView glyph={字形.图形盒子} />
+                  </BorderItem>
+                </Tooltip>
+              );
+            })}
+          </Flex>
+        );
+      },
       sorter: (a, b) =>
         (a.references?.length ?? 0) - (b.references?.length ?? 0),
       width: 80,

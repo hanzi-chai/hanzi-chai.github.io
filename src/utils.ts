@@ -179,8 +179,11 @@ export class 字符字形过滤器 {
   }
 
   过滤字形(glyph: 字形) {
-    const { operator, part } = this.过滤条件;
+    const { unicode, operator, part } = this.过滤条件;
     let result = true;
+    if (unicode) {
+      result &&= unicode === glyph.id.toString()
+    }
     if (this.sequenceRegex !== undefined) {
       result &&= this.sequenceRegex!.test(glyph.标准笔顺);
     }

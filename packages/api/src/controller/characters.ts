@@ -178,3 +178,34 @@ export async function Delete(request: IRequest, env: Env) {
   }
   return true;
 }
+
+export async function DeleteBatch(request: IRequest, env: Env) {
+  let body: { unicodes: number[] };
+  try {
+    body = await request.json();
+  } catch (err) {
+    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
+  }
+  try {
+    const statement = env.CHAI.prepare(`DELETE FROM ${table} WHERE unicode=?`);
+    await env.CHAI.batch(body.unicodes.map((unicode) => statement.bind(unicode)));
+  } catch (err) {
+    return new Err(
+      ErrCode.DataDeleteFailed,
+      `批量删除失败（${(err as Error).message}）`,
+    );
+  }
+  return true;
+}
+
+export async function DeleteAll(_request: IRequest, env: Env) {
+  try {
+    await env.CHAI.prepare(`DELETE FROM ${table}`).run();
+  } catch (err) {
+    return new Err(
+      ErrCode.DataDeleteFailed,
+      `删除所有字符失败（${(err as Error).message}）`,
+    );
+  }
+  return true;
+}

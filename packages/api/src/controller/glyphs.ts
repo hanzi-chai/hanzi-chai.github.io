@@ -60,7 +60,7 @@ export async function Info(request: IRequest, env: Env) {
   return 转数据(res);
 }
 
-async function getNextId(env: Env): Promise<number> {
+async function getNextId(type: 字形模型["type"], env: Env): Promise<number> {
   const allIDs = await env.CHAI.prepare(`SELECT id FROM ${table}`).all<{
     id: number;
   }>();
@@ -82,7 +82,7 @@ export async function Create(request: IRequest, env: Env) {
   }
   const { type, operator, references, strokes, gf0014_id, gf3001_id } =
     转模型(body);
-  const id = await getNextId(env);
+  const id = await getNextId(type, env);
   try {
     await env.CHAI.prepare(
       `INSERT INTO ${table} (id, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -164,6 +164,40 @@ export async function Update(request: IRequest, env: Env) {
     return new Err(
       ErrCode.DataUpdateFailed,
       `更新失败（${(err as Error).message}）`,
+    );
+  }
+  return true;
+}
+
+export async function UpdateBatch(request: IRequest, env: Env) {
+  let body: any[];
+  try {
+    body = await request.json();
+  } catch (err) {
+    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
+  }
+  try {
+    const statement = env.CHAI.prepare(
+      `UPDATE ${table} SET type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
+    );
+    await env.CHAI.batch(
+      body.map((item: any) => {
+        const { id, type, operator, references, strokes, gf0014_id, gf3001_id } = 转模型(item);
+        return statement.bind(
+          type,
+          operator,
+          references,
+          strokes,
+          gf0014_id,
+          gf3001_id,
+          id
+        );
+      }),
+    );
+  } catch (err) {
+    return new Err(
+      ErrCode.DataUpdateFailed,
+      `批量更新失败（${(err as Error).message}）`,
     );
   }
   return true;
@@ -251,6 +285,18 @@ export async function DeleteBatch(request: IRequest, env: Env) {
     return new Err(
       ErrCode.DataDeleteFailed,
       `批量删除失败（${(err as Error).message}）`,
+    );
+  }
+  return true;
+}
+
+export async function DeleteAll(_request: IRequest, env: Env) {
+  try {
+    await env.CHAI.prepare(`DELETE FROM ${table}`).run();
+  } catch (err) {
+    return new Err(
+      ErrCode.DataDeleteFailed,
+      `删除所有字形失败（${(err as Error).message}）`,
     );
   }
   return true;

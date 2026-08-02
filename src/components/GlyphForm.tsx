@@ -34,10 +34,10 @@ import { useRef, useState } from "react";
 import { 图形盒子缓存原子 } from "~/atoms";
 import { 数字 } from "~/utils";
 import GlyphSelect from "./GlyphSelect";
-import { Box, StrokesView } from "./GlyphView";
+import GlyphView from "./GlyphView";
 import OperatorSelect from "./OperatorSelect";
 import ProFormListMovable from "./ProFormListMovable";
-import { EditorColumn, EditorRow } from "./Utils";
+import { Box, EditorColumn, EditorRow } from "./Utils";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={56} name={name} fieldProps={{ min: -100, max: 100 }} />
@@ -76,10 +76,10 @@ const strokeOptions = Object.keys(笔画表示方式).map((x) => ({
 }));
 const classifiedStrokeOptions: BaseOptionType[] = [
   { key: 0, label: "横竖", children: strokeOptions.slice(0, 4) },
-  { key: 1, label: "撇点", children: strokeOptions.slice(4, 11) },
-  { key: 2, label: "折类 I", children: strokeOptions.slice(11, 24) },
-  { key: 3, label: "折类 II", children: strokeOptions.slice(24, 31) },
-  { key: 4, label: "折类 III", children: strokeOptions.slice(31) },
+  { key: 1, label: "撇点", children: strokeOptions.slice(4, 12) },
+  { key: 2, label: "折类 I", children: strokeOptions.slice(12, 26) },
+  { key: 3, label: "折类 II", children: strokeOptions.slice(26, 34) },
+  { key: 4, label: "折类 III", children: strokeOptions.slice(34) },
 ];
 
 const StrokeForm = ({
@@ -177,11 +177,38 @@ const StrokeForm = ({
                 if (!form) return;
                 const glyph: 字形数据 = form.getFieldsValue();
                 const strokes = glyph.strokes ?? [];
-                const stroke = strokes[meta.name];
-                if (stroke === undefined || isVectorStroke(stroke)) return;
-                const 渲染结果 = 临时渲染(glyph, 矢量缓存).获取笔画列表();
+                const currentStroke = strokes[meta.name];
+                if (
+                  currentStroke === undefined ||
+                  isVectorStroke(currentStroke)
+                )
+                  return;
+                const references = glyph.references ?? [];
+                const 图形 = 临时渲染(glyph, 矢量缓存).获取笔画列表();
+                let startIndex = 0;
+                for (const stroke of strokes.slice(0, meta.name)) {
+                  if (isVectorStroke(stroke)) startIndex++;
+                  else {
+                    const ref = references[stroke.index];
+                    if (!ref) continue;
+                    const refShape = 矢量缓存.get(ref.id);
+                    if (!refShape) continue;
+                    startIndex += 切片(refShape.获取笔画列表(), stroke).length;
+                  }
+                }
+                const currentRef = references[currentStroke.index];
+                if (!currentRef) return;
+                const currentShape = 矢量缓存.get(currentRef.id);
+                if (!currentShape) return;
+                const currentStrokes = currentShape.获取笔画列表();
+                const endIndex =
+                  startIndex + 切片(currentStrokes, currentStroke).length;
                 const newStrokes = structuredClone(strokes);
-                newStrokes.splice(meta.name, 1, ...切片(渲染结果, stroke));
+                newStrokes.splice(
+                  meta.name,
+                  1,
+                  ...图形.slice(startIndex, endIndex),
+                );
                 formRef.current?.setFieldValue("strokes", newStrokes);
               }}
             >
@@ -286,7 +313,7 @@ export default function GlyphForm({
       formRef={formRef}
     >
       <EditorRow>
-        <EditorColumn span={10} className="p-0!">
+        <EditorColumn span={9} className="p-0!">
           <Box>
             {fontChar && (
               <div className="absolute top-0 left-0 right-0 bottom-0 text-[348px] leading-none text-blue-400 font-extralight -z-10 font-[Noto_Sans_SC]">
@@ -299,21 +326,17 @@ export default function GlyphForm({
               {(props) => {
                 const 图形盒子 = 临时渲染(props as 字形数据, 矢量缓存);
                 return (
-                  <StrokesView
-                    glyph={图形盒子}
-                    setGlyph={setGlyph}
-                    displayMode
-                  />
+                  <GlyphView glyph={图形盒子} setGlyph={setGlyph} displayMode />
                 );
               }}
             </ProFormDependency>
           </Box>
         </EditorColumn>
-        <EditorColumn span={14}>
+        <EditorColumn span={15}>
           <Flex align="flex-start" gap="large">
-            <ProFormDigit name="id" label="id" readonly />
-            <ProFormDigit name="gf0014_id" label="GF0014" readonly />
-            <ProFormDigit name="gf3001_id" label="GF3001" readonly />
+            <ProFormDigit name="id" label="id" disabled width={64} />
+            <ProFormDigit name="gf0014_id" label="GF0014" width={64} />
+            <ProFormDigit name="gf3001_id" label="GF3001" width={64} />
             <ProFormSelect
               label="类型"
               name="type"
@@ -321,18 +344,18 @@ export default function GlyphForm({
                 { label: "部件", value: "component" },
                 { label: "复合体", value: "compound" },
               ]}
-              className="w-16"
+              width={96}
               allowClear={false}
             />
             <ProFormItem label="结构" name="operator">
-              <OperatorSelect className="w-24" allowClear />
+              <OperatorSelect className="w-16!" allowClear />
             </ProFormItem>
           </Flex>
           <Typography.Title level={5}>引用</Typography.Title>
           <ProFormList name="references" alwaysShowItemLabel>
             <ProFormGroup size="small">
               <ProFormItem name="id">
-                <GlyphSelect />
+                <GlyphSelect className="w-32!" />
               </ProFormItem>
               <ProFormDigit
                 name="xbegin"

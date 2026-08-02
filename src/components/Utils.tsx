@@ -31,7 +31,7 @@ import {
   键盘原子,
 } from "~/atoms";
 import BorderItem from "./BorderItem";
-import { StrokesView } from "./GlyphView";
+import GlyphView from "./GlyphView";
 import Item from "./Item";
 
 export const EditorRow = ({ className, ...props }: RowProps) => (
@@ -180,7 +180,7 @@ export const CharacterDisplay = ({
   }
   return (
     <span {...rest}>
-      <StrokesView glyph={图形} />
+      <GlyphView glyph={图形} />
     </span>
   );
 };
@@ -264,3 +264,9 @@ export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
     : element.十六进制();
   return <Tooltip title={title}>{core}</Tooltip>;
 };
+
+export const Box = ({ children }: { children?: React.ReactNode }) => (
+  <div className="border border-black aspect-square min-w-100 min-h-100 max-w-100 max-h-100 text-[348px] leading-none relative z-0">
+    {children}
+  </div>
+);
