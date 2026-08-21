@@ -8,25 +8,24 @@ import { Button, Dropdown, Flex } from "antd";
 import type {
   IDVariable,
   OperatorVariable,
-  原始字库,
   字形拼写运算,
   模式,
 } from "hanzi-chai";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { type ReactNode, useRef } from "react";
-import { 原始字库原子, 字形拼写运算列表原子 } from "~/atoms";
+import { 字形拼写运算列表原子 } from "~/atoms";
 import GlyphSelect from "./GlyphSelect";
 import OperatorSelect from "./OperatorSelect";
 import { MinusButton, PlusButton } from "./Utils";
 
-function serialize(模式: 模式, 原始字库: 原始字库): ReactNode {
+function serialize(模式: 模式): ReactNode {
   if (typeof 模式 === "number") return <span>{模式}</span>;
   if ("variable" in 模式)
     return "①②③④⑤⑥⑦⑧⑨⑩"[模式.variable - 1] || `{${模式.variable}}`;
   return (
     <>
       {模式.operator}
-      {模式.references.map((operand) => serialize(operand, 原始字库))}
+      {模式.references.map((operand) => serialize(operand))}
     </>
   );
 }
@@ -131,7 +130,6 @@ const 示例列表: 字形拼写运算[] = [
 
 const getDummyTransformer = (): 字形拼写运算 => {
   return {
-    type: "xform",
     from: { operator: "⿰", references: [1, 1] },
     to: { operator: "⿱", references: [1, 1] },
   };
@@ -188,7 +186,6 @@ const PatternEditor: React.FC<{
 export default function GlyphAlgebraForm() {
   const [algebra, setAlgebra] = useAtom(字形拼写运算列表原子);
   const formRef = useRef<ProFormInstance>(undefined);
-  const 原始字库 = useAtomValue(原始字库原子);
 
   return (
     <ModalForm
@@ -224,8 +221,8 @@ export default function GlyphAlgebraForm() {
               key: index,
               label: (
                 <span className="flex flex-nowrap leading-none">
-                  {示例.type}:{serialize(示例.from, 原始字库)} →{" "}
-                  {"to" in 示例 ? serialize(示例.to, 原始字库) : ""}
+                  {serialize(示例.from)} →{" "}
+                  {serialize(示例.to)}
                 </span>
               ),
             })),

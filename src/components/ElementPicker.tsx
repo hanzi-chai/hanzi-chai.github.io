@@ -1,12 +1,14 @@
 import QuestionCircleOutlined from "@ant-design/icons/QuestionCircleOutlined";
 import { Button, Cascader, Flex, Popover, Typography } from "antd";
-import type { 元素 } from "hanzi-chai";
+import { type 元素, 字符 } from "hanzi-chai";
+import { sortBy } from "lodash-es";
 import { useState } from "react";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
   useRemoveAtom,
   全部合法元素原子,
+  字库原子,
   拼写运算自定义原子,
 } from "~/atoms";
 import ElementAdder from "./ElementAdder";
@@ -78,27 +80,36 @@ export default function ElementPicker() {
     "字形",
     "字根",
   ]);
+  const 字库 = useAtomValue(字库原子);
   const elements = useAtomValueUnwrapped(全部合法元素原子);
   const {
-    字符列表: 字根,
-    二笔列表: 二笔,
-    笔画列表: 笔画,
-    结构符元素列表: 结构,
-    拼音元素映射: 字音,
-    自定义元素映射: 自定义,
+    字符列表,
+    字形列表,
+    二笔列表,
+    笔画列表,
+    结构符元素列表,
+    拼音元素映射,
+    自定义元素映射,
   } = elements;
   const [一级类型, 二级类型] = 类型列表;
   let 当前元素列表: 元素[];
   if (一级类型 === "字形") {
-    if (二级类型 === "字根") 当前元素列表 = 字根;
-    else if (二级类型 === "二笔") 当前元素列表 = 二笔;
-    else if (二级类型 === "笔画") 当前元素列表 = 笔画;
-    else if (二级类型 === "结构") 当前元素列表 = 结构;
+    if (二级类型 === "字根") {
+      当前元素列表 = sortBy([...字符列表, ...字形列表], (e) => {
+        if (e instanceof 字符) {
+          return 字库.查询字符的字形(e)?.[0]?.标准笔顺.length ?? 0;
+        } else {
+          return e.标准笔顺.length;
+        }
+      });
+    } else if (二级类型 === "二笔") 当前元素列表 = 二笔列表;
+    else if (二级类型 === "笔画") 当前元素列表 = 笔画列表;
+    else if (二级类型 === "结构") 当前元素列表 = 结构符元素列表;
     else 当前元素列表 = [];
   } else if (一级类型 === "字音") {
-    当前元素列表 = 字音.get(二级类型) ?? [];
+    当前元素列表 = 拼音元素映射.get(二级类型) ?? [];
   } else {
-    当前元素列表 = 自定义.get(二级类型) ?? [];
+    当前元素列表 = 自定义元素映射.get(二级类型) ?? [];
   }
   const options: Option[] = [
     {
@@ -112,7 +123,7 @@ export default function ElementPicker() {
     {
       value: "字音",
       label: "字音",
-      children: [...字音.keys()].map((v) => ({
+      children: [...拼音元素映射.keys()].map((v) => ({
         value: v,
         label: v,
       })),
@@ -120,11 +131,11 @@ export default function ElementPicker() {
     {
       value: "自定义",
       label: "自定义",
-      children: [...自定义.keys()].map((v) => ({
+      children: [...自定义元素映射.keys()].map((v) => ({
         value: v,
         label: v,
       })),
-      disabled: 自定义.size === 0,
+      disabled: 自定义元素映射.size === 0,
     },
   ];
   return (

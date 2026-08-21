@@ -15,17 +15,18 @@ import {
 import {
   二笔,
   type 元素,
+  复合体,
   字符,
   type 强类型元素位或编码,
   拼音元素,
   笔画,
   自定义元素,
+  部件,
 } from "hanzi-chai";
 import type { ComponentProps, MouseEventHandler } from "react";
 import {
   useAtom,
   useAtomValue,
-  别名显示原子,
   字库原子,
   当前元素原子,
   键盘原子,
@@ -157,6 +158,13 @@ export const ElementDisplay = ({
   if (element instanceof 字符) {
     return <CharacterDisplay {...rest} character={element} />;
   }
+  if (element instanceof 部件 || element instanceof 复合体) {
+    return (
+      <span {...rest}>
+        <GlyphView glyph={element.图形盒子} />
+      </span>
+    );
+  }
   return <span {...rest}>{element.获取名称()}</span>;
 };
 
@@ -170,7 +178,7 @@ export const CharacterDisplay = ({
   character: 字符;
 } & ComponentProps<"span">) => {
   const 字库 = useAtomValue(字库原子);
-  const 图形 = 字库.查询字形(character)?.[0]?.图形盒子;
+  const 图形 = 字库.查询字符的字形(character)?.[0]?.图形盒子;
   if (!character.是私用区() || 图形 === undefined) {
     return (
       <span {...rest} className={`whitespace-nowrap ${rest.className ?? ""}`}>
@@ -216,7 +224,6 @@ export const CodePositionDisplay = ({
 };
 
 export const BoxedElementWithTooltip = ({ element }: { element: 元素 }) => {
-  const display = useAtomValue(别名显示原子);
   const core = (
     <BorderItem
       onClick={() => navigator.clipboard.writeText(element.获取名称())}
@@ -225,7 +232,9 @@ export const BoxedElementWithTooltip = ({ element }: { element: 元素 }) => {
     </BorderItem>
   );
   if (element instanceof 字符 && element.是私用区())
-    return <Tooltip title={display(element)}>{core}</Tooltip>;
+    return <Tooltip title={element.获取名称()}>{core}</Tooltip>;
+  if (element instanceof 部件 || element instanceof 复合体)
+    return <Tooltip title={element.获取名称()}>{core}</Tooltip>;
   return core;
 };
 
@@ -239,15 +248,25 @@ export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
       : mapping[element.获取名称()]
         ? "link"
         : "default";
-  const display = useAtomValue(别名显示原子);
-  const text =
-    typeof element === "string" ? (
-      element
-    ) : !(element instanceof 字符) ? (
-      element.获取名称()
-    ) : (
-      <CharacterDisplay character={element} />
+  let title: React.ReactNode;
+  let text: React.ReactNode;
+  if (element instanceof 字符) {
+    text = <CharacterDisplay character={element} />;
+    title = element.是私用区()
+      ? `${element.获取名称()} ${element.十六进制()}`
+      : element.十六进制();
+  } else if (element instanceof 部件 || element instanceof 复合体) {
+    text = (
+      <span>
+        <GlyphView glyph={element.图形盒子} />
+      </span>
     );
+    title = element.获取名称();
+  } else if (typeof element === "string") {
+    text = element;
+  } else {
+    text = element.获取名称();
+  }
   const core = (
     <Item
       onClick={() =>
@@ -258,10 +277,7 @@ export const CharacterWithTooltip = ({ element }: { element: 元素 }) => {
       {text}
     </Item>
   );
-  if (!(element instanceof 字符)) return core;
-  const title = element.是私用区()
-    ? `${display(element)} ${element.十六进制()}`
-    : element.十六进制();
+  if (!title) return core;
   return <Tooltip title={title}>{core}</Tooltip>;
 };
 

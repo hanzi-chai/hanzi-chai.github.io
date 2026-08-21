@@ -1,13 +1,7 @@
 import { Checkbox, Flex, Form, Space, Tooltip } from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
-import {
-  区块列表,
-  图形盒子,
-  type 字形数据,
-  是用户字符,
-  type 校验字符数据,
-} from "hanzi-chai";
+import { 区块列表, 图形盒子, type 扩展字符数据, 是用户字符 } from "hanzi-chai";
 import { useMemo, useState } from "react";
 import { createCharacter, removeCharacter, updateCharacter } from "~/api";
 import {
@@ -15,14 +9,12 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   下一个用户字符码位原子,
-  原始字库原子,
   可编辑字符列表原子,
   如按笔顺排序字符原子,
   字库原子,
   字形来源列表原子,
   字形自定义原子,
   用户字符列表原子,
-  统一字形列表原子,
   远程原子,
 } from "~/atoms";
 import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/utils";
@@ -30,7 +22,6 @@ import BorderItem from "./BorderItem";
 import CharacterForm from "./CharacterForm";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
-import GlyphAlgebraForm from "./GlyphAlgebraForm";
 import { EditOrRedrawGraph } from "./GlyphTable";
 import GlyphView from "./GlyphView";
 import PatchForm from "./PatchForm";
@@ -86,7 +77,7 @@ const DeleteCharacter = ({ unicode }: { unicode: number }) => {
   );
 };
 
-const EditOrPatchCharacter = ({ record }: { record: 校验字符数据 }) => {
+const EditOrPatchCharacter = ({ record }: { record: 扩展字符数据 }) => {
   const 远程 = useAtomValue(远程原子);
   const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
   const [用户字符列表, set用户字符列表] = useAtom(用户字符列表原子);
@@ -120,10 +111,10 @@ const EditOrPatchCharacter = ({ record }: { record: 校验字符数据 }) => {
   );
 };
 
-type Column = ColumnType<校验字符数据>;
+type Column = ColumnType<扩展字符数据>;
 
 export default function CharacterTable() {
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 远程 = useAtomValue(远程原子);
   const 字库 = useAtomValue(字库原子);
   const 按笔顺排序字符 = useAtomValueUnwrapped(如按笔顺排序字符原子);
   const [字形来源列表, 设置字形来源列表] = useAtom(字形来源列表原子);
@@ -131,23 +122,15 @@ export default function CharacterTable() {
   const [filter, setFilter] = useState({} as 过滤器参数);
   const dataSource = useMemo(() => {
     const 过滤器 = new 字符字形过滤器(filter);
-    const result: 校验字符数据[] = [];
+    const result: 扩展字符数据[] = [];
     for (const character of 按笔顺排序字符) {
-      const data = 原始字库.查询(character);
+      const data = 字库.查询字符(character);
       if (!data) continue;
       if (!过滤器.过滤字符(data.character, data, 字库)) continue;
       result.push(data);
     }
     return result;
-  }, [按笔顺排序字符, 原始字库, 字库, filter]);
-  const 统一字形列表 = useAtomValue(统一字形列表原子);
-  const 统一字形映射 = useMemo(() => {
-    const map = new Map<number, 字形数据>();
-    for (const glyph of 统一字形列表) {
-      map.set(glyph.id, glyph);
-    }
-    return map;
-  }, [统一字形列表]);
+  }, [按笔顺排序字符, 字库, filter]);
 
   const unicodeColumn: Column = {
     title: "Unicode",
@@ -206,11 +189,11 @@ export default function CharacterTable() {
     render: (_, character) => {
       return (
         <span>
-          {character.glyphs.map(({ id, sources }) => (
+          {character.final_glyphs.map(({ id, sources }) => (
             <span key={id}>
               <Tooltip title={id}>
                 <EditOrRedrawGraph
-                  record={统一字形映射.get(id)!}
+                  id={id}
                   trigger={
                     <BorderItem>
                       <GlyphView glyph={字库.获取字形(id)!.图形盒子} />
@@ -295,7 +278,7 @@ export default function CharacterTable() {
     },
   };
 
-  const columns: ColumnsType<校验字符数据> = [
+  const columns: ColumnsType<扩展字符数据> = [
     unicodeColumn,
     tygfColumn,
     gb2312,
@@ -310,13 +293,14 @@ export default function CharacterTable() {
       <FilterForm setFilter={setFilter} />
       <Flex gap="large">
         <CharacterGlyphSwitcher />
-        <Form.Item label="选择字形来源" className="m-0!">
-          <SourceSelect value={字形来源列表} onChange={设置字形来源列表} />
-        </Form.Item>
-        <GlyphAlgebraForm />
+        {!远程 && (
+          <Form.Item label="选择字形来源" className="m-0!">
+            <SourceSelect value={字形来源列表} onChange={设置字形来源列表} />
+          </Form.Item>
+        )}
         <CreateCharacter />
       </Flex>
-      <Table<校验字符数据>
+      <Table<扩展字符数据>
         dataSource={dataSource}
         columns={columns}
         size="small"

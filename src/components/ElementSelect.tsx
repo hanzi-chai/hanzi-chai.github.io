@@ -52,7 +52,7 @@ export default function ElementSelect(
         if (!元素) return false;
         const 匹配序列 =
           元素 instanceof 字符 &&
-          字库.查询字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
+          字库.查询字符的字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
         const 匹配元素 = option.value.includes(input);
         return 匹配序列 || 匹配元素;
       }}
@@ -60,8 +60,8 @@ export default function ElementSelect(
         const cha = 名称映射.get(a.value);
         const chb = 名称映射.get(b.value);
         if (cha instanceof 字符 && chb instanceof 字符) {
-          const seqa = 字库.查询字形(cha)?.[0]?.标准笔顺 ?? "";
-          const seqb = 字库.查询字形(chb)?.[0]?.标准笔顺 ?? "";
+          const seqa = 字库.查询字符的字形(cha)?.[0]?.标准笔顺 ?? "";
+          const seqb = 字库.查询字符的字形(chb)?.[0]?.标准笔顺 ?? "";
           return seqa.length - seqb.length;
         }
         return a.value.localeCompare(b.value);

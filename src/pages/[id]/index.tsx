@@ -28,8 +28,8 @@ import {
   useAtomValue,
   useSetAtom,
   type WritableAtom,
-  原始字库原子,
   基本信息原子,
+  字库原子,
   字集指示原子,
   用户原始词典原子,
   用户当量映射原子,
@@ -180,11 +180,11 @@ const ConfigInfo = () => {
 export default function Index() {
   useChaifenTitle("基本信息");
   const [字集指示, 设置字集指示] = useAtom(字集指示原子);
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(字库原子);
   const counter = Object.fromEntries(
     Object.keys(字集过滤查找表).map((key) => [key as 字集指示, 0]),
   ) as Record<字集指示, number>;
-  for (const data of 原始字库) {
+  for (const [_, data] of 原始字库) {
     for (const key of Object.keys(counter) as 字集指示[]) {
       const fn = 字集过滤查找表[key];
       if (fn(data.character, data)) counter[key]++;

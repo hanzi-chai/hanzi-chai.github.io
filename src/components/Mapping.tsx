@@ -16,6 +16,8 @@ import {
   type 元素,
   可打印字符列表,
   字符,
+  type 强类型安排描述,
+  type 强类型广义安排,
   type 强类型非归并安排,
   type 强类型非空安排,
   是强类型归并,
@@ -34,10 +36,9 @@ import {
   useSetAtom,
   全部合法元素原子,
   决策图原子,
-  别名显示原子,
-  原始字库原子,
   字库原子,
   字母表原子,
+  强类型决策与决策空间原子,
   强类型决策原子,
   强类型决策空间原子,
   强类型线性化决策原子,
@@ -319,7 +320,6 @@ const MappingUploader = ({
   setImportResult: (a: any) => void;
 }) => {
   const repertoire = useAtomValue(字库原子);
-  const 原始字库 = useAtomValue(原始字库原子);
   const mapping = useAtomValueUnwrapped(强类型决策原子);
   const setMapping = useSetAtom(强类型决策原子);
   const mappingType = useAtomValue(编码类型原子);
@@ -334,12 +334,12 @@ const MappingUploader = ({
         for (const line of tsv) {
           const [key, value] = line;
           if (key === undefined || value === undefined) continue;
-          const ch = 原始字库.校验(key)?.character;
+          const ch = repertoire.校验字符(key)?.character;
           if (!ch) {
             unknownKeys.push(key);
             continue;
           }
-          const glyphs = repertoire.查询字形(ch);
+          const glyphs = repertoire.查询字符的字形(ch);
           if (glyphs === undefined || ch.是私用区()) {
             unknownKeys.push(key);
             continue;
@@ -390,7 +390,6 @@ const MappingExporter = () => {
 
 const PUAExporter = () => {
   const mapping = useAtomValueUnwrapped(强类型决策原子);
-  const display = useAtomValue(别名显示原子);
   return (
     <Button
       onClick={() => {
@@ -400,13 +399,89 @@ const PUAExporter = () => {
         私用区字符列表.sort((a, b) => a.toNumber() - b.toNumber());
         const tsv: string[][] = [];
         for (const 字符 of 私用区字符列表) {
-          tsv.push([字符.获取名称(), 字符.十六进制(), display(字符)]);
+          tsv.push([字符.获取名称(), 字符.十六进制()]);
         }
         exportTSV(tsv, "PUA 映射.txt");
       }}
     >
       导出 PUA 映射
     </Button>
+  );
+};
+
+const LegacyPUAUpdater = () => {
+  const repertoire = useAtomValue(字库原子);
+  const { 决策, 决策空间 } = useAtomValueUnwrapped(强类型决策与决策空间原子);
+  const setMapping = useSetAtom(强类型决策原子);
+  const setMappingSpace = useSetAtom(强类型决策空间原子);
+
+  let hasLegacyPUA = false;
+  for (const key of [...决策.keys(), ...决策空间.keys()]) {
+    if (key instanceof 字符 && key.是私用区()) {
+      hasLegacyPUA = true;
+      break;
+    }
+  }
+
+  const convertElement = (element: 元素): 元素 => {
+    if (element instanceof 字符 && element.是私用区()) {
+      const glyphs = repertoire.查询字符的字形(element);
+      if (glyphs && glyphs.length > 0) {
+        return glyphs[0]!;
+      }
+    }
+    return element;
+  };
+  const convertValue = (value: 强类型广义安排): 强类型广义安排 => {
+    if (typeof value === "string" || value === null) {
+      return value;
+    } else if (是强类型归并(value)) {
+      return { element: convertElement(value.element) };
+    } else {
+      return value.map((x) => {
+        if (typeof x === "object" && x !== null && "element" in x) {
+          return { ...x, element: convertElement(x.element) };
+        } else {
+          return x;
+        }
+      });
+    }
+  };
+  if (!hasLegacyPUA) return null;
+  return (
+    <Flex justify="center" align="baseline" gap="small">
+      <Button
+        type="primary"
+        onClick={() => {
+          const newMapping = new Map<元素, 强类型非空安排>();
+          for (const [key, value] of 决策) {
+            newMapping.set(
+              convertElement(key),
+              convertValue(value) as 强类型非空安排,
+            );
+          }
+          const newMappingSpace = new Map<元素, 强类型安排描述[]>();
+          for (const [key, value] of 决策空间) {
+            const newValue: 强类型安排描述[] = [];
+            for (const desc of value) {
+              newValue.push({
+                ...desc,
+                value: convertValue(desc.value),
+                condition: desc.condition?.map((x) => ({
+                  ...x,
+                  element: convertElement(x.element),
+                })),
+              });
+            }
+            newMappingSpace.set(convertElement(key), newValue);
+          }
+          setMapping(newMapping);
+          setMappingSpace(newMappingSpace);
+        }}
+      >
+        检测到有旧版 PUA，一键迁移
+      </Button>
+    </Flex>
   );
 };
 
@@ -472,6 +547,7 @@ const MappingHeader = () => {
         <MappingExporter />
         <PUAExporter />
       </Flex>
+      <LegacyPUAUpdater />
       {importResult && <ImportResultAlert {...importResult} />}
     </>
   );

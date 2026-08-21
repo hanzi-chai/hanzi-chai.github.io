@@ -35,7 +35,6 @@ import {
   useAtomValue,
   useAtomValueUnwrapped,
   分析配置原子,
-  别名显示原子,
   动态分析原子,
   复合体分析器原子,
   如动态字形分析结果原子,
@@ -59,13 +58,12 @@ import {
 
 const 导出字形分析结果 = (
   a: 字形分析结果 | 动态字形分析结果,
-  display: (s: 字符) => string,
 ) => {
   const { 分析结果 } = a;
   const tsv: string[][] = [];
   const 序列化 = (l: 字根[]) =>
     l
-      .map((z) => (z instanceof 部件字根 ? display(z.字符) : z.获取名称()))
+      .map((z) => (z instanceof 部件字根 ? z.字符.获取名称() : z.获取名称()))
       .join(" ");
   for (const [汉字, 分析列表] of 分析结果) {
     const head = [汉字.获取名称()];
@@ -76,14 +74,12 @@ const 导出字形分析结果 = (
           // 动态分析以全角空格隔开
           [...分析].map((x) => 序列化(x.字根序列)).join("　"),
           分析.sources.join(","),
-          分析.compatible ? "兼容" : "",
         ]);
       } else {
         tsv.push([
           ...head,
           序列化(分析.字根序列),
           分析.sources.join(","),
-          分析.compatible ? "兼容" : "",
         ]);
       }
     }
@@ -137,10 +133,9 @@ const ConfigureRules = () => {
 };
 
 const ExportDynamicAnalysis = () => {
-  const display = useAtomValue(别名显示原子);
   const 动态分析结果 = useAtomValueUnwrapped(如动态字形分析结果原子);
   return (
-    <Button onClick={() => 导出字形分析结果(动态分析结果, display)}>
+    <Button onClick={() => 导出字形分析结果(动态分析结果)}>
       导出动态拆分
     </Button>
   );
@@ -154,7 +149,6 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   const 动态分析 = useAtomValue(动态分析原子);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const display = useAtomValue(别名显示原子);
   const { 自定义分析映射, 动态自定义分析映射 } = useAtomValueUnwrapped(
     强类型自定义分析原子,
   );
@@ -225,7 +219,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
           <Radio.Button value={0}>部件拆分</Radio.Button>
           <Radio.Button value={1}>复合体拆分</Radio.Button>
         </Radio.Group>
-        <Button onClick={() => 导出字形分析结果(字形分析结果, display)}>
+        <Button onClick={() => 导出字形分析结果(字形分析结果)}>
           导出拆分
         </Button>
         {分析配置.component_analyzer === "冰雪飞花" && (
@@ -245,7 +239,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
                 if (部首) {
                   部首字符串 =
                     部首 instanceof 部件字根
-                      ? display(部首.字符)
+                      ? 部首.字符.获取名称()
                       : map[部首.获取名称()]!;
                 }
                 tsv.push([复合体.id.toString(), 部首字符串]);

@@ -23,21 +23,23 @@ import type {
   基本字符字形分析,
   基本部件分析,
   字形分析结果,
-  带条件,
   来源和兼容标记,
 } from "./repertoire.js";
-import { 优先表, 贝叶斯推断, 部件字根 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 import {
   default_err,
   ok,
   type Result,
+  优先表,
+  type 带条件,
   type 强类型元素位或编码,
   type 强类型决策,
   type 强类型决策空间,
   总序列化,
   排列组合,
   type 自定义分析映射,
+  贝叶斯推断,
+  部件字根,
 } from "./utils.js";
 
 /**
@@ -199,7 +201,6 @@ class 默认组装器 extends 按规则构词 {
     return ok({
       元素序列: this.取码器.取码(汉字分析),
       sources: 字形分析.sources,
-      compatible: 字形分析.compatible,
     });
   }
 }
@@ -255,7 +256,6 @@ class 星空键道组装器 extends 按规则构词<默认部件分析, 星空�
     return ok({
       元素序列,
       sources: 字形分析.sources,
-      compatible: 字形分析.compatible,
     });
   }
 }
@@ -284,18 +284,17 @@ const 组装 = (
         for (const 字 of 词) {
           const 分析列表 = 分析结果.get(字) ?? [];
           const 有效分析列表 = 分析列表.filter((x) => x.sources.includes(来源));
-          if (有效分析列表.length === 0) 有效分析列表.push(...分析列表.slice(0, 1));
+          if (有效分析列表.length === 0)
+            有效分析列表.push(...分析列表.slice(0, 1));
           各字字形分析.push(有效分析列表);
         }
         for (const 组合 of 排列组合(各字字形分析)) {
-          const 兼容 = 组合.some((x) => x.compatible);
           const 元素序列 = 组装器.多字词组装(词, 组合, 元素映射);
           if (!元素序列.ok) return 元素序列;
           单一来源元素序列列表.push({
             ...元素序列.value,
-            compatible: 兼容,
             sources: [来源],
-            hash: 总序列化(元素序列.value.元素序列)
+            hash: 总序列化(元素序列.value.元素序列),
           });
         }
       }
@@ -305,7 +304,6 @@ const 组装 = (
         if (索引 !== undefined) {
           const 上一个结果 = 元素序列列表[索引]!;
           上一个结果.sources.push(...rest.sources);
-          上一个结果.compatible = 上一个结果.compatible && rest.compatible;
         } else {
           索引映射.set(hash, 元素序列列表.length);
           元素序列列表.push(rest);

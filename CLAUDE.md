@@ -123,7 +123,6 @@ Worker 通过 `Thread` 类（`src/utils.ts`）管理，使用 `MessageChannel` �
 - `classifier.ts` — 字根分类器
 - `data.ts` — 数据加载与解析（原始字库、词典、当量映射、键位分布）
 - `element.ts` — 元素操作
-- `primitive.ts` — 图元定义
 - `pinyin.ts` — 拼音分析
 - `affine.ts` — 仿射变换相关
 - `bezier.ts` — 贝塞尔曲线工具

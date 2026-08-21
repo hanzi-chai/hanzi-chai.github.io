@@ -4,28 +4,30 @@ import { 图形盒子 } from "./affine.js";
 import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
 import { type 分类器, type 笔画名称, 默认分类器 } from "./classifier.js";
 import type { 条件, 退化配置 } from "./config.js";
-import type { 矢量图形数据, 结构描述字符 } from "./data.js";
+import type { 基本部件数据, 矢量图形数据, 结构描述字符 } from "./data.js";
 import { 二笔, type 元素, 未知元素, 笔画 } from "./element.js";
 import { 排序, 是共线, 是小于 } from "./math.js";
 import { 获取注册表 } from "./registry.js";
-import {
-  优先表,
-  type 基本部件分析,
-  type 字形分析配置,
-  type 字根,
-  存在,
-  type 带条件,
-  部件字根,
-} from "./repertoire.js";
+import type { 字形分析配置 } from "./repertoire.js";
 import type { 拆分方式, 拆分环境 } from "./selector.js";
 import {
   default_err,
   ok,
   type Result,
+  优先表,
+  type 字根,
+  存在,
+  type 带条件,
   type 强类型安排描述,
   type 强类型条件,
   是强类型归并,
+  部件字根,
 } from "./utils.js";
+
+export interface 基本部件分析 {
+  字根序列: 字根[];
+  部件: 部件;
+}
 
 export const 默认退化配置: 退化配置 = {
   feature: {
@@ -49,19 +51,30 @@ const 笔画名称等价 = (退化器: 退化配置, s1: 笔画名称, s2: 笔�
  * 再基于参数曲线计算拓扑
  */
 class 部件 {
-  private 笔画列表: 笔画图形[];
-  private 拓扑: 拓扑;
+  public id: number;
+  public name: string | undefined;
+  public gf0014_id: number | undefined;
+  public gf3001_id: number | undefined;
+  public 笔画列表: 笔画图形[];
+  public 矢量图形: 矢量图形数据;
+  public 拓扑: 拓扑;
   public 图形盒子: 图形盒子;
   public 标准笔顺: string;
 
-  constructor(
-    public id: number,
-    public 矢量图形: 矢量图形数据,
-  ) {
-    this.笔画列表 = 矢量图形.map((x) => new 笔画图形(x));
+  constructor(数据: 基本部件数据) {
+    this.id = 数据.id;
+    this.name = 数据.name;
+    this.gf0014_id = 数据.gf0014_id;
+    this.gf3001_id = 数据.gf3001_id;
+    this.矢量图形 = 数据.strokes;
+    this.笔画列表 = 数据.strokes.map((x) => new 笔画图形(x));
     this.拓扑 = new 拓扑(this.笔画列表);
-    this.图形盒子 = 图形盒子.从笔画列表构建(矢量图形);
+    this.图形盒子 = 图形盒子.从笔画列表构建(this.矢量图形);
     this.标准笔顺 = this.获取笔画序列(默认分类器).join("");
+  }
+
+  获取名称() {
+    return `字形-${this.id}`;
   }
 
   _笔画列表() {

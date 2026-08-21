@@ -23,7 +23,6 @@ import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import {
   useAtomValueUnwrapped,
-  原始字库原子,
   字库原子,
   汉字集合原子,
   码表数据库,
@@ -91,7 +90,6 @@ const 校对方向原子 = atomWithStorage(
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
   const repertoire = useAtomValue(字库原子);
-  const 原始字库 = useAtomValue(原始字库原子);
   const characters = useAtomValue(汉字集合原子);
   const 联合结果 = useAtomValueUnwrapped(联合结果原子);
   const [外部码表, 设置外部码表] = useAtom(
@@ -104,7 +102,7 @@ export default function Debugger() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<元素 | null>(null);
   const 字符是部件: 过滤 = (c, _) => {
-    return characters.has(c) && repertoire.查询字形(c)?.some(是部件) === true;
+    return characters.has(c) && repertoire.查询字符的字形(c)?.some(是部件) === true;
   };
   const 过滤函数 =
     校对范围 === "components" ? 字符是部件 : 字集过滤查找表[校对范围];
@@ -144,7 +142,7 @@ export default function Debugger() {
     return "correct";
   };
   const 合法 = (词: string) => {
-    const data = 原始字库.校验(词);
+    const data = repertoire.校验字符(词);
     if (!data) return false;
     return 过滤函数(data.character, data);
   };

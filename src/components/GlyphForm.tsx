@@ -20,6 +20,7 @@ import {
   切片,
   图形盒子,
   type 基本字形数据,
+  type 字库,
   type 字形数据,
   type 引用数据,
   type 引用笔画块数据,
@@ -31,7 +32,7 @@ import {
 import { useAtomValue } from "jotai";
 import type { MutableRefObject, ReactElement, ReactNode } from "react";
 import { useRef, useState } from "react";
-import { 图形盒子缓存原子 } from "~/atoms";
+import { 字库原子 } from "~/atoms";
 import { 数字 } from "~/utils";
 import GlyphSelect from "./GlyphSelect";
 import GlyphView from "./GlyphView";
@@ -93,7 +94,7 @@ const StrokeForm = ({
   formRef: MutableRefObject<ProFormInstance | undefined>;
   meta: FormListFieldData;
 }) => {
-  const 矢量缓存 = useAtomValue(图形盒子缓存原子);
+  const 字库 = useAtomValue(字库原子);
   const referenceOptions: BaseOptionType[] = (references ?? []).map((x) => ({
     key: x.id,
     value: x.id,
@@ -184,23 +185,26 @@ const StrokeForm = ({
                 )
                   return;
                 const references = glyph.references ?? [];
-                const 图形 = 临时渲染(glyph, 矢量缓存).获取笔画列表();
+                const 图形 = 临时渲染(glyph, 字库).获取笔画列表();
                 let startIndex = 0;
                 for (const stroke of strokes.slice(0, meta.name)) {
                   if (isVectorStroke(stroke)) startIndex++;
                   else {
                     const ref = references[stroke.index];
                     if (!ref) continue;
-                    const refShape = 矢量缓存.get(ref.id);
+                    const refShape = 字库.获取字形(ref.id);
                     if (!refShape) continue;
-                    startIndex += 切片(refShape.获取笔画列表(), stroke).length;
+                    startIndex += 切片(
+                      refShape.图形盒子.获取笔画列表(),
+                      stroke,
+                    ).length;
                   }
                 }
                 const currentRef = references[currentStroke.index];
                 if (!currentRef) return;
-                const currentShape = 矢量缓存.get(currentRef.id);
+                const currentShape = 字库.获取字形(currentRef.id);
                 if (!currentShape) return;
-                const currentStrokes = currentShape.获取笔画列表();
+                const currentStrokes = currentShape.图形盒子.获取笔画列表();
                 const endIndex =
                   startIndex + 切片(currentStrokes, currentStroke).length;
                 const newStrokes = structuredClone(strokes);
@@ -221,13 +225,10 @@ const StrokeForm = ({
   );
 };
 
-function 临时渲染(
-  字形: 字形数据,
-  图形盒子缓存: Map<number, 图形盒子>,
-): 图形盒子 {
+function 临时渲染(字形: 字形数据, 字库: 字库): 图形盒子 {
   const 引用列表 = 字形.references ?? [];
   const 部分列表 = 引用列表.map(
-    (x) => 图形盒子缓存.get(x.id) ?? new 图形盒子(),
+    (x) => 字库.获取字形(x.id)?.图形盒子 ?? new 图形盒子(),
   );
   return 仿射合并(部分列表, 引用列表, 字形.operator, 字形.strokes);
 }
@@ -247,7 +248,7 @@ export default function GlyphForm({
 }) {
   const formRef = useRef<ProFormInstance>(undefined);
   const [fontChar, setFontChar] = useState<string | undefined>(undefined);
-  const 矢量缓存 = useAtomValue(图形盒子缓存原子);
+  const 字库 = useAtomValue(字库原子);
 
   const setGlyph = (glyph: 矢量笔画数据[]) => {
     const prevStrokes: (矢量笔画数据 | 引用笔画块数据)[] =
@@ -264,7 +265,7 @@ export default function GlyphForm({
       } else {
         const ref = references[stroke.index];
         if (!ref) continue;
-        const refStrokes = 矢量缓存.get(ref.id)?.获取笔画列表();
+        const refStrokes = 字库.获取字形(ref.id)?.图形盒子.获取笔画列表();
         if (!refStrokes) continue;
         count += 切片(refStrokes, stroke).length;
       }
@@ -294,7 +295,7 @@ export default function GlyphForm({
       initialValues={initialValues}
       onFinish={(glyph) => {
         if (glyph.type === "compound") return onFinish(glyph);
-        const strokes = 临时渲染(glyph, 矢量缓存).获取笔画列表();
+        const strokes = 临时渲染(glyph, 字库).获取笔画列表();
         return onFinish({
           id: glyph.id,
           gf0014_id: glyph.gf0014_id,
@@ -324,7 +325,7 @@ export default function GlyphForm({
               name={["type", "operator", "strokes", "references"]}
             >
               {(props) => {
-                const 图形盒子 = 临时渲染(props as 字形数据, 矢量缓存);
+                const 图形盒子 = 临时渲染(props as 字形数据, 字库);
                 return (
                   <GlyphView glyph={图形盒子} setGlyph={setGlyph} displayMode />
                 );

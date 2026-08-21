@@ -6,11 +6,11 @@ import {
   决策图,
   分析拼音,
   动态组装,
-  原始字库,
   type 原始词典,
   合并拼写运算,
-  type 图形盒子,
   type 基本字形数据,
+  字库,
+  type 字形,
   type 字符,
   type 字符数据,
   序列化强类型决策,
@@ -124,26 +124,26 @@ export const 原始词典原子 = atom((get) => {
 
 export const 词典原子 = atom((get) => {
   const 原始词典 = get(原始词典原子);
-  const 字库 = get(原始字库原子);
+  const 字库 = get(字库原子);
   return 字库.校验词典(原始词典);
 });
 
 export const 过滤词典原子 = atom((get) => {
   const 词典 = get(词典原子);
-  const 字库 = get(原始字库原子);
+  const 字库 = get(字库原子);
   const 字集指示 = get(字集指示原子);
   return 字库.过滤词典(词典, 字集指示);
 });
 
 export const 自定义元素映射原子 = atom((get) => {
   const 自定义元素集合 = get(自定义分析数据库.entries);
-  const 字库 = get(原始字库原子);
+  const 字库 = get(字库原子);
   return 字库.校验自定义映射(Object.fromEntries(自定义元素集合));
 });
 
 export const 汉字集合原子 = atom((get) => {
   const 词典 = get(过滤词典原子);
-  const 字库 = get(原始字库原子);
+  const 字库 = get(字库原子);
   return 字库.获取汉字集合(词典);
 });
 
@@ -154,20 +154,26 @@ export const 统一字形列表原子 = atom((get) => {
   return 可编辑字形列表;
 });
 
-export const 原始字库原子 = atom((get) => {
+export const 字库原子 = atom((get) => {
   const 远程 = get(远程原子);
   if (远程) {
     const 字符列表 = get(可编辑字符列表原子);
     const 字形列表 = get(可编辑字形列表原子);
-    return new 原始字库(字符列表, 字形列表);
+    return new 字库(字符列表, 字形列表, Array.from(来源排序));
   }
+  const 字形自定义 = get(字形自定义原子);
+  const 变换器列表 = get(字形拼写运算列表原子);
   const 字符列表 = get(字符列表原子);
   const 用户字符列表 = get(用户字符列表原子);
   const 字形列表 = get(字形列表原子);
   const 用户字形列表 = get(用户字形列表原子);
-  return new 原始字库(
+  const 字形来源列表 = get(字形来源列表原子);
+  return new 字库(
     [...字符列表, ...用户字符列表],
     [...字形列表, ...用户字形列表],
+    字形来源列表,
+    字形自定义,
+    变换器列表,
   );
 });
 
@@ -183,49 +189,35 @@ export const GF0014映射原子 = atom((get) => {
   return map;
 });
 
-export const 别名显示原子 = atom((get) => {
-  const 字库 = get(原始字库原子);
-  return (字符实例: 字符) => {
-    if (!字符实例.是私用区()) return 字符实例.获取名称();
-    const name = 字库.查询(字符实例)?.name;
-    return name ?? "丢失的字根";
-  };
-});
-
-export const 字库原子 = atom((get) => {
-  const 原始字库 = get(原始字库原子);
-  const 字形自定义 = get(字形自定义原子);
-  const 变换器列表 = get(字形拼写运算列表原子);
-  const 字形来源列表 = get(字形来源列表原子);
-  return 原始字库.确定(字形自定义, 变换器列表, 字形来源列表);
-});
-
-export const 图形盒子缓存原子 = atom((get) => {
-  const 字库 = get(字库原子);
-  const 图形盒子缓存 = new Map<number, 图形盒子>();
-  for (const [id, 字形] of 字库.字形迭代器()) {
-    图形盒子缓存.set(id, 字形.图形盒子);
-  }
-  return 图形盒子缓存;
-});
-
 export const 如按笔顺排序字符原子 = atom((get) => {
-  const 原始字库 = get(原始字库原子);
   const 字库 = get(字库原子);
-  const 全部字符 = [...原始字库].map((x) => x.character);
+  const 全部字符 = [...字库].map(([_, x]) => x.character);
   const result = sortBy(全部字符, (c) => {
-    const 首个字形 = (字库.查询字形(c) ?? [])[0];
+    const 首个字形 = 字库.查询字符的字形(c)?.[0];
     return 首个字形?.标准笔顺?.length ?? 0;
   });
   return ok(result);
 });
 
+export const 字形字符映射原子 = atom((get) => {
+  const 字库 = get(字库原子);
+  const map = new Map<number, Set<字符>>();
+  for (const [_, 字符数据] of 字库) {
+    for (const { id } of 字符数据.final_extended_glyphs) {
+      if (!map.has(id)) map.set(id, new Set());
+      map.get(id)!.add(字符数据.character);
+    }
+  }
+  return map;
+});
+
 export const 全部来源原子 = atom((get) => {
-  const 字库 = get(原始字库原子);
+  const 字库 = get(字库原子);
   const 全部来源集合 = new Set<string>();
-  for (const { glyphs } of 字库) {
-    for (const { sources } of glyphs) {
-      sources.map((s) => 全部来源集合.add(s));
+  for (const [_, { final_extended_glyphs: final }] of 字库) {
+    for (const { source } of final) {
+      if (!source) continue;
+      全部来源集合.add(source);
     }
   }
   return sortBy(Array.from(全部来源集合), (s) => 来源排序.indexOf(s));
@@ -256,8 +248,18 @@ export const 全部合法元素原子 = atom((get) => {
   const 如字符列表 = get(如按笔顺排序字符原子);
   if (!如字符列表.ok) return 如字符列表;
   const 字符列表 = 如字符列表.value;
+  const 字形列表: 字形[] = [];
+  for (const [_, 字形] of get(字库原子).字形迭代器()) {
+    字形列表.push(字形);
+  }
   return ok(
-    计算全部合法元素与元素映射(字符列表, 分类器, 拼音元素映射, 自定义元素映射),
+    计算全部合法元素与元素映射(
+      字符列表,
+      字形列表,
+      分类器,
+      拼音元素映射,
+      自定义元素映射,
+    ),
   );
 });
 
@@ -325,19 +327,12 @@ export const 拼音元素映射原子 = atom((get) => {
 
 export const 强类型自定义分析原子 = atom((get) => {
   const 字库 = get(字库原子);
-  const 原始字库 = get(原始字库原子);
   const 全部合法元素 = get(全部合法元素原子);
   if (!全部合法元素.ok) return 全部合法元素;
   const { 名称映射 } = 全部合法元素.value;
   const 自定义分析 = get(自定义拆分原子);
   const 动态自定义拆分 = get(动态自定义拆分原子);
-  const 结果 = 构建强类型自定义分析(
-    字库,
-    原始字库,
-    名称映射,
-    自定义分析,
-    动态自定义拆分,
-  );
+  const 结果 = 构建强类型自定义分析(字库, 名称映射, 自定义分析, 动态自定义拆分);
   return ok(结果);
 });
 
@@ -478,13 +473,13 @@ export const 如动态组装结果原子 = atom((get) => {
 });
 
 export const 优先简码映射原子 = atom((get) => {
-  const 字库 = get(原始字库原子);
+  const 字库 = get(字库原子);
   const 优先简码列表 = get(优先简码原子);
   const map = new Map<string, number>();
   for (const { word, sources, level } of 优先简码列表) {
     const chars: 字符[] = [];
     for (const char of word) {
-      const charInstance = 字库.校验(char);
+      const charInstance = 字库.校验字符(char);
       if (!charInstance) {
         console.warn(`优先简码中的字符不在字库中: ${char}`);
         continue;

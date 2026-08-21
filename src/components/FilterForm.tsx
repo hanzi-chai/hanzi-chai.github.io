@@ -12,12 +12,16 @@ import GlyphSelect from "./GlyphSelect";
 import OperatorSelect from "./OperatorSelect";
 
 interface StrokeSearchProps {
+  isGlyph?: boolean;
   setFilter: (s: 过滤器参数) => void;
 }
 
-export default function FilterForm({ setFilter }: StrokeSearchProps) {
+export default function FilterForm({ setFilter, isGlyph }: StrokeSearchProps) {
   const tags = useAtomValue(全部来源原子);
   const debounced = debounce(setFilter, 500);
+  const idLabel = isGlyph ? "字形 ID" : "Unicode";
+  const idPlaceholder = isGlyph ? "十进制" : "十或十六进制";
+  const nameLabel = isGlyph ? "字形别名" : "字符";
   return (
     <QueryFilter<过滤器参数>
       onValuesChange={async (_, values) => debounced(values)}
@@ -25,8 +29,8 @@ export default function FilterForm({ setFilter }: StrokeSearchProps) {
       className="max-w-270"
       autoFocusFirstInput={false}
     >
-      <ProFormText label="Unicode" name="unicode" />
-      <ProFormText label="名称" name="name" />
+      <ProFormText label={idLabel} name="id" placeholder={idPlaceholder}/>
+      <ProFormText label={nameLabel} name="name" />
       <ProFormText label="笔画" name="sequence" />
       <ProFormSelect
         label="包含来源"

@@ -7,6 +7,7 @@ import type { 字符模型 } from "./characters";
 const table = "glyphs";
 
 interface 字形模型 extends Pick<字形数据, "id" | "type"> {
+  name: string | null;
   operator: 结构描述字符 | null;
   references: string | null; // JSON 字符串
   strokes: string | null; // JSON 字符串
@@ -18,6 +19,7 @@ function 转数据(数据: 字形模型): 字形数据 {
   const { references, strokes, gf0014_id, gf3001_id } = 数据;
   return {
     ...数据,
+    name: 数据.name ?? undefined,
     operator: 数据.operator ?? undefined,
     references: references
       ? (JSON.parse(references) as 字形数据["references"])
@@ -31,6 +33,7 @@ function 转数据(数据: 字形模型): 字形数据 {
 function 转模型(数据: 字形数据): 字形模型 {
   return {
     ...数据,
+    name: 数据.name ?? null,
     operator: 数据.operator ?? null,
     references: 数据.references ? JSON.stringify(数据.references) : null,
     strokes: 数据.strokes ? JSON.stringify(数据.strokes) : null,
@@ -80,14 +83,14 @@ export async function Create(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { type, operator, references, strokes, gf0014_id, gf3001_id } =
+  const { name, type, operator, references, strokes, gf0014_id, gf3001_id } =
     转模型(body);
   const id = await getNextId(type, env);
   try {
     await env.CHAI.prepare(
-      `INSERT INTO ${table} (id, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-      .bind(id, type, operator, references, strokes, gf0014_id, gf3001_id)
+      .bind(id, name, type, operator, references, strokes, gf0014_id, gf3001_id)
       .run();
   } catch (err) {
     return new Err(
@@ -108,12 +111,13 @@ export async function CreateBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(
-      `INSERT INTO ${table} (id, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     await env.CHAI.batch(
       body.map((item: any) => {
         const {
           id,
+          name,
           type,
           operator,
           references,
@@ -123,6 +127,7 @@ export async function CreateBatch(request: IRequest, env: Env) {
         } = 转模型(item);
         return statement.bind(
           id,
+          name,
           type,
           operator,
           references,
@@ -152,13 +157,13 @@ export async function Update(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { type, operator, references, strokes, gf0014_id, gf3001_id } =
+  const { name, type, operator, references, strokes, gf0014_id, gf3001_id } =
     转模型(body);
   try {
     await env.CHAI.prepare(
-      `UPDATE ${table} SET type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
+      `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
     )
-      .bind(type, operator, references, strokes, gf0014_id, gf3001_id, id)
+      .bind(name, type, operator, references, strokes, gf0014_id, gf3001_id, id)
       .run();
   } catch (err) {
     return new Err(
@@ -178,12 +183,13 @@ export async function UpdateBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(
-      `UPDATE ${table} SET type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
+      `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
     );
     await env.CHAI.batch(
       body.map((item: any) => {
-        const { id, type, operator, references, strokes, gf0014_id, gf3001_id } = 转模型(item);
+        const { id, name, type, operator, references, strokes, gf0014_id, gf3001_id } = 转模型(item);
         return statement.bind(
+          name,
           type,
           operator,
           references,

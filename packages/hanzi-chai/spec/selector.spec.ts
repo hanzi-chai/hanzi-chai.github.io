@@ -41,7 +41,7 @@ beforeAll(() => {
   const result = 字库.准备字形分析配置({}, 决策, 决策空间, 线性化决策.value, new Map(), new Map());
   if (!result.ok) throw new Error("Failed to prepare analysis config");
   配置 = result.value;
-  天 = 部件图形库.get(原始字库.校验("天")!.character);
+  天 = 部件图形库.get(原始字库.校验字符("天")!.character);
   env = {
     部件图形: 天!,
     二进制字根映射: new Map(),

@@ -1,26 +1,62 @@
-import { isEqual } from "lodash-es";
+import { max } from "lodash-es";
 import { type 分类器, 合并分类器 } from "./classifier.js";
-import { 部件, 默认退化配置 } from "./component.js";
+import { type 基本部件分析, 部件, 默认退化配置 } from "./component.js";
+import type { 基本复合体分析 } from "./compound.js";
 import { 复合体 } from "./compound.js";
-import type { 分析配置, 条件, 退化配置 } from "./config.js";
-import { 二笔, type 元素, 笔画 } from "./element.js";
 import type {
-  原始字库,
-  复合体树数据,
-  字形历史记录,
-  字形树数据,
-} from "./primitive.js";
+  分析配置,
+  字形拼写运算,
+  字形自定义,
+  字集指示,
+  模式,
+  补丁操作,
+  退化配置,
+} from "./config.js";
+import type {
+  基本字形数据,
+  字形来源数据,
+  字符数据,
+  结构描述字符,
+} from "./data.js";
+import { 二笔, type 元素, 笔画, 自定义元素 } from "./element.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
-import { 字符 } from "./unicode.js";
+import { 字符, 字集过滤查找表 } from "./unicode.js";
 import {
   ok,
   type Result,
+  优先表,
+  type 原始词典,
+  type 字根,
   type 强类型决策,
   type 强类型决策空间,
   type 强类型安排,
   type 强类型安排描述,
+  type 自定义分析,
+  type 自定义分析映射,
+  type 词典,
+  部件字根,
 } from "./utils.js";
+
+// 模式变量映射：记录模式匹配过程中变量的绑定
+interface 模式变量映射 {
+  id映射: Map<number, number>; // variable -> glyph id
+  operator映射: Map<number, 结构描述字符>; // variable -> operator
+}
+
+type 字形单一来源数据 = { id: number; source?: string };
+
+export interface 扩展字符数据 extends 字符数据 {
+  character: 字符;
+  expanded_glyphs: 字形单一来源数据[];
+  expanded_glyphs_history: 字形单一来源数据[][];
+  final_extended_glyphs: 字形单一来源数据[];
+  final_glyphs: 字形来源数据[];
+}
+
+type 字符数据单一补丁 = 补丁操作 & {
+  source?: string;
+};
 
 export type 字形 = 部件 | 复合体;
 
@@ -32,52 +68,10 @@ export function 是复合体(字形: 字形): 字形 is 复合体 {
   return 字形 instanceof 复合体;
 }
 
-export class 部件字根 {
-  constructor(
-    public 字符: 字符,
-    private 部件: 部件,
-  ) {}
-
-  获取名称() {
-    return this.字符.获取名称();
-  }
-
-  获取部件() {
-    return this.部件;
-  }
-
-  获取笔画序列(classifier: 分类器) {
-    return this.部件.获取笔画序列(classifier);
-  }
-}
-
-export type 字根 = 笔画 | 二笔 | 部件字根;
-
-interface 基本部件分析 {
-  字根序列: 字根[];
-  部件: 部件;
-}
-
-export type 带条件<T extends object> = T & {
-  条件列表: 条件[];
-};
-
-export const 存在 = (x: 字根): 条件 => ({
-  element: x.获取名称(),
-  op: "不是" as const,
-  value: null,
-});
-
-interface 基本复合体分析 {
-  字根序列: 字根[];
-  复合体: 复合体;
-}
-
 type 基本分析 = 基本部件分析 | 基本复合体分析;
 
 export interface 来源和兼容标记 {
   sources: string[];
-  compatible: boolean;
 }
 
 export type 基本字符字形分析 = 基本分析 & 来源和兼容标记;
@@ -130,169 +124,139 @@ interface 字形分析配置 {
   弱字根列表: 字根[];
 }
 
-export class 优先表<T extends object> {
-  constructor(
-    private 列表: 带条件<T>[],
-    public sources: string[] = [],
-    public compatible = false,
-  ) {}
-
-  [Symbol.iterator]() {
-    return this.列表[Symbol.iterator]();
-  }
-}
-
-type 内部带条件 = { 条件列表: 条件[]; 排除: 条件[]; array: object[] };
-
-function 预处理优先表(列表: 带条件<object>[]): 内部带条件[] {
-  return 列表.map((entry, i) => {
-    const 排除: 条件[] = [];
-    for (let j = 0; j < i; j++) {
-      const 差集 = 列表[j]!.条件列表.filter(
-        (c) => !entry.条件列表.some((e) => isEqual(c, e)),
-      );
-      if (差集.length === 1 && !排除.some((e) => isEqual(e, 差集[0]!))) {
-        排除.push(差集[0]!);
-      }
-    }
-    return { ...entry, 排除, array: [entry] };
-  });
-}
-
-export function 贝叶斯推断<Ts extends object[], U extends object>(
-  优先表列表: { [K in keyof Ts]: 带条件<Ts[K] & object>[] },
-  reducer: (a: Ts) => U,
-): 带条件<U>[] {
-  const recurse = (l: 带条件<object>[][]): 内部带条件[] => {
-    if (l.length === 1) return 预处理优先表(l[0]!);
-    const 前一个表 = recurse(l.slice(0, -1));
-    const 当前表 = 预处理优先表(l.at(-1)!);
-    const 结果列表: 内部带条件[] = [];
-    for (const 前一个项 of 前一个表) {
-      for (const 当前项 of 当前表) {
-        const 合并负 = [...前一个项.排除, ...当前项.排除];
-        const 合并正 = [...前一个项.条件列表, ...当前项.条件列表];
-        if (合并正.some((c) => 合并负.some((e) => isEqual(c, e)))) continue;
-        const 扩充条件列表 = [...前一个项.条件列表];
-        const 合并项: 内部带条件 = {
-          array: [...前一个项.array, ...当前项.array],
-          条件列表: 扩充条件列表,
-          排除: 合并负,
-        };
-        if (蕴含(前一个项.条件列表, 当前项.条件列表)) {
-          结果列表.push(合并项);
-          break;
-        } else {
-          for (const 条件 of 当前项.条件列表) {
-            if (!扩充条件列表.some((c) => isEqual(c, 条件))) {
-              扩充条件列表.push(条件);
-            }
-          }
-          结果列表.push(合并项);
-        }
-      }
-    }
-    return 结果列表;
-  };
-  const 结果列表 = recurse(优先表列表 as 带条件<object>[][]).map((x) => ({
-    ...reducer(x.array as Ts),
-    条件列表: x.条件列表,
-  }));
-  return 结果列表;
-}
-
-function 蕴含(已有列表: 条件[], 目标列表: 条件[]): boolean {
-  for (const 目标 of 目标列表) {
-    if (!已有列表.some((条件) => isEqual(条件, 目标))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-interface 字形信息 extends 来源和兼容标记 {
-  id: number;
-}
-
 class 字库 {
   private 字形表: Map<number, 字形>;
-  private 字符表: Map<字符, 字形信息[]>;
+  private 字符表: Map<number, 扩展字符数据>;
 
+  /**
+   * 确定每个字符的最终字形列表。
+   *
+   * 流程：
+   * 1. 解引用字形查找表中的所有字形
+   * 2. 针对每个字符，依次应用拼写运算，匹配 from 模式并执行增删改
+   * 3. 将变更累积到字形自定义（补丁）中
+   * 4. 返回新的字形查找表和字符查找表
+   *
+   * 新合成的字形使用占位符 ID。
+   */
   constructor(
-    原始字符表: Map<字符, 字形历史记录>,
-    原始字形表: Map<number, 字形树数据>,
+    字符数据列表: 字符数据[],
+    字形数据列表: 基本字形数据[],
+    字形来源列表: string[],
+    字形自定义: 字形自定义 = {},
+    拼写运算列表: 字形拼写运算[] = [],
   ) {
-    this.字符表 = new Map<字符, 字形信息[]>();
-
-    for (const [字符实例, { filtered }] of 原始字符表) {
-      const 字形信息列表: 字形信息[] = [];
-      for (const { id, source } of filtered) {
-        const isCompatible = 字形信息列表
-          .flatMap((info) => info.sources)
-          .includes(source);
-        const previousInfo = 字形信息列表.find(
-          (info) => info.id === id && info.compatible === isCompatible,
-        );
-        if (previousInfo) {
-          previousInfo.sources.push(source);
-        } else {
-          字形信息列表.push({
-            id,
-            sources: [source],
-            compatible: isCompatible,
-          });
-        }
+    this.字符表 = new Map();
+    this.字形表 = new Map();
+    // 新字形 ID 分配器
+    let 新ID计数器 = max(字形数据列表.map((x) => x.id))! + 1; // 占位符 ID 起始值
+    const 取新ID = () => {
+      if (新ID计数器 > 0x1_ffff) {
+        throw new Error("新字形 ID 超过范围");
       }
-      this.字符表.set(字符实例, 字形信息列表);
-    }
-
-    this.字形表 = new Map<number, 字形>();
-    // 第一趟：创建所有部件（叶子节点，无依赖）
-    for (const 字形 of 原始字形表.values()) {
-      if (字形.type === "component") {
-        const 部件实例 = new 部件(字形.id, 字形.strokes);
-        this.字形表.set(字形.id, 部件实例);
-      }
-    }
-
-    // 计算每个复合体的深度（依赖链长度），按深度排序后依次构造
-    const 深度缓存 = new Map<number, number>();
-    const 计算深度 = (id: number): number => {
-      const cached = 深度缓存.get(id);
-      if (cached !== undefined) return cached;
-      const 字形 = 原始字形表.get(id);
-      if (!字形 || 字形.type === "component") {
-        深度缓存.set(id, 0);
-        return 0;
-      }
-      let maxChildDepth = 0;
-      for (const ref of 字形.references) {
-        maxChildDepth = Math.max(maxChildDepth, 计算深度(ref.glyph.id));
-      }
-      const depth = maxChildDepth + 1;
-      深度缓存.set(id, depth);
-      return depth;
+      return 新ID计数器++;
     };
 
-    // 收集所有复合体并按深度排序（浅层优先）
-    const 复合体列表: 复合体树数据[] = [];
-    for (const 字形 of 原始字形表.values()) {
-      if (字形.type === "compound") {
-        计算深度(字形.id); // 确保深度已缓存
-        复合体列表.push(字形);
+    // 1. 处理所有字形
+    const 字形查找表 = new Map<number, 基本字形数据>();
+    字形数据列表.map((glyph) => 字形查找表.set(glyph.id, glyph));
+    for (const [id, 字形数据] of 字形查找表) {
+      const 字形 = this.构建并变换字形(
+        字形数据,
+        字形查找表,
+        拼写运算列表,
+        取新ID,
+      );
+      this.字形表.set(id, 字形);
+    }
+
+    // 2. 处理所有字符
+    for (const data of 字符数据列表) {
+      const 字符实例 = 字符.从码位创建(data.unicode);
+      if (!字符实例.ok) continue;
+      const glyphs: 字形单一来源数据[] = [];
+      for (const 来源数据 of data.glyphs) {
+        for (const source of 来源数据.sources) {
+          glyphs.push({ id: 来源数据.id, source });
+        }
+        // 对于非 unified 字符，只有一个字形，source 定义为 undefined
+        if (来源数据.sources.length === 0) {
+          glyphs.push({ id: 来源数据.id });
+        }
+      }
+      this.字符表.set(data.unicode, {
+        ...data,
+        character: 字符实例.value,
+        expanded_glyphs: glyphs,
+        expanded_glyphs_history: [glyphs],
+        final_extended_glyphs: [],
+        final_glyphs: [],
+      });
+    }
+
+    // 5. 对每个字符应用字形自定义补丁
+    for (const [字符串, 补丁列表] of Object.entries(字形自定义)) {
+      const 字符数据 = this.校验字符(字符串);
+      if (!字符数据) continue;
+      const 单一补丁列表: 字符数据单一补丁[] = [];
+      for (const 补丁 of 补丁列表) {
+        const { sources, ...rest } = 补丁;
+        for (const source of 补丁.sources) {
+          单一补丁列表.push({ ...rest, source });
+        }
+        if (补丁.sources.length === 0) {
+          单一补丁列表.push({ ...rest });
+        }
+      }
+      for (const 补丁 of 单一补丁列表) {
+        const prev = 字符数据.expanded_glyphs_history.at(-1) ?? [];
+        let next: 字形单一来源数据[];
+        switch (补丁.type) {
+          case "delete": {
+            next = prev.filter((来源数据) => 来源数据.source !== 补丁.source);
+            break;
+          }
+          case "update": {
+            const 字形 = 字形查找表.get(补丁.id);
+            if (!字形) continue;
+            next = prev.map((来源数据) =>
+              来源数据.source === 补丁.source
+                ? { id: 补丁.id, source: 来源数据.source }
+                : 来源数据,
+            );
+            break;
+          }
+          case "insert": {
+            const 字形 = 字形查找表.get(补丁.id);
+            if (!字形) continue;
+            next = [...prev, { id: 补丁.id, source: 补丁.source }];
+            break;
+          }
+        }
+        字符数据.expanded_glyphs_history.push(next);
       }
     }
-    复合体列表.sort((a, b) => 深度缓存.get(a.id)! - 深度缓存.get(b.id)!);
 
-    // 按深度顺序构造复合体：此时所有部分一定已存在于字形表中
-    for (const 字形 of 复合体列表) {
-      const 部分列表 = 字形.references.map((ref) => {
-        const 字形实例 = this.字形表.get(ref.glyph.id);
-        if (!字形实例) throw new Error(`字形 ${ref.glyph.id} 未找到`);
-        return 字形实例;
-      });
-      const 复合体实例 = new 复合体(字形, 部分列表);
-      this.字形表.set(字形.id, 复合体实例);
+    for (const 字形历史 of this.字符表.values()) {
+      const last = 字形历史.expanded_glyphs_history.at(-1) ?? [];
+      字形历史.final_extended_glyphs = last.filter(
+        (x) => x.source === undefined || 字形来源列表.includes(x.source),
+      );
+      const groupById = new Map<number, Set<string | undefined>>();
+      for (const { id, source } of 字形历史.final_extended_glyphs) {
+        if (!groupById.has(id)) {
+          groupById.set(id, new Set());
+        }
+        groupById.get(id)!.add(source);
+      }
+      for (const [id, sources] of groupById) {
+        字形历史.final_glyphs.push({
+          id,
+          sources: Array.from(sources).filter(
+            (s) => s !== undefined,
+          ) as string[],
+        });
+      }
     }
   }
 
@@ -308,8 +272,8 @@ class 字库 {
     }
   }
 
-  查询字形(字符: 字符): 字形[] | undefined {
-    const 字形信息列表 = this.字符表.get(字符);
+  查询字符的字形(字符: 字符): 字形[] | undefined {
+    const 字形信息列表 = this.字符表.get(字符.toNumber())?.final_glyphs;
     if (!字形信息列表) return undefined;
     const 字形列表: 字形[] = [];
     for (const 字形数据 of 字形信息列表) {
@@ -325,10 +289,10 @@ class 字库 {
     return this.字形表.get(id);
   }
 
-  找到部件(字符串: string, 原始字库: 原始字库): 部件 | undefined {
-    const 字符 = 原始字库.校验(字符串)?.character;
+  找到部件(字符串: string): 部件 | undefined {
+    const 字符 = this.校验字符(字符串)?.character;
     if (!字符) return undefined;
-    const 字形列表 = this.查询字形(字符);
+    const 字形列表 = this.查询字符的字形(字符);
     if (!字形列表) return undefined;
     for (const 字形 of 字形列表) {
       if (字形 instanceof 部件) {
@@ -336,6 +300,232 @@ class 字库 {
       }
     }
     return undefined;
+  }
+
+  查询字符(字符实例: 字符): 扩展字符数据 | undefined {
+    return this.字符表.get(字符实例.toNumber());
+  }
+
+  校验字符(汉字: string): 扩展字符数据 | undefined {
+    const 字符列表 = [...汉字];
+    if (字符列表.length !== 1) return;
+    return this.字符表.get(汉字.codePointAt(0)!);
+  }
+
+  /**
+   * 递归构建字形树，并应用拼写运算。
+   * @param 字形数据 当前字形数据
+   * @param 字形查找表 字形数据查找表
+   * @param 拼写运算列表 拼写运算列表
+   * @param 取新ID 分配新字形 ID 的函数
+   * @param 最大深度 最大递归深度，防止循环引用
+   * @returns 构建好的字形实例
+   */
+  private 构建并变换字形(
+    字形数据: 基本字形数据,
+    字形查找表: Map<number, 基本字形数据>,
+    拼写运算列表: 字形拼写运算[],
+    取新ID: () => number,
+    最大深度 = 10,
+  ): 字形 {
+    const 已存在 = this.字形表.get(字形数据.id);
+    if (已存在) return 已存在;
+    if (字形数据.type === "component") return new 部件(字形数据);
+    if (最大深度 <= 0) {
+      throw new Error("解引用超过最大深度，可能存在循环引用");
+    }
+    const 子字形列表: 字形[] = [];
+    for (const { id } of 字形数据.references) {
+      const 引用字形 = 字形查找表.get(id);
+      if (!引用字形) {
+        throw new Error(`字形 ${id} 不存在于字形查找表中`);
+      }
+      const 子字形 = this.构建并变换字形(
+        引用字形,
+        字形查找表,
+        拼写运算列表,
+        取新ID,
+        最大深度 - 1,
+      );
+      子字形列表.push(子字形);
+    }
+    const 原始字形 = new 复合体(字形数据, 子字形列表);
+    // 尝试应用拼写运算列表，匹配 from 模式并执行 to 模式的增删改
+    const 模式变量映射: 模式变量映射 = {
+      id映射: new Map(),
+      operator映射: new Map(),
+    };
+    let 当前字形: 字形 = 原始字形;
+    for (const { from, to } of 拼写运算列表) {
+      if (this.匹配模式(当前字形, from, 模式变量映射)) {
+        const 新字形 = this.合成字形(to, 模式变量映射, 取新ID);
+        if (新字形) {
+          当前字形 = 新字形;
+        }
+      }
+    }
+    return 当前字形;
+  }
+
+  /**
+   * 在字形树上进行模式匹配。
+   * 返回 true 表示匹配成功，同时将变量绑定写入映射。
+   */
+  private 匹配模式(字形: 字形, 模式: 模式, 映射: 模式变量映射): boolean {
+    // ID：精确匹配字形 ID
+    if (typeof 模式 === "number") {
+      return 字形.id === 模式;
+    }
+    // IDVariable：匹配字形 ID（可选限定 id_set），绑定变量
+    if (!("references" in 模式)) {
+      const { variable, id_set } = 模式;
+      if (id_set && !id_set.includes(字形.id)) return false;
+      const bound = 映射.id映射.get(variable);
+      if (bound !== undefined) return bound === 字形.id;
+      映射.id映射.set(variable, 字形.id);
+      return true;
+    }
+    // 复合模式：匹配复合体树数据
+    if (字形 instanceof 部件) return false;
+    const { operator, references } = 模式;
+    // 匹配结构描述字符
+    if (typeof operator === "string") {
+      if (字形.结构描述字符 !== operator) return false;
+    } else {
+      // OperatorVariable
+      const { variable, opearator_set } = operator;
+      if (opearator_set && !opearator_set.includes(字形.结构描述字符))
+        return false;
+      const bound = 映射.operator映射.get(variable);
+      if (bound !== undefined) return bound !== 字形.结构描述字符;
+      映射.operator映射.set(variable, 字形.结构描述字符);
+    }
+    // 匹配子节点
+    if (references.length !== 字形.部分列表.length) return false;
+    for (let i = 0; i < references.length; i++) {
+      const 子字形 = 字形.部分列表[i]!;
+      if (!this.匹配模式(子字形, references[i]!, 映射)) return false;
+    }
+    return true;
+  }
+
+  /**
+   * 根据 to 模式和变量绑定合成新的已解引用字形。
+   * 新字形使用取新ID()分配的占位符 ID。
+   */
+  private 合成字形(
+    模式: 模式,
+    映射: 模式变量映射,
+    取新ID: () => number,
+  ): 字形 | undefined {
+    // ID：直接查表返回
+    if (typeof 模式 === "number") {
+      return this.字形表.get(模式);
+    }
+    // IDVariable：根据变量绑定查找对应的字形
+    if (!("references" in 模式)) {
+      const glyphId = 映射.id映射.get(模式.variable);
+      if (glyphId === undefined) return undefined;
+      return this.字形表.get(glyphId);
+    }
+    // 复合模式：递归合成新的字形
+    const { operator, references } = 模式;
+    // 解析结构描述字符
+    let 已解析Operator: 结构描述字符;
+    if (typeof operator === "string") {
+      已解析Operator = operator;
+    } else {
+      const op = 映射.operator映射.get(operator.variable);
+      if (!op) return undefined;
+      已解析Operator = op;
+    }
+    // 递归合成子节点
+    const 子字形列表: 字形[] = [];
+    for (const 子模式 of references) {
+      const 子字形 = this.合成字形(子模式, 映射, 取新ID);
+      if (!子字形) return undefined;
+      子字形列表.push(子字形);
+    }
+    return new 复合体(
+      {
+        type: "compound",
+        id: 取新ID(),
+        operator: 已解析Operator,
+        references: 子字形列表.map((glyph) => ({ id: glyph.id })),
+      },
+      子字形列表,
+    );
+  }
+
+  校验自定义映射(自定义元素集合: Record<string, 自定义分析>) {
+    const 自定义分析映射: 自定义分析映射 = new Map();
+    const 自定义元素映射 = new Map<string, 自定义元素[]>();
+    for (const [类别, 映射] of Object.entries(自定义元素集合)) {
+      const 元素名称映射 = new Map<string, 自定义元素>();
+      for (const [汉字, 元素名称列表] of Object.entries(映射)) {
+        const 字符实例 = this.校验字符(汉字);
+        if (!字符实例) continue;
+        const 记录 =
+          自定义分析映射.get(字符实例.character) ??
+          new Map<string, 自定义元素[]>();
+        const 元素列表: 自定义元素[] = [];
+        for (const 元素名称 of 元素名称列表) {
+          const 元素 =
+            元素名称映射.get(元素名称) ?? new 自定义元素(类别, 元素名称);
+          元素列表.push(元素);
+          if (!元素名称映射.has(元素名称)) 元素名称映射.set(元素名称, 元素);
+        }
+        记录.set(类别, 元素列表);
+        自定义分析映射.set(字符实例.character, 记录);
+      }
+      自定义元素映射.set(类别, [...元素名称映射.values()]);
+    }
+    return { 自定义分析映射, 自定义元素映射 };
+  }
+
+  校验词典(原始词典: 原始词典): 词典 {
+    const result: 词典 = [];
+    for (const { 词, ...rest } of 原始词典) {
+      const 字符列表: 字符[] = [];
+      let valid = true;
+      for (const 字符 of [...词]) {
+        const 字符实例 = this.校验字符(字符)?.character;
+        if (字符实例) {
+          字符列表.push(字符实例);
+        } else {
+          valid = false;
+        }
+      }
+      if (valid) result.push({ 词: 字符列表, ...rest });
+    }
+    return result;
+  }
+
+  过滤词典(词典: 词典, 字集指示: 字集指示): 词典 {
+    const 过滤函数 = 字集过滤查找表[字集指示]!;
+    const result: 词典 = [];
+    for (const 条目 of 词典) {
+      let valid = true;
+      for (const 汉字 of 条目.词) {
+        const 汉字数据 = this.查询字符(汉字);
+        if (!汉字数据) continue;
+        if (!过滤函数(汉字数据.character, 汉字数据)) valid = false;
+      }
+      if (valid) result.push(条目);
+    }
+    return result;
+  }
+
+  获取汉字集合(词典: 词典): Set<字符> {
+    const 字符集合 = new Set<字符>();
+    for (const { 词 } of 词典) {
+      for (const 汉字 of 词) {
+        const 汉字数据 = this.查询字符(汉字);
+        if (!汉字数据) continue;
+        字符集合.add(汉字);
+      }
+    }
+    return 字符集合;
   }
 
   准备字形分析配置(
@@ -360,14 +550,20 @@ class 字库 {
       if (元素 instanceof 笔画 || 元素 instanceof 二笔) {
         所有字根.push(元素);
       } else if (元素 instanceof 字符) {
-        const 字形列表 = this.查询字形(元素) ?? [];
+        const 字形列表 = this.查询字符的字形(元素) ?? [];
         for (const 字根字形 of 字形列表) {
           if (字根字形 instanceof 部件) {
             const 字根实例 = new 部件字根(元素, 字根字形);
             部件字根列表.push(字根实例);
             所有字根.push(字根实例);
           } else {
-            const 部件字形 = new 部件(0, 字根字形.图形盒子.获取笔画列表());
+            const 部件字形 = new 部件({
+              type: "component",
+              id: 0,
+              strokes: 字根字形.图形盒子.获取笔画列表(),
+              operator: undefined,
+              references: undefined,
+            });
             const 字根实例 = new 部件字根(元素, 部件字形);
             部件字根列表.push(字根实例);
             复合体字根映射.set(字根字形, 字根实例);
@@ -470,7 +666,7 @@ class 字库 {
       }
     };
     for (const 汉字 of 汉字列表) {
-      const 字形列表 = this.查询字形(汉字) ?? [];
+      const 字形列表 = this.查询字符的字形(汉字) ?? [];
       for (const 字形 of 字形列表) {
         recurse(字形);
         if (是复合体(字形)) {
@@ -546,10 +742,11 @@ class 字库 {
       复合体分析结果.set(复合体, 分析.value);
     }
     const 分析结果 = new Map<字符, 基本字符字形分析[]>();
-    for (const 汉字 of 汉字集合) {
-      const 字形列表 = this.字符表.get(汉字) ?? [];
+    for (const 字符 of 汉字集合) {
+      const 字形来源列表 = this.字符表.get(字符.toNumber())?.final_glyphs ?? [];
       const 分析列表: 基本字符字形分析[] = [];
-      for (const { id, ...rest } of 字形列表) {
+      for (const 字形来源数据 of 字形来源列表) {
+        const { id, ...rest } = 字形来源数据;
         const 字形 = this.字形表.get(id);
         if (!字形) continue;
         if (是部件(字形)) {
@@ -560,7 +757,7 @@ class 字库 {
           if (分析) 分析列表.push({ ...分析, ...rest });
         }
       }
-      分析结果.set(汉字, 分析列表);
+      分析结果.set(字符, 分析列表);
     }
     return ok({
       分析结果,
@@ -598,19 +795,19 @@ class 字库 {
     type 分析结果类型 = 优先表<基本部件分析> | 优先表<基本复合体分析>;
     const 分析结果 = new Map<字符, 分析结果类型[]>();
     for (const 汉字 of 汉字集合) {
-      const 字形列表 = this.字符表.get(汉字) ?? [];
+      const 字形来源列表 = this.字符表.get(汉字.toNumber())?.final_glyphs ?? [];
       const 分析列表: 分析结果类型[] = [];
-      for (const { id, ...rest } of 字形列表) {
+      for (const { id, ...rest } of 字形来源列表) {
         const 字形 = this.字形表.get(id);
         if (!字形) continue;
         if (是部件(字形)) {
           const 分析 = 动态部件分析结果.get(字形);
           if (分析)
-            分析列表.push(new 优先表([...分析], rest.sources, rest.compatible));
+            分析列表.push(new 优先表([...分析], rest.sources, false));
         } else if (是复合体(字形)) {
           const 分析 = 动态复合体分析结果.get(字形);
           if (分析)
-            分析列表.push(new 优先表([...分析], rest.sources, rest.compatible));
+            分析列表.push(new 优先表([...分析], rest.sources, false));
         }
       }
       分析结果.set(汉字, 分析列表);

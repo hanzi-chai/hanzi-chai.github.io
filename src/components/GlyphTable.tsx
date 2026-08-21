@@ -1,17 +1,23 @@
 import { Button, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import type { 基本字形数据, 字形数据, 字符 } from "hanzi-chai";
-import { isVectorStroke, 是用户字形 } from "hanzi-chai";
+import type { 基本字形数据, 字形 } from "hanzi-chai";
+import {
+  isVectorStroke,
+  复合体,
+  是用户字形,
+  结构描述字符列表,
+  部件,
+} from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { type ReactElement, useMemo, useState } from "react";
 import { createGlyph, removeGlyph, replaceGlyph, updateGlyph } from "~/api";
 import {
   下一个用户字形ID原子,
-  原始字库原子,
   可编辑字形列表原子,
   可编辑字符列表原子,
   字库原子,
+  字形字符映射原子,
   用户字形列表原子,
   统一字形列表原子,
   远程原子,
@@ -20,6 +26,7 @@ import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/ut
 import BorderItem from "./BorderItem";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
+import GlyphAlgebraForm from "./GlyphAlgebraForm";
 import GlyphForm from "./GlyphForm";
 import GlyphSelect from "./GlyphSelect";
 import GlyphView from "./GlyphView";
@@ -121,17 +128,20 @@ const ReplaceGlyph = ({ id }: { id: number }) => {
 };
 
 export const EditOrRedrawGraph = ({
-  record,
+  id,
   trigger,
   initialChar,
 }: {
-  record: 字形数据;
+  id: number;
   trigger: ReactElement;
   initialChar?: string;
 }) => {
   const 远程 = useAtomValue(远程原子);
+  const 统一字形列表 = useAtomValue(统一字形列表原子);
   const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
   const [用户字形列表, set用户字形列表] = useAtom(用户字形列表原子);
+  const record = 统一字形列表.find((x) => x.id === id);
+  if (!record) return null;
   return (
     <GlyphForm
       trigger={trigger}
@@ -159,21 +169,12 @@ export const EditOrRedrawGraph = ({
 };
 
 export default function GlyphTable() {
-  const 原始字库 = useAtomValue(原始字库原子);
   const 统一字形列表 = useAtomValue(统一字形列表原子);
   const 用户字形列表 = useAtomValue(用户字形列表原子);
   const 字库 = useAtomValue(字库原子);
   const [filter, setFilter] = useState<过滤器参数>({});
-  const 字形字符映射 = useMemo(() => {
-    const map = new Map<number, Set<字符>>();
-    for (const 字符 of 原始字库) {
-      for (const { id } of 字符.glyphs) {
-        if (!map.has(id)) map.set(id, new Set());
-        map.get(id)!.add(字符.character);
-      }
-    }
-    return map;
-  }, [原始字库]);
+  const 字形字符映射 = useAtomValue(字形字符映射原子);
+
   const gf0014set = new Set(
     Array(514)
       .keys()
@@ -195,71 +196,68 @@ export default function GlyphTable() {
 
   const dataSource = useMemo(() => {
     const 过滤器 = new 字符字形过滤器(filter);
-    const result: 字形数据[] = [];
-    for (const 字形 of 统一字形列表) {
-      const 真字形 = 字库.获取字形(字形.id);
-      if (!真字形) continue;
-      if (过滤器.过滤字形(真字形)) {
+    const result: 字形[] = [];
+    for (const [_, 字形] of 字库.字形迭代器()) {
+      if (过滤器.过滤字形(字形)) {
         result.push(字形);
       }
     }
-    return result.sort(
-      (a, b) =>
-        字库.获取字形(a.id)!.标准笔顺.length -
-        字库.获取字形(b.id)!.标准笔顺.length,
-    );
+    return result.sort((a, b) => a.标准笔顺.length - b.标准笔顺.length);
   }, [统一字形列表, 字库, filter]);
 
-  const columns: ColumnsType<字形数据 | 基本字形数据> = [
+  const columns: ColumnsType<字形> = [
     {
       title: "ID",
       dataIndex: "id",
       sorter: (a, b) => a.id - b.id,
       sortDirections: ["ascend", "descend"],
-      render: (_, record) => {
-        const 图形 = 字库.获取字形(record.id)?.图形盒子;
-        return (
-          <Flex className="flex-nowrap items-center gap-2">
-            <BorderItem>{图形 ? <GlyphView glyph={图形} /> : null}</BorderItem>
-            {record.id}
-          </Flex>
-        );
-      },
+      render: (_, record) => (
+        <Flex className="flex-nowrap items-center gap-2">
+          <Tooltip title={record.name}>
+            <BorderItem>
+              <GlyphView glyph={record.图形盒子} />
+            </BorderItem>
+          </Tooltip>
+          {record.id}
+        </Flex>
+      ),
       width: 80,
     },
     {
       title: "类型",
-      dataIndex: "type",
-      render: (_, record) => (record.type === "component" ? "部件" : "复合体"),
+      render: (_, record) => (record instanceof 部件 ? "部件" : "复合体"),
       filters: [
         { text: "部件", value: "component" },
         { text: "复合体", value: "compound" },
       ],
-      onFilter: (value, record) => record.type === value,
+      onFilter: (value, record) =>
+        (record instanceof 部件 ? "部件" : "复合体") === value,
       width: 96,
     },
     {
       title: "结构",
-      dataIndex: "operator",
+      render: (_, record) =>
+        record instanceof 部件 ? "" : record.结构描述字符,
       filters: [
-        { text: "只看有结构描述字符", value: 1 },
-        { text: "只看无结构描述字符", value: 0 },
+        { text: "无", value: "" },
+        ...结构描述字符列表.map((x) => ({ text: x, value: x })),
       ],
       onFilter: (value, record) =>
-        value === 1 ? !!record.operator : !record.operator,
+        value === ""
+          ? record instanceof 部件
+          : record instanceof 复合体 && record.结构描述字符 === value,
       width: 64,
     },
     {
       title: "引用",
       render: (_, record) => {
-        const ids = (record.references ?? []).map((x) => x.id);
+        if (record instanceof 部件) return null;
         return (
           <Flex>
-            {ids.map((id) => {
-              const 字形 = 字库.获取字形(id);
+            {record.部分列表.map((字形) => {
               if (!字形) return null;
               return (
-                <Tooltip key={id} title={`ID: ${id}`}>
+                <Tooltip key={字形.id} title={`ID: ${字形.id}`}>
                   <BorderItem>
                     <GlyphView glyph={字形.图形盒子} />
                   </BorderItem>
@@ -269,16 +267,14 @@ export default function GlyphTable() {
           </Flex>
         );
       },
-      sorter: (a, b) =>
-        (a.references?.length ?? 0) - (b.references?.length ?? 0),
       width: 80,
     },
     {
       title: "笔画",
-      dataIndex: "strokes",
       render: (_, record) => {
         const summaries: string[] = [];
-        for (const stroke of record.strokes ?? []) {
+        const list = record instanceof 部件 ? record.矢量图形 : record.笔画列表;
+        for (const stroke of list) {
           if (isVectorStroke(stroke)) {
             summaries.push(stroke.feature);
           } else {
@@ -289,7 +285,6 @@ export default function GlyphTable() {
         }
         return summaries.join(", ");
       },
-      sorter: (a, b) => (a.strokes?.length ?? 0) - (b.strokes?.length ?? 0),
       width: 128,
     },
     {
@@ -331,7 +326,7 @@ export default function GlyphTable() {
       title: "操作",
       render: (_, record) => (
         <Space>
-          <EditOrRedrawGraph record={record} trigger={<Button>编辑</Button>} />
+          <EditOrRedrawGraph id={record.id} trigger={<Button>编辑</Button>} />
           <ReplaceGlyph id={record.id} />
           <DeleteGlyph id={record.id} />
         </Space>
@@ -350,12 +345,13 @@ export default function GlyphTable() {
 
   return (
     <Flex className="overflow-y-scroll" vertical align="center" gap="small">
-      <FilterForm setFilter={setFilter} />
+      <FilterForm setFilter={setFilter} isGlyph />
       <Flex gap="large">
         <CharacterGlyphSwitcher />
+        <GlyphAlgebraForm />
         <CreateGlyph />
       </Flex>
-      <Table<字形数据>
+      <Table<字形>
         dataSource={dataSource}
         columns={columns}
         size="small"

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS characters (
 
 CREATE TABLE IF NOT EXISTS glyphs (
   `id` INTEGER PRIMARY KEY,
+  `name` TEXT,
   `type` TEXT NOT NULL,
   `operator` TEXT,
   `references` TEXT,

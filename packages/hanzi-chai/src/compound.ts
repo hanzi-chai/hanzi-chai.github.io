@@ -11,38 +11,52 @@ import {
   type 首末取大部件分析,
   type 默认部件分析,
 } from "./component.js";
-import type { 引用笔画块数据, 结构描述字符 } from "./data.js";
+import type { 复合体数据, 引用笔画块数据, 结构描述字符 } from "./data.js";
 import { 二笔, 未知元素, 结构符元素 } from "./element.js";
-import type { 复合体树数据 } from "./primitive.js";
 import {
-  优先表,
-  type 基本复合体分析,
   type 基本部件分析,
   type 字形,
   type 字形分析配置,
+  是复合体,
+  是部件,
+} from "./repertoire.js";
+import {
+  default_err,
+  ok,
+  type Result,
+  仿射合并,
+  优先表,
   type 字根,
   存在,
   type 带条件,
-  是复合体,
-  是部件,
   贝叶斯推断,
-} from "./repertoire.js";
-import { default_err, ok, type Result, 仿射合并 } from "./utils.js";
+} from "./utils.js";
+
+export interface 基本复合体分析 {
+  字根序列: 字根[];
+  复合体: 复合体;
+}
 
 class 复合体 {
   public id: number;
+  public name: string | undefined;
+  public gf0014_id: number | undefined;
+  public gf3001_id: number | undefined;
   public 结构描述字符: 结构描述字符;
-  public 笔顺: 引用笔画块数据[];
+  public 笔画列表: 引用笔画块数据[];
   public 图形盒子: 图形盒子;
   public 标准笔顺: string;
 
   constructor(
-    数据: 复合体树数据,
+    数据: 复合体数据,
     public 部分列表: 字形[],
   ) {
     this.id = 数据.id;
+    this.name = 数据.name;
+    this.gf0014_id = 数据.gf0014_id;
+    this.gf3001_id = 数据.gf3001_id;
     this.结构描述字符 = 数据.operator;
-    this.笔顺 = 数据.strokes ?? 部分列表.map((_, i) => ({ index: i }));
+    this.笔画列表 = 数据.strokes ?? 部分列表.map((_, i) => ({ index: i }));
     this.图形盒子 = 仿射合并(
       部分列表.map((x) => x.图形盒子),
       数据.references,
@@ -52,9 +66,13 @@ class 复合体 {
     this.标准笔顺 = this.获取笔画序列(默认分类器).join("");
   }
 
+  获取名称() {
+    return `字形-${this.id}`;
+  }
+
   按首笔排序部分(): 字形[] {
     const 部分列表 = sortBy(range(this.部分列表.length), (i) =>
-      this.笔顺.findIndex((b) => b.index === i),
+      this.笔画列表.findIndex((b) => b.index === i),
     ).map((i) => this.部分列表[i]!);
     return 部分列表;
   }
@@ -96,7 +114,7 @@ abstract class 复合体分析器<
       } else 字根序列 = this.顺序取根(子字形);
       return { 字根序列, 部件分析 };
     });
-    const result = this.执行笔顺(部分结果列表, 字形.笔顺);
+    const result = this.执行笔顺(部分结果列表, 字形.笔画列表);
     // const result = 部分结果列表.flatMap(x => x.字根序列);
     return result;
   }
@@ -135,7 +153,7 @@ abstract class 复合体分析器<
     });
     return 结果列表.concat(
       贝叶斯推断(部分结果组列表, (组合) => {
-        const 字根序列 = this.执行笔顺(组合, 字形.笔顺);
+        const 字根序列 = this.执行笔顺(组合, 字形.笔画列表);
         return { 字根序列 };
       }),
     );
@@ -278,7 +296,7 @@ class 首末取大复合体分析器 extends 复合体分析器<
       const 字根序列 = this.首末取大顺序取根(子字形, 下一级末尾);
       return { 字根序列, 部件分析 };
     });
-    const result = this.执行笔顺(部分结果列表, 字形.笔顺);
+    const result = this.执行笔顺(部分结果列表, 字形.笔画列表);
     return result;
   }
 }
@@ -542,7 +560,7 @@ class 星空键道复合体分析器 extends 复合体分析器<
       return ok(分析);
     }
     分析.字根序列 = this.顺序取根(复合体);
-    if (复合体.笔顺[0]?.index === 1) {
+    if (复合体.笔画列表[0]?.index === 1) {
       // 第一个书写的部分只写了一笔，视同独体字取码
     } else {
       const 排序部分结果 = 复合体.按首笔排序部分();

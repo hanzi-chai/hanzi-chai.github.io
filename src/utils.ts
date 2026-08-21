@@ -161,28 +161,31 @@ export class 字符字形过滤器 {
     }
   }
 
-  过滤字符(汉字: 字符, 数据: 字符数据, 字库: 字库) {
+  过滤字符(字符: 字符, 字符数据: 字符数据, 字库: 字库) {
     let result = true;
-    const { name, unicode, source } = this.过滤条件;
+    const { name, id, source } = this.过滤条件;
+    if (id) {
+      let hex_str = 字符.toNumber().toString(16);
+      let dec_str = 字符.toNumber().toString(10);
+      result &&= id.toLowerCase() === hex_str || id === dec_str;
+    }
     if (name) {
-      result &&= (数据.name ?? "").includes(name) || 汉字.获取名称().includes(name);
+      result &&= 字符.获取名称().includes(name);
     }
-    if (unicode) {
-      let hex_str = 汉字.toNumber().toString(16);
-      let dec_str = 汉字.toNumber().toString(10);
-      result &&= unicode.toLowerCase() === hex_str || unicode === dec_str;
-    }
-    if (source) result &&= 数据.glyphs.some((glyph) => glyph.sources.includes(source));
-    const 字形列表 = 字库.查询字形(汉字) ?? [];
+    if (source) result &&= 字符数据.glyphs.some((glyph) => glyph.sources.includes(source));
+    const 字形列表 = 字库.查询字符的字形(字符) ?? [];
     result &&= 字形列表.some((glyph) => this.过滤字形(glyph));
     return result;
   }
 
   过滤字形(glyph: 字形) {
-    const { unicode, operator, part } = this.过滤条件;
+    const { id, name, operator, part } = this.过滤条件;
     let result = true;
-    if (unicode) {
-      result &&= unicode === glyph.id.toString()
+    if (id) {
+      result &&= id === glyph.id.toString()
+    }
+    if (name) {
+      result &&= (glyph.name ?? "").includes(name);
     }
     if (this.sequenceRegex !== undefined) {
       result &&= this.sequenceRegex!.test(glyph.标准笔顺);
@@ -198,9 +201,9 @@ export class 字符字形过滤器 {
 }
 
 export interface 过滤器参数 {
+  id?: string;
   name?: string;
   sequence?: string;
-  unicode?: string;
   source?: string;
   part?: string;
   operator?: 结构描述字符;

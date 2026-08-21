@@ -2,17 +2,20 @@ import type { 基本汉字分析 } from "./assembly.js";
 import type { 分类器 } from "./classifier.js";
 import type { 条件节点配置, 源节点配置, 运算符 } from "./config.js";
 import type { 结构描述字符 } from "./data.js";
-import { type 字根, 部件字根 } from "./repertoire.js";
+import type { 字形 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 import {
+  type 字根,
   type 强类型元素位或编码,
   type 强类型决策,
   type 强类型决策空间,
   计算当前或潜在长度,
+  部件字根,
 } from "./utils.js";
 
 export type 元素 =
   | 字符
+  | 字形
   | 笔画
   | 二笔
   | 结构符元素
@@ -362,8 +365,7 @@ export class 取码器 {
         stroke2 = signedIndex(strokes, object.strokeIndex * 2);
         return 二笔.创建(stroke1, stroke2 ?? 0);
       case "结构":
-        console.log(result);
-        return "结构" in result ? result.结构 : undefined;
+        return "结构" in result ? (result.结构 as 结构符元素) : undefined;
       case "自定义":
         return signedIndex(
           result.自定义元素.get(object.subtype) ?? [],

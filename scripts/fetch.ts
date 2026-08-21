@@ -6,7 +6,7 @@
  * - public/data/${version}/ (用于网页，版本化避免缓存)
  */
 
-import { mkdirSync, writeFileSync } from "fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import pako from "pako";
 import { listCharacters, listGlyphs } from "../src/api";
 import { getLocalDataPath, VERSION } from "./utils.js";

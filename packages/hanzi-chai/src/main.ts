@@ -48,7 +48,6 @@ export * from "./data.js";
 export * from "./element.js";
 export * from "./math.js";
 export * from "./pinyin.js";
-export * from "./primitive.js";
 export * from "./registry.js";
 export * from "./repertoire.js";
 export * from "./selector.js";

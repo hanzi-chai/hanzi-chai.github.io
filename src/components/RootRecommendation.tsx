@@ -5,7 +5,7 @@ import {
   useAtomValueUnwrapped,
   useMapAddAtom,
   全部合法元素原子,
-  原始字库原子,
+  字库原子,
   强类型决策原子,
   当前元素原子,
 } from "~/atoms";
@@ -57,7 +57,7 @@ interface RootRecommendationProps {
 export default function RootRecommendation({ value }: RootRecommendationProps) {
   const 当前元素 = useAtomValue(当前元素原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(字库原子);
   const 推荐映射 = new Map<字符, 字符[]>();
   for (const group of GROUPS) {
     const elements: 字符[] = [];
@@ -104,13 +104,13 @@ export default function RootRecommendation({ value }: RootRecommendationProps) {
           {元素列表.map((e) => (
             <span key={e.toNumber()}>
               <CharacterDisplay character={e} />
-              {e.是私用区() && ` (${原始字库.查询(e)?.name})`}
+              {e.是私用区() && ` (${原始字库.查询字符(e)?.name})`}
             </span>
           ))}
           」 与「
           <span>
             <CharacterDisplay character={当前元素} />
-            {当前元素.是私用区() && ` (${原始字库.查询(当前元素)?.name})`}
+            {当前元素.是私用区() && ` (${原始字库.查询字符(当前元素)?.name})`}
           </span>
           」相似。是否一并添加？
         </div>

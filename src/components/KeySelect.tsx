@@ -115,7 +115,7 @@ export default function KeySelect({
         if (!元素) return false;
         const 匹配序列 =
           元素 instanceof 字符 &&
-          字库.查询字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
+          字库.查询字符的字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
         const 匹配元素 = key.element.includes(input);
         return 匹配序列 || 匹配元素;
       }}
@@ -141,8 +141,8 @@ export default function KeySelect({
         const cha = 名称映射.get(ak.element);
         const chb = 名称映射.get(bk.element);
         if (cha instanceof 字符 && chb instanceof 字符) {
-          const aSequence = 字库.查询字形(cha)?.[0]?.标准笔顺 ?? "";
-          const bSequence = 字库.查询字形(chb)?.[0]?.标准笔顺 ?? "";
+          const aSequence = 字库.查询字符的字形(cha)?.[0]?.标准笔顺 ?? "";
+          const bSequence = 字库.查询字符的字形(chb)?.[0]?.标准笔顺 ?? "";
           return aSequence.length - bSequence.length;
         }
         return ak.element.localeCompare(bk.element);

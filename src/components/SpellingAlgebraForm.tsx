@@ -5,10 +5,10 @@ import {
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Form, notification, Space } from "antd";
-import ProFormListMovable from "./ProFormListMovable";
 import type { 运算规则 } from "hanzi-chai";
 import { 拼写运算查找表 } from "hanzi-chai";
 import { useAddAtom, 拼写运算自定义原子 } from "~/atoms";
+import ProFormListMovable from "./ProFormListMovable";
 
 interface SpellingAlgebraFormProps {
   name: string;
@@ -68,10 +68,7 @@ export default function SpellingAlgebraForm({
           );
         })}
       </Space>
-      <ProFormListMovable
-        name="rules"
-        label="拼写运算"
-      >
+      <ProFormListMovable name="rules" label="拼写运算">
         <ProFormGroup key="group">
           <ProFormSelect
             name="type"

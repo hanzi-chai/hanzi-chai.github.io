@@ -41,8 +41,7 @@ import {
   type 自定义元素,
 } from "./element.js";
 import { 应用拼写运算, type 拼音分析映射 } from "./pinyin.js";
-import type { 原始字库 } from "./primitive.js";
-import type { 字库 } from "./repertoire.js";
+import type { 字库, 字形 } from "./repertoire.js";
 import { 字符 } from "./unicode.js";
 
 // Result 类型定义
@@ -305,6 +304,7 @@ export const 计算拼音分析与元素映射 = (
 
 export const 计算全部合法元素与元素映射 = (
   字符列表: 字符[],
+  字形列表: 字形[],
   分类器: 分类器,
   拼音元素映射: Map<string, 拼音元素[]>,
   自定义元素映射: Map<string, 自定义元素[]>,
@@ -326,6 +326,7 @@ export const 计算全部合法元素与元素映射 = (
   const 名称映射: Map<string, 元素> = new Map();
   const 普通元素: 元素[] = [
     ...字符列表,
+    ...字形列表,
     ...笔画列表,
     ...二笔列表,
     ...结构符元素列表,
@@ -341,6 +342,7 @@ export const 计算全部合法元素与元素映射 = (
   }
   return {
     字符列表,
+    字形列表,
     笔画列表,
     二笔列表,
     结构符元素列表,
@@ -416,7 +418,6 @@ export function 构建强类型决策与决策空间(
 
 export function 构建强类型自定义分析(
   字库: 字库,
-  原始字库: 原始字库,
   名称映射: Map<string, 元素>,
   自定义分析: Record<string, string[]>,
   动态自定义拆分: Record<string, string[][]>,
@@ -424,7 +425,7 @@ export function 构建强类型自定义分析(
   const 自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[]> = new Map();
   const 动态自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[][]> = new Map();
   for (const [key, value] of Object.entries(自定义分析)) {
-    const 部件实例 = 字库.找到部件(key, 原始字库);
+    const 部件实例 = 字库.找到部件(key);
     if (!部件实例) continue;
     const 字根列表: (字符 | 笔画 | 二笔)[] = [];
     for (const 字根名称 of value) {
@@ -435,7 +436,7 @@ export function 构建强类型自定义分析(
     自定义分析映射.set(部件实例, 字根列表);
   }
   for (const [key, value] of Object.entries(动态自定义拆分)) {
-    const 部件实例 = 字库.找到部件(key, 原始字库);
+    const 部件实例 = 字库.找到部件(key);
     if (!部件实例) continue;
     const 字根列表列表: (字符 | 笔画 | 二笔)[][] = [];
     for (const 字根名称列表 of value) {
@@ -992,8 +993,6 @@ export function 仿射合并(
   return new 图形盒子(合并图形);
 }
 
-export const 生成字形起始点 = 0xe_0000;
-export const 生成字形终止点 = 0xe_ffff;
 export const 用户字形起始点 = 0xf_0000;
 export const 用户字形终止点 = 0xf_ffff;
 export const 是用户字形 = (id: number) =>
@@ -1004,3 +1003,114 @@ export const 是用户字符 = (unicode: number) =>
   unicode >= 用户字符起始点 && unicode <= 用户字符终止点;
 
 export const 来源排序 = "GHTJKNVMSBU";
+
+export type 带条件<T extends object> = T & {
+  条件列表: 条件[];
+};
+
+export const 存在 = (x: 字根): 条件 => ({
+  element: x.获取名称(),
+  op: "不是" as const,
+  value: null,
+});
+
+export class 部件字根 {
+  constructor(
+    public 字符: 字符,
+    private 部件: 部件,
+  ) {}
+
+  获取名称() {
+    return this.字符.获取名称();
+  }
+
+  获取部件() {
+    return this.部件;
+  }
+
+  获取笔画序列(classifier: 分类器) {
+    return this.部件.获取笔画序列(classifier);
+  }
+}
+
+export type 字根 = 笔画 | 二笔 | 部件字根;
+
+export class 优先表<T extends object> {
+  constructor(
+    private 列表: 带条件<T>[],
+    public sources: string[] = [],
+    public compatible = false,
+  ) {}
+
+  [Symbol.iterator]() {
+    return this.列表[Symbol.iterator]();
+  }
+}
+
+type 内部带条件 = { 条件列表: 条件[]; 排除: 条件[]; array: object[] };
+
+function 预处理优先表(列表: 带条件<object>[]): 内部带条件[] {
+  return 列表.map((entry, i) => {
+    const 排除: 条件[] = [];
+    for (let j = 0; j < i; j++) {
+      const 差集 = 列表[j]!.条件列表.filter(
+        (c) => !entry.条件列表.some((e) => isEqual(c, e)),
+      );
+      if (差集.length === 1 && !排除.some((e) => isEqual(e, 差集[0]!))) {
+        排除.push(差集[0]!);
+      }
+    }
+    return { ...entry, 排除, array: [entry] };
+  });
+}
+
+export function 贝叶斯推断<Ts extends object[], U extends object>(
+  优先表列表: { [K in keyof Ts]: 带条件<Ts[K] & object>[] },
+  reducer: (a: Ts) => U,
+): 带条件<U>[] {
+  const recurse = (l: 带条件<object>[][]): 内部带条件[] => {
+    if (l.length === 1) return 预处理优先表(l[0]!);
+    const 前一个表 = recurse(l.slice(0, -1));
+    const 当前表 = 预处理优先表(l.at(-1)!);
+    const 结果列表: 内部带条件[] = [];
+    for (const 前一个项 of 前一个表) {
+      for (const 当前项 of 当前表) {
+        const 合并负 = [...前一个项.排除, ...当前项.排除];
+        const 合并正 = [...前一个项.条件列表, ...当前项.条件列表];
+        if (合并正.some((c) => 合并负.some((e) => isEqual(c, e)))) continue;
+        const 扩充条件列表 = [...前一个项.条件列表];
+        const 合并项: 内部带条件 = {
+          array: [...前一个项.array, ...当前项.array],
+          条件列表: 扩充条件列表,
+          排除: 合并负,
+        };
+        if (蕴含(前一个项.条件列表, 当前项.条件列表)) {
+          结果列表.push(合并项);
+          break;
+        } else {
+          for (const 条件 of 当前项.条件列表) {
+            if (!扩充条件列表.some((c) => isEqual(c, 条件))) {
+              扩充条件列表.push(条件);
+            }
+          }
+          结果列表.push(合并项);
+        }
+      }
+    }
+    return 结果列表;
+  };
+  const 结果列表 = recurse(优先表列表 as 带条件<object>[][]).map((x) => ({
+    ...reducer(x.array as Ts),
+    条件列表: x.条件列表,
+  }));
+  return 结果列表;
+}
+
+function 蕴含(已有列表: 条件[], 目标列表: 条件[]): boolean {
+  for (const 目标 of 目标列表) {
+    if (!已有列表.some((条件) => isEqual(条件, 目标))) {
+      return false;
+    }
+  }
+  return true;
+}

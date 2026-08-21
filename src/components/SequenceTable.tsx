@@ -15,7 +15,6 @@ import {
   useAtomValueUnwrapped,
   优先简码原子,
   优先简码映射原子,
-  原始字库原子,
   如编码结果原子,
   字库原子,
   最大码长原子,
@@ -114,7 +113,7 @@ const EnumFilterDropdown = ({
       const 元素 = element.element;
       const 匹配序列 =
         元素 instanceof 字符 &&
-        字库.查询字形(元素)?.some((s) => s.标准笔顺.startsWith(search));
+        字库.查询字符的字形(元素)?.some((s) => s.标准笔顺.startsWith(search));
       return 匹配序列 || 匹配元素;
     });
   return (
@@ -189,13 +188,13 @@ function CommitShortCodeButton({
   onCommit: () => void;
 }) {
   const [优先简码列表, set优先简码] = useAtom(优先简码原子);
-  const 原始字库 = useAtomValue(原始字库原子);
+  const 原始字库 = useAtomValue(字库原子);
 
   const getEntryHash = (entry: { word: string; sources: string[][] }) => {
     if (!原始字库) return null;
     const chars: 字符[] = [];
     for (const c of entry.word) {
-      const ch = 原始字库.校验(c);
+      const ch = 原始字库.校验字符(c);
       if (!ch) return null;
       chars.push(ch.character);
     }

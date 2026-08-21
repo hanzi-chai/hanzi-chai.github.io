@@ -1,8 +1,8 @@
 import { describe, expect, it, beforeAll } from "bun:test";
 import { 获取数据 } from "./index.js";
-import { 获取原始字库, 字集指示, 字集过滤查找表 } from "../src/index.js";
+import { 获取字库, 字集指示, 字集过滤查找表 } from "../src/index.js";
 
-let 原始字库: ReturnType<typeof 获取原始字库>;
+let 原始字库: ReturnType<typeof 获取字库>;
 
 beforeAll(() => {
   ({ 原始字库 } = 获取数据());

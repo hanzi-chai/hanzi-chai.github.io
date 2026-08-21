@@ -16,7 +16,7 @@ describe("笔顺数据验证", () => {
     const result = new Map<string, string>();
     for (const [字符] of 字库) {
       if (!字符.是基本区汉字()) continue;
-      const 字形列表 = 字库.查询字形(字符);
+      const 字形列表 = 字库.查询字符的字形(字符);
       if (!字形列表) continue;
       for (const glyph of 字形列表) {
         result.set(字符.获取名称(), glyph.获取笔画序列(默认分类器).join(""));

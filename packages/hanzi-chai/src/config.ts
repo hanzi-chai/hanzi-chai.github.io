@@ -1,9 +1,5 @@
 import type { 笔画名称 } from "./classifier.js";
-import type {
-  基本字形数据,
-  字符数据,
-  结构描述字符,
-} from "./data.js";
+import type { 基本字形数据, 字符数据, 结构描述字符 } from "./data.js";
 import type { 取码对象 } from "./element.js";
 
 // config.info begin
@@ -49,16 +45,10 @@ export interface 数据配置 {
 
 export type 字形自定义 = Record<string, 字符数据补丁[]>;
 
-export type 字形拼写运算 =
-  | {
-      type: "xform" | "derive";
-      from: 模式;
-      to: 模式;
-    }
-  | {
-      type: "erase";
-      from: 模式;
-    };
+export type 字形拼写运算 = {
+  from: 模式;
+  to: 模式;
+};
 
 /**
  * 它本质上是树上的正则表达式。其中，ID 和 Operator 匹配特定字形 ID 或结构符，而 IDVariable 和 OperatorVariable 匹配一系列的字形 ID 或结构符。如果提供了 `id_set` 或 `operator_set`，则只匹配集合内的字形 ID 或结构符；否则，视为匹配任何字形 ID 或结构符。
@@ -73,7 +63,10 @@ export type 模式 =
 
 export type ID = number;
 export type IDVariable = { variable: number; id_set?: ID[] };
-export type OperatorVariable = { variable: number; opearator_set?: 结构描述字符[] };
+export type OperatorVariable = {
+  variable: number;
+  opearator_set?: 结构描述字符[];
+};
 
 // config.data end
 
