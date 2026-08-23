@@ -30,7 +30,7 @@ export default function ResultDetail({
           {拆分方式.map(({ 字根 }, index) => (
             <BoxedElementWithTooltip
               key={index}
-              element={字根 instanceof 部件字根 ? 字根.字符 : 字根}
+              element={字根 instanceof 部件字根 ? 字根.元素 : 字根}
             />
           ))}
           {可用 && <span>［备选］</span>}
@@ -81,7 +81,7 @@ export default function ResultDetail({
         {[...map].map(([s, v]) => (
           <Space key={s.获取名称()}>
             <BoxedElementWithTooltip
-              element={s instanceof 部件字根 ? s.字符 : s}
+              element={s instanceof 部件字根 ? s.元素 : s}
             />
             <span>{v.map((ar) => `(${ar.join(", ")})`).join(" ")}</span>
           </Space>

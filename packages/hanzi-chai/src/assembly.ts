@@ -231,14 +231,14 @@ class 星空键道组装器 extends 按规则构词<默认部件分析, 星空�
     ];
     if ("首部字根序列" in 字形分析) {
       for (const 字根 of 字形分析.首部字根序列) {
-        const 名称 = 字根 instanceof 部件字根 ? 字根.字符 : 字根;
+        const 名称 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
         for (let i = 0; i < this.编码长度(名称); i++) {
           元素序列.push({ element: 名称, index: i });
         }
       }
       元素序列.splice(2 + 2); // 首部最多取两个形码
       for (const 字根 of 字形分析.余部字根序列) {
-        const 名称 = 字根 instanceof 部件字根 ? 字根.字符 : 字根;
+        const 名称 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
         for (let i = 0; i < this.编码长度(名称); i++) {
           元素序列.push({ element: 名称, index: i });
         }
@@ -246,7 +246,7 @@ class 星空键道组装器 extends 按规则构词<默认部件分析, 星空�
       元素序列.splice(2 + 4); // 一共最多取四个形码
     } else {
       for (const 字根 of 字形分析.字根序列) {
-        const 名称 = 字根 instanceof 部件字根 ? 字根.字符 : 字根;
+        const 名称 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
         for (let i = 0; i < this.编码长度(名称); i++) {
           元素序列.push({ element: 名称, index: i });
         }

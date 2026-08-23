@@ -1,7 +1,6 @@
 import type { 曲线关系 } from "./bezier.js";
 import type { 部件 } from "./component.js";
-import type { 字根 } from "./repertoire.js";
-import { type 强类型安排, 是强类型归并 } from "./utils.js";
+import { type 字根, type 强类型安排, 是强类型归并 } from "./utils.js";
 
 const 默认筛选器列表: string[] = [
   "结构完整",

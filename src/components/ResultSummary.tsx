@@ -175,7 +175,7 @@ export default function ResultSummary({
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
         <GlyphView glyph={glyph.图形盒子} />
         {字根序列.map((x, index) => {
-          const element = x instanceof 部件字根 ? x.字符 : x;
+          const element = x instanceof 部件字根 ? (x.元素 ?? x.获取部件()) : x;
           return (
             <Flex key={index} align="center">
               <BoxedElementWithTooltip element={element} />
@@ -229,7 +229,7 @@ export default function ResultSummary({
                       .filter((x) => x.可用)
                       .map((x) =>
                         x.拆分方式.map((y) =>
-                          y.字根 instanceof 部件字根 ? y.字根.字符 : y.字根,
+                          y.字根 instanceof 部件字根 ? y.字根.元素 : y.字根,
                         ),
                       )
                   }
@@ -247,7 +247,7 @@ export default function ResultSummary({
                 component={glyph}
                 initialValues={
                   自定义字根序列 ??
-                  字根序列.map((x) => (x instanceof 部件字根 ? x.字符 : x))
+                  字根序列.map((x) => (x instanceof 部件字根 ? (x.元素 ?? x.获取部件()) : x))
                 }
               />
             }

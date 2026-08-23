@@ -161,7 +161,6 @@ const StrokeForm = ({
                 label: `第${数字(x + 1)}笔`,
                 value: x,
               }))}
-              allowClear={false}
             />
             <ProFormSelect
               name="to"
@@ -170,7 +169,6 @@ const StrokeForm = ({
                 label: `第${数字(x + 1)}笔`,
                 value: x,
               }))}
-              allowClear={false}
             />
             <Button
               onClick={() => {
@@ -430,8 +428,6 @@ export default function GlyphForm({
                           formRef.current?.getFieldValue("strokes") ?? [];
                         const 引用笔画: 引用笔画块数据 = {
                           index: Number(item.key),
-                          from: 0,
-                          to: 0,
                         };
                         formRef.current?.setFieldValue(
                           "strokes",

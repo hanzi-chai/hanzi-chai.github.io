@@ -77,7 +77,7 @@ import { 位置原子, 配置原子 } from "./config";
 
 export const 远程原子 = atom((get) => {
   const location = get(位置原子);
-  return location.pathname === "/admin" || location.hash === "#/admin";
+  return ["admin", "algorithm"].some(x => location.pathname === `/${x}` || location.hash === `#/${x}`);
 });
 
 export const 字符列表原子 = atom((): 字符数据[] => get预加载数据().字符列表);

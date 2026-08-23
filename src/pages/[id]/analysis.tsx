@@ -15,15 +15,13 @@ import {
 } from "antd";
 import type { CollapseProps } from "antd/lib";
 import {
-  type 二笔,
   优先表,
   type 冰雪飞花复合体分析,
   type 动态字形分析结果,
   type 基本部件分析,
   type 字形分析结果,
   type 字根,
-  type 字符,
-  type 笔画,
+  type 字根元素,
   获取注册表,
   部件字根,
   默认分类器,
@@ -39,6 +37,7 @@ import {
   复合体分析器原子,
   如动态字形分析结果原子,
   如字形分析结果原子,
+  字库原子,
   强类型决策原子,
   强类型决策空间原子,
   强类型自定义分析原子,
@@ -56,14 +55,12 @@ import {
   type 过滤器参数,
 } from "~/utils";
 
-const 导出字形分析结果 = (
-  a: 字形分析结果 | 动态字形分析结果,
-) => {
+const 导出字形分析结果 = (a: 字形分析结果 | 动态字形分析结果) => {
   const { 分析结果 } = a;
   const tsv: string[][] = [];
   const 序列化 = (l: 字根[]) =>
     l
-      .map((z) => (z instanceof 部件字根 ? z.字符.获取名称() : z.获取名称()))
+      .map((z) => (z instanceof 部件字根 ? z.元素.获取名称() : z.获取名称()))
       .join(" ");
   for (const [汉字, 分析列表] of 分析结果) {
     const head = [汉字.获取名称()];
@@ -76,11 +73,7 @@ const 导出字形分析结果 = (
           分析.sources.join(","),
         ]);
       } else {
-        tsv.push([
-          ...head,
-          序列化(分析.字根序列),
-          分析.sources.join(","),
-        ]);
+        tsv.push([...head, 序列化(分析.字根序列), 分析.sources.join(",")]);
       }
     }
   }
@@ -135,13 +128,12 @@ const ConfigureRules = () => {
 const ExportDynamicAnalysis = () => {
   const 动态分析结果 = useAtomValueUnwrapped(如动态字形分析结果原子);
   return (
-    <Button onClick={() => 导出字形分析结果(动态分析结果)}>
-      导出动态拆分
-    </Button>
+    <Button onClick={() => 导出字形分析结果(动态分析结果)}>导出动态拆分</Button>
   );
 };
 
 const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
+  const 字库 = useAtomValue(字库原子);
   const [step, setStep] = useState(0 as 0 | 1);
   const 分析配置 = useAtomValue(分析配置原子);
   const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
@@ -161,7 +153,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   const 过滤器 = new 字符字形过滤器(filter);
   const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
   const [只显示自定义, 设置只显示自定义] = useState(false);
-  const 是必要字根 = (e: 笔画 | 二笔 | 字符) => {
+  const 是必要字根 = (e: 字根元素) => {
     return (
       决策.get(e) && (决策空间.get(e) ?? []).every((x) => x.value !== null)
     );
@@ -171,7 +163,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   })[] = [];
   const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
   for (const [部件, 分析] of 部件分析结果) {
-    if (!过滤器.过滤字形(部件)) continue;
+    if (!过滤器.过滤字形(部件, 字库)) continue;
     if (
       只显示自定义 &&
       !自定义分析映射.get(部件) &&
@@ -195,7 +187,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
     });
   }
   for (const [复合体, 复合体分析] of 复合体分析结果) {
-    if (!过滤器.过滤字形(复合体)) continue;
+    if (!过滤器.过滤字形(复合体, 字库)) continue;
     复合体分析内容.push({
       key: 复合体.id,
       label: <ResultSummary glyph={复合体} analysis={复合体分析} />,
@@ -219,9 +211,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
           <Radio.Button value={0}>部件拆分</Radio.Button>
           <Radio.Button value={1}>复合体拆分</Radio.Button>
         </Radio.Group>
-        <Button onClick={() => 导出字形分析结果(字形分析结果)}>
-          导出拆分
-        </Button>
+        <Button onClick={() => 导出字形分析结果(字形分析结果)}>导出拆分</Button>
         {分析配置.component_analyzer === "冰雪飞花" && (
           <Button
             onClick={() => {
@@ -239,7 +229,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
                 if (部首) {
                   部首字符串 =
                     部首 instanceof 部件字根
-                      ? 部首.字符.获取名称()
+                      ? 部首.元素.获取名称()
                       : map[部首.获取名称()]!;
                 }
                 tsv.push([复合体.id.toString(), 部首字符串]);

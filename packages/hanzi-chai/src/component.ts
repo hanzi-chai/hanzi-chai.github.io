@@ -250,25 +250,25 @@ class 部件 {
    * @param indices - 笔画索引列表
    */
   验证特殊字根(root: 部件字根, indices: number[]) {
-    const s = root.获取名称();
-    if (["土", "士"].includes(s)) {
+    const id = root.获取部件().id;
+    if ([221, 222].includes(id)) {
       const [i1, _, i3] = indices as [number, number, number];
       const upperHeng = this.笔画列表[i1]!.curveList[0]!;
       const lowerHeng = this.笔画列表[i3]!.curveList[0]!;
       const lowerIsLonger = upperHeng.长度() < lowerHeng.长度();
-      return s === "土" ? lowerIsLonger : !lowerIsLonger;
+      return id === 221 ? lowerIsLonger : !lowerIsLonger;
     }
-    if (["未", "末"].includes(s)) {
+    if ([655, 657].includes(id)) {
       const [i1, i2] = indices as [number, number];
       const upperHeng = this.笔画列表[i1]!.curveList[0]!;
       const lowerHeng = this.笔画列表[i2]!.curveList[0]!;
       const lowerIsLonger = upperHeng.长度() < lowerHeng.长度();
-      return s === "未" ? lowerIsLonger : !lowerIsLonger;
+      return id === 655 ? lowerIsLonger : !lowerIsLonger;
     }
-    if (["口", "囗"].includes(s)) {
+    if ([282 /* 口 */, 283 /* 囗 */].includes(id)) {
       // 如果大框里面没有东西，理论上无法通过图形来判断。所以这里直接比对部件 id
-      if ([216, 1057].includes(this.id)) {
-        return s === "囗";
+      if ([283, 556 /* 囱字框 */].includes(this.id)) {
+        return id === 283;
       }
       const [i1, _, i3] = indices as [number, number, number];
       const upperLeft = this.笔画列表[i1]!.curveList[0]!.求值(0);
@@ -281,9 +281,9 @@ class 部件 {
       const containsStroke = otherStrokes.some((stroke) =>
         stroke.isBoundedBy(xrange, yrange),
       );
-      return s === "囗" ? containsStroke : !containsStroke;
+      return id === 283 ? containsStroke : !containsStroke;
     }
-    if (["\ue087" /* 木无十 */, "\ue43d" /* 全字头 */].includes(s)) {
+    if ([123 /* 木无十 */, 120 /* 全字头 */].includes(id)) {
       const [i1] = indices as [number];
       const attachPoint = this.笔画列表[i1]!.curveList[0]!.求值(0);
       const otherStrokes = this.笔画列表.filter(
@@ -295,7 +295,7 @@ class 部件 {
           x.获取类型() === "linear" &&
           是共线(x.求值(0), x.求值(1), attachPoint),
       );
-      return s === "\ue087" ? pieAndNaIsSeparated : !pieAndNaIsSeparated;
+      return id === 123 ? pieAndNaIsSeparated : !pieAndNaIsSeparated;
     }
     return true;
   }
@@ -904,7 +904,7 @@ class 冰雪飞花分析器 {
   }
 
   当前在小集合(字根: 字根) {
-    const 元素 = 字根 instanceof 部件字根 ? 字根.字符 : 字根;
+    const 元素 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
     return this.小集合.test(this.配置.线性化决策.get(元素) ?? "");
   }
 
@@ -914,7 +914,7 @@ class 冰雪飞花分析器 {
     this.可选字根 = new Set(配置.可选字根);
     this.可选字根与必要一般字根 = new Set(配置.可选字根);
     for (const [字根] of 配置.字根决策.entries()) {
-      const 元素 = 字根 instanceof 部件字根 ? 字根.字符 : 字根;
+      const 元素 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
       if (!this.证明该字根只会出现在小集合(元素)) {
         this.可选字根与必要一般字根.add(字根);
       }

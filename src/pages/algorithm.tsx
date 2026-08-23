@@ -1,10 +1,12 @@
 import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { 部件, 默认退化配置 } from "hanzi-chai";
-import { useState } from "react";
-import { useAtomValueUnwrapped, 字库原子 } from "~/atoms";
+import { 部件, 部件字根, 默认退化配置 } from "hanzi-chai";
+import { useEffect, useState } from "react";
+import { listCharacters, listGlyphs } from "~/api";
+import { useAtomValue, useSetAtom, 可编辑字形列表原子, 可编辑字符列表原子, 字库原子 } from "~/atoms";
 import BorderItem from "~/components/BorderItem";
-import { CharacterDisplay } from "~/components/Utils";
+import GlyphView from "~/components/GlyphView";
+import { useChaifenTitle } from "~/utils";
 
 // interface TreeNodeData {
 //   name: string;
@@ -117,13 +119,11 @@ import { CharacterDisplay } from "~/components/Utils";
 // };
 
 const DegeneratorTable = () => {
-  const repertoire = useAtomValueUnwrapped(字库原子);
+  const repertoire = useAtomValue(字库原子);
   const components: 部件[] = [];
-  for (const { 字形列表 } of repertoire) {
-    for (const 字形 of 字形列表) {
-      if (字形 instanceof 部件) {
-        components.push(字形);
-      }
+  for (const [_, 字形] of repertoire.字形迭代器()) {
+    if (字形 instanceof 部件) {
+      components.push(字形);
     }
   }
   components.sort((a, b) => a.笔画数() - b.笔画数());
@@ -134,8 +134,8 @@ const DegeneratorTable = () => {
     {
       title: "部件",
       dataIndex: "name",
-      render: (_, { 字符 }) => {
-        return <CharacterDisplay character={字符} />;
+      render: (_, record) => {
+        return <GlyphView glyph={record.图形盒子} />;
       },
       width: 128,
     },
@@ -146,7 +146,8 @@ const DegeneratorTable = () => {
         const rootMap = new Map<部件, number[]>();
         for (const another of toCompare) {
           if (another.获取名称() === record.获取名称()) continue;
-          const slices = record.生成二进制切片列表(another, 默认退化配置);
+          const 字根 = new 部件字根(another, another);
+          const slices = record.生成二进制切片列表(字根, 默认退化配置);
           if (slices.length) {
             rootMap.set(another, slices);
           }
@@ -162,7 +163,7 @@ const DegeneratorTable = () => {
               return (
                 <Space key={name.获取名称()} align="center">
                   <BorderItem>
-                    <CharacterDisplay character={name.字符} />
+                    <GlyphView glyph={name.图形盒子} />
                   </BorderItem>
                   {slices
                     .map((x) => `(${record.二进制转索引(x).join(", ")})`)
@@ -195,6 +196,19 @@ const DegeneratorTable = () => {
 };
 
 export default function Algorithm() {
+  useChaifenTitle("管理");
+  const 设置字符列表 = useSetAtom(可编辑字符列表原子);
+  const 设置字形列表 = useSetAtom(可编辑字形列表原子);
+
+  useEffect(() => {
+    Promise.all([listCharacters(), listGlyphs()]).then(
+      ([字符数据, 字形数据]) => {
+        if (!("err" in 字符数据)) 设置字符列表(字符数据);
+        if (!("err" in 字形数据)) 设置字形列表(字形数据);
+      },
+    );
+  }, []);
+
   return (
     <Layout className="h-full overflow-y-auto">
       <Layout.Content className="h-full p-8 max-w-360 mx-auto flex flex-col overflow-y-auto">

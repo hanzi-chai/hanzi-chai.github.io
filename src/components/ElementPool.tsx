@@ -74,7 +74,7 @@ export default function ElementPool({
             .some((x) => 字库.查询字符的字形(x)?.length === 1);
           if (可被字符唯一对应) return false;
         }
-        return 笔顺过滤.过滤字形(元素) || 直接过滤.过滤字形(元素);
+        return 笔顺过滤.过滤字形(元素, 字库) || 直接过滤.过滤字形(元素, 字库);
       } else {
         return false; // 不应该出现其他类型的元素
       }

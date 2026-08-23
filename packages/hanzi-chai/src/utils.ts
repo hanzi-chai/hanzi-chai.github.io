@@ -4,7 +4,8 @@ import type { 动态组装条目, 组装条目 } from "./assembly.js";
 import { 区间 } from "./bezier.js";
 import type { 分类器, 笔画名称 } from "./classifier.js";
 import { 笔画表示方式 } from "./classifier.js";
-import type { 部件 } from "./component.js";
+import { 部件 } from "./component.js";
+import { 复合体 } from "./compound.js";
 import {
   type 元素位,
   type 决策,
@@ -422,31 +423,39 @@ export function 构建强类型自定义分析(
   自定义分析: Record<string, string[]>,
   动态自定义拆分: Record<string, string[][]>,
 ) {
-  const 自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[]> = new Map();
-  const 动态自定义分析映射: Map<部件, (字符 | 笔画 | 二笔)[][]> = new Map();
+  const 自定义分析映射: Map<部件, 字根元素[]> = new Map();
+  const 动态自定义分析映射: Map<部件, 字根元素[][]> = new Map();
   for (const [key, value] of Object.entries(自定义分析)) {
-    const 部件实例 = 字库.找到部件(key);
-    if (!部件实例) continue;
-    const 字根列表: (字符 | 笔画 | 二笔)[] = [];
+    const 部件实例 = 字库.获取字形(Number(key));
+    if (!部件实例 || 部件实例 instanceof 复合体) continue;
+    const 字根列表: 字根元素[] = [];
     for (const 字根名称 of value) {
       const 字根 = 名称映射.get(字根名称);
-      if (字根 instanceof 笔画 || 字根 instanceof 二笔 || 字根 instanceof 字符)
+      if (
+        字根 instanceof 笔画 ||
+        字根 instanceof 二笔 ||
+        字根 instanceof 字符 ||
+        字根 instanceof 部件 ||
+        字根 instanceof 复合体
+      )
         字根列表.push(字根);
     }
     自定义分析映射.set(部件实例, 字根列表);
   }
   for (const [key, value] of Object.entries(动态自定义拆分)) {
-    const 部件实例 = 字库.找到部件(key);
-    if (!部件实例) continue;
-    const 字根列表列表: (字符 | 笔画 | 二笔)[][] = [];
+    const 部件实例 = 字库.获取字形(Number(key));
+    if (!部件实例 || 部件实例 instanceof 复合体) continue;
+    const 字根列表列表: 字根元素[][] = [];
     for (const 字根名称列表 of value) {
-      const 字根列表: (字符 | 笔画 | 二笔)[] = [];
+      const 字根列表: 字根元素[] = [];
       for (const 字根名称 of 字根名称列表) {
         const 字根 = 名称映射.get(字根名称);
         if (
           字根 instanceof 笔画 ||
           字根 instanceof 二笔 ||
-          字根 instanceof 字符
+          字根 instanceof 字符 ||
+          字根 instanceof 部件 ||
+          字根 instanceof 复合体
         )
           字根列表.push(字根);
       }
@@ -1016,12 +1025,13 @@ export const 存在 = (x: 字根): 条件 => ({
 
 export class 部件字根 {
   constructor(
-    public 字符: 字符,
+    public 元素: 字符 | 部件 | 复合体,
     private 部件: 部件,
   ) {}
 
   获取名称() {
-    return this.字符.获取名称();
+    if (this.元素) return this.元素.获取名称();
+    return this.部件.获取名称();
   }
 
   获取部件() {
@@ -1034,6 +1044,8 @@ export class 部件字根 {
 }
 
 export type 字根 = 笔画 | 二笔 | 部件字根;
+
+export type 字根元素 = 字符 | 笔画 | 二笔 | 部件 | 复合体;
 
 export class 优先表<T extends object> {
   constructor(

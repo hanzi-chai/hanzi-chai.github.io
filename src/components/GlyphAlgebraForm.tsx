@@ -16,6 +16,7 @@ import { type ReactNode, useRef } from "react";
 import { 字形拼写运算列表原子 } from "~/atoms";
 import GlyphSelect from "./GlyphSelect";
 import OperatorSelect from "./OperatorSelect";
+import ProFormListMovable from "./ProFormListMovable";
 import { MinusButton, PlusButton } from "./Utils";
 
 function serialize(模式: 模式): ReactNode {
@@ -162,7 +163,19 @@ const PatternEditor: React.FC<{
           <OperatorSelect
             includeVariables
             value={value.operator}
-            onChange={(newOp) => onChange({ ...value, operator: newOp })}
+            onChange={(newOp) => {
+              const newValue = { ...value, operator: newOp };
+              if (newOp === "⿲" || newOp === "⿳") {
+                if (newValue.references.length < 3) {
+                  newValue.references = newValue.references.concat([1]);
+                }
+              } else {
+                if (newValue.references.length > 2) {
+                  newValue.references = newValue.references.slice(0, 2);
+                }
+              }
+              onChange(newValue);
+            }}
           />
           <MinusButton onClick={() => onChange(1)} />
         </Flex>
@@ -200,7 +213,7 @@ export default function GlyphAlgebraForm() {
       }}
       formRef={formRef}
     >
-      <ProFormList
+      <ProFormListMovable
         name="content"
         creatorRecord={getDummyTransformer}
         alwaysShowItemLabel
@@ -213,7 +226,7 @@ export default function GlyphAlgebraForm() {
           {/* @ts-ignore */}
           <PatternEditor />
         </ProFormItem>
-      </ProFormList>
+      </ProFormListMovable>
       <Flex justify="center">
         <Dropdown
           menu={{
@@ -221,8 +234,7 @@ export default function GlyphAlgebraForm() {
               key: index,
               label: (
                 <span className="flex flex-nowrap leading-none">
-                  {serialize(示例.from)} →{" "}
-                  {serialize(示例.to)}
+                  {serialize(示例.from)} → {serialize(示例.to)}
                 </span>
               ),
             })),

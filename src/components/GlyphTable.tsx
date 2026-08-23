@@ -155,11 +155,13 @@ export const EditOrRedrawGraph = ({
             );
           }
         } else {
-          set用户字形列表(
-            用户字形列表.map((x) =>
-              x.id === values.id ? (values as 基本字形数据) : x,
-            ),
-          );
+          if (用户字形列表.some((x) => x.id === values.id)) {
+            set用户字形列表(
+              用户字形列表.map((x) => (x.id === values.id ? values : x)),
+            );
+          } else {
+            set用户字形列表([...用户字形列表, values]);
+          }
         }
         return true;
       }}
@@ -174,6 +176,7 @@ export default function GlyphTable() {
   const 字库 = useAtomValue(字库原子);
   const [filter, setFilter] = useState<过滤器参数>({});
   const 字形字符映射 = useAtomValue(字形字符映射原子);
+  const 远程 = useAtomValue(远程原子);
 
   const gf0014set = new Set(
     Array(514)
@@ -198,14 +201,14 @@ export default function GlyphTable() {
     const 过滤器 = new 字符字形过滤器(filter);
     const result: 字形[] = [];
     for (const [_, 字形] of 字库.字形迭代器()) {
-      if (过滤器.过滤字形(字形)) {
+      if (过滤器.过滤字形(字形, 字库)) {
         result.push(字形);
       }
     }
     return result.sort((a, b) => a.标准笔顺.length - b.标准笔顺.length);
   }, [统一字形列表, 字库, filter]);
 
-  const columns: ColumnsType<字形> = [
+  let columns: ColumnsType<字形> = [
     {
       title: "ID",
       dataIndex: "id",
@@ -278,9 +281,9 @@ export default function GlyphTable() {
           if (isVectorStroke(stroke)) {
             summaries.push(stroke.feature);
           } else {
-            summaries.push(
-              `${stroke.index}[${stroke.from ?? ""}-${stroke.to ?? ""}]`,
-            );
+            const from = stroke.from !== undefined ? stroke.from + 1 : undefined;
+            const to = stroke.to !== undefined ? stroke.to + 1 : undefined;
+            summaries.push(`${stroke.index}[${from ?? ""}-${to ?? ""}]`);
           }
         }
         return summaries.join(", ");
@@ -342,6 +345,10 @@ export default function GlyphTable() {
       },
     },
   ];
+
+  if (!远程) {
+    columns = columns.filter((col) => col.title !== "GF0014" && col.title !== "GF3001");
+  }
 
   return (
     <Flex className="overflow-y-scroll" vertical align="center" gap="small">

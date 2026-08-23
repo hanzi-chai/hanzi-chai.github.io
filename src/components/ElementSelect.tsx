@@ -1,4 +1,4 @@
-import { type 元素, 字符, 笔画 } from "hanzi-chai";
+import { type 元素, 复合体, 字符, 笔画, 部件 } from "hanzi-chai";
 import {
   useAtomValue,
   useAtomValueUnwrapped,
@@ -31,7 +31,13 @@ export default function ElementSelect(
     全部元素 = 全部元素.filter((x) => 决策.get(x) !== undefined);
   }
   if (onlyRootsAndStrokes) {
-    全部元素 = 全部元素.filter((x) => x instanceof 字符 || x instanceof 笔画);
+    全部元素 = 全部元素.filter(
+      (x) =>
+        x instanceof 字符 ||
+        x instanceof 部件 ||
+        x instanceof 复合体 ||
+        x instanceof 笔画,
+    );
   }
   return (
     <Select
@@ -50,9 +56,12 @@ export default function ElementSelect(
         if (option === undefined) return false;
         const 元素 = 名称映射.get(option.value);
         if (!元素) return false;
-        const 匹配序列 =
-          元素 instanceof 字符 &&
-          字库.查询字符的字形(元素)?.some((s) => s.标准笔顺.startsWith(input));
+        let 匹配序列 = false;
+        if (元素 instanceof 字符) {
+          匹配序列 = 字库.查询字符的字形(元素)?.some((s) => s.标准笔顺.startsWith(input)) ?? false;
+        } else if (元素 instanceof 部件 || 元素 instanceof 复合体) {
+          匹配序列 = 元素.标准笔顺.startsWith(input);
+        }
         const 匹配元素 = option.value.includes(input);
         return 匹配序列 || 匹配元素;
       }}

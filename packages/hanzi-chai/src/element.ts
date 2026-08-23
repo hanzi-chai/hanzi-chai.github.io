@@ -347,7 +347,7 @@ export class 取码器 {
       case "字根":
         root = signedIndex(字根序列, object.rootIndex);
         if (root === undefined) return undefined;
-        return root instanceof 部件字根 ? root.字符 : root;
+        return root instanceof 部件字根 ? root.元素 : root;
       case "笔画":
       case "二笔":
         root = signedIndex(字根序列, object.rootIndex);

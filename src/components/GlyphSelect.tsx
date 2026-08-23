@@ -22,6 +22,15 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
   const [options, setOptions] = useState<DefaultOptionType[]>([]);
 
   useEffect(() => {
+    if (typeof value === "object" && value !== null && "variable" in value) {
+      setOptions([
+        {
+          value: JSON.stringify(value),
+          label: `变量 ${value.variable}`,
+        },
+      ]);
+      return;
+    }
     if (typeof value !== "number") return;
     const 字形 = 字库.获取字形(value);
     if (!字形) return;
@@ -52,12 +61,20 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
     ),
   });
 
+  const rawValue = typeof value === "number" ? value : JSON.stringify(value);
+
   return (
     <Select
       {...rest}
       options={options}
-      value={value}
-      onChange={onChange}
+      value={rawValue as any}
+      onChange={(newValue) => {
+        if (typeof newValue === "number") {
+          onChange?.(newValue as T);
+        } else {
+          onChange?.(JSON.parse(newValue as any) as T);
+        }
+      }}
       showSearch
       placeholder="输入笔画或字符搜索"
       filterOption={false}
@@ -84,7 +101,7 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
             const num = Number(input);
             if (!Number.isNaN(num)) {
               选项列表.unshift({
-                value: -num,
+                value: JSON.stringify({ variable: num }),
                 label: `变量 ${num}`,
               });
             }

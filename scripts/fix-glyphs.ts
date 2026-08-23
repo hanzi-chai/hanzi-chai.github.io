@@ -1,14 +1,12 @@
 /**
  * 检查服务器中的所有字形数据。
- * 如果一个字形数据是复合体，operator 是重叠结构（⿻），
- * 且 references 第一项的 id 是 428，则将其替换为左中​右结构（⿲）。
  *
  * 用法：bun run scripts/fix-overlap-glyphs.ts
  * 需要设置环境变量 JWT（用于 API 认证）。
  */
 
 import "dotenv/config";
-import type { 基本字形数据, 复合体数据, 引用数据 } from "hanzi-chai";
+import type { 基本字形数据, 复合体数据, 引用笔画块数据 } from "hanzi-chai";
 import { createClient } from "../packages/api/src/client";
 
 const { get, put } = createClient(() => process.env.JWT ?? null);
@@ -25,22 +23,19 @@ console.log(`共获取 ${glyphs.length} 个字形数据。\n`);
 
 const updated: 复合体数据[] = [];
 for (const g of glyphs) {
-  if (
-    g.type === "compound" &&
-    g.operator === "⿻" &&
-    g.references[0]?.id === 428
-  ) {
-    const newReferences: 引用数据[] = [
-      { id: 291 },
-      ...g.references.slice(1),
-      { id: 429 },
-    ];
-    updated.push({ ...g, operator: "⿲", references: newReferences });
+  if (g.type === "compound") {
+    if (!g.strokes) continue;
+    if (g.strokes.length < 3) continue;
+    if (g.strokes[0]!.index === g.strokes[2]!.index && g.strokes[0]!.to === g.strokes[2]!.from) {
+      if (g.strokes[0]!.to === undefined) continue;
+      g.strokes[0]!.to! -= 1;
+    }
+    updated.push(g);
   }
 }
 
 if (updated.length === 0) {
-  console.log("未找到匹配的字形（复合体 + ⿻ + references[0].id === 428）。");
+  console.log("未找到匹配的字形");
   process.exit(0);
 }
 

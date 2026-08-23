@@ -21,7 +21,7 @@ export default function FilterForm({ setFilter, isGlyph }: StrokeSearchProps) {
   const debounced = debounce(setFilter, 500);
   const idLabel = isGlyph ? "字形 ID" : "Unicode";
   const idPlaceholder = isGlyph ? "十进制" : "十或十六进制";
-  const nameLabel = isGlyph ? "字形别名" : "字符";
+  const nameLabel = isGlyph ? "别名或字符" : "字符";
   return (
     <QueryFilter<过滤器参数>
       onValuesChange={async (_, values) => debounced(values)}
