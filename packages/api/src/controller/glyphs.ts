@@ -68,7 +68,7 @@ async function getNextId(type: 字形模型["type"], env: Env): Promise<number> 
     id: number;
   }>();
   const idSet = new Set(allIDs.results.map((item) => item.id));
-  let id = 1;
+  let id = type === "component" ? 64 : 4096;
   while (idSet.has(id)) {
     id++;
   }

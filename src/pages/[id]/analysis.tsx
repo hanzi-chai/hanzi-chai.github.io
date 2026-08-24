@@ -162,7 +162,10 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
     sequence: number[];
   })[] = [];
   const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
+  let 需拆分部件数 = 0;
   for (const [部件, 分析] of 部件分析结果) {
+    if (分析.字根序列.length === 1) continue;
+    需拆分部件数++;
     if (!过滤器.过滤字形(部件, 字库)) continue;
     if (
       只显示自定义 &&
@@ -171,7 +174,6 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
     )
       continue;
     const r = 分析 as 默认部件分析 | 基本部件分析;
-    if (分析.字根序列.length === 1) continue;
     部件分析内容.push({
       key: 分析.部件.id,
       label: <ResultSummary glyph={分析.部件} analysis={分析} />,
@@ -283,12 +285,12 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
           <Statistic title="总部件数" value={部件分析结果.size} />
         </Col>
         <Col span={5}>
-          <Statistic title="需拆分部件数" value={部件分析内容.length} />
+          <Statistic title="需拆分部件数" value={需拆分部件数} />
         </Col>
         <Col span={5}>
           <Statistic
             title="自动拆分部件数"
-            value={部件分析内容.length - 全部自定义字符.size}
+            value={需拆分部件数 - 全部自定义字符.size}
           />
         </Col>
         <Col span={5}>

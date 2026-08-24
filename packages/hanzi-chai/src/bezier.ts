@@ -407,6 +407,20 @@ class 区间 {
 
 type 笔画关系 = 曲线关系[];
 
+type 扩展曲线关系 = 曲线关系 & {
+  index1: number;
+  index2: number;
+}
+
+/**
+ * 两个连通子图整体之间的关系
+ * 每个子图取其全部曲线的包络区间，在横纵两个方向上分别比较
+ */
+interface 子图关系 {
+  x: 区间关系;
+  y: 区间关系;
+}
+
 /**
  * 渲染后的笔画
  * 这个类型和 SVGStroke 的区别是，这个类型包含了一系列 Bezier 曲线，而 SVGStroke 包含了一系列 SVG 命令
@@ -440,38 +454,143 @@ class 笔画图形 {
     }
     return strokeRelation;
   }
+
+  simpleRelation(stroke2: 笔画图形): 曲线关系 | undefined {
+    let relation: 曲线关系 | undefined;
+    for (const [index1, curve1] of this.curveList.entries()) {
+      for (const [index2, curve2] of stroke2.curveList.entries()) {
+        const current = { ...curve1.计算关系(curve2), index1, index2 };
+        // 在所有曲线关系中取最重要的一个。规定交比连重要
+        if (current.type === "平行" || current.type === "垂直") continue;
+        if (relation === undefined) relation = current;
+        else if (relation.type === "连" && current.type === "交") {
+          relation = current;
+        }
+      }
+    }
+    return relation;
+  }
 }
 
 class 拓扑 {
-  matrix: 笔画关系[][];
-  orientedPairs: [number, number][];
+  关系矩阵: 笔画关系[][];
+  新关系矩阵: (曲线关系 | undefined)[][];
+  同向笔画对: [number, number][];
+  划分: number[][];
+  子图关系矩阵: 子图关系[][];
 
-  constructor(renderedGlyph: 笔画图形[]) {
-    this.matrix = [];
-    this.orientedPairs = [];
-    for (const [index1, stroke1] of renderedGlyph.entries()) {
+  constructor(部件图形: 笔画图形[]) {
+    this.关系矩阵 = [];
+    this.新关系矩阵 = [];
+    this.同向笔画对 = [];
+    for (const [index1, stroke1] of 部件图形.entries()) {
       const row: 笔画关系[] = [];
-      for (const [index2, stroke2] of renderedGlyph.entries()) {
+      for (const [index2, stroke2] of 部件图形.entries()) {
         if (index1 === index2) row.push([]);
         else row.push(stroke1.relation(stroke2));
       }
-      this.matrix.push(row);
+      this.关系矩阵.push(row);
     }
-    for (const [index1] of renderedGlyph.entries()) {
-      for (const [index2] of renderedGlyph.entries()) {
+    for (const [index1, stroke1] of 部件图形.entries()) {
+      const row: (曲线关系 | undefined)[] = [];
+      for (const [index2, stroke2] of 部件图形.entries()) {
+        if (index1 === index2) row.push(undefined);
+        else row.push(stroke1.simpleRelation(stroke2));
+      }
+      this.新关系矩阵.push(row);
+    }
+    for (const [index1] of 部件图形.entries()) {
+      for (const [index2] of 部件图形.entries()) {
         if (index2 >= index1) break;
-        const relations = this.matrix[index1]![index2]!;
+        const relations = this.关系矩阵[index1]![index2]!;
         if (relations.some((v) => v.type === "交" || v.type === "连")) continue;
         const parallelIndex = relations.findIndex(
           (v) => v.type === "平行" && v.mainAxis === 0,
         );
         if (parallelIndex !== -1) {
-          this.orientedPairs.push([index1, index2]);
+          this.同向笔画对.push([index1, index2]);
         }
       }
     }
+    this.划分 = 拓扑.划分连通子图(this.新关系矩阵);
+    this.子图关系矩阵 = 拓扑.计算子图关系(this.划分, 部件图形);
+  }
+
+  /**
+   * 将笔画按照交连关系划分为若干连通子图
+   * 子图内的笔画通过交连关系连成一体，不同子图之间不存在任何交连关系
+   * 子图按照首笔的先后排列，子图内的笔画索引保持递增
+   */
+  static 划分连通子图(新关系矩阵: (曲线关系 | undefined)[][]): number[][] {
+    const n = 新关系矩阵.length;
+    const parent = [...Array(n).keys()];
+    const find = (i: number): number => {
+      while (parent[i] !== i) {
+        parent[i] = parent[parent[i]!]!;
+        i = parent[i]!;
+      }
+      return i;
+    };
+    const union = (i: number, j: number) => {
+      const [rootI, rootJ] = [find(i), find(j)];
+      if (rootI !== rootJ) parent[rootI] = rootJ;
+    };
+    for (let i = 0; i < n; ++i) {
+      for (let j = 0; j < i; ++j) {
+        const relation = 新关系矩阵[i]![j];
+        if (relation !== undefined) union(i, j);
+      }
+    }
+    const groups = new Map<number, number[]>();
+    for (let i = 0; i < n; ++i) {
+      const root = find(i);
+      if (!groups.has(root)) groups.set(root, []);
+      groups.get(root)!.push(i);
+    }
+    return [...groups.values()];
+  }
+
+  /**
+   * 计算子图整体之间的离散关系
+   * 每个子图取其全部曲线的包络区间，两个子图的关系就是包络区间在横纵两个方向上的比较
+   */
+  static 计算子图关系(划分: number[][], 部件图形: 笔画图形[]): 子图关系[][] {
+    const 子图区间列表 = 划分.map((indices) => {
+      let x: 区间 | undefined;
+      let y: 区间 | undefined;
+      for (const i of indices) {
+        for (const curve of 部件图形[i]!.curveList) {
+          const [curveX, curveY] = curve.获取区间();
+          x = x === undefined ? curveX : x.取并集(curveX);
+          y = y === undefined ? curveY : y.取并集(curveY);
+        }
+      }
+      return [x!, y!] as [区间, 区间];
+    });
+    return 子图区间列表.map(([ax, ay]) =>
+      子图区间列表.map(([bx, by]) => ({ x: ax.比较(bx), y: ay.比较(by) })),
+    );
+  }
+
+  验证子图关系(部件图形: 笔画图形[], 部件拓扑: 拓扑, 切片: number[]): boolean {
+    const 部件子图形 = 切片.map((i) => 部件图形[i]!);
+    const 部件子新关系矩阵 = 切片.map((i) => 切片.map((j) => 部件拓扑.新关系矩阵[i]![j]));
+    const 部件子划分 = 拓扑.划分连通子图(部件子新关系矩阵);
+    console.log({ 部件图形, 部件拓扑, 切片, 部件子划分, 部件子图形 });
+    const 部件子图关系矩阵 = 拓扑.计算子图关系(部件子划分, 部件子图形);
+    return isEqual(部件子划分, this.划分) && isEqual(部件子图关系矩阵, this.子图关系矩阵);
   }
 }
 
-export type { 曲线关系, 笔画关系 };
-export { 一次曲线, 三次曲线, 创建曲线, 区间, 圆弧曲线, 拓扑, 曲线, 笔画图形 };
+export type { 子图关系, 曲线关系, 笔画关系 };
+export {
+  一次曲线,
+  三次曲线,
+  创建曲线,
+  区间,
+  区间关系,
+  圆弧曲线,
+  拓扑,
+  曲线,
+  笔画图形,
+};

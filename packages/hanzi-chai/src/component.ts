@@ -95,63 +95,113 @@ class 部件 {
 
   查询拓扑关系(i: number, j: number) {
     if (i <= j) {
-      return this.拓扑.matrix[j]?.[i];
+      return this.拓扑.关系矩阵[j]?.[i];
     } else {
-      return this.拓扑.matrix[i]?.[j];
+      return this.拓扑.关系矩阵[i]?.[j];
     }
   }
 
   具有同向笔画(i: number, j: number) {
     const [smaller, larger] = 排序(i, j);
-    return this.拓扑.orientedPairs.some((x) => isEqual(x, [larger, smaller]));
+    return this.拓扑.同向笔画对.some((x) => isEqual(x, [larger, smaller]));
   }
 
   /**
    * 给定一个部件和一个字根，找出这个部件所有包含这个字根的方式
    * 如果部件不包含这个字根，就返回空列表
    *
-   * @param root - 字根
-   * @param degenerator - 退化器
+   * @param 字根 - 字根
+   * @param 退化配置 - 退化器
    */
-  生成二进制切片列表(root: 部件字根, degenerator: 退化配置) {
-    const { 笔画列表: cglyph, 拓扑: ctopology } = this;
-    const { 笔画列表: rglyph, 拓扑: rtopology } = root.获取部件();
-    if (cglyph.length < rglyph.length) return [];
-    let queue = [[]] as number[][];
-    for (const [rIndex, rStroke] of rglyph.entries()) {
-      const rStrokeTopology = rtopology.matrix[rIndex]?.slice(0, rIndex);
-      const end = cglyph.length - rglyph.length + rIndex + 1;
-      for (let _ = queue.length; _ !== 0; --_) {
-        const indexList = queue.shift()!;
-        const start = indexList.length ? indexList.at(-1)! + 1 : 0;
-        for (const [cIndex, cStroke] of cglyph.slice(start, end).entries()) {
-          if (!笔画名称等价(degenerator, cStroke.feature, rStroke.feature))
+  生成二进制切片列表(字根: 部件字根, 退化配置: 退化配置) {
+    const { 笔画列表: 部件笔画列表, 拓扑: 部件拓扑 } = this;
+    const { 笔画列表: 字根笔画列表, 拓扑: 字根拓扑 } = 字根.获取部件();
+    if (部件笔画列表.length < 字根笔画列表.length) return [];
+    let 切片队列: number[][] = [[]];
+    for (const [字根索引, 字根笔画] of 字根笔画列表.entries()) {
+      const 字根笔画前向关系列表 = 字根拓扑.关系矩阵[字根索引]?.slice(0, 字根索引);
+      const 搜索终止 = 部件笔画列表.length - 字根笔画列表.length + 字根索引 + 1;
+      for (let _ = 切片队列.length; _ !== 0; --_) {
+        const 切片 = 切片队列.shift()!;
+        const 搜索起始 = 切片.length ? 切片.at(-1)! + 1 : 0;
+        for (const [部件索引, 部件笔画] of 部件笔画列表.entries()) {
+          if (部件索引 < 搜索起始 || 部件索引 >= 搜索终止) continue;
+          if (!笔画名称等价(退化配置, 部件笔画.feature, 字根笔画.feature))
             continue;
-          const realIndex = cIndex + start;
-          const cStrokeTopology = ctopology.matrix[realIndex]?.filter((_, i) =>
-            indexList.includes(i),
+          const 部件笔画前向关系列表 = 部件拓扑.关系矩阵[部件索引]?.filter((_, i) =>
+            切片.includes(i),
           );
-          if (!isEqual(cStrokeTopology, rStrokeTopology)) continue;
-          queue.push(indexList.concat(realIndex));
+          if (!isEqual(部件笔画前向关系列表, 字根笔画前向关系列表)) continue;
+          切片队列.push(切片.concat(部件索引));
         }
       }
-      if (!queue) return [];
+      if (切片队列.length === 0) return [];
     }
-    if (degenerator.no_cross) {
-      const allindices = [...Array(cglyph.length).keys()];
-      queue = queue.filter((indices) => {
+    if (退化配置.no_cross) {
+      const allindices = [...Array(部件笔画列表.length).keys()];
+      切片队列 = 切片队列.filter((indices) => {
         const others = allindices.filter((x) => !indices.includes(x));
         const allCombinations = indices.flatMap((x) =>
           others.map((y) => 排序(x, y)),
         );
         return allCombinations.every(([x, y]) => {
-          const relation = ctopology.matrix[y]![x]!;
+          const relation = 部件拓扑.关系矩阵[y]![x]!;
           return relation.every((cr) => cr.type !== "交");
         });
       });
     }
-    return queue
-      .filter((x) => this.验证特殊字根(root, x))
+    return 切片队列
+      .filter((x) => this.验证特殊字根(字根, x))
+      .map(this.索引转二进制.bind(this));
+  }
+
+  /**
+   * 给定一个部件和一个字根，找出这个部件所有包含这个字根的方式
+   * 如果部件不包含这个字根，就返回空列表
+   *
+   * @param 字根 - 字根
+   * @param 退化配置 - 退化器
+   */
+  生成新二进制切片列表(字根: 部件字根, 退化配置: 退化配置) {
+    const { 笔画列表: 部件笔画列表, 拓扑: 部件拓扑 } = this;
+    const { 笔画列表: 字根笔画列表, 拓扑: 字根拓扑 } = 字根.获取部件();
+    if (部件笔画列表.length < 字根笔画列表.length) return [];
+    let 切片队列: number[][] = [[]];
+    for (const [字根索引, 字根笔画] of 字根笔画列表.entries()) {
+      const 字根笔画前向关系列表 = 字根拓扑.新关系矩阵[字根索引]?.slice(0, 字根索引);
+      const 搜索终止 = 部件笔画列表.length - 字根笔画列表.length + 字根索引 + 1;
+      for (let _ = 切片队列.length; _ !== 0; --_) {
+        const 切片 = 切片队列.shift()!;
+        const 搜索起始 = 切片.length ? 切片.at(-1)! + 1 : 0;
+        for (const [部件索引, 部件笔画] of 部件笔画列表.entries()) {
+          if (部件索引 < 搜索起始 || 部件索引 >= 搜索终止) continue;
+          if (!笔画名称等价(退化配置, 部件笔画.feature, 字根笔画.feature))
+            continue;
+          const 部件笔画前向关系列表 = 部件拓扑.新关系矩阵[部件索引]?.filter((_, i) =>
+            切片.includes(i),
+          );
+          if (!isEqual(部件笔画前向关系列表, 字根笔画前向关系列表)) continue;
+          切片队列.push(切片.concat(部件索引));
+        }
+      }
+      if (切片队列.length === 0) return [];
+    }
+    切片队列 = 切片队列.filter((indices) => 字根拓扑.验证子图关系(部件笔画列表, 部件拓扑, indices));
+    if (退化配置.no_cross) {
+      const allindices = [...Array(部件笔画列表.length).keys()];
+      切片队列 = 切片队列.filter((indices) => {
+        const others = allindices.filter((x) => !indices.includes(x));
+        const allCombinations = indices.flatMap((x) =>
+          others.map((y) => 排序(x, y)),
+        );
+        return allCombinations.every(([x, y]) => {
+          const relation = 部件拓扑.新关系矩阵[y]![x]!;
+          return relation.type !== "交";
+        });
+      });
+    }
+    return 切片队列
+      .filter((x) => this.验证特殊字根(字根, x))
       .map(this.索引转二进制.bind(this));
   }
 
@@ -312,7 +362,7 @@ class 部件 {
       }),
     );
     for (const 字根部件 of 部件字根列表) {
-      const 二进制列表 = this.生成二进制切片列表(字根部件, 退化配置);
+      const 二进制列表 = this.生成新二进制切片列表(字根部件, 退化配置);
       二进制列表.map((二进制数) => 二进制字根映射.set(二进制数, 字根部件));
     }
     return 二进制字根映射;

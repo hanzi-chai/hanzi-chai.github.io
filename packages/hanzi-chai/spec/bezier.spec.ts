@@ -124,6 +124,6 @@ describe("拓扑结构计算", () => {
         [],
       ],
     ];
-    expect(土._拓扑()).toEqual({ matrix: array, orientedPairs: [[2, 0]] });
+    expect(土._拓扑()).toEqual({ 关系矩阵: array, 同向笔画对: [[2, 0]] });
   });
 });

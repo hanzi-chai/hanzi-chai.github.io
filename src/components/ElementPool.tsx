@@ -6,6 +6,7 @@ import {
   Input,
   Modal,
   Pagination,
+  Select,
   Typography,
 } from "antd";
 import { type 元素, 复合体, 字符, 部件 } from "hanzi-chai";
@@ -20,9 +21,18 @@ const 使用康熙部首原子 = atomWithStorage("使用康熙部首", false);
 const 使用部首补充原子 = atomWithStorage("使用部首补充", false);
 const 相似字根推荐原子 = atomWithStorage("相似字根推荐", true);
 const 隐藏旧版私用区原子 = atomWithStorage("隐藏旧版私用区", true);
-const 隐藏可被字符唯一对应的字形元素 = atomWithStorage(
-  "隐藏可被字符唯一对应的字形元素",
-  true,
+
+const 字符字形偏好列表 = [
+  "显示字符和字形",
+  "显示字符和不能被字符唯一对应的字形",
+  "仅显示字形",
+] as const;
+
+type 字符字形偏好 = (typeof 字符字形偏好列表)[number];
+
+const 隐藏可被字符唯一对应的字形元素 = atomWithStorage<字符字形偏好>(
+  "字符字形偏好",
+  "显示字符和不能被字符唯一对应的字形",
 );
 
 export default function ElementPool({
@@ -110,10 +120,14 @@ export default function ElementPool({
             />
           </Flex>
           <Flex>
-            隐藏可被字符唯一对应的字形：
-            <Checkbox
-              checked={隐藏可被字符唯一对应的字形}
-              onChange={(e) => 设置隐藏可被字符唯一对应的字形(e.target.checked)}
+            字符字形偏好：
+            <Select
+              value={隐藏可被字符唯一对应的字形}
+              onChange={(value) => 设置隐藏可被字符唯一对应的字形(value)}
+              options={字符字形偏好列表.map((value) => ({
+                value,
+                label: value,
+              }))}
             />
           </Flex>
           <Input

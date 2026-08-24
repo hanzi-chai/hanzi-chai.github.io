@@ -1,11 +1,12 @@
 import { Button, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import type { 基本字形数据, 字形 } from "hanzi-chai";
+import type { 基本字形数据, 基本部件数据, 复合体数据, 字形 } from "hanzi-chai";
 import {
   isVectorStroke,
   复合体,
   是用户字形,
+  笔画图形,
   结构描述字符列表,
   部件,
 } from "hanzi-chai";
@@ -32,15 +33,29 @@ import GlyphSelect from "./GlyphSelect";
 import GlyphView from "./GlyphView";
 import { CharacterDisplay, DeleteButton } from "./Utils";
 
-const CreateGlyph = () => {
+const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
   const 远程 = useAtomValue(远程原子);
   const [用户字形列表, set用户字形列表] = useAtom(用户字形列表原子);
   const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
   const 下一个字形ID = useAtomValue(下一个用户字形ID原子);
+  const dummyComponent: 基本部件数据 = {
+    id: 0,
+    type: "component",
+    strokes: [],
+    operator: undefined,
+    references: undefined,
+  };
+  const dummyCompound: 复合体数据 = {
+    id: 0,
+    type: "compound",
+    operator: "⿰",
+    references: [{ id: 1 }, { id: 1 }],
+  };
+  const initialValues = type === "component" ? dummyComponent : dummyCompound;
   return (
     <GlyphForm
-      trigger={<Button>新建</Button>}
-      initialValues={{ id: 0, type: "component", strokes: [] }}
+      trigger={<Button>新建{type === "component" ? "部件" : "复合体"}</Button>}
+      initialValues={initialValues}
       onFinish={async (record) => {
         if (远程) {
           const res = await createGlyph(record);
@@ -281,7 +296,8 @@ export default function GlyphTable() {
           if (isVectorStroke(stroke)) {
             summaries.push(stroke.feature);
           } else {
-            const from = stroke.from !== undefined ? stroke.from + 1 : undefined;
+            const from =
+              stroke.from !== undefined ? stroke.from + 1 : undefined;
             const to = stroke.to !== undefined ? stroke.to + 1 : undefined;
             summaries.push(`${stroke.index}[${from ?? ""}-${to ?? ""}]`);
           }
@@ -347,7 +363,9 @@ export default function GlyphTable() {
   ];
 
   if (!远程) {
-    columns = columns.filter((col) => col.title !== "GF0014" && col.title !== "GF3001");
+    columns = columns.filter(
+      (col) => col.title !== "GF0014" && col.title !== "GF3001",
+    );
   }
 
   return (
@@ -356,7 +374,8 @@ export default function GlyphTable() {
       <Flex gap="large">
         <CharacterGlyphSwitcher />
         <GlyphAlgebraForm />
-        <CreateGlyph />
+        <CreateGlyph type="component" />
+        <CreateGlyph type="compound" />
       </Flex>
       <Table<字形>
         dataSource={dataSource}

@@ -3,10 +3,17 @@ import type { ColumnsType } from "antd/es/table";
 import { 部件, 部件字根, 默认退化配置 } from "hanzi-chai";
 import { useEffect, useState } from "react";
 import { listCharacters, listGlyphs } from "~/api";
-import { useAtomValue, useSetAtom, 可编辑字形列表原子, 可编辑字符列表原子, 字库原子 } from "~/atoms";
+import {
+  useAtomValue,
+  useSetAtom,
+  可编辑字形列表原子,
+  可编辑字符列表原子,
+  字库原子,
+} from "~/atoms";
 import BorderItem from "~/components/BorderItem";
+import FilterForm from "~/components/FilterForm";
 import GlyphView from "~/components/GlyphView";
-import { useChaifenTitle } from "~/utils";
+import { useChaifenTitle, 字符字形过滤器, type 过滤器参数 } from "~/utils";
 
 // interface TreeNodeData {
 //   name: string;
@@ -120,6 +127,8 @@ import { useChaifenTitle } from "~/utils";
 
 const DegeneratorTable = () => {
   const repertoire = useAtomValue(字库原子);
+  const [filterData, setFilterData] = useState<过滤器参数>({});
+  const filter = new 字符字形过滤器(filterData);
   const components: 部件[] = [];
   for (const [_, 字形] of repertoire.字形迭代器()) {
     if (字形 instanceof 部件) {
@@ -127,7 +136,9 @@ const DegeneratorTable = () => {
     }
   }
   components.sort((a, b) => a.笔画数() - b.笔画数());
-  const dataSource = components.filter((cache) => cache.笔画数() >= 3);
+  const dataSource = components
+    .filter((cache) => cache.笔画数() >= 3)
+    .filter((cache) => filter.过滤字形(cache, repertoire));
   const toCompare = components.filter((cache) => cache.笔画数() >= 2);
   const [page, setPage] = useState(1);
   const columns: ColumnsType<部件> = [
@@ -147,7 +158,7 @@ const DegeneratorTable = () => {
         for (const another of toCompare) {
           if (another.获取名称() === record.获取名称()) continue;
           const 字根 = new 部件字根(another, another);
-          const slices = record.生成二进制切片列表(字根, 默认退化配置);
+          const slices = record.生成新二进制切片列表(字根, 默认退化配置);
           if (slices.length) {
             rootMap.set(another, slices);
           }
@@ -178,20 +189,23 @@ const DegeneratorTable = () => {
     },
   ];
   return (
-    <Table
-      dataSource={dataSource}
-      columns={columns}
-      size="small"
-      rowKey="name"
-      pagination={{
-        pageSize: 50,
-        current: page,
-      }}
-      onChange={(pagination) => {
-        setPage(pagination.current!);
-      }}
-      className="max-w-480"
-    />
+    <>
+      <FilterForm setFilter={setFilterData} />
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        size="small"
+        rowKey="name"
+        pagination={{
+          pageSize: 50,
+          current: page,
+        }}
+        onChange={(pagination) => {
+          setPage(pagination.current!);
+        }}
+        className="max-w-480"
+      />
+    </>
   );
 };
 

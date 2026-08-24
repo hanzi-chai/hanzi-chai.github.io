@@ -10,6 +10,7 @@ import {
   ProFormItem,
   ProFormList,
   ProFormSelect,
+  ProFormText,
 } from "@ant-design/pro-components";
 import type { FormListFieldData, MenuProps } from "antd";
 import { Button, Dropdown, Flex, Input, Typography } from "antd";
@@ -109,15 +110,8 @@ const StrokeForm = ({
               <ProFormSelect<笔画名称>
                 name="feature"
                 options={classifiedStrokeOptions}
-                disabled
+                // disabled
                 allowClear={false}
-                onChange={(value) => {
-                  const newStroke = 模拟矢量笔画(value);
-                  formRef.current?.setFieldValue(
-                    ["strokes", meta.name],
-                    newStroke,
-                  );
-                }}
               />
               <Digit name={["start", 0]} />
               <Digit name={["start", 1]} />
@@ -295,9 +289,7 @@ export default function GlyphForm({
         if (glyph.type === "compound") return onFinish(glyph);
         const strokes = 临时渲染(glyph, 字库).获取笔画列表();
         return onFinish({
-          id: glyph.id,
-          gf0014_id: glyph.gf0014_id,
-          gf3001_id: glyph.gf3001_id,
+          ...glyph,
           type: "component",
           strokes,
           operator: undefined,
@@ -334,8 +326,9 @@ export default function GlyphForm({
         <EditorColumn span={15}>
           <Flex align="flex-start" gap="large">
             <ProFormDigit name="id" label="id" disabled width={64} />
-            <ProFormDigit name="gf0014_id" label="GF0014" width={64} />
-            <ProFormDigit name="gf3001_id" label="GF3001" width={64} />
+            <ProFormDigit name="gf0014_id" label="GF0014" width={64} readonly />
+            <ProFormDigit name="gf3001_id" label="GF3001" width={64} readonly />
+            <ProFormText name="name" label="名称" width={128} readonly />
             <ProFormSelect
               label="类型"
               name="type"
@@ -397,6 +390,9 @@ export default function GlyphForm({
             )}
           </ProFormListMovable>
           <Flex justify="center" gap="middle">
+            <Button onClick={() => formRef.current?.setFieldValue("strokes", [])}>
+              清空笔画
+            </Button>
             <Dropdown
               menu={{
                 items: classifiedStrokeOptions as MenuProps["items"],

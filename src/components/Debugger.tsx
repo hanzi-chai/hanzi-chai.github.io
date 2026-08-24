@@ -31,7 +31,11 @@ import {
   配置原子,
 } from "~/atoms";
 import { ElementDetail } from "~/components/Mapping";
-import { CodePositionDisplay, Uploader } from "~/components/Utils";
+import {
+  BoxedElementWithTooltip,
+  CodePositionDisplay,
+  Uploader,
+} from "~/components/Utils";
 
 type 码表格式 =
   | "char_tab_code"
@@ -102,7 +106,9 @@ export default function Debugger() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<元素 | null>(null);
   const 字符是部件: 过滤 = (c, _) => {
-    return characters.has(c) && repertoire.查询字符的字形(c)?.some(是部件) === true;
+    return (
+      characters.has(c) && repertoire.查询字符的字形(c)?.some(是部件) === true
+    );
   };
   const 过滤函数 =
     校对范围 === "components" ? 字符是部件 : 字集过滤查找表[校对范围];
@@ -197,6 +203,15 @@ export default function Debugger() {
       title: "词",
       key: "词",
       dataIndex: "词",
+      render: (_, record) => {
+        return [...record.词].map((char, index) => {
+          const data = repertoire.校验字符(char);
+          if (!data) return char;
+          return (
+            <BoxedElementWithTooltip key={index} element={data.character} />
+          );
+        });
+      },
     },
     {
       title: "元素序列",
