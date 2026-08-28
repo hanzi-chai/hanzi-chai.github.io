@@ -376,6 +376,7 @@ export default function GlyphTable() {
         <GlyphAlgebraForm />
         <CreateGlyph type="component" />
         <CreateGlyph type="compound" />
+        <CreateGlyph type="compound" />
       </Flex>
       <Table<字形>
         dataSource={dataSource}

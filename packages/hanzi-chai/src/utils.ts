@@ -952,7 +952,7 @@ function 弹性布局(区间列表: 区间[]) {
     );
     const 缩放 = item.长度() === 0 ? 1 : 目标区间.长度() / item.长度();
     const 平移 = 目标区间.起点() - item.起点() * 缩放;
-    results.push(new 区间(平移, 平移 + 100 * 缩放));
+    results.push(new 区间(Math.round(平移), Math.round(平移 + 100 * 缩放)));
   }
   return results;
 }

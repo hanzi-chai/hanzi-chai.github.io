@@ -150,6 +150,8 @@ export default function CharacterTable() {
     sorter: (a, b) => a.unicode - b.unicode,
     sortDirections: ["ascend", "descend"],
     width: 128,
+    filteredValue: ["cjk"],
+    sortOrder: "ascend",
   };
 
   const tygfColumn: Column = {
@@ -305,7 +307,7 @@ export default function CharacterTable() {
         columns={columns}
         size="small"
         rowKey="unicode"
-        pagination={{ defaultPageSize: 50 }}
+        pagination={{ defaultPageSize: 50, current: 15 }}
         className="max-w-480"
       />
     </Flex>

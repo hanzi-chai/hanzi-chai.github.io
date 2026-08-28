@@ -11,6 +11,7 @@ import {
   type 基本字形数据,
   字库,
   type 字形,
+  字形库,
   type 字符,
   type 字符数据,
   序列化强类型决策,
@@ -154,26 +155,34 @@ export const 统一字形列表原子 = atom((get) => {
   return 可编辑字形列表;
 });
 
-export const 字库原子 = atom((get) => {
+export const 字形库原子 = atom((get) => {
   const 远程 = get(远程原子);
   if (远程) {
-    const 字符列表 = get(可编辑字符列表原子);
     const 字形列表 = get(可编辑字形列表原子);
-    return new 字库(字符列表, 字形列表, Array.from(来源排序));
+    return new 字形库(字形列表);
   }
-  const 字形自定义 = get(字形自定义原子);
-  const 变换器列表 = get(字形拼写运算列表原子);
-  const 字符列表 = get(字符列表原子);
-  const 用户字符列表 = get(用户字符列表原子);
   const 字形列表 = get(字形列表原子);
   const 用户字形列表 = get(用户字形列表原子);
+  const 变换器列表 = get(字形拼写运算列表原子);
+  return new 字形库([...字形列表, ...用户字形列表], 变换器列表);
+});
+
+export const 字库原子 = atom((get) => {
+  const 远程 = get(远程原子);
+  const 字形库 = get(字形库原子);
+  if (远程) {
+    const 字符列表 = get(可编辑字符列表原子);
+    return new 字库(字符列表, 字形库, Array.from(来源排序));
+  }
+  const 字符列表 = get(字符列表原子);
+  const 用户字符列表 = get(用户字符列表原子);
+  const 字形自定义 = get(字形自定义原子);
   const 字形来源列表 = get(字形来源列表原子);
   return new 字库(
     [...字符列表, ...用户字符列表],
-    [...字形列表, ...用户字形列表],
+    字形库,
     字形来源列表,
     字形自定义,
-    变换器列表,
   );
 });
 

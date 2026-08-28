@@ -69,7 +69,9 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
       options={options}
       value={rawValue as any}
       onChange={(newValue) => {
-        if (typeof newValue === "number") {
+        if (newValue === undefined) {
+          onChange?.(undefined as any);
+        } else if (typeof newValue === "number") {
           onChange?.(newValue as T);
         } else {
           onChange?.(JSON.parse(newValue as any) as T);
