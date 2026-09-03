@@ -1,11 +1,11 @@
-import { Layout, Row } from "antd";
+import { Layout } from "antd";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
 import { listCharacters, listGlyphs } from "~/api";
 import { 可编辑字形列表原子, 可编辑字符列表原子 } from "~/atoms";
 import CharacterTable from "~/components/CharacterTable";
 import GlyphTable from "~/components/GlyphTable";
-import { EditorColumn } from "~/components/Utils";
+import { EditorColumn, EditorRow } from "~/components/Utils";
 import { useChaifenTitle } from "~/utils";
 
 export default function AdminLayout() {
@@ -23,16 +23,16 @@ export default function AdminLayout() {
   }, []);
 
   return (
-    <Layout>
-      <Layout.Content>
-        <Row>
+    <Layout className="h-screen">
+      <Layout.Content className="h-full overflow-y-auto">
+        <EditorRow>
           <EditorColumn span={12}>
             <CharacterTable />
           </EditorColumn>
           <EditorColumn span={12}>
             <GlyphTable />
           </EditorColumn>
-        </Row>
+        </EditorRow>
       </Layout.Content>
     </Layout>
   );

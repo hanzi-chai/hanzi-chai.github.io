@@ -1,13 +1,13 @@
 import {
   ModalForm,
   ProFormGroup,
-  ProFormList,
   ProFormSelect,
   ProFormSwitch,
 } from "@ant-design/pro-components";
 import { Button } from "antd";
 import { type 笔画名称, 默认分类器 } from "hanzi-chai";
 import { useAtom, 退化配置原子 } from "~/atoms";
+import ProFormListMovable from "./ProFormListMovable";
 
 export default function Degenerator() {
   const [degenerator, setDegenerator] = useAtom(退化配置原子);
@@ -40,7 +40,7 @@ export default function Degenerator() {
         return true;
       }}
     >
-      <ProFormList name="feature" alwaysShowItemLabel>
+      <ProFormListMovable name="feature" alwaysShowItemLabel>
         <ProFormGroup>
           <ProFormSelect
             name="from"
@@ -55,7 +55,7 @@ export default function Degenerator() {
             fieldProps={{ style: { width: 100 } }}
           />
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
       <ProFormSwitch name="no_cross" label="相交不拆" />
     </ModalForm>
   );

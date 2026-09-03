@@ -63,16 +63,21 @@ export async function Info(request: IRequest, env: Env) {
   return 转数据(res);
 }
 
-async function getNextId(type: 字形模型["type"], env: Env): Promise<number> {
+async function getNextId(type: 字形模型["type"], env: Env, count = 1): Promise<number[]> {
   const allIDs = await env.CHAI.prepare(`SELECT id FROM ${table}`).all<{
     id: number;
   }>();
   const idSet = new Set(allIDs.results.map((item) => item.id));
   let id = type === "component" ? 64 : 4096;
-  while (idSet.has(id)) {
-    id++;
+  const ids: number[] = [];
+  for (let i = 0; i < count; i++) {
+    while (idSet.has(id)) {
+      id++;
+    }
+    ids.push(id);
+    idSet.add(id);
   }
-  return id;
+  return ids;
 }
 
 /** POST:/glyphs */
@@ -85,7 +90,7 @@ export async function Create(request: IRequest, env: Env) {
   }
   const { name, type, operator, references, strokes, gf0014_id, gf3001_id } =
     转模型(body);
-  const id = await getNextId(type, env);
+  const [id] = await getNextId(type, env);
   try {
     await env.CHAI.prepare(
       `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -113,10 +118,10 @@ export async function CreateBatch(request: IRequest, env: Env) {
     const statement = env.CHAI.prepare(
       `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
+    const ids = await getNextId(body[0].type, env, body.length);
     await env.CHAI.batch(
-      body.map((item: any) => {
+      body.map((item: any, index: number) => {
         const {
-          id,
           name,
           type,
           operator,
@@ -126,7 +131,7 @@ export async function CreateBatch(request: IRequest, env: Env) {
           gf3001_id,
         } = 转模型(item);
         return statement.bind(
-          id,
+          ids[index],
           name,
           type,
           operator,

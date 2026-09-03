@@ -2,7 +2,6 @@ import {
   ModalForm,
   ProFormGroup,
   ProFormItem,
-  ProFormList,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
@@ -29,6 +28,7 @@ import ElementSelect from "~/components/ElementSelect";
 import { ElementLabelWrapper } from "~/components/Mapping";
 import { DeleteButton, ElementDisplay, NumberInput } from "~/components/Utils";
 import BorderItem from "./BorderItem";
+import ProFormListMovable from "./ProFormListMovable";
 import ValueEditor from "./Value";
 
 const ValueDescriptionEditor = ({
@@ -198,7 +198,7 @@ const MappingVariablesForm = () => {
         return true;
       }}
     >
-      <ProFormList name="variables" alwaysShowItemLabel>
+      <ProFormListMovable name="variables" alwaysShowItemLabel>
         <ProFormGroup>
           <ProFormText name="name" label="名称" />
           <ProFormSelect
@@ -212,7 +212,7 @@ const MappingVariablesForm = () => {
             }))}
           />
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
     </ModalForm>
   );
 };
@@ -231,7 +231,7 @@ const MappingGeneratorsForm = () => {
         return true;
       }}
     >
-      <ProFormList
+      <ProFormListMovable
         name="mappingGenerators"
         alwaysShowItemLabel
         creatorRecord={() => ({
@@ -250,7 +250,7 @@ const MappingGeneratorsForm = () => {
             />
           </ProFormItem>
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
     </ModalForm>
   );
 };

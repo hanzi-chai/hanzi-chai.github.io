@@ -4,13 +4,13 @@ import {
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
-  ProFormList,
   ProFormSelect,
 } from "@ant-design/pro-components";
 import { Button, Flex, Form } from "antd";
 import type { 简码规则 } from "hanzi-chai";
 import { 多字词长度列表 } from "hanzi-chai";
 import { useAtom, 简码配置原子 } from "~/atoms";
+import ProFormListMovable from "./ProFormListMovable";
 
 const defaultRules: 简码规则[] = [
   {
@@ -47,7 +47,7 @@ export default function ShortCodeRules() {
       }}
       form={form}
     >
-      <ProFormList
+      <ProFormListMovable
         name="short_code"
         creatorButtonProps={false}
         alwaysShowItemLabel
@@ -76,13 +76,13 @@ export default function ShortCodeRules() {
               );
           }}
         </ProFormDependency>
-        <ProFormList name="schemes" alwaysShowItemLabel>
+        <ProFormListMovable name="schemes" alwaysShowItemLabel>
           <ProFormGroup>
             <ProFormDigit name="prefix" label="前缀" width="xs" />
             <ProFormDigit name="count" label="数量" width="xs" />
           </ProFormGroup>
-        </ProFormList>
-      </ProFormList>
+        </ProFormListMovable>
+      </ProFormListMovable>
       <Flex justify="center" gap="middle">
         <Button
           onClick={() => {

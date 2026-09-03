@@ -31,7 +31,7 @@ import {
   笔画表示方式,
 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
-import type { MutableRefObject, ReactElement, ReactNode } from "react";
+import type { MutableRefObject, ReactElement } from "react";
 import { useRef, useState } from "react";
 import { 字库原子 } from "~/atoms";
 import { 数字 } from "~/utils";
@@ -43,19 +43,6 @@ import { Box, EditorColumn, EditorRow } from "./Utils";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
   <ProFormDigit width={56} name={name} fieldProps={{ min: -100, max: 100 }} />
-);
-
-export const InlineRender = ({
-  listDom,
-  action,
-}: {
-  listDom: ReactNode;
-  action: ReactNode;
-}) => (
-  <div className="inline-flex mr-2">
-    {listDom}
-    {action}
-  </div>
 );
 
 function StaticList<T>(props: ProFormListProps<T>) {
@@ -86,20 +73,22 @@ const classifiedStrokeOptions: BaseOptionType[] = [
 
 const StrokeForm = ({
   references,
-  maxIndex,
   formRef,
   meta,
 }: {
   references?: 引用数据[];
-  maxIndex?: number;
   formRef: MutableRefObject<ProFormInstance | undefined>;
   meta: FormListFieldData;
 }) => {
   const 字库 = useAtomValue(字库原子);
-  const referenceOptions: BaseOptionType[] = (references ?? []).map((x) => ({
-    key: x.id,
-    value: x.id,
-    label: `引用第${数字(x.id + 1)}部`,
+  const 引用列表 = references ?? [];
+  const 笔画数列表 = 引用列表.map(
+    (x) => 字库.获取字形(x.id)?.标准笔顺.length ?? 0,
+  );
+  const referenceOptions: BaseOptionType[] = 引用列表.map((_, i) => ({
+    key: i,
+    value: i,
+    label: `第${数字(i + 1)}部`,
   }));
   return (
     <ProFormDependency name={["feature"]}>
@@ -148,22 +137,33 @@ const StrokeForm = ({
               options={referenceOptions}
               allowClear={false}
             />
-            <ProFormSelect
-              name="from"
-              label="从"
-              options={[...Array(maxIndex).keys()].map((x) => ({
-                label: `第${数字(x + 1)}笔`,
-                value: x,
-              }))}
-            />
-            <ProFormSelect
-              name="to"
-              label="到"
-              options={[...Array(maxIndex).keys()].map((x) => ({
-                label: `第${数字(x + 1)}笔`,
-                value: x,
-              }))}
-            />
+            <ProFormDependency name={["index"]}>
+              {({ index }) => {
+                const 笔画数 = 笔画数列表[index ?? 0] ?? 0;
+                return (
+                  <>
+                    <ProFormSelect
+                      name="from"
+                      label="从"
+                      options={[...Array(笔画数).keys()].map((x) => ({
+                        label: `第${数字(x + 1)}笔`,
+                        value: x,
+                      }))}
+                      placeholder="第一笔"
+                    />
+                    <ProFormSelect
+                      name="to"
+                      label="到"
+                      options={[...Array(笔画数).keys()].map((x) => ({
+                        label: `第${数字(x + 1)}笔`,
+                        value: x,
+                      }))}
+                      placeholder="最后一笔"
+                    />
+                  </>
+                );
+              }}
+            </ProFormDependency>
             <Button
               onClick={() => {
                 const form = formRef.current;
@@ -344,7 +344,7 @@ export default function GlyphForm({
             </ProFormItem>
           </Flex>
           <Typography.Title level={5}>引用</Typography.Title>
-          <ProFormList name="references" alwaysShowItemLabel>
+          <ProFormListMovable name="references" alwaysShowItemLabel>
             <ProFormGroup size="small">
               <ProFormItem name="id">
                 <GlyphSelect className="w-32!" />
@@ -355,6 +355,7 @@ export default function GlyphForm({
                 width={56}
                 min={-100}
                 max={200}
+                placeholder=""
               />
               <ProFormDigit
                 name="ybegin"
@@ -362,6 +363,7 @@ export default function GlyphForm({
                 width={56}
                 min={-100}
                 max={200}
+                placeholder=""
               />
               <ProFormDigit
                 name="xend"
@@ -369,6 +371,7 @@ export default function GlyphForm({
                 width={56}
                 min={-100}
                 max={200}
+                placeholder=""
               />
               <ProFormDigit
                 name="yend"
@@ -376,21 +379,32 @@ export default function GlyphForm({
                 width={56}
                 min={-100}
                 max={200}
+                placeholder=""
               />
             </ProFormGroup>
-          </ProFormList>
-          <Typography.Title level={5}>笔画</Typography.Title>
-          <ProFormListMovable
-            name="strokes"
-            creatorButtonProps={false}
-            alwaysShowItemLabel
-          >
-            {(meta) => (
-              <StrokeForm maxIndex={12} formRef={formRef} meta={meta} />
-            )}
           </ProFormListMovable>
+          <Typography.Title level={5}>笔画</Typography.Title>
+          <ProFormDependency name={["references"]}>
+            {({ references }) => (
+              <ProFormListMovable
+                name="strokes"
+                creatorButtonProps={false}
+                alwaysShowItemLabel
+              >
+                {(meta) => (
+                  <StrokeForm
+                    formRef={formRef}
+                    meta={meta}
+                    references={references}
+                  />
+                )}
+              </ProFormListMovable>
+            )}
+          </ProFormDependency>
           <Flex justify="center" gap="middle">
-            <Button onClick={() => formRef.current?.setFieldValue("strokes", [])}>
+            <Button
+              onClick={() => formRef.current?.setFieldValue("strokes", [])}
+            >
               清空笔画
             </Button>
             <Dropdown
@@ -415,9 +429,9 @@ export default function GlyphForm({
                 return (
                   <Dropdown
                     menu={{
-                      items: 引用数据列表.map((x, i) => ({
+                      items: 引用数据列表.map((_, i) => ({
                         key: i.toString(),
-                        label: `引用 ${x.id}`,
+                        label: `引用第${数字(i + 1)}部`,
                       })) as MenuProps["items"],
                       onClick: (item) => {
                         const strokes =

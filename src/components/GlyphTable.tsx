@@ -6,7 +6,6 @@ import {
   isVectorStroke,
   复合体,
   是用户字形,
-  笔画图形,
   结构描述字符列表,
   部件,
 } from "hanzi-chai";
@@ -38,6 +37,7 @@ const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
   const [用户字形列表, set用户字形列表] = useAtom(用户字形列表原子);
   const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
   const 下一个字形ID = useAtomValue(下一个用户字形ID原子);
+  const 统一字形列表 = useAtomValue(统一字形列表原子);
   const dummyComponent: 基本部件数据 = {
     id: 0,
     type: "component",
@@ -52,11 +52,23 @@ const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
     references: [{ id: 1 }, { id: 1 }],
   };
   const initialValues = type === "component" ? dummyComponent : dummyCompound;
+  const hashset = new Set<string>();
+  for (const glyph of 统一字形列表) {
+    const { id, name, gf0014_id, gf3001_id, ...rest } = glyph;
+    const key = JSON.stringify(rest);
+    hashset.add(key);
+  }
   return (
     <GlyphForm
       trigger={<Button>新建{type === "component" ? "部件" : "复合体"}</Button>}
       initialValues={initialValues}
       onFinish={async (record) => {
+        const { id, name, gf0014_id, gf3001_id, ...rest } = record;
+        const key = JSON.stringify(rest);
+        if (hashset.has(key)) {
+          alert("已存在相同的字形，请修改后再提交。");
+          return false;
+        }
         if (远程) {
           const res = await createGlyph(record);
           if (!errorFeedback(res)) {

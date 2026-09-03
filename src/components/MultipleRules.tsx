@@ -3,13 +3,13 @@ import {
   ProFormCascader,
   ProFormDependency,
   ProFormGroup,
-  ProFormList,
   ProFormSelect,
   ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Form, Space } from "antd";
 import { 多字词长度列表, type 构词规则 } from "hanzi-chai";
 import { useAtom, 构词配置原子 } from "~/atoms";
+import ProFormListMovable from "./ProFormListMovable";
 
 const defaultRules: 构词规则[] = [
   { length_equal: 2, formula: "AaAbBaBb" },
@@ -41,7 +41,7 @@ export default function MultipleRules() {
         return true;
       }}
     >
-      <ProFormList name="rules" creatorButtonProps={false}>
+      <ProFormListMovable name="rules" creatorButtonProps={false}>
         <ProFormGroup>
           <ProFormDependency name={["length_equal", "length_in_range"]}>
             {({ length_equal, length_in_range }) => {
@@ -74,7 +74,7 @@ export default function MultipleRules() {
             rules={[{ validator }]}
           />
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
       <Space>
         <Button
           onClick={() => {

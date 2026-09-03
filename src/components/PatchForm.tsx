@@ -3,7 +3,6 @@ import {
   ProFormDependency,
   ProFormGroup,
   ProFormItem,
-  ProFormList,
   ProFormSelect,
 } from "@ant-design/pro-components";
 import { Button } from "antd";
@@ -11,6 +10,7 @@ import type { 字符 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { useAddAtom, 字形自定义原子 } from "~/atoms";
 import GlyphSelect from "./GlyphSelect";
+import ProFormListMovable from "./ProFormListMovable";
 import SourceSelect from "./SourceSelect";
 import { CharacterDisplay } from "./Utils";
 
@@ -38,7 +38,7 @@ export default function PatchForm({ character }: { character: 字符 }) {
         return true;
       }}
     >
-      <ProFormList
+      <ProFormListMovable
         name="patches"
         alwaysShowItemLabel
         creatorRecord={() => ({
@@ -71,7 +71,7 @@ export default function PatchForm({ character }: { character: 字符 }) {
             }}
           </ProFormDependency>
         </ProFormGroup>
-      </ProFormList>
+      </ProFormListMovable>
     </ModalForm>
   );
 }

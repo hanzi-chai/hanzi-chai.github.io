@@ -129,6 +129,9 @@ export default defineConfig(({ mode, command }) => {
         // Allow serving files from one level up to the project root
         allow: [".."],
       },
+      watch: {
+        ignored: ["**/scripts/**", "**/node_modules/**", "**/.git/**"],
+      },
     },
   };
 

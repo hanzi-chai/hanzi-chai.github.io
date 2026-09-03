@@ -7,7 +7,7 @@ import {
   ProFormItem,
   ProFormText,
 } from "@ant-design/pro-components";
-import { Button, Flex, Form, Typography } from "antd";
+import { Button, Flex, Typography } from "antd";
 import type { 字符数据 } from "hanzi-chai";
 import type { ReactNode } from "react";
 import { useRef } from "react";

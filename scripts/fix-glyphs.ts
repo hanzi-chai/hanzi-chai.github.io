@@ -1,12 +1,12 @@
 /**
  * 检查服务器中的所有字形数据。
  *
- * 用法：bun run scripts/fix-overlap-glyphs.ts
+ * 用法：bun run scripts/fix-glyphs.ts
  * 需要设置环境变量 JWT（用于 API 认证）。
  */
 
 import "dotenv/config";
-import type { 基本字形数据, 复合体数据, 引用笔画块数据 } from "hanzi-chai";
+import type { 基本字形数据, 复合体数据 } from "hanzi-chai";
 import { createClient } from "../packages/api/src/client";
 
 const { get, put } = createClient(() => process.env.JWT ?? null);
@@ -24,13 +24,15 @@ console.log(`共获取 ${glyphs.length} 个字形数据。\n`);
 const updated: 复合体数据[] = [];
 for (const g of glyphs) {
   if (g.type === "compound") {
-    if (!g.strokes) continue;
-    if (g.strokes.length < 3) continue;
-    if (g.strokes[0]!.index === g.strokes[2]!.index && g.strokes[0]!.to === g.strokes[2]!.from) {
-      if (g.strokes[0]!.to === undefined) continue;
-      g.strokes[0]!.to! -= 1;
+    if (
+      g.operator === "⿺" &&
+      g.references[1]?.id === 189 &&
+      g.strokes === undefined
+    ) {
+      g.references = [g.references[1], g.references[0]!];
+      g.strokes = [{ index: 1 }, { index: 0 }];
+      updated.push(g);
     }
-    updated.push(g);
   }
 }
 

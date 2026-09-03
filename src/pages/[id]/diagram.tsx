@@ -2,7 +2,6 @@ import {
   ProForm,
   ProFormDependency,
   ProFormGroup,
-  ProFormList,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
@@ -21,6 +20,7 @@ import {
   强类型翻转决策原子,
 } from "~/atoms";
 import { AdjustableElementGroup } from "~/components/Mapping";
+import ProFormListMovable from "~/components/ProFormListMovable";
 import { useChaifenTitle } from "~/utils";
 
 const PrintArea = ({ children }: { children?: ReactNode }) => (
@@ -146,7 +146,7 @@ const Sidebar = () => {
         submitter={false}
       >
         <Typography.Title level={4}>布局</Typography.Title>
-        <ProFormList
+        <ProFormListMovable
           name="layout"
           creatorRecord={{
             keys: [],
@@ -160,12 +160,12 @@ const Sidebar = () => {
             label="字符"
             options={[...alphabet].map((x) => ({ label: x, value: x }))}
           />
-        </ProFormList>
+        </ProFormListMovable>
         <Typography.Title level={4}>共享样式</Typography.Title>
         <ProFormTextArea name="row_style" label="行样式" />
         <ProFormTextArea name="cell_style" label="格样式" />
         <Typography.Title level={4}>格内容</Typography.Title>
-        <ProFormList
+        <ProFormListMovable
           name="contents"
           alwaysShowItemLabel
           creatorRecord={{
@@ -204,7 +204,7 @@ const Sidebar = () => {
             </ProFormDependency>
           </ProFormGroup>
           <ProFormTextArea name="style" label="样式" />
-        </ProFormList>
+        </ProFormListMovable>
       </ProForm>
     </SidebarWrapper>
   );
