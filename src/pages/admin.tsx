@@ -26,10 +26,10 @@ export default function AdminLayout() {
     <Layout className="h-screen">
       <Layout.Content className="h-full overflow-y-auto">
         <EditorRow>
-          <EditorColumn span={12}>
+          <EditorColumn span={10}>
             <CharacterTable />
           </EditorColumn>
-          <EditorColumn span={12}>
+          <EditorColumn span={14}>
             <GlyphTable />
           </EditorColumn>
         </EditorRow>

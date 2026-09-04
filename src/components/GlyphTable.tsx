@@ -1,4 +1,4 @@
-import { Button, Flex, Popconfirm, Space, Tooltip } from "antd";
+import { Button, Checkbox, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import type { 基本字形数据, 基本部件数据, 复合体数据, 字形 } from "hanzi-chai";
@@ -352,6 +352,19 @@ export default function GlyphTable() {
           </span>
         );
       },
+    },
+    {
+      title: "歧义",
+      dataIndex: "ambiguous",
+      render: (_, record) => {
+        return <Checkbox checked={true} />;
+      },
+      filters: [
+        { text: "只看有歧义", value: 1 },
+        { text: "只看无歧义", value: 0 },
+      ],
+      onFilter: (value, record) => Number(true) === value,
+      width: 64,
     },
     {
       title: "操作",

@@ -2,6 +2,7 @@ import { Checkbox, Flex, Form, Space, Tooltip } from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
 import { 区块列表, 图形盒子, type 扩展字符数据, 是用户字符 } from "hanzi-chai";
+import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
 import { createCharacter, removeCharacter, updateCharacter } from "~/api";
 import {
@@ -22,6 +23,7 @@ import BorderItem from "./BorderItem";
 import CharacterForm from "./CharacterForm";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
+import GlyphRecommendation from "./GlyphRecommendation";
 import { EditOrRedrawGraph } from "./GlyphTable";
 import GlyphView from "./GlyphView";
 import PatchForm from "./PatchForm";
@@ -77,15 +79,15 @@ const DeleteCharacter = ({ unicode }: { unicode: number }) => {
   );
 };
 
-const EditOrPatchCharacter = ({ record }: { record: 扩展字符数据 }) => {
+const EditOrPatchCharacter = ({ character }: { character: 扩展字符数据 }) => {
   const 远程 = useAtomValue(远程原子);
   const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
   const [用户字符列表, set用户字符列表] = useAtom(用户字符列表原子);
 
-  return 远程 || record.character.是用户私用区() ? (
+  return 远程 || character.character.是用户私用区() ? (
     <CharacterForm
       title="编辑"
-      initialValues={record}
+      initialValues={character}
       onFinish={async (values) => {
         if (远程) {
           const res = await updateCharacter(values);
@@ -107,7 +109,7 @@ const EditOrPatchCharacter = ({ record }: { record: 扩展字符数据 }) => {
       }}
     />
   ) : (
-    <PatchForm character={record.character} />
+    <PatchForm character={character.character} />
   );
 };
 
@@ -131,6 +133,7 @@ export default function CharacterTable() {
     }
     return result;
   }, [按笔顺排序字符, 字库, filter]);
+  const [currentPage, setCurrentPage] = useAtom(currentPageAtom);
 
   const unicodeColumn: Column = {
     title: "Unicode",
@@ -244,26 +247,13 @@ export default function CharacterTable() {
     width: 128,
   };
 
-  const ambiguous: Column = {
-    title: "歧义",
-    dataIndex: "ambiguous",
-    render: (_, record) => {
-      return <Checkbox checked={record.ambiguous === 1} />;
-    },
-    filters: [
-      { text: "只看有歧义", value: 1 },
-      { text: "只看无歧义", value: 0 },
-    ],
-    onFilter: (value, record) => Number(record.ambiguous) === value,
-    width: 64,
-  };
-
   const operations: Column = {
     title: "操作",
     key: "option",
     render: (_, record) => (
       <Space>
-        <EditOrPatchCharacter record={record} />
+        <EditOrPatchCharacter character={record} />
+        {远程 && <GlyphRecommendation character={record} />}
         <DeleteCharacter unicode={record.unicode} />
       </Space>
     ),
@@ -285,9 +275,12 @@ export default function CharacterTable() {
     gb2312,
     glyphs,
     patches,
-    ambiguous,
     operations,
   ];
+
+  if (远程) {
+    columns.splice(4, 1); // remove patches column
+  }
 
   return (
     <Flex className="overflow-y-scroll" vertical align="center" gap="small">
@@ -306,9 +299,11 @@ export default function CharacterTable() {
         columns={columns}
         size="small"
         rowKey="unicode"
-        pagination={{ defaultPageSize: 50, current: 232 }}
+        pagination={{ defaultPageSize: 50, current: currentPage, onChange: (page) => setCurrentPage(page) }}
         className="max-w-480"
       />
     </Flex>
   );
 }
+
+const currentPageAtom = atomWithStorage("character-table-current-page", 367);
