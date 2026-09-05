@@ -23,7 +23,7 @@ import BorderItem from "./BorderItem";
 import CharacterForm from "./CharacterForm";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
-import GlyphRecommendation from "./GlyphRecommendation";
+import GlyphRecommendation, { BatchGlyphRecommendation } from "./GlyphRecommendation";
 import { EditOrRedrawGraph } from "./GlyphTable";
 import GlyphView from "./GlyphView";
 import PatchForm from "./PatchForm";
@@ -293,6 +293,7 @@ export default function CharacterTable() {
           </Form.Item>
         )}
         <CreateCharacter />
+        <BatchGlyphRecommendation />
       </Flex>
       <Table<扩展字符数据>
         dataSource={dataSource}

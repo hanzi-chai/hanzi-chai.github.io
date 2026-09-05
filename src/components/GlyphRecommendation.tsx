@@ -1,72 +1,174 @@
 import type { ProFormInstance } from "@ant-design/pro-components";
 import {
   ProForm,
-  ProFormDependency,
+  ProFormDigit,
   ProFormGroup,
   ProFormList,
+  ProFormText,
 } from "@ant-design/pro-components";
-import { Button, Flex, Popconfirm, Tooltip } from "antd";
+import { Button, Flex, Input, Popconfirm } from "antd";
 import type {
   基本字形数据,
   复合体数据,
   字形来源数据,
   字符数据,
 } from "hanzi-chai";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { isEqual, maxBy } from "lodash-es";
+import type { MutableRefObject, ReactNode } from "react";
 import { useRef, useState } from "react";
 import { createGlyph, updateCharacter } from "~/api";
 import { errorFeedback } from "~/utils";
-import { 可编辑字形列表原子, 可编辑字符列表原子, 字库原子 } from "../atoms";
-import BorderItem from "./BorderItem";
-import GlyphView from "./GlyphView";
+import { 可编辑字形列表原子, 可编辑字符列表原子 } from "../atoms";
+import GlyphSelect from "./GlyphSelect";
 import SourceSelect from "./SourceSelect";
 
-// const GlyphRecommendationForm = ({
-//   result,
-//   formRef,
-// }: {
-//   result: 分组推荐结果;
-//   formRef: any;
-// }) => {
-//   return (
-//     <ProForm initialValues={{ result }} submitter={false} formRef={formRef}>
-//       <ProFormList name="result">
-//         <ProFormGroup>
-//           <ProForm.Item label="来源" name="sources">
-//             <SourceSelect />
-//           </ProForm.Item>
-//           <ProForm.Item label="字形" name="glyph">
-//             <ProFormDependency name={["glyph"]}>
-//               {({ glyph }) => {
-//                 return (
-//                   <Tooltip title={glyph.id}>
-//                     <BorderItem>
-//                       <GlyphView glyph={glyph.图形盒子} />
-//                     </BorderItem>
-//                   </Tooltip>
-//                 );
-//               }}
-//             </ProFormDependency>
-//           </ProForm.Item>
-//         </ProFormGroup>
-//       </ProFormList>
-//     </ProForm>
-//   );
-// };
+const InlineRender = ({
+  listDom,
+  action,
+}: {
+  listDom: ReactNode;
+  action: ReactNode;
+}) => (
+  <div className="inline-flex mr-2">
+    {listDom}
+    {action}
+  </div>
+);
 
-type 分组推荐结果 = {
+type 推荐结果 = {
   sources: string[];
-  glyph: 复合体数据;
+  id: number;
+  references: { id: number }[];
 }[];
+
+const GlyphRecommendationForm = ({
+  formRef,
+}: {
+  formRef: MutableRefObject<ProFormInstance | undefined>;
+}) => {
+  return (
+    <ProForm submitter={false} formRef={formRef} layout="horizontal">
+      <ProFormList
+        name="result"
+        alwaysShowItemLabel
+        creatorRecord={() => ({
+          sources: [],
+          id: 0,
+          references: [{ id: 1 }, { id: 1 }],
+        })}
+      >
+        <ProFormGroup>
+          <ProForm.Item label="来源" name="sources">
+            <SourceSelect />
+          </ProForm.Item>
+          <ProForm.Item label="字形ID" name="id">
+            <GlyphSelect />
+          </ProForm.Item>
+          <ProFormList
+            name="references"
+            creatorButtonProps={false}
+            itemRender={InlineRender}
+          >
+            <ProForm.Item label="引用" name="id">
+              <GlyphSelect />
+            </ProForm.Item>
+          </ProFormList>
+        </ProFormGroup>
+      </ProFormList>
+    </ProForm>
+  );
+};
+
+export const BatchGlyphRecommendation = () => {
+  const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
+  const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
+  const [from, setFrom] = useState<number>(0);
+  const [to, setTo] = useState<number>(0);
+
+  return (
+    <Popconfirm
+      title={`推断其他来源字形`}
+      description={
+        <Flex>
+          <Input
+            value={from.toString(16)}
+            onChange={(e) => setFrom(parseInt(e.target.value, 16))}
+          />
+          <Input
+            value={to.toString(16)}
+            onChange={(e) => setTo(parseInt(e.target.value, 16))}
+          />
+        </Flex>
+      }
+      onConfirm={async () => {
+        const 新可编辑字形列表 = [...可编辑字形列表];
+        const 字符替换表 = new Map<number, 字符数据>();
+        for (let unicode = from; unicode <= to; unicode++) {
+          const character = 可编辑字符列表.find((c) => c.unicode === unicode);
+          if (!character) continue;
+          const 推荐结果 = 计算字形推荐(
+            character,
+            可编辑字符列表,
+            可编辑字形列表,
+          );
+          if (!推荐结果) continue;
+          const res = await handle(character, 推荐结果, 可编辑字形列表);
+          if (!res) continue;
+          const { newCharacter, 可编辑字形列表增量 } = res;
+          新可编辑字形列表.push(...可编辑字形列表增量);
+          字符替换表.set(unicode, newCharacter);
+        }
+        set可编辑字形列表(新可编辑字形列表);
+        const 新可编辑字符列表 = 可编辑字符列表.map((c) =>
+          字符替换表.has(c.unicode) ? 字符替换表.get(c.unicode)! : c,
+        );
+        set可编辑字符列表(新可编辑字符列表);
+      }}
+    >
+      <Button>批量补全</Button>
+    </Popconfirm>
+  );
+};
+
+async function handle(
+  character: 字符数据,
+  推荐结果: 推荐结果,
+  可编辑字形列表: 基本字形数据[],
+) {
+  const 可编辑字形列表增量: 基本字形数据[] = [];
+  const newGlyphs: 字形来源数据[] = [];
+  const 参考字形 = character.glyphs[0]!.id;
+  const 参考字形数据 = 可编辑字形列表.find((g) => g.id === 参考字形)!;
+  if (参考字形数据.type !== "compound") return;
+  const { id, gf0014_id, gf3001_id, name, references, ...rest } = 参考字形数据;
+  for (const { sources, id, references } of 推荐结果) {
+    if (sources.length === 0) continue;
+    if (id === 0) {
+      const glyph: 复合体数据 = { id: 0, references, ...rest };
+      const res = await createGlyph(glyph);
+      if (!errorFeedback(res)) {
+        const withId = { ...glyph, id: res };
+        可编辑字形列表增量.push(withId);
+        newGlyphs.push({ id: res, sources });
+      }
+    } else {
+      newGlyphs.push({ id, sources });
+    }
+  }
+  const newCharacter = {
+    ...character,
+    glyphs: newGlyphs,
+  };
+  const res = await updateCharacter(newCharacter);
+  if (!errorFeedback(res)) return { newCharacter, 可编辑字形列表增量 };
+}
 
 export default function GlyphRecommendation({
   character,
 }: {
   character: 字符数据;
 }) {
-  const [推荐结果, set推荐结果] = useState<分组推荐结果 | null>(null);
-  const 字库 = useAtomValue(字库原子);
   const [可编辑字符列表, set可编辑字符列表] = useAtom(可编辑字符列表原子);
   const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
   const formRef = useRef<ProFormInstance>(undefined);
@@ -74,86 +176,22 @@ export default function GlyphRecommendation({
   return (
     <Popconfirm
       title={`从来源 ${character.glyphs[0]?.sources[0]} 推断其他来源字形`}
-      description={推荐结果?.map(
-        ({ sources: 来源列表, glyph: 字形数据 }, index) => {
-          const 字形ID列表 = 字形数据.references.map((r) => r.id);
-          return (
-            <Flex key={index} gap="middle" align="center">
-              <Flex gap="small" align="center">
-                <SourceSelect
-                  value={来源列表}
-                  onChange={(newSources) => {
-                    const 新推荐结果 = [...推荐结果!];
-                    新推荐结果[index] = {
-                      sources: newSources,
-                      glyph: 推荐结果![index]!.glyph,
-                    };
-                    set推荐结果(新推荐结果);
-                  }}
-                />
-              </Flex>
-              {字形数据.id !== 0 ? (
-                <>
-                  已存在
-                  <Tooltip title={字形数据.id}>
-                    <BorderItem>
-                      <GlyphView glyph={字库.获取字形(字形数据.id)!.图形盒子} />
-                    </BorderItem>
-                  </Tooltip>
-                </>
-              ) : (
-                <>
-                  需创建
-                  {字形ID列表.map((字形ID, index) => {
-                    const 字形 = 字库.获取字形(字形ID)!;
-                    return (
-                      <Tooltip key={index} title={字形ID}>
-                        <BorderItem>
-                          <GlyphView glyph={字形.图形盒子} />
-                        </BorderItem>
-                      </Tooltip>
-                    );
-                  })}
-                </>
-              )}
-            </Flex>
-          );
-        },
-      )}
-      onOpenChange={(open) => {
-        if (!open) return;
+      description={<GlyphRecommendationForm formRef={formRef} />}
+      onPopupClick={() => {
         const 结果 = 计算字形推荐(character, 可编辑字符列表, 可编辑字形列表);
-        set推荐结果(结果);
+        formRef.current?.setFieldsValue({ result: 结果 });
       }}
       onConfirm={async () => {
-        if (推荐结果 === null) return;
-        const 新可编辑字形列表 = [...可编辑字形列表];
-        const newGlyphs: 字形来源数据[] = [];
-        for (const { sources, glyph } of 推荐结果) {
-          if (sources.length === 0) continue;
-          if (glyph.id === 0) {
-            const res = await createGlyph(glyph);
-            if (!errorFeedback(res)) {
-              const withId = { ...glyph, id: res };
-              新可编辑字形列表.push(withId);
-              newGlyphs.push({ id: res, sources });
-            }
-          } else {
-            newGlyphs.push({ id: glyph.id, sources });
-          }
-        }
-        const newCharacter = {
-          ...character,
-          glyphs: newGlyphs,
-        };
-        const res = await updateCharacter(newCharacter);
-        if (!errorFeedback(res)) {
-          const 新可编辑字符列表 = 可编辑字符列表.map((c) =>
-            c.unicode === character.unicode ? newCharacter : c,
-          );
-          set可编辑字符列表(新可编辑字符列表);
-          set可编辑字形列表(新可编辑字形列表);
-        }
+        const 推荐结果: 推荐结果 = formRef.current?.getFieldValue("result");
+        if (!推荐结果) return;
+        const res = await handle(character, 推荐结果, 可编辑字形列表);
+        if (!res) return;
+        const { newCharacter, 可编辑字形列表增量 } = res;
+        set可编辑字形列表([...可编辑字形列表, ...可编辑字形列表增量]);
+        const 新可编辑字符列表 = 可编辑字符列表.map((c) =>
+          c.unicode === character.unicode ? newCharacter : c,
+        );
+        set可编辑字符列表(新可编辑字符列表);
       }}
     >
       <Button>补全</Button>
@@ -165,6 +203,7 @@ const visitedRanges = [
   { start: 0x4e00, end: 0x6400 },
   { start: 0x7a70, end: 0x7aca },
   { start: 0x7cf8, end: 0x7f35 },
+  { start: 0x8fb6, end: 0x9090 },
 ];
 
 function 计算字形推荐(
@@ -179,12 +218,10 @@ function 计算字形推荐(
       return [JSON.stringify(rest), glyph];
     }),
   );
-  const 样本字符范围 = 可编辑字符列表.filter(
-    (c) =>
-      visitedRanges.some(
-        ({ start, end }) => c.unicode >= start && c.unicode <= end,
-      ) ||
-      (c.unicode >= 0x7cf8 && c.unicode < character.unicode),
+  const 样本字符范围 = 可编辑字符列表.filter((c) =>
+    visitedRanges.some(
+      ({ start, end }) => c.unicode >= start && c.unicode <= end,
+    ),
   );
   const 来源列表 = character.glyphs.flatMap((g) => g.sources);
   const 参考来源 = 来源列表[0]!;
@@ -228,10 +265,11 @@ function 计算字形推荐(
     }
   }
   // 对于每个待推断来源，统计每个引用的出现次数，选择出现次数最多的引用作为推荐结果
-  const 分组推荐结果 = [
+  const 分组推荐结果: 推荐结果 = [
     {
       sources: [参考来源],
-      glyph: 参考字形数据,
+      id: 参考字形数据.id,
+      references: 参考字形数据.references,
     },
   ];
   for (const [来源, 引用统计列表] of 统计数据.entries()) {
@@ -244,28 +282,25 @@ function 计算字形推荐(
     }
     const 分组 = 分组推荐结果.find((g) =>
       isEqual(
-        g.glyph.references.map((r) => r.id),
+        g.references.map((r) => r.id),
         字形ID列表,
       ),
     );
     if (分组) {
       分组.sources.push(来源);
     } else {
-      const { id, name, gf0014_id, gf3001_id, ...rest } = 参考字形数据;
-      const x = { ...rest, references: 字形ID列表.map((id) => ({ id })) };
+      const { id: _, name, gf0014_id, gf3001_id, ...rest } = 参考字形数据;
+      const references = 字形ID列表.map((id) => ({ id }));
+      const x = { ...rest, references };
       const 字形数据 = 字形哈希表.get(JSON.stringify(x));
-      let glyph: 复合体数据;
+      let id = 0;
       if (字形数据 && 字形数据.type === "compound") {
-        glyph = 字形数据;
-      } else {
-        glyph = {
-          id: 0,
-          ...x,
-        };
+        id = 字形数据.id;
       }
       分组推荐结果.push({
         sources: [来源],
-        glyph,
+        id,
+        references,
       });
     }
   }
