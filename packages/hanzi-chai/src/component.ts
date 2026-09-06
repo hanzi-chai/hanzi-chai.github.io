@@ -60,12 +60,14 @@ class 部件 {
   public 拓扑: 拓扑;
   public 图形盒子: 图形盒子;
   public 标准笔顺: string;
+  public ambiguous: boolean;
 
   constructor(数据: 基本部件数据) {
     this.id = 数据.id;
     this.name = 数据.name;
     this.gf0014_id = 数据.gf0014_id;
     this.gf3001_id = 数据.gf3001_id;
+    this.ambiguous = 数据.ambiguous ?? false;
     this.矢量图形 = 数据.strokes;
     this.笔画列表 = 数据.strokes.map((x) => new 笔画图形(x));
     this.拓扑 = new 拓扑(this.笔画列表);

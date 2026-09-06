@@ -46,6 +46,7 @@ class 复合体 {
   public 笔画列表: 引用笔画块数据[];
   public 图形盒子: 图形盒子;
   public 标准笔顺: string;
+  public ambiguous: boolean;
 
   constructor(
     数据: 复合体数据,
@@ -55,6 +56,7 @@ class 复合体 {
     this.name = 数据.name;
     this.gf0014_id = 数据.gf0014_id;
     this.gf3001_id = 数据.gf3001_id;
+    this.ambiguous = 数据.ambiguous;
     this.结构描述字符 = 数据.operator;
     this.笔画列表 = 数据.strokes ?? 部分列表.map((_, i) => ({ index: i }));
     this.图形盒子 = 仿射合并(

@@ -4,6 +4,7 @@ import type {
 } from "@ant-design/pro-components";
 import {
   ModalForm,
+  ProFormCheckbox,
   ProFormDependency,
   ProFormDigit,
   ProFormGroup,
@@ -342,6 +343,7 @@ export default function GlyphForm({
             <ProFormItem label="结构" name="operator">
               <OperatorSelect className="w-16!" allowClear />
             </ProFormItem>
+            <ProFormCheckbox label="歧义" name="ambiguous"/>
           </Flex>
           <Typography.Title level={5}>引用</Typography.Title>
           <ProFormListMovable name="references" alwaysShowItemLabel>

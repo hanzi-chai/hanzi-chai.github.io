@@ -16,7 +16,7 @@ import {
   type 拼音分析映射,
   type 拼音分析结果,
 } from "./pinyin.js";
-import { 字库, 字形库, type 字形分析结果 } from "./repertoire.js";
+import { 字库, type 字形分析结果, 字形库 } from "./repertoire.js";
 import {
   决策图,
   type 原始词典,
@@ -74,10 +74,7 @@ export function 获取字库(配置: 配置): 字库 {
   const 字形自定义 = 配置.data?.character_customization ?? {};
   const 拼写运算列表 = 配置.data?.glyph_algebra ?? [];
   const 字形来源列表 = 配置.data?.glyph_sources ?? [];
-  const 字形库实例 = new 字形库(
-    [...字形列表, ...自定义字形列表],
-    拼写运算列表,
-  );
+  const 字形库实例 = new 字形库([...字形列表, ...自定义字形列表], 拼写运算列表);
   return new 字库(
     [...字符列表, ...自定义字符列表],
     字形库实例,

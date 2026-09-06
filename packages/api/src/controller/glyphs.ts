@@ -13,6 +13,7 @@ interface 字形模型 extends Pick<字形数据, "id" | "type"> {
   strokes: string | null; // JSON 字符串
   gf0014_id: number | null;
   gf3001_id: number | null;
+  ambiguous: 1 | 0;
 }
 
 function 转数据(数据: 字形模型): 字形数据 {
@@ -27,6 +28,7 @@ function 转数据(数据: 字形模型): 字形数据 {
     strokes: strokes ? (JSON.parse(strokes) as 字形数据["strokes"]) : undefined,
     gf0014_id: gf0014_id ?? undefined,
     gf3001_id: gf3001_id ?? undefined,
+    ambiguous: 数据.ambiguous === 1,
   } as 字形数据;
 }
 
@@ -39,6 +41,7 @@ function 转模型(数据: 字形数据): 字形模型 {
     strokes: 数据.strokes ? JSON.stringify(数据.strokes) : null,
     gf0014_id: 数据.gf0014_id ?? null,
     gf3001_id: 数据.gf3001_id ?? null,
+    ambiguous: 数据.ambiguous ? 1 : 0,
   };
 }
 
@@ -88,14 +91,14 @@ export async function Create(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { name, type, operator, references, strokes, gf0014_id, gf3001_id } =
+  const { name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } =
     转模型(body);
   const [id] = await getNextId(type, env);
   try {
     await env.CHAI.prepare(
-      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id, ambiguous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-      .bind(id, name, type, operator, references, strokes, gf0014_id, gf3001_id)
+      .bind(id, name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous)
       .run();
   } catch (err) {
     return new Err(
@@ -116,7 +119,7 @@ export async function CreateBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(
-      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id, ambiguous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const ids = await getNextId(body[0].type, env, body.length);
     await env.CHAI.batch(
@@ -129,6 +132,7 @@ export async function CreateBatch(request: IRequest, env: Env) {
           strokes,
           gf0014_id,
           gf3001_id,
+          ambiguous,
         } = 转模型(item);
         return statement.bind(
           ids[index],
@@ -139,6 +143,7 @@ export async function CreateBatch(request: IRequest, env: Env) {
           strokes,
           gf0014_id,
           gf3001_id,
+          ambiguous,
         );
       }),
     );
@@ -162,13 +167,13 @@ export async function Update(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { name, type, operator, references, strokes, gf0014_id, gf3001_id } =
+  const { name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } =
     转模型(body);
   try {
     await env.CHAI.prepare(
-      `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
+      `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=?, ambiguous=? WHERE id=?`,
     )
-      .bind(name, type, operator, references, strokes, gf0014_id, gf3001_id, id)
+      .bind(name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous, id)
       .run();
   } catch (err) {
     return new Err(
@@ -188,11 +193,11 @@ export async function UpdateBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(
-      `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=? WHERE id=?`,
+      `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=?, ambiguous=? WHERE id=?`,
     );
     await env.CHAI.batch(
       body.map((item: any) => {
-        const { id, name, type, operator, references, strokes, gf0014_id, gf3001_id } = 转模型(item);
+        const { id, name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } = 转模型(item);
         return statement.bind(
           name,
           type,
@@ -201,6 +206,7 @@ export async function UpdateBatch(request: IRequest, env: Env) {
           strokes,
           gf0014_id,
           gf3001_id,
+          ambiguous,
           id
         );
       }),

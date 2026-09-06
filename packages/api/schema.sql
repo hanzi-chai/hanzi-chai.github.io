@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS glyphs (
   `references` TEXT,
   `strokes` TEXT,
   `gf0014_id` INTEGER,
-  `gf3001_id` INTEGER
+  `gf3001_id` INTEGER,
+  `ambiguous` INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (

@@ -84,6 +84,7 @@ interface 字形数据基础 {
   name?: string;
   gf0014_id?: number;
   gf3001_id?: number;
+  ambiguous: boolean;
 }
 
 export interface 引用数据 {

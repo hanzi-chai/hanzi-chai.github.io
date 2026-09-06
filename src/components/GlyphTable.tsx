@@ -44,12 +44,14 @@ const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
     strokes: [],
     operator: undefined,
     references: undefined,
+    ambiguous: false,
   };
   const dummyCompound: 复合体数据 = {
     id: 0,
     type: "compound",
     operator: "⿰",
     references: [{ id: 1 }, { id: 1 }],
+    ambiguous: false,
   };
   const initialValues = type === "component" ? dummyComponent : dummyCompound;
   const hashset = new Set<string>();
@@ -357,13 +359,13 @@ export default function GlyphTable() {
       title: "歧义",
       dataIndex: "ambiguous",
       render: (_, record) => {
-        return <Checkbox checked={true} />;
+        return <Checkbox checked={record.ambiguous} />;
       },
       filters: [
         { text: "只看有歧义", value: 1 },
         { text: "只看无歧义", value: 0 },
       ],
-      onFilter: (value, record) => Number(true) === value,
+      onFilter: (value, record) => Number(record.ambiguous) === value,
       width: 64,
     },
     {

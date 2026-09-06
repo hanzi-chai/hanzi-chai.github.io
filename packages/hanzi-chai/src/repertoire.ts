@@ -326,6 +326,7 @@ class 字形库 {
         id: 取新ID(),
         operator: 已解析Operator,
         references: 子字形列表.map((glyph) => ({ id: glyph.id })),
+        ambiguous: false,
       },
       子字形列表,
     );
@@ -594,6 +595,7 @@ class 字库 {
               strokes: 字根字形.图形盒子.获取笔画列表(),
               operator: undefined,
               references: undefined,
+              ambiguous: false,
             });
             const 字根实例 = new 部件字根(元素, 部件字形);
             部件字根列表.push(字根实例);
