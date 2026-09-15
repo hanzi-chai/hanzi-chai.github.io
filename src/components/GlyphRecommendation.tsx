@@ -90,13 +90,19 @@ export const BatchGlyphRecommendation = () => {
     <Popconfirm
       title={`推断其他来源字形`}
       description={
-        <Flex>
+        <Flex gap="small" align="center">
+          从
           <Input
+            className="w-24!"
             value={from.toString(16)}
+            prefix="U+"
             onChange={(e) => setFrom(parseInt(e.target.value, 16))}
           />
+          到
           <Input
+            className="w-24!"
             value={to.toString(16)}
+            prefix="U+"
             onChange={(e) => setTo(parseInt(e.target.value, 16))}
           />
         </Flex>
@@ -177,10 +183,6 @@ export default function GlyphRecommendation({
     <Popconfirm
       title={`从来源 ${character.glyphs[0]?.sources[0]} 推断其他来源字形`}
       description={<GlyphRecommendationForm formRef={formRef} />}
-      onPopupClick={() => {
-        const 结果 = 计算字形推荐(character, 可编辑字符列表, 可编辑字形列表);
-        formRef.current?.setFieldsValue({ result: 结果 });
-      }}
       onConfirm={async () => {
         const 推荐结果: 推荐结果 = formRef.current?.getFieldValue("result");
         if (!推荐结果) return;
@@ -193,8 +195,16 @@ export default function GlyphRecommendation({
         );
         set可编辑字符列表(新可编辑字符列表);
       }}
+      trigger="hover"
     >
-      <Button>补全</Button>
+      <Button
+        onClick={() => {
+          const 结果 = 计算字形推荐(character, 可编辑字符列表, 可编辑字形列表);
+          formRef.current?.setFieldsValue({ result: 结果 });
+        }}
+      >
+        补全
+      </Button>
     </Popconfirm>
   );
 }
@@ -204,6 +214,7 @@ const visitedRanges = [
   { start: 0x7a70, end: 0x7aca },
   { start: 0x7cf8, end: 0x7f35 },
   { start: 0x8fb6, end: 0x9090 },
+  { start: 0x96e8, end: 0x9761 }
 ];
 
 function 计算字形推荐(
@@ -221,7 +232,7 @@ function 计算字形推荐(
   const 样本字符范围 = 可编辑字符列表.filter((c) =>
     visitedRanges.some(
       ({ start, end }) => c.unicode >= start && c.unicode <= end,
-    ),
+    ) || c.unicode >= 0x8278 && c.unicode <= 0x827f,
   );
   const 来源列表 = character.glyphs.flatMap((g) => g.sources);
   const 参考来源 = 来源列表[0]!;

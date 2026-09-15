@@ -307,4 +307,4 @@ export default function CharacterTable() {
   );
 }
 
-const currentPageAtom = atomWithStorage("character-table-current-page", 367);
+const currentPageAtom = atomWithStorage("character-table-current-page", 400);
