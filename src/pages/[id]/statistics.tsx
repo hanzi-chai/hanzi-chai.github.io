@@ -30,6 +30,7 @@ import {
   最大码长原子,
 } from "~/atoms";
 import KeySelect from "~/components/KeySelect";
+import RootAdditionAnalyzer from "~/components/RootAdditionAnalyzer";
 import {
   CodePositionDisplay,
   DeleteButton,
@@ -319,6 +320,140 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   );
 };
 
+const combinations = (n: number, k: number): number[][] => {
+  const result: number[][] = [];
+  const dfs = (start: number, current: number[]) => {
+    if (current.length === k) {
+      result.push([...current]);
+      return;
+    }
+    for (let i = start; i < n; i++) {
+      dfs(i + 1, [...current, i]);
+    }
+  };
+  dfs(0, []);
+  return result;
+};
+
+const 模式名称 = (空位: number[]) =>
+  空位.length === 0 ? "全保留" : `空${空位.map((x) => 数字(x + 1)).join("")}码`;
+
+/**
+ * 各阶重分析：阶 = 空出的码位数。
+ * 对每个阶枚举全部 C(maxLength, 阶) 个空位组合，按保留码位的元素序列分组，
+ * 以 n²/(2·26^阶) 估计该模式的选重数（独立随机编码近似，仅描述全码撞车潜力，出简可避开一部分）。
+ * 零阶（全保留）不用估计，直接精确计数 Σ(n−1)。
+ */
+const OrderDuplicationAnalyzer = () => {
+  const maxLength = useAtomValue(最大码长原子);
+  const alphabet = useAtomValue(字母表原子);
+  const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
+  const [analyzer, setAnalyzer] = useState<AnalyzerForm>({
+    type: "single",
+    position: range(0, maxLength),
+    top: 0,
+  });
+
+  const computeEstimation = (空位: number[]): number => {
+    const 保留 = range(maxLength).filter((x) => !空位.includes(x));
+    const reverseMap = 分析原始重码(
+      { ...analyzer, position: 保留 },
+      assemblyResult,
+      maxLength,
+    );
+    if (空位.length === 0) {
+      let total = 0;
+      reverseMap.forEach((items) => {
+        if (items.length > 1) total += items.length - 1;
+      });
+      return total;
+    }
+    const space = alphabet.length ** 空位.length;
+    let total = 0;
+    reverseMap.forEach((items) => {
+      total += (items.length * items.length) / 2 / space;
+    });
+    return Math.round(total);
+  };
+
+  const 模式列表 = range(maxLength + 1).flatMap((阶) =>
+    combinations(maxLength, 阶).map((空位) => ({ 阶, 空位 })),
+  );
+  const 数值表 = new Map<string, number>();
+  for (const { 空位 } of 模式列表) {
+    数值表.set(空位.join("-"), computeEstimation(空位));
+  }
+
+  const columns: ColumnsType<Record<string, any>> = [
+    { title: "阶", dataIndex: "阶", key: "阶", width: 64 },
+    { title: "阶内合计", dataIndex: "合计", key: "合计", width: 96 },
+    ...模式列表.map(({ 空位 }) => ({
+      title: 模式名称(空位),
+      dataIndex: 空位.join("-"),
+      key: `mode-${空位.join("-")}`,
+      width: Math.max(88, 模式名称(空位).length * 16),
+    })),
+  ];
+  const dataSource = range(maxLength + 1).map((阶) => {
+    const row: Record<string, any> = { 阶: 数字(阶), key: 阶 };
+    let 合计 = 0;
+    for (const { 空位 } of 模式列表) {
+      if (空位.length !== 阶) continue;
+      const value = 数值表.get(空位.join("-"))!;
+      row[空位.join("-")] = value;
+      合计 += value;
+    }
+    row.合计 = Math.round(合计);
+    return row;
+  });
+
+  const [求和阶, 设置求和阶] = useState<number[]>([]);
+  const 自定义合计 = dataSource
+    .filter((row) => 求和阶.includes(row.key as number))
+    .reduce((acc, row) => acc + (row.合计 as number), 0);
+
+  return (
+    <>
+      <Typography.Title level={3}>各阶重分析</Typography.Title>
+      <Typography.Paragraph type="secondary">
+        阶 = 空出的码位数。每阶枚举全部空位组合，按保留码位的元素序列分组，以
+        n²/(2·26^阶) 估计选重数（独立随机编码近似）。这只描述全码的撞车潜力，出简能避开一部分；零阶为精确计数。
+      </Typography.Paragraph>
+      <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} disablePosition />
+      <Flex gap="middle" align="center" wrap="wrap">
+        <Select
+          mode="multiple"
+          placeholder="选择若干阶自定义求和"
+          value={求和阶}
+          onChange={设置求和阶}
+          options={range(maxLength + 1).map((阶) => ({
+            label: `${数字(阶)}阶`,
+            value: 阶,
+          }))}
+          className="w-64"
+          allowClear
+        />
+        <Typography.Text strong>
+          自定义合计：
+          {求和阶.length === 0
+            ? "—"
+            : `${Math.round(自定义合计)}（${求和阶
+                .sort((a, b) => a - b)
+                .map((阶) => `${数字(阶)}阶`)
+                .join(" + ")}）`}
+        </Typography.Text>
+      </Flex>
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        scroll={{ x: "max-content" }}
+        size="small"
+        pagination={false}
+      />
+    </>
+  );
+};
+
 const MarginalFirstOrderDuplication = () => {
   const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const maxLength = useAtomValue(最大码长原子);
@@ -419,6 +554,8 @@ export default function Statistics() {
     <Flex vertical gap="middle">
       <Typography.Title level={2}>离散性分析</Typography.Title>
       <Suspense fallback={<Skeleton active />}>
+        <OrderDuplicationAnalyzer />
+        <RootAdditionAnalyzer />
         <MarginalFirstOrderDuplication />
         <MultiDistribution
           init={{ type: "single", position: range(0, maxLength), top: 0 }}

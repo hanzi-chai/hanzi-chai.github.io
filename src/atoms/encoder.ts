@@ -31,6 +31,10 @@ export const 简码配置原子 = focusAtom(编码配置原子, (o) =>
   o.prop("short_code").valueOr([] as 简码规则[]),
 );
 
+export const 出简让全原子 = focusAtom(编码配置原子, (o) =>
+  o.prop("short_code_yield_to_full").valueOr(true),
+);
+
 export const 构词配置原子 = focusAtom(编码配置原子, (o) =>
   o.prop("rules").valueOr([] as 构词规则[]),
 );

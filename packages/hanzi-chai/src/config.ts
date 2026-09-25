@@ -171,6 +171,8 @@ export interface 编码配置 {
   // 简码
   short_code?: 简码规则[];
   short_code_list?: 优先简码[];
+  /** 出简让全：出简字是否把全码位让给后续同全码字（缺省 true）。false 即「出简不让全」 */
+  short_code_yield_to_full?: boolean;
   // 组装器
   assembler?: string;
 }

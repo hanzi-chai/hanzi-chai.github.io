@@ -1,9 +1,10 @@
-import { Button, Flex, Select, Skeleton } from "antd";
+import { Button, Flex, Select, Skeleton, Switch, Tooltip, Typography } from "antd";
 import { 获取注册表 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { Suspense } from "react";
 import {
   useAtomValueUnwrapped,
+  出简让全原子,
   动态分析原子,
   如导出动态组装结果原子,
   如导出组装结果原子,
@@ -39,6 +40,7 @@ export const ExportDynamicAssembly = () => {
 const ConfigureRules = () => {
   const 动态分析 = useAtomValue(动态分析原子);
   const [组装器, 设置组装器] = useAtom(组装器原子);
+  const [出简让全, 设置出简让全] = useAtom(出简让全原子);
   const 注册表 = 获取注册表();
   return (
     <Flex gap="middle" justify="center">
@@ -53,6 +55,12 @@ const ConfigureRules = () => {
           }))}
         />
       </Flex>
+      <Tooltip title="开启时，出简的字把全码位让给后续同全码的字；关闭时（出简不让全），后续同全码的字一律计入简码重码。">
+        <Flex align="center" gap="small">
+          <Typography.Text>出简让全</Typography.Text>
+          <Switch checked={出简让全} onChange={设置出简让全} />
+        </Flex>
+      </Tooltip>
       <SingleRules />
       <MultipleRules />
       <SelectRules />
