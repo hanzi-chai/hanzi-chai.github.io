@@ -393,8 +393,13 @@ const combinations = (n: number, k: number): number[][] => {
   return result;
 };
 
-const 模式名称 = (空位: number[]) =>
-  空位.length === 0 ? "全保留" : `空${空位.map((x) => 数字(x + 1)).join("")}码`;
+/** 模式名：空位显示 *（每个 * 后带空格），保留位显示位数 */
+const 模式名称 = (空位: number[], 总位数: number) => {
+  const tokens = range(总位数).map((i) =>
+    空位.includes(i) ? "* " : 数字(i + 1),
+  );
+  return tokens.join("").trimEnd() || "*".repeat(总位数);
+};
 
 /**
  * 各阶重分析：阶 = 空出的码位数。
@@ -446,10 +451,10 @@ const OrderDuplicationAnalyzer = () => {
     { title: "阶", dataIndex: "阶", key: "阶", width: 64 },
     { title: "阶内合计", dataIndex: "合计", key: "合计", width: 96 },
     ...模式列表.map(({ 空位 }) => ({
-      title: 模式名称(空位),
+      title: 模式名称(空位, maxLength),
       dataIndex: 空位.join("-"),
       key: `mode-${空位.join("-")}`,
-      width: Math.max(88, 模式名称(空位).length * 16),
+      width: Math.max(88, 模式名称(空位, maxLength).length * 14),
     })),
   ];
   const dataSource = range(maxLength + 1).map((阶) => {
@@ -493,7 +498,7 @@ const OrderDuplicationAnalyzer = () => {
         ),
       );
       const 成员 = 反向映射.get(键) ?? [];
-      return { key: 空位.join("-"), 阶, 模式: 模式名称(空位), 成员 };
+      return { key: 空位.join("-"), 阶, 模式: 模式名称(空位, maxLength), 成员 };
     });
     return { 不在字集: false as const, 行 };
   }, [搜索字, analyzer, assemblyResult, maxLength]);
