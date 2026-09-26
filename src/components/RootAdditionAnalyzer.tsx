@@ -439,22 +439,8 @@ export default function RootAdditionAnalyzer() {
         width: 120,
         render: (v, record, index) =>
           typeof v === "number" ? (
-            <Popover trigger="click">
-              <Flex vertical>
-                <span className={变化显示(v).类}>{变化显示(v).文本}</span>
-                {index === 0 && (
-                  <Typography.Text
-                    type="secondary"
-                    className="text-xs! whitespace-nowrap"
-                  >
-                    点击展开变化组
-                  </Typography.Text>
-                )}
-              </Flex>
-            </Popover>
-          ) : (
-            "—"
-          ),
+            <Popover
+              trigger="click"
               content={
                 <div className="max-w-130 max-h-96 overflow-y-auto">
                   {record.变化组.length === 0 ? (
@@ -497,12 +483,17 @@ export default function RootAdditionAnalyzer() {
                 </div>
               }
             >
-              <span className={变化显示(v).类}>{变化显示(v).文本}</span>
-              {index === 0 && (
-                <Typography.Text type="secondary" className="ml-1 text-xs! whitespace-nowrap">
-                  （点击展开变化组）
-                </Typography.Text>
-              )}
+              <Flex vertical>
+                <span className={变化显示(v).类}>{变化显示(v).文本}</span>
+                {index === 0 && (
+                  <Typography.Text
+                    type="secondary"
+                    className="text-xs! whitespace-nowrap"
+                  >
+                    点击展开变化组
+                  </Typography.Text>
+                )}
+              </Flex>
             </Popover>
           ) : (
             "—"
