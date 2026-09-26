@@ -173,6 +173,10 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
     .map(([name, items]) => ({ name, items }));
   const lengths = dataSource.map((x) => x.items.length);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
+
+  // 汉字搜索：高亮包含该字的组
+  const [搜索字, 设搜索字] = useState("");
+
   const columns: ColumnsType<Density> = [
     {
       title: "元素序列",
@@ -206,7 +210,21 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
       title: "对象",
       dataIndex: "items",
       key: "items",
-      render: (items) => items.join("、"),
+      render: (items) =>
+        搜索字 ? (
+          <Space wrap size={1}>
+            {items.map((w: string) => (
+              <span
+                key={w}
+                className={w === 搜索字 ? "text-red-500 font-bold" : ""}
+              >
+                {w}
+              </span>
+            ))}
+          </Space>
+        ) : (
+          items.join("、")
+        ),
     },
   ];
 
@@ -221,11 +239,27 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
         多元分布（{coorder}阶重码估计：{Math.round(estimation)}）
       </Typography.Title>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} />
+      <Flex gap="small" align="center" wrap="wrap" className="mt-2">
+        <Input
+          className="w-24"
+          placeholder="搜索汉字"
+          value={搜索字}
+          maxLength={1}
+          allowClear
+          onChange={(e) => 设搜索字(e.target.value)}
+        />
+        <Typography.Text type="secondary">
+          输入单个汉字，包含它的组将高亮显示
+        </Typography.Text>
+      </Flex>
       <Table
         dataSource={dataSource}
         columns={columns}
         size="small"
         rowKey="name"
+        rowClassName={(record) =>
+          搜索字 && record.items.includes(搜索字) ? "bg-orange-50" : ""
+        }
       />
     </>
   );
