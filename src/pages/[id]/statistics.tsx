@@ -9,6 +9,7 @@ import {
   Button,
   Flex,
   Form,
+  Input,
   Popover,
   Select,
   Skeleton,
@@ -21,7 +22,7 @@ import type { 元素位或编码, 强类型元素位或编码, 组装条目 } fr
 import { 下转换, 反序列化, 序列化 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { isEqual, range, sumBy } from "lodash-es";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import {
   useAtomValueUnwrapped,
   全部合法元素原子,
@@ -411,6 +412,73 @@ const OrderDuplicationAnalyzer = () => {
     .filter((row) => 求和阶.includes(row.key as number))
     .reduce((acc, row) => acc + (row.合计 as number), 0);
 
+  // 汉字搜索：查找该字在各模式下的重码组
+  const [搜索字, 设搜索字] = useState("");
+  const 搜索结果 = useMemo(() => {
+    if (![...搜索字].length || [...搜索字].length > 1) return null;
+    const 条目 = assemblyResult.find(
+      (x) => [...x.词].length === 1 && x.词[0]!.获取名称() === 搜索字,
+    );
+    if (!条目) return { 不在字集: true as const, 行: [] };
+    const 行 = 模式列表.map(({ 阶, 空位 }) => {
+      const 保留 = range(maxLength).filter((x) => !空位.includes(x));
+      const 反向映射 = 分析原始重码(
+        { ...analyzer, position: 保留 },
+        assemblyResult,
+        maxLength,
+      );
+      const 键 = JSON.stringify(
+        range(maxLength).map((i) =>
+          保留.includes(i)
+            ? 下转换(条目.元素序列.元素序列[i] as any)
+            : "*",
+        ),
+      );
+      const 成员 = 反向映射.get(键) ?? [];
+      return { key: 空位.join("-"), 阶, 模式: 模式名称(空位), 成员 };
+    });
+    return { 不在字集: false as const, 行 };
+  }, [搜索字, analyzer, assemblyResult, maxLength]);
+
+  interface 搜索行 {
+    key: string;
+    阶: number;
+    模式: string;
+    成员: string[];
+  }
+  const 搜索列: ColumnsType<搜索行> = [
+    { title: "阶", dataIndex: "阶", key: "阶", width: 56, render: (阶) => 数字(阶) },
+    { title: "模式", dataIndex: "模式", key: "模式", width: 110 },
+    { title: "组大小", dataIndex: "成员", key: "大小", width: 80, render: (成员: string[]) => 成员.length },
+    {
+      title: "组成员（红为搜索字）",
+      dataIndex: "成员",
+      key: "成员",
+      render: (成员: string[]) =>
+        成员.length <= 60 ? (
+          <Space wrap size={2}>
+            {成员.map((x) => (
+              <span
+                key={x}
+                className={
+                  x === 搜索字
+                    ? "text-red-500 font-bold"
+                    : ""
+                }
+              >
+                {x}
+              </span>
+            ))}
+          </Space>
+        ) : (
+          <span>
+            {成员.slice(0, 60).map((x) => (x === 搜索字 ? "【" + x + "】" : x)).join("")}
+            {" "}等共 {成员.length} 字
+          </span>
+        ),
+    },
+  ];
+
   return (
     <>
       <Typography.Title level={3}>各阶重分析</Typography.Title>
@@ -449,6 +517,36 @@ const OrderDuplicationAnalyzer = () => {
         size="small"
         pagination={false}
       />
+      <Flex gap="small" align="center" wrap="wrap" className="mt-2">
+        <Input
+          className="w-24"
+          placeholder="搜索汉字"
+          value={搜索字}
+          maxLength={1}
+          allowClear
+          onChange={(e) => 设搜索字(e.target.value)}
+        />
+        <Typography.Text type="secondary">
+          输入单个汉字，列出它在全部模式下所属的重码组
+        </Typography.Text>
+      </Flex>
+      {搜索结果 && (
+        搜索结果.不在字集 ? (
+          <Typography.Text type="warning">
+            「{搜索字}」不在当前字集或未成功拆分
+          </Typography.Text>
+        ) : (
+          <Table
+            dataSource={搜索结果.行}
+            columns={搜索列}
+            size="small"
+            pagination={false}
+            rowClassName={(record) =>
+              record.成员.length >= 2 ? "bg-orange-50" : ""
+            }
+          />
+        )
+      )}
     </>
   );
 };
