@@ -22,7 +22,7 @@ import type { 元素位或编码, 强类型元素位或编码, 组装条目 } fr
 import { 下转换, 反序列化, 序列化 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { isEqual, range, sumBy } from "lodash-es";
-import { Suspense, useMemo, useState } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAtomValueUnwrapped,
   全部合法元素原子,
@@ -174,8 +174,25 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const lengths = dataSource.map((x) => x.items.length);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
 
-  // 汉字搜索：高亮包含该字的组
+  // 汉字搜索：定位到包含该字的组所在页并高亮
   const [搜索字, 设搜索字] = useState("");
+  const [分页, 设分页] = useState<{ current: number; pageSize: number }>({
+    current: 1,
+    pageSize: 20,
+  });
+  const 表格锚点 = useRef<HTMLDivElement>(null);
+  const 命中索引 = 搜索字
+    ? dataSource.findIndex((x) => x.items.includes(搜索字))
+    : -1;
+  useEffect(() => {
+    if (命中索引 >= 0) {
+      设分页((p) => ({
+        ...p,
+        current: Math.floor(命中索引 / p.pageSize) + 1,
+      }));
+      表格锚点.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [命中索引]);
 
   const columns: ColumnsType<Density> = [
     {
@@ -212,16 +229,16 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
       key: "items",
       render: (items) =>
         搜索字 ? (
-          <Space wrap size={1}>
-            {items.map((w: string) => (
-              <span
-                key={w}
-                className={w === 搜索字 ? "text-red-500 font-bold" : ""}
-              >
-                {w}
-              </span>
+          <>
+            {items.map((w: string, i: number) => (
+              <Fragment key={w}>
+                {i > 0 && "、"}
+                <span className={w === 搜索字 ? "text-red-500 font-bold" : ""}>
+                  {w}
+                </span>
+              </Fragment>
             ))}
-          </Space>
+          </>
         ) : (
           items.join("、")
         ),
@@ -249,18 +266,29 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
           onChange={(e) => 设搜索字(e.target.value)}
         />
         <Typography.Text type="secondary">
-          输入单个汉字，包含它的组将高亮显示
+          输入单个汉字，自动翻页定位到它所在的组
+          {搜索字 && 命中索引 < 0 && (
+            <Typography.Text type="warning">（未找到）</Typography.Text>
+          )}
         </Typography.Text>
       </Flex>
-      <Table
-        dataSource={dataSource}
-        columns={columns}
-        size="small"
-        rowKey="name"
-        rowClassName={(record) =>
-          搜索字 && record.items.includes(搜索字) ? "bg-orange-50" : ""
-        }
-      />
+      <div ref={表格锚点}>
+        <Table
+          dataSource={dataSource}
+          columns={columns}
+          size="small"
+          rowKey="name"
+          rowClassName={(record) =>
+            搜索字 && record.items.includes(搜索字) ? "bg-orange-50" : ""
+          }
+          pagination={{
+            current: 分页.current,
+            pageSize: 分页.pageSize,
+            onChange: (current, pageSize) => 设分页({ current, pageSize }),
+            showSizeChanger: true,
+          }}
+        />
+      </div>
     </>
   );
 };
