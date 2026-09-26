@@ -538,9 +538,9 @@ export default function RootAdditionAnalyzer() {
               return (
                 <Flex
                   key={i}
-                  gap={4}
+                  gap={6}
                   align="center"
-                  className={`${槽色} rounded-md px-2 py-1`}
+                  className={`${槽色} rounded-md px-3 py-2 -my-1`}
                 >
                   <span className={`${字色} text-xs font-medium whitespace-nowrap`}>
                     第{数字标签(i + 1)}码
