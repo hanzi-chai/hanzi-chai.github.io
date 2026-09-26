@@ -61,9 +61,11 @@ export const combinations = (n: number, k: number): number[][] => {
 const 数字标签 = (n: number) => "零一二三四五六七八九十"[n] ?? String(n);
 
 /** 模式名：空位显示 *（每个 * 后带空格），保留位显示位数 */
-export const 模式名称 = (空位: number[]) => {
-  const tokens = range(4).map((i) => (空位.includes(i) ? "* " : 数字标签(i + 1)));
-  return tokens.join("").trimEnd() || "****";
+export const 模式名称 = (空位: number[], 总位数: number) => {
+  const tokens = range(总位数).map((i) =>
+    空位.includes(i) ? "* " : 数字标签(i + 1),
+  );
+  return tokens.join("").trimEnd() || "*".repeat(总位数);
 };
 
 /** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋ */
@@ -419,7 +421,7 @@ export default function RootAdditionAnalyzer() {
       const r = 候选 ? 阶重变化(空位, 表.top) : null;
       return {
         key: JSON.stringify(空位),
-        模式: 模式名称(空位),
+        模式: 模式名称(空位, maxLength),
         阶: 数字标签(空位.length),
         原始: r ? Math.round(r.基线) : "—",
         加减根后: r ? Math.round(r.候选) : "—",
@@ -429,7 +431,7 @@ export default function RootAdditionAnalyzer() {
     });
     const columns: ColumnsType<(typeof 行)[number]> = [
       { title: "阶", dataIndex: "阶", key: "阶", width: 56 },
-      { title: "模式", dataIndex: "模式", key: "模式", width: 110 },
+      { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
       { title: "原始", dataIndex: "原始", key: "原始", width: 90 },
       { title: "加减根后", dataIndex: "加减根后", key: "加减根后", width: 100 },
       {
@@ -702,7 +704,7 @@ export default function RootAdditionAnalyzer() {
                     options={range(maxLength + 1).map((阶) => ({
                       label: `${数字标签(阶)}阶`,
                       options: combinations(maxLength, 阶).map((空位) => ({
-                        label: 模式名称(空位),
+                        label: 模式名称(空位, maxLength),
                         value: JSON.stringify(空位),
                       })),
                     }))}
