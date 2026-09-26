@@ -433,11 +433,18 @@ export default function RootAdditionAnalyzer() {
       { title: "原始", dataIndex: "原始", key: "原始", width: 90 },
       { title: "加减根后", dataIndex: "加减根后", key: "加减根后", width: 100 },
       {
-        title: "变化",
+        title: (
+          <Flex vertical>
+            <span>变化</span>
+            <Typography.Text type="secondary" className="text-xs! font-normal! whitespace-nowrap">
+              点击展开变化组
+            </Typography.Text>
+          </Flex>
+        ),
         dataIndex: "变化",
         key: "变化",
         width: 120,
-        render: (v, record, index) =>
+        render: (v, record) =>
           typeof v === "number" ? (
             <Popover
               trigger="click"
@@ -483,17 +490,7 @@ export default function RootAdditionAnalyzer() {
                 </div>
               }
             >
-              <Flex vertical>
-                <span className={变化显示(v).类}>{变化显示(v).文本}</span>
-                {index === 0 && (
-                  <Typography.Text
-                    type="secondary"
-                    className="text-xs! whitespace-nowrap"
-                  >
-                    点击展开变化组
-                  </Typography.Text>
-                )}
-              </Flex>
+              <span className={变化显示(v).类}>{变化显示(v).文本}</span>
             </Popover>
           ) : (
             "—"
