@@ -5,6 +5,7 @@ import {
   InputNumber,
   Popover,
   Select,
+  Space,
   Spin,
   Table,
   Tag,
@@ -33,12 +34,12 @@ import {
   拼音分析结果原子,
   决策原子,
   决策空间原子,
-  配置原子,
   最大码长原子,
   字母表原子,
   字形分析配置原子,
   组装配置原子,
 } from "~/atoms";
+import CharacterSelect from "~/components/CharacterSelect";
 
 export const combinations = (n: number, k: number): number[][] => {
   const result: number[][] = [];
@@ -99,20 +100,21 @@ const 带归并处理 = (组装结果: 组装条目[], 决策: 强类型决策):
 
 interface 表配置 {
   id: number;
-  /** 空位模式，序列化为 JSON 字符串数组（如 "[]"、"[\\"0\\"]"） */
+  /** 空位模式，序列化为 JSON 字符串数组 */
   模式: string[];
   top: number;
   权重: number;
 }
 
+interface 候选根 {
+  名: string;
+  键位: string;
+}
+
 let 表序号 = 0;
 
 /** 按模式分组：保留非空位码位的元素序列（布局无关），返回 键→词列表 */
-const 分组按模式 = (
-  条目列表: 组装条目[],
-  空位: number[],
-  top: number,
-) => {
+const 分组按模式 = (条目列表: 组装条目[], 空位: number[], top: number) => {
   const relevant = [...条目列表]
     .sort((a, b) => b.频率 - a.频率)
     .filter((x) => [...x.词].length === 1);
@@ -159,8 +161,9 @@ export default function RootAdditionAnalyzer() {
   const 决策 = useAtomValue(决策原子);
   const 决策空间 = useAtomValue(决策空间原子);
 
-  const [根名, 设根名] = useState("");
-  const [键位, 设键位] = useState("");
+  const [当前根, 设当前根] = useState<string>("");
+  const [当前键位, 设当前键位] = useState<string>("");
+  const [加根列表, 设加根列表] = useState<候选根[]>([]);
   const [运行中, 设运行中] = useState(false);
   const [错误, 设错误] = useState("");
   const [已完成根, 设已完成根] = useState("");
@@ -184,30 +187,60 @@ export default function RootAdditionAnalyzer() {
     [maxLength],
   );
 
-  const 分析 = async () => {
+  const 添加根 = () => {
     设错误("");
-    if (!根名 || !键位) {
-      设错误("请输入根和键位");
+    if (!当前根 || !当前键位) {
+      设错误("请先选择根并输入键位");
       return;
     }
-    if (!名称映射.has(根名)) {
-      设错误(`「${根名}」不是字库中的合法元素`);
+    if (!名称映射.has(当前根)) {
+      设错误(`「${当前根}」不是字库中的合法元素`);
       return;
     }
-    if (决策[根名] !== undefined) {
-      设错误(`「${根名}」已在方案的键位映射中`);
+    if (决策[当前根] !== undefined) {
+      设错误(`「${当前根}」已在方案的键位映射中`);
       return;
     }
-    for (const c of 键位) {
+    if (加根列表.some((x) => x.名 === 当前根)) {
+      设错误(`「${当前根}」已在候选列表中`);
+      return;
+    }
+    for (const c of 当前键位) {
       if (!alphabet.includes(c)) {
         设错误(`键位「${c}」不在字母表 ${alphabet} 中`);
         return;
       }
     }
+    设加根列表([...加根列表, { 名: 当前根, 键位: 当前键位 }]);
+    设当前根("");
+    设当前键位("");
+  };
+
+  const 分析 = async () => {
+    设错误("");
+    if (加根列表.length === 0) {
+      设错误("请先添加至少一个候选根");
+      return;
+    }
+    for (const { 名, 键位: k } of 加根列表) {
+      if (!名称映射.has(名) || 决策[名] !== undefined) {
+        设错误(`「${名}」不可用`);
+        return;
+      }
+      for (const c of k) {
+        if (!alphabet.includes(c)) {
+          设错误(`「${名}」的键位「${c}」不在字母表中`);
+          return;
+        }
+      }
+    }
     设运行中(true);
     try {
-      // 1. 候选决策（加入新根；键位不影响阶重，仅要求合法）
-      const 候选决策Record = { ...决策, [根名]: 键位 };
+      // 1. 候选决策（加入全部候选根；键位不影响阶重估计）
+      const 候选决策Record = {
+        ...决策,
+        ...Object.fromEntries(加根列表.map((x) => [x.名, x.键位])),
+      };
       const 强 = 构建强类型决策与决策空间(
         候选决策Record,
         决策空间,
@@ -239,7 +272,7 @@ export default function RootAdditionAnalyzer() {
       );
       if (!组装结果.ok) throw 组装结果.error;
       设候选(带归并处理(组装结果.value, 强.决策));
-      设已完成根(`${根名}→${键位}`);
+      设已完成根(加根列表.map((x) => `${x.名}→${x.键位}`).join("、"));
     } catch (e: any) {
       设错误(String(e?.message ?? e));
       设候选(null);
@@ -344,27 +377,46 @@ export default function RootAdditionAnalyzer() {
     <>
       <Typography.Title level={2}>加根分析</Typography.Title>
       <Typography.Paragraph type="secondary">
-        输入一个候选字根及其键位安排（双编码方案输两位，如 qj；键位不影响阶重估计），系统将重新拆分并对比各阶重的变化。每张表可自定义空位模式、统计前 N 字与权重。
+        选择一个或多个候选字根（支持笔画 12345 检索、汉字、别名检索），为其指定键位安排（双编码方案输两位，如 qj；键位不影响阶重估计），系统将一次性加入全部候选根重新拆分，对比各阶重的变化。每张表可自定义空位模式、统计前 N 字与权重。
       </Typography.Paragraph>
       <Flex gap="small" align="center" wrap="wrap">
-        <Input
-          className="w-24"
-          placeholder="根（如 亻）"
-          value={根名}
-          onChange={(e) => 设根名(e.target.value)}
+        <CharacterSelect
+          className="w-40"
+          placeholder="输入笔画（12345）、汉字或别名搜索"
+          value={当前根 || undefined}
+          onChange={(v) => 设当前根(v ?? "")}
         />
         <Input
-          className="w-24"
+          className="w-28"
           placeholder="键位（如 qj）"
-          value={键位}
-          onChange={(e) => 设键位(e.target.value)}
+          value={当前键位}
+          onChange={(e) => 设当前键位(e.target.value)}
         />
+        <Button onClick={添加根}>添加</Button>
         <Button type="primary" onClick={分析} loading={运行中}>
           分析
         </Button>
-        {已完成根 && !运行中 && 候选 && <Tag color="green">已分析：{已完成根}</Tag>}
         {错误 && <Typography.Text type="danger">{错误}</Typography.Text>}
       </Flex>
+      {加根列表.length > 0 && (
+        <Flex gap="small" align="center" wrap="wrap">
+          <Typography.Text type="secondary">候选根：</Typography.Text>
+          {加根列表.map((x) => (
+            <Tag
+              key={x.名}
+              closable
+              onClose={() =>
+                设加根列表(加根列表.filter((y) => y.名 !== x.名))
+              }
+            >
+              {x.名} → {x.键位}
+            </Tag>
+          ))}
+          {已完成根 && !运行中 && 候选 && (
+            <Tag color="green">已分析：{已完成根}</Tag>
+          )}
+        </Flex>
+      )}
       {运行中 && <Spin tip="正在重新拆分……" />}
       {候选 && (
         <Typography.Title level={3} className="mt-2!">
@@ -377,76 +429,76 @@ export default function RootAdditionAnalyzer() {
             const 本表降低 = Math.round(表的值(表) * 100) / 100;
             const 本表贡献 = Math.round(表的值(表) * 表.权重 * 10000) / 10000;
             return (
-            <div key={表.id} className="border rounded p-2">
-              <Flex gap="small" align="center" wrap="wrap" className="mb-2">
-                <Tag>阶重</Tag>
-                <Typography.Text strong>
-                  总降低 {本表降低}
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  加权贡献 {本表降低} × {表.权重} = {本表贡献}
-                </Typography.Text>
-                <Select
-                  mode="multiple"
-                  allowClear
-                  placeholder="选择空位模式（默认全部）"
-                  value={表.模式}
-                  className="min-w-72"
-                  options={range(maxLength + 1).map((阶) => ({
-                    label: `${数字标签(阶)}阶`,
-                    options: combinations(maxLength, 阶).map((空位) => ({
-                      label: 模式名称(空位),
-                      value: JSON.stringify(空位),
-                    })),
-                  }))}
-                  onChange={(vs) =>
-                    设表列表(
-                      表列表.map((t) =>
-                        t.id === 表.id ? { ...t, 模式: vs as string[] } : t,
-                      ),
-                    )
-                  }
-                />
-                <Flex gap="small" align="center">
-                  范围前
-                  <InputNumber
-                    min={0}
-                    value={表.top || undefined}
-                    placeholder="全部"
-                    onChange={(v) =>
+              <div key={表.id} className="border rounded p-2">
+                <Flex gap="small" align="center" wrap="wrap" className="mb-2">
+                  <Tag>阶重</Tag>
+                  <Typography.Text strong>总降低 {本表降低}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    加权贡献 {本表降低} × {表.权重} = {本表贡献}
+                  </Typography.Text>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    placeholder="选择空位模式（默认全部）"
+                    value={表.模式}
+                    className="min-w-72"
+                    options={range(maxLength + 1).map((阶) => ({
+                      label: `${数字标签(阶)}阶`,
+                      options: combinations(maxLength, 阶).map((空位) => ({
+                        label: 模式名称(空位),
+                        value: JSON.stringify(空位),
+                      })),
+                    }))}
+                    onChange={(vs) =>
                       设表列表(
                         表列表.map((t) =>
-                          t.id === 表.id ? { ...t, top: v ?? 0 } : t,
+                          t.id === 表.id ? { ...t, 模式: vs as string[] } : t,
                         ),
                       )
                     }
                   />
-                  字
-                </Flex>
-                <Flex gap="small" align="center">
-                  权重
-                  <InputNumber
-                    step={0.1}
-                    value={表.权重}
-                    onChange={(v) =>
-                      设表列表(
-                        表列表.map((t) =>
-                          t.id === 表.id ? { ...t, 权重: v ?? 0 } : t,
-                        ),
-                      )
+                  <Flex gap="small" align="center">
+                    范围前
+                    <InputNumber
+                      min={0}
+                      value={表.top || undefined}
+                      placeholder="全部"
+                      onChange={(v) =>
+                        设表列表(
+                          表列表.map((t) =>
+                            t.id === 表.id ? { ...t, top: v ?? 0 } : t,
+                          ),
+                        )
+                      }
+                    />
+                    字
+                  </Flex>
+                  <Flex gap="small" align="center">
+                    权重
+                    <InputNumber
+                      step={0.1}
+                      value={表.权重}
+                      onChange={(v) =>
+                        设表列表(
+                          表列表.map((t) =>
+                            t.id === 表.id ? { ...t, 权重: v ?? 0 } : t,
+                          ),
+                        )
+                      }
+                    />
+                  </Flex>
+                  <Button
+                    size="small"
+                    danger
+                    onClick={() =>
+                      设表列表(表列表.filter((t) => t.id !== 表.id))
                     }
-                  />
+                  >
+                    删除
+                  </Button>
                 </Flex>
-                <Button
-                  size="small"
-                  danger
-                  onClick={() => 设表列表(表列表.filter((t) => t.id !== 表.id))}
-                >
-                  删除
-                </Button>
-              </Flex>
-              {渲染表(表)}
-            </div>
+                {渲染表(表)}
+              </div>
             );
           })}
           <Button
