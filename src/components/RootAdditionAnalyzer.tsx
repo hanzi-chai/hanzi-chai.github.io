@@ -287,18 +287,18 @@ export default function RootAdditionAnalyzer() {
     const 候选分组 = 分组按模式(候选!, 空位, top);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
-    const 减少组: string[][] = [];
-    const 增加组: string[][] = [];
+    const 减少组: { 词: string[]; 基线: number; 候选: number }[] = [];
+    const 增加组: { 词: string[]; 基线: number; 候选: number }[] = [];
     基线分组.forEach((items, 键) => {
       const 候选词 = 候选分组.get(键);
       if (候选词 && 候选词.length < items.length) {
-        减少组.push(items);
+        减少组.push({ 词: items, 基线: items.length, 候选: 候选词.length });
       }
     });
     候选分组.forEach((items, 键) => {
       const 基线词 = 基线分组.get(键);
       if (!基线词 || 基线词.length < items.length) {
-        增加组.push(items);
+        增加组.push({ 词: items, 基线: 基线词?.length ?? 0, 候选: items.length });
       }
     });
     return {
@@ -347,9 +347,16 @@ export default function RootAdditionAnalyzer() {
               content={
                 <div className="max-w-120">
                   {(() => {
-                    const 渲染组列表 = (组列表: string[][]) => {
+                    const 渲染组列表 = (
+                      组列表: { 词: string[]; 基线: number; 候选: number }[],
+                    ) => {
                       if (组列表.length === 0) return "";
-                      const 文本 = 组列表.map((组: string[]) => 组.join("、")).join("；");
+                      const 文本 = 组列表
+                        .map(
+                          (组) =>
+                            `${组.词.join("、")}（${组.基线}→${组.候选}）`,
+                        )
+                        .join("；");
                       return 文本.length <= 400
                         ? 文本
                         : `${文本.slice(0, 400)}……（共 ${组列表.length} 组）`;
