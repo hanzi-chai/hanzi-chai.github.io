@@ -531,6 +531,9 @@ const OrderDuplicationAnalyzer = () => {
 
   // 汉字搜索：查找该字在各模式下的重码组
   const [搜索字, 设搜索字] = useState("");
+  const [弹窗组, 设弹窗组] = useState<{ 标题: string; 词: string[] } | null>(
+    null,
+  );
   const 搜索结果 = useMemo(() => {
     if (![...搜索字].length || [...搜索字].length > 1) return null;
     const 条目 = assemblyResult.find(
@@ -673,6 +676,11 @@ const OrderDuplicationAnalyzer = () => {
           />
         )
       )}
+      <成员弹窗
+        组={弹窗组}
+        搜索字={搜索字}
+        关闭={() => 设弹窗组(null)}
+      />
     </>
   );
 };
