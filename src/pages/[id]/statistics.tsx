@@ -447,15 +447,11 @@ const OrderDuplicationAnalyzer = () => {
     数值表.set(空位.join("-"), computeEstimation(空位));
   }
 
-  const columns: ColumnsType<Record<string, any>> = [
+  const columns: ColumnsType<{ key: string; 阶: string; 阶内合计: string; 模式: string; 重码估计: number }> = [
     { title: "阶", dataIndex: "阶", key: "阶", width: 64 },
-    { title: "阶内合计", dataIndex: "合计", key: "合计", width: 96 },
-    ...模式列表.map(({ 空位 }) => ({
-      title: 模式名称(空位, maxLength),
-      dataIndex: 空位.join("-"),
-      key: `mode-${空位.join("-")}`,
-      width: Math.max(88, 模式名称(空位, maxLength).length * 14),
-    })),
+    { title: "阶内合计", dataIndex: "阶内合计", key: "阶内合计", width: 96 },
+    { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
+    { title: "重码估计", dataIndex: "重码估计", key: "重码估计", width: 96 },
   ];
   const dataSource = range(maxLength + 1).map((阶) => {
     const row: Record<string, any> = { 阶: 数字(阶), key: 阶 };
@@ -468,6 +464,25 @@ const OrderDuplicationAnalyzer = () => {
     }
     row.合计 = Math.round(合计);
     return row;
+  });
+  // 长表：每模式一行，同阶仅在首行显示阶与阶内合计
+  const 长表数据: {
+    key: string;
+    阶: string;
+    阶内合计: string;
+    模式: string;
+    重码估计: number;
+  }[] = [];
+  模式列表.forEach(({ 阶, 空位 }, idx) => {
+    const 首行 = 模式列表.findIndex((m) => m.阶 === 阶) === idx;
+    const 对应行 = dataSource[阶]!;
+    长表数据.push({
+      key: 空位.join("-"),
+      阶: 首行 ? 数字(阶) : "",
+      阶内合计: 首行 ? String(对应行.合计) : "",
+      模式: 模式名称(空位, maxLength),
+      重码估计: 数值表.get(空位.join("-"))!,
+    });
   });
 
   const [求和阶, 设置求和阶] = useState<number[]>([]);
@@ -574,9 +589,8 @@ const OrderDuplicationAnalyzer = () => {
         </Typography.Text>
       </Flex>
       <Table
-        dataSource={dataSource}
+        dataSource={长表数据}
         columns={columns}
-        scroll={{ x: "max-content" }}
         size="small"
         pagination={false}
       />

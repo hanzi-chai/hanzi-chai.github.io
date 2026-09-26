@@ -420,7 +420,7 @@ export default function RootAdditionAnalyzer() {
       return {
         key: JSON.stringify(空位),
         模式: 模式名称(空位),
-        阶: 空位.length,
+        阶: 数字标签(空位.length),
         原始: r ? Math.round(r.基线) : "—",
         加减根后: r ? Math.round(r.候选) : "—",
         变化: r ? Math.round(r.变化 * 100) / 100 : "—",
