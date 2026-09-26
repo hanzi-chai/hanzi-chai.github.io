@@ -287,18 +287,18 @@ export default function RootAdditionAnalyzer() {
     const 候选分组 = 分组按模式(候选!, 空位, top);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
-    const 减少字集合 = new Set<string>();
+    const 减少组: string[][] = [];
     基线分组.forEach((items, 键) => {
       const 候选词 = 候选分组.get(键);
       if (候选词 && 候选词.length < items.length) {
-        for (const w of items) 减少字集合.add(w);
+        减少组.push(items);
       }
     });
     return {
       基线: 基线值,
       候选: 候选值,
       降低: 基线值 - 候选值,
-      减少字: [...减少字集合],
+      减少组,
     };
   };
 
@@ -319,7 +319,7 @@ export default function RootAdditionAnalyzer() {
         基线: r ? Math.round(r.基线) : "—",
         加根后: r ? Math.round(r.候选) : "—",
         降低: r ? Math.round(r.降低 * 100) / 100 : "—",
-        减少字: r?.减少字 ?? [],
+        减少组: r?.减少组 ?? [],
       };
     });
     const columns: ColumnsType<(typeof 行)[number]> = [
@@ -337,11 +337,17 @@ export default function RootAdditionAnalyzer() {
             <Popover
               content={
                 <div className="max-w-120">
-                  {record.减少字.length === 0
+                  {record.减少组.length === 0
                     ? "无字的重减少"
-                    : record.减少字.length <= 100
-                      ? `减少了 ${record.减少字.join("、")} 的重`
-                      : `减少了 ${record.减少字.slice(0, 100).join("、")} 等共 ${record.减少字.length} 个字的重`}
+                    : (() => {
+                        const 组文本 = record.减少组.map((组: string[]) =>
+                          组.join("、"),
+                        );
+                        const 文本 = 组文本.join("；");
+                        return 文本.length <= 600
+                          ? `减少了 ${文本} 的重`
+                          : `减少了 ${文本.slice(0, 600)}……（共 ${组文本.length} 组）`;
+                      })()}
                 </div>
               }
             >
