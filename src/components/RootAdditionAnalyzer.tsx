@@ -5,6 +5,7 @@ import {
   InputNumber,
   Popover,
   Radio,
+  Segmented,
   Select,
   Spin,
   Table,
@@ -24,7 +25,7 @@ import {
 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { range, sumBy } from "lodash-es";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useAtomValueUnwrapped,
   如带归并组装结果原子,
@@ -34,6 +35,7 @@ import {
   拼音分析结果原子,
   决策原子,
   决策空间原子,
+  编码类型原子,
   最大码长原子,
   字母表原子,
   字形分析配置原子,
@@ -123,8 +125,8 @@ interface 根操作 {
   id: number;
   类型: 操作类型;
   名: string;
-  /** 加根时的安排：键位字符串，或 { element: 目标 } 表示归并 */
-  安排?: string | { element: string };
+  /** 加根时的安排：键位字符串，或广义码位列表（字母键 / 归并引用混排） */
+  安排?: string | (string | { element: string; index: number })[];
 }
 
 let 表序号 = 0;
@@ -179,10 +181,14 @@ export default function RootAdditionAnalyzer() {
   const 决策空间 = useAtomValue(决策空间原子);
 
   const [操作, 设操作] = useState<操作类型>("加");
+  const 编码类型 = useAtomValue(编码类型原子);
   const [当前根, 设当前根] = useState<string>("");
-  const [安排形式, 设安排形式] = useState<"键位" | "归并">("键位");
-  const [当前键位, 设当前键位] = useState<string>("");
-  const [归并目标, 设归并目标] = useState<string>("");
+  // 每一码独立安排：键位字母，或归并到某根的第几码
+  const [码槽列表, 设码槽列表] = useState<
+    { 类型: "键" | "归"; 键: string; 目标: string; 序号: number }[]
+  >(() =>
+    range(2).map(() => ({ 类型: "键", 键: "", 目标: "", 序号: 0 }) as const),
+  );
   const [操作列表, 设操作列表] = useState<根操作[]>([]);
   const [运行中, 设运行中] = useState(false);
   const [错误, 设错误] = useState("");
@@ -193,6 +199,11 @@ export default function RootAdditionAnalyzer() {
   ]);
 
   const 已映射元素集 = useMemo(() => new Set(Object.keys(决策)), [决策]);
+  useEffect(() => {
+    设码槽列表(
+      range(编码类型).map(() => ({ 类型: "键", 键: "", 目标: "", 序号: 0 })),
+    );
+  }, [编码类型]);
   const 频率表 = useMemo(
     () =>
       new Map<string, number>(
@@ -231,39 +242,45 @@ export default function RootAdditionAnalyzer() {
       设当前根("");
       return;
     }
-    // 加根
-    let 安排: string | { element: string };
-    if (安排形式 === "归并") {
-      if (!归并目标) {
-        设错误("请选择归并目标");
-        return;
-      }
-      if (!已映射元素集.has(归并目标)) {
-        设错误(`归并目标「${归并目标}」必须在当前方案的字根映射中`);
-        return;
-      }
-      if (操作列表.some((x) => x.类型 === "减" && x.名 === 归并目标)) {
-        设错误(`归并目标「${归并目标}」正在被减去，不能作为归并目标`);
-        return;
-      }
-      安排 = { element: 归并目标 };
-    } else {
-      if (!当前键位) {
-        设错误("请输入键位");
-        return;
-      }
-      for (const c of 当前键位) {
-        if (!alphabet.includes(c)) {
-          设错误(`键位「${c}」不在字母表 ${alphabet} 中`);
+    // 加根：逐码构造安排（全键位 → 键位串；含归并 → 广义码位列表）
+    for (const 槽 of 码槽列表) {
+      if (槽.类型 === "键") {
+        if (!槽.键) {
+          设错误(`第${数字标签(码槽列表.indexOf(槽) + 1)}码未设置键位`);
+          return;
+        }
+        if (!alphabet.includes(槽.键)) {
+          设错误(`键位「${槽.键}」不在字母表 ${alphabet} 中`);
+          return;
+        }
+      } else {
+        if (!槽.目标) {
+          设错误(`第${数字标签(码槽列表.indexOf(槽) + 1)}码未选择归并目标`);
+          return;
+        }
+        if (!已映射元素集.has(槽.目标)) {
+          设错误(`归并目标「${槽.目标}」必须在当前方案的字根映射中`);
+          return;
+        }
+        if (操作列表.some((x) => x.类型 === "减" && x.名 === 槽.目标)) {
+          设错误(`归并目标「${槽.目标}」正在被减去，不能作为归并目标`);
+          return;
+        }
+        if (槽.序号 >= 编码类型) {
+          设错误(`归并目标的码序超出编码类型（${编码类型} 编码）`);
           return;
         }
       }
-      安排 = 当前键位;
     }
+    const 安排: string | (string | { element: string; index: number })[] =
+      码槽列表.every((s) => s.类型 === "键")
+        ? 码槽列表.map((s) => s.键).join("")
+        : 码槽列表.map((s) =>
+            s.类型 === "键" ? s.键 : { element: s.目标, index: s.序号 },
+          );
     设操作列表([...操作列表, { id: 操作序号++, 类型: "加", 名: 当前根, 安排 }]);
     设当前根("");
-    设当前键位("");
-    设归并目标("");
+    设码槽列表(码槽列表.map((s) => ({ ...s, 键: "", 目标: "", 序号: 0 })));
   };
 
   const 分析 = async () => {
@@ -325,15 +342,20 @@ export default function RootAdditionAnalyzer() {
       设候选(带归并处理(组装结果.value, 强.决策));
       设已完成(
         操作列表
-          .map((x) =>
-            x.类型 === "减"
-              ? `−${x.名}`
-              : `＋${x.名}${
-                  typeof x.安排 === "string"
-                    ? `→${x.安排}`
-                    : `→归${(x.安排 as any).element}`
-                }`,
-          )
+          .map((x) => {
+            if (x.类型 === "减") return `−${x.名}`;
+            const 安排文本 =
+              typeof x.安排 === "string"
+                ? x.安排
+                : (x.安排 ?? [])
+                    .map((c) =>
+                      typeof c === "string"
+                        ? c
+                        : `${c.element}${c.index ? "'" + c.index : ""}`,
+                    )
+                    .join("");
+            return `＋${x.名}→${安排文本}`;
+          })
           .join("、"),
       );
     } catch (e: any) {
@@ -508,34 +530,77 @@ export default function RootAdditionAnalyzer() {
           onChange={(v) => 设当前根(v ?? "")}
         />
         {操作 === "加" &&
-          (安排形式 === "键位" ? (
-            <Input
-              className="w-14!"
-              placeholder="键位"
-              value={当前键位}
-              onChange={(e) => 设当前键位(e.target.value)}
-            />
-          ) : (
-            <Select
-              className="w-36"
-              placeholder="归并到"
-              value={归并目标 || undefined}
-              onChange={(v) => 设归并目标(v ?? "")}
-              options={[...已映射元素集].map((x) => ({ label: x, value: x }))}
-              showSearch
-            />
+          码槽列表.map((槽, i) => (
+            <Flex key={i} gap={4} align="center">
+              <Typography.Text type="secondary">
+                {数字标签(i + 1)}码
+              </Typography.Text>
+              <Segmented
+                value={槽.类型}
+                onChange={(v) =>
+                  设码槽列表(
+                    码槽列表.map((s, si) =>
+                      si === i ? { ...s, 类型: v as "键" | "归" } : s,
+                    ),
+                  )
+                }
+                options={[
+                  { label: "键", value: "键" },
+                  { label: "归", value: "归" },
+                ]}
+              />
+              {槽.类型 === "键" ? (
+                <Input
+                  className="w-10! text-center"
+                  maxLength={1}
+                  placeholder="键"
+                  value={槽.键}
+                  onChange={(e) =>
+                    设码槽列表(
+                      码槽列表.map((s, si) =>
+                        si === i ? { ...s, 键: e.target.value } : s,
+                      ),
+                    )
+                  }
+                />
+              ) : (
+                <>
+                  <Select
+                    className="w-32"
+                    placeholder="归并到根"
+                    value={槽.目标 || undefined}
+                    onChange={(v) =>
+                      设码槽列表(
+                        码槽列表.map((s, si) =>
+                          si === i ? { ...s, 目标: v ?? "" } : s,
+                        ),
+                      )
+                    }
+                    options={[...已映射元素集].map((x) => ({
+                      label: x,
+                      value: x,
+                    }))}
+                    showSearch
+                  />
+                  <Select
+                    className="w-20"
+                    value={槽.序号}
+                    onChange={(v) =>
+                      设码槽列表(
+                        码槽列表.map((s, si) =>
+                          si === i ? { ...s, 序号: v as number } : s,
+                        ),
+                      )
+                    }
+                    options={range(编码类型).map((j) => ({
+                      label: `第${数字标签(j + 1)}码`,
+                      value: j,
+                    }))}
+                  />
+                </>
+              )}
+            </Flex>
           ))}
-        {操作 === "加" && (
-          <Radio.Group
-            value={安排形式}
-            onChange={(e) => 设安排形式(e.target.value)}
-            optionType="button"
-            options={[
-              { label: "键位", value: "键位" },
-              { label: "归并", value: "归并" },
-            ]}
-          />
-        )}
         <Button onClick={添加操作}>添加</Button>
       </Flex>
       <Flex gap="small" align="center" wrap="wrap" className="mt-2">
@@ -556,10 +621,16 @@ export default function RootAdditionAnalyzer() {
             >
               {x.类型 === "减"
                 ? `减 ${x.名}`
-                : `加 ${x.名}${
+                : `加 ${x.名} → ${
                     typeof x.安排 === "string"
-                      ? ` → ${x.安排}`
-                      : ` → 归并 ${(x.安排 as any).element}`
+                      ? x.安排
+                      : (x.安排 ?? [])
+                          .map((c) =>
+                            typeof c === "string"
+                              ? c
+                              : `${c.element}${c.index ? "'" + c.index : ""}`,
+                          )
+                          .join("")
                   }`}
             </Tag>
           ))}
