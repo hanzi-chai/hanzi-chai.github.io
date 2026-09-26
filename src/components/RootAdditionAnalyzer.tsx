@@ -333,7 +333,7 @@ export default function RootAdditionAnalyzer() {
   const 表模式 = (表: 表配置) =>
     表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
 
-  const 表总降低 = (表: 表配置): number =>
+  const 表总变化 = (表: 表配置): number =>
     sumBy(表模式(表), (空位) => 阶重降低(空位, 表.top).降低);
 
   const 渲染表 = (表: 表配置) => {
@@ -346,7 +346,7 @@ export default function RootAdditionAnalyzer() {
         阶: 空位.length,
         基线: r ? Math.round(r.基线) : "—",
         加根后: r ? Math.round(r.候选) : "—",
-        降低: r ? Math.round(r.降低 * 100) / 100 : "—",
+        变化: r ? Math.round(r.降低 * 100) / 100 : "—",
         变化组: r?.变化组 ?? [],
       };
     });
@@ -356,9 +356,9 @@ export default function RootAdditionAnalyzer() {
       { title: "基线", dataIndex: "基线", key: "基线", width: 90 },
       { title: "加根后", dataIndex: "加根后", key: "加根后", width: 90 },
       {
-        title: "降低",
-        dataIndex: "降低",
-        key: "降低",
+        title: "变化",
+        dataIndex: "变化",
+        key: "变化",
         width: 90,
         render: (v, record) =>
           typeof v === "number" ? (
@@ -424,7 +424,7 @@ export default function RootAdditionAnalyzer() {
 
   const 表的值 = (表: 表配置): number => {
     if (!候选) return 0;
-    return 表总降低(表);
+    return 表总变化(表);
   };
 
   const 总预期值 = sumBy(表列表, (表) => 表的值(表) * 表.权重);
@@ -488,16 +488,16 @@ export default function RootAdditionAnalyzer() {
       {候选 && (
         <Flex vertical gap="middle">
           {表列表.map((表) => {
-            const 本表降低 = Math.round(表的值(表) * 100) / 100;
-            const 本表贡献 = Math.round(表的值(表) * 表.权重 * 10000) / 10000;
+            const 本表变化 = 表的值(表);
+            const 本表贡献 = 本表变化 * 表.权重;
             return (
               <div key={表.id} className="border rounded p-2">
                 <Flex gap="small" align="center" wrap="wrap" className="mb-2">
                   <Tag>阶重</Tag>
                   <Typography.Text strong>
-                    总降低{" "}
-                    <span className={变化显示(本表降低).类}>
-                      {变化显示(本表降低).文本}
+                    总变化{" "}
+                    <span className={变化显示(本表变化).类}>
+                      {变化显示(本表变化).文本}
                     </span>
                   </Typography.Text>
                   <Typography.Text type="secondary">
@@ -505,7 +505,7 @@ export default function RootAdditionAnalyzer() {
                     <span className={变化显示(本表贡献).类}>
                       {变化显示(本表贡献).文本}
                     </span>{" "}
-                    （{本表降低} × {表.权重}）
+                    （{变化显示(本表变化).文本} × {表.权重}）
                   </Typography.Text>
                   <Select
                     mode="multiple"
