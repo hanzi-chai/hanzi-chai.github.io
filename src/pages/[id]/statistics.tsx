@@ -492,6 +492,9 @@ const OrderDuplicationAnalyzer = () => {
 
   // 汉字搜索：查找该字在各模式下的重码组
   const [搜索字, 设搜索字] = useState("");
+  const [展开全部, 设展开全部] = useState(false);
+  const 全部合计 = dataSource.reduce((acc, row) => acc + (row.合计 as number), 0);
+  const 显示行数 = 展开全部 ? 长表数据.length : 3;
   const 搜索结果 = useMemo(() => {
     if (![...搜索字].length || [...搜索字].length > 1) return null;
     const 条目 = assemblyResult.find(
@@ -556,6 +559,10 @@ const OrderDuplicationAnalyzer = () => {
       </Typography.Paragraph>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} disablePosition />
       <Flex gap="middle" align="center" wrap="wrap">
+        <Typography.Text strong>
+          全部合计：
+          {Math.round(全部合计)}（{数字(0)}阶~{数字(maxLength)}阶所有模式求和）
+        </Typography.Text>
         <Select
           mode="multiple"
           placeholder="选择若干阶自定义求和"
@@ -579,11 +586,19 @@ const OrderDuplicationAnalyzer = () => {
         </Typography.Text>
       </Flex>
       <Table
-        dataSource={长表数据}
+        dataSource={长表数据.slice(0, 显示行数)}
         columns={columns}
         size="small"
         pagination={false}
       />
+      <Button
+        type="link"
+        size="small"
+        className="p-0! h-auto!"
+        onClick={() => 设展开全部(!展开全部)}
+      >
+        {展开全部 ? "收起" : `展开全部 ${长表数据.length} 行`}
+      </Button>
       <Flex gap="small" align="center" wrap="wrap" className="mt-2">
         <Input
           className="w-24"
