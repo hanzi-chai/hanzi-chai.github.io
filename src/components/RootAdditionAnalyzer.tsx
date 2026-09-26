@@ -288,10 +288,17 @@ export default function RootAdditionAnalyzer() {
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
     const 减少组: string[][] = [];
+    const 增加组: string[][] = [];
     基线分组.forEach((items, 键) => {
       const 候选词 = 候选分组.get(键);
       if (候选词 && 候选词.length < items.length) {
         减少组.push(items);
+      }
+    });
+    候选分组.forEach((items, 键) => {
+      const 基线词 = 基线分组.get(键);
+      if (!基线词 || 基线词.length < items.length) {
+        增加组.push(items);
       }
     });
     return {
@@ -299,6 +306,7 @@ export default function RootAdditionAnalyzer() {
       候选: 候选值,
       降低: 基线值 - 候选值,
       减少组,
+      增加组,
     };
   };
 
@@ -320,6 +328,7 @@ export default function RootAdditionAnalyzer() {
         加根后: r ? Math.round(r.候选) : "—",
         降低: r ? Math.round(r.降低 * 100) / 100 : "—",
         减少组: r?.减少组 ?? [],
+        增加组: r?.增加组 ?? [],
       };
     });
     const columns: ColumnsType<(typeof 行)[number]> = [
@@ -337,17 +346,29 @@ export default function RootAdditionAnalyzer() {
             <Popover
               content={
                 <div className="max-w-120">
-                  {record.减少组.length === 0
-                    ? "无字的重减少"
-                    : (() => {
-                        const 组文本 = record.减少组.map((组: string[]) =>
-                          组.join("、"),
-                        );
-                        const 文本 = 组文本.join("；");
-                        return 文本.length <= 600
-                          ? `减少了 ${文本} 的重`
-                          : `减少了 ${文本.slice(0, 600)}……（共 ${组文本.length} 组）`;
-                      })()}
+                  {(() => {
+                    const 渲染组列表 = (组列表: string[][]) => {
+                      if (组列表.length === 0) return "";
+                      const 文本 = 组列表.map((组: string[]) => 组.join("、")).join("；");
+                      return 文本.length <= 400
+                        ? 文本
+                        : `${文本.slice(0, 400)}……（共 ${组列表.length} 组）`;
+                    };
+                    const 减 = 渲染组列表(record.减少组);
+                    const 增 = 渲染组列表(record.增加组);
+                    return (
+                      <>
+                        {减 ? (
+                          <div className="text-green-700">减少：{减}</div>
+                        ) : (
+                          <div>无字的重减少</div>
+                        )}
+                        {增 && (
+                          <div className="mt-1 text-red-600">增加：{增}</div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               }
             >
