@@ -58,15 +58,10 @@ export const combinations = (n: number, k: number): number[][] => {
 
 const 数字标签 = (n: number) => "零一二三四五六七八九十"[n] ?? String(n);
 
-/** 模式名：空位显示 *，保留位显示位数；* 与后续保留位之间以空格分隔 */
+/** 模式名：空位显示 *（每个 * 后带空格），保留位显示位数 */
 export const 模式名称 = (空位: number[]) => {
-  const tokens = range(4).map((i) => (空位.includes(i) ? "*" : 数字标签(i + 1)));
-  let out = "";
-  tokens.forEach((t, i) => {
-    if (i > 0 && t !== "*" && tokens[i - 1] === "*") out += " ";
-    out += t;
-  });
-  return out || "****";
+  const tokens = range(4).map((i) => (空位.includes(i) ? "* " : 数字标签(i + 1)));
+  return tokens.join("").trimEnd() || "****";
 };
 
 /** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋ */
@@ -515,7 +510,7 @@ export default function RootAdditionAnalyzer() {
         {操作 === "加" &&
           (安排形式 === "键位" ? (
             <Input
-              className="w-20"
+              className="w-14!"
               placeholder="键位"
               value={当前键位}
               onChange={(e) => 设当前键位(e.target.value)}
