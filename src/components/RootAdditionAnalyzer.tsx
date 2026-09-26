@@ -287,27 +287,38 @@ export default function RootAdditionAnalyzer() {
     const 候选分组 = 分组按模式(候选!, 空位, top);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
-    const 减少组: { 词: string[]; 基线: number; 候选: number }[] = [];
-    const 增加组: { 词: string[]; 基线: number; 候选: number }[] = [];
-    基线分组.forEach((items, 键) => {
-      const 候选词 = 候选分组.get(键);
-      if (候选词 && 候选词.length < items.length) {
-        减少组.push({ 词: items, 基线: items.length, 候选: 候选词.length });
-      }
-    });
-    候选分组.forEach((items, 键) => {
+    // 成员构成发生变化（人数或成员互换）的组
+    const 变化组: {
+      基线词: string[];
+      候选词: string[];
+      基线: number;
+      候选: number;
+    }[] = [];
+    const 全部键 = new Set([...基线分组.keys(), ...候选分组.keys()]);
+    全部键.forEach((键) => {
       const 基线词 = 基线分组.get(键);
-      // 单字组没有重码潜力，不记入增加
-      if ((!基线词 || 基线词.length < items.length) && items.length >= 2) {
-        增加组.push({ 词: items, 基线: 基线词?.length ?? 0, 候选: items.length });
+      const 候选词 = 候选分组.get(键);
+      const 基线数 = 基线词?.length ?? 0;
+      const 候选数 = 候选词?.length ?? 0;
+      if (基线数 < 2 && 候选数 < 2) return; // 两边都是单字组，无重码含义
+      if (基线词 && 候选词) {
+        const 候选集 = new Set(候选词);
+        const 构成不变 =
+          基线数 === 候选数 && 基线词.every((x) => 候选集.has(x));
+        if (构成不变) return;
       }
+      变化组.push({
+        基线词: 基线词 ?? [],
+        候选词: 候选词 ?? [],
+        基线: 基线数,
+        候选: 候选数,
+      });
     });
     return {
       基线: 基线值,
       候选: 候选值,
       降低: 基线值 - 候选值,
-      减少组,
-      增加组,
+      变化组,
     };
   };
 
@@ -328,8 +339,7 @@ export default function RootAdditionAnalyzer() {
         基线: r ? Math.round(r.基线) : "—",
         加根后: r ? Math.round(r.候选) : "—",
         降低: r ? Math.round(r.降低 * 100) / 100 : "—",
-        减少组: r?.减少组 ?? [],
-        增加组: r?.增加组 ?? [],
+        变化组: r?.变化组 ?? [],
       };
     });
     const columns: ColumnsType<(typeof 行)[number]> = [
@@ -346,37 +356,44 @@ export default function RootAdditionAnalyzer() {
           typeof v === "number" ? (
             <Popover
               content={
-                <div className="max-w-120">
-                  {(() => {
-                    const 渲染组列表 = (
-                      组列表: { 词: string[]; 基线: number; 候选: number }[],
-                    ) => {
-                      if (组列表.length === 0) return "";
-                      const 文本 = 组列表
-                        .map(
-                          (组) =>
-                            `${组.词.join("、")}（${组.基线}→${组.候选}）`,
-                        )
-                        .join("；");
-                      return 文本.length <= 400
-                        ? 文本
-                        : `${文本.slice(0, 400)}……（共 ${组列表.length} 组）`;
-                    };
-                    const 减 = 渲染组列表(record.减少组);
-                    const 增 = 渲染组列表(record.增加组);
-                    return (
-                      <>
-                        {减 ? (
-                          <div className="text-green-700">减少：{减}</div>
-                        ) : (
-                          <div>无字的重减少</div>
-                        )}
-                        {增 && (
-                          <div className="mt-1 text-red-600">增加：{增}</div>
-                        )}
-                      </>
-                    );
-                  })()}
+                <div className="max-w-130">
+                  {record.变化组.length === 0 ? (
+                    <div>无组变化</div>
+                  ) : (
+                    record.变化组.map((组, gi) => {
+                      const 基线集 = new Set(组.基线词);
+                      const 候选集 = new Set(组.候选词);
+                      const 不变 = 组.基线词.filter((x) => 候选集.has(x));
+                      const 加入 = 组.候选词.filter((x) => !基线集.has(x));
+                      const 离开 = 组.基线词.filter((x) => !候选集.has(x));
+                      return (
+                        <div key={gi} className="mb-1">
+                          <div className="font-medium">
+                            组（{组.基线}→{组.候选}）：
+                          </div>
+                          {加入.length > 0 && (
+                            <div className="text-green-600">
+                              ＋{加入.join("、")}
+                            </div>
+                          )}
+                          {离开.length > 0 && (
+                            <div className="text-red-500">
+                              －{离开.join("、")}
+                            </div>
+                          )}
+                          {不变.length > 0 &&
+                            (不变.length <= 8 ? (
+                              <div>＝{不变.join("、")}</div>
+                            ) : (
+                              <div className="text-gray-500">
+                                ＝{不变.slice(0, 8).join("、")} 等 {不变.length}{" "}
+                                字不变
+                              </div>
+                            ))}
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               }
             >
