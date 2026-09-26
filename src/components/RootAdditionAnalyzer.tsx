@@ -187,9 +187,9 @@ export default function RootAdditionAnalyzer() {
   const [当前根, 设当前根] = useState<string>("");
   // 每一码独立安排：键位字母（默认预填键盘前几位字母），或归并到某根的第几码
   const 默认码槽 = (n: number) =>
-    range(n).map((i) => ({
+    range(n).map(() => ({
       类型: "键" as const,
-      键: alphabet[i % alphabet.length] ?? "",
+      键: alphabet[0] ?? "",
       目标: "",
       序号: 0,
     }));
@@ -570,7 +570,7 @@ export default function RootAdditionAnalyzer() {
                                   类型: v as "键" | "归",
                                   键:
                                     v === "键" && !s.键
-                                      ? (alphabet[i % alphabet.length] ?? "")
+                                      ? (alphabet[0] ?? "")
                                       : s.键,
                                 }
                               : s,
@@ -588,6 +588,7 @@ export default function RootAdditionAnalyzer() {
                       maxLength={1}
                       placeholder="键"
                       value={槽.键}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) =>
                         设码槽列表(
                           码槽列表.map((s, si) =>
