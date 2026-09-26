@@ -36,7 +36,7 @@ const items: MenuProps["items"] = [
   { label: "校对", key: "debug", icon: <BoldOutlined /> },
   { label: "统计一", key: "statistics", icon: <NumberOutlined /> },
   { label: "统计二", key: "statistics2", icon: <NumberOutlined /> },
-  { label: "加根分析", key: "root-analyzer", icon: <PlusCircleOutlined /> },
+  { label: "加减根分析", key: "root-analyzer", icon: <PlusCircleOutlined /> },
   { label: "优化", key: "optimization", icon: <RiseOutlined /> },
   { label: "图示", key: "diagram", icon: <ProfileOutlined /> },
 ];

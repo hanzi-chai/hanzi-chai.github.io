@@ -4,8 +4,8 @@ import {
   Input,
   InputNumber,
   Popover,
+  Radio,
   Select,
-  Space,
   Spin,
   Table,
   Tag,
@@ -58,6 +58,17 @@ export const combinations = (n: number, k: number): number[][] => {
 
 const 数字标签 = (n: number) => "零一二三四五六七八九十"[n] ?? String(n);
 
+/** 模式名：空位显示 *，保留位显示位数；* 与后续保留位之间以空格分隔 */
+export const 模式名称 = (空位: number[]) => {
+  const tokens = range(4).map((i) => (空位.includes(i) ? "*" : 数字标签(i + 1)));
+  let out = "";
+  tokens.forEach((t, i) => {
+    if (i > 0 && t !== "*" && tokens[i - 1] === "*") out += " ";
+    out += t;
+  });
+  return out || "****";
+};
+
 /** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋ */
 const 变化显示 = (v: number) => {
   const x = Math.round(v * 10000) / 10000;
@@ -65,9 +76,6 @@ const 变化显示 = (v: number) => {
   if (x < 0) return { 文本: `＋${Math.abs(x)}`, 类: "text-red-500" };
   return { 文本: "0", 类: "" };
 };
-
-export const 模式名称 = (空位: number[]) =>
-  空位.length === 0 ? "全保留" : `空${空位.map((x) => 数字标签(x + 1)).join("")}码`;
 
 /** 与 如带归并组装结果原子 相同的归并展开后处理 */
 const 带归并处理 = (组装结果: 组装条目[], 决策: 强类型决策): 组装条目[] => {
@@ -114,12 +122,18 @@ interface 表配置 {
   权重: number;
 }
 
-interface 候选根 {
+type 操作类型 = "加" | "减";
+
+interface 根操作 {
+  id: number;
+  类型: 操作类型;
   名: string;
-  键位: string;
+  /** 加根时的安排：键位字符串，或 { element: 目标 } 表示归并 */
+  安排?: string | { element: string };
 }
 
 let 表序号 = 0;
+let 操作序号 = 0;
 
 /** 按模式分组：保留非空位码位的元素序列（布局无关），返回 键→词列表 */
 const 分组按模式 = (条目列表: 组装条目[], 空位: number[], top: number) => {
@@ -169,17 +183,21 @@ export default function RootAdditionAnalyzer() {
   const 决策 = useAtomValue(决策原子);
   const 决策空间 = useAtomValue(决策空间原子);
 
+  const [操作, 设操作] = useState<操作类型>("加");
   const [当前根, 设当前根] = useState<string>("");
+  const [安排形式, 设安排形式] = useState<"键位" | "归并">("键位");
   const [当前键位, 设当前键位] = useState<string>("");
-  const [加根列表, 设加根列表] = useState<候选根[]>([]);
+  const [归并目标, 设归并目标] = useState<string>("");
+  const [操作列表, 设操作列表] = useState<根操作[]>([]);
   const [运行中, 设运行中] = useState(false);
   const [错误, 设错误] = useState("");
-  const [已完成根, 设已完成根] = useState("");
+  const [已完成, 设已完成] = useState("");
   const [候选, 设候选] = useState<组装条目[] | null>(null);
   const [表列表, 设表列表] = useState<表配置[]>([
     { id: 表序号++, 模式: [], top: 0, 权重: 1 },
   ]);
 
+  const 已映射元素集 = useMemo(() => new Set(Object.keys(决策)), [决策]);
   const 频率表 = useMemo(
     () =>
       new Map<string, number>(
@@ -195,65 +213,95 @@ export default function RootAdditionAnalyzer() {
     [maxLength],
   );
 
-  const 添加根 = () => {
+  const 添加操作 = () => {
     设错误("");
-    if (!当前根 || !当前键位) {
-      设错误("请先选择根并输入键位");
+    if (!当前根) {
+      设错误("请先选择字根");
       return;
     }
     if (!名称映射.has(当前根)) {
       设错误(`「${当前根}」不是字库中的合法元素`);
       return;
     }
-    if (决策[当前根] !== undefined) {
-      设错误(`「${当前根}」已在方案的键位映射中`);
+    if (操作列表.some((x) => x.名 === 当前根)) {
+      设错误(`「${当前根}」已在操作列表中（同一根先减后加即可表达改根）`);
       return;
     }
-    if (加根列表.some((x) => x.名 === 当前根)) {
-      设错误(`「${当前根}」已在候选列表中`);
-      return;
-    }
-    for (const c of 当前键位) {
-      if (!alphabet.includes(c)) {
-        设错误(`键位「${c}」不在字母表 ${alphabet} 中`);
+    if (操作 === "减") {
+      if (!已映射元素集.has(当前根)) {
+        设错误(`「${当前根}」不在当前方案的字根映射中，无法减去`);
         return;
       }
+      设操作列表([...操作列表, { id: 操作序号++, 类型: "减", 名: 当前根 }]);
+      设当前根("");
+      return;
     }
-    设加根列表([...加根列表, { 名: 当前根, 键位: 当前键位 }]);
+    // 加根
+    let 安排: string | { element: string };
+    if (安排形式 === "归并") {
+      if (!归并目标) {
+        设错误("请选择归并目标");
+        return;
+      }
+      if (!已映射元素集.has(归并目标)) {
+        设错误(`归并目标「${归并目标}」必须在当前方案的字根映射中`);
+        return;
+      }
+      if (操作列表.some((x) => x.类型 === "减" && x.名 === 归并目标)) {
+        设错误(`归并目标「${归并目标}」正在被减去，不能作为归并目标`);
+        return;
+      }
+      安排 = { element: 归并目标 };
+    } else {
+      if (!当前键位) {
+        设错误("请输入键位");
+        return;
+      }
+      for (const c of 当前键位) {
+        if (!alphabet.includes(c)) {
+          设错误(`键位「${c}」不在字母表 ${alphabet} 中`);
+          return;
+        }
+      }
+      安排 = 当前键位;
+    }
+    设操作列表([...操作列表, { id: 操作序号++, 类型: "加", 名: 当前根, 安排 }]);
     设当前根("");
     设当前键位("");
+    设归并目标("");
   };
 
   const 分析 = async () => {
     设错误("");
-    if (加根列表.length === 0) {
-      设错误("请先添加至少一个候选根");
+    if (操作列表.length === 0) {
+      设错误("请先添加至少一条加/减根操作");
       return;
     }
-    for (const { 名, 键位: k } of 加根列表) {
-      if (!名称映射.has(名) || 决策[名] !== undefined) {
-        设错误(`「${名}」不可用`);
+    for (const op of 操作列表) {
+      if (!名称映射.has(op.名)) {
+        设错误(`「${op.名}」不是字库中的合法元素`);
         return;
       }
-      for (const c of k) {
-        if (!alphabet.includes(c)) {
-          设错误(`「${名}」的键位「${c}」不在字母表中`);
-          return;
-        }
+      if (op.类型 === "减" && !已映射元素集.has(op.名)) {
+        设错误(`「${op.名}」不在当前方案的字根映射中，无法减去`);
+        return;
       }
     }
     设运行中(true);
     try {
-      // 1. 候选决策（加入全部候选根；键位不影响阶重估计）
-      const 候选决策Record = {
-        ...决策,
-        ...Object.fromEntries(加根列表.map((x) => [x.名, x.键位])),
-      };
-      const 强 = 构建强类型决策与决策空间(
-        候选决策Record,
-        决策空间,
-        名称映射,
-      );
+      // 1. 候选决策：先应用减根，再应用加根（同根先减后加即“改根”）
+      const 候选决策Record: Record<string, any> = { ...决策 };
+      for (const op of 操作列表) {
+        if (op.类型 === "减") {
+          delete 候选决策Record[op.名];
+        }
+      }
+      for (const op of 操作列表) {
+        if (op.类型 === "加") {
+          候选决策Record[op.名] = op.安排;
+        }
+      }
+      const 强 = 构建强类型决策与决策空间(候选决策Record, 决策空间, 名称映射);
       const 如线性化 = new 决策图(强.决策).线性化();
       if (!如线性化.ok) throw 如线性化.error;
       // 2. 候选拆分
@@ -280,7 +328,19 @@ export default function RootAdditionAnalyzer() {
       );
       if (!组装结果.ok) throw 组装结果.error;
       设候选(带归并处理(组装结果.value, 强.决策));
-      设已完成根(加根列表.map((x) => `${x.名}→${x.键位}`).join("、"));
+      设已完成(
+        操作列表
+          .map((x) =>
+            x.类型 === "减"
+              ? `−${x.名}`
+              : `＋${x.名}${
+                  typeof x.安排 === "string"
+                    ? `→${x.安排}`
+                    : `→归${(x.安排 as any).element}`
+                }`,
+          )
+          .join("、"),
+      );
     } catch (e: any) {
       设错误(String(e?.message ?? e));
       设候选(null);
@@ -289,8 +349,8 @@ export default function RootAdditionAnalyzer() {
     }
   };
 
-  /** 单个阶重模式的降低量与降低的字（top 为统计范围前 N 字，0 为全部） */
-  const 阶重降低 = (空位: number[], top: number) => {
+  /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 字，0 为全部） */
+  const 阶重变化 = (空位: number[], top: number) => {
     const 基线分组 = 分组按模式(基线 ?? [], 空位, top);
     const 候选分组 = 分组按模式(候选!, 空位, top);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
@@ -325,7 +385,7 @@ export default function RootAdditionAnalyzer() {
     return {
       基线: 基线值,
       候选: 候选值,
-      降低: 基线值 - 候选值,
+      变化: 基线值 - 候选值,
       变化组,
     };
   };
@@ -334,27 +394,27 @@ export default function RootAdditionAnalyzer() {
     表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
 
   const 表总变化 = (表: 表配置): number =>
-    sumBy(表模式(表), (空位) => 阶重降低(空位, 表.top).降低);
+    sumBy(表模式(表), (空位) => 阶重变化(空位, 表.top).变化);
 
   const 渲染表 = (表: 表配置) => {
     const 模式 = 表模式(表);
     const 行 = 模式.map((空位) => {
-      const r = 候选 ? 阶重降低(空位, 表.top) : null;
+      const r = 候选 ? 阶重变化(空位, 表.top) : null;
       return {
         key: JSON.stringify(空位),
         模式: 模式名称(空位),
         阶: 空位.length,
-        基线: r ? Math.round(r.基线) : "—",
-        加根后: r ? Math.round(r.候选) : "—",
-        变化: r ? Math.round(r.降低 * 100) / 100 : "—",
+        原始: r ? Math.round(r.基线) : "—",
+        加减根后: r ? Math.round(r.候选) : "—",
+        变化: r ? Math.round(r.变化 * 100) / 100 : "—",
         变化组: r?.变化组 ?? [],
       };
     });
     const columns: ColumnsType<(typeof 行)[number]> = [
       { title: "阶", dataIndex: "阶", key: "阶", width: 56 },
       { title: "模式", dataIndex: "模式", key: "模式", width: 110 },
-      { title: "基线", dataIndex: "基线", key: "基线", width: 90 },
-      { title: "加根后", dataIndex: "加根后", key: "加根后", width: 90 },
+      { title: "原始", dataIndex: "原始", key: "原始", width: 90 },
+      { title: "加减根后", dataIndex: "加减根后", key: "加减根后", width: 100 },
       {
         title: "变化",
         dataIndex: "变化",
@@ -431,46 +491,84 @@ export default function RootAdditionAnalyzer() {
 
   return (
     <>
-      <Typography.Title level={2}>加根分析</Typography.Title>
+      <Typography.Title level={2}>加减根分析</Typography.Title>
       <Typography.Paragraph type="secondary">
-        选择一个或多个候选字根（支持笔画 12345 检索、汉字、别名检索），为其指定键位安排（双编码方案输两位，如 qj；键位不影响阶重估计），系统将一次性加入全部候选根重新拆分，对比各阶重的变化。每张表可自定义空位模式、统计前 N 字与权重。
+        选择候选字根（支持笔画 12345、汉字、别名检索），以「加根」「减根」「先减后加（即改根）」任意组合；加根的安排可为键位或归并到已有字根（安排不影响阶重估计）。系统将按操作重拆分，对比各阶重变化。每张表可自定义空位模式、统计前 N 字与权重。
       </Typography.Paragraph>
       <Flex gap="small" align="center" wrap="wrap">
+        <Radio.Group
+          value={操作}
+          onChange={(e) => 设操作(e.target.value)}
+          optionType="button"
+          buttonStyle="solid"
+          options={[
+            { label: "加根", value: "加" },
+            { label: "减根", value: "减" },
+          ]}
+        />
         <CharacterSelect
-          className="w-40"
-          placeholder="输入笔画（12345）、汉字或别名搜索"
+          className="w-36"
+          placeholder="字根"
           value={当前根 || undefined}
           onChange={(v) => 设当前根(v ?? "")}
         />
-        <Input
-          className="w-28"
-          placeholder="键位（如 qj）"
-          value={当前键位}
-          onChange={(e) => 设当前键位(e.target.value)}
-        />
-        <Button onClick={添加根}>添加</Button>
+        {操作 === "加" &&
+          (安排形式 === "键位" ? (
+            <Input
+              className="w-20"
+              placeholder="键位"
+              value={当前键位}
+              onChange={(e) => 设当前键位(e.target.value)}
+            />
+          ) : (
+            <Select
+              className="w-36"
+              placeholder="归并到"
+              value={归并目标 || undefined}
+              onChange={(v) => 设归并目标(v ?? "")}
+              options={[...已映射元素集].map((x) => ({ label: x, value: x }))}
+              showSearch
+            />
+          ))}
+        {操作 === "加" && (
+          <Radio.Group
+            value={安排形式}
+            onChange={(e) => 设安排形式(e.target.value)}
+            optionType="button"
+            options={[
+              { label: "键位", value: "键位" },
+              { label: "归并", value: "归并" },
+            ]}
+          />
+        )}
+        <Button onClick={添加操作}>添加</Button>
+      </Flex>
+      <Flex gap="small" align="center" wrap="wrap" className="mt-2">
         <Button type="primary" onClick={分析} loading={运行中}>
           分析
         </Button>
         {错误 && <Typography.Text type="danger">{错误}</Typography.Text>}
       </Flex>
-      {加根列表.length > 0 && (
-        <Flex gap="small" align="center" wrap="wrap">
-          <Typography.Text type="secondary">候选根：</Typography.Text>
-          {加根列表.map((x) => (
+      {操作列表.length > 0 && (
+        <Flex gap="small" align="center" wrap="wrap" className="mt-2">
+          <Typography.Text type="secondary">操作列表：</Typography.Text>
+          {操作列表.map((x) => (
             <Tag
-              key={x.名}
+              key={x.id}
               closable
-              onClose={() =>
-                设加根列表(加根列表.filter((y) => y.名 !== x.名))
-              }
+              color={x.类型 === "减" ? "red" : "green"}
+              onClose={() => 设操作列表(操作列表.filter((y) => y.id !== x.id))}
             >
-              {x.名} → {x.键位}
+              {x.类型 === "减"
+                ? `减 ${x.名}`
+                : `加 ${x.名}${
+                    typeof x.安排 === "string"
+                      ? ` → ${x.安排}`
+                      : ` → 归并 ${(x.安排 as any).element}`
+                  }`}
             </Tag>
           ))}
-          {已完成根 && !运行中 && 候选 && (
-            <Tag color="green">已分析：{已完成根}</Tag>
-          )}
+          {已完成 && !运行中 && 候选 && <Tag color="green">已分析：{已完成}</Tag>}
         </Flex>
       )}
       {运行中 && <Spin tip="正在重新拆分……" />}
@@ -512,7 +610,7 @@ export default function RootAdditionAnalyzer() {
                     allowClear
                     placeholder="选择空位模式（默认全部）"
                     value={表.模式}
-                    className="min-w-72"
+                    className="min-w-80"
                     options={range(maxLength + 1).map((阶) => ({
                       label: `${数字标签(阶)}阶`,
                       options: combinations(maxLength, 阶).map((空位) => ({
