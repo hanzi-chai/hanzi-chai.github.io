@@ -30,7 +30,6 @@ import {
   最大码长原子,
 } from "~/atoms";
 import KeySelect from "~/components/KeySelect";
-import RootAdditionAnalyzer from "~/components/RootAdditionAnalyzer";
 import {
   CodePositionDisplay,
   DeleteButton,
@@ -555,7 +554,6 @@ export default function Statistics() {
       <Typography.Title level={2}>离散性分析</Typography.Title>
       <Suspense fallback={<Skeleton active />}>
         <OrderDuplicationAnalyzer />
-        <RootAdditionAnalyzer />
         <MarginalFirstOrderDuplication />
         <MultiDistribution
           init={{ type: "single", position: range(0, maxLength), top: 0 }}

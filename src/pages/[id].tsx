@@ -3,6 +3,7 @@ import BoldOutlined from "@ant-design/icons/BoldOutlined";
 import DatabaseOutlined from "@ant-design/icons/DatabaseOutlined";
 import MailOutlined from "@ant-design/icons/MailOutlined";
 import NumberOutlined from "@ant-design/icons/NumberOutlined";
+import PlusCircleOutlined from "@ant-design/icons/PlusCircleOutlined";
 import OrderedListOutlined from "@ant-design/icons/OrderedListOutlined";
 import ProfileOutlined from "@ant-design/icons/ProfileOutlined";
 import RiseOutlined from "@ant-design/icons/RiseOutlined";
@@ -35,6 +36,7 @@ const items: MenuProps["items"] = [
   { label: "校对", key: "debug", icon: <BoldOutlined /> },
   { label: "统计一", key: "statistics", icon: <NumberOutlined /> },
   { label: "统计二", key: "statistics2", icon: <NumberOutlined /> },
+  { label: "加根分析", key: "root-analyzer", icon: <PlusCircleOutlined /> },
   { label: "优化", key: "optimization", icon: <RiseOutlined /> },
   { label: "图示", key: "diagram", icon: <ProfileOutlined /> },
 ];
