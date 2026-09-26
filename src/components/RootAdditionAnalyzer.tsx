@@ -570,7 +570,7 @@ export default function RootAdditionAnalyzer() {
                                   类型: v as "键" | "归",
                                   键:
                                     v === "键" && !s.键
-                                      ? alphabet[i % alphabet.length]
+                                      ? (alphabet[i % alphabet.length] ?? "")
                                       : s.键,
                                 }
                               : s,
