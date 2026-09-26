@@ -185,12 +185,17 @@ export default function RootAdditionAnalyzer() {
   const [操作, 设操作] = useState<操作类型>("加");
   const 编码类型 = useAtomValue(编码类型原子);
   const [当前根, 设当前根] = useState<string>("");
-  // 每一码独立安排：键位字母，或归并到某根的第几码
+  // 每一码独立安排：键位字母（默认预填键盘前几位字母），或归并到某根的第几码
+  const 默认码槽 = (n: number) =>
+    range(n).map((i) => ({
+      类型: "键",
+      键: alphabet[i % alphabet.length] ?? "",
+      目标: "",
+      序号: 0,
+    }));
   const [码槽列表, 设码槽列表] = useState<
     { 类型: "键" | "归"; 键: string; 目标: string; 序号: number }[]
-  >(() =>
-    range(2).map(() => ({ 类型: "键", 键: "", 目标: "", 序号: 0 }) as const),
-  );
+  >(() => 默认码槽(编码类型));
   const [操作列表, 设操作列表] = useState<根操作[]>([]);
   const [运行中, 设运行中] = useState(false);
   const [错误, 设错误] = useState("");
@@ -202,9 +207,7 @@ export default function RootAdditionAnalyzer() {
 
   const 已映射元素集 = useMemo(() => new Set(Object.keys(决策)), [决策]);
   useEffect(() => {
-    设码槽列表(
-      range(编码类型).map(() => ({ 类型: "键", 键: "", 目标: "", 序号: 0 })),
-    );
+    设码槽列表(默认码槽(编码类型));
   }, [编码类型]);
   const 频率表 = useMemo(
     () =>
@@ -282,7 +285,7 @@ export default function RootAdditionAnalyzer() {
           );
     设操作列表([...操作列表, { id: 操作序号++, 类型: "加", 名: 当前根, 安排 }]);
     设当前根("");
-    设码槽列表(码槽列表.map((s) => ({ ...s, 键: "", 目标: "", 序号: 0 })));
+    设码槽列表(默认码槽(编码类型));
   };
 
   const 分析 = async () => {
@@ -556,15 +559,24 @@ export default function RootAdditionAnalyzer() {
                   <span className={`${字色} text-xs font-medium whitespace-nowrap`}>
                     第{数字标签(i + 1)}码
                   </span>
-                  <Segmented
-                    value={槽.类型}
-                    onChange={(v) =>
-                      设码槽列表(
-                        码槽列表.map((s, si) =>
-                          si === i ? { ...s, 类型: v as "键" | "归" } : s,
-                        ),
-                      )
-                    }
+                    <Segmented
+                      value={槽.类型}
+                      onChange={(v) =>
+                        设码槽列表(
+                          码槽列表.map((s, si) =>
+                            si === i
+                              ? {
+                                  ...s,
+                                  类型: v as "键" | "归",
+                                  键:
+                                    v === "键" && !s.键
+                                      ? alphabet[i % alphabet.length]
+                                      : s.键,
+                                }
+                              : s,
+                          ),
+                        )
+                      }
                     options={[
                       { label: "键", value: "键" },
                       { label: "归", value: "归" },
