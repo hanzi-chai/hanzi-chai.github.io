@@ -10,7 +10,6 @@ import {
   Flex,
   Form,
   Input,
-  Modal,
   Popover,
   Select,
   Skeleton,
@@ -162,44 +161,6 @@ const AnalyzerConfig = ({
     </ProForm>
   );
 };
-
-/** 成员列表弹窗：可翻页浏览大组的全部字 */
-const 成员弹窗 = ({
-  组,
-  搜索字,
-  关闭,
-}: {
-  组: { 标题: string; 词: string[] } | null;
-  搜索字: string;
-  关闭: () => void;
-}) => (
-  <Modal
-    open={!!组}
-    onCancel={关闭}
-    title={组?.标题 ?? ""}
-    footer={null}
-    width={720}
-  >
-    <Table
-      dataSource={(组?.词 ?? []).map((w, i) => ({ key: i, 序号: i + 1, 字: w }))}
-      columns={[
-        { title: "序号", dataIndex: "序号", key: "序号", width: 80 },
-        {
-          title: "字",
-          dataIndex: "字",
-          key: "字",
-          render: (w: string) => (
-            <span className={w === 搜索字 ? "text-red-500 font-bold" : ""}>
-              {w}
-            </span>
-          ),
-        },
-      ]}
-      size="small"
-      pagination={{ pageSize: 50, showSizeChanger: true }}
-    />
-  </Modal>
-);
 
 const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
@@ -531,9 +492,6 @@ const OrderDuplicationAnalyzer = () => {
 
   // 汉字搜索：查找该字在各模式下的重码组
   const [搜索字, 设搜索字] = useState("");
-  const [弹窗组, 设弹窗组] = useState<{ 标题: string; 词: string[] } | null>(
-    null,
-  );
   const 搜索结果 = useMemo(() => {
     if (![...搜索字].length || [...搜索字].length > 1) return null;
     const 条目 = assemblyResult.find(
@@ -574,38 +532,18 @@ const OrderDuplicationAnalyzer = () => {
       title: "组成员（红为搜索字）",
       dataIndex: "成员",
       key: "成员",
-      render: (成员: string[]) =>
-        成员.length <= 60 ? (
-          <Space wrap size={2}>
-            {成员.map((x) => (
-              <span
-                key={x}
-                className={
-                  x === 搜索字
-                    ? "text-red-500 font-bold"
-                    : ""
-                }
-              >
-                {x}
-              </span>
-            ))}
-          </Space>
-        ) : (
-          <div className="max-w-md">
-            {成员.slice(0, 60).map((x) => (x === 搜索字 ? "【" + x + "】" : x)).join("")}
-            {" "}等共 {成员.length} 字{" "}
-            <Button
-              type="link"
-              size="small"
-              className="p-0! h-auto!"
-              onClick={() =>
-                设弹窗组({ 标题: `${搜索字} 的组（共 ${成员.length} 字）`, 词: 成员 })
-              }
+      render: (成员: string[]) => (
+        <Space wrap size={2} className="max-w-lg">
+          {成员.map((x) => (
+            <span
+              key={x}
+              className={x === 搜索字 ? "text-red-500 font-bold" : ""}
             >
-              查看全部
-            </Button>
-          </div>
-        ),
+              {x}
+            </span>
+          ))}
+        </Space>
+      ),
     },
   ];
 
@@ -676,11 +614,6 @@ const OrderDuplicationAnalyzer = () => {
           />
         )
       )}
-      <成员弹窗
-        组={弹窗组}
-        搜索字={搜索字}
-        关闭={() => 设弹窗组(null)}
-      />
     </>
   );
 };

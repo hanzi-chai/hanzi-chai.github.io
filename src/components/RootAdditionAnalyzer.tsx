@@ -440,8 +440,9 @@ export default function RootAdditionAnalyzer() {
         render: (v, record) =>
           typeof v === "number" ? (
             <Popover
+              trigger="click"
               content={
-                <div className="max-w-130">
+                <div className="max-w-130 max-h-96 overflow-y-auto">
                   {record.变化组.length === 0 ? (
                     <div>无组变化</div>
                   ) : (
