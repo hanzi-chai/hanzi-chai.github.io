@@ -188,7 +188,7 @@ export default function RootAdditionAnalyzer() {
   // 每一码独立安排：键位字母（默认预填键盘前几位字母），或归并到某根的第几码
   const 默认码槽 = (n: number) =>
     range(n).map((i) => ({
-      类型: "键",
+      类型: "键" as const,
       键: alphabet[i % alphabet.length] ?? "",
       目标: "",
       序号: 0,
