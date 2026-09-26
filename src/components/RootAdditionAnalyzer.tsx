@@ -530,90 +530,88 @@ export default function RootAdditionAnalyzer() {
           onChange={(v) => 设当前根(v ?? "")}
         />
         {操作 === "加" && (
-          <Flex vertical gap={6} className="border rounded-md px-3 py-2 bg-gray-50/60">
-            <Typography.Text type="secondary" className="text-xs!">
-              安排（逐码设置：键 = 字母键，归 = 归并到已有字根的某一码）
-            </Typography.Text>
-            <Flex gap="small" align="center" wrap="wrap">
-              {码槽列表.map((槽, i) => (
+          <Flex gap="small" align="center" wrap="wrap">
+            {码槽列表.map((槽, i) => {
+              const 槽色 = i % 2 === 0 ? "bg-blue-50" : "bg-emerald-50";
+              const 字色 =
+                i % 2 === 0 ? "text-blue-700" : "text-emerald-700";
+              return (
                 <Flex
                   key={i}
-                  vertical
                   gap={4}
-                  className="border rounded-md px-2 py-1.5 bg-white"
+                  align="center"
+                  className={`${槽色} rounded-md px-2 py-1`}
                 >
-                  <Typography.Text className="text-xs! font-medium">
+                  <span className={`${字色} text-xs font-medium whitespace-nowrap`}>
                     第{数字标签(i + 1)}码
-                  </Typography.Text>
-                  <Flex gap={4} align="center">
-                    <Segmented
-                      value={槽.类型}
-                      onChange={(v) =>
+                  </span>
+                  <Segmented
+                    value={槽.类型}
+                    onChange={(v) =>
+                      设码槽列表(
+                        码槽列表.map((s, si) =>
+                          si === i ? { ...s, 类型: v as "键" | "归" } : s,
+                        ),
+                      )
+                    }
+                    options={[
+                      { label: "键", value: "键" },
+                      { label: "归", value: "归" },
+                    ]}
+                  />
+                  {槽.类型 === "键" ? (
+                    <Input
+                      className="w-10! text-center"
+                      maxLength={1}
+                      placeholder="键"
+                      value={槽.键}
+                      onChange={(e) =>
                         设码槽列表(
                           码槽列表.map((s, si) =>
-                            si === i ? { ...s, 类型: v as "键" | "归" } : s,
+                            si === i ? { ...s, 键: e.target.value } : s,
                           ),
                         )
                       }
-                      options={[
-                        { label: "键", value: "键" },
-                        { label: "归", value: "归" },
-                      ]}
                     />
-                    {槽.类型 === "键" ? (
-                      <Input
-                        className="w-10! text-center"
-                        maxLength={1}
-                        placeholder="键"
-                        value={槽.键}
-                        onChange={(e) =>
+                  ) : (
+                    <>
+                      <Select
+                        className="w-28"
+                        placeholder="归并到根"
+                        value={槽.目标 || undefined}
+                        onChange={(v) =>
                           设码槽列表(
                             码槽列表.map((s, si) =>
-                              si === i ? { ...s, 键: e.target.value } : s,
+                              si === i ? { ...s, 目标: v ?? "" } : s,
                             ),
                           )
                         }
+                        options={[...已映射元素集].map((x) => ({
+                          label: x,
+                          value: x,
+                        }))}
+                        showSearch
                       />
-                    ) : (
-                      <>
-                        <Select
-                          className="w-28"
-                          placeholder="归并到根"
-                          value={槽.目标 || undefined}
-                          onChange={(v) =>
-                            设码槽列表(
-                              码槽列表.map((s, si) =>
-                                si === i ? { ...s, 目标: v ?? "" } : s,
-                              ),
-                            )
-                          }
-                          options={[...已映射元素集].map((x) => ({
-                            label: x,
-                            value: x,
-                          }))}
-                          showSearch
-                        />
-                        <Select
-                          className="w-20"
-                          value={槽.序号}
-                          onChange={(v) =>
-                            设码槽列表(
-                              码槽列表.map((s, si) =>
-                                si === i ? { ...s, 序号: v as number } : s,
-                              ),
-                            )
-                          }
-                          options={range(编码类型).map((j) => ({
-                            label: `第${数字标签(j + 1)}码`,
-                            value: j,
-                          }))}
-                        />
-                      </>
-                    )}
-                  </Flex>
+                      <Select
+                        className="w-20"
+                        value={槽.序号}
+                        onChange={(v) =>
+                          设码槽列表(
+                            码槽列表.map((s, si) =>
+                              si === i ? { ...s, 序号: v as number } : s,
+                            ),
+                          )
+                        }
+                        options={range(编码类型).map((j) => ({
+                          label: `第${数字标签(j + 1)}码`,
+                          value: j,
+                        }))}
+                      />
+                    </>
+                  )}
                 </Flex>
-              ))}
-            </Flex>
+              );
+            })}
           </Flex>
         )}
         <Button onClick={添加操作}>添加</Button>
