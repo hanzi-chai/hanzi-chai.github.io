@@ -58,6 +58,14 @@ export const combinations = (n: number, k: number): number[][] => {
 
 const 数字标签 = (n: number) => "零一二三四五六七八九十"[n] ?? String(n);
 
+/** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋ */
+const 变化显示 = (v: number) => {
+  const x = Math.round(v * 10000) / 10000;
+  if (x > 0) return { 文本: `−${Math.abs(x)}`, 类: "text-green-600" };
+  if (x < 0) return { 文本: `＋${Math.abs(x)}`, 类: "text-red-500" };
+  return { 文本: "0", 类: "" };
+};
+
 export const 模式名称 = (空位: number[]) =>
   空位.length === 0 ? "全保留" : `空${空位.map((x) => 数字标签(x + 1)).join("")}码`;
 
@@ -372,12 +380,12 @@ export default function RootAdditionAnalyzer() {
                             组（{组.基线}→{组.候选}）：
                           </div>
                           {加入.length > 0 && (
-                            <div className="text-green-600">
+                            <div className="text-red-500">
                               ＋{加入.join("、")}
                             </div>
                           )}
                           {离开.length > 0 && (
-                            <div className="text-red-500">
+                            <div className="text-green-600">
                               －{离开.join("、")}
                             </div>
                           )}
@@ -397,11 +405,7 @@ export default function RootAdditionAnalyzer() {
                 </div>
               }
             >
-              <span
-                className={v > 0 ? "text-green-600" : v < 0 ? "text-red-500" : ""}
-              >
-                {v > 0 ? `−${v}` : String(v)}
-              </span>
+              <span className={变化显示(v).类}>{变化显示(v).文本}</span>
             </Popover>
           ) : (
             "—"
@@ -472,7 +476,13 @@ export default function RootAdditionAnalyzer() {
       {运行中 && <Spin tip="正在重新拆分……" />}
       {候选 && (
         <Typography.Title level={3} className="mt-2!">
-          总预期值：{Math.round(总预期值 * 10000) / 10000}
+          总预期值：
+          <span className={变化显示(总预期值).类}>
+            {变化显示(总预期值).文本}
+          </span>
+          <Typography.Text type="secondary" className="text-base! font-normal!">
+            （绿减＝良性，红加＝恶性）
+          </Typography.Text>
         </Typography.Title>
       )}
       {候选 && (
@@ -484,9 +494,18 @@ export default function RootAdditionAnalyzer() {
               <div key={表.id} className="border rounded p-2">
                 <Flex gap="small" align="center" wrap="wrap" className="mb-2">
                   <Tag>阶重</Tag>
-                  <Typography.Text strong>总降低 {本表降低}</Typography.Text>
+                  <Typography.Text strong>
+                    总降低{" "}
+                    <span className={变化显示(本表降低).类}>
+                      {变化显示(本表降低).文本}
+                    </span>
+                  </Typography.Text>
                   <Typography.Text type="secondary">
-                    加权贡献 {本表降低} × {表.权重} = {本表贡献}
+                    加权贡献{" "}
+                    <span className={变化显示(本表贡献).类}>
+                      {变化显示(本表贡献).文本}
+                    </span>{" "}
+                    （{本表降低} × {表.权重}）
                   </Typography.Text>
                   <Select
                     mode="multiple"
