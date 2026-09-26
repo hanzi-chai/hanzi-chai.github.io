@@ -667,7 +667,7 @@ export default function RootAdditionAnalyzer() {
             {变化显示(总预期值).文本}
           </span>
           <Typography.Text type="secondary" className="text-base! font-normal!">
-            （绿减＝良性，红加＝恶性）
+            （绿减＝重码变少，红加＝重码变多）
           </Typography.Text>
         </Typography.Title>
       )}
