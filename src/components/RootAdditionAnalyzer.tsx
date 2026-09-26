@@ -297,7 +297,8 @@ export default function RootAdditionAnalyzer() {
     });
     候选分组.forEach((items, 键) => {
       const 基线词 = 基线分组.get(键);
-      if (!基线词 || 基线词.length < items.length) {
+      // 单字组没有重码潜力，不记入增加
+      if ((!基线词 || 基线词.length < items.length) && items.length >= 2) {
         增加组.push({ 词: items, 基线: 基线词?.length ?? 0, 候选: items.length });
       }
     });
