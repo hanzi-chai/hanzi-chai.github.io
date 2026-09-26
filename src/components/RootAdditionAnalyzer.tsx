@@ -248,10 +248,10 @@ export default function RootAdditionAnalyzer() {
     }
   };
 
-  /** 单个阶重模式的降低量与降低的字 */
-  const 阶重降低 = (空位: number[]) => {
-    const 基线分组 = 分组按模式(基线 ?? [], 空位, 0);
-    const 候选分组 = 分组按模式(候选!, 空位, 0);
+  /** 单个阶重模式的降低量与降低的字（top 为统计范围前 N 字，0 为全部） */
+  const 阶重降低 = (空位: number[], top: number) => {
+    const 基线分组 = 分组按模式(基线 ?? [], 空位, top);
+    const 候选分组 = 分组按模式(候选!, 空位, top);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
     const 减少字集合 = new Set<string>();
@@ -269,11 +269,16 @@ export default function RootAdditionAnalyzer() {
     };
   };
 
+  const 表模式 = (表: 表配置) =>
+    表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
+
+  const 表总降低 = (表: 表配置): number =>
+    sumBy(表模式(表), (空位) => 阶重降低(空位, 表.top).降低);
+
   const 渲染表 = (表: 表配置) => {
-    const 模式 =
-      表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
+    const 模式 = 表模式(表);
     const 行 = 模式.map((空位) => {
-      const r = 候选 ? 阶重降低(空位) : null;
+      const r = 候选 ? 阶重降低(空位, 表.top) : null;
       return {
         key: JSON.stringify(空位),
         模式: 模式名称(空位),
@@ -284,7 +289,6 @@ export default function RootAdditionAnalyzer() {
         减少字: r?.减少字 ?? [],
       };
     });
-    const 总降低 = sumBy(行, (x) => (typeof x.降低 === "number" ? x.降低 : 0));
     const columns: ColumnsType<(typeof 行)[number]> = [
       { title: "阶", dataIndex: "阶", key: "阶", width: 56 },
       { title: "模式", dataIndex: "模式", key: "模式", width: 110 },
@@ -325,27 +329,13 @@ export default function RootAdditionAnalyzer() {
         columns={columns}
         size="small"
         pagination={false}
-        summary={() => (
-          <Table.Summary.Row>
-            <Table.Summary.Cell index={0} colSpan={4}>
-              <Typography.Text strong>总降低（选重估计）</Typography.Text>
-            </Table.Summary.Cell>
-            <Table.Summary.Cell index={4}>
-              <Typography.Text strong>
-                {Math.round(总降低 * 100) / 100}
-              </Typography.Text>
-            </Table.Summary.Cell>
-          </Table.Summary.Row>
-        )}
       />
     );
   };
 
   const 表的值 = (表: 表配置): number => {
     if (!候选) return 0;
-    const 模式 =
-      表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
-    return sumBy(模式, (空位) => 阶重降低(空位).降低);
+    return 表总降低(表);
   };
 
   const 总预期值 = sumBy(表列表, (表) => 表的值(表) * 表.权重);
@@ -354,7 +344,7 @@ export default function RootAdditionAnalyzer() {
     <>
       <Typography.Title level={2}>加根分析</Typography.Title>
       <Typography.Paragraph type="secondary">
-        输入一个候选字根及其键位安排（双编码方案输两位，如 qj；键位不影响阶重估计），系统将重新拆分并对比各阶重的变化。每张表可自定义空位模式、统计前 N 字与权重，底部为加权总预期值。
+        输入一个候选字根及其键位安排（双编码方案输两位，如 qj；键位不影响阶重估计），系统将重新拆分并对比各阶重的变化。每张表可自定义空位模式、统计前 N 字与权重。
       </Typography.Paragraph>
       <Flex gap="small" align="center" wrap="wrap">
         <Input
@@ -377,11 +367,25 @@ export default function RootAdditionAnalyzer() {
       </Flex>
       {运行中 && <Spin tip="正在重新拆分……" />}
       {候选 && (
+        <Typography.Title level={3} className="mt-2!">
+          总预期值：{Math.round(总预期值 * 10000) / 10000}
+        </Typography.Title>
+      )}
+      {候选 && (
         <Flex vertical gap="middle">
-          {表列表.map((表) => (
+          {表列表.map((表) => {
+            const 本表降低 = Math.round(表的值(表) * 100) / 100;
+            const 本表贡献 = Math.round(表的值(表) * 表.权重 * 10000) / 10000;
+            return (
             <div key={表.id} className="border rounded p-2">
               <Flex gap="small" align="center" wrap="wrap" className="mb-2">
                 <Tag>阶重</Tag>
+                <Typography.Text strong>
+                  总降低 {本表降低}
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  加权贡献 {本表降低} × {表.权重} = {本表贡献}
+                </Typography.Text>
                 <Select
                   mode="multiple"
                   allowClear
@@ -442,12 +446,9 @@ export default function RootAdditionAnalyzer() {
                 </Button>
               </Flex>
               {渲染表(表)}
-              <Typography.Text type="secondary">
-                本表贡献到总预期值：
-                {Math.round(表的值(表) * 10000) / 10000} × {表.权重}
-              </Typography.Text>
             </div>
-          ))}
+            );
+          })}
           <Button
             onClick={() =>
               设表列表([...表列表, { id: 表序号++, 模式: [], top: 0, 权重: 1 }])
@@ -455,9 +456,6 @@ export default function RootAdditionAnalyzer() {
           >
             新建阶重表
           </Button>
-          <Typography.Title level={4}>
-            总预期值：{Math.round(总预期值 * 10000) / 10000}
-          </Typography.Title>
         </Flex>
       )}
     </>
