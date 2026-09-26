@@ -22,7 +22,7 @@ import type { 元素位或编码, 强类型元素位或编码, 组装条目 } fr
 import { 下转换, 反序列化, 序列化 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { isEqual, range, sumBy } from "lodash-es";
-import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useState } from "react";
 import {
   useAtomValueUnwrapped,
   全部合法元素原子,
@@ -180,7 +180,6 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
     current: 1,
     pageSize: 20,
   });
-  const 表格锚点 = useRef<HTMLDivElement>(null);
   const 命中索引 = 搜索字
     ? dataSource.findIndex((x) => x.items.includes(搜索字))
     : -1;
@@ -190,7 +189,6 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
         ...p,
         current: Math.floor(命中索引 / p.pageSize) + 1,
       }));
-      表格锚点.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [命中索引]);
 
@@ -272,23 +270,21 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
           )}
         </Typography.Text>
       </Flex>
-      <div ref={表格锚点}>
-        <Table
-          dataSource={dataSource}
-          columns={columns}
-          size="small"
-          rowKey="name"
-          rowClassName={(record) =>
-            搜索字 && record.items.includes(搜索字) ? "bg-orange-50" : ""
-          }
-          pagination={{
-            current: 分页.current,
-            pageSize: 分页.pageSize,
-            onChange: (current, pageSize) => 设分页({ current, pageSize }),
-            showSizeChanger: true,
-          }}
-        />
-      </div>
+      <Table
+        dataSource={dataSource}
+        columns={columns}
+        size="small"
+        rowKey="name"
+        rowClassName={(record) =>
+          搜索字 && record.items.includes(搜索字) ? "bg-orange-50" : ""
+        }
+        pagination={{
+          current: 分页.current,
+          pageSize: 分页.pageSize,
+          onChange: (current, pageSize) => 设分页({ current, pageSize }),
+          showSizeChanger: true,
+        }}
+      />
     </>
   );
 };
