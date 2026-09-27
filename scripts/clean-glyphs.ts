@@ -149,6 +149,7 @@ async function 删除孤立字形(
   }
 
   const 孤立字形ID列表 = 字形列表
+    .filter((字形) => 字形.type !== "component")
     .filter((字形) => !被引用ID集合.has(字形.id))
     .map((字形) => 字形.id);
 
@@ -167,7 +168,7 @@ async function 删除孤立字形(
   }
 
   console.log("\n正在批量删除孤立字形...");
-  const 结果 = await del<true>("/glyphs", { ids: 孤立字形ID列表 });
+  const 结果 = await del<true>("/glyphs/batch", { ids: 孤立字形ID列表 });
 
   if (结果 === true) {
     console.log(`成功删除 ${孤立字形ID列表.length} 个孤立字形！\n`);

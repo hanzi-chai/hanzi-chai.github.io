@@ -213,8 +213,13 @@ const visitedRanges = [
   { start: 0x4e00, end: 0x6400 },
   { start: 0x7a70, end: 0x7aca },
   { start: 0x7cf8, end: 0x7f35 },
+  { start: 0x8278, end: 0x866a },
+  { start: 0x89d2, end: 0x8c36 },
+  { start: 0x8d64, end: 0x8d6f },
   { start: 0x8fb6, end: 0x9090 },
-  { start: 0x96e8, end: 0x9761 }
+  { start: 0x96b9, end: 0x9761 },
+  { start: 0x97cb, end: 0x97ec },
+  { start: 0x98a8, end: 0x98da },
 ];
 
 function 计算字形推荐(
