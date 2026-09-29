@@ -343,7 +343,6 @@ export default function GlyphForm({
             <ProFormItem label="结构" name="operator">
               <OperatorSelect className="w-16!" allowClear />
             </ProFormItem>
-            <ProFormCheckbox label="歧义" name="ambiguous"/>
           </Flex>
           <Typography.Title level={5}>引用</Typography.Title>
           <ProFormListMovable name="references" alwaysShowItemLabel>
@@ -453,6 +452,9 @@ export default function GlyphForm({
                 );
               }}
             </ProFormDependency>
+          </Flex>
+          <Flex>
+            <ProFormCheckbox label="歧义" name="ambiguous" />
           </Flex>
         </EditorColumn>
       </EditorRow>

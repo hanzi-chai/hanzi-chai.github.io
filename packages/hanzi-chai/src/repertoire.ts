@@ -144,7 +144,7 @@ class 字形库 {
     // 新字形 ID 分配器
     let 新ID计数器 = max(字形数据列表.map((x) => x.id))! + 1; // 占位符 ID 起始值
     const 取新ID = () => {
-      if (新ID计数器 > 0x1_ffff) {
+      if (新ID计数器 > 0x2_ffff) {
         throw new Error("新字形 ID 超过范围");
       }
       return 新ID计数器++;

@@ -147,6 +147,7 @@ async function handle(
   const 参考字形 = character.glyphs[0]!.id;
   const 参考字形数据 = 可编辑字形列表.find((g) => g.id === 参考字形)!;
   if (参考字形数据.type !== "compound") return;
+  if (推荐结果.length === 1) return;
   const { id, gf0014_id, gf3001_id, name, references, ...rest } = 参考字形数据;
   for (const { sources, id, references } of 推荐结果) {
     if (sources.length === 0) continue;
@@ -217,9 +218,9 @@ const visitedRanges = [
   { start: 0x89d2, end: 0x8c36 },
   { start: 0x8d64, end: 0x8d6f },
   { start: 0x8fb6, end: 0x9090 },
-  { start: 0x96b9, end: 0x9761 },
-  { start: 0x97cb, end: 0x97ec },
-  { start: 0x98a8, end: 0x98da },
+  { start: 0x96b9, end: 0x9ad7 },
+  { start: 0x9b2f, end: 0x9b59 },
+  { start: 0x9e7f, end: 0x9fff },
 ];
 
 function 计算字形推荐(
@@ -237,7 +238,7 @@ function 计算字形推荐(
   const 样本字符范围 = 可编辑字符列表.filter((c) =>
     visitedRanges.some(
       ({ start, end }) => c.unicode >= start && c.unicode <= end,
-    ) || c.unicode >= 0x8278 && c.unicode <= 0x827f,
+    ),
   );
   const 来源列表 = character.glyphs.flatMap((g) => g.sources);
   const 参考来源 = 来源列表[0]!;

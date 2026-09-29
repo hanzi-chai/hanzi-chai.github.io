@@ -259,8 +259,8 @@ export default function GlyphTable() {
       title: "类型",
       render: (_, record) => (record instanceof 部件 ? "部件" : "复合体"),
       filters: [
-        { text: "部件", value: "component" },
-        { text: "复合体", value: "compound" },
+        { text: "部件", value: "部件" },
+        { text: "复合体", value: "复合体" },
       ],
       onFilter: (value, record) =>
         (record instanceof 部件 ? "部件" : "复合体") === value,
