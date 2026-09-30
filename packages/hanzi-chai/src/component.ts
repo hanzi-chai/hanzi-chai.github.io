@@ -51,6 +51,7 @@ const 笔画名称等价 = (退化器: 退化配置, s1: 笔画名称, s2: 笔�
  * 再基于参数曲线计算拓扑
  */
 class 部件 {
+  public readonly type = "component";
   public id: number;
   public name: string | undefined;
   public gf0014_id: number | undefined;

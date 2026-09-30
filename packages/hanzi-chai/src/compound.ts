@@ -38,6 +38,7 @@ export interface 基本复合体分析 {
 }
 
 class 复合体 {
+  public readonly type = "compound";
   public id: number;
   public name: string | undefined;
   public gf0014_id: number | undefined;

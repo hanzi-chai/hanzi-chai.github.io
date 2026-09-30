@@ -1,14 +1,14 @@
 import { Button, Checkbox, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
-import type { 基本字形数据, 基本部件数据, 复合体数据, 字形 } from "hanzi-chai";
-import {
-  isVectorStroke,
-  复合体,
-  是用户字形,
-  结构描述字符列表,
+import type {
+  基本字形数据,
+  基本部件数据,
+  复合体数据,
+  字形,
   部件,
 } from "hanzi-chai";
+import { isVectorStroke, 是用户字形, 结构描述字符列表 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { type ReactElement, useMemo, useState } from "react";
 import { createGlyph, removeGlyph, replaceGlyph, updateGlyph } from "~/api";
@@ -199,6 +199,13 @@ export const EditOrRedrawGraph = ({
   );
 };
 
+// 只要表格上有任一筛选生效，antd 就会把每条记录 Object.assign 浅拷贝成普通对象
+// （见 antd/es/table/hooks/useFilter 的 getFilterData），原型链随之丢失。
+// 因此列的 render 和 onFilter 里都不能用 instanceof，只能按自有的 type 字段判断。
+const 是部件 = (record: 字形): record is 部件 => record.type === "component";
+
+const 类型名 = (record: 字形) => (是部件(record) ? "部件" : "复合体");
+
 export default function GlyphTable() {
   const 统一字形列表 = useAtomValue(统一字形列表原子);
   const 用户字形列表 = useAtomValue(用户字形列表原子);
@@ -257,33 +264,33 @@ export default function GlyphTable() {
     },
     {
       title: "类型",
-      render: (_, record) => (record instanceof 部件 ? "部件" : "复合体"),
+      key: "类型",
+      render: (_, record) => 类型名(record),
       filters: [
         { text: "部件", value: "部件" },
         { text: "复合体", value: "复合体" },
       ],
-      onFilter: (value, record) =>
-        (record instanceof 部件 ? "部件" : "复合体") === value,
+      onFilter: (value, record) => 类型名(record) === value,
       width: 96,
     },
     {
       title: "结构",
-      render: (_, record) =>
-        record instanceof 部件 ? "" : record.结构描述字符,
+      key: "结构",
+      render: (_, record) => (是部件(record) ? "" : record.结构描述字符),
       filters: [
         { text: "无", value: "" },
         ...结构描述字符列表.map((x) => ({ text: x, value: x })),
       ],
       onFilter: (value, record) =>
         value === ""
-          ? record instanceof 部件
-          : record instanceof 复合体 && record.结构描述字符 === value,
+          ? 是部件(record)
+          : !是部件(record) && record.结构描述字符 === value,
       width: 64,
     },
     {
       title: "引用",
       render: (_, record) => {
-        if (record instanceof 部件) return null;
+        if (是部件(record)) return null;
         return (
           <Flex>
             {record.部分列表.map((字形) => {
@@ -305,7 +312,7 @@ export default function GlyphTable() {
       title: "笔画",
       render: (_, record) => {
         const summaries: string[] = [];
-        const list = record instanceof 部件 ? record.矢量图形 : record.笔画列表;
+        const list = 是部件(record) ? record.矢量图形 : record.笔画列表;
         for (const stroke of list) {
           if (isVectorStroke(stroke)) {
             summaries.push(stroke.feature);
@@ -370,6 +377,7 @@ export default function GlyphTable() {
     },
     {
       title: "操作",
+      key: "操作",
       render: (_, record) => (
         <Space>
           <EditOrRedrawGraph id={record.id} trigger={<Button>编辑</Button>} />

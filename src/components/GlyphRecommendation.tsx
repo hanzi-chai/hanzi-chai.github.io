@@ -14,7 +14,7 @@ import type {
   字符数据,
 } from "hanzi-chai";
 import { useAtom } from "jotai";
-import { isEqual, maxBy } from "lodash-es";
+import { isEqual, maxBy, sumBy } from "lodash-es";
 import type { MutableRefObject, ReactNode } from "react";
 import { useRef, useState } from "react";
 import { createGlyph, updateCharacter } from "~/api";
@@ -86,25 +86,31 @@ export const BatchGlyphRecommendation = () => {
   const [from, setFrom] = useState<number>(0);
   const [to, setTo] = useState<number>(0);
 
+  const CJKtotal = 20992;
+  const finished = sumBy(visitedRanges, ({ start, end }) => end - start + 1);
+  const percentage = (finished / CJKtotal) * 100;
   return (
     <Popconfirm
       title={`推断其他来源字形`}
       description={
-        <Flex gap="small" align="center">
-          从
-          <Input
-            className="w-24!"
-            value={from.toString(16)}
-            prefix="U+"
-            onChange={(e) => setFrom(parseInt(e.target.value, 16))}
-          />
-          到
-          <Input
-            className="w-24!"
-            value={to.toString(16)}
-            prefix="U+"
-            onChange={(e) => setTo(parseInt(e.target.value, 16))}
-          />
+        <Flex vertical gap="small">
+          已完成：{ finished } / {CJKtotal} ({percentage.toFixed()}%)
+          <Flex gap="small" align="center">
+            从
+            <Input
+              className="w-24!"
+              value={from.toString(16)}
+              prefix="U+"
+              onChange={(e) => setFrom(parseInt(e.target.value, 16))}
+            />
+            到
+            <Input
+              className="w-24!"
+              value={to.toString(16)}
+              prefix="U+"
+              onChange={(e) => setTo(parseInt(e.target.value, 16))}
+            />
+          </Flex>
         </Flex>
       }
       onConfirm={async () => {
@@ -217,10 +223,7 @@ const visitedRanges = [
   { start: 0x8278, end: 0x866a },
   { start: 0x89d2, end: 0x8c36 },
   { start: 0x8d64, end: 0x8d6f },
-  { start: 0x8fb6, end: 0x9090 },
-  { start: 0x96b9, end: 0x9ad7 },
-  { start: 0x9b2f, end: 0x9b59 },
-  { start: 0x9e7f, end: 0x9fff },
+  { start: 0x8fb6, end: 0x9fff },
 ];
 
 function 计算字形推荐(
