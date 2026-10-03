@@ -14,6 +14,7 @@ import {
   合并拼写运算,
   合并分类器,
   构建强类型决策与决策空间,
+  构建强类型自定义分析,
   决策图,
   组装,
   标准化自定义,
@@ -387,6 +388,9 @@ export class 智能选根核心 {
   频率表: Map<string, number>;
   字符对象映射: Map<string, any>;
   名称映射: Map<string, any>;
+  /** analysis.customize / dynamic_customize 的强类型形式（与 cache.ts 字形分析配置原子同口径），
+   *  构造时算一次；不传入字形分析的话，自定义拆分的字会按默认规则重拆，分数与面板对不上 */
+  自定义分析: { 自定义分析映射: Map<any, any>; 动态自定义分析映射: Map<any, any> };
   父映射 = new Map<any, Set<any>>();
   按频词序: string[];
   词全集: Set<string>;
@@ -410,15 +414,22 @@ export class 智能选根核心 {
     this.字库 = (原始字库实例.确定(
       标准化自定义(配置.data?.glyph_customization ?? {}),
       配置.data?.transformers ?? [],
-      (配置.data?.glyph_sources ?? []) as any,
+      (配置.data?.glyph_sources ?? ["G"]) as any,
     ) as any).value;
-    this.拼音分析 = 分析拼音(
-      计算拼音分析与元素映射(词典, 合并拼写运算(配置.algebra)).拼音分析映射,
-      词典,
-    );
     // 名称映射与根集无关（只依赖字形与分析配置），构造时算一次
     const 分类器 = 合并分类器(配置.analysis?.classifier);
-    const { 拼音元素映射 } = 计算拼音分析与元素映射(词典, 合并拼写运算(配置.algebra));
+    // 拼音分析与名称映射必须共用同一次 计算拼音分析与元素映射 的产物：
+    // 该函数每次调用都 new 拼音元素，分两次调用会让拼音分析里的元素对象与
+    // 决策表（经名称映射构建）里的对象身份不同，取码器查不到键长，
+    // 字音码位被整体丢弃（音形方案序列塌成纯形码，分数与手动分析严重对不上）
+    const { 拼音元素映射, 拼音分析映射 } = 计算拼音分析与元素映射(
+      词典,
+      合并拼写运算(配置.algebra),
+    );
+    // 分析拼音用过滤词典（与 cache.ts 拼音分析结果原子同口径），字集外的字不进组装
+    const 字集指示 = (配置 as any)?.data?.character_set as string | undefined;
+    const 过滤后词典 = 字集指示 ? 原始字库实例.过滤词典(词典, 字集指示 as any) : 词典;
+    this.拼音分析 = 分析拼音(拼音分析映射, 过滤后词典);
     const 自定义元素映射 = 原始字库实例.校验自定义映射({}).自定义元素映射;
     const 字符列表 = [...this.字库].map(({ 字符 }: any) => 字符);
     this.名称映射 = 计算全部合法元素与元素映射(
@@ -427,9 +438,14 @@ export class 智能选根核心 {
       拼音元素映射,
       自定义元素映射,
     ).名称映射;
+    this.自定义分析 = 构建强类型自定义分析(
+      this.字库,
+      原始字库实例,
+      this.名称映射,
+      (配置.analysis as any)?.customize ?? {},
+      (配置.analysis as any)?.dynamic_customize ?? {},
+    );
     // 分析字集与全站对齐：按方案 character_set 过滤词典（此前直接用词典全集，音形方案会混入字集外的字）
-    const 字集指示 = (配置 as any)?.data?.character_set as string | undefined;
-    const 过滤后词典 = 字集指示 ? 原始字库实例.过滤词典(词典, 字集指示 as any) : 词典;
     this.汉字集合 = 原始字库实例.获取汉字集合(过滤后词典);
     this.频率表 = new Map(原始词典.map((d) => [d.词, d.频率]));
     this.字符对象映射 = new Map([...this.汉字集合].map((c) => [c.获取名称(), c]));
@@ -493,9 +509,9 @@ export class 智能选根核心 {
         决策: 强.决策,
         决策空间: 强.决策空间,
         线性化决策: 线性化,
-        自定义分析映射: new Map(),
-        动态自定义分析映射: new Map(),
-        字形来源列表: this.配置0.data?.glyph_sources ?? [],
+        自定义分析映射: this.自定义分析.自定义分析映射,
+        动态自定义分析映射: this.自定义分析.动态自定义分析映射,
+        字形来源列表: (this.配置0.data?.glyph_sources ?? ["G"]) as any[],
       },
       this.汉字集合,
     );

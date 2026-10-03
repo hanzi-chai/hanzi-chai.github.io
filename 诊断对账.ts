@@ -19,6 +19,7 @@ import {
   组装,
   标准化自定义,
   计算全部合法元素与元素映射,
+  构建强类型自定义分析,
   是强类型归并,
   type 组装条目,
   type 强类型元素位或编码,
@@ -68,7 +69,7 @@ const 字库 = (
   原始字库实例.确定(
     标准化自定义(配置0.data?.glyph_customization ?? {}),
     配置0.data?.transformers ?? [],
-    (配置0.data?.glyph_sources ?? []) as any,
+    (配置0.data?.glyph_sources ?? ["G"]) as any,
   ) as any
 ).value;
 const 词典 = 原始字库实例.校验词典(原始词典 as any);
@@ -108,14 +109,21 @@ const 组装配置M = {
   决策空间: 强.决策空间,
   分类器,
 };
+const 自定义分析M = 构建强类型自定义分析(
+  字库,
+  原始字库实例,
+  名称映射,
+  配置0.analysis?.customize ?? {},
+  配置0.analysis?.dynamic_customize ?? {},
+);
 const 字形分析配置M = {
   分析配置: 配置0.analysis ?? {},
   决策: 强.决策,
   决策空间: 强.决策空间,
   线性化决策: 如线性化.value,
-  自定义分析映射: new Map(),
-  动态自定义分析映射: new Map(),
-  字形来源列表: 配置0.data?.glyph_sources ?? [],
+  自定义分析映射: 自定义分析M.自定义分析映射,
+  动态自定义分析映射: 自定义分析M.动态自定义分析映射,
+  字形来源列表: (配置0.data?.glyph_sources ?? ["G"]) as any[],
 };
 const 字形分析 = (字库 as any).分析(字形分析配置M, 汉字集合);
 if (!字形分析.ok) throw 字形分析.error;
@@ -204,6 +212,7 @@ const 估计选重 = (分组: Map<string, string[]>, 空位: number[]) => {
 
 const 表列表 = (配置0.statistics?.tables ?? []) as any[];
 let 手动总分 = 0;
+let 手动总分按面板舍入 = 0;
 console.log(`\n== 逐表对账（表名 | 核心值 | 手动值 | 差） ==`);
 for (const t of 表列表) {
   const 模式 = 展开表模式(t);
@@ -214,11 +223,13 @@ for (const t of 表列表) {
   const 核心值 = 核心表值.get(t.name) ?? NaN;
   const 差 = Math.round((核心值 - 手动值) * 100) / 100;
   console.log(
-    `${t.name}(w${t.weight},top${t.top ?? 0},模式${模式.length}): 核心=${核心值.toFixed(2)} 手动=${手动值.toFixed(2)} 差=${差}`,
+    `${t.name}(w${t.weight},top${t.top ?? 0},模式${模式.length}): 核心=${核心值.toFixed(2)} 手动=${手动值.toFixed(4)} 差=${差}`,
   );
   手动总分 += t.weight * 手动值;
+  // 面板口径：每表先 round 到 2 位小数再乘权重累加（RootAdditionAnalyzer 表初态/总初态）
+  手动总分按面板舍入 += t.weight * (Math.round(手动值 * 100) / 100);
 }
-console.log(`\n总分：核心总分基=${核心.总分基.toFixed(2)}  手动加权总=${手动总分.toFixed(2)}  差=${(核心.总分基 - 手动总分).toFixed(2)}`);
+console.log(`\n总分：核心总分基=${核心.总分基.toFixed(2)}  手动加权总=${手动总分.toFixed(2)}  手动(面板舍入口径)=${手动总分按面板舍入.toFixed(2)}  差=${(核心.总分基 - 手动总分).toFixed(2)}`);
 
 // top 域诊断：核心 top-N 是全词典序（含字集外），手动 top-N 是组装条目序（仅字集内）
 for (const t of 表列表) {
