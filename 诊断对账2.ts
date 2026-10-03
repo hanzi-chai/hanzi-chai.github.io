@@ -41,7 +41,7 @@ const 字库 = (
   原始字库实例.确定(
     标准化自定义(配置0.data?.glyph_customization ?? {}),
     配置0.data?.transformers ?? [],
-    (配置0.data?.glyph_sources ?? []) as any,
+    (配置0.data?.glyph_sources ?? ["G"]) as any,
   ) as any
 ).value;
 const 词典 = 原始字库实例.校验词典(原始词典);

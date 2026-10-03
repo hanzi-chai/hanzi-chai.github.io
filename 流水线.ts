@@ -15,7 +15,7 @@ import {
   决策图,
   计算全部合法元素与元素映射,
   标准化自定义,
-  默认分类器,
+  合并分类器,
 } from "./packages/hanzi-chai/dist/index.js";
 import { 构建强类型自定义分析 } from "./packages/hanzi-chai/dist/utils.js";
 import type { 配置, 原始词典 } from "./packages/hanzi-chai/dist/index.js";
@@ -42,28 +42,32 @@ const 原始字库 = 获取原始字库(Object.values(配置.data?.repertoire ??
 const 词典 = 原始字库.校验词典(原始词典);
 console.log(`校验后词典: ${词典.length}`);
 
-// 3. 由同一实例确定字库（应用字形自定义/变换器/字形来源）
+// 3. 由同一实例确定字库（应用字形自定义/变换器/字形来源；来源默认与站点一致取 G）
 const 字库结果 = 原始字库.确定(
   标准化自定义(配置.data?.glyph_customization ?? {}),
   配置.data?.transformers ?? [],
-  (配置.data?.glyph_sources ?? []) as any,
+  (配置.data?.glyph_sources ?? ["G"]) as any,
 );
 if (!字库结果.ok) throw 字库结果.error;
 const 字库 = 字库结果.value;
 console.log(`字库大小: ${[...字库].length}`);
 
-// 4. 拼音分析
+// 4. 拼音分析（与站点 cache.ts 同口径：过滤词典；拼音元素单次计算共享）
+const 字集指示 = 配置.data?.character_set;
+const 过滤词典 = 字集指示 ? 原始字库.过滤词典(词典, 字集指示 as any) : 词典;
 const { 拼音元素映射, 拼音分析映射 } = 计算拼音分析与元素映射(词典, 合并拼写运算(配置.algebra));
-const 拼音分析 = 获取拼音分析结果(拼音分析映射, 词典);
+const 拼音分析 = 获取拼音分析结果(拼音分析映射, 过滤词典);
 console.log(`拼音分析: ${拼音分析.length}`);
 
 // 5. 合法元素映射（全字库范围，与 e2e 一致）
 const 字符列表 = [...字库].map(({ 字符 }) => 字符);
+const 分类器 = 合并分类器(配置.analysis?.classifier);
+const 自定义元素映射 = 原始字库.校验自定义映射({}).自定义元素映射;
 const { 名称映射 } = 计算全部合法元素与元素映射(
   字符列表,
-  默认分类器,
+  分类器,
   拼音元素映射,
-  new Map(),
+  自定义元素映射,
 );
 
 // 6. 字形分析（仅分析词典内的字；内联实现以保证实例一致）
@@ -74,7 +78,7 @@ const { 自定义分析映射, 动态自定义分析映射 } = 构建强类型�
   配置.analysis?.customize ?? {},
   (配置.analysis as any)?.dynamic_customize ?? {},
 );
-const { 决策: 决策2, 决策空间: 决策空间2 } = 获取决策与决策空间(配置, 字库, 词典, 原始字库);
+const { 决策: 决策2, 决策空间: 决策空间2 } = 获取决策与决策空间(配置, 字库, 词典, 原始字库, 名称映射);
 const 如线性化决策2 = new 决策图(决策2).线性化();
 if (!如线性化决策2.ok) throw 如线性化决策2.error;
 const 字形分析结果 = (字库 as any).分析(
@@ -84,10 +88,10 @@ const 字形分析结果 = (字库 as any).分析(
     自定义分析映射,
     动态自定义分析映射,
     分析配置: 配置.analysis ?? {},
-    字形来源列表: 配置.data?.glyph_sources ?? [],
+    字形来源列表: (配置.data?.glyph_sources ?? ["G"]) as any[],
     线性化决策: 如线性化决策2.value,
   },
-  原始字库.获取汉字集合(词典),
+  原始字库.获取汉字集合(过滤词典),
 );
 if (!字形分析结果.ok) throw 字形分析结果.error;
 const 分析结果 = (字形分析结果.value as any).分析结果 as Map<any, any[]>;
@@ -95,8 +99,8 @@ const 有分析数 = [...分析结果.values()].filter((x) => x.length > 0).leng
 console.log(`字形分析: ${分析结果.size} 字, 其中有分析 ${有分析数} 字`);
 if (有分析数 === 0) throw new Error("字形分析全部为空，请检查方案配置");
 
-// 7. 决策与组装
-const { 决策, 决策空间 } = 获取决策与决策空间(配置, 字库, 词典, 原始字库);
+// 7. 决策与组装（同一份名称映射，避免拼音元素对象二次构建）
+const { 决策, 决策空间 } = 获取决策与决策空间(配置, 字库, 词典, 原始字库, 名称映射);
 const 线性化决策 = new 决策图(决策).线性化();
 if (!线性化决策.ok) throw 线性化决策.error;
 const 组装 = 获取组装结果(配置, 决策, 决策空间, 线性化决策.value, 拼音分析, 字形分析结果.value);

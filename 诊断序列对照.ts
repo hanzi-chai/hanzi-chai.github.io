@@ -16,6 +16,7 @@ import {
   组装,
   标准化自定义,
   计算全部合法元素与元素映射,
+  构建强类型自定义分析,
   是强类型归并,
   下转换,
 } from "hanzi-chai";
@@ -61,7 +62,7 @@ const 字库 = (
   原始字库实例.确定(
     标准化自定义(配置0.data?.glyph_customization ?? {}),
     配置0.data?.transformers ?? [],
-    (配置0.data?.glyph_sources ?? []) as any,
+    (配置0.data?.glyph_sources ?? ["G"]) as any,
   ) as any
 ).value;
 const 词典 = 原始字库实例.校验词典(原始词典 as any);
@@ -79,6 +80,13 @@ const { 名称映射 } = 计算全部合法元素与元素映射(
   分类器,
   拼音元素映射.拼音元素映射,
   自定义元素映射,
+);
+const 自定义分析M = 构建强类型自定义分析(
+  字库,
+  原始字库实例,
+  名称映射,
+  配置0.analysis?.customize ?? {},
+  配置0.analysis?.dynamic_customize ?? {},
 );
 const 强 = 构建强类型决策与决策空间(mapping, 配置0.form?.mapping_space ?? {}, 名称映射);
 const 如线性化 = new 决策图(强.决策).线性化();
@@ -102,9 +110,9 @@ const 字形分析配置M = {
   决策: 强.决策,
   决策空间: 强.决策空间,
   线性化决策: 如线性化.value,
-  自定义分析映射: new Map(),
-  动态自定义分析映射: new Map(),
-  字形来源列表: 配置0.data?.glyph_sources ?? [],
+  自定义分析映射: 自定义分析M.自定义分析映射,
+  动态自定义分析映射: 自定义分析M.动态自定义分析映射,
+  字形来源列表: (配置0.data?.glyph_sources ?? ["G"]) as any[],
 };
 const 字形分析 = (字库 as any).分析(字形分析配置M, 汉字集合);
 if (!字形分析.ok) throw 字形分析.error;

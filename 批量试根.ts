@@ -15,7 +15,7 @@ import {
   计算全部合法元素与元素映射,
   组装,
   标准化自定义,
-  默认分类器,
+  合并分类器,
 } from "./packages/hanzi-chai/dist/index.js";
 import type { 配置, 原始词典, 组装条目 } from "./packages/hanzi-chai/dist/index.js";
 
@@ -34,20 +34,26 @@ const 词典 = 原始字库.校验词典(原始词典);
 const 字库 = (原始字库.确定(
   标准化自定义(配置.data?.glyph_customization ?? {}),
   配置.data?.transformers ?? [],
-  (配置.data?.glyph_sources ?? []) as any,
+  (配置.data?.glyph_sources ?? ["G"]) as any,
 ) as any).value;
+// 与站点 cache.ts 同口径：按方案字集过滤词典（汉字集合、分析拼音都用过滤词典）
+const 字集指示 = 配置.data?.character_set;
+const 过滤词典 = 字集指示 ? 原始字库.过滤词典(词典, 字集指示 as any) : 词典;
+// 拼音元素只计算一次：名称映射/决策/拼音分析共享同一批拼音元素对象
 const { 拼音元素映射, 拼音分析映射 } = 计算拼音分析与元素映射(词典, 合并拼写运算(配置.algebra));
-const 拼音分析 = 获取拼音分析结果(拼音分析映射, 词典);
+const 拼音分析 = 获取拼音分析结果(拼音分析映射, 过滤词典);
+const 分类器 = 合并分类器(配置.analysis?.classifier);
 const 字符列表 = [...字库].map(({ 字符 }) => 字符);
-const { 名称映射 } = 计算全部合法元素与元素映射(字符列表, 默认分类器, 拼音元素映射, new Map());
-const 汉字集合 = 原始字库.获取汉字集合(词典);
+const 自定义元素映射 = 原始字库.校验自定义映射({}).自定义元素映射;
+const { 名称映射 } = 计算全部合法元素与元素映射(字符列表, 分类器, 拼音元素映射, 自定义元素映射);
+const 汉字集合 = 原始字库.获取汉字集合(过滤词典);
 
 function 组装词表(额外根: Record<string, string>): Map<string, string> {
   const 配置变体 = {
     ...配置,
     form: { ...配置.form, mapping: { ...配置.form.mapping, ...额外根 } },
   } as 配置;
-  const 强 = 获取决策与决策空间(配置变体, 字库, 词典, 原始字库);
+  const 强 = 获取决策与决策空间(配置变体, 字库, 词典, 原始字库, 名称映射);
   const 线性化 = new 决策图(强.决策).线性化();
   if (!线性化.ok) throw 线性化.error;
   const 分析 = (字库 as any).分析(
@@ -58,7 +64,7 @@ function 组装词表(额外根: Record<string, string>): Map<string, string> {
       线性化决策: 线性化.value,
       自定义分析映射: new Map(),
       动态自定义分析映射: new Map(),
-      字形来源列表: 配置.data?.glyph_sources ?? [],
+      字形来源列表: (配置.data?.glyph_sources ?? ["G"]) as any[],
     },
     汉字集合,
   );
@@ -75,7 +81,7 @@ function 组装词表(额外根: Record<string, string>): Map<string, string> {
       自定义分析映射: new Map(),
       决策: 强.决策,
       决策空间: 强.决策空间,
-      分类器: 默认分类器,
+      分类器: 合并分类器(配置.analysis?.classifier),
     },
     拼音分析,
     分析.value,
