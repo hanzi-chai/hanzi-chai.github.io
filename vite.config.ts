@@ -66,6 +66,8 @@ export default defineConfig(({ mode, command }) => {
       chunkSizeWarningLimit: 700,
       outDir: `dist/${mode.toLowerCase()}`,
       emptyOutDir: true,
+      // dist 数据文件被占用时的逃生门：NO_COPY_PUBLIC=1 跳过 public 拷贝（数据文件本就未变）
+      copyPublicDir: process.env.NO_COPY_PUBLIC ? false : true,
       reportCompressedSize: false,
       rollupOptions: {
         treeshake: {

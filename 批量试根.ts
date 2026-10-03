@@ -19,7 +19,7 @@ import {
 } from "./packages/hanzi-chai/dist/index.js";
 import type { 配置, 原始词典, 组装条目 } from "./packages/hanzi-chai/dist/index.js";
 
-const ROOT = "C:/Users/RICHERD/WorkBuddy AI/2026-09-25-19-24-54";
+const ROOT = "D:/chai魔改";
 const 试根列表 = ["㝵", "氐", "曷", "臾", "丱", "巛"];
 
 const 配置 = yaml.load(readFileSync(`${ROOT}/方案/方案.yaml`, "utf8")) as 配置;

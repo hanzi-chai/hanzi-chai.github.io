@@ -1,6 +1,7 @@
 import { Flex, Select, Space } from "antd";
 import {
   合并字符串,
+  type 元素,
   type 强类型广义安排,
   type 强类型广义引用,
   是强类型归并,
@@ -15,7 +16,7 @@ import {
 import ElementSelect from "./ElementSelect";
 import KeySelect from "./KeySelect";
 
-const KeysEditor = ({
+export const KeysEditor = ({
   value,
   onChange,
   allowVariables,
@@ -64,12 +65,18 @@ const ValueEditor = ({
   allowVariables,
   allowPlaceholder,
   isCurrent,
+  allowDisabled = true,
+  extraMergeTargets,
 }: {
   value: 强类型广义安排;
   onChange: (newValue: 强类型广义安排) => void;
   allowVariables?: boolean;
   allowPlaceholder?: boolean;
   isCurrent?: boolean;
+  /** 是否允许「禁用」（加根分析场景无意义，可关闭） */
+  allowDisabled?: boolean;
+  /** 归并目标的额外选项：如本批次临时加入、尚未持久化的根 */
+  extraMergeTargets?: 元素[];
 }) => {
   const alphabet = useAtomValue(字母表原子);
   const { 笔画列表: 笔画 } = useAtomValueUnwrapped(全部合法元素原子);
@@ -89,7 +96,7 @@ const ValueEditor = ({
           }
         }}
         options={[
-          { label: "禁用", value: "禁用" },
+          ...(allowDisabled ? [{ label: "禁用", value: "禁用" }] : []),
           { label: "键位", value: "键位" },
           { label: "归并", value: "归并" },
         ]}
@@ -98,6 +105,7 @@ const ValueEditor = ({
       {是强类型归并(value) ? (
         <ElementSelect
           includeOptional
+          extraElements={extraMergeTargets}
           value={value.element}
           onChange={(newValue) => onChange({ element: newValue })}
         />

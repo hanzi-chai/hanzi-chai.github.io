@@ -110,6 +110,13 @@ export const 自定义分析数据库 = new MiniDb<自定义分析>({ name: "自
 
 export const 码表数据库 = new MiniDb<码表条目[]>({ name: "码表" });
 
+// 用户数据（IndexedDB）异步水合就绪：未就绪时组装会基于缺省用户数据算出错误中间值
+export const 用户数据就绪原子 = atom(
+  (get) =>
+    get(用户原始词典数据库.items) !== undefined &&
+    get(自定义分析数据库.items) !== undefined,
+);
+
 export const 原始词典原子 = atom((get) => {
   return get(用户原始词典原子) ?? get(默认原始词典原子);
 });
@@ -421,6 +428,10 @@ export const 组装配置原子 = atom((get) => {
 });
 
 export const 如组装结果原子 = atom((get) => {
+  // 用户词典/自定义分析（IndexedDB）尚未水合时不算组装，避免闪现错误中间值
+  if (!get(用户数据就绪原子)) {
+    return { ok: false as const, error: new Error("用户数据加载中") };
+  }
   const 拼音分析结果 = get(拼音分析结果原子);
   const 如字形分析结果 = get(如字形分析结果原子);
   if (!如字形分析结果.ok) return 如字形分析结果;

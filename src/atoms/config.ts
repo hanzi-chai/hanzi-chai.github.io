@@ -26,8 +26,20 @@ export const 方案序列号原子 = atom((get) => {
   return get(位置原子).hash?.split("/")[1] ?? "";
 });
 
+// 同步读取本地存储的方案配置作为初始值：避免 atomWithStorage 先用模板/默认配置
+// 组装出错误中间值（如上亿的重码估计），水合后再跳变的闪烁
+const 同步读取配置 = (id: string): 配置 => {
+  try {
+    const raw = localStorage.getItem(id);
+    if (raw !== null) return JSON.parse(raw) as 配置;
+  } catch {
+    /* ignore */
+  }
+  return examples[id as Example] ?? defaultConfig;
+};
+
 const 配置存储 = atomFamily((id: string) =>
-  atomWithStorage<配置>(id, examples[id as Example] ?? defaultConfig),
+  atomWithStorage<配置>(id, 同步读取配置(id)),
 );
 
 export const 配置原子 = atom(

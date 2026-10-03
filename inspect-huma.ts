@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import yaml from "js-yaml";
-const ROOT = "C:/Users/RICHERD/WorkBuddy AI/2026-09-25-19-24-54";
+const ROOT = "D:/chai魔改";
 const d: any = yaml.load(readFileSync(ROOT + "/chaifen-docs/examples/huma.yaml", "utf8"));
 const enc = d.encoder, form = d.form;
 console.log("info:", JSON.stringify(d.info));

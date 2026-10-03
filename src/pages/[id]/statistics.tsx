@@ -32,60 +32,15 @@ import {
 } from "~/atoms";
 import KeySelect from "~/components/KeySelect";
 import {
+  阶重分析原始重码 as 分析原始重码,
+  阶重filterRelevant as filterRelevant,
+} from "~/lib/阶重统计";
+import {
   CodePositionDisplay,
   DeleteButton,
   PlusButton,
 } from "~/components/Utils";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
-
-const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
-  let relevant = result.sort((a, b) => b.频率 - a.频率);
-  if (analyzer.type === "single")
-    relevant = relevant.filter((x) => [...x.词].length === 1);
-  if (analyzer.type === "multi")
-    relevant = relevant.filter((x) => [...x.词].length > 1);
-  if (analyzer.top > 0) {
-    relevant = relevant.slice(0, analyzer.top);
-  }
-  return relevant;
-};
-
-const 分析原始重码 = (
-  分析配置: AnalyzerForm,
-  result: 组装条目[],
-  maxLength: number,
-  合并组列表: 强类型元素位或编码[][] = [],
-) => {
-  const 反向映射 = new Map<string, string[]>();
-  const 相关结果 = filterRelevant(result, 分析配置);
-  for (const 条目 of 相关结果) {
-    const { 词, 元素序列 } = 条目;
-    const 处理后元素序列: (强类型元素位或编码 | undefined)[] = [];
-    for (const i of range(maxLength)) {
-      if (分析配置.position.includes(i)) {
-        const 码位 = 元素序列.元素序列[i];
-        const index = 合并组列表.findIndex((group) =>
-          group.some((y) => isEqual(y, 码位)),
-        );
-        处理后元素序列.push(
-          index !== -1 ? String.fromCodePoint(0x100000 + index) : 码位,
-        );
-      } else {
-        处理后元素序列.push("*");
-      }
-    }
-    const summary = JSON.stringify(
-      处理后元素序列.map((x) => (x !== undefined ? 下转换(x) : "ε")),
-    );
-    反向映射.set(
-      summary,
-      (反向映射.get(summary) || []).concat(
-        词.map((c) => c.获取名称()).join(""),
-      ),
-    );
-  }
-  return 反向映射;
-};
 
 interface Density {
   name: string;
@@ -433,6 +388,7 @@ const OrderDuplicationAnalyzer = () => {
     }
     const space = alphabet.length ** 空位.length;
     let total = 0;
+    // 口径：n²/2·26^阶（独立随机编码期望，含自身对），与 CLI 评分器、智能选根统一（src/lib/阶重统计.ts）
     reverseMap.forEach((items) => {
       total += (items.length * items.length) / 2 / space;
     });
@@ -451,7 +407,7 @@ const OrderDuplicationAnalyzer = () => {
     { title: "阶", dataIndex: "阶", key: "阶", width: 64 },
     { title: "阶内合计", dataIndex: "阶内合计", key: "阶内合计", width: 96 },
     { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
-    { title: "重码估计", dataIndex: "重码估计", key: "重码估计", width: 96 },
+    { title: "重码估计（实际碰撞）", dataIndex: "重码估计", key: "重码估计", width: 150 },
   ];
   const dataSource = range(maxLength + 1).map((阶) => {
     const row: Record<string, any> = { 阶: 数字(阶), key: 阶 };
@@ -555,7 +511,9 @@ const OrderDuplicationAnalyzer = () => {
       <Typography.Title level={3}>各阶重分析</Typography.Title>
       <Typography.Paragraph type="secondary">
         阶 = 空出的码位数。每阶枚举全部空位组合，按保留码位的元素序列分组，以
-        n²/(2·26^阶) 估计选重数（独立随机编码近似）。这只描述全码的撞车潜力，出简能避开一部分；零阶为精确计数。
+        n²/(2·26^阶) 估计选重数（独立随机编码期望，含自身对；2026-09-29
+        起本公式为全项目唯一口径，CLI 评分器与智能选根同源实现于
+        src/lib/阶重统计.ts）。这只描述全码的撞车潜力，出简能避开一部分；零阶为精确计数 Σ(n−1)。
       </Typography.Paragraph>
       <AnalyzerConfig analyzer={analyzer} setAnalyzer={setAnalyzer} disablePosition />
       <Flex gap="middle" align="center" wrap="wrap">

@@ -13,18 +13,22 @@ interface ElementSelectProps {
   onChange: (e: 元素) => void;
   includeOptional?: boolean;
   onlyRootsAndStrokes?: boolean; // 仅显示字根和笔画
+  /** 额外可选项：尚未进入决策/决策空间的元素（如本批次临时加入的根） */
+  extraElements?: 元素[];
 }
 
 export default function ElementSelect(
   props: ElementSelectProps & { className?: string; allowClear?: boolean },
 ) {
-  const { value, onChange, onlyRootsAndStrokes, includeOptional, ...rest } =
+  const { value, onChange, onlyRootsAndStrokes, includeOptional, extraElements, ...rest } =
     props;
   const 决策 = useAtomValueUnwrapped(强类型决策原子);
   const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
-  let 全部元素 = [...new Set([...决策.keys(), ...决策空间.keys()])];
+  let 全部元素 = [
+    ...new Set([...决策.keys(), ...决策空间.keys(), ...(extraElements ?? [])]),
+  ];
   全部元素.sort((a, b) => a.获取名称().localeCompare(b.获取名称()));
   if (!includeOptional) {
     全部元素 = 全部元素.filter((x) => 决策.get(x) !== undefined);
