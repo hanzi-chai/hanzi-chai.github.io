@@ -158,17 +158,30 @@ interface 根操作 {
 let 表序号 = 0;
 let 操作序号 = 0;
 
-/** 按模式分组：保留非空位码位的元素序列（布局无关），返回 键→词列表 */
-const 分组按模式 = (条目列表: 组装条目[], 空位: number[], top: number) => {
+/** 按模式分组：保留非空位码位的元素序列（布局无关），返回 键→词列表。
+ *  键构造与 阶重统计.ts/阶重序列键（统计一、智能选根核心口径）严格一致：
+ *  按 maxLength 补齐全部码位（空位优先显示 *，序列越界补 "ε"）——
+ *  短序列若不补位，尾部空位模式的通配符不会生成，会与同前缀长序列错误拆组。 */
+const 分组按模式 = (
+  条目列表: 组装条目[],
+  空位: number[],
+  top: number,
+  maxLength: number,
+) => {
   const relevant = [...条目列表]
     .sort((a, b) => b.频率 - a.频率)
     .filter((x) => [...x.词].length === 1);
   const scope = top > 0 ? relevant.slice(0, top) : relevant;
   const map = new Map<string, string[]>();
   for (const 条目 of scope) {
+    const 序列 = 条目.元素序列.元素序列;
     const 键 = JSON.stringify(
-      条目.元素序列.元素序列.map((码位, i) =>
-        空位.includes(i) ? "*" : 下转换(码位 as any),
+      range(maxLength).map((i) =>
+        空位.includes(i)
+          ? "*"
+          : 序列[i] === undefined
+            ? "ε"
+            : 下转换(序列[i] as any),
       ),
     );
     const 词 = 条目.词.map((c) => c.获取名称()).join("");
@@ -439,8 +452,8 @@ function 手动分析面板() {
 
   /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 字，0 为全部） */
   const 阶重变化 = (空位: number[], top: number) => {
-    const 基线分组 = 分组按模式(基线 ?? [], 空位, top);
-    const 候选分组 = 分组按模式(候选!, 空位, top);
+    const 基线分组 = 分组按模式(基线 ?? [], 空位, top, maxLength);
+    const 候选分组 = 分组按模式(候选!, 空位, top, maxLength);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
     // 成员构成发生变化（人数或成员互换）的组
@@ -508,7 +521,7 @@ function 手动分析面板() {
       let 变化合计 = 0;
       const 行 = 表模式(表).map((空位) => {
         const 基线值 = 估计选重(
-          分组按模式(基线 ?? [], 空位, 表.top),
+          分组按模式(基线 ?? [], 空位, 表.top, maxLength),
           空位,
           alphabet.length,
         );
