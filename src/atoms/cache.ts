@@ -1,10 +1,10 @@
 import {
   ok,
+  err,
   下转换,
   type 元素,
   type 元素位或编码,
   决策图,
-  分析拼音,
   动态组装,
   原始字库,
   type 原始字库数据,
@@ -18,11 +18,9 @@ import {
   type 强类型决策,
   type 强类型决策空间,
   type 当量映射,
-  是强类型归并,
   是部件,
   type 条件,
   构建强类型决策与决策空间,
-  构建强类型自定义分析,
   标准化自定义,
   添加优先简码,
   生成,
@@ -32,7 +30,6 @@ import {
   type 组装配置,
   type 自定义分析,
   计算全部合法元素与元素映射,
-  计算拼音分析与元素映射,
   识别符,
   type 键位分布目标,
   默认分类器,
@@ -43,12 +40,14 @@ import { sortBy } from "lodash-es";
 import type { Metric } from "~/components/MetricTable";
 import { get预加载数据 } from "~/preload";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
+import { 构建标准上下文, 展开归并码位 } from "~/lib/标准装配";
 import {
   优先简码原子,
   决策原子,
   决策空间原子,
   分析配置原子,
   分类器原子,
+  分类器自定义原子,
   动态分析原子,
   动态自定义拆分原子,
   变换器列表原子,
@@ -121,30 +120,37 @@ export const 原始词典原子 = atom((get) => {
   return get(用户原始词典原子) ?? get(默认原始词典原子);
 });
 
-export const 词典原子 = atom((get) => {
-  const 原始词典 = get(原始词典原子);
-  const 字库 = get(原始字库原子);
-  return 字库.校验词典(原始词典);
-});
+/** 标准装配：映射无关装配上下文的唯一配方，见 src/lib/标准装配.ts 头注释（六条口径锚点）。 */
+export const 标准装配输入原子 = atom((get) => ({
+  原始字库: get(原始字库原子),
+  原始词典: get(原始词典原子),
+  字形自定义: get(字形自定义原子),
+  变换器列表: get(变换器列表原子),
+  字形来源列表: get(字形来源列表原子),
+  字集指示: get(字集指示原子),
+  拼写运算查找表: get(拼写运算查找表原子),
+  分类器自定义: get(分类器自定义原子),
+  自定义拆分: get(自定义拆分原子),
+  动态自定义拆分: get(动态自定义拆分原子),
+  自定义元素集合: Object.fromEntries(get(自定义分析数据库.entries)),
+  字符排序: "笔顺" as const,
+}));
 
-export const 过滤词典原子 = atom((get) => {
-  const 词典 = get(词典原子);
-  const 字库 = get(原始字库原子);
-  const 字集指示 = get(字集指示原子);
-  return 字库.过滤词典(词典, 字集指示);
-});
+export const 标准上下文原子 = atom((get) => 构建标准上下文(get(标准装配输入原子)));
+
+export const 词典原子 = atom((get) => get(标准上下文原子).词典);
+
+export const 过滤词典原子 = atom((get) => get(标准上下文原子).过滤词典);
 
 export const 自定义元素映射原子 = atom((get) => {
-  const 自定义元素集合 = get(自定义分析数据库.entries);
-  const 字库 = get(原始字库原子);
-  return 字库.校验自定义映射(Object.fromEntries(自定义元素集合));
+  const 上下文 = get(标准上下文原子);
+  return {
+    自定义分析映射: 上下文.自定义元素分析映射,
+    自定义元素映射: 上下文.自定义元素映射,
+  };
 });
 
-export const 汉字集合原子 = atom((get) => {
-  const 词典 = get(过滤词典原子);
-  const 字库 = get(原始字库原子);
-  return 字库.获取汉字集合(词典);
-});
+export const 汉字集合原子 = atom((get) => get(标准上下文原子).汉字集合);
 
 export const 原始字库原子 = atom((get) => {
   const 远程 = get(远程原子);
@@ -187,11 +193,9 @@ export const 标准字形自定义原子 = atom((get) => {
 });
 
 export const 如字库原子 = atom((get) => {
-  const 字库 = get(原始字库原子);
-  const 字形自定义 = get(标准字形自定义原子);
-  const 变换器列表 = get(变换器列表原子);
-  const 字形来源列表 = get(字形来源列表原子);
-  return 字库.确定(字形自定义, 变换器列表, 字形来源列表);
+  const 上下文 = get(标准上下文原子);
+  if (!上下文.字库) return err(上下文.字库错误 ?? new Error("字库构建失败"));
+  return ok(上下文.字库);
 });
 
 export const 如私用区图形原子 = atom((get) => {
@@ -330,29 +334,14 @@ export const 拼写运算查找表原子 = atom((get) => {
 });
 
 export const 拼音元素映射原子 = atom((get) => {
-  const 词典 = get(词典原子);
-  const 拼写运算查找表 = get(拼写运算查找表原子);
-  return 计算拼音分析与元素映射(词典, 拼写运算查找表);
+  const 上下文 = get(标准上下文原子);
+  return { 拼音元素映射: 上下文.拼音元素映射, 拼音分析映射: 上下文.拼音分析映射 };
 });
 
 export const 强类型自定义分析原子 = atom((get) => {
-  const 如字库 = get(如字库原子);
-  if (!如字库.ok) return 如字库;
-  const 字库 = 如字库.value;
-  const 原始字库 = get(原始字库原子);
-  const 全部合法元素 = get(全部合法元素原子);
-  if (!全部合法元素.ok) return 全部合法元素;
-  const { 名称映射 } = 全部合法元素.value;
-  const 自定义分析 = get(自定义拆分原子);
-  const 动态自定义拆分 = get(动态自定义拆分原子);
-  const 结果 = 构建强类型自定义分析(
-    字库,
-    原始字库,
-    名称映射,
-    自定义分析,
-    动态自定义拆分,
-  );
-  return ok(结果);
+  const 上下文 = get(标准上下文原子);
+  if (!上下文.字库 || !上下文.名称映射) return err(上下文.字库错误 ?? new Error("字库构建失败"));
+  return ok({ 自定义分析映射: 上下文.自定义分析映射, 动态自定义分析映射: 上下文.动态自定义分析映射 });
 });
 
 export const 字形分析配置原子 = atom((get) => {
@@ -396,11 +385,7 @@ export const 如动态字形分析结果原子 = atom((get) => {
   return 如字库.value.动态分析(字形分析配置.value, 汉字集合);
 });
 
-export const 拼音分析结果原子 = atom((get) => {
-  const { 拼音分析映射: 音节表 } = get(拼音元素映射原子);
-  const 词典 = get(过滤词典原子);
-  return 分析拼音(音节表, 词典);
-});
+export const 拼音分析结果原子 = atom((get) => get(标准上下文原子).拼音分析);
 
 export const 组装配置原子 = atom((get) => {
   const { 自定义分析映射 } = get(自定义元素映射原子);
@@ -447,37 +432,15 @@ export const 如带归并组装结果原子 = atom((get) => {
   if (!如组装结果.ok) return 如组装结果;
   const 决策与决策空间 = get(强类型决策与决策空间原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
+  const 决策 = 决策与决策空间.value.决策;
   const 带归并组装结果: 组装条目[] = [];
   for (const 条目 of 如组装结果.value) {
-    const 新元素序列: 强类型元素位或编码[] = [];
-    for (const 码位 of 条目.元素序列.元素序列) {
-      if (typeof 码位 === "string") {
-        新元素序列.push(码位);
-      } else {
-        // 判断当前元素位是自由还是归并的
-        let 当前码位 = 码位;
-        let i = 0;
-        while (true) {
-          i += 1;
-          if (i > 100) break; // 防止死循环
-          const 安排 = 决策与决策空间.value.决策.get(当前码位.element);
-          if (!安排) continue;
-          if (是强类型归并(安排)) {
-            // 如果当前元素是归并的，更新元素为归并元素，位置不变
-            当前码位 = { ...当前码位, element: 安排.element };
-          } else if (Array.isArray(安排)) {
-            const 引用码位 = 安排[当前码位.index];
-            if (引用码位 === undefined || typeof 引用码位 === "string") {
-              break;
-            } else {
-              当前码位 = 引用码位;
-            }
-          }
-        }
-        新元素序列.push(当前码位);
-      }
-    }
-    带归并组装结果.push({ ...条目, 元素序列: { 元素序列: 新元素序列 } });
+    带归并组装结果.push({
+      ...条目,
+      元素序列: {
+        元素序列: 条目.元素序列.元素序列.map((码位) => 展开归并码位(码位, 决策)),
+      },
+    });
   }
   return ok(带归并组装结果);
 });

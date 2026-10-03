@@ -13,6 +13,7 @@ import {
   合并拼写运算,
   决策图,
   计算全部合法元素与元素映射,
+  构建强类型自定义分析,
   组装,
   标准化自定义,
   合并分类器,
@@ -37,7 +38,7 @@ const 字库 = (原始字库.确定(
   (配置.data?.glyph_sources ?? ["G"]) as any,
 ) as any).value;
 // 与站点 cache.ts 同口径：按方案字集过滤词典（汉字集合、分析拼音都用过滤词典）
-const 字集指示 = 配置.data?.character_set;
+const 字集指示 = 配置.data?.character_set ?? "general";
 const 过滤词典 = 字集指示 ? 原始字库.过滤词典(词典, 字集指示 as any) : 词典;
 // 拼音元素只计算一次：名称映射/决策/拼音分析共享同一批拼音元素对象
 const { 拼音元素映射, 拼音分析映射 } = 计算拼音分析与元素映射(词典, 合并拼写运算(配置.algebra));
@@ -46,6 +47,14 @@ const 分类器 = 合并分类器(配置.analysis?.classifier);
 const 字符列表 = [...字库].map(({ 字符 }) => 字符);
 const 自定义元素映射 = 原始字库.校验自定义映射({}).自定义元素映射;
 const { 名称映射 } = 计算全部合法元素与元素映射(字符列表, 分类器, 拼音元素映射, 自定义元素映射);
+// analysis.customize 强类型化（与核心/面板同口径），字形分析须传入
+const 自定义分析 = 构建强类型自定义分析(
+  字库,
+  原始字库,
+  名称映射,
+  配置.analysis?.customize ?? {},
+  配置.analysis?.dynamic_customize ?? {},
+);
 const 汉字集合 = 原始字库.获取汉字集合(过滤词典);
 
 function 组装词表(额外根: Record<string, string>): Map<string, string> {
@@ -62,8 +71,8 @@ function 组装词表(额外根: Record<string, string>): Map<string, string> {
       决策: 强.决策,
       决策空间: 强.决策空间,
       线性化决策: 线性化.value,
-      自定义分析映射: new Map(),
-      动态自定义分析映射: new Map(),
+      自定义分析映射: 自定义分析.自定义分析映射,
+      动态自定义分析映射: 自定义分析.动态自定义分析映射,
       字形来源列表: (配置.data?.glyph_sources ?? ["G"]) as any[],
     },
     汉字集合,

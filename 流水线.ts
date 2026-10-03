@@ -53,7 +53,7 @@ const 字库 = 字库结果.value;
 console.log(`字库大小: ${[...字库].length}`);
 
 // 4. 拼音分析（与站点 cache.ts 同口径：过滤词典；拼音元素单次计算共享）
-const 字集指示 = 配置.data?.character_set;
+const 字集指示 = 配置.data?.character_set ?? "general";
 const 过滤词典 = 字集指示 ? 原始字库.过滤词典(词典, 字集指示 as any) : 词典;
 const { 拼音元素映射, 拼音分析映射 } = 计算拼音分析与元素映射(词典, 合并拼写运算(配置.algebra));
 const 拼音分析 = 获取拼音分析结果(拼音分析映射, 过滤词典);

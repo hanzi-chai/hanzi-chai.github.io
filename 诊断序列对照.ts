@@ -66,7 +66,7 @@ const 字库 = (
   ) as any
 ).value;
 const 词典 = 原始字库实例.校验词典(原始词典 as any);
-const 字集指示 = 配置0.data?.character_set;
+const 字集指示 = 配置0.data?.character_set ?? "general";
 const 过滤词典 = 字集指示 ? 原始字库实例.过滤词典(词典, 字集指示) : 词典;
 const 汉字集合 = 原始字库实例.获取汉字集合(过滤词典);
 const 拼写运算 = 合并拼写运算(配置0.algebra);

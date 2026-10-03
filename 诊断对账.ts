@@ -74,7 +74,7 @@ const 字库 = (
 ).value;
 const 词典 = 原始字库实例.校验词典(原始词典 as any);
 // 全站管线：过滤词典 → 汉字集合（与 cache.ts 过滤词典原子/汉字集合原子一致）
-const 字集指示 = 配置0.data?.character_set;
+const 字集指示 = 配置0.data?.character_set ?? "general";
 const 过滤词典 = 字集指示 ? 原始字库实例.过滤词典(词典, 字集指示) : 词典;
 const 汉字集合 = 原始字库实例.获取汉字集合(过滤词典);
 // 拼音元素映射用「词典原子」= 校验后未过滤（cache.ts 拼音元素映射原子口径）
