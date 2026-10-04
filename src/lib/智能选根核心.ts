@@ -232,10 +232,12 @@ export function 挖掘重码组根(
 ): { 组: 重码组信息[]; 根: 重码根候选[] } {
   // 1) 组枚举与伤害排名
   const 组全: 重码组信息[] = [];
+  const 枚举步数 = 表列表.reduce((a, t) => a + 展开表模式(t).length, 0);
+  let 已完成步 = 0;
   for (const t of 表列表) {
     const 模式列表 = 展开表模式(t);
-    模式列表.forEach((空位, pi) => {
-      cb?.on阶段?.(`重码组枚举 ${t.name} 模式 ${pi + 1}/${模式列表.length}……`);
+    模式列表.forEach((空位) => {
+      cb?.on阶段?.(`重码组挖掘 ${++已完成步}/${枚举步数}……`);
       const 组 = new Map<string, string[]>();
       for (const [名, seq] of 词序列) {
         const 键 = JSON.stringify(
@@ -261,11 +263,9 @@ export function 挖掘重码组根(
         组全.push({ 表名: t.name, 表权重: t.weight, 空位: [...空位], 成员, 大小: n, 组分 });
       });
     });
-    cb?.on阶段?.(`${t.name} 枚举完成，累计 ${组全.length} 组`);
   }
   组全.sort((a, b) => b.组分 - a.组分);
   const 组选定 = 组全; // 根计分遍历全部组（伤害大的组自然贡献大）
-  cb?.on阶段?.(`重码组枚举完成：共 ${组选定.length} 组，开始分离收益计分……`);
 
   // 2) 倒排索引：字 → 能从它拆出的形状（Set 供计分内层的成员判断，数组供遍历）
   const 字到形状 = new Map<string, string[]>();
@@ -309,7 +309,7 @@ export function 挖掘重码组根(
       for (const 字 of 字集) e.字集.add(字);
     }
     if (cb?.on阶段 && ++已计分组 % 报告间隔 === 0)
-      cb.on阶段(`重码组根收益计分 ${已计分组}/${组选定.length} 组……`);
+      cb.on阶段(`重码组挖掘 ${枚举步数 + 已计分组}/${枚举步数 + 组选定.length}……`);
   }
   const 根 = [...根累计.entries()]
     .map(([名, { 得分, 字集 }]) => ({ 名, 得分: Math.round(得分 * 100) / 100, 字列表: [...字集] }))
