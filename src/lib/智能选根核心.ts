@@ -281,19 +281,24 @@ export function 挖掘重码组根(
     }
   }
 
-  // 3) 根计分：分离收益（把形状从各组中分离出成员所消除的重码伤害）
+  // 3) 根计分：分离收益（把形状从各组中分离出成员所消除的重码伤害）。
+  //    组按组分降序处理，头部全是几百字的大组、最耗时；单遍同时收集每形状的成员数与成员集
   const 根累计 = new Map<string, { 得分: number; 字集: Set<string> }>();
   let 已计分组 = 0;
+  const 报告间隔 = Math.max(1, Math.floor(组选定.length / 50));
   for (const g of 组选定) {
     const n = g.大小;
     const k = g.空位.length;
-    const 成员形状 = new Map<string, number>(); // 形状 → 覆盖的组成员数
+    const 成员形状 = new Map<string, { m: number; 字集: Set<string> }>(); // 形状 → 成员数 + 成员集（一遍收集）
     for (const 字 of g.成员) {
       for (const 形状名 of 字到形状.get(字) ?? []) {
-        成员形状.set(形状名, (成员形状.get(形状名) ?? 0) + 1);
+        let e = 成员形状.get(形状名);
+        if (!e) { e = { m: 0, 字集: new Set<string>() }; 成员形状.set(形状名, e); }
+        e.m += 1;
+        e.字集.add(字);
       }
     }
-    for (const [形状名, m] of 成员形状) {
+    for (const [形状名, { m, 字集 }] of 成员形状) {
       const 收益 =
         k === 0
           ? g.表权重 * ((n * (n - 1) - (n - m) * (n - m - 1)) / 2)
@@ -301,9 +306,9 @@ export function 挖掘重码组根(
       let e = 根累计.get(形状名);
       if (!e) { e = { 得分: 0, 字集: new Set<string>() }; 根累计.set(形状名, e); }
       e.得分 += 收益;
-      for (const 字 of g.成员) if (字到形状集.get(字)?.has(形状名)) e.字集.add(字);
+      for (const 字 of 字集) e.字集.add(字);
     }
-    if (cb?.on阶段 && ++已计分组 % 5000 === 0)
+    if (cb?.on阶段 && ++已计分组 % 报告间隔 === 0)
       cb.on阶段(`重码组根收益计分 ${已计分组}/${组选定.length} 组……`);
   }
   const 根 = [...根累计.entries()]
