@@ -67,8 +67,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/<你的用户名>/hanzi-chai.github.io.git
-cd hanzi-chai.github.io
+git clone https://github.com/Richard-Phi/hanzi-chai-autoselect.git
+cd hanzi-chai-autoselect
 
 # 安装依赖并下载汉字数据
 bun install && bun run fetch
