@@ -1347,6 +1347,15 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       已绑定.add(根);
       预置.push({ 根, 目标 });
     }
+    const 范围文本 = 减根范围文本.trim();
+    if (范围文本) {
+      try {
+        new RegExp(范围文本, "u");
+      } catch {
+        设错误(`减根范围「${范围文本}」不是有效正则`);
+        return;
+      }
+    }
     const worker = new Worker(new URL("../lib/智能选根.worker.ts", import.meta.url), {
       type: "module",
     });
