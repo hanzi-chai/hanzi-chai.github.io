@@ -665,12 +665,29 @@ function 手动分析面板() {
             { label: "减根", value: "减" },
           ]}
         />
-        <CharacterSelect
-          className="w-36"
-          placeholder="字根"
-          value={当前根 || undefined}
-          onChange={(v) => 设当前根(v ?? "")}
-        />
+        {操作 === "加" ? (
+          <CharacterSelect
+            className="w-36"
+            placeholder="字根"
+            value={当前根 || undefined}
+            onChange={(v) => 设当前根(v ?? "")}
+          />
+        ) : (
+          <Select
+            className="w-44"
+            showSearch
+            allowClear
+            placeholder="已映射元素（可减声韵等）"
+            value={当前根 || undefined}
+            onChange={(v) => 设当前根(v ?? "")}
+            options={[...已映射元素集]
+              .sort()
+              .map((名) => ({ value: 名, label: 名 }))}
+            filterOption={(输入, 选项) =>
+              ((选项?.value as string | undefined) ?? "").includes(输入)
+            }
+          />
+        )}
         {操作 === "加" && (
           <Flex gap="small" align="center" wrap="wrap">
             <Value
@@ -1063,6 +1080,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     初始配置.占位安排 ?? (alphabet[0] ?? "a").repeat(编码类型),
   );
   const [罚分表达式, 设罚分表达式] = useState(初始配置.罚分表达式 ?? "");
+  const [减根范围文本, 设减根范围文本] = useState(初始配置.减根范围 ?? "");
   const [允许加根, 设允许加根] = useState(初始配置.允许加根 ?? true);
   const [允许减根, 设允许减根] = useState(初始配置.允许减根 ?? true);
   const [自动归并相似根, 设自动归并相似根] = useState(初始配置.自动归并相似根 ?? true);
@@ -1078,6 +1096,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           允许加根,
           允许减根,
           罚分表达式,
+          减根范围: 减根范围文本,
           自动归并相似根,
           预置归并文本,
         }),
@@ -1085,7 +1104,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     } catch {
       /* 忽略存储失败 */
     }
-  }, [轮数, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 自动归并相似根, 预置归并文本]);
+  }, [轮数, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
@@ -1390,6 +1409,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         占位安排: 占位,
         允许加根,
         允许减根,
+        减根范围: 减根范围文本,
         保护根: ["1", "2", "3", "4", "5", "6"],
         表列表,
         根数惩罚: 罚分表达式,
@@ -1795,6 +1815,19 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           <Switch size="small" checked={允许减根} onChange={设允许减根} />
           <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
         </Flex>
+        {允许减根 && (
+          <Flex gap={4} align="center">
+            <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
+              减根范围
+            </span>
+            <Input
+              className="w-36! text-center"
+              placeholder="正则，留空=全部"
+              value={减根范围文本}
+              onChange={(e) => 设减根范围文本(e.target.value)}
+            />
+          </Flex>
+        )}
         <Flex gap={4} align="center">
           <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
           <span

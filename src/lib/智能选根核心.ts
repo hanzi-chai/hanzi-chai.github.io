@@ -341,6 +341,8 @@ export interface 搜索参数 {
   表列表: 评分表输入[];
   允许加根?: boolean;
   允许减根?: boolean;
+  /** 删除根范围：正则（对根名称匹配）。留空=全部可减；无效正则忽略并记日志 */
+  减根范围?: string;
   /** 根数惩罚：以 n（直设根数）为自变量的表达式，如 "max(0, n-150)*50000"；空=不惩罚 */
   根数惩罚?: string;
   /** 加根时，若候选的相似字形分组兄弟已在方案中，自动归并到该根（缺省开启） */
@@ -1108,7 +1110,18 @@ export class 智能选根核心 {
     for (let 轮 = 1; 轮 <= 参数.轮数; 轮++) {
       if (cb.应停止?.()) { 已停止 = true; break; }
       const 直设根 = Object.keys(mapping).filter((k) => typeof mapping[k] === "string");
-      const 可删 = 直设根.filter((k) => !保护.has(k));
+      const 范围文本 = (参数.减根范围 ?? "").trim();
+      let 减根正则: RegExp | null = null;
+      if (范围文本) {
+        try {
+          减根正则 = new RegExp(范围文本, "u");
+        } catch {
+          cb.on日志?.(`减根范围「${范围文本}」不是有效正则，已忽略（全部可减）`);
+        }
+      }
+      const 可删 = 直设根.filter(
+        (k) => !保护.has(k) && (!减根正则 || 减根正则.test(k)),
+      );
       const 在集 = new Set(Object.keys(mapping)); // 含别名：已是任何形式条目的字不能再加
       const 可加 = 池.filter((k) => !在集.has(k));
       const 允许加根 = 参数.允许加根 !== false;
