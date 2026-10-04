@@ -171,7 +171,10 @@ export function 挖掘切片候选(
         .map(([名, { 次数, 字集 }]) => ({ 名, 次数, 字列表: [...字集] }))
         .sort((a, b) => b.次数 - a.次数);
     }
-    if (cb?.on进度 && ++已扫叶子 % 200 === 0) cb.on进度(已扫叶子, 叶子列表.length);
+    已扫叶子 += 1;
+    // 每 2% 或最后 5 个位置报一次进度——粒度太粗时尾段会长时间静默，看起来像卡死
+    if (cb?.on进度 && (已扫叶子 % Math.max(1, Math.ceil(叶子列表.length / 50)) === 0 || 叶子列表.length - 已扫叶子 <= 5))
+      cb.on进度(已扫叶子, 叶子列表.length);
     const L笔画 = (L as any)._笔画列表() as { feature: string }[];
     const L计数 = new Map<string, number>();
     for (const { feature } of L笔画) L计数.set(feature, (L计数.get(feature) ?? 0) + 1);
