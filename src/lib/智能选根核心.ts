@@ -376,6 +376,7 @@ export class 智能选根核心 {
   配置0: any;
   原始字库: any;
   词典: any;
+  过滤词典: any;
   字库: any;
   拼音分析: any;
   汉字集合: Set<any>;
@@ -409,6 +410,7 @@ export class 智能选根核心 {
     const 上下文 = 构建标准上下文(装配输入自配置(配置, 原始词典 as any, 原始字库实例));
     if (!上下文.字库 || !上下文.名称映射) throw 上下文.字库错误 ?? new Error("字库构建失败");
     this.词典 = 上下文.词典;
+    this.过滤词典 = 上下文.过滤词典;
     this.字库 = 上下文.字库;
     this.拼音分析 = 上下文.拼音分析;
     this.名称映射 = 上下文.名称映射;
@@ -520,33 +522,35 @@ export class 智能选根核心 {
     return { 强, 线性化, 准备: 准备.value, 分析结果, 部件分析结果 };
   }
   条目提取(r: { value: 组装条目[] }, 决策?: Map<any, any>) {
-    const out = new Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }>();
+    // 一字多条目全部保留：多音字/多字形字在面板与统计一里逐条参与分组，
+    // 在这里去重会让自动搜索的分母与手动分析不一致（词库里多音字越多差得越大）
+    const out = new Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>();
     for (const 条目 of r.value) {
       const 词 = 条目.词.map((c: any) => c.获取名称()).join("");
       if ([...词].length !== 1) continue;
-      out.set(词, {
-        元素序列: (条目.元素序列.元素序列 as any[]).map((c) => {
-          let cur: any = c;
-          if (typeof cur !== "string" && 决策) {
-            for (let t = 0; t < 100; t++) {
-              const 安排 = 决策.get(cur.element);
-              if (!安排) break;
-              if (是强类型归并(安排)) {
-                cur = { ...cur, element: 安排.element };
-              } else if (Array.isArray(安排)) {
-                const 引 = 安排[cur.index ?? 0];
-                if (引 === undefined || typeof 引 === "string") break;
-                cur = 引;
-              } else break;
-            }
+      const 元素序列 = (条目.元素序列.元素序列 as any[]).map((c) => {
+        let cur: any = c;
+        if (typeof cur !== "string" && 决策) {
+          for (let t = 0; t < 100; t++) {
+            const 安排 = 决策.get(cur.element);
+            if (!安排) break;
+            if (是强类型归并(安排)) {
+              cur = { ...cur, element: 安排.element };
+            } else if (Array.isArray(安排)) {
+              const 引 = 安排[cur.index ?? 0];
+              if (引 === undefined || typeof 引 === "string") break;
+              cur = 引;
+            } else break;
           }
-          return {
-            element: typeof cur === "string" ? cur : cur.element.获取名称(),
-            index: cur.index ?? 0,
-          };
-        }),
-        频率: this.频率表.get(词) ?? 0,
+        }
+        return {
+          element: typeof cur === "string" ? cur : cur.element.获取名称(),
+          index: cur.index ?? 0,
+        };
       });
+      const 列表 = out.get(词);
+      if (列表) 列表.push({ 元素序列, 频率: 条目.频率 });
+      else out.set(词, [{ 元素序列, 频率: 条目.频率 }]);
     }
     return out;
   }
@@ -577,22 +581,36 @@ export class 智能选根核心 {
       this.域缓存.set(key, new Set(top && top > 0 ? this.按频词序.slice(0, top) : this.按频词序));
     return this.域缓存.get(key)!;
   }
-  全量计分(词条: Map<string, { 元素序列: { element: string; index: number }[] }>) {
+  全量计分(词条: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>) {
     const 表值: Record<string, number> = {};
     let 总分 = 0;
     for (const t of this.表配置) {
-      const 域 = this.取域(t.top);
       let v = 0;
-      for (const 空位 of t.模式) {
-        const 组 = new Map<string, number>();
-        for (const w of this.按频词序) {
-          if (!域.has(w)) continue;
-          const s = 词条.get(w);
-          if (!s) continue;
-          const 键 = 阶重序列键(s.元素序列, 空位, 4);
-          组.set(键, (组.get(键) ?? 0) + 1);
+      if (t.top) {
+        const 切片 = this.平铺排序(词条).slice(0, t.top);
+        for (const 空位 of t.模式) {
+          const 组 = new Map<string, number>();
+          for (const { j } of 切片) {
+            const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
+            组.set(键, (组.get(键) ?? 0) + 1);
+          }
+          v += 阶重估计计数(组, 空位, 26);
         }
-        v += 阶重估计计数(组, 空位, 26);
+      } else {
+        const 域 = this.取域(t.top);
+        for (const 空位 of t.模式) {
+          const 组 = new Map<string, number>();
+          for (const w of this.按频词序) {
+            if (!域.has(w)) continue;
+            const 列表 = 词条.get(w);
+            if (!列表) continue;
+            for (const { 元素序列 } of 列表) {
+              const 键 = 阶重序列键(元素序列, 空位, 4);
+              组.set(键, (组.get(键) ?? 0) + 1);
+            }
+          }
+          v += 阶重估计计数(组, 空位, 26);
+        }
       }
       表值[t.名] = Math.round(v * 100) / 100;
       总分 += t.权重 * v;
@@ -607,9 +625,31 @@ export class 智能选根核心 {
   基态退化配置!: any;
   基态待分析部件!: Set<any>;
   基态根列表!: any[];
-  基态词序列!: Map<string, string>;
+  基态词序列!: Map<string, string[]>;
+  /** 基态词条（含组装条目频率）；top>0 表的逐条目切片口径要用 */
+  基态词条!: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>;
+  基态平铺!: { j: string; 频率: number }[];
   表组!: { 名: string; 组: Map<string, number>[]; 值: number }[];
   总分基 = 0;
+
+  /** 条目级平铺并按组装频率降序稳定排序——与手动分析面板的 分组按模式 切片完全同序。
+   *  top>0 表是逐条目口径：多音字的多条序列各自占排名位（官方编码页同款，不合并）。 */
+  private 平铺排序(词条: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>) {
+    const 平铺: { j: string; 频率: number }[] = [];
+    // 大词库同一字可能占多行（多音），组装侧已按 词+序列 合并频率；这里每字只取一次，
+    // 首次出现位置 = 组装条目顺序，与面板的排序底序完全一致
+    const 已见 = new Set<string>();
+    for (const { 词 } of this.过滤词典) {
+      // 过滤词典的 词 是字符数组，词条表以名称字符串为键
+      const 名 = 词.map((c: any) => c.获取名称()).join("");
+      if (已见.has(名)) continue;
+      已见.add(名);
+      const 列表 = 词条.get(名);
+      if (!列表) continue;
+      for (const x of 列表) 平铺.push({ j: JSON.stringify(x.元素序列), 频率: x.频率 });
+    }
+    return 平铺.sort((a, b) => b.频率 - a.频率);
+  }
 
   设置基态(mapping: Record<string, any>) {
     this.基态mapping = mapping;
@@ -622,24 +662,42 @@ export class 智能选根核心 {
     const r = this.运行组装(mapping, 强, 线性化, 分析结果, 准备.字根部件列表);
     if (!r.ok) throw r.error;
     const 词条 = this.条目提取(r, 强.决策);
-    this.基态词序列 = new Map([...词条].map(([w, x]) => [w, JSON.stringify(x.元素序列)]));
+    this.基态词条 = 词条;
+    this.基态词序列 = new Map([...词条].map(([w, 列表]) => [w, 列表.map((x) => JSON.stringify(x.元素序列))]));
+    this.基态平铺 = this.平铺排序(词条);
     this.表组 = this.表配置.map((t) => ({ 名: t.名, 组: t.模式.map(() => new Map<string, number>()), 值: 0 }));
     let 总分 = 0;
     for (const [ti, t] of this.表配置.entries()) {
-      const 域 = this.取域(t.top);
       let v = 0;
-      for (const w of this.按频词序) {
-        if (!域.has(w)) continue;
-        const s = this.基态词序列.get(w);
-        if (!s) continue;
-        const seq = JSON.parse(s);
+      if (t.top) {
+        // top>0：逐条目口径——按组装频率排序取前 N 条（多音字各序列独立占位，官方编码页同款）
+        const 切片 = this.基态平铺.slice(0, t.top);
         t.模式.forEach((空位, pi) => {
-          const 键 = 阶重序列键(seq, 空位, 4);
           const 组 = this.表组[ti]!.组[pi]!;
-          const m = 组.get(键) ?? 0;
-          v += 阶重加增量(空位.length, m);
-          组.set(键, m + 1);
+          for (const { j } of 切片) {
+            const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
+            const m = 组.get(键) ?? 0;
+            v += 阶重加增量(空位.length, m);
+            组.set(键, m + 1);
+          }
         });
+      } else {
+        const 域 = this.取域(t.top);
+        for (const w of this.按频词序) {
+          if (!域.has(w)) continue;
+          const 列表 = this.基态词序列.get(w);
+          if (!列表) continue;
+          for (const seqJson of 列表) {
+            const seq = JSON.parse(seqJson);
+            t.模式.forEach((空位, pi) => {
+              const 键 = 阶重序列键(seq, 空位, 4);
+              const 组 = this.表组[ti]!.组[pi]!;
+              const m = 组.get(键) ?? 0;
+              v += 阶重加增量(空位.length, m);
+              组.set(键, m + 1);
+            });
+          }
+        }
       }
       this.表组[ti]!.值 = v;
       总分 += t.权重 * v;
@@ -773,53 +831,103 @@ export class 智能选根核心 {
     const 组副本 = this.表组.map((t) => ({ 名: t.名, 组: t.组.map((g) => new Map(g)), 值: t.值 }));
     let 总分 = this.总分基;
     let 脏字数 = 0;
-    for (const [w, 新] of 新词条) {
-      const 新键 = JSON.stringify(新.元素序列);
-      const 旧键 = this.基态词序列.get(w);
-      if (旧键 === 新键) continue;
+    for (const [w, 新列表] of 新词条) {
+      // 新旧序列多重集对比：多音字/多字形字一个词可有多条序列，每条都独立参与分组
+      const 差 = new Map<string, number>();
+      for (const j of this.基态词序列.get(w) ?? []) 差.set(j, (差.get(j) ?? 0) - 1);
+      for (const x of 新列表) {
+        const j = JSON.stringify(x.元素序列);
+        差.set(j, (差.get(j) ?? 0) + 1);
+      }
+      let 变了 = false;
+      for (const 变化量 of 差.values()) if (变化量 !== 0) { 变了 = true; break; }
+      if (!变了) continue;
       脏字数++;
-      const 旧seq = 旧键 ? JSON.parse(旧键) : null;
-      const 新seq = JSON.parse(新键);
       for (const [ti, t] of this.表配置.entries()) {
-        if (!this.取域(t.top).has(w)) continue;
+        if (t.top) continue; // top>0 是逐条目切片口径，由下方平铺差分统一处理
         const 表副本 = 组副本[ti]!;
         t.模式.forEach((空位, pi) => {
           const 组 = 表副本.组[pi]!;
-          if (旧seq) {
-            const 键 = 阶重序列键(旧seq, 空位, 4);
-            const n = 组.get(键) ?? 0;
-            表副本.值 += 阶重减增量(空位.length, n);
-            if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
-          }
-          {
-            const 键 = 阶重序列键(新seq, 空位, 4);
-            const m = 组.get(键) ?? 0;
-            表副本.值 += 阶重加增量(空位.length, m);
-            组.set(键, m + 1);
+          for (const [j, 变化量] of 差) {
+            if (变化量 === 0) continue;
+            const seq = JSON.parse(j);
+            const 键 = 阶重序列键(seq, 空位, 4);
+            if (变化量 < 0) {
+              for (let k = 0; k < -变化量; k++) {
+                const n = 组.get(键) ?? 0;
+                表副本.值 += 阶重减增量(空位.length, n);
+                if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
+              }
+            } else {
+              for (let k = 0; k < 变化量; k++) {
+                const m = 组.get(键) ?? 0;
+                表副本.值 += 阶重加增量(空位.length, m);
+                组.set(键, m + 1);
+              }
+            }
           }
         });
       }
     }
     // 变体中拆分无解而被丢弃的字：基态有条目、新组装没有——必须扣掉它们的全部旧贡献，
     // 否则增量分系统性高于全量分（删根的收益会被低估，搜索决策随之失真）
-    for (const [w, 旧键] of this.基态词序列) {
+    for (const [w, 旧列表] of this.基态词序列) {
       if (新词条.has(w)) continue;
       脏字数++;
-      const 旧seq = JSON.parse(旧键);
       for (const [ti, t] of this.表配置.entries()) {
-        if (!this.取域(t.top).has(w)) continue;
+        if (t.top) continue; // 同上，top>0 由平铺差分处理
         const 表副本 = 组副本[ti]!;
         t.模式.forEach((空位, pi) => {
           const 组 = 表副本.组[pi]!;
-          const 键 = 阶重序列键(旧seq, 空位, 4);
-          const n = 组.get(键) ?? 0;
-          表副本.值 += 阶重减增量(空位.length, n);
-          if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
+          for (const j of 旧列表) {
+            const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
+            const n = 组.get(键) ?? 0;
+            表副本.值 += 阶重减增量(空位.length, n);
+            if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
+          }
         });
       }
     }
+    // top>0 表：逐条目切片差分——基态切片 vs 变体切片按序列多重集求差。
+    // 词频不随加删根变化，切片顺序稳定，条目进出与序列变化都能被这层差分精确覆盖
+    const 变体平铺 = this.平铺排序(新词条);
+    for (const [ti, t] of this.表配置.entries()) {
+      if (!t.top) continue;
+      const 基计数 = new Map<string, number>();
+      for (const { j } of this.基态平铺.slice(0, t.top))
+        基计数.set(j, (基计数.get(j) ?? 0) + 1);
+      const 变计数 = new Map<string, number>();
+      for (const { j } of 变体平铺.slice(0, t.top))
+        变计数.set(j, (变计数.get(j) ?? 0) + 1);
+      const 差 = new Map<string, number>();
+      for (const [j, n] of 基计数) 差.set(j, (差.get(j) ?? 0) - n);
+      for (const [j, n] of 变计数) 差.set(j, (差.get(j) ?? 0) + n);
+      const 表副本 = 组副本[ti]!;
+      t.模式.forEach((空位, pi) => {
+        const 组 = 表副本.组[pi]!;
+        for (const [j, 变化量] of 差) {
+          if (变化量 === 0) continue;
+          const seq = JSON.parse(j);
+          const 键 = 阶重序列键(seq, 空位, 4);
+          if (变化量 < 0) {
+            for (let k = 0; k < -变化量; k++) {
+              const n = 组.get(键) ?? 0;
+              表副本.值 += 阶重减增量(空位.length, n);
+              if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
+            }
+          } else {
+            for (let k = 0; k < 变化量; k++) {
+              const m = 组.get(键) ?? 0;
+              表副本.值 += 阶重加增量(空位.length, m);
+              组.set(键, m + 1);
+            }
+          }
+        }
+      });
+    }
     for (const [ti, t] of this.表配置.entries())
-      总分 += t.权重 * (组副本[ti]!.值 - this.表组[ti]!.值);    const 表值: Record<string, number> = {};
+      总分 += t.权重 * (组副本[ti]!.值 - this.表组[ti]!.值);
+    const 表值: Record<string, number> = {};
     for (const g of 组副本) 表值[g.名] = Math.round(g.值 * 100) / 100;
     return { 总分: Math.round(总分 * 100) / 100, 表: 表值, 字数: 新词条.size, 脏字数 };
   }
@@ -848,9 +956,9 @@ export class 智能选根核心 {
     cb?: { 应停止?: () => boolean },
     允许复合体 = false,
   ): { 组: 重码组信息[]; 根: 重码根候选[] } {
-    const 词序列 = [...this.基态词序列.entries()].map(
-      ([名, 串]): [string, { element: string; index: number }[]] => [名, JSON.parse(串)],
-    );
+    const 词序列: [string, { element: string; index: number }[]][] = [];
+    for (const [名, 列表] of this.基态词序列)
+      for (const j of 列表) 词序列.push([名, JSON.parse(j)]);
     const 挖掘结果 = this.挖掘切片候选(cb, 允许复合体);
     return 挖掘重码组根(词序列, 表列表, 4, 根起, 根止, 挖掘结果);
   }
