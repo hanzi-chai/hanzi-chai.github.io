@@ -1030,6 +1030,7 @@ export class 智能选根核心 {
           },
           规则.允许复合体 !== false,
         );
+        cb.on阶段?.(`字内部件扫描完成（${候选.length} 个形状），构建候选池……`);
         for (let i = 起 - 1; i < Math.min(止, 候选.length); i++) {
           const 名 = 候选[i]!.名;
           if (保护.has(名) || 已有根.has(名)) continue;
@@ -1128,9 +1129,8 @@ export class 智能选根核心 {
         const r = this.评变体(动作[i]!.m);
         const 分 = "失败" in r ? Infinity : r.总分 + this.根数罚分(动作[i]!.m);
         if (分 < best分) { best分 = 分; best = i; }
-        if (i % 10 === 9 || i === 动作.length - 1) {
-          cb.on轮进度?.(i + 1, 动作.length, best === -1 ? "—" : 动作[best]!.描述, best分);
-        }
+        // 每个动作都报进度：大词库下单动作可达十几秒，每 10 个才报会在轮首造成长时间静默
+        cb.on轮进度?.(i + 1, 动作.length, best === -1 ? "—" : 动作[best]!.描述, best分);
       }
       if (已停止) break;
       const 耗时 = (Date.now() - t0) / 1000;
