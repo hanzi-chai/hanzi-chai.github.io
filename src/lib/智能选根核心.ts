@@ -331,6 +331,7 @@ export type 字根表规则 =
   | { 类型: "重码组挖掘"; 根起: number; 根止: number; 允许复合体?: boolean }
   | { 类型: "手动指定"; 字根: string };
 export interface 搜索参数 {
+  /** 轮数上限 */
   轮数: number;
   /** 旧版单值（字频 1~N），字根表列表缺省时兜底使用 */
   高频字数?: number;
@@ -343,6 +344,9 @@ export interface 搜索参数 {
   允许减根?: boolean;
   /** 删除根范围：正则（对根名称匹配）。留空=全部可减；无效正则忽略并记日志 */
   减根范围?: string;
+  /** 单轮根数：每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评）。
+   *  1 = 经典单步贪心（默认） */
+  单轮根数?: number;
   /** 根数惩罚：以 n（直设根数）为自变量的表达式，如 "max(0, n-150)*50000"；空=不惩罚 */
   根数惩罚?: string;
   /** 加根时，若候选的相似字形分组兄弟已在方案中，自动归并到该根（缺省开启） */
@@ -360,6 +364,8 @@ export interface 轮结果 {
   根数: number;
   动作数: number;
   耗时: number;
+  /** 单轮多根时：入选动作的描述与其单独评分相对前分的预期降幅（合评分 ≠ 各项之和，供对照） */
+  单加明细?: { 描述: string; 预期变化: number }[];
 }
 export interface 搜索回调 {
   on阶段?: (文本: string) => void;
@@ -1155,15 +1161,73 @@ export class 智能选根核心 {
       }
       const t0 = Date.now();
       let best = -1, best分 = Infinity;
+      const 各动作分: number[] = [];
       for (let i = 0; i < 动作.length; i++) {
         if (cb.应停止?.()) { 已停止 = true; break; }
         const r = this.评变体(动作[i]!.m);
         const 分 = "失败" in r ? Infinity : r.总分 + this.根数罚分(动作[i]!.m);
+        各动作分.push(分);
         if (分 < best分) { best分 = 分; best = i; }
         // 每个动作都报进度：大词库下单动作可达十几秒，每 10 个才报会在轮首造成长时间静默
         cb.on轮进度?.(i + 1, 动作.length, best === -1 ? "—" : 动作[best]!.描述, best分);
       }
       if (已停止) break;
+      const 单轮根数 = Math.max(1, Math.floor(参数.单轮根数 ?? 1));
+      if (单轮根数 > 1) {
+        // 单轮多根：取改善最多的前 K 个「加根」动作同时应用（按各自单加收益降序选，
+        // 组合后整体合评——根间相互作用使合评分 ≠ 各自单加之和，以合评为准）。
+        // 减根不参与多选（一次删多个容易破坏拆分，探索收益低）
+        const 改善加根 = 动作
+          .map((a, i) => ({ a, i, 分: 各动作分[i]! }))
+          .filter((x) => x.a.加.length > 0 && isFinite(x.分) && x.分 < 当前分 - 1e-9)
+          .sort((x, y) => x.分 - y.分)
+          .slice(0, 单轮根数);
+        if (改善加根.length > 1) {
+          const 组合m = this.变体mapping(mapping, 改善加根.map((x) => x.a.加).flat(), [], 占位);
+          // 随行归并：选中动作里带归并的（自动归并相似根/预置归并随行）把 {element} 安排也带进组合
+          for (const { a } of 改善加根)
+            for (const k2 of a.加)
+              if (组合m[k2] !== undefined) 组合m[k2] = a.m[k2];
+          const 合评 = this.评变体(组合m);
+          if (!("失败" in 合评)) {
+            const 合评分 = 合评.总分 + this.根数罚分(组合m);
+            const 前分0 = 当前分;
+            if (合评分 < 前分0 - 1e-9) {
+              mapping = 组合m;
+              当前分 = 合评分;
+              const 轮r: 轮结果 = {
+                轮,
+                动作: 改善加根.map((x) => x.a.描述).join(""),
+                分数: Math.round(合评分 * 100) / 100,
+                前分: Math.round(前分0 * 100) / 100,
+                变化: Math.round((合评分 - 前分0) * 100) / 100,
+                根数: Object.keys(mapping).length,
+                动作数: 动作.length,
+                耗时: (Date.now() - t0) / 1000,
+                单加明细: 改善加根.map((x) => ({
+                  描述: x.a.描述,
+                  预期变化: Math.round((x.分 - 前分0) * 100) / 100,
+                })),
+              };
+              轮日志.push(轮r);
+              cb.on轮?.(轮r);
+              // 明细排版：合评一行 + 各根单加预期一列（预期是「单独加它」的降幅，合评才是真降幅）
+              const 明细 = 改善加根
+                .map((x) => `  ${x.a.描述} 单加预期 ${(x.分 - 前分0).toFixed(2)}`)
+                .join("\n");
+              cb.on日志?.(
+                `第${轮}轮 [单轮${改善加根.length}根] ${轮r.前分} → ${轮r.分数}（合评 ${轮r.变化 > 0 ? "+" : ""}${轮r.变化}，根 ${轮r.根数}）\n${明细}\n  （单加预期之和 ≠ 合评：根间相互作用）`,
+              );
+              this.设置基态(mapping);
+              continue;
+            } else {
+              cb.on日志?.(`第${轮}轮 [单轮多根] 前${改善加根.length}根合评 ${Math.round(合评分)} 无改善，回退单步最优`);
+            }
+          } else {
+            cb.on日志?.(`第${轮}轮 [单轮多根] 组合合评失败（${合评.失败.slice(0, 80)}），回退单步最优`);
+          }
+        }
+      }
       const 耗时 = (Date.now() - t0) / 1000;
       if (!isFinite(best分) || best === -1 || best分 >= 当前分 - 1e-9) {
         // 无代价减根：删除动作且分数完全不变 → 免费缩小根集，直接应用并继续搜索

@@ -1073,6 +1073,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     }
   })();
   const [轮数, 设轮数] = useState(初始配置.轮数 ?? 12);
+  const [单轮根数, 设单轮根数] = useState(初始配置.单轮根数 ?? 1);
   const [字根表, 设字根表] = useState<字根表规则[]>(
     初始配置.字根表 ?? [{ 类型: "字频范围", 起: 1, 止: 200 }],
   );
@@ -1091,6 +1092,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         自动搜索配置键,
         JSON.stringify({
           轮数,
+          单轮根数,
           字根表,
           占位安排,
           允许加根,
@@ -1104,7 +1106,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     } catch {
       /* 忽略存储失败 */
     }
-  }, [轮数, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本]);
+  }, [轮数, 单轮根数, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
@@ -1414,6 +1416,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       mapping: 起始mapping,
       参数: {
         轮数,
+        单轮根数,
         字根表列表: 字根表,
         占位安排: 占位,
         允许加根,
@@ -1817,6 +1820,12 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
         </Flex>
         <Flex gap={4} align="center">
+          <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
+            单轮根数
+          </span>
+          <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
+        </Flex>
+        <Flex gap={4} align="center">
           <Switch size="small" checked={允许加根} onChange={设允许加根} />
           <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
         </Flex>
@@ -1932,6 +1941,17 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 {r.变化}
               </Typography.Text>
               ，根 {r.根数}，{r.动作数} 动作 / {r.耗时.toFixed(1)}s）
+              {r.单加明细 && (
+                <div className="ml-2 text-xs text-gray-500 leading-5">
+                  {r.单加明细.map((x) => (
+                    <div key={x.描述}>
+                      {x.描述} 单加预期 {x.预期变化 > 0 ? "+" : ""}
+                      {x.预期变化}
+                    </div>
+                  ))}
+                  <div>合评 {r.变化 > 0 ? "+" : ""}{r.变化}（单加之和≠合评：根间相互作用）</div>
+                </div>
+              )}
             </div>
           ))}
         </div>
