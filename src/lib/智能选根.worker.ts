@@ -43,7 +43,7 @@ self.onmessage = async (e: MessageEvent) => {
       const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据);
       核心.设置基态(msg.mapping);
       post({ type: "阶段", 文本: "组伤害排名 + 切片挖掘 + 分离收益计分……" });
-      const 结果 = 核心.重码组挖掘(msg.表列表, msg.根起, msg.根止, undefined, msg.允许复合体 !== false);
+      const 结果 = 核心.重码组挖掘(msg.表列表, msg.根起, msg.根止, { on阶段: (文本) => post({ type: "阶段", 文本 }) }, msg.允许复合体 !== false);
       post({ type: "组挖掘完成", 结果 });
     } catch (err: any) {
       post({ type: "错误", 错误: String(err?.message ?? err) + (err?.stack ? "\n" + String(err.stack).split("\n").slice(0,4).join("\n") : "") });
