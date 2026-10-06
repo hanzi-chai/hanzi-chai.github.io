@@ -297,9 +297,30 @@ function 手动分析面板() {
   const [错误, 设错误] = useState("");
   const [已完成, 设已完成] = useState("");
   const [候选, 设候选] = useState<组装条目[] | null>(null);
-  const [自建表, 设自建表] = useState<表配置[]>([
-    { id: 表序号++, 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` },
-  ]);
+  // 自建表持久化（localStorage，跨刷新保留；与自动搜索配置同模式）
+  const 自建表键 = "智能选根-手动分析自建表";
+  const 初始自建表 = (() => {
+    try {
+      const 存 = JSON.parse(localStorage.getItem(自建表键) ?? "null") as 表配置[] | null;
+      if (存?.length) {
+        表序号 = Math.max(表序号, ...存.map((t) => t.id + 1)); // 新建表 id 不与恢复数据冲突
+        return 存;
+      }
+    } catch {
+      // 存档损坏按无存档处理
+    }
+    return null;
+  })();
+  const [自建表, 设自建表] = useState<表配置[]>(
+    初始自建表 ?? [{ id: 表序号++, 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` }],
+  );
+  useEffect(() => {
+    try {
+      localStorage.setItem(自建表键, JSON.stringify(自建表));
+    } catch {
+      // 存储失败不影响本页使用
+    }
+  }, [自建表]);
   // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables（此处编辑直接写回）
   const [共享表, 设共享表] = useState(true);
   const 配置 = useAtomValue(配置原子);
