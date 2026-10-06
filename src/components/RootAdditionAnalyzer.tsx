@@ -793,6 +793,9 @@ function 手动分析面板() {
                 : `加 ${x.名} → ${安排文本(x.安排).replace(/^归并→/, "并→")}`}
             </Tag>
           ))}
+          <Button size="small" onClick={() => 设操作列表([])}>
+            清空
+          </Button>
         </Flex>
       )}
       <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 24 }}>
@@ -1952,12 +1955,12 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             />
           </Flex>
           <Flex gap={4} align="center">
-            <span title="预登记归并绑定：等号两边都不占基态键位。搜索把右边的根强制加入候选池，执行「加它」时左边的根自动以归并随行。多条用逗号分隔，如 a=人,b=人">
+            <span title="预登记归并绑定：等号两边都不占基态键位。搜索把右边的根强制加入候选池，执行「加它」时左边的根自动以归并随行。多条用逗号分隔，如 ,b=人">
               预置归并
             </span>
             <Input
-              className="w-36! text-center"
-              placeholder="a=人，b=人"
+              className="w-40! text-center"
+              placeholder="例：a=人，b=人"
               value={预置归并文本}
               onChange={(e) => 设预置归并文本(e.target.value)}
             />
@@ -1968,7 +1971,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </span>
             <Input
               className="w-56! text-center"
-              placeholder="留空=0"
+              placeholder="例：max(0, n-150)**2"
             value={罚分表达式}
             onChange={(e) => 设罚分表达式(e.target.value)}
           />
