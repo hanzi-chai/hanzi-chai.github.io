@@ -1105,7 +1105,7 @@ function 评分表面板() {
         手动指定空位模式（一个模式 = 一组计入统计的码位）。top =
         只统计按字频前 N 字（0 为全部）。
       </Typography.Paragraph>
-      <Flex gap="small" className="mb-2">
+      <Flex gap="small" style={{ marginBottom: 16 }}>
         <Button
           onClick={() =>
             更新([...tables, { name: `表${tables.length + 1}`, weight: 1, top: 0, patterns: [] }])
