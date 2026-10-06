@@ -93,6 +93,7 @@ export default defineConfig(({ mode, command }) => {
       },
     },
     esbuild: {
+      // @ts-expect-error vite 的 ESBuildOptions 类型未含 supported（运行时实际支持 top-level-await）
       supported: {
         "top-level-await": true,
       },
