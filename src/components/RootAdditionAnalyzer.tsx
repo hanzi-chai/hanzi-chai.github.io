@@ -793,7 +793,7 @@ function 手动分析面板() {
                 : `加 ${x.名} → ${安排文本(x.安排).replace(/^归并→/, "并→")}`}
             </Tag>
           ))}
-          <Button size="small" onClick={() => 设操作列表([])}>
+          <Button size="small" danger onClick={() => 设操作列表([])}>
             清空
           </Button>
         </Flex>
