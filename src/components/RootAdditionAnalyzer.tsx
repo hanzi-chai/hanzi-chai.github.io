@@ -764,11 +764,19 @@ function 手动分析面板() {
       <Typography.Paragraph type="secondary">
         选一批候选字根，以「加根」「减根」任意组合试算：系统按操作重拆分，逐表对比分数变化；已在方案中的根配上新安排即为改根。每张表可自定义空位模式、统计前
         N 字与权重。
-        <span
-          title="候选支持笔画 12345、汉字、别名检索；加根的安排可为键位或归并到已有字根（安排不影响阶重估计）。阶重估计口径：某空位模式下同码 n 字的组，期望重码 = n²/(2·k^阶)，n=组内字数，k=键盘按键数（取方案字母表大小，通常 26），阶=空位数；零阶按精确值 Σ(n−1) 计。独立随机编码期望（含自身对），与统计一、智能选根、CLI 口径统一。"
+        <Popover
+          trigger="click"
+          content={
+            <div style={{ maxWidth: 420 }}>
+              候选支持笔画 12345、汉字、别名检索；加根的安排可为键位或归并到已有字根（安排不影响阶重估计）。阶重估计口径：某空位模式下同码
+              n 字的组，期望重码 = n²/(2·k^阶)，n=组内字数，k=键盘按键数（取方案字母表大小，通常
+              26），阶=空位数；零阶按精确值 Σ(n−1) 计。独立随机编码期望（含自身对），与统计一、智能选根、CLI
+              口径统一。
+            </div>
+          }
         >
-          <InfoCircleOutlined style={{ marginLeft: 6 }} />
-        </span>
+          <InfoCircleOutlined style={{ marginLeft: 6, cursor: "pointer" }} />
+        </Popover>
       </Typography.Paragraph>
       <Flex gap="small" align="center" wrap="wrap">
         <Radio.Group
@@ -1611,11 +1619,17 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     <>
       <Typography.Paragraph type="secondary">
         按「开始搜索」后，每轮自动试删、试加字根并显示各表分数变化，自动应用最有利的一步，直到没有改进或达到轮数上限；过程中可随时停止，结果可应用到方案。
-        <span
-          title="算法：以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 / 加高频字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。"
+        <Popover
+          trigger="click"
+          content={
+            <div style={{ maxWidth: 420 }}>
+              算法：以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 /
+              加高频字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。
+            </div>
+          }
         >
-          <InfoCircleOutlined style={{ marginLeft: 6 }} />
-        </span>
+          <InfoCircleOutlined style={{ marginLeft: 6, cursor: "pointer" }} />
+        </Popover>
       </Typography.Paragraph>
       <Typography.Title level={3} className="mt-2!">可选字根配置</Typography.Title>
       <Flex gap="small" align="center" wrap="wrap">
