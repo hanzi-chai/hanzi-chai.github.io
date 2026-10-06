@@ -1955,7 +1955,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           </span>
           <Input
             className="w-56! text-center"
-            placeholder="max(0, n-150)*50000"
             value={罚分表达式}
             onChange={(e) => 设罚分表达式(e.target.value)}
           />
