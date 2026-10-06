@@ -29,32 +29,10 @@ export default function CharacterSelect(props: ItemSelectProps) {
   const value = props.value;
   const 笔顺映射 = useAtomValueUnwrapped(如笔顺映射原子);
   const 原始字库 = useAtomValue(原始字库原子);
-  useEffect(() => {
-    if (!value) {
-      setData([]);
-      return;
-    }
-    let label: React.ReactNode;
-    if (/^\{.+\}$/.test(value)) {
-      label = getLabel(JSON.parse(value));
-    } else {
-      const character = 原始字库.校验(value);
-      if (!character) {
-        // 非字符元素（如拼音元素）：显示名称本身
-        setData([{ value, label: <span>{value}</span> }]);
-        return;
-      }
-      label = <CharacterDisplay character={character.character} />;
-    }
-    const initial = [{ value, label }];
-    setData(initial);
-  }, [value]);
-  const onSearch = (input: string) => {
-    if (input.length === 0) {
-      setData([]);
-      return;
-    }
-    const allResults = (候选元素 ?? 字符列表)
+  // 小类别（≤200 项）聚焦即全列；大类别（字根数千）保持输入才出，避免刷屏难找
+  const 全量可显示 = 候选元素 !== undefined && 候选元素.length <= 200;
+  const 构建选项 = (input: string) =>
+    (候选元素 ?? 字符列表)
       .filter((元素实例) => {
         const 名 = 元素实例.获取名称();
         if (元素实例 instanceof 字符) {
@@ -85,6 +63,32 @@ export default function CharacterSelect(props: ItemSelectProps) {
           strokes: 笔顺映射.get(元素实例 as never) ?? [],
         };
       });
+  useEffect(() => {
+    if (!value) {
+      setData(全量可显示 ? 构建选项("") : []);
+      return;
+    }
+    let label: React.ReactNode;
+    if (/^\{.+\}$/.test(value)) {
+      label = getLabel(JSON.parse(value));
+    } else {
+      const character = 原始字库.校验(value);
+      if (!character) {
+        // 非字符元素（如拼音元素）：显示名称本身
+        setData([{ value, label: <span>{value}</span> }]);
+        return;
+      }
+      label = <CharacterDisplay character={character.character} />;
+    }
+    const initial = [{ value, label }];
+    setData(initial);
+  }, [value]);
+  const onSearch = (input: string) => {
+    if (input.length === 0) {
+      setData(全量可显示 ? 构建选项("") : []);
+      return;
+    }
+    const allResults = 构建选项(input);
     let minResults = allResults.filter(({ strokes }) =>
       strokes.some((x) => x === input),
     ).length;
