@@ -1888,90 +1888,103 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           ))}
         </div>
       </div>
-      <Flex gap="small" align="center" wrap="wrap">
-        <Flex gap={4} align="center">
-          轮数上限
-          <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
-        </Flex>
-        <Flex gap={4} align="center">
-          <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
-            单轮根数
-          </span>
-          <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
-        </Flex>
-        <Flex gap={4} align="center">
-          <Switch size="small" checked={允许加根} onChange={设允许加根} />
-          <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
-        </Flex>
-        <Flex gap={4} align="center">
-          <Switch size="small" checked={允许减根} onChange={设允许减根} />
-          <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
-        </Flex>
-        {允许减根 && (
+      <div className="mt-2 border rounded p-2">
+        <Typography.Text strong>搜索行为</Typography.Text>
+        <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 4 }}>
           <Flex gap={4} align="center">
-            <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
-              减根范围
+            轮数上限
+            <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
+          </Flex>
+          <Flex gap={4} align="center">
+            <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
+              单轮根数
             </span>
+            <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
+          </Flex>
+          <Flex gap={4} align="center">
+            <Switch size="small" checked={允许加根} onChange={设允许加根} />
+            <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
+          </Flex>
+          <Flex gap={4} align="center">
+            <Switch size="small" checked={允许减根} onChange={设允许减根} />
+            <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
+          </Flex>
+          {允许减根 && (
+            <Flex gap={4} align="center">
+              <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
+                减根范围
+              </span>
+              <Input
+                className="w-40! text-center"
+                placeholder="正则，留空=全部"
+                value={减根范围文本}
+                onChange={(e) => 设减根范围文本(e.target.value)}
+              />
+            </Flex>
+          )}
+        </Flex>
+      </div>
+      <div className="mt-2 border rounded p-2">
+        <Typography.Text strong>根与归并</Typography.Text>
+        <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 4 }}>
+          <Flex gap={4} align="center">
+            <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
+            <span
+              title="加根时若其相似字形分组（力/𠃛、木/朩、比/北 等）的兄弟已在方案中，自动归并到该根"
+              style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}
+            >
+              自动归并相似根
+            </span>
+          </Flex>
+          <Flex gap={4} align="center">
+            占位安排
             <Input
-              className="w-40! text-center"
-              placeholder="正则，留空=全部"
-              value={减根范围文本}
-              onChange={(e) => 设减根范围文本(e.target.value)}
+              className="w-16! text-center"
+              placeholder={(alphabet[0] ?? "a").repeat(编码类型)}
+              value={占位安排}
+              onChange={(e) => 设占位安排(e.target.value)}
             />
           </Flex>
-        )}
-        <Flex gap={4} align="center">
-          <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
-          <span
-            title="加根时若其相似字形分组（力/𠃛、木/朩、比/北 等）的兄弟已在方案中，自动归并到该根"
-            style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}
-          >
-            自动归并相似根
-          </span>
+          <Flex gap={4} align="center">
+            <span title="预登记归并绑定：等号两边都不占基态键位。搜索把右边的根强制加入候选池，执行「加它」时左边的根自动以归并随行。多条用逗号分隔，如 a=人,b=人">
+              预置归并
+            </span>
+            <Input
+              className="w-36! text-center"
+              placeholder="a=人，b=人"
+              value={预置归并文本}
+              onChange={(e) => 设预置归并文本(e.target.value)}
+            />
+          </Flex>
+          <Flex gap={4} align="center">
+            <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示150根起每根罚5万">
+              根数罚分 f(n)
+            </span>
+            <Input
+              className="w-56! text-center"
+              placeholder="留空=0"
+              value={罚分表达式}
+              onChange={(e) => 设罚分表达式(e.target.value)}
+            />
+          </Flex>
         </Flex>
-        <Flex gap={4} align="center">
-          占位安排
-          <Input
-            className="w-16! text-center"
-            placeholder={(alphabet[0] ?? "a").repeat(编码类型)}
-            value={占位安排}
-            onChange={(e) => 设占位安排(e.target.value)}
-          />
+      </div>
+      <div className="mt-2 border rounded p-2">
+        <Typography.Text strong>评判标准</Typography.Text>
+        <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 4 }}>
+          <Typography.Text type="secondary">
+            评分表：
+            {表列表.length === 0
+              ? "（未配置，请先到「评分表」页签）"
+              : 表列表.map((t) => t.name).join("、")}
+          </Typography.Text>
+          {!运行中 && 表列表.length === 0 && (
+            <Button size="small" onClick={转评分表}>
+              去配置评分表
+            </Button>
+          )}
         </Flex>
-        <Flex gap={4} align="center">
-          <span title="预登记归并绑定：等号两边都不占基态键位。搜索把右边的根强制加入候选池，执行「加它」时左边的根自动以归并随行。多条用逗号分隔，如 a=人,b=人">
-            预置归并
-          </span>
-          <Input
-            className="w-36! text-center"
-            placeholder="a=人，b=人"
-            value={预置归并文本}
-            onChange={(e) => 设预置归并文本(e.target.value)}
-          />
-        </Flex>
-        <Flex gap={4} align="center">
-          <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示150根起每根罚5万">
-            根数罚分 f(n)
-          </span>
-          <Input
-            className="w-56! text-center"
-            placeholder="留空=0"
-            value={罚分表达式}
-            onChange={(e) => 设罚分表达式(e.target.value)}
-          />
-        </Flex>
-        <Typography.Text type="secondary">
-          评分表：
-          {表列表.length === 0
-            ? "（未配置，请先到「评分表」页签）"
-            : 表列表.map((t) => t.name).join("、")}
-        </Typography.Text>
-        {!运行中 && 表列表.length === 0 && (
-          <Button size="small" onClick={转评分表}>
-            去配置评分表
-          </Button>
-        )}
-      </Flex>
+      </div>
       <Flex gap="small" align="center" className="mt-2">
         <Button type="primary" onClick={开始} loading={运行中}>
           开始搜索
