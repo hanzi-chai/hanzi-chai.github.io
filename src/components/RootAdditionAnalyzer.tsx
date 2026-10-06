@@ -1913,7 +1913,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               减根范围
             </span>
             <Input
-              className="w-36! text-center"
+              className="w-40! text-center"
               placeholder="正则，留空=全部"
               value={减根范围文本}
               onChange={(e) => 设减根范围文本(e.target.value)}
