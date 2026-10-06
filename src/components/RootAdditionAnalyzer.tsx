@@ -1,6 +1,7 @@
 import {
   Alert,
   Button,
+  Cascader,
   Dropdown,
   Flex,
   Input,
@@ -18,6 +19,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { 元素 } from "hanzi-chai";
 import {
   下转换,
   是强类型归并,
@@ -239,11 +241,45 @@ function 手动分析面板() {
   const 如字库 = useAtomValue(如字库原子);
   const 字库 = 如字库?.ok ? 如字库.value : null;
   const 如全部合法元素 = useAtomValue(全部合法元素原子);
+  const 合法元素 = 如全部合法元素?.ok ? 如全部合法元素.value : null;
   const 名称映射 = 如全部合法元素?.ok ? 如全部合法元素.value.名称映射 : null;
+  // 加根类别（与元素页元素选择器同分类）：字形/字音/自定义
+  const [加根类别, 设加根类别] = useState<[string, string]>(["字形", "字根"]);
+  const 加根类别选项 = [
+    {
+      value: "字形",
+      label: "字形",
+      children: ["字根", "二笔", "笔画", "结构"].map((v) => ({ value: v, label: v })),
+    },
+    {
+      value: "字音",
+      label: "字音",
+      children: [...(合法元素?.拼音元素映射?.keys() ?? [])].map((v) => ({ value: v, label: v })),
+    },
+    {
+      value: "自定义",
+      label: "自定义",
+      children: [...(合法元素?.自定义元素映射?.keys() ?? [])].map((v) => ({ value: v, label: v })),
+      disabled: (合法元素?.自定义元素映射?.size ?? 0) === 0,
+    },
+  ];
   const 决策 = useAtomValue(决策原子);
   const 决策空间 = useAtomValue(决策空间原子);
 
   const [操作, 设操作] = useState<操作类型>("加");
+  const 加根候选: 元素[] | undefined = (() => {
+    if (!合法元素 || 操作 !== "加") return undefined;
+    const [一级, 二级] = 加根类别;
+    if (一级 === "字形") {
+      if (二级 === "字根") return undefined; // 字根类别走 CharacterSelect 原路径
+      if (二级 === "二笔") return 合法元素.二笔列表;
+      if (二级 === "笔画") return 合法元素.笔画列表;
+      if (二级 === "结构") return 合法元素.结构符元素列表;
+      return [];
+    }
+    if (一级 === "字音") return 合法元素.拼音元素映射.get(二级) ?? [];
+    return 合法元素.自定义元素映射.get(二级) ?? [];
+  })();
   const 编码类型 = useAtomValue(编码类型原子);
   const [当前根, 设当前根] = useState("");
   // 单字符串码串（默认预填键盘前几位字母）；经 Value 编辑器可为广义码位列表或纯归并
@@ -690,10 +726,23 @@ function 手动分析面板() {
             { label: "减根", value: "减" },
           ]}
         />
+        {操作 === "加" && (
+          <Cascader
+            className="min-w-36"
+            placeholder={`${加根类别[0]} / ${加根类别[1]}`}
+            value={加根类别}
+            onChange={(x) => {
+              设加根类别(x as [string, string]);
+              设当前根("");
+            }}
+            options={加根类别选项}
+          />
+        )}
         {操作 === "加" ? (
           <CharacterSelect
             className="w-36"
-            placeholder="字根"
+            placeholder={加根类别[1]}
+            候选元素={加根候选}
             value={当前根 || undefined}
             onChange={(v) => 设当前根(v ?? "")}
           />
