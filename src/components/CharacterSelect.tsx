@@ -82,7 +82,8 @@ export default function CharacterSelect(props: ItemSelectProps) {
     }
     const initial = [{ value, label }];
     setData(initial);
-  }, [value]);
+    // 依赖 候选元素：切换元素类别时即使 value 未变也要重建候选（否则新类别聚焦无列表）
+  }, [value, 候选元素]);
   const onSearch = (input: string) => {
     if (input.length === 0) {
       setData(全量可显示 ? 构建选项("") : []);
