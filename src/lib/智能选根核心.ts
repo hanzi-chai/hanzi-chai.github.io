@@ -1074,18 +1074,15 @@ export class 智能选根核心 {
           池Set.add(名);
         }
       } else if (规则.类型 === "手动指定") {
-        const 坏: string[] = [];
         for (const w of [...规则.字根]) {
           if (保护.has(w) || 已有根.has(w)) continue;
           const 字符对象 = this.字符对象映射.get(w);
           if (!字符对象 || this.字库.查询字形(字符对象)?.length === 0) {
-            坏.push(w);
+            cb.on日志?.(`手动指定字根「${w}」不在字库或无字形，已跳过`);
             continue;
           }
           池Set.add(w);
         }
-        if (坏.length)
-          throw new Error(`手动指定字根「${坏.join("、")}」不在字库或无字形，请修正字根表后重新搜索`);
       }
     }
     if (cb.应停止?.()) {
