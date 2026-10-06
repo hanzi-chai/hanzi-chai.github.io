@@ -69,7 +69,7 @@ export function 阶重分析原始重码(
   return 反向映射;
 }
 
-/** 阶重合计的唯一公式实现：零阶精确 Σ(n−1)，一阶以上 n²/2÷26^阶（网页原版公式）。
+/** 阶重合计的唯一公式实现：零阶精确 Σ(n−1)，一阶以上 n²/2÷按键数^阶（网页原版公式，底数=键盘字母表大小）。
  *  输入为分组计数（增量评分/核心的高性能路径）。 */
 export function 阶重估计计数(
   计数: Map<string, number>,
@@ -91,7 +91,7 @@ export function 阶重估计计数(
   return total;
 }
 
-/** 单模式估计（词列表版）：零阶精确 Σ(n−1)，一阶以上 n²/2÷26^阶（网页原版公式） */
+/** 单模式估计（词列表版）：零阶精确 Σ(n−1)，一阶以上 n²/2÷按键数^阶（网页原版公式） */
 export function 阶重估计(
   reverseMap: Map<string, string[]>,
   空位: number[],
@@ -120,12 +120,12 @@ export function 阶重序列键(
   return JSON.stringify(处理后);
 }
 
-/** 增量评分用：n²/2 口径的分组计数增量（k=0 走精确 Σ(n−1)） */
-export function 阶重加增量(k: number, m: number): number {
+/** 增量评分用：n²/2 口径的分组计数增量（k=0 走精确 Σ(n−1)）；按键数=键盘字母表大小（随方案而定，不写死 26） */
+export function 阶重加增量(k: number, m: number, 按键数: number): number {
   if (k === 0) return m >= 1 ? 1 : 0;
-  return (m + 0.5) / 26 ** k;
+  return (m + 0.5) / 按键数 ** k;
 }
-export function 阶重减增量(k: number, n: number): number {
+export function 阶重减增量(k: number, n: number, 按键数: number): number {
   if (k === 0) return n >= 2 ? -1 : 0;
-  return -(n - 0.5) / 26 ** k;
+  return -(n - 0.5) / 按键数 ** k;
 }

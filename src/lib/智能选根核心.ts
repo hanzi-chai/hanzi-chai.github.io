@@ -422,6 +422,8 @@ export class 智能选根核心 {
   词全集: Set<string>;
   域缓存 = new Map<number, Set<string>>();
   表配置: { 名: string; 权重: number; top: number | undefined; 模式: number[][] }[];
+  /** 键盘按键数 = 方案字母表大小（阶重估计的底数，随方案而定，不写死 26） */
+  按键数: number;
 
   constructor(
     配置: any,
@@ -451,6 +453,7 @@ export class 智能选根核心 {
     };
     this.频率表 = new Map(原始词典.map((d) => [d.词, d.频率]));
     this.字符对象映射 = new Map([...this.汉字集合].map((c) => [c.获取名称(), c]));
+    this.按键数 = (this.配置0.form.alphabet as string | undefined)?.length || 26;
     // 字形组合反向图：子字形 → 父复合体（结构静态，与根集无关）
     for (const 字符 of this.汉字集合) {
       const 递归 = (g: any) => {
@@ -623,7 +626,7 @@ export class 智能选根核心 {
             const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
             组.set(键, (组.get(键) ?? 0) + 1);
           }
-          v += 阶重估计计数(组, 空位, 26);
+          v += 阶重估计计数(组, 空位, this.按键数);
         }
       } else {
         const 域 = this.取域(t.top);
@@ -638,7 +641,7 @@ export class 智能选根核心 {
               组.set(键, (组.get(键) ?? 0) + 1);
             }
           }
-          v += 阶重估计计数(组, 空位, 26);
+          v += 阶重估计计数(组, 空位, this.按键数);
         }
       }
       表值[t.名] = Math.round(v * 100) / 100;
@@ -706,7 +709,7 @@ export class 智能选根核心 {
           for (const { j } of 切片) {
             const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
             const m = 组.get(键) ?? 0;
-            v += 阶重加增量(空位.length, m);
+            v += 阶重加增量(空位.length, m, this.按键数);
             组.set(键, m + 1);
           }
         });
@@ -722,7 +725,7 @@ export class 智能选根核心 {
               const 键 = 阶重序列键(seq, 空位, 4);
               const 组 = this.表组[ti]!.组[pi]!;
               const m = 组.get(键) ?? 0;
-              v += 阶重加增量(空位.length, m);
+              v += 阶重加增量(空位.length, m, this.按键数);
               组.set(键, m + 1);
             });
           }
@@ -888,13 +891,13 @@ export class 智能选根核心 {
             if (变化量 < 0) {
               for (let k = 0; k < -变化量; k++) {
                 const n = 组.get(键) ?? 0;
-                表副本.值 += 阶重减增量(空位.length, n);
+                表副本.值 += 阶重减增量(空位.length, n, this.按键数);
                 if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
               }
             } else {
               for (let k = 0; k < 变化量; k++) {
                 const m = 组.get(键) ?? 0;
-                表副本.值 += 阶重加增量(空位.length, m);
+                表副本.值 += 阶重加增量(空位.length, m, this.按键数);
                 组.set(键, m + 1);
               }
             }
@@ -915,7 +918,7 @@ export class 智能选根核心 {
           for (const j of 旧列表) {
             const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
             const n = 组.get(键) ?? 0;
-            表副本.值 += 阶重减增量(空位.length, n);
+            表副本.值 += 阶重减增量(空位.length, n, this.按键数);
             if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
           }
         });
@@ -945,13 +948,13 @@ export class 智能选根核心 {
           if (变化量 < 0) {
             for (let k = 0; k < -变化量; k++) {
               const n = 组.get(键) ?? 0;
-              表副本.值 += 阶重减增量(空位.length, n);
+              表副本.值 += 阶重减增量(空位.length, n, this.按键数);
               if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
             }
           } else {
             for (let k = 0; k < 变化量; k++) {
               const m = 组.get(键) ?? 0;
-              表副本.值 += 阶重加增量(空位.length, m);
+              表副本.值 += 阶重加增量(空位.length, m, this.按键数);
               组.set(键, m + 1);
             }
           }
