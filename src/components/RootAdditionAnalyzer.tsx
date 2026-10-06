@@ -322,7 +322,20 @@ function 手动分析面板() {
     }
   }, [自建表]);
   // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables（此处编辑直接写回）
-  const [共享表, 设共享表] = useState(true);
+  const [共享表, 设共享表] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("智能选根-手动分析共享表") ?? "null") ?? true;
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("智能选根-手动分析共享表", JSON.stringify(共享表));
+    } catch {
+      // 存储失败不影响本页使用
+    }
+  }, [共享表]);
   const 配置 = useAtomValue(配置原子);
   const 设配置 = useSetAtom(配置原子);
   const 共享表数据 = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
