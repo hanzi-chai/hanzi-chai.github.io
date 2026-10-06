@@ -18,6 +18,7 @@ import {
   Typography,
   message,
 } from "antd";
+import InfoCircleOutlined from "@ant-design/icons/InfoCircleOutlined";
 import type { ColumnsType } from "antd/es/table";
 import type { 元素 } from "hanzi-chai";
 import {
@@ -1552,8 +1553,12 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   return (
     <>
       <Typography.Paragraph type="secondary">
-        以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 /
-        加高频字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。
+        按「开始搜索」后，每轮自动试删、试加字根并显示各表分数变化，自动应用最有利的一步，直到没有改进或达到轮数上限；过程中可随时停止，结果可应用到方案。
+        <span
+          title="算法：以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 / 加高频字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。"
+        >
+          <InfoCircleOutlined style={{ marginLeft: 6 }} />
+        </span>
       </Typography.Paragraph>
       <Typography.Title level={3} className="mt-2!">可选字根配置</Typography.Title>
       <Flex gap="small" align="center" wrap="wrap">
