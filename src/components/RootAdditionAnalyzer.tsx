@@ -857,7 +857,7 @@ function 手动分析面板() {
           const 本表变化 = 候选 ? 表变化值(表) : 0;
           const 本表贡献 = 候选 ? 本表变化 * 表.权重 : 0;
           return (
-            <div key={表.id} className="border rounded p-2">
+            <div key={表.id}>
               <Flex gap="small" align="center" wrap="wrap" className="mb-2">
                 <Tag>阶重</Tag>
                 <Input
@@ -1067,7 +1067,7 @@ function 评分表面板() {
       )}
       <Flex vertical gap="middle">
         {tables.map((表, i) => (
-          <div key={i} className="border rounded p-2">
+          <div key={i}>
             <Flex gap="small" align="center" wrap="wrap">
               <Input
                 className="w-32!"
@@ -1555,9 +1555,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 /
         加高频字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。
       </Typography.Paragraph>
-      <div className="mt-2 border rounded p-2">
-        <Flex gap="small" align="center" wrap="wrap">
-          <Typography.Text strong>可选字根配置</Typography.Text>
+      <Typography.Title level={3} className="mt-2!">可选字根配置</Typography.Title>
+      <Flex gap="small" align="center" wrap="wrap">
           <Dropdown
             menu={{
               items: [
@@ -1706,13 +1705,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   const 状态 = 组挖掘状态[`${i}:${r.允许复合体 === false ? "叶" : "复"}`];
                   if (!状态 || 状态.进行中 || !状态.结果) {
                     return (
-                      <div className="ml-6 mt-1 border rounded p-2 text-gray-500">
+                      <div className="ml-6 mt-1 rounded p-2 bg-gray-50 text-gray-500">
                         {状态?.阶段 || "准备中……"}（后台线程执行，页面不卡顿）
                       </div>
                     );
                   }
                   return (
-                    <div className="ml-6 mt-1 border rounded p-2">
+                    <div className="ml-6 mt-1 rounded p-2 bg-gray-50">
                       <Typography.Text strong>
                         注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
                       </Typography.Text>
@@ -1772,7 +1771,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   if (r.类型 === "手动指定") {
                     if (!状态.结果) {
                       return (
-                        <div className="ml-6 mt-1 border rounded p-2 text-gray-500">
+                        <div className="ml-6 mt-1 rounded p-2 bg-gray-50 text-gray-500">
                           {状态.阶段 || "字内部件挖掘中……"}
                           （后台首次需扫全字集笔顺，稍等数秒）
                         </div>
@@ -1812,7 +1811,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   } else {
                     if (状态.进行中) {
                       return (
-                        <div className="ml-6 mt-1 border rounded p-2 text-gray-500">
+                        <div className="ml-6 mt-1 rounded p-2 bg-gray-50 text-gray-500">
                           {状态.阶段 || "字内部件挖掘中……"}
                           （在后台线程执行，页面不卡顿）
                         </div>
@@ -1830,7 +1829,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     }
                   }
                   return (
-                    <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start border rounded p-1">
+                    <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                       <Typography.Text type="secondary" className="w-full!">
                         共 {成员.length} 个候选（灰=已在方案），点字形看它出现在哪些字里：
                       </Typography.Text>
@@ -1887,10 +1886,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </div>
           ))}
         </div>
-      </div>
-      <div className="mt-2 border rounded p-2">
-        <Typography.Text strong>搜索行为</Typography.Text>
-        <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 4 }}>
+      <Typography.Title level={3} className="mt-2!">搜索行为</Typography.Title>
+      <Flex gap="small" align="center" wrap="wrap">
           <Flex gap={4} align="center">
             轮数上限
             <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
@@ -1923,10 +1920,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </Flex>
           )}
         </Flex>
-      </div>
-      <div className="mt-2 border rounded p-2">
-        <Typography.Text strong>根与归并</Typography.Text>
-        <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 4 }}>
+      <Typography.Title level={3} className="mt-2!">根与归并</Typography.Title>
+      <Flex gap="small" align="center" wrap="wrap">
           <Flex gap={4} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
             <span
@@ -1963,15 +1958,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             <Input
               className="w-56! text-center"
               placeholder="留空=0"
-              value={罚分表达式}
-              onChange={(e) => 设罚分表达式(e.target.value)}
-            />
+            value={罚分表达式}
+            onChange={(e) => 设罚分表达式(e.target.value)}
+          />
           </Flex>
         </Flex>
-      </div>
-      <div className="mt-2 border rounded p-2">
-        <Typography.Text strong>评判标准</Typography.Text>
-        <Flex gap="small" align="center" wrap="wrap" style={{ marginTop: 4 }}>
+      <Typography.Title level={3} className="mt-2!">评判标准</Typography.Title>
+      <Flex gap="small" align="center" wrap="wrap">
           <Typography.Text type="secondary">
             评分表：
             {表列表.length === 0
@@ -1984,7 +1977,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </Button>
           )}
         </Flex>
-      </div>
       <Flex gap="small" align="center" className="mt-2">
         <Button type="primary" onClick={开始} loading={运行中}>
           开始搜索
@@ -2017,7 +2009,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         />
       )}
       {轮日志.length > 0 && (
-        <div className="mt-2 border rounded p-2 max-h-60 overflow-y-auto">
+        <div className="mt-2 rounded p-2 bg-gray-50 max-h-60 overflow-y-auto">
           <Typography.Text strong>搜索轨迹</Typography.Text>
           {轮日志.map((r) => (
             <div key={r.轮}>
@@ -2044,7 +2036,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         </div>
       )}
       {结果 && (
-        <div className="mt-2 border rounded p-2">
+        <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>
             最终总分 {结果.总分}（{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
             {结果.轮日志.length} 轮）
