@@ -9,12 +9,14 @@ import {
 import { ElementDisplay, Select } from "./Utils";
 
 interface ElementSelectProps {
-  value: 元素;
+  /** 未选中时可不传（显示 placeholder） */
+  value?: 元素;
   onChange: (e: 元素) => void;
   includeOptional?: boolean;
   onlyRootsAndStrokes?: boolean; // 仅显示字根和笔画
   /** 额外可选项：尚未进入决策/决策空间的元素（如本批次临时加入的根） */
   extraElements?: 元素[];
+  placeholder?: string;
 }
 
 export default function ElementSelect(
@@ -38,13 +40,13 @@ export default function ElementSelect(
   }
   return (
     <Select
-      value={value.获取名称()}
+      value={value?.获取名称() ?? ""}
       onChange={(s) => {
         const 元素 = 名称映射.get(s);
         if (元素) onChange(元素);
       }}
       showSearch
-      placeholder="输入元素名称或笔画搜索"
+      placeholder={props.placeholder ?? "输入元素名称或笔画搜索"}
       options={全部元素.map((v) => ({
         value: v.获取名称(),
         label: <ElementDisplay element={v} />,

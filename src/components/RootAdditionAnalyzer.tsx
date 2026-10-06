@@ -63,6 +63,7 @@ import {
   type 轮结果,
 } from "../lib/智能选根核心";
 import CharacterSelect from "~/components/CharacterSelect";
+import ElementSelect from "~/components/ElementSelect";
 import { CharacterDisplay, DeleteButton } from "~/components/Utils";
 import Value from "~/components/Value";
 
@@ -697,19 +698,12 @@ function 手动分析面板() {
             onChange={(v) => 设当前根(v ?? "")}
           />
         ) : (
-          <Select
-            className="w-44"
-            showSearch
+          <ElementSelect
+            className="w-52"
             allowClear
             placeholder="已映射元素（可减声韵等）"
-            value={当前根 || undefined}
-            onChange={(v) => 设当前根(v ?? "")}
-            options={[...已映射元素集]
-              .sort()
-              .map((名) => ({ value: 名, label: 名 }))}
-            filterOption={(输入, 选项) =>
-              ((选项?.value as string | undefined) ?? "").includes(输入)
-            }
+            value={当前根 ? 名称映射?.get(当前根) : undefined}
+            onChange={(e) => 设当前根(e.获取名称())}
           />
         )}
         {操作 === "加" && (
