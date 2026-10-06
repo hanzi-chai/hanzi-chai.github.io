@@ -535,13 +535,9 @@ function 手动分析面板() {
           key: JSON.stringify(空位),
           模式: 模式名称(空位, maxLength),
           阶: 数字标签(空位.length),
-          原始: Math.round(基线值 * 100) / 100,
-          加减根后: 变化结果
-            ? Math.round(变化结果.候选 * 100) / 100
-            : ("—" as const),
-          变化: 变化结果
-            ? Math.round(变化结果.变化 * 100) / 100
-            : ("—" as const),
+          原始: 基线值,
+          加减根后: 变化结果 ? 变化结果.候选 : ("—" as const),
+          变化: 变化结果 ? 变化结果.变化 : ("—" as const),
           变化组: 变化结果?.变化组 ?? [],
         };
       });
@@ -564,14 +560,24 @@ function 手动分析面板() {
         dataIndex: "原始",
         key: "原始",
         width: 90,
-        render: (v: number | string) => (typeof v === "number" ? v.toFixed(2) : v),
+        render: (v: number | string) =>
+          typeof v === "number" ? (
+            <span title={`精确 ${v}`}>{v.toFixed(2)}</span>
+          ) : (
+            v
+          ),
       },
       {
         title: "加减根后",
         dataIndex: "加减根后",
         key: "加减根后",
         width: 100,
-        render: (v: number | string) => (typeof v === "number" ? v.toFixed(2) : v),
+        render: (v: number | string) =>
+          typeof v === "number" ? (
+            <span title={`精确 ${v}`}>{v.toFixed(2)}</span>
+          ) : (
+            v
+          ),
       },
       {
         title: (
@@ -631,7 +637,12 @@ function 手动分析面板() {
                 </div>
               }
             >
-              <span className={变化显示(v).类}>{变化显示(v).文本}</span>
+              <span
+                className={变化显示(v).类}
+                title={typeof v === "number" ? `精确 ${v}` : undefined}
+              >
+                {变化显示(v).文本}
+              </span>
             </Popover>
           ) : (
             "—"
@@ -642,10 +653,9 @@ function 手动分析面板() {
   };
 
   const 表变化值 = (表: 表配置) => (候选 ? 表分析.变化和.get(表.id) ?? 0 : 0);
-  const 表初态 = (表: 表配置) =>
-    Math.round((表分析.原始和.get(表.id) ?? 0) * 100) / 100;
-  const 表末态 = (表: 表配置) =>
-    Math.round((表分析.候选和.get(表.id) ?? 0) * 100) / 100;
+  // 初/末态取精确值（显示层负责舍入到 2 位 + 悬浮展示精确值）
+  const 表初态 = (表: 表配置) => 表分析.原始和.get(表.id) ?? 0;
+  const 表末态 = (表: 表配置) => 表分析.候选和.get(表.id) ?? 0;
 
   const { 总预期值, 总初态, 总末态 } = useMemo(() => {
     let 预期 = 0;
@@ -758,13 +768,17 @@ function 手动分析面板() {
               {变化显示(总预期值).文本}
             </span>
             <Typography.Text type="secondary" className="text-base! font-normal!">
-              （初 {总初态.toFixed(2)} → 末 {总末态.toFixed(2)}）
+              （初{" "}
+              <span title={`精确 ${总初态}`}>{总初态.toFixed(2)}</span> → 末{" "}
+              <span title={`精确 ${总末态}`}>{总末态.toFixed(2)}</span>）
             </Typography.Text>
           </>
         ) : (
           <>
             总初态：
-            <span className="text-black">{总初态.toFixed(2)}</span>
+            <span className="text-black" title={`精确 ${总初态}`}>
+              {总初态.toFixed(2)}
+            </span>
             <Typography.Text type="secondary" className="text-base! font-normal!">
               （添加加/减根操作并点「分析」后显示末态）
             </Typography.Text>
@@ -820,21 +834,30 @@ function 手动分析面板() {
                 />
                 <Typography.Text strong>
                   总变化{" "}
-                  <span className={变化显示(本表变化).类}>
+                  <span
+                    className={变化显示(本表变化).类}
+                    title={`精确 ${本表变化}`}
+                  >
                     {变化显示(本表变化).文本}
                   </span>
                 </Typography.Text>
                 <Typography.Text type="secondary">
                   加权贡献{" "}
-                  <span className={变化显示(本表贡献).类}>
+                  <span
+                    className={变化显示(本表贡献).类}
+                    title={`精确 ${本表贡献}`}
+                  >
                     {变化显示(本表贡献).文本}
                   </span>{" "}
                   （{变化显示(本表变化).文本} × {表.权重}）
                 </Typography.Text>
                 <Typography.Text type="secondary">
                   {候选
-                    ? `（初 ${表初态(表).toFixed(2)} → 末 ${表末态(表).toFixed(2)}）`
-                    : `（初 ${表初态(表).toFixed(2)}）`}
+                    ? (<>（初{" "}
+                        <span title={`精确 ${表初态(表)}`}>{表初态(表).toFixed(2)}</span> → 末{" "}
+                        <span title={`精确 ${表末态(表)}`}>{表末态(表).toFixed(2)}</span>）</>)
+                    : (<>（初{" "}
+                        <span title={`精确 ${表初态(表)}`}>{表初态(表).toFixed(2)}</span>）</>)}
                 </Typography.Text>
                 <Select
                   mode="multiple"

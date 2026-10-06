@@ -411,7 +411,10 @@ const OrderDuplicationAnalyzer = () => {
       dataIndex: "阶内合计",
       key: "阶内合计",
       width: 96,
-      render: (v: string) => (v === "" ? v : `${v}`),
+      render: (v: string, row) =>
+        v === "" ? v : (
+          <span title={`精确 ${(row as any).合计精确}`}>{v}</span>
+        ),
     },
     { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
     {
@@ -419,7 +422,7 @@ const OrderDuplicationAnalyzer = () => {
       dataIndex: "重码估计",
       key: "重码估计",
       width: 150,
-      render: (v: number) => 显示2位(v),
+      render: (v: number) => <span title={`精确 ${v}`}>{显示2位(v)}</span>,
     },
   ];
   const dataSource = range(maxLength + 1).map((阶) => {
@@ -429,10 +432,11 @@ const OrderDuplicationAnalyzer = () => {
       if (空位.length !== 阶) continue;
       const value = 数值表.get(空位.join("-"))!;
       row[空位.join("-")] = value;
-      // 合计 = 所显示各模式（2 位小数）之和，人工逐行可验算
-      合计 += Math.round(value * 100) / 100;
+      // 合计 = 精确模式值求和后再舍入（显示层），悬浮可见精确和
+      合计 += value;
     }
-    row.合计 = Math.round(合计 * 100) / 100;
+    row.合计 = 合计;
+    row.合计精确 = 合计;
     return row;
   });
   // 长表：每模式一行，同阶仅在首行显示阶与阶内合计
@@ -458,15 +462,12 @@ const OrderDuplicationAnalyzer = () => {
   const [求和阶, 设置求和阶] = useState<number[]>([]);
   const 自定义合计 = dataSource
     .filter((row) => 求和阶.includes(row.key as number))
-    .reduce((acc, row) => acc + Math.round((row.合计 as number) * 100) / 100, 0);
+    .reduce((acc, row) => acc + (row.合计精确 as number), 0);
 
   // 汉字搜索：查找该字在各模式下的重码组
   const [搜索字, 设搜索字] = useState("");
   const [展开全部, 设展开全部] = useState(false);
-  const 全部合计 = dataSource.reduce(
-    (acc, row) => acc + Math.round((row.合计 as number) * 100) / 100,
-    0,
-  );
+  const 全部合计 = dataSource.reduce((acc, row) => acc + (row.合计精确 as number), 0);
   const 显示行数 = 展开全部 ? 长表数据.length : 3;
   const 搜索结果 = useMemo(() => {
     if (![...搜索字].length || [...搜索字].length > 1) return null;
@@ -536,7 +537,7 @@ const OrderDuplicationAnalyzer = () => {
       <Flex gap="middle" align="center" wrap="wrap">
         <Typography.Text strong>
           全部合计：
-          {全部合计.toFixed(2)}（{数字(0)}阶~{数字(maxLength)}阶所有模式求和）
+          <span title={`精确 ${全部合计}`}>{全部合计.toFixed(2)}</span>（{数字(0)}阶~{数字(maxLength)}阶所有模式求和）
         </Typography.Text>
         <Select
           mode="multiple"
@@ -552,12 +553,16 @@ const OrderDuplicationAnalyzer = () => {
         />
         <Typography.Text strong>
           自定义合计：
-          {求和阶.length === 0
-            ? "—"
-            : `${自定义合计.toFixed(2)}（${求和阶
+          {求和阶.length === 0 ? (
+            "—"
+          ) : (
+            <span title={`精确 ${自定义合计}`}>
+              {自定义合计.toFixed(2)}（{求和阶
                 .sort((a, b) => a - b)
                 .map((阶) => `${数字(阶)}阶`)
-                .join(" + ")}）`}
+                .join(" + ")}）
+            </span>
+          )}
         </Typography.Text>
       </Flex>
       <Table
