@@ -1950,7 +1950,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           />
         </Flex>
         <Flex gap={4} align="center">
-          <span title="n=直设根数。留空=不惩罚。例：max(0, n-150)*50000 表示150根起每根罚5万">
+          <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示150根起每根罚5万">
             根数罚分 f(n)
           </span>
           <Input

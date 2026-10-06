@@ -736,27 +736,31 @@ export class 智能选根核心 {
 
   根数惩罚?: string;
   private 罚分缓存?: { 源: string; 函数: (...a: any[]) => number };
-  /** 根数惩罚：n=直设根数（mapping 中字符串值的键数），套用用户表达式；非法表达式按 0 处理 */
+  /** 根数惩罚：n=直设根数（mapping 中字符串值的键数），套用用户表达式。
+   *  非法表达式 / 求值失败 / 非有限结果一律抛错（worker 会作为「错误」上报 UI），不做静默降级 */
   根数罚分(m: Record<string, any>): number {
     const 源 = (this.根数惩罚 ?? "").trim();
     if (!源) return 0;
     if (!this.罚分缓存 || this.罚分缓存.源 !== 源) {
+      let 函数: (...a: any[]) => number;
       try {
-        const 函数 = new Function("n", "max", "min", `"use strict"; return (${源});`) as (...a: any[]) => number;
-        函数(0, Math.max, Math.min); // 试编译+试运行
-        this.罚分缓存 = { 源, 函数 };
-      } catch {
-        this.罚分缓存 = { 源, 函数: () => 0 };
+        函数 = new Function("n", "max", "min", `"use strict"; return (${源});`) as (...a: any[]) => number;
+        函数(0, Math.max, Math.min); // 试编译+试运行：编译错误、引用未定义变量在此暴露
+      } catch (err: any) {
+        throw new Error(`根数罚分表达式「${源}」非法（须为单个 JavaScript 表达式，变量 n=直设根数、max、min）：${err?.message ?? err}`);
       }
+      this.罚分缓存 = { 源, 函数 };
     }
     const 根数 = Object.values(m).filter((v) => typeof v === "string").length;
-    let 值 = 0;
+    let 值: unknown;
     try {
       值 = this.罚分缓存.函数(根数, Math.max, Math.min);
-    } catch {
-      return 0;
+    } catch (err: any) {
+      throw new Error(`根数罚分表达式「${源}」在 n=${根数} 时求值失败：${err?.message ?? err}`);
     }
-    return typeof 值 === "number" && isFinite(值) ? 值 : 0;
+    if (typeof 值 !== "number" || !isFinite(值))
+      throw new Error(`根数罚分表达式「${源}」在 n=${根数} 时结果为 ${String(值)}，须为有限数`);
+    return 值;
   }
 
   /** 变体评分（增量）：mapping 相对基态mapping 的差异自动求出 */
@@ -1070,15 +1074,18 @@ export class 智能选根核心 {
           池Set.add(名);
         }
       } else if (规则.类型 === "手动指定") {
+        const 坏: string[] = [];
         for (const w of [...规则.字根]) {
           if (保护.has(w) || 已有根.has(w)) continue;
           const 字符对象 = this.字符对象映射.get(w);
           if (!字符对象 || this.字库.查询字形(字符对象)?.length === 0) {
-            cb.on日志?.(`手动指定字根「${w}」不在字库或无字形，已跳过`);
+            坏.push(w);
             continue;
           }
           池Set.add(w);
         }
+        if (坏.length)
+          throw new Error(`手动指定字根「${坏.join("、")}」不在字库或无字形，请修正字根表后重新搜索`);
       }
     }
     if (cb.应停止?.()) {
