@@ -1592,7 +1592,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             <Button size="small">+ 添加字根表</Button>
           </Dropdown>
           <Typography.Text type="secondary">
-            各表并集去重为加根候选池；自动过滤笔画 1–6、无字形字与已有根。「字内部件」首次运行需扫全字集笔顺，稍等数秒。
+            各表并集去重为加根候选池；自动过滤笔画、已有根与无字形字。
           </Typography.Text>
         </Flex>
         <div className="mt-1">
