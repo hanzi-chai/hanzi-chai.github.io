@@ -91,12 +91,12 @@ export const 模式名称 = (空位: number[], 总位数: number) => {
   return tokens.join("").trimEnd() || "*".repeat(总位数);
 };
 
-/** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋ */
+/** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋。显示统一 2 位小数 */
 const 变化显示 = (v: number) => {
-  const x = Math.round(v * 10000) / 10000;
-  if (x > 0) return { 文本: `−${Math.abs(x)}`, 类: "text-green-600" };
-  if (x < 0) return { 文本: `＋${Math.abs(x)}`, 类: "text-red-500" };
-  return { 文本: "0", 类: "" };
+  const x = Math.round(v * 100) / 100;
+  if (x > 0) return { 文本: `−${x.toFixed(2)}`, 类: "text-green-600" };
+  if (x < 0) return { 文本: `＋${Math.abs(x).toFixed(2)}`, 类: "text-red-500" };
+  return { 文本: "0.00", 类: "" };
 };
 
 /** 与 如带归并组装结果原子 相同的归并展开后处理 */
@@ -535,8 +535,10 @@ function 手动分析面板() {
           key: JSON.stringify(空位),
           模式: 模式名称(空位, maxLength),
           阶: 数字标签(空位.length),
-          原始: Math.round(基线值),
-          加减根后: 变化结果 ? Math.round(变化结果.候选) : ("—" as const),
+          原始: Math.round(基线值 * 100) / 100,
+          加减根后: 变化结果
+            ? Math.round(变化结果.候选 * 100) / 100
+            : ("—" as const),
           变化: 变化结果
             ? Math.round(变化结果.变化 * 100) / 100
             : ("—" as const),
@@ -557,8 +559,20 @@ function 手动分析面板() {
     const columns: ColumnsType<(typeof 行)[number]> = [
       { title: "阶", dataIndex: "阶", key: "阶", width: 56 },
       { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
-      { title: "原始", dataIndex: "原始", key: "原始", width: 90 },
-      { title: "加减根后", dataIndex: "加减根后", key: "加减根后", width: 100 },
+      {
+        title: "原始",
+        dataIndex: "原始",
+        key: "原始",
+        width: 90,
+        render: (v: number | string) => (typeof v === "number" ? v.toFixed(2) : v),
+      },
+      {
+        title: "加减根后",
+        dataIndex: "加减根后",
+        key: "加减根后",
+        width: 100,
+        render: (v: number | string) => (typeof v === "number" ? v.toFixed(2) : v),
+      },
       {
         title: (
           <Flex vertical>
@@ -744,16 +758,13 @@ function 手动分析面板() {
               {变化显示(总预期值).文本}
             </span>
             <Typography.Text type="secondary" className="text-base! font-normal!">
-              （初 {Math.round(总初态 * 100) / 100} → 末{" "}
-              {Math.round(总末态 * 100) / 100}）
+              （初 {总初态.toFixed(2)} → 末 {总末态.toFixed(2)}）
             </Typography.Text>
           </>
         ) : (
           <>
             总初态：
-            <span className="text-black">
-              {Math.round(总初态 * 100) / 100}
-            </span>
+            <span className="text-black">{总初态.toFixed(2)}</span>
             <Typography.Text type="secondary" className="text-base! font-normal!">
               （添加加/减根操作并点「分析」后显示末态）
             </Typography.Text>
@@ -822,8 +833,8 @@ function 手动分析面板() {
                 </Typography.Text>
                 <Typography.Text type="secondary">
                   {候选
-                    ? `（初 ${表初态(表)} → 末 ${表末态(表)}）`
-                    : `（初 ${表初态(表)}）`}
+                    ? `（初 ${表初态(表).toFixed(2)} → 末 ${表末态(表).toFixed(2)}）`
+                    : `（初 ${表初态(表).toFixed(2)}）`}
                 </Typography.Text>
                 <Select
                   mode="multiple"

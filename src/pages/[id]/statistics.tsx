@@ -392,7 +392,7 @@ const OrderDuplicationAnalyzer = () => {
     reverseMap.forEach((items) => {
       total += (items.length * items.length) / 2 / space;
     });
-    return Math.round(total);
+    return total; // 原始值；显示层统一 toFixed(2)（含整数补 .00）
   };
 
   const 模式列表 = range(maxLength + 1).flatMap((阶) =>
@@ -403,11 +403,24 @@ const OrderDuplicationAnalyzer = () => {
     数值表.set(空位.join("-"), computeEstimation(空位));
   }
 
+  const 显示2位 = (v: number) => v.toFixed(2);
   const columns: ColumnsType<{ key: string; 阶: string; 阶内合计: string; 模式: string; 重码估计: number }> = [
     { title: "阶", dataIndex: "阶", key: "阶", width: 64 },
-    { title: "阶内合计", dataIndex: "阶内合计", key: "阶内合计", width: 96 },
+    {
+      title: "阶内合计",
+      dataIndex: "阶内合计",
+      key: "阶内合计",
+      width: 96,
+      render: (v: string) => (v === "" ? v : `${v}`),
+    },
     { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
-    { title: "重码估计（实际碰撞）", dataIndex: "重码估计", key: "重码估计", width: 150 },
+    {
+      title: "重码估计（实际碰撞）",
+      dataIndex: "重码估计",
+      key: "重码估计",
+      width: 150,
+      render: (v: number) => 显示2位(v),
+    },
   ];
   const dataSource = range(maxLength + 1).map((阶) => {
     const row: Record<string, any> = { 阶: 数字(阶), key: 阶 };
@@ -416,9 +429,10 @@ const OrderDuplicationAnalyzer = () => {
       if (空位.length !== 阶) continue;
       const value = 数值表.get(空位.join("-"))!;
       row[空位.join("-")] = value;
-      合计 += value;
+      // 合计 = 所显示各模式（2 位小数）之和，人工逐行可验算
+      合计 += Math.round(value * 100) / 100;
     }
-    row.合计 = Math.round(合计);
+    row.合计 = Math.round(合计 * 100) / 100;
     return row;
   });
   // 长表：每模式一行，同阶仅在首行显示阶与阶内合计
@@ -435,7 +449,7 @@ const OrderDuplicationAnalyzer = () => {
     长表数据.push({
       key: 空位.join("-"),
       阶: 首行 ? 数字(阶) : "",
-      阶内合计: 首行 ? String(对应行.合计) : "",
+      阶内合计: 首行 ? 显示2位(对应行.合计 as number) : "",
       模式: 模式名称(空位, maxLength),
       重码估计: 数值表.get(空位.join("-"))!,
     });
@@ -444,12 +458,15 @@ const OrderDuplicationAnalyzer = () => {
   const [求和阶, 设置求和阶] = useState<number[]>([]);
   const 自定义合计 = dataSource
     .filter((row) => 求和阶.includes(row.key as number))
-    .reduce((acc, row) => acc + (row.合计 as number), 0);
+    .reduce((acc, row) => acc + Math.round((row.合计 as number) * 100) / 100, 0);
 
   // 汉字搜索：查找该字在各模式下的重码组
   const [搜索字, 设搜索字] = useState("");
   const [展开全部, 设展开全部] = useState(false);
-  const 全部合计 = dataSource.reduce((acc, row) => acc + (row.合计 as number), 0);
+  const 全部合计 = dataSource.reduce(
+    (acc, row) => acc + Math.round((row.合计 as number) * 100) / 100,
+    0,
+  );
   const 显示行数 = 展开全部 ? 长表数据.length : 3;
   const 搜索结果 = useMemo(() => {
     if (![...搜索字].length || [...搜索字].length > 1) return null;
@@ -519,7 +536,7 @@ const OrderDuplicationAnalyzer = () => {
       <Flex gap="middle" align="center" wrap="wrap">
         <Typography.Text strong>
           全部合计：
-          {Math.round(全部合计)}（{数字(0)}阶~{数字(maxLength)}阶所有模式求和）
+          {全部合计.toFixed(2)}（{数字(0)}阶~{数字(maxLength)}阶所有模式求和）
         </Typography.Text>
         <Select
           mode="multiple"
@@ -537,7 +554,7 @@ const OrderDuplicationAnalyzer = () => {
           自定义合计：
           {求和阶.length === 0
             ? "—"
-            : `${Math.round(自定义合计)}（${求和阶
+            : `${自定义合计.toFixed(2)}（${求和阶
                 .sort((a, b) => a - b)
                 .map((阶) => `${数字(阶)}阶`)
                 .join(" + ")}）`}
