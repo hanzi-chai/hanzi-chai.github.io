@@ -1717,7 +1717,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                             size="small"
                             readOnly
                             style={{ cursor: "text" }}
-                            value={根列表.length ? `+${根列表.length}` : ""}
+                            value={根列表.join(" ")}
                             placeholder="输入字根，空格分隔"
                             onClick={() => {
                               设手动收起集((s) => {
