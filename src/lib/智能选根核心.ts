@@ -241,8 +241,6 @@ export function 挖掘重码组根(
   词序列: Iterable<[string, { element: string; index: number }[]]>,
   表列表: 评分表输入[],
   maxLength: number,
-  根起: number,
-  根止: number,
   切片挖掘结果: 挖掘结果项[],
   cb?: { on阶段?: (文本: string) => void },
 ): { 组: 重码组信息[]; 根: 重码根候选[] } {
@@ -329,8 +327,8 @@ export function 挖掘重码组根(
   }
   const 根 = [...根累计.entries()]
     .map(([名, { 得分, 字集 }]) => ({ 名, 得分: Math.round(得分 * 100) / 100, 字列表: [...字集] }))
-    .sort((a, b) => b.得分 - a.得分)
-    .slice(Math.max(0, 根起 - 1), Math.max(根起 - 1, 根止));
+    .sort((a, b) => b.得分 - a.得分);
+  // 不在此切片：调用方按各自的根起/根止取用（界面改范围无需重新挖掘）
 
   return { 组: 组选定, 根 };
 }
@@ -1002,8 +1000,6 @@ export class 智能选根核心 {
    *  根按「从组中分离出的收益」（可消除的重码伤害）降序取 [根起, 根止] */
   重码组挖掘(
     表列表: 评分表输入[],
-    根起: number,
-    根止: number,
     cb?: { 应停止?: () => boolean; on阶段?: (文本: string) => void },
     允许复合体 = false,
   ): { 组: 重码组信息[]; 根: 重码根候选[] } {
@@ -1011,7 +1007,8 @@ export class 智能选根核心 {
     for (const [名, 列表] of this.基态词序列)
       for (const j of 列表) 词序列.push([名, JSON.parse(j)]);
     const 挖掘结果 = this.挖掘切片候选(cb, 允许复合体);
-    return 挖掘重码组根(词序列, 表列表, 4, 根起, 根止, 挖掘结果, cb);
+    // 根返回完整收益榜（不切片）：调用方按各自的根起/根止取用，改范围无需重新挖掘
+    return 挖掘重码组根(词序列, 表列表, 4, 挖掘结果, cb);
   }
 
   // ---------- 贪心搜索 ----------
@@ -1058,7 +1055,7 @@ export class 智能选根核心 {
     this.设置基态(起始去预置); // 必须在候选池之前：重码组挖掘规则需要基态词序列
     for (const 规则 of 规则列表) {
       if (规则.类型 === "重码组挖掘") {
-        const { 根: 组根 } = this.重码组挖掘(参数.表列表, 规则.根起, 规则.根止, { 应停止: () => cb.应停止?.() ?? false, on阶段: (文本) => cb.on阶段?.(文本) }, 规则.允许复合体 !== false);
+        const { 根: 组根 } = this.重码组挖掘(参数.表列表, { 应停止: () => cb.应停止?.() ?? false, on阶段: (文本) => cb.on阶段?.(文本) }, 规则.允许复合体 !== false);
         for (let i = 规则.根起 - 1; i < Math.min(规则.根止, 组根.length); i++) {
           const 名 = 组根[i]!.名;
           if (保护.has(名) || 已有根.has(名)) continue;

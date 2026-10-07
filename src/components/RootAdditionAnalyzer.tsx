@@ -1790,10 +1790,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                         注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
                       </Typography.Text>
                       <Typography.Text type="secondary" className="w-full!">
-                        共 {状态.结果.根.length} 个候选（灰=已在方案），点字形看它出现在哪些字里：
+                        共 {状态.结果.根.length} 个候选（灰=已在方案），显示第 {r.根起 ?? 1}~
+                        {Math.min(r.根止 ?? 状态.结果.根.length, 状态.结果.根.length)} 名，改范围即时生效：
                       </Typography.Text>
                       <div className="mt-1 flex flex-wrap gap-1 max-h-44 overflow-y-auto items-start">
-                        {状态.结果.根.map((rk, ri) => (
+                        {状态.结果.根
+                          .slice((r.根起 ?? 1) - 1, r.根止 ?? 状态.结果.根.length)
+                          .map((rk, ri) => (
                           <Popover
                             key={ri}
                             trigger="click"
