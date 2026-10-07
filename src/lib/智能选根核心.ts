@@ -343,7 +343,7 @@ export type 字根表规则 =
   | { 类型: "字频范围"; 起: number; 止: number }
   | { 类型: "字内部件"; 起: number; 止: number; 允许复合体?: boolean }
   | { 类型: "重码组挖掘"; 根起: number; 根止: number; 允许复合体?: boolean }
-  | { 类型: "手动指定"; 字根: string };
+  | { 类型: "手动指定"; 字根: string | string[] };
 export interface 搜索参数 {
   /** 轮数上限 */
   轮数: number;
@@ -1089,12 +1089,18 @@ export class 智能选根核心 {
           池Set.add(名);
         }
       } else if (规则.类型 === "手动指定") {
-        for (const w of [...规则.字根]) {
+        // 字根列表两种形态：string[]（新版，一根一名，支持拼音/自定义等多字符元素）与
+        // string（旧版单字符串，逐码点一根——仅兼容历史配置）
+        const 根列表 = Array.isArray(规则.字根) ? 规则.字根 : [...规则.字根];
+        for (const w of 根列表) {
           if (保护.has(w) || 已有根.has(w)) continue;
           const 字符对象 = this.字符对象映射.get(w);
           if (!字符对象 || this.字库.查询字形(字符对象)?.length === 0) {
-            cb.on日志?.(`手动指定字根「${w}」不在字库或无字形，已跳过`);
-            continue;
+            // 拼音/自定义元素没有字形，但在名称映射中是合法元素，同样允许入池
+            if (!this.名称映射.has(w)) {
+              cb.on日志?.(`手动指定字根「${w}」不在字库且不是合法元素，已跳过`);
+              continue;
+            }
           }
           池Set.add(w);
         }

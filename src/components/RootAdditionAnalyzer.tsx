@@ -28,6 +28,7 @@ import {
   决策图,
   构建强类型决策与决策空间,
   组装,
+  笔画,
   type 强类型广义安排,
   type 强类型广义引用,
   type 强类型决策,
@@ -1640,7 +1641,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   key: "重码组挖掘",
                   label: "重码组挖掘（按有该根的字从组中分离出的收益排名）",
                 },
-                { key: "手动指定", label: "手动指定（文本框逐字输入，一字符一根）" },
+                { key: "手动指定", label: "手动指定（标签输入，支持拼音/自定义元素）" },
               ],
               onClick: ({ key }) => {
                 const 类型 = key as "字频范围" | "字内部件" | "重码组挖掘" | "手动指定";
@@ -1650,7 +1651,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     类型 === "重码组挖掘"
                       ? { 类型, 根起: 1, 根止: 100, 允许复合体: true }
                       : 类型 === "手动指定"
-                        ? { 类型, 字根: "" }
+                        ? { 类型, 字根: [] as string[] }
                         : {
                             类型,
                             起: 1,
@@ -1682,12 +1683,15 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   <Tag color="magenta">重码组挖掘</Tag>
                 )}
                 {r.类型 === "手动指定" && (
-                  <Input
+                  <Select
                     size="small"
-                    className="w-72!"
-                    placeholder="直接输入/粘贴字根字符，一字符一根"
-                    value={r.字根}
-                    onChange={(e) => 改规则(i, { 字根: e.target.value })}
+                    mode="tags"
+                    open={false}
+                    className="min-w-96!"
+                    placeholder="输入字根后回车/空格/逗号成签；支持拼音与自定义元素名"
+                    value={Array.isArray(r.字根) ? r.字根 : [...r.字根]}
+                    onChange={(v) => 改规则(i, { 字根: v })}
+                    tokenSeparators={[" ", ",", "，", "、", ";", "；", "\t", "\n"]}
                   />
                 )}
                 {(r.类型 === "字频范围" || r.类型 === "字内部件") && (
@@ -1753,7 +1757,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     : r.类型 === "字内部件"
                       ? "（按包含该根的字数排名，可挖到整字与各层部件）"
                       : r.类型 === "手动指定"
-                        ? "（逐字直接作为候选，非法字会被跳过并记日志）"
+                        ? "（一根一签，回车/空格/逗号成签；拼音与自定义元素同样有效，非法名会被跳过并记日志）"
                         : "（按有该根的字从组中分离出的收益排名）"}
                 </Typography.Text>
                 <Button
@@ -1837,7 +1841,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                       : 挖掘状态.复;
                   const 起 = Math.max(1, Math.floor((r as any).起 ?? 1));
                   const 止 = Math.max(起, Math.floor((r as any).止 ?? 200));
-                  const 保护 = new Set(["1", "2", "3", "4", "5", "6"]);
+                  // 动态笔画根：与引擎口径一致（名称映射中元素身份为「笔画」者），不写死 '1'-'6'
+                  const 笔画根集 = new Set<string>();
+                  for (const [名, e] of 名称映射 ?? [])
+                    if (e instanceof 笔画) 笔画根集.add(名);
+                  const 保护 = 笔画根集;
                   const 已有 = new Set(Object.keys(起始mapping));
                   const 成员: {
                     名: string;
@@ -1854,8 +1862,9 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                         </div>
                       );
                     }
+                    const 根列表 = Array.isArray(r.字根) ? r.字根 : [...(r.字根 ?? "")];
                     const 见过 = new Set<string>();
-                    for (const ch of [...(r.字根 ?? "")]) {
+                    for (const ch of 根列表) {
                       if (保护.has(ch) || 见过.has(ch)) continue;
                       见过.add(ch);
                       const 字符 = 笔顺索引.名到字符.get(ch);
@@ -1866,7 +1875,9 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                           ? 已有.has(ch)
                             ? "已在方案"
                             : `${项?.次数 ?? 0}字`
-                          : "不在字库",
+                          : 名称映射?.has(ch)
+                            ? "名称元素"
+                            : "不在字库",
                         在方案: 已有.has(ch),
                         字列表: 项?.字列表,
                       });
@@ -1929,6 +1940,10 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                               </div>
                             ) : 状态.进行中 || !状态.按名 ? (
                               <div className="text-gray-500">字内部件挖掘中……</div>
+                            ) : m.标注 === "名称元素" ? (
+                              <div className="text-gray-500">
+                                名称元素（拼音/自定义）：无字形，不参与字内部件字数统计
+                              </div>
                             ) : (
                               <div className="text-gray-500">
                                 挖掘完成：该字形作为切片出现 0 次（挖不出）
