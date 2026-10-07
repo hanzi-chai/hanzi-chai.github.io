@@ -40,6 +40,21 @@ export interface 挖掘结果项 {
 
 const 挖掘缓存 = new WeakMap<object, Map<string, 挖掘结果项[]>>();
 
+/** 字形同形键：与部件匹配器的判据同构（笔画数 + 逐笔完整特征 + 拓扑签名）。
+ *  同键者匹配器必然同等对待，可安全去重/互斥；返回 null = 不参与同形判定
+ *  （非部件、复合体、无逐笔笔画列表的空壳、单笔画笔画根）。
+ *  挖掘去重与搜索的候选池「与已有根同形则不进池」过滤必须共用本函数，
+ *  两层判据一旦不同步就会静默漏候选（E00d 被 E446 误杀的教训）。 */
+export function 字形同形键(字形: any): string | null {
+  if (!字形 || !是部件(字形)) return null;
+  const 笔画列表 = 字形._笔画列表?.() as { feature: string }[] | undefined;
+  if ((笔画列表?.length ?? 0) < 2) return null; // 单笔画 = 笔画根，恒可用，不参与同形
+  const 拓扑 = 字形._拓扑?.();
+  const 拓扑签名 = 拓扑?.matrix
+    ?.map((行: any[]) => 行.map((关系: any) => (关系?.map?.((r: any) => r.type).join("+") ?? "")).join(",")).join(";");
+  return `部#${笔画列表!.length}#${笔画列表!.map((s) => s.feature).join("|")}#${拓扑签名 ?? ""}`;
+}
+
 /** 引擎版字内部件挖掘（原名切片挖掘）：按「分析字集中包含该形状的字数」对全字库候选形状排名。
  *  两类候选、两类判定：
  *  - 部件候选（叶部件字形）：在扫描字的叶部件上做引擎切片判定（笔画特征等价 + 拓扑矩阵校验，
@@ -63,7 +78,7 @@ export function 挖掘切片候选(
   if (cached) return cached;
   const 中止 = () => cb?.应停止?.() === true;
 
-  // 1) 候选形状 = 全字库每字符的主字形，按分类笔顺（部件另加拓扑）去重，取词典频度最高者为代表
+  // 1) 候选形状 = 全字库每字符的主字形，按「字形同形键」去重，取词典频度最高者为代表
   const 形状代表 = new Map<string, { 字形: any; 名: string; 频: number; 复合体: boolean; 分类串: string }>();
   for (const { 字符, 字形列表 } of 字库) {
     const 字形 = 字形列表?.[0];
@@ -73,22 +88,18 @@ export function 挖掘切片候选(
     const 名 = 字符.获取名称();
     const 笔画列表 = (字形 as any)._笔画列表?.() as { feature: string }[] | undefined;
     const 分类串 = (字形.获取笔画序列(默认分类器) as unknown as number[]).join("");
-    if ((笔画列表?.length ?? 0) < 2 || 分类串.length < 2) continue; // 单笔画 = 笔画根，恒可用；无真实笔画列表的空壳字形不作为候选
-    // 去重键 = 匹配器的判据本身：部件匹配比对「笔画数 + 逐笔特征 + 拓扑」，同键者匹配器必然同等对待，
-    // 去重零误判。此前用「分类串+拓扑」做键，丢掉了笔画方向等几何信息，横竖两点被判同形（E446 案例）。
-    // 复合体的匹配判据含结构与各叶子，无法可靠镜像为签名，故逐一独立候选（复合体是少数）。
-    let 键: string;
+    if (分类串.length < 2) continue; // 单笔画 = 笔画根，恒可用
+    // 复合体：匹配判据含结构与各叶子，无法可靠镜像为签名，逐一独立候选（宁多勿错），且不做空壳过滤（复合体没有逐笔笔画列表）
     if (复) {
-      键 = `复#${名}`;
-    } else {
-      const 拓扑 = (字形 as any)._拓扑();
-      const 拓扑签名 = 拓扑?.matrix
-        ?.map((行: any[]) => 行.map((关系: any) => (关系?.map?.((r: any) => r.type).join("+") ?? "")).join(",")).join(";");
-      键 = `部#${笔画列表!.length}#${笔画列表!.map((s) => s.feature).join("|")}#${拓扑签名 ?? ""}`;
+      形状代表.set(`复#${名}`, { 字形, 名, 频: 频率表.get(名) ?? -1, 复合体: true, 分类串 });
+      continue;
     }
+    // 部件：无真实笔画列表的空壳字形不作为候选
+    if ((笔画列表?.length ?? 0) < 2) continue;
+    const 键 = 字形同形键(字形)!;
     const 频 = 频率表.get(名) ?? -1;
     const 旧 = 形状代表.get(键);
-    if (!旧 || 频 > 旧.频) 形状代表.set(键, { 字形, 名, 频, 复合体: 复, 分类串 });
+    if (!旧 || 频 > 旧.频) 形状代表.set(键, { 字形, 名, 频, 复合体: false, 分类串 });
   }
   const 部件候选: { 部件: any; 名: string; 计数: Map<string, number>; 掩码: bigint; 长度: number }[] = [];
   const 复合候选: { 名: string; 分类串: string }[] = [];
@@ -1102,15 +1113,8 @@ export class 智能选根核心 {
     for (const { 字符, 字形列表 } of this.字库 as any) {
       if (!名到字形.has(字符.获取名称())) 名到字形.set(字符.获取名称(), 字形列表?.[0]);
     }
-    const 形状签名 = (字形: any) => {
-      if (!字形 || !是部件(字形)) return null;
-      const 分类串 = (字形.获取笔画序列(默认分类器) as unknown as number[]).join("");
-      const 拓扑 = (字形 as any)._拓扑();
-      const 拓扑签名 = 拓扑?.matrix
-        ?.map((行: any[]) => 行.map((关系: any) => (关系?.map?.((r: any) => r.type).join("+") ?? "")).join(","))
-        .join(";");
-      return `${分类串}#${拓扑签名 ?? ""}`;
-    };
+    // 与挖掘去重共用「字形同形键」（匹配器判据同构），两层判据必须一致——见 字形同形键 注释
+    const 形状签名 = (字形: any) => 字形同形键(字形);
     const 已有签名 = new Set<string>();
     for (const 名 of Object.keys(mapping)) {
       const 签名 = 形状签名(名到字形.get(名));
