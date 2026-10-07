@@ -1711,7 +1711,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                       });
                     };
                     return (
-                      <Flex gap={4} style={{ flex: 1, minWidth: 0 }} align="flex-start">
+                      <Flex gap={4} style={{ flex: "1 1 280px", minWidth: 280 }} align="flex-start">
                         {收起 ? (
                           <Input
                             size="small"
