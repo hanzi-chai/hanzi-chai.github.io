@@ -19,6 +19,8 @@ import {
   message,
 } from "antd";
 import InfoCircleOutlined from "@ant-design/icons/InfoCircleOutlined";
+import CaretDownOutlined from "@ant-design/icons/CaretDownOutlined";
+import CaretUpOutlined from "@ant-design/icons/CaretUpOutlined";
 import type { ColumnsType } from "antd/es/table";
 import type { 元素 } from "hanzi-chai";
 import {
@@ -1219,6 +1221,17 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const [字根表, 设字根表] = useState<字根表规则[]>(
     初始配置.字根表 ?? [{ 类型: "字频范围", 起: 1, 止: 200 }],
   );
+  // 手动指定输入域：收起索引集 + 打字中的原始文本（不即时归一，避免受控回写跳光标）
+  const [手动收起集, 设手动收起集] = useState<Set<number>>(new Set());
+  const [手动文本, 设手动文本] = useState<Record<number, string>>({});
+  const 手动域引用 = useRef<any>(null);
+  // 删除规则后重排按索引记录的临时状态
+  const 重排索引记录 = (记录: Record<number, string>, 删: number): Record<number, string> =>
+    Object.fromEntries(
+      Object.entries(记录)
+        .filter(([j]) => Number(j) !== 删)
+        .map(([j, v]) => [Number(j) > 删 ? Number(j) - 1 : Number(j), v]),
+    );
   const [占位安排, 设占位安排] = useState(
     初始配置.占位安排 ?? (alphabet[0] ?? "a").repeat(编码类型),
   );
@@ -1682,25 +1695,77 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 ) : (
                   <Tag color="magenta">重码组挖掘</Tag>
                 )}
-                {r.类型 === "手动指定" && (
-                  <Select
-                    size="small"
-                    mode="tags"
-                    open={false}
-                    suffixIcon={null}
-                    maxTagCount="responsive"
-                    maxTagPlaceholder={(omitted) => (
-                      <span title={omitted.join(" ")}>+{omitted.length}</span>
-                    )}
-                    className="min-w-96!"
-                    placeholder="输入字根，回车/空格成签"
-                    value={Array.isArray(r.字根) ? r.字根 : [...r.字根]}
-                    onChange={(v) =>
-                      改规则(i, { 字根: v.map((s) => s.trim()).filter(Boolean) })
-                    }
-                    tokenSeparators={[" ", "\t", "\n"]}
-                  />
-                )}
+                {r.类型 === "手动指定" &&
+                  (() => {
+                    const 根列表 = Array.isArray(r.字根) ? r.字根 : [...r.字根];
+                    const 收起 = 手动收起集.has(i);
+                    const 聚焦末尾 = () => {
+                      requestAnimationFrame(() => {
+                        const el: HTMLTextAreaElement | null =
+                          手动域引用.current?.nativeElement ?? 手动域引用.current;
+                        if (el) {
+                          el.focus();
+                          const 末 = (手动文本[i] ?? 根列表.join(" ")).length;
+                          el.setSelectionRange(末, 末);
+                        }
+                      });
+                    };
+                    return (
+                      <Flex gap={4} style={{ flex: 1, minWidth: 0 }} align="flex-start">
+                        {收起 ? (
+                          <Input
+                            size="small"
+                            readOnly
+                            style={{ cursor: "text" }}
+                            value={根列表.length ? `+${根列表.length}` : ""}
+                            placeholder="输入字根，空格分隔"
+                            onClick={() => {
+                              设手动收起集((s) => {
+                                const n = new Set(s);
+                                n.delete(i);
+                                return n;
+                              });
+                              聚焦末尾();
+                            }}
+                          />
+                        ) : (
+                          <Input.TextArea
+                            size="small"
+                            ref={手动域引用}
+                            style={{ resize: "none" }}
+                            placeholder="输入字根，空格分隔"
+                            autoSize={{ minRows: 1, maxRows: 5 }}
+                            value={手动文本[i] ?? 根列表.join(" ")}
+                            onChange={(e) => {
+                              设手动文本((t) => ({ ...t, [i]: e.target.value }));
+                              改规则(i, {
+                                字根: e.target.value.split(/\s+/).filter(Boolean),
+                              });
+                            }}
+                          />
+                        )}
+                        <Button
+                          size="small"
+                          type="text"
+                          icon={收起 ? <CaretDownOutlined /> : <CaretUpOutlined />}
+                          onClick={() => {
+                            设手动收起集((s) => {
+                              const n = new Set(s);
+                              if (收起) n.delete(i);
+                              else n.add(i);
+                              return n;
+                            });
+                            if (!收起) 设手动文本((t) => {
+                              const n = { ...t };
+                              delete n[i];
+                              return n;
+                            });
+                            else 聚焦末尾();
+                          }}
+                        />
+                      </Flex>
+                    );
+                  })()}
                 {(r.类型 === "字频范围" || r.类型 === "字内部件") && (
                   <>
                     第
@@ -1782,7 +1847,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                       ? "▸ 查看排行"
                       : "▸ 查看候选"}
                 </Button>
-                <DeleteButton onClick={() => 设字根表((x) => x.filter((_, j) => j !== i))} />
+                <DeleteButton
+                  onClick={() => {
+                    设字根表((x) => x.filter((_, j) => j !== i));
+                    设手动收起集((s) => new Set([...s].filter((j) => j !== i).map((j) => (j > i ? j - 1 : j))));
+                    设手动文本((t) => 重排索引记录(t, i));
+                  }}
+                />
               </div>
               {展开规则.includes(i) &&
                 r.类型 === "重码组挖掘" &&
