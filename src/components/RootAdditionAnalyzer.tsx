@@ -1688,7 +1688,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     mode="tags"
                     open={false}
                     className="min-w-96!"
-                    placeholder="输入字根后回车/空格成签；支持拼音与自定义元素名"
+                    placeholder="输入字根，回车/空格成签"
                     value={Array.isArray(r.字根) ? r.字根 : [...r.字根]}
                     onChange={(v) =>
                       改规则(i, { 字根: v.map((s) => s.trim()).filter(Boolean) })
