@@ -365,9 +365,12 @@ export interface 搜索参数 {
   根数惩罚?: string;
   /** 加根时，若候选的相似字形分组兄弟已在方案中，自动归并到该根（缺省开启） */
   自动归并相似根?: boolean;
-  /** 预置归并：[{根, 目标}]——两者都不占基态键位；目标强制加入候选池，
-   *  执行「加目标」动作时，绑定的根自动以 {element: 目标} 随行入映射 */
-  预置归并?: { 根: string; 目标: string }[];
+  /** 预置归并：[{根, 目标, 根位?, 目标位?}]。
+   *  无码位：两者都不占基态键位，根整体随目标（真归并 {element: 目标}）；目标强制加入候选池，
+   *  执行「加目标」动作时，绑定的根自动以 {element: 目标} 随行入映射。
+   *  带码位（1 起）：根保留自己的键位，仅第 根位 码改用 目标元素的第 目标位 码
+   *  （安排=逐位数组，该位={element: 目标, index: 目标位-1}）；不摘除、不随行。 */
+  预置归并?: { 根: string; 目标: string; 根位?: number; 目标位?: number }[];
 }
 export interface 轮结果 {
   轮: number;
@@ -1033,11 +1036,16 @@ export class 智能选根核心 {
       ? [...this.频率表.entries()].filter(([w]) => [...w].length === 1).sort((a, b) => b[1] - a[1])
       : [];
     const 池Set = new Set<string>();
-    // 预置归并：绑定的根从基态摘除（不占键位），目标稍后强制入池
+    // 预置归并：绑定的根从基态摘除（不占键位），目标稍后强制入池；
+    // 带码位条目（根位/目标位）不走此路：根保留键位，仅指定码位改用目标元素的指定码
     const 预置归并表 = 参数.预置归并 ?? [];
-    const 预置根集 = new Set(预置归并表.map((x) => x.根));
+    for (const x of 预置归并表)
+      if ((x.根位 == null) !== (x.目标位 == null))
+        cb.on日志?.(`预置归并「${x.根}=${x.目标}」码位只写了一边，按整体归并处理（码位必须成对）`);
+    const 无位归并 = 预置归并表.filter((x) => x.根位 == null || x.目标位 == null);
+    const 预置根集 = new Set(无位归并.map((x) => x.根));
     const 预置目标到根 = new Map<string, string[]>();
-    for (const { 根, 目标 } of 预置归并表) {
+    for (const { 根, 目标 } of 无位归并) {
       const e = 预置目标到根.get(目标) ?? [];
       e.push(根);
       预置目标到根.set(目标, e);
@@ -1049,6 +1057,23 @@ export class 智能选根核心 {
       if (起始去预置[目标] !== undefined) {
         for (const 根 of 根s) 起始去预置[根] = { element: 目标 }; // 真归并
       }
+    }
+    // 带码位归并：根保留原键位安排，仅第 根位 码替换为 {element: 目标, index: 目标位-1}（码位从 1 起）
+    const 归并码数 = this.配置0.form.mapping_type ?? 2;
+    for (const { 根, 目标, 根位, 目标位 } of 预置归并表) {
+      if (根位 == null || 目标位 == null) continue;
+      const 原 = 起始去预置[根];
+      if (原 === undefined || (typeof 原 !== "string" && !Array.isArray(原))) {
+        cb.on日志?.(`预置归并「${根} ${根位}=${目标} ${目标位}」跳过：根不在当前方案或安排无法逐位展开`);
+        continue;
+      }
+      if (根位 < 1 || 根位 > 归并码数 || 目标位 < 1) {
+        cb.on日志?.(`预置归并「${根} ${根位}=${目标} ${目标位}」跳过：码位超出范围（每根 ${归并码数} 码）`);
+        continue;
+      }
+      起始去预置[根] = Array.from({ length: 归并码数 }, (_, i) =>
+        i === 根位 - 1 ? { element: 目标, index: 目标位 - 1 } : typeof 原 === "string" ? 原 : 原[i],
+      );
     }
     const 已有根 = new Set(Object.keys(起始mapping));
     this.根数惩罚 = 参数.根数惩罚;

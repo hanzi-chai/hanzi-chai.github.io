@@ -1225,6 +1225,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const [手动收起集, 设手动收起集] = useState<Set<number>>(new Set());
   const [手动文本, 设手动文本] = useState<Record<number, string>>({});
   const 手动域引用 = useRef<any>(null);
+  const [归并收起, 设归并收起] = useState(false);
+  const 归并域引用 = useRef<any>(null);
   // 删除规则后重排按索引记录的临时状态
   const 重排索引记录 = (记录: Record<number, string>, 删: number): Record<number, string> =>
     Object.fromEntries(
@@ -1232,6 +1234,62 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         .filter(([j]) => Number(j) !== 删)
         .map(([j, v]) => [Number(j) > 删 ? Number(j) - 1 : Number(j), v]),
     );
+  // 可收放的多行输入域（手动指定/预置归并共用渲染函数——直接调用返回 JSX，不产生新组件类型，避免失焦重挂）
+  const 渲染收放输入 = (
+    原文: string,
+    设原文: (v: string) => void,
+    收起: boolean,
+    设收起: (收: boolean) => void,
+    占位: string,
+    引用: { current: any },
+  ) => {
+    const 聚焦末尾 = () => {
+      requestAnimationFrame(() => {
+        const el: HTMLTextAreaElement | null = 引用.current?.nativeElement ?? 引用.current;
+        if (el) {
+          el.focus();
+          const 末 = 原文.length;
+          el.setSelectionRange(末, 末);
+        }
+      });
+    };
+    return (
+      <Flex gap={4} style={{ flex: "1 1 280px", minWidth: 280 }} align="flex-start">
+        {收起 ? (
+          <Input
+            size="small"
+            readOnly
+            style={{ cursor: "text" }}
+            value={原文}
+            placeholder={占位}
+            onClick={() => {
+              设收起(false);
+              聚焦末尾();
+            }}
+          />
+        ) : (
+          <Input.TextArea
+            size="small"
+            ref={引用}
+            style={{ resize: "none" }}
+            placeholder={占位}
+            autoSize={{ minRows: 1, maxRows: 5 }}
+            value={原文}
+            onChange={(e) => 设原文(e.target.value)}
+          />
+        )}
+        <Button
+          size="small"
+          type="text"
+          icon={收起 ? <CaretDownOutlined /> : <CaretUpOutlined />}
+          onClick={() => {
+            设收起(!收起);
+            if (!收起) 聚焦末尾();
+          }}
+        />
+      </Flex>
+    );
+  };
   const [占位安排, 设占位安排] = useState(
     初始配置.占位安排 ?? (alphabet[0] ?? "a").repeat(编码类型),
   );
@@ -1473,21 +1531,54 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       设错误("请先在「评分表」页签配置至少一张评分表");
       return;
     }
-    // 预置归并解析与校验
+    // 预置归并解析与校验（条目用中英逗号或换行分隔；空格是码位语法：的 1=人 2）
     const 占位 = 占位安排.trim() || (alphabet[0] ?? "a").repeat(编码类型);
     const 条目 = 预置归并文本
-      .split(/[,，;；\n]/)
+      .split(/[,,\n]/)
       .map((s: string) => s.trim())
       .filter(Boolean);
-    const 预置: { 根: string; 目标: string }[] = [];
+    const 预置: { 根: string; 目标: string; 根位?: number; 目标位?: number }[] = [];
     const 已绑定 = new Set<string>();
+    const 解归并侧 = (
+      s: string,
+      条: string,
+      序: number,
+      侧名: string,
+    ): { 名: string; 位: number | null } | null => {
+      const ts = s.trim().split(/\s+/).filter(Boolean);
+      if (ts.length === 0) {
+        设错误(`预置归并第 ${序 + 1} 条（${条}）：${侧名}为空`);
+        return null;
+      }
+      let 位: number | null = null;
+      if (ts.length >= 2 && /^\d+$/.test(ts[ts.length - 1]!)) 位 = Number(ts.pop());
+      if (ts.length > 1) {
+        设错误(
+          `预置归并第 ${序 + 1} 条（${条}）：${侧名}「${s.trim()}」元素名不能含空白（空格用于码位语法，如 的 1=人 2）`,
+        );
+        return null;
+      }
+      return { 名: ts[0]!, 位 };
+    };
     for (let i = 0; i < 条目.length; i++) {
-      const [根, 目标] = 条目[i]!.split(/[=＝]/).map((s: string) => s.trim());
-      if (!根 || !目标) {
-        设错误(`预置归并第 ${i + 1} 条（${条目[i]}）格式应为「根=目标」`);
+      const 等分 = 条目[i]!.split(/[=＝]/);
+      if (等分.length !== 2) {
+        设错误(`预置归并第 ${i + 1} 条（${条目[i]}）格式应为「根=目标」或「根 位=目标 位」`);
         return;
       }
-      if (根 === 目标) {
+      const L = 解归并侧(等分[0]!, 条目[i]!, i, "左边");
+      if (!L) return;
+      const R = 解归并侧(等分[1]!, 条目[i]!, i, "右边");
+      if (!R) return;
+      if ((L.位 == null) !== (R.位 == null)) {
+        设错误(
+          `预置归并第 ${i + 1} 条（${条目[i]}）：码位必须两边都写或都不写，如 的 1=人 2（的的第一码归到人的第二码）或 a=人（整体归并）`,
+        );
+        return;
+      }
+      const 根 = L.名;
+      const 目标 = R.名;
+      if (根 === 目标 && (L.位 == null || L.位 === R.位)) {
         设错误(`预置归并第 ${i + 1} 条：根与目标是同一个（${根}）`);
         return;
       }
@@ -1502,7 +1593,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         return;
       }
       已绑定.add(根);
-      预置.push({ 根, 目标 });
+      预置.push(
+        L.位 == null
+          ? { 根, 目标 }
+          : { 根, 目标, 根位: L.位, 目标位: R.位! },
+      );
     }
     const 范围文本 = 减根范围文本.trim();
     if (范围文本) {
@@ -1696,72 +1791,25 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   <Tag color="magenta">重码组挖掘</Tag>
                 )}
                 {r.类型 === "手动指定" &&
-                  (() => {
-                    const 根列表 = Array.isArray(r.字根) ? r.字根 : [...r.字根];
-                    const 收起 = 手动收起集.has(i);
-                    const 聚焦末尾 = () => {
-                      requestAnimationFrame(() => {
-                        const el: HTMLTextAreaElement | null =
-                          手动域引用.current?.nativeElement ?? 手动域引用.current;
-                        if (el) {
-                          el.focus();
-                          const 末 = (手动文本[i] ?? 根列表.join(" ")).length;
-                          el.setSelectionRange(末, 末);
-                        }
+                  渲染收放输入(
+                    手动文本[i] ?? (Array.isArray(r.字根) ? r.字根 : [...r.字根]).join(","),
+                    (v) => {
+                      设手动文本((t) => ({ ...t, [i]: v }));
+                      改规则(i, {
+                        字根: v.split(/[,,\n]/).map((s) => s.trim()).filter(Boolean),
                       });
-                    };
-                    return (
-                      <Flex gap={4} style={{ flex: "1 1 280px", minWidth: 280 }} align="flex-start">
-                        {收起 ? (
-                          <Input
-                            size="small"
-                            readOnly
-                            style={{ cursor: "text" }}
-                            value={手动文本[i] ?? 根列表.join(" ")}
-                            placeholder="输入字根，空白符分隔"
-                            onClick={() => {
-                              设手动收起集((s) => {
-                                const n = new Set(s);
-                                n.delete(i);
-                                return n;
-                              });
-                              聚焦末尾();
-                            }}
-                          />
-                        ) : (
-                          <Input.TextArea
-                            size="small"
-                            ref={手动域引用}
-                            style={{ resize: "none" }}
-                            placeholder="输入字根，空白符分隔"
-                            autoSize={{ minRows: 1, maxRows: 5 }}
-                            value={手动文本[i] ?? 根列表.join(" ")}
-                            onChange={(e) => {
-                              设手动文本((t) => ({ ...t, [i]: e.target.value }));
-                              改规则(i, {
-                                字根: e.target.value.split(/\s+/).filter(Boolean),
-                              });
-                            }}
-                          />
-                        )}
-                        <Button
-                          size="small"
-                          type="text"
-                          icon={收起 ? <CaretDownOutlined /> : <CaretUpOutlined />}
-                          onClick={() => {
-                            设手动收起集((s) => {
-                              const n = new Set(s);
-                              if (收起) n.delete(i);
-                              else n.add(i);
-                              return n;
-                            });
-                            // 打字原文始终保留（含换行/Tab 等空白符排列），收起不归一
-                            if (收起) 聚焦末尾();
-                          }}
-                        />
-                      </Flex>
-                    );
-                  })()}
+                    },
+                    手动收起集.has(i),
+                    (收) =>
+                      设手动收起集((s) => {
+                        const n = new Set(s);
+                        if (收) n.delete(i);
+                        else n.add(i);
+                        return n;
+                      }),
+                    "输入字根，逗号分隔",
+                    手动域引用,
+                  )}
                 {(r.类型 === "字频范围" || r.类型 === "字内部件") && (
                   <>
                     第
@@ -1825,7 +1873,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     : r.类型 === "字内部件"
                       ? "（按包含该根的字数排名，可挖到整字与各层部件）"
                       : r.类型 === "手动指定"
-                        ? "（自定义，空白符分隔）"
+                        ? "（自定义，逗号分隔）"
                         : "（按有该根的字从组中分离出的收益排名）"}
                 </Typography.Text>
                 <Button
@@ -2106,16 +2154,18 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               onChange={(e) => 设占位安排(e.target.value)}
             />
           </Flex>
-          <Flex gap={4} align="center">
-            <span title="预登记归并绑定：等号两边都不占基态键位。搜索把右边的根强制加入候选池，执行「加它」时左边的根自动以归并随行。多条用逗号分隔，如 ,b=人">
+          <Flex gap={4} align="center" style={{ flex: 1, minWidth: 320 }}>
+            <span title="预登记归并绑定。整体归并：a=人（两边都不占键位，a 随人走）；码位归并：的 1=人 2（的的第一码改用人的第二码，的保留键位）。码位必须两边都写或都不写。元素可多字符（拼音/自定义）。条目用中英逗号或换行分隔，空格用于码位语法">
               预置归并
             </span>
-            <Input
-              className="w-40! text-center"
-              placeholder="例：a=人，b=人"
-              value={预置归并文本}
-              onChange={(e) => 设预置归并文本(e.target.value)}
-            />
+            {渲染收放输入(
+              预置归并文本,
+              设预置归并文本,
+              归并收起,
+              设归并收起,
+              "例：a=人，的 1=人 2",
+              归并域引用,
+            )}
           </Flex>
           <Flex gap={4} align="center">
             <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示150根起每根罚5万">
