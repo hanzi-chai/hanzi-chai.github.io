@@ -1717,8 +1717,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                             size="small"
                             readOnly
                             style={{ cursor: "text" }}
-                            value={根列表.join(" ")}
-                            placeholder="输入字根，空格分隔"
+                            value={手动文本[i] ?? 根列表.join(" ")}
+                            placeholder="输入字根，空白符分隔"
                             onClick={() => {
                               设手动收起集((s) => {
                                 const n = new Set(s);
@@ -1733,7 +1733,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                             size="small"
                             ref={手动域引用}
                             style={{ resize: "none" }}
-                            placeholder="输入字根，空格分隔"
+                            placeholder="输入字根，空白符分隔"
                             autoSize={{ minRows: 1, maxRows: 5 }}
                             value={手动文本[i] ?? 根列表.join(" ")}
                             onChange={(e) => {
@@ -1755,12 +1755,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                               else n.add(i);
                               return n;
                             });
-                            if (!收起) 设手动文本((t) => {
-                              const n = { ...t };
-                              delete n[i];
-                              return n;
-                            });
-                            else 聚焦末尾();
+                            // 打字原文始终保留（含换行/Tab 等空白符排列），收起不归一
+                            if (收起) 聚焦末尾();
                           }}
                         />
                       </Flex>
@@ -1829,7 +1825,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     : r.类型 === "字内部件"
                       ? "（按包含该根的字数排名，可挖到整字与各层部件）"
                       : r.类型 === "手动指定"
-                        ? "（一根一签，仅空白符分隔——元素名可含逗号等标点；拼音与自定义元素同样有效，非法名会被跳过并记日志）"
+                        ? "（自定义，空白符分隔）"
                         : "（按有该根的字从组中分离出的收益排名）"}
                 </Typography.Text>
                 <Button
