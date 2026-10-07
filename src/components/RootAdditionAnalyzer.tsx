@@ -1687,6 +1687,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     size="small"
                     mode="tags"
                     open={false}
+                    suffixIcon={null}
+                    maxTagCount="responsive"
+                    maxTagPlaceholder={(omitted) => (
+                      <span title={omitted.join(" ")}>+{omitted.length}</span>
+                    )}
                     className="min-w-96!"
                     placeholder="输入字根，回车/空格成签"
                     value={Array.isArray(r.字根) ? r.字根 : [...r.字根]}
