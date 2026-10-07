@@ -2098,7 +2098,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </span>
           </Flex>
           <Flex gap={4} align="center">
-            占位安排
+            字根编码
             <Input
               className="w-16! text-center"
               placeholder={(alphabet[0] ?? "a").repeat(编码类型)}
