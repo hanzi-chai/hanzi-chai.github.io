@@ -73,8 +73,14 @@ export function 挖掘切片候选(
     const 名 = 字符.获取名称();
     const 分类串 = (字形.获取笔画序列(默认分类器) as unknown as number[]).join("");
     if (分类串.length < 2) continue; // 单笔画 = 笔画根，恒可用
+    // 私用区元素是独立的候选元素（可与同形常规字共存、设不同键位），不参与同形去重：
+    // 同形判定只看笔画类别序列+拓扑，连横竖两点都分不出，按代表去重会丢掉真实字形各异的私用区元素（如 E446 横两点）
+    const 码位 = 名.codePointAt(0) ?? 0;
+    const 是私用区 = 码位 >= 0xe000 && 码位 <= 0xf8ff;
     let 键: string;
-    if (复) {
+    if (是私用区) {
+      键 = `PUA#${名}`;
+    } else if (复) {
       键 = `复#${分类串}`;
     } else {
       const 拓扑 = (字形 as any)._拓扑();
