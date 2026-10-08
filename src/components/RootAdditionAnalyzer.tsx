@@ -65,6 +65,7 @@ import {
   重码根候选,
   重码组信息,
   字根表规则,
+  字形同形键,
   type 搜索结果,
   type 轮结果,
 } from "../lib/智能选根核心";
@@ -1436,6 +1437,31 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     Object.keys(起始mapping).filter((k) => 是根身份(起始mapping[k])),
   );
 
+  // 候选预览与搜索池同尺子：形状签名与已有根相同的候选不会入池（如 PUA 变体），
+  // 预览必须把这些标出来，否则"看着能加、实际被滤"就是显示与实际脱节
+  const 名到字形 = useMemo(() => {
+    const m = new Map<string, any>();
+    if (字库) {
+      for (const { 字符, 字形列表 } of 字库 as any) {
+        if (!m.has(字符.获取名称())) m.set(字符.获取名称(), 字形列表?.[0]);
+      }
+    }
+    return m;
+  }, [字库]);
+  const 签名到已有根 = useMemo(() => {
+    const s = new Map<string, string>();
+    for (const 名 of Object.keys(起始mapping)) {
+      const 签名 = 字形同形键(名到字形.get(名));
+      if (签名) s.set(签名, 名);
+    }
+    return s;
+  }, [起始mapping, 名到字形]);
+  // 候选名 → 同形的已有根名（无碰撞则 undefined）
+  const 同形已有根 = (名: string) => {
+    const 签名 = 字形同形键(名到字形.get(名));
+    return 签名 ? 签名到已有根.get(签名) : undefined;
+  };
+
   // —— 可选字根配置的数据准备：全字库笔顺索引 ——
   const 频率表 = useMemo(
     () => new Map(原始词典.map((d) => [d.词, d.频率] as [string, number])),
@@ -2028,13 +2054,15 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                         注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
                       </Typography.Text>
                       <Typography.Text type="secondary" className="w-full!">
-                        共 {状态.结果.根.length} 个候选（灰=已在方案），显示第 {r.根起 ?? 1}~
+                        共 {状态.结果.根.length} 个候选（灰=已在方案或与已有根同形，同形者不会入池），显示第 {r.根起 ?? 1}~
                         {Math.min(r.根止 ?? 状态.结果.根.length, 状态.结果.根.length)} 名，改范围即时生效：
                       </Typography.Text>
                       <div className="mt-1 flex flex-wrap gap-1 max-h-44 overflow-y-auto items-start">
                         {状态.结果.根
                           .slice((r.根起 ?? 1) - 1, r.根止 ?? 状态.结果.根.length)
-                          .map((rk, ri) => (
+                          .map((rk, ri) => {
+                            const 同形 = 同形已有根(rk.名);
+                            return (
                           <Popover
                             key={ri}
                             trigger="click"
@@ -2044,11 +2072,16 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                                   出现于 {rk.字列表.length} 字：
                                 </div>
                                 {rk.字列表.join("、")}
+                                {同形 && (
+                                  <div className="text-gray-500 mt-1">
+                                    与已有根「{同形}」字形完全相同（形状签名去重），加根搜索不会把它单独入池
+                                  </div>
+                                )}
                               </div>
                             }
                           >
                             <Tag
-                              color={起始mapping[rk.名] === undefined ? "purple" : "default"}
+                              color={起始mapping[rk.名] === undefined && !同形 ? "purple" : "default"}
                               style={{ cursor: "pointer" }}
                             >
                               {笔顺索引.名到字符.get(rk.名) ? (
@@ -2058,10 +2091,12 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                               )}
                               <span className="text-xs ml-1 opacity-70">
                                 +{Math.round(rk.得分 * 100) / 100}
+                                {同形 ? `·与「${同形}」同形` : ""}
                               </span>
                             </Tag>
                           </Popover>
-                        ))}
+                            );
+                          })}
                       </div>
                     </div>
                   );
@@ -2085,6 +2120,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     名: string;
                     标注: string;
                     在方案: boolean;
+                    同形?: string;
                     字列表?: string[];
                   }[] = [];
                   if (r.类型 === "手动指定") {
@@ -2103,16 +2139,20 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                       见过.add(ch);
                       const 字符 = 笔顺索引.名到字符.get(ch);
                       const 项 = 状态.按名?.get(ch);
+                      const 同形 = 同形已有根(ch);
                       成员.push({
                         名: ch,
                         标注: 字符
                           ? 已有.has(ch)
                             ? "已在方案"
-                            : `${项?.次数 ?? 0}字`
+                            : 同形
+                              ? `${项?.次数 ?? 0}字·与「${同形}」同形`
+                              : `${项?.次数 ?? 0}字`
                           : 名称映射?.has(ch)
                             ? "名称元素"
                             : "不在字库",
                         在方案: 已有.has(ch),
+                        同形,
                         字列表: 项?.字列表,
                       });
                     }
@@ -2123,10 +2163,12 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     for (let k = 起 - 1; k < Math.min(止, 排名单.length); k++) {
                       const [w, f] = 排名单[k]!;
                       if (!笔顺索引.名到串.has(w) || 保护.has(w)) continue;
+                      const 同形 = 同形已有根(w);
                       成员.push({
                         名: w,
-                        标注: `频${f}`,
+                        标注: 同形 ? `频${f}·与「${同形}」同形` : `频${f}`,
                         在方案: 已有.has(w),
+                        同形,
                         字列表: 状态.按名?.get(w)?.字列表,
                       });
                     }
@@ -2142,10 +2184,12 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     if (!状态.结果) return null;
                     for (let k = 起 - 1; k < Math.min(止, 状态.结果.length); k++) {
                       const c = 状态.结果[k]!;
+                      const 同形 = 同形已有根(c.名);
                       成员.push({
                         名: c.名,
-                        标注: `${c.次数}字`,
+                        标注: 同形 ? `${c.次数}字·与「${同形}」同形` : `${c.次数}字`,
                         在方案: 已有.has(c.名),
+                        同形,
                         字列表: c.字列表,
                       });
                     }
@@ -2153,14 +2197,18 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   return (
                     <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                       <Typography.Text type="secondary" className="w-full!">
-                        共 {成员.length} 个候选（灰=已在方案），点字形看它出现在哪些字里：
+                        共 {成员.length} 个候选（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字里：
                       </Typography.Text>
                       {成员.map((m) => (
                         <Popover
                           key={m.名}
                           trigger="click"
                           content={
-                            m.字列表 ? (
+                            m.同形 && !m.在方案 ? (
+                              <div className="text-gray-500">
+                                与已有根「{m.同形}」字形完全相同（形状签名去重），加根搜索不会把它单独入池
+                              </div>
+                            ) : m.字列表 ? (
                               <div className="max-w-120 max-h-80 overflow-y-auto">
                                 <div className="font-medium mb-1">
                                   出现于 {m.字列表.length} 字：
@@ -2187,7 +2235,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                         >
                           <Tag
                             color={
-                              m.在方案
+                              m.在方案 || m.同形
                                 ? "default"
                                 : r.类型 === "字内部件"
                                   ? "purple"
