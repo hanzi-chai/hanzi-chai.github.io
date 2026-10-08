@@ -200,7 +200,11 @@ const 分组按模式 = (
     const 键 = range(maxLength)
       .map((i) => (空位.includes(i) ? "*" : 码[i]!))
       .join("\u0001");
-    map.set(键, [...(map.get(键) ?? []), 词]);
+    // push 而非展开重建：全空位模式（如 ****）会把全部字放进同一组，
+    // 展开写法是 O(n²)（8230 字 ≈ 3400 万次拷贝），是旧版单次重算的大头
+    const 列表 = map.get(键);
+    if (列表) 列表.push(词);
+    else map.set(键, [词]);
   }
   return map;
 };
@@ -635,27 +639,20 @@ function 手动分析面板() {
   const 表模式 = (表: 表配置) =>
     表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
 
-  // 分析基准 = 已提交的表（非编辑草稿）：名称/权重/top 的键入不改签名，不触发重算；失焦提交后才重算。
-  // 共享表草稿由 失焦提交共享 写回，自建表草稿由 提交自建 写回，此处永远读已提交值（统一转成 表配置 视图）。
-  const 分析源表: 表配置[] = 共享表
-    ? 共享表数据.map((t, i) => ({
-        id: 10000 + i,
-        模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
-        top: t.top ?? 0,
-        权重: t.weight,
-        名称: t.name,
-      }))
-    : 自建表;
-  // 签名带模式前缀：共享/自建的表 id 体系不同（10000+i vs 自增 id），切换时必须重算而非复用按 id 存的结果
-  const 分析签名 =
-    (共享表 ? "S|" : "Z|") +
-    分析源表
-      .map((t) => `${JSON.stringify(t.模式)}#${t.top ?? 0}`)
-      .join("|");
+  // 贵的公共开销（全量过滤+排序+逐位下转换）只在 基线/候选 变化时做一次——
+  // 之后任何表编辑（名称/权重/top/模式）的重算都只剩廉价的分组
+  const 表预处理 = useMemo(
+    () => ({
+      基线: 预处理单字(基线 ?? [], maxLength),
+      候选: 候选 ? 预处理单字(候选, maxLength) : null,
+    }),
+    [基线, 候选, maxLength],
+  );
 
+  // 表编辑全部时时重算（用户口径：非必须全量重算的场景都实时反馈）；
+  // 全量重算只发生在 基线/候选 变化（点「分析」）时，由 表预处理 承担
   const 表分析 = useMemo(() => {
-    const 基线预处理 = 预处理单字(基线 ?? [], maxLength);
-    const 候选预处理 = 候选 ? 预处理单字(候选, maxLength) : null;
+    const { 基线: 基线预处理, 候选: 候选预处理 } = 表预处理;
     const 行数据 = new Map<
       number,
       {
@@ -676,7 +673,7 @@ function 手动分析面板() {
     const 原始和 = new Map<number, number>();
     const 候选和 = new Map<number, number>();
     const 变化和 = new Map<number, number>();
-    for (const 表 of 分析源表) {
+    for (const 表 of 表视图) {
       let 原始合计 = 0;
       let 候选合计 = 0;
       let 变化合计 = 0;
@@ -710,7 +707,7 @@ function 手动分析面板() {
     }
     return { 行数据, 原始和, 候选和, 变化和 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [候选, 基线, 分析签名, maxLength, alphabet]);
+  }, [表预处理, 表视图, 候选, maxLength, alphabet]);
 
   const 渲染表 = (表: 表配置) => {
     const 行 = 表分析.行数据.get(表.id) ?? [];
