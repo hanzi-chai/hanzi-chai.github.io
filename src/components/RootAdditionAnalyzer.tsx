@@ -165,33 +165,41 @@ interface 根操作 {
 let 表序号 = 0;
 let 操作序号 = 0;
 
+/** 预处理：过滤单字词 + 按频率降序 + 逐位下转换缓存。分组前公共开销只做一次——
+ *  旧版每（表×模式）都重新 sort 全量条目并逐条 JSON.stringify，60 次调用就是打字卡顿的大头 */
+const 预处理单字 = (条目列表: 组装条目[], maxLength: number) =>
+  [...条目列表]
+    .filter((x) => [...x.词].length === 1)
+    .sort((a, b) => b.频率 - a.频率)
+    .map((条目) => {
+      const 序列 = 条目.元素序列.元素序列;
+      return {
+        词: 条目.词.map((c) => c.获取名称()).join(""),
+        码: range(maxLength).map((i) => {
+          const v =
+            序列[i] === undefined ? "ε" : (下转换(序列[i] as any) as any);
+          return typeof v === "string" ? v : JSON.stringify(v);
+        }),
+      };
+    });
+
 /** 按模式分组：保留非空位码位的元素序列（布局无关），返回 键→词列表。
  *  键构造与 阶重统计.ts/阶重序列键（统计一、智能选根核心口径）严格一致：
  *  按 maxLength 补齐全部码位（空位优先显示 *，序列越界补 "ε"）——
- *  短序列若不补位，尾部空位模式的通配符不会生成，会与同前缀长序列错误拆组。 */
+ *  短序列若不补位，尾部空位模式的通配符不会生成，会与同前缀长序列错误拆组。
+ *  入参用 预处理单字 的结果（同一列表分多个模式时排序/下转换不重复做）。 */
 const 分组按模式 = (
-  条目列表: 组装条目[],
+  预处理: { 词: string; 码: string[] }[],
   空位: number[],
   top: number,
   maxLength: number,
 ) => {
-  const relevant = [...条目列表]
-    .sort((a, b) => b.频率 - a.频率)
-    .filter((x) => [...x.词].length === 1);
-  const scope = top > 0 ? relevant.slice(0, top) : relevant;
+  const scope = top > 0 ? 预处理.slice(0, top) : 预处理;
   const map = new Map<string, string[]>();
-  for (const 条目 of scope) {
-    const 序列 = 条目.元素序列.元素序列;
-    const 键 = JSON.stringify(
-      range(maxLength).map((i) =>
-        空位.includes(i)
-          ? "*"
-          : 序列[i] === undefined
-            ? "ε"
-            : 下转换(序列[i] as any),
-      ),
-    );
-    const 词 = 条目.词.map((c) => c.获取名称()).join("");
+  for (const { 词, 码 } of scope) {
+    const 键 = range(maxLength)
+      .map((i) => (空位.includes(i) ? "*" : 码[i]!))
+      .join("\u0001");
     map.set(键, [...(map.get(键) ?? []), 词]);
   }
   return map;
@@ -324,7 +332,30 @@ function 手动分析面板() {
       // 存储失败不影响本页使用
     }
   }, [自建表]);
-  // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables（此处编辑直接写回）
+  // 自建表键入草稿：名称/top/权重 输入期间只改本地，失焦才提交（与共享表同一交互，见下）
+  const [自建草稿, 设自建草稿] = useState<表配置[] | null>(null);
+  const 自建已提交 = useRef(自建表);
+  useEffect(() => {
+    if (自建表 !== 自建已提交.current) {
+      自建已提交.current = 自建表; // 外部变更 → 丢弃本地草稿
+      设自建草稿(null);
+    }
+  }, [自建表]);
+  const 提交自建 = (新表: 表配置[]) => {
+    自建已提交.current = 新表;
+    设自建草稿(null);
+    设自建表(新表);
+  };
+  const 失焦提交自建 = () => {
+    if (自建草稿) 提交自建(自建草稿);
+  };
+  // 键入路径（名称/top/权重）：只进草稿
+  const 改自建草稿 = (id: number, patch: Partial<表配置>) =>
+    设自建草稿(当前 => (当前 ?? 自建表).map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  // 离散路径（模式下拉/新建/删除）：立即提交，基于草稿叠加以免覆盖未失焦键入
+  const 即时改自建 = (id: number, patch: Partial<表配置>) =>
+    提交自建((自建草稿 ?? 自建表).map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables（键入入草稿，失焦写回）
   const [共享表, 设共享表] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("智能选根-手动分析共享表") ?? "null") ?? true;
@@ -360,6 +391,7 @@ function 手动分析面板() {
     if (共享草稿) 提交共享(共享草稿);
   };
   const 共享表有效 = 共享草稿 ?? 共享表数据; // 编辑期间草稿为显示与提交的基准
+  const 自建表有效 = 自建草稿 ?? 自建表;
   const 表视图 = useMemo<表配置[]>(
     () =>
       共享表
@@ -370,9 +402,9 @@ function 手动分析面板() {
             权重: t.weight,
             名称: t.name,
           }))
-        : 自建表,
+        : 自建表有效,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [共享表, 配置, 自建表, 共享表有效],
+    [共享表, 配置, 自建表有效, 共享表有效],
   );
   // 键入路径（名称/top/权重输入框）：只进草稿，失焦提交
   const 更新共享表 = (索引: number, patch: Partial<评分表格式>) => {
@@ -554,10 +586,15 @@ function 手动分析面板() {
     }
   };
 
-  /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 字，0 为全部） */
-  const 阶重变化 = (空位: number[], top: number) => {
-    const 基线分组 = 分组按模式(基线 ?? [], 空位, top, maxLength);
-    const 候选分组 = 分组按模式(候选!, 空位, top, maxLength);
+  /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 字，0 为全部；入参为预处理后的单字列表） */
+  const 阶重变化 = (
+    空位: number[],
+    top: number,
+    基线预处理: { 词: string; 码: string[] }[],
+    候选预处理: { 词: string; 码: string[] }[],
+  ) => {
+    const 基线分组 = 分组按模式(基线预处理, 空位, top, maxLength);
+    const 候选分组 = 分组按模式(候选预处理, 空位, top, maxLength);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
     // 成员构成发生变化（人数或成员互换）的组
@@ -598,7 +635,27 @@ function 手动分析面板() {
   const 表模式 = (表: 表配置) =>
     表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
 
+  // 分析基准 = 已提交的表（非编辑草稿）：名称/权重/top 的键入不改签名，不触发重算；失焦提交后才重算。
+  // 共享表草稿由 失焦提交共享 写回，自建表草稿由 提交自建 写回，此处永远读已提交值（统一转成 表配置 视图）。
+  const 分析源表: 表配置[] = 共享表
+    ? 共享表数据.map((t, i) => ({
+        id: 10000 + i,
+        模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
+        top: t.top ?? 0,
+        权重: t.weight,
+        名称: t.name,
+      }))
+    : 自建表;
+  // 签名带模式前缀：共享/自建的表 id 体系不同（10000+i vs 自增 id），切换时必须重算而非复用按 id 存的结果
+  const 分析签名 =
+    (共享表 ? "S|" : "Z|") +
+    分析源表
+      .map((t) => `${JSON.stringify(t.模式)}#${t.top ?? 0}`)
+      .join("|");
+
   const 表分析 = useMemo(() => {
+    const 基线预处理 = 预处理单字(基线 ?? [], maxLength);
+    const 候选预处理 = 候选 ? 预处理单字(候选, maxLength) : null;
     const 行数据 = new Map<
       number,
       {
@@ -619,17 +676,18 @@ function 手动分析面板() {
     const 原始和 = new Map<number, number>();
     const 候选和 = new Map<number, number>();
     const 变化和 = new Map<number, number>();
-    for (const 表 of 表视图) {
+    for (const 表 of 分析源表) {
       let 原始合计 = 0;
       let 候选合计 = 0;
       let 变化合计 = 0;
       const 行 = 表模式(表).map((空位) => {
         const 基线值 = 估计选重(
-          分组按模式(基线 ?? [], 空位, 表.top, maxLength),
+          分组按模式(基线预处理, 空位, 表.top, maxLength),
           空位,
           alphabet.length,
         );
-        const 变化结果 = 候选 ? 阶重变化(空位, 表.top) : null;
+        const 变化结果 =
+          候选预处理 && 候选 ? 阶重变化(空位, 表.top, 基线预处理, 候选预处理) : null;
         原始合计 += 基线值;
         if (变化结果) {
           候选合计 += 变化结果.候选;
@@ -652,7 +710,7 @@ function 手动分析面板() {
     }
     return { 行数据, 原始和, 候选和, 变化和 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [候选, 基线, 表视图, maxLength, alphabet]);
+  }, [候选, 基线, 分析签名, maxLength, alphabet]);
 
   const 渲染表 = (表: 表配置) => {
     const 行 = 表分析.行数据.get(表.id) ?? [];
@@ -925,8 +983,8 @@ function 手动分析面板() {
           <Button
             size="small"
             onClick={() =>
-              设自建表([
-                ...自建表,
+              提交自建([
+                ...(自建草稿 ?? 自建表),
                 { id: 表序号++, 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` },
               ])
             }
@@ -951,13 +1009,9 @@ function 手动分析面板() {
                     const 名称 = e.target.value;
                     共享表
                       ? 更新共享表(表.id - 10000, { name: 名称 })
-                      : 设自建表(
-                          自建表.map((t) =>
-                            t.id === 表.id ? { ...t, 名称 } : t,
-                          ),
-                        );
+                      : 改自建草稿(表.id, { 名称 });
                   }}
-                  onBlur={共享表 ? 失焦提交共享 : undefined}
+                  onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                   onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                 />
                 <Typography.Text strong>
@@ -1006,11 +1060,7 @@ function 手动分析面板() {
                       ? 即时更新共享表(表.id - 10000, {
                           patterns: 模式.map((v) => JSON.parse(v)),
                         })
-                      : 设自建表(
-                          自建表.map((t) =>
-                            t.id === 表.id ? { ...t, 模式 } : t,
-                          ),
-                        );
+                      : 即时改自建(表.id, { 模式 });
                   }}
                 />
                 <Flex gap="small" align="center">
@@ -1023,13 +1073,9 @@ function 手动分析面板() {
                       const top = v ?? 0;
                       共享表
                         ? 更新共享表(表.id - 10000, { top })
-                        : 设自建表(
-                            自建表.map((t) =>
-                              t.id === 表.id ? { ...t, top } : t,
-                            ),
-                          );
+                        : 改自建草稿(表.id, { top });
                     }}
-                    onBlur={共享表 ? 失焦提交共享 : undefined}
+                    onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                     onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                   />
                   字
@@ -1043,13 +1089,9 @@ function 手动分析面板() {
                       const 权重 = v ?? 0;
                       共享表
                         ? 更新共享表(表.id - 10000, { weight: 权重 })
-                        : 设自建表(
-                            自建表.map((t) =>
-                              t.id === 表.id ? { ...t, 权重 } : t,
-                            ),
-                          );
+                        : 改自建草稿(表.id, { 权重 });
                     }}
-                    onBlur={共享表 ? 失焦提交共享 : undefined}
+                    onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                     onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                   />
                 </Flex>
@@ -1059,7 +1101,7 @@ function 手动分析面板() {
                   onClick={() => {
                     共享表
                       ? 删除共享表(表.id - 10000)
-                      : 设自建表(自建表.filter((t) => t.id !== 表.id));
+                      : 提交自建((自建草稿 ?? 自建表).filter((t) => t.id !== 表.id));
                   }}
                 >
                   删除
