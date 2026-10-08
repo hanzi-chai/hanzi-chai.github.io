@@ -356,9 +356,6 @@ function 手动分析面板() {
   // 键入路径（名称/top/权重）：只进草稿
   const 改自建草稿 = (id: number, patch: Partial<表配置>) =>
     设自建草稿(当前 => (当前 ?? 自建表).map((t) => (t.id === id ? { ...t, ...patch } : t)));
-  // 离散路径（模式下拉/新建/删除）：立即提交，基于草稿叠加以免覆盖未失焦键入
-  const 即时改自建 = (id: number, patch: Partial<表配置>) =>
-    提交自建((自建草稿 ?? 自建表).map((t) => (t.id === id ? { ...t, ...patch } : t)));
   // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables（键入入草稿，失焦写回）
   const [共享表, 设共享表] = useState(() => {
     try {
@@ -410,13 +407,9 @@ function 手动分析面板() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [共享表, 配置, 自建表有效, 共享表有效],
   );
-  // 键入路径（名称/top/权重输入框）：只进草稿，失焦提交
+  // 键入路径（名称/top/权重/空位模式下拉）：只进草稿，失焦提交
   const 更新共享表 = (索引: number, patch: Partial<评分表格式>) => {
     设共享草稿(共享表有效.map((t, i) => (i === 索引 ? { ...t, ...patch } : t)));
-  };
-  // 离散路径（模式下拉/删除按钮）：立即提交
-  const 即时更新共享表 = (索引: number, patch: Partial<评分表格式>) => {
-    提交共享(共享表有效.map((t, i) => (i === 索引 ? { ...t, ...patch } : t)));
   };
   const 删除共享表 = (索引: number) => {
     提交共享(共享表有效.filter((_, i) => i !== 索引));
@@ -639,8 +632,24 @@ function 手动分析面板() {
   const 表模式 = (表: 表配置) =>
     表.模式.length > 0 ? 表.模式.map((v) => JSON.parse(v) as number[]) : 全部模式;
 
-  // 贵的公共开销（全量过滤+排序+逐位下转换）只在 基线/候选 变化时做一次——
-  // 之后任何表编辑（名称/权重/top/模式）的重算都只剩廉价的分组
+  // 分析基准 = 已提交的表（非编辑草稿）：手动分析页所有编辑（名称/权重/top/空位模式）统一失焦后才重算。
+  // 键入期间草稿不进这里 → 表分析/总分行/逐表数字全部保持不动；失焦提交（或删除/新建等按钮）才更新。
+  const 分析源表 = useMemo<表配置[]>(
+    () =>
+      共享表
+        ? 共享表数据.map((t, i) => ({
+            id: 10000 + i,
+            模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
+            top: t.top ?? 0,
+            权重: t.weight,
+            名称: t.name,
+          }))
+        : 自建表,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [共享表, 配置, 自建表],
+  );
+
+  // 贵的公共开销（全量过滤+排序+逐位下转换）只在 基线/候选 变化时做一次，失焦重算时只剩廉价分组
   const 表预处理 = useMemo(
     () => ({
       基线: 预处理单字(基线 ?? [], maxLength),
@@ -649,8 +658,6 @@ function 手动分析面板() {
     [基线, 候选, maxLength],
   );
 
-  // 表编辑全部时时重算（用户口径：非必须全量重算的场景都实时反馈）；
-  // 全量重算只发生在 基线/候选 变化（点「分析」）时，由 表预处理 承担
   const 表分析 = useMemo(() => {
     const { 基线: 基线预处理, 候选: 候选预处理 } = 表预处理;
     const 行数据 = new Map<
@@ -673,7 +680,7 @@ function 手动分析面板() {
     const 原始和 = new Map<number, number>();
     const 候选和 = new Map<number, number>();
     const 变化和 = new Map<number, number>();
-    for (const 表 of 表视图) {
+    for (const 表 of 分析源表) {
       let 原始合计 = 0;
       let 候选合计 = 0;
       let 变化合计 = 0;
@@ -707,7 +714,7 @@ function 手动分析面板() {
     }
     return { 行数据, 原始和, 候选和, 变化和 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [表预处理, 表视图, 候选, maxLength, alphabet]);
+  }, [表预处理, 分析源表, 候选, maxLength, alphabet]);
 
   const 渲染表 = (表: 表配置) => {
     const 行 = 表分析.行数据.get(表.id) ?? [];
@@ -820,7 +827,7 @@ function 手动分析面板() {
     let 预期 = 0;
     let 初 = 0;
     let 末 = 0;
-    for (const 表 of 表视图) {
+    for (const 表 of 分析源表) {
       // 总分用未舍入的逐表和累加（与智能选根核心 Σ权重×未舍入表值 同口径），
       // 逐表四舍五入只用于表内显示，进总分会让手动初态与自动搜索分数差在小数位
       预期 += (候选 ? 表分析.变化和.get(表.id) ?? 0 : 0) * 表.权重;
@@ -829,7 +836,7 @@ function 手动分析面板() {
     }
     return { 总预期值: 预期, 总初态: 初, 总末态: 末 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [表分析, 表视图, 候选]);
+  }, [表分析, 分析源表, 候选]);
 
   return (
     <>
@@ -991,9 +998,11 @@ function 手动分析面板() {
         )}
       </Flex>
       <Flex vertical gap="middle">
-        {表视图.map((表) => {
+        {表视图.map((表, 表序) => {
+          // 显示数字一律读已提交值（分析源表与表视图同源同序）：键入/选模式期间保持不动，失焦后才更新
+          const 已提交表 = 分析源表[表序];
           const 本表变化 = 候选 ? 表变化值(表) : 0;
-          const 本表贡献 = 候选 ? 本表变化 * 表.权重 : 0;
+          const 本表贡献 = 候选 ? 本表变化 * (已提交表?.权重 ?? 0) : 0;
           return (
             <div key={表.id}>
               <Flex gap="small" align="center" wrap="wrap" className="mb-2">
@@ -1028,7 +1037,7 @@ function 手动分析面板() {
                   >
                     {变化显示(本表贡献).文本}
                   </span>{" "}
-                  （{变化显示(本表变化).文本} × {表.权重}）
+                  （{变化显示(本表变化).文本} × {已提交表?.权重 ?? 0}）
                 </Typography.Text>
                 <Typography.Text type="secondary">
                   {候选
@@ -1053,12 +1062,14 @@ function 手动分析面板() {
                   }))}
                   onChange={(vs) => {
                     const 模式 = vs as string[];
+                    // 只进草稿：勾选期间不重算，下拉关闭且失焦后才提交
                     共享表
-                      ? 即时更新共享表(表.id - 10000, {
+                      ? 更新共享表(表.id - 10000, {
                           patterns: 模式.map((v) => JSON.parse(v)),
                         })
-                      : 即时改自建(表.id, { 模式 });
+                      : 改自建草稿(表.id, { 模式 });
                   }}
+                  onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                 />
                 <Flex gap="small" align="center">
                   范围前
@@ -1182,8 +1193,6 @@ function 评分表面板() {
     设草稿(草稿.map((t, ti) => (ti === i ? { ...t, ...patch } : t)));
   };
   // 离散操作（多选下拉/按钮）：立即提交，基于草稿叠加以免覆盖未失焦的键入
-  const 改表即时 = (i: number, patch: Partial<评分表格式>) =>
-    提交(草稿.map((t, ti) => (ti === i ? { ...t, ...patch } : t)));
 
   const 模式选项 = range(maxLength + 1).flatMap((阶) =>
     combinations(maxLength, 阶).map((空位) => ({
@@ -1257,8 +1266,9 @@ function 评分表面板() {
                 value={(表.patterns ?? []).map((p) => JSON.stringify(p))}
                 options={模式选项}
                 onChange={(vs) =>
-                  改表即时(i, { patterns: (vs as string[]).map((s) => JSON.parse(s)) })
+                  改草稿(i, { patterns: (vs as string[]).map((s) => JSON.parse(s)) })
                 }
+                onBlur={失焦提交}
               />
               <Button danger size="small" onClick={() => 提交(草稿.filter((_, ti) => ti !== i))}>
                 删除
