@@ -1178,6 +1178,7 @@ export class 智能选根核心 {
     // 成链时反复施加直至稳定。踢出可能让部分字无法拆分（需要 A 的字失去唯一拆法）——
     // 试建基态失败则回滚被踢的根并记录，待目标成根后经随行/触发转为归并。
     const 被踢: string[] = [];
+    const 已生效: string[] = [];
     {
       for (let 遍 = 0; 遍 < 8; 遍++) {
         let 变了 = false;
@@ -1225,6 +1226,21 @@ export class 智能选根核心 {
         }
         if (!变了) break;
       }
+      // 初态已满足的条目从待归并摘除：其效果已写入映射，结尾的"未触发"备注不再提及
+      const 已满足 = 待归并.filter(({ 条目: x }) => {
+        const 是码位 = x.根位 != null && x.目标位 != null;
+        const 现 = mapping[x.根];
+        if (是码位) {
+          if (现 === undefined || (typeof 现 !== "string" && !Array.isArray(现))) return false;
+          if ((typeof 现 === "string" ? [...现].length : 现.length) !== 归并码数) return false;
+          const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
+            i === x.根位! - 1 ? { element: x.目标, index: x.目标位! - 1 } : typeof 现 === "string" ? [...现][i]! : 现[i]);
+          return JSON.stringify(目标状态) === JSON.stringify(现);
+        }
+        return 现 !== undefined && typeof 现 === "object" && !Array.isArray(现) && 现.element === x.目标;
+      });
+      for (const y of 已满足) 待归并.splice(待归并.findIndex((z) => z.条目 === y.条目), 1);
+      if (已满足.length) 已生效.push(...已满足.map((y) => y.描述));
     }
     if (被踢.length) {
       try {
@@ -1533,6 +1549,11 @@ export class 智能选根核心 {
     const 未触发 = 待归并.length
       ? `预置归并未触发：${待归并.map((t) => t.描述).join("；")}（涉及的根尚未都成为字根）`
       : undefined;
+    const 备注段 = [
+      死归并.length ? `预置归并失败：${死归并.join("；")}` : "",
+      已生效.length ? `预置归并已生效：${已生效.join("、")}` : "",
+      未触发 ?? "",
+    ].filter(Boolean).join("；");
     return {
       mapping,
       总分: Math.round(当前分 * 100) / 100,
@@ -1540,7 +1561,7 @@ export class 智能选根核心 {
       收敛,
       已停止,
       建议: 建议动作,
-      备注: [备注, 未触发].filter(Boolean).join("；") || undefined,
+      备注: 备注段 || undefined,
     };
   }
 }

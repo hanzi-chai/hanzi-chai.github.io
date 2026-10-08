@@ -2422,7 +2422,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   </Tag>
                 ))}
                 <Typography.Text type="secondary" className="ml-2">
-                  （根保留键位，安排被预置归并码位语法改写）
+                  （预置归并生效后的安排）
                 </Typography.Text>
               </div>
             )}
