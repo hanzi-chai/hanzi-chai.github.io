@@ -386,7 +386,7 @@ export interface 轮结果 {
 }
 export interface 搜索回调 {
   on阶段?: (文本: string) => void;
-  on轮进度?: (已评: number, 总数: number, 最优描述: string, 最优分: number) => void;
+  on轮进度?: (已评: number, 总数: number, 最优描述: string, 最优分: number, 变化: number | null) => void;
   on轮?: (r: 轮结果) => void;
   on日志?: (文本: string) => void;
   应停止?: () => boolean;
@@ -1220,7 +1220,7 @@ export class 智能选根核心 {
         各动作分.push(分);
         if (分 < best分) { best分 = 分; best = i; }
         // 每个动作都报进度：大词库下单动作可达十几秒，每 10 个才报会在轮首造成长时间静默
-        cb.on轮进度?.(i + 1, 动作.length, best === -1 ? "—" : 动作[best]!.描述, best分);
+        cb.on轮进度?.(i + 1, 动作.length, best === -1 ? "—" : 动作[best]!.描述, best分, best === -1 ? null : best分 - 当前分);
       }
       if (已停止) break;
       const 单轮根数 = Math.max(1, Math.floor(参数.单轮根数 ?? 1));

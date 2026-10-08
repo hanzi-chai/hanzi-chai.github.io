@@ -57,8 +57,8 @@ self.onmessage = async (e: MessageEvent) => {
     const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据);
     const 回调 = {
       on阶段: (文本: string) => post({ type: "阶段", 文本 }),
-      on轮进度: (已评: number, 总数: number, 最优: string, 最优分: number) =>
-        post({ type: "轮进度", 已评, 总数, 最优, 最优分 }),
+      on轮进度: (已评: number, 总数: number, 最优: string, 最优分: number, 变化: number | null) =>
+        post({ type: "轮进度", 已评, 总数, 最优, 最优分, 变化 }),
       on轮: (r: 轮结果) => post({ type: "轮", 轮结果: r }),
       on日志: (文本: string) => post({ type: "日志", 文本 }),
       应停止: () => 停止,

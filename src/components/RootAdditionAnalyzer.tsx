@@ -1324,7 +1324,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
   const [阶段, 设阶段] = useState("");
-  const [进度, 设进度] = useState<{ 已评: number; 总数: number; 最优: string; 最优分: number } | null>(null);
+  const [进度, 设进度] = useState<{ 已评: number; 总数: number; 最优: string; 最优分: number; 变化: number | null } | null>(null);
   const [轮日志, 设轮日志] = useState<轮结果[]>([]);
   const [结果, 设结果] = useState<搜索结果 | null>(null);
   const [错误, 设错误] = useState("");
@@ -1624,7 +1624,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           设阶段(data.文本);
           break;
         case "轮进度":
-          设进度({ 已评: data.已评, 总数: data.总数, 最优: data.最优, 最优分: data.最优分 });
+          设进度({ 已评: data.已评, 总数: data.总数, 最优: data.最优, 最优分: data.最优分, 变化: data.变化 });
           break;
         case "轮":
           设轮日志((x) => [...x, data.轮结果]);
@@ -2217,6 +2217,15 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 />
                 <Typography.Text type="secondary">
                   本轮已评 {进度.已评}/{进度.总数}，当前最优 {进度.最优}（
+                  {进度.变化 != null && isFinite(进度.变化) && (
+                    <Typography.Text
+                      type={进度.变化 < 0 ? "success" : "danger"}
+                      style={{ fontSize: "inherit" }}
+                    >
+                      {进度.变化 > 0 ? "+" : ""}
+                      {Math.round(进度.变化)}，{" "}
+                    </Typography.Text>
+                  )}
                   {isFinite(进度.最优分) ? Math.round(进度.最优分) : "∞"}）
                 </Typography.Text>
               </>
