@@ -496,18 +496,37 @@ export class 智能选根核心 {
   }
 
   // ---------- mapping 变换 ----------
-  /** 应用加/删并级联别名（引用根不全的别名条目失效） */
+  /**
+   * 应用加/删并级联失效（2026-10-08 修订，修复"连带删除别名 53 个"误删）。
+   * 条目三形态：string 键位安排（直设根）/ 数组逐位安排（带自身键位的根，可含 {element,index} 借码位）/
+   * 纯别名 {element: X}（整体归并，跟随 X 的码）。
+   * 级联规则（不动点）：非 string 条目引用的根**因本次动作从映射中消失**（被显式删除，或沿引用链上游失效）时
+   * 随之失效——数组条目也必须遵守：借码根悬空时决策图线性化硬报错"决策中不存在键"（实测）。
+   * 引用**从未入映射**的名字（基线悬空条目，如 {element:忄} 且 忄 不是根）不属本次动作的后果，保持原样
+   * ——这类条目在恢复安排里本就被跳过（死条目），删与不删不影响任何分数，动了反而惊扰用户。
+   * 旧 bug 双根因：①收集引用把数组里的键位字符（如 "j"）当引用根，所有数组条目被判引用不全；
+   * ②直设集只认 string 值，"引用数组根"的 444 个别名全被误判失效。
+   */
   变体mapping(基: Record<string, any>, 加: string[], 删: string[], 占位 = "aa"): Record<string, any> {
     const m: Record<string, any> = { ...基 };
-    for (const r of 删 ?? []) delete m[r];
-    for (const r of 加 ?? []) if (!(r in m)) m[r] = 占位;
-    const 直 = new Set(Object.keys(m).filter((k) => typeof m[k] === "string"));
-    for (const k of Object.keys(m)) {
-      const v = m[k];
-      if (typeof v === "string") continue;
-      const refs = new Set<string>();
-      收集引用(v, refs);
-      if (![...refs].every((r) => 直.has(r))) delete m[k];
+    const 加集 = new Set(加 ?? []);
+    const 死 = new Set(删 ?? []);
+    for (const r of 死) if (!加集.has(r)) delete m[r];
+    for (const r of 加集) if (!(r in m)) m[r] = 占位;
+    const 非串条目 = Object.entries(m).filter(([, v]) => typeof v !== "string") as [string, any][];
+    let 变了 = true;
+    while (变了) {
+      变了 = false;
+      for (const [k, v] of 非串条目) {
+        if (死.has(k)) continue;
+        const refs = new Set<string>();
+        收集引用(v, refs);
+        if ([...refs].some((r) => 死.has(r))) {
+          死.add(k);
+          delete m[k];
+          变了 = true;
+        }
+      }
     }
     return m;
   }
@@ -1404,17 +1423,23 @@ export function 查相似已映射根(c: string, mapping: Record<string, any>): 
   return null;
 }
 
+/**
+ * 收集安排值里的**元素引用**：只有 {element: 名} 对象是引用。
+ * 裸字符串（顶层或数组内）是键位安排（键位字符，如 "j"），不是引用——旧版把它们当引用根去校验，
+ * 导致所有逐位安排数组被判"引用根不全"而遭级联误删（2026-10-08 修复）。
+ */
 export function 收集引用(v: any, out: Set<string>) {
-  if (typeof v === "string") out.add(v);
-  else if (Array.isArray(v)) v.forEach((x) => 收集引用(x, out));
-  else if (v && typeof v === "object") Object.values(v).forEach((x) => 收集引用(x, out));
+  if (Array.isArray(v)) v.forEach((x) => 收集引用(x, out));
+  else if (v && typeof v === "object" && typeof v.element === "string") out.add(v.element);
 }
-const 直设 = (m: Record<string, any>) => new Set(Object.keys(m).filter((k) => typeof m[k] === "string"));
+/** 根身份 = string 键位安排 ∪ 数组逐位安排（都占键位，都是映射里的真根） */
+const 是根身份 = (v: any) => typeof v === "string" || Array.isArray(v);
+const 根身份集 = (m: Record<string, any>) => new Set(Object.keys(m).filter((k) => 是根身份(m[k])));
 const 活跃别名 = (m: Record<string, any>) => {
-  const 有 = 直设(m);
+  const 有 = 根身份集(m); // 引用数组根的别名同样有效（数组条目是真根，旧版只认 string 值导致误判失效）
   const keys = new Set<string>();
   for (const [k, v] of Object.entries(m)) {
-    if (typeof v === "string") continue;
+    if (是根身份(v)) continue;
     const refs = new Set<string>();
     收集引用(v, refs);
     if ([...refs].every((r) => 有.has(r))) keys.add(k);
@@ -1423,7 +1448,7 @@ const 活跃别名 = (m: Record<string, any>) => {
 };
 /** 影响拆分的根差异：直接根增删 + 别名开/关（别名键自身获得/失去根身份）+ 开关别名的引用根 */
 export function 差异根(m1: Record<string, any>, m2: Record<string, any>): Set<string> {
-  const d1 = 直设(m1), d2 = 直设(m2);
+  const d1 = 根身份集(m1), d2 = 根身份集(m2);
   const out = new Set<string>();
   for (const k of d1) if (!d2.has(k)) out.add(k);
   for (const k of d2) if (!d1.has(k)) out.add(k);
