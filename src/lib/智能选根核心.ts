@@ -383,12 +383,18 @@ export interface 轮结果 {
   耗时: number;
   /** 单轮多根时：入选动作的描述与其单独评分相对前分的预期降幅（合评分 ≠ 各项之和，供对照） */
   单加明细?: { 描述: string; 预期变化: number }[];
+  /** 该轮结束（动作已应用到 mapping）后的方案快照，供主线程在「强杀后」抓包还原已选好的根 */
+  mapping?: Record<string, any>;
 }
 export interface 搜索回调 {
   on阶段?: (文本: string) => void;
   on轮进度?: (已评: number, 总数: number, 最优描述: string, 最优分: number, 变化: number | null) => void;
   on轮?: (r: 轮结果) => void;
   on日志?: (文本: string) => void;
+  /** 预置归并筛死（两边不都在字根池）——候选池建好后即刻上报，不等搜索结束 */
+  on预置归并失败?: (文本: string) => void;
+  /** 手动指定字根里字库找不到（无字形）被跳过的字——候选池建好后上报 */
+  on手动指定问题?: (文本: string) => void;
   应停止?: () => boolean;
 }
 export interface 搜索结果 {
@@ -1059,6 +1065,8 @@ export class 智能选根核心 {
       ? [...this.频率表.entries()].filter(([w]) => [...w].length === 1).sort((a, b) => b[1] - a[1])
       : [];
     const 池Set = new Set<string>();
+    // 手动指定里字库找不到（无字形）且非合法元素、被跳过的字，收集后一次性上报 UI（橙条另起一行）
+    const 手动指定问题: string[] = [];
     // 预置归并（2026-10-08 用户定案）：配对不变式——配对的根同进同出。
     // 初态先施加不变式（见下），搜索中由随行（B 入带 A）与级联（B 出带 A）维持；
     // 参与者不在（映射∪候选池）的条目判死（筛掉），已在初态产生的改写回滚。
@@ -1121,6 +1129,7 @@ export class 智能选根核心 {
             // 拼音/自定义元素没有字形，但在名称映射中是合法元素，同样允许入池
             if (!this.名称映射.has(w)) {
               cb.on日志?.(`手动指定字根「${w}」不在字库且不是合法元素，已跳过`);
+              手动指定问题.push(w);
               continue;
             }
           }
@@ -1128,6 +1137,8 @@ export class 智能选根核心 {
         }
       }
     }
+    if (手动指定问题.length)
+      cb.on手动指定问题?.(`手动指定失败：${手动指定问题.join("，")}（不是字库中的合法元素）`);
     if (cb.应停止?.()) {
       return { mapping: { ...起始mapping }, 总分: Math.round(this.总分基 * 100) / 100, 轮日志: [], 收敛: false, 已停止: true, 建议: null };
     }
@@ -1162,15 +1173,20 @@ export class 智能选根核心 {
       const 死因 =
         x.根 === x.目标
           ? "根和目标是同一个字"
-          : !在册(x.根)
-            ? `「${x.根}」不在字根池`
-            : !在册(x.目标)
-              ? `「${x.目标}」不在字根池`
-              : null;
+          : !this.名称映射.has(x.根)
+            ? `「${x.根}」不是字库中的合法元素`
+            : !this.名称映射.has(x.目标)
+              ? `「${x.目标}」不是字库中的合法元素`
+              : !在册(x.根)
+                ? `「${x.根}」不在字根池`
+                : !在册(x.目标)
+                  ? `「${x.目标}」不在字根池`
+                  : null;
       if (死因) 死归并.push(`${描述}（${死因}）`);
       else 待归并.push({ 条目: x, 描述 });
     }
-    const 备注 = 死归并.length ? `预置归并失败：${死归并.join("；")}` : undefined;
+    // 筛死结果即刻上报：不等搜索跑完（强杀停止会丢结尾备注），点开始搜索后就能看到
+    if (死归并.length) cb.on预置归并失败?.(`预置归并失败：${死归并.join("；")}`);
     // —— 初态不变式（只施加于活条目）——
     // 整体 A=B：B 在映射 ⇒ A 以 {element:B} 入/转（AB 同在）；B 不在 ⇒ A 被踢出（A 只能跟随 B 存在）
     // 码位 A 1=B x：B 在映射 ⇒ A 在映射时安排改写为借码（A 不在则不入，等 B 在后经加根带借码）；
@@ -1260,6 +1276,8 @@ export class 智能选根核心 {
     let 收敛 = false, 已停止 = false;
     let 建议动作: { 动作: string; 分数: number; mapping: Record<string, any> } | null = null;
     let 轮序 = 0;
+    // 每轮结束（动作已应用到 mapping）后拍一份快照，供主线程强杀后抓包还原已选好的根
+    const 快照 = () => JSON.parse(JSON.stringify(mapping)) as Record<string, any>;
     while (轮序 < 参数.轮数) {
       if (cb.应停止?.()) { 已停止 = true; break; }
       // 预置归并触发（码位改写，不占轮数）：目标已成根但安排还没借码的，自动生效、代价如实计分。
@@ -1298,6 +1316,7 @@ export class 智能选根核心 {
           根数: Object.keys(mapping).length,
           动作数: 0,
           耗时: 0,
+          mapping: 快照(),
         };
         轮日志.push(轮r);
         cb.on轮?.(轮r);
@@ -1438,6 +1457,7 @@ export class 智能选根核心 {
                   描述: x.a.描述,
                   预期变化: Math.round((x.分 - 前分0) * 100) / 100,
                 })),
+                mapping: 快照(),
               };
               轮日志.push(轮r);
               cb.on轮?.(轮r);
@@ -1476,12 +1496,13 @@ export class 智能选根核心 {
             前分: Math.round(前分 * 100) / 100,
             变化: 0,
             根数: Object.keys(mapping).length,
-            动作数: 动作.length,
-            耗时,
-          };
-          轮日志.push(轮r);
-          cb.on轮?.(轮r);
-          cb.on日志?.(`第${轮}轮 [无代价减根] ${无代价减根动作.描述}（分数不变，免费缩小根集至 ${轮r.根数}）`);
+          动作数: 动作.length,
+          耗时,
+          mapping: 快照(),
+        };
+        轮日志.push(轮r);
+        cb.on轮?.(轮r);
+        cb.on日志?.(`第${轮}轮 [无代价减根] ${无代价减根动作.描述}（分数不变，免费缩小根集至 ${轮r.根数}）`);
           continue; // 继续搜：可能还有更多无代价减根或真正的改进
         }
         收敛 = true;
@@ -1497,6 +1518,7 @@ export class 智能选根核心 {
             根数: Object.keys(mapping).length,
             动作数: 动作.length,
             耗时,
+            mapping: 快照(),
           };
           轮日志.push(轮r);
           cb.on轮?.(轮r);
@@ -1536,13 +1558,14 @@ export class 智能选根核心 {
         分数: Math.round(best分 * 100) / 100,
         前分: Math.round(前分0 * 100) / 100,
         变化: Math.round((best分 - 前分0) * 100) / 100,
-        根数: Object.keys(mapping).length,
-        动作数: 动作.length,
-        耗时,
-      };
-      轮日志.push(轮r);
-      cb.on轮?.(轮r);
-      cb.on日志?.(`第${轮}轮 ${轮r.动作} ${轮r.前分} → ${轮r.分数}（${轮r.变化 > 0 ? "+" : ""}${轮r.变化}，根 ${轮r.根数}，${动作.length} 动作 ${耗时.toFixed(1)}s）`);
+      根数: Object.keys(mapping).length,
+      动作数: 动作.length,
+      耗时,
+      mapping: 快照(),
+    };
+    轮日志.push(轮r);
+    cb.on轮?.(轮r);
+    cb.on日志?.(`第${轮}轮 ${轮r.动作} ${轮r.前分} → ${轮r.分数}（${轮r.变化 > 0 ? "+" : ""}${轮r.变化}，根 ${轮r.根数}，${动作.length} 动作 ${耗时.toFixed(1)}s）`);
       cb.on阶段?.(`第${轮 + 1} 轮：重建基态……`);
       this.设置基态(mapping); // 下一轮以此为基态
     }
@@ -1556,10 +1579,10 @@ export class 智能选根核心 {
           ? "候选池为空——字根表范围内的候选均已是字根或被过滤，可尝试扩大范围"
           : "候选池中的候选均已是字根或被预置归并锁定，无可加入项"
         : undefined;
-    // 成功的归并不进备注（差异区的「安排调整」已可见），备注只报异常
+    // 成功的归并不进备注（差异区的「安排调整」已可见），备注只报异常。
+    // 死归并也不进备注：候选池建好时就经 on预置归并失败 上报、UI 常驻显示，再进备注会与绿条重复
     const 备注段 = [
       无动作说明 ?? "",
-      死归并.length ? `预置归并失败：${死归并.join("；")}` : "",
       未触发 ?? "",
     ].filter(Boolean).join("；");
     return {

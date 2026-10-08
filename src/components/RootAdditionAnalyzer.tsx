@@ -1423,9 +1423,15 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const [阶段, 设阶段] = useState("");
   const [进度, 设进度] = useState<{ 已评: number; 总数: number; 最优: string; 最优分: number; 变化: number | null } | null>(null);
   const [轮日志, 设轮日志] = useState<轮结果[]>([]);
+  // 抓包用：实时镜像最新轮日志与最近一轮的 mapping 快照，强杀后据此合成已选好的根
+  const 轮日志引用 = useRef<轮结果[]>([]);
+  const 快照引用 = useRef<Record<string, any> | null>(null);
   const [结果, 设结果] = useState<搜索结果 | null>(null);
   const [错误, 设错误] = useState("");
   const worker引用 = useRef<Worker | null>(null);
+  // 预置归并筛死 / 手动指定字库找不到 等警告，点开始搜索后由核心上报，常驻显示到下次搜索。
+  // 按"实际处理顺序"自然排列：string[] 按发生先后 push，渲染即顺序（不强行调序）
+  const [归并失败提示, 设归并失败提示] = useState<string[]>([]);
   useEffect(() => () => worker引用.current?.terminate(), []);
 
   const 表列表 = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
@@ -1681,6 +1687,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       设错误("请先在「评分表」页签配置至少一张评分表");
       return;
     }
+    // 清空上一轮的预置归并提示（解析出问题时再写入，避免旧提示残留）
+    设归并失败提示([]);
     // 预置归并解析与校验（条目用中英逗号或换行分隔；空格是码位语法：的 1=人 2）
     const 占位 = 占位安排.trim() || (alphabet[0] ?? "a").repeat(编码类型);
     const 条目 = 预置归并文本
@@ -1732,17 +1740,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         设错误(`预置归并第 ${i + 1} 条：根与目标是同一个（${根}）`);
         return;
       }
-      // 名称映射未加载完时不能断言"非法元素"——合法字也会被误报
-      if (!名称映射) {
-        设错误("基础数据仍在加载中，请稍候再试");
-        return;
-      }
-      if (!名称映射.has(根) || !名称映射.has(目标)) {
-        设错误(
-          `预置归并第 ${i + 1} 条：${名称映射.has(根) ? 目标 : 根} 不是字库中的合法元素`,
-        );
-        return;
-      }
       if (已绑定.has(根)) {
         设错误(`预置归并第 ${i + 1} 条：根 ${根} 被绑定了多次（一个根只能归并到一个目标）`);
         return;
@@ -1768,6 +1765,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     });
     worker引用.current = worker;
     设轮日志([]);
+    轮日志引用.current = [];
+    快照引用.current = null;
     设结果(null);
     设错误("");
     设运行中(true);
@@ -1781,12 +1780,22 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         case "轮进度":
           设进度({ 已评: data.已评, 总数: data.总数, 最优: data.最优, 最优分: data.最优分, 变化: data.变化 });
           break;
-        case "轮":
-          设轮日志((x) => [...x, data.轮结果]);
+        case "轮": {
+          const 新 = [...轮日志引用.current, data.轮结果];
+          轮日志引用.current = 新;
+          设轮日志(新);
+          if (data.轮结果?.mapping) 快照引用.current = data.轮结果.mapping;
           设进度(null);
           break;
+        }
         case "日志":
           设阶段(data.文本);
+          break;
+        case "预置归并失败":
+          设归并失败提示((旧) => [...旧, data.文本]);
+          break;
+        case "手动指定问题":
+          设归并失败提示((旧) => [...旧, data.文本]);
           break;
         case "完成":
           设结果(data.结果);
@@ -1835,14 +1844,32 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     });
   };
 
-  // 停止 = 通知 + 300ms 后强杀兜底（同步搜索期间消息队列不会处理）
+  // 停止 = 立即强杀（搜索同步按整轮跑，等自然停下可能很久，体验上是"停不了"）。
+  // 强杀前已从每轮回传的消息里抓包了「最近一轮的 mapping 快照 + 已累积轮日志」，
+  // 据此合成部分结果——mapping 只含已完成的轮，正在评的轮还没应用故不计入，
+  // 这样「应用到方案」能把已经选好的根落进方案。
   const 停止 = () => {
-    worker引用.current?.postMessage({ type: "stop" });
-    window.setTimeout(() => {
-      worker引用.current?.terminate();
+    const w = worker引用.current;
+    w?.postMessage({ type: "stop" });
+    if (w) {
+      w.terminate();
       worker引用.current = null;
-      设运行中(false);
-    }, 300);
+    }
+    设运行中(false);
+    const 快照 = 快照引用.current;
+    const 日志 = 轮日志引用.current;
+    if (!结果) {
+      设结果({
+        mapping: 快照 ?? 起始mapping,
+        总分: 日志.length ? 日志[日志.length - 1]!.分数 : 0,
+        轮日志: 日志,
+        收敛: false,
+        已停止: true,
+        建议: null,
+        备注: 日志.length === 0 ? "停止时尚未完成任何一轮" : undefined,
+      });
+    }
+    设阶段(快照 ? "已手动停止（已选好的根仍可应用）" : "已手动停止（尚未完成任何一轮）");
   };
 
   // —— 应用与显示共用的单一事实来源：将实际写入方案的 mapping ——
@@ -2454,7 +2481,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   size="small"
                 />
                 <Typography.Text type="secondary">
-                  本轮已评 {进度.已评}/{进度.总数}，当前最优 {进度.最优}（
+                  本轮已评 {进度.已评}/{进度.总数}，当前最优 {富文本(进度.最优)}（
                   {进度.变化 != null && isFinite(进度.变化) && (
                     <Typography.Text
                       type={进度.变化 < 0 ? "success" : "danger"}
@@ -2468,6 +2495,20 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 </Typography.Text>
               </>
             ) : undefined
+          }
+        />
+      )}
+      {归并失败提示.length > 0 && (
+        <Alert
+          className="mt-2!"
+          type="warning"
+          showIcon
+          message={
+            <div>
+              {归并失败提示.map((t, i) => (
+                <div key={i}>{富文本(t)}</div>
+              ))}
+            </div>
           }
         />
       )}
