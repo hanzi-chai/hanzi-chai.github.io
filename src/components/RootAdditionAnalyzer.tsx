@@ -1429,8 +1429,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const 表列表 = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
   const 键盘 = useAtomValue(键盘原子);
   const 起始mapping = (键盘 as any).mapping as Record<string, any>;
-  const 起始直设根 = Object.keys(起始mapping).filter(
-    (k) => typeof 起始mapping[k] === "string",
+  // 根身份 = string 键位安排 ∪ 数组逐位安排（码位归并把根从 string 改写成数组，仍是根——
+  // 增删判定必须按根身份，只认 string 会把"改逐位安排"的根误报成"移除根"）
+  const 是根身份 = (v: any) => typeof v === "string" || Array.isArray(v);
+  const 起始根集 = new Set(
+    Object.keys(起始mapping).filter((k) => 是根身份(起始mapping[k])),
   );
 
   // —— 可选字根配置的数据准备：全字库笔顺索引 ——
@@ -1801,16 +1804,22 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const 结果直设根 = 结果
     ? Object.keys(结果.mapping).filter((k) => typeof 结果.mapping[k] === "string")
     : [];
-  const 起始直设集 = new Set(起始直设根);
-  const 新增根 = 结果直设根.filter((k) => !起始直设集.has(k));
+  const 结果根集 = 结果
+    ? new Set(Object.keys(结果.mapping).filter((k) => 是根身份(结果.mapping[k])))
+    : new Set<string>();
+  // 新增/移除按根身份比较：string→数组（预置归并码位表达）不算增删，算"安排调整"
+  const 新增根 = [...结果根集].filter((k) => !起始根集.has(k));
+  const 安排调整 = [...结果根集].filter(
+    (k) =>
+      起始根集.has(k) &&
+      JSON.stringify(起始mapping[k]) !== JSON.stringify(结果!.mapping[k]),
+  );
   const 连带删除别名 = 结果
     ? Object.keys(起始mapping).filter(
-        (k) => typeof 起始mapping[k] !== "string" && !(k in 结果.mapping),
+        (k) => !是根身份(起始mapping[k]) && !(k in 结果.mapping),
       )
     : [];
-  const 移除根 = 起始直设根.filter(
-    (k) => !结果 || typeof 结果.mapping[k] !== "string",
-  );
+  const 移除根 = [...起始根集].filter((k) => !结果根集.has(k));
 
   const 改规则 = (i: number, patch: Record<string, any>) =>
     设字根表((x) =>
@@ -2416,6 +2425,19 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     {连带删除别名.join("、")}
                   </Typography.Text>
                 )}
+              </div>
+            )}
+            {安排调整.length > 0 && (
+              <div>
+                安排调整：
+                {安排调整.map((k) => (
+                  <Tag key={k} color="orange">
+                    {k}→{安排文本(结果!.mapping[k])}
+                  </Tag>
+                ))}
+                <Typography.Text type="secondary" className="ml-2">
+                  （根保留键位，安排被预置归并码位语法改写）
+                </Typography.Text>
               </div>
             )}
             <Typography.Text type="secondary">
