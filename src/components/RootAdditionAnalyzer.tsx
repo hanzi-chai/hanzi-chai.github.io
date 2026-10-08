@@ -39,7 +39,7 @@ import {
 } from "hanzi-chai";
 import { useAtomValue, useSetAtom } from "jotai";
 import { range, sumBy } from "lodash-es";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   useAtomValueUnwrapped,
   如带归并组装结果原子,
@@ -1488,6 +1488,31 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     return { 串到代表, 名到串, 名到字符 };
   }, [字库, 频率表]);
 
+  // PUA 感知文本：文本里的 PUA 码点（网站自定义字形的字，字体里没有）用字形组件渲染，
+  // 其余保持纯文本——用于日志、轨迹、结果块等一切嵌入根名的说明文字
+  const 富文本 = (文本: string): ReactNode => {
+    if (!文本) return 文本;
+    const 匹配 = [...文本.matchAll(/([\uE000-\uF8FF\u{F0000}-\u{FFFFD}\u{100000}-\u{10FFFD}])/gu)];
+    if (匹配.length === 0) return 文本;
+    const 段: ReactNode[] = [];
+    let 光标 = 0;
+    for (const m of 匹配) {
+      const 起 = m.index!, 码点 = m[1]!;
+      if (起 > 光标) 段.push(文本.slice(光标, 起));
+      const 字符 = 笔顺索引.名到字符.get(码点);
+      段.push(
+        字符 ? (
+          <CharacterDisplay key={`${起}-${码点}`} character={字符} />
+        ) : (
+          <span key={`${起}-${码点}`}>{码点}</span>
+        ),
+      );
+      光标 = 起 + 码点.length;
+    }
+    if (光标 < 文本.length) 段.push(文本.slice(光标));
+    return 段;
+  };
+
   // —— 字内部件挖掘：复/叶 双模式，各自后台 worker（带旗守卫防重复启动） ——
   const 空挖掘状态: 挖掘状态类型 = { 进行中: false, 阶段: "", 结果: null, 按名: null };
   const [挖掘状态, 设挖掘状态] = useState<{ 复: 挖掘状态类型; 叶: 挖掘状态类型 }>({
@@ -2037,6 +2062,21 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   }}
                 />
               </div>
+              {r.类型 === "手动指定" && Array.isArray(r.字根) && r.字根.length > 0 && (
+                <div className="ml-6 mt-1 flex flex-wrap gap-1 items-center">
+                  <Typography.Text type="secondary" className="text-xs!">
+                    已指定：
+                  </Typography.Text>
+                  {r.字根.map((名) => {
+                    const 字符 = 笔顺索引.名到字符.get(名);
+                    return (
+                      <Tag key={名} style={{ cursor: "default" }}>
+                        {字符 ? <CharacterDisplay character={字符} /> : <span>{名}</span>}
+                      </Tag>
+                    );
+                  })}
+                </div>
+              )}
               {展开规则.includes(i) &&
                 r.类型 === "重码组挖掘" &&
                 (() => {
@@ -2327,6 +2367,20 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               归并域引用,
             )}
           </Flex>
+          {预置归并文本.trim() && (
+            <div className="ml-2 mt-1 flex flex-wrap gap-1 items-center">
+              <Typography.Text type="secondary" className="text-xs!">
+                当前条目：
+              </Typography.Text>
+              {富文本(
+                预置归并文本
+                  .split(/[,,，\n]/)
+                  .map((s: string) => s.trim())
+                  .filter(Boolean)
+                  .join("；"),
+              )}
+            </div>
+          )}
           <Flex gap={4} align="center">
             <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示150根起每根罚5万">
               根数罚分 f(n)
@@ -2367,7 +2421,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           className="mt-2!"
           type={运行中 ? "info" : 结果 ? "success" : "warning"}
           showIcon={!!错误}
-          message={运行中 ? 阶段 || "搜索中……" : 阶段}
+          message={运行中 ? 富文本(阶段 || "搜索中……") : 富文本(阶段)}
           description={
             运行中 && 进度 ? (
               <>
@@ -2398,7 +2452,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           <Typography.Text strong>搜索轨迹</Typography.Text>
           {轮日志.map((r, i) => (
             <div key={i}>
-              第{r.轮}轮 <Tag color="green">{r.动作}</Tag>
+              第{r.轮}轮 <Tag color="green">{富文本(r.动作)}</Tag>
               {r.前分} → {r.分数}（
               <Typography.Text type={r.变化 < 0 ? "success" : "danger"}>
                 {r.变化 > 0 ? "+" : ""}
@@ -2439,7 +2493,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   const v = 生效mapping![k];
                   return (
                     <Tag key={k} color="green">
-                      {typeof v === "string" ? `+${k}` : `+${k}（${安排文本(v)}）`}
+                      {富文本(typeof v === "string" ? `+${k}` : `+${k}（${安排文本(v)}）`)}
                     </Tag>
                   );
                 })}
@@ -2450,13 +2504,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 移除根：
                 {移除根.map((k) => (
                   <Tag key={k} color="red">
-                    −{k}
+                    {富文本(`−${k}`)}
                   </Tag>
                 ))}
                 {连带删除别名.length > 0 && (
                   <Typography.Text type="secondary" className="ml-2">
                     连带删除别名 {连带删除别名.length} 个：
-                    {连带删除别名.join("、")}
+                    {富文本(连带删除别名.join("、"))}
                   </Typography.Text>
                 )}
               </div>
@@ -2466,7 +2520,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 安排调整：
                 {安排调整.map((k) => (
                   <Tag key={k} color="orange">
-                    {k}→{安排文本(生效mapping![k])}
+                    {富文本(`${k}→${安排文本(生效mapping![k])}`)}
                   </Tag>
                 ))}
                 <Typography.Text type="secondary" className="ml-2">
