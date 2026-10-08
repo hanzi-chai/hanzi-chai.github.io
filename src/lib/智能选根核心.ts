@@ -1549,9 +1549,9 @@ export class 智能选根核心 {
     const 未触发 = 待归并.length
       ? `预置归并未触发：${待归并.map((t) => t.描述).join("；")}（涉及的根尚未都成为字根）`
       : undefined;
+    // 成功的归并不进备注（差异区的「安排调整」已可见），备注只报异常
     const 备注段 = [
       死归并.length ? `预置归并失败：${死归并.join("；")}` : "",
-      已生效.length ? `预置归并已生效：${已生效.join("、")}` : "",
       未触发 ?? "",
     ].filter(Boolean).join("；");
     return {
