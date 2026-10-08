@@ -1059,9 +1059,9 @@ export class 智能选根核心 {
       ? [...this.频率表.entries()].filter(([w]) => [...w].length === 1).sort((a, b) => b[1] - a[1])
       : [];
     const 池Set = new Set<string>();
-    // 预置归并（2026-10-08 重构）：不再是初始改写。作为待执行动作挂起，每轮重建动作列表时
-    // 重新评估——涉及的根都成为字根后才入场，与其他加/减根动作一起按分数竞争
-    //（第一轮加了个根，第二轮就能归）。开头只做单边码位修正；筛死条目在候选池建好之后。
+    // 预置归并（2026-10-08 用户定案）：配对不变式——配对的根同进同出。
+    // 初态先施加不变式（见下），搜索中由随行（B 入带 A）与级联（B 出带 A）维持；
+    // 参与者不在（映射∪候选池）的条目判死（筛掉），已在初态产生的改写回滚。
     const 预置归并表 = (参数.预置归并 ?? []).map((x) => {
       if ((x.根位 == null) !== (x.目标位 == null)) {
         cb.on日志?.(`预置归并「${x.根}=${x.目标}」码位只写了一边，按整体归并处理`);
@@ -1071,7 +1071,10 @@ export class 智能选根核心 {
     });
     const 已有根 = new Set(Object.keys(起始mapping));
     this.根数惩罚 = 参数.根数惩罚;
-    this.设置基态(起始mapping); // 必须在候选池之前：重码组挖掘规则需要基态词序列
+    let mapping = { ...起始mapping };
+    const 归并码数 = this.配置0.form.mapping_type ?? 2;
+    // 初态不变式的施加放在候选池筛死之后（见下）：只对活条目施加，判死条目不得动方案
+    this.设置基态(mapping); // 必须在候选池之前：重码组挖掘规则需要基态词序列
     for (const 规则 of 规则列表) {
       if (规则.类型 === "重码组挖掘") {
         const { 根: 组根 } = this.重码组挖掘(参数.表列表, { 应停止: () => cb.应停止?.() ?? false, on阶段: (文本) => cb.on阶段?.(文本) }, 规则.允许复合体 !== false);
@@ -1128,7 +1131,6 @@ export class 智能选根核心 {
     if (cb.应停止?.()) {
       return { mapping: { ...起始mapping }, 总分: Math.round(this.总分基 * 100) / 100, 轮日志: [], 收敛: false, 已停止: true, 建议: null };
     }
-    let mapping = { ...起始mapping };
 
     // 形状签名去重：与已有根（含别名）同形状+同拓扑的字形不是新根（如 ⼆/二/PUA 变体）
     const 名到字形 = new Map<string, any>();
@@ -1150,8 +1152,7 @@ export class 智能选根核心 {
       : [];
     if (允许加根总开关) cb.on日志?.(`候选池 ${池.length} 个（${规则列表.length} 条字根表规则，已按形状去重）`);
     // 预置归并筛选：参与者都得是（或能成为）字根——在映射里或进了候选池，否则永远无法应用，
-    // 直接判死并在绿框说明（不再把池外的字强行写进映射）
-    const 归并码数 = this.配置0.form.mapping_type ?? 2;
+    // 判死并在绿框说明；判死条目完全不参与初态不变式（死条目不该动方案）
     const 在册 = (名: string) => mapping[名] !== undefined || 池Set.has(名);
     const 待归并: { 条目: (typeof 预置归并表)[number]; 描述: string }[] = [];
     const 死归并: string[] = [];
@@ -1170,42 +1171,103 @@ export class 智能选根核心 {
       else 待归并.push({ 条目: x, 描述 });
     }
     const 备注 = 死归并.length ? `预置归并失败：${死归并.join("；")}` : undefined;
-    let 当前分 = this.总分基 + this.根数罚分(起始mapping);
+    // —— 初态不变式（只施加于活条目）——
+    // 整体 A=B：B 在映射 ⇒ A 以 {element:B} 入/转（AB 同在）；B 不在 ⇒ A 被踢出（A 只能跟随 B 存在）
+    // 码位 A 1=B x：B 在映射 ⇒ A 在映射时安排改写为借码（A 不在则不入，等 B 在后经加根带借码）；
+    //              B 不在 ⇒ A 被踢出（B 入后 A 才被允许入）
+    // 成链时反复施加直至稳定。踢出可能让部分字无法拆分（需要 A 的字失去唯一拆法）——
+    // 试建基态失败则回滚被踢的根并记录，待目标成根后经随行/触发转为归并。
+    const 被踢: string[] = [];
+    {
+      for (let 遍 = 0; 遍 < 8; 遍++) {
+        let 变了 = false;
+        for (const { 条目: x } of 待归并) {
+          const B在 = mapping[x.目标] !== undefined;
+          const A在 = mapping[x.根] !== undefined;
+          if (B在 && !A在) {
+            if (x.根位 == null || x.目标位 == null) {
+              mapping[x.根] = { element: x.目标 }; // 整体：随 B 入（别名形态）
+              变了 = true;
+            }
+            // 码位：A 不在则不入（等 B 在后经加根带借码），初态无事可做
+          } else if (B在 && A在) {
+            if (x.根位 == null || x.目标位 == null) {
+              if (JSON.stringify(mapping[x.根]) !== JSON.stringify({ element: x.目标 })) {
+                mapping[x.根] = { element: x.目标 }; // 整体：转为跟随 B
+                变了 = true;
+              }
+            } else {
+              const 原 = mapping[x.根];
+              if (typeof 原 === "string" || Array.isArray(原)) {
+                const 位数 = typeof 原 === "string" ? [...原].length : 原.length;
+                if (
+                  位数 === 归并码数 && x.根位! >= 1 && x.根位! <= 归并码数 && x.目标位! >= 1
+                ) {
+                  const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
+                    i === x.根位! - 1
+                      ? { element: x.目标, index: x.目标位! - 1 }
+                      : typeof 原 === "string"
+                        ? [...原][i]!
+                        : 原[i],
+                  );
+                  if (JSON.stringify(目标状态) !== JSON.stringify(原)) {
+                    mapping[x.根] = 目标状态; // 码位：安排改写为借码
+                    变了 = true;
+                  }
+                }
+              }
+            }
+          } else if (!B在 && A在) {
+            delete mapping[x.根]; // 被踢出：跟随 B 入出
+            被踢.push(x.根);
+            变了 = true;
+          }
+        }
+        if (!变了) break;
+      }
+    }
+    if (被踢.length) {
+      try {
+        this.设置基态(mapping);
+      } catch (e) {
+        // 踢出导致部分字无法拆分：回滚被踢的根（保留原状），待目标成根后经随行/触发转为归并
+        for (const 根 of 被踢) {
+          if (起始mapping[根] === undefined) delete mapping[根];
+          else mapping[根] = 起始mapping[根];
+        }
+        this.设置基态(mapping);
+        cb.on日志?.(`预置归并的根 ${被踢.join("、")} 暂保留原状（直接踢出会让部分字无法拆分），待其目标成根后自动转为归并`);
+      }
+    }
+    let 当前分 = this.总分基 + this.根数罚分(mapping);
     const 轮日志: 轮结果[] = [];
     let 收敛 = false, 已停止 = false;
     let 建议动作: { 动作: string; 分数: number; mapping: Record<string, any> } | null = null;
     let 轮序 = 0;
     while (轮序 < 参数.轮数) {
       if (cb.应停止?.()) { 已停止 = true; break; }
-      // 预置归并触发（不占轮数）：预设的归并是义务而非候选，条件满足即自动生效，
-      // 代价如实计分；目标还没成根就等下一轮（加根时也可随行，见随行表）
+      // 预置归并触发（码位改写，不占轮数）：目标已成根但安排还没借码的，自动生效、代价如实计分。
+      // （整体归并的生效由初态不变式 + 加根随行 + 级联覆盖，无需在此触发）
       const 触发 = 待归并.filter(({ 条目: x }) => {
+        if (x.根位 == null || x.目标位 == null) return false; // 整体：随行/初态已覆盖
         if (mapping[x.目标] === undefined) return false;
-        if (x.根位 != null && x.目标位 != null) {
-          const 原 = mapping[x.根];
-          if (原 === undefined || (typeof 原 !== "string" && !Array.isArray(原))) return false;
-          const 根位 = x.根位, 目标位 = x.目标位;
-          if ((typeof 原 === "string" ? [...原].length : 原.length) !== 归并码数) return false;
-          if (根位 < 1 || 根位 > 归并码数 || 目标位 < 1) return false;
-          const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
-            i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i] : 原[i]);
-          return JSON.stringify(目标状态) !== JSON.stringify(原);
-        }
-        const 现 = mapping[x.根];
-        return !(现 !== undefined && typeof 现 === "object" && !Array.isArray(现) && 现.element === x.目标);
+        const 原 = mapping[x.根];
+        if (原 === undefined || (typeof 原 !== "string" && !Array.isArray(原))) return false;
+        const 根位 = x.根位, 目标位 = x.目标位;
+        if ((typeof 原 === "string" ? [...原].length : 原.length) !== 归并码数) return false;
+        if (根位 < 1 || 根位 > 归并码数 || 目标位 < 1) return false;
+        const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
+          i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i] : 原[i]);
+        return JSON.stringify(目标状态) !== JSON.stringify(原);
       });
       if (触发.length) {
         const 前分0 = 当前分;
         const 描述列表: string[] = [];
         for (const { 条目: x, 描述 } of 触发) {
-          if (x.根位 != null && x.目标位 != null) {
-            const 原 = mapping[x.根];
-            const 根位 = x.根位, 目标位 = x.目标位;
-            mapping[x.根] = Array.from({ length: 归并码数 }, (_, i) =>
-              i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i]! : 原[i]);
-          } else {
-            mapping[x.根] = { element: x.目标 };
-          }
+          const 原 = mapping[x.根];
+          const 根位 = x.根位!, 目标位 = x.目标位!;
+          mapping[x.根] = Array.from({ length: 归并码数 }, (_, i) =>
+            i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i]! : 原[i]);
           描述列表.push(描述);
           待归并.splice(待归并.findIndex((y) => y.条目 === x), 1);
         }
@@ -1229,7 +1291,6 @@ export class 智能选根核心 {
       }
       轮序++;
       const 轮 = 轮序;
-      const 直设根 = Object.keys(mapping).filter((k) => typeof mapping[k] === "string");
       const 范围文本 = (参数.减根范围 ?? "").trim();
       let 减根正则: RegExp | null = null;
       if (范围文本) {
@@ -1240,16 +1301,26 @@ export class 智能选根核心 {
           throw new Error(`减根范围「${范围文本}」不是有效正则`);
         }
       }
+      // 预置归并配对根禁止单独删除（纯归并 A 跟着 B 出）：整体条目的根只能经级联随 B 消失
+      const 禁删 = new Set(
+        待归并.filter(({ 条目: x }) => x.根位 == null || x.目标位 == null).map(({ 条目: x }) => x.根),
+      );
+      const 直设根 = Object.keys(mapping).filter((k) => typeof mapping[k] === "string");
       const 可删 = 直设根.filter(
-        (k) => !保护.has(k) && (!减根正则 || 减根正则.test(k)),
+        (k) => !保护.has(k) && !禁删.has(k) && (!减根正则 || 减根正则.test(k)),
       );
       const 在集 = new Set(Object.keys(mapping)); // 含别名：已是任何形式条目的字不能再加
-      const 可加 = 池.filter((k) => !在集.has(k));
+      // 预置归并锁定：待归并条目里目标还没成根的，其根禁止单独入映射（纯归并 A 绝不单独出入；
+      // 码位 A 要等 B 入后才被允许入）——只能随目标一起进，或等目标成根后解锁
+      const 锁定 = new Set(
+        待归并.filter(({ 条目: x }) => mapping[x.目标] === undefined).map(({ 条目: x }) => x.根),
+      );
+      const 可加 = 池.filter((k) => !在集.has(k) && !锁定.has(k));
       const 允许加根 = 参数.允许加根 !== false;
       const 允许减根 = 参数.允许减根 !== false;
       // 预置归并随行表（每轮重建）：整体归并条目里目标还不在此映射的——目标从池里加进来时
       // 同一动作内让根以 {element:目标} 随行（加根即归并，不分两轮）。根已是普通字根的也同样
-      // 随行转换（纯归并 = A、B 同进同出）；目标已在映射的由轮首触发段自动生效。
+      // 随行转换（纯归并 = A、B 同进同出）；目标已在映射的状态由初态不变式保证。
       const 随行表 = new Map<string, string[]>();
       for (const { 条目: x } of 待归并) {
         if (x.根位 != null && x.目标位 != null) continue; // 码位走借码安排/独立动作

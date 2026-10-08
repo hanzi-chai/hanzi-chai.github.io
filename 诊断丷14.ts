@@ -72,7 +72,7 @@ const r2 = 跑([{ 根: 根A, 目标: 根A, 根位: 1, 目标位: 2 }]);
 {
   const r = 跑([{ 根: 根A, 目标: 根B }], { 轮数: 1 });
   断言("③ 纯归并：A 跟随 B", r.mapping[根A] && typeof r.mapping[根A] === "object" && r.mapping[根A].element === 根B, JSON.stringify(r.mapping[根A]));
-  断言("③ 纯归并：第1轮轨迹即归并（义务触发，无未采用）", r.轮日志[0]?.动作 === `${根A}=${根B}`, r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
+  断言("③ 纯归并：初态不变式直接转换（无需轮次）", r.轮日志.every((x: any) => !x.动作.includes(`${根A}=${根B}`)), r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
   const 原型 = 智能选根核心.prototype as any;
   const 删B后 = 原型.变体mapping.call(null, r.mapping, [], [根B], "aa");
   断言("③ 同减：删 B 时 A 级联消失", !(根B in 删B后) && !(根A in 删B后));
@@ -83,7 +83,7 @@ const r2 = 跑([{ 根: 根A, 目标: 根A, 根位: 1, 目标位: 2 }]);
   const r = 跑([{ 根: 根A, 目标: 根B, 根位: 1, 目标位: 2 }], { 轮数: 1 });
   const 安排 = r.mapping[根A];
   断言("④ 码位：借码正确、其余位逐位保留", Array.isArray(安排) && JSON.stringify(安排[0]) === JSON.stringify({ element: 根B, index: 1 }) && 安排[1] === [...(基线m[根A] as string)][1]!, JSON.stringify(安排));
-  断言("④ 码位：第1轮轨迹即借码", r.轮日志[0]?.动作 === `${根A} 1=${根B} 2`, r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
+  断言("④ 码位：初态不变式直接改写（无需轮次）", r.轮日志.every((x: any) => !x.动作.includes(`${根A} 1=`)), r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
 }
 
 // ⑤ 随行同轮（新根对）：A、B 都是池外新字，加 B 的同一轮内 A 以别名随行
@@ -156,7 +156,7 @@ const r2 = 跑([{ 根: 根A, 目标: 根A, 根位: 1, 目标位: 2 }]);
     字根表列表: [{ 类型: "手动指定", 字根: [新2] }],
   });
   断言("⑨ 未触发：备注说明", !!r.备注 && r.备注.includes("预置归并未触发") && r.备注.includes(新2), r.备注 ?? "（无备注）");
-  断言("⑨ 未触发：根 A 安排原样", r.mapping[根A] === 基线m[根A], JSON.stringify(r.mapping[根A]));
+  断言("⑨ 未触发：A 被踢出或安全回滚保留（踢出会破坏拆分时）", r.mapping[根A] === undefined || r.mapping[根A] === 基线m[根A], `${根A} → ${JSON.stringify(r.mapping[根A])}`);
 }
 
 console.log(失败 === 0 ? "\n全部通过" : `\n${失败} 项失败`);
