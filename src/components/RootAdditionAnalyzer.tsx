@@ -342,10 +342,28 @@ function 手动分析面板() {
   const 配置 = useAtomValue(配置原子);
   const 设配置 = useSetAtom(配置原子);
   const 共享表数据 = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
+  // 共享表键入草稿：输入期间只改本地，失焦才写回配置（逐键写回会让三个重页签全部跟着重算，打字卡顿）
+  const [共享草稿, 设共享草稿] = useState<评分表格式[] | null>(null);
+  const 共享已提交 = useRef(共享表数据);
+  useEffect(() => {
+    if (共享表数据 !== 共享已提交.current) {
+      共享已提交.current = 共享表数据; // 外部变更（评分表页签编辑等）→ 丢弃本地草稿
+      设共享草稿(null);
+    }
+  }, [共享表数据]);
+  const 提交共享 = (新表: 评分表格式[]) => {
+    共享已提交.current = 新表;
+    设共享草稿(null);
+    设配置({ ...配置, statistics: { tables: 新表 } } as any);
+  };
+  const 失焦提交共享 = () => {
+    if (共享草稿) 提交共享(共享草稿);
+  };
+  const 共享表有效 = 共享草稿 ?? 共享表数据; // 编辑期间草稿为显示与提交的基准
   const 表视图 = useMemo<表配置[]>(
     () =>
       共享表
-        ? 共享表数据.map((t, i) => ({
+        ? 共享表有效.map((t, i) => ({
             id: 10000 + i,
             模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
             top: t.top ?? 0,
@@ -354,21 +372,18 @@ function 手动分析面板() {
           }))
         : 自建表,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [共享表, 配置, 自建表],
+    [共享表, 配置, 自建表, 共享表有效],
   );
+  // 键入路径（名称/top/权重输入框）：只进草稿，失焦提交
   const 更新共享表 = (索引: number, patch: Partial<评分表格式>) => {
-    设配置({
-      ...配置,
-      statistics: {
-        tables: 共享表数据.map((t, i) => (i === 索引 ? { ...t, ...patch } : t)),
-      },
-    } as any);
+    设共享草稿(共享表有效.map((t, i) => (i === 索引 ? { ...t, ...patch } : t)));
+  };
+  // 离散路径（模式下拉/删除按钮）：立即提交
+  const 即时更新共享表 = (索引: number, patch: Partial<评分表格式>) => {
+    提交共享(共享表有效.map((t, i) => (i === 索引 ? { ...t, ...patch } : t)));
   };
   const 删除共享表 = (索引: number) => {
-    设配置({
-      ...配置,
-      statistics: { tables: 共享表数据.filter((_, i) => i !== 索引) },
-    } as any);
+    提交共享(共享表有效.filter((_, i) => i !== 索引));
   };
 
   const 已映射元素集 = useMemo(() => new Set(Object.keys(决策)), [决策]);
@@ -903,7 +918,7 @@ function 手动分析面板() {
         <Switch size="small" checked={共享表} onChange={设共享表} />
         <Typography.Text type="secondary">
           {共享表
-            ? "已共享「评分表」页签的表（此处编辑会直接写回评分表）"
+            ? "已共享「评分表」页签的表（此处编辑在失焦后写回评分表）"
             : "使用本页自建阶重表"}
         </Typography.Text>
         {!共享表 && (
@@ -942,6 +957,8 @@ function 手动分析面板() {
                           ),
                         );
                   }}
+                  onBlur={共享表 ? 失焦提交共享 : undefined}
+                  onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                 />
                 <Typography.Text strong>
                   总变化{" "}
@@ -986,7 +1003,7 @@ function 手动分析面板() {
                   onChange={(vs) => {
                     const 模式 = vs as string[];
                     共享表
-                      ? 更新共享表(表.id - 10000, {
+                      ? 即时更新共享表(表.id - 10000, {
                           patterns: 模式.map((v) => JSON.parse(v)),
                         })
                       : 设自建表(
@@ -1012,6 +1029,8 @@ function 手动分析面板() {
                             ),
                           );
                     }}
+                    onBlur={共享表 ? 失焦提交共享 : undefined}
+                    onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                   />
                   字
                 </Flex>
@@ -1030,6 +1049,8 @@ function 手动分析面板() {
                             ),
                           );
                     }}
+                    onBlur={共享表 ? 失焦提交共享 : undefined}
+                    onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                   />
                 </Flex>
                 <Button
@@ -1094,11 +1115,36 @@ function 评分表面板() {
   const maxLength = useAtomValue(最大码长原子);
   const tables = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
 
-  const 更新 = (新表: 评分表格式[]) => {
+  // 输入期间只改本地草稿，失焦才写回配置。配置一变，常挂载的「手动分析」「自动搜索」两个重页签
+  // 会全部跟着重算——逐键写回就是打字卡顿的根源（用户要求：有光标不重算，失焦才重算）。
+  const [草稿, 设草稿] = useState<评分表格式[]>(() => tables);
+  const 已提交引用 = useRef(tables); // 本组件最近一次写回配置的内容：识别外部变更、避免回声覆盖
+  const 有未提交 = useRef(false);
+  useEffect(() => {
+    if (tables !== 已提交引用.current) {
+      // 外部变更（手动分析共享编辑、其他入口）→ 以配置为准覆盖草稿
+      已提交引用.current = tables;
+      有未提交.current = false;
+      设草稿(tables);
+    }
+  }, [tables]);
+  const 提交 = (新表: 评分表格式[]) => {
+    已提交引用.current = 新表;
+    有未提交.current = false;
+    设草稿(新表);
     设配置({ ...配置, statistics: { tables: 新表 } } as any);
   };
-  const 改表 = (i: number, patch: Partial<评分表格式>) =>
-    更新(tables.map((t, ti) => (ti === i ? { ...t, ...patch } : t)));
+  const 失焦提交 = () => {
+    if (有未提交.current) 提交(草稿);
+  };
+  // 键入路径：只进草稿
+  const 改草稿 = (i: number, patch: Partial<评分表格式>) => {
+    有未提交.current = true;
+    设草稿(草稿.map((t, ti) => (ti === i ? { ...t, ...patch } : t)));
+  };
+  // 离散操作（多选下拉/按钮）：立即提交，基于草稿叠加以免覆盖未失焦的键入
+  const 改表即时 = (i: number, patch: Partial<评分表格式>) =>
+    提交(草稿.map((t, ti) => (ti === i ? { ...t, ...patch } : t)));
 
   const 模式选项 = range(maxLength + 1).flatMap((阶) =>
     combinations(maxLength, 阶).map((空位) => ({
@@ -1112,35 +1158,33 @@ function 评分表面板() {
       <Typography.Paragraph type="secondary">
         这些评分表是「智能选根」的优化目标（加权和最小者优先）。patterns =
         手动指定空位模式（一个模式 = 一组计入统计的码位）。top =
-        只统计按字频前 N 字（0 为全部）。
+        只统计按字频前 N 字（0 为全部）。编辑在离开输入框（失焦）后才生效重算。
       </Typography.Paragraph>
       <Flex gap="small" style={{ marginBottom: 16 }}>
-        <Button
-          onClick={() =>
-            更新([...tables, { name: `表${tables.length + 1}`, weight: 1, top: 0, patterns: [] }])
-          }
-        >
+        <Button onClick={() => 提交([...草稿, { name: `表${草稿.length + 1}`, weight: 1, top: 0, patterns: [] }])}>
           新建表
         </Button>
-        <Button onClick={() => 更新(默认四表(maxLength))}>恢复默认四表</Button>
-        {tables.length > 0 && (
-          <Button danger onClick={() => 更新([])}>
+        <Button onClick={() => 提交(默认四表(maxLength))}>恢复默认四表</Button>
+        {草稿.length > 0 && (
+          <Button danger onClick={() => 提交([])}>
             清空
           </Button>
         )}
       </Flex>
-      {tables.length === 0 && (
+      {草稿.length === 0 && (
         <Alert type="warning" showIcon message="尚无评分表，请新建或恢复默认四表。" />
       )}
       <Flex vertical gap="middle">
-        {tables.map((表, i) => (
+        {草稿.map((表, i) => (
           <div key={i}>
             <Flex gap="small" align="center" wrap="wrap">
               <Input
                 className="w-32!"
                 value={表.name}
                 addonBefore="名"
-                onChange={(e) => 改表(i, { name: e.target.value })}
+                onChange={(e) => 改草稿(i, { name: e.target.value })}
+                onBlur={失焦提交}
+                onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
               />
               <Flex gap={4} align="center">
                 权重
@@ -1148,7 +1192,9 @@ function 评分表面板() {
                   step={0.1}
                   min={0}
                   value={表.weight}
-                  onChange={(v) => 改表(i, { weight: v ?? 0 })}
+                  onChange={(v) => 改草稿(i, { weight: v ?? 0 })}
+                  onBlur={失焦提交}
+                  onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                 />
               </Flex>
               <Flex gap={4} align="center">
@@ -1157,7 +1203,9 @@ function 评分表面板() {
                   min={0}
                   value={表.top ?? 0}
                   placeholder="全部"
-                  onChange={(v) => 改表(i, { top: v ?? 0 })}
+                  onChange={(v) => 改草稿(i, { top: v ?? 0 })}
+                  onBlur={失焦提交}
+                  onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                 />
                 字
               </Flex>
@@ -1170,10 +1218,10 @@ function 评分表面板() {
                 value={(表.patterns ?? []).map((p) => JSON.stringify(p))}
                 options={模式选项}
                 onChange={(vs) =>
-                  改表(i, { patterns: (vs as string[]).map((s) => JSON.parse(s)) })
+                  改表即时(i, { patterns: (vs as string[]).map((s) => JSON.parse(s)) })
                 }
               />
-              <Button danger size="small" onClick={() => 更新(tables.filter((_, ti) => ti !== i))}>
+              <Button danger size="small" onClick={() => 提交(草稿.filter((_, ti) => ti !== i))}>
                 删除
               </Button>
             </Flex>
@@ -2272,7 +2320,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           {结果.收敛 && 结果.建议 && (
             <div className="mt-1">
               <Typography.Text type="secondary">
-                下一步建议（分数无改进故未自动应用；点下方「应用到方案」可强制执行此建议）：
+                分数无改进故自动结束（该行不会应用）：
               </Typography.Text>
               <Tag color="orange" style={{ marginLeft: 4 }}>
                 {结果.建议.动作}
