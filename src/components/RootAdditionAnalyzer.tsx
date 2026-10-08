@@ -2114,7 +2114,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                                 {rk.字列表.join("、")}
                                 {同形 && (
                                   <div className="text-gray-500 mt-1">
-                                    与已有根「{同形}」字形完全相同（形状签名去重），加根搜索不会把它单独入池
+                                    {富文本(`与已有根「${同形}」字形完全相同`)}（形状签名去重），加根搜索不会把它单独入池
                                   </div>
                                 )}
                               </div>
@@ -2131,7 +2131,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                               )}
                               <span className="text-xs ml-1 opacity-70">
                                 +{Math.round(rk.得分 * 100) / 100}
-                                {同形 ? `·与「${同形}」同形` : ""}
+                                {同形 ? 富文本(`·与「${同形}」同形`) : ""}
                               </span>
                             </Tag>
                           </Popover>
@@ -2246,7 +2246,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                           content={
                             m.同形 && !m.在方案 ? (
                               <div className="text-gray-500">
-                                与已有根「{m.同形}」字形完全相同（形状签名去重），加根搜索不会把它单独入池
+                                {富文本(`与已有根「${m.同形}」字形完全相同`)}（形状签名去重），加根搜索不会把它单独入池
                               </div>
                             ) : m.字列表 ? (
                               <div className="max-w-120 max-h-80 overflow-y-auto">
@@ -2290,7 +2290,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                             ) : (
                               <span>{m.名}</span>
                             )}
-                            <span className="text-xs ml-1 opacity-70">{m.标注}</span>
+                            <span className="text-xs ml-1 opacity-70">{富文本(m.标注)}</span>
                           </Tag>
                         </Popover>
                       ))}
