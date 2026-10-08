@@ -1629,7 +1629,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     // 预置归并解析与校验（条目用中英逗号或换行分隔；空格是码位语法：的 1=人 2）
     const 占位 = 占位安排.trim() || (alphabet[0] ?? "a").repeat(编码类型);
     const 条目 = 预置归并文本
-      .split(/[,,\n]/)
+      .split(/[,,，\n]/)
       .map((s: string) => s.trim())
       .filter(Boolean);
     const 预置: { 根: string; 目标: string; 根位?: number; 目标位?: number }[] = [];
@@ -1896,7 +1896,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     (v) => {
                       设手动文本((t) => ({ ...t, [i]: v }));
                       改规则(i, {
-                        字根: v.split(/[,,\n]/).map((s) => s.trim()).filter(Boolean),
+                        字根: v.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean),
                       });
                     },
                     手动收起集.has(i),
