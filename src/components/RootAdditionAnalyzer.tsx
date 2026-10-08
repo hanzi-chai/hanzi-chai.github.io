@@ -1218,9 +1218,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   })();
   const [轮数, 设轮数] = useState(初始配置.轮数 ?? 12);
   const [单轮根数, 设单轮根数] = useState(初始配置.单轮根数 ?? 1);
-  const [字根表, 设字根表] = useState<字根表规则[]>(
-    初始配置.字根表 ?? [{ 类型: "字频范围", 起: 1, 止: 200 }],
-  );
+  const [字根表, 设字根表] = useState<字根表规则[]>(初始配置.字根表 ?? []);
   // 手动指定输入域：收起索引集 + 打字中的原始文本（不即时归一，避免受控回写跳光标）
   const [手动收起集, 设手动收起集] = useState<Set<number>>(new Set());
   const [手动文本, 设手动文本] = useState<Record<number, string>>({});
@@ -1778,6 +1776,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           </Typography.Text>
         </Flex>
         <div className="mt-1">
+          {字根表.length === 0 && (
+            <Typography.Text type="secondary" className="block mb-1">
+              暂无规则——不自动加根（删根搜索仍可用）。点上方「+ 添加字根表」创建。
+            </Typography.Text>
+          )}
           {字根表.map((r, i) => (
             <div key={i}>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
