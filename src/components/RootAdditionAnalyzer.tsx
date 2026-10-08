@@ -2363,7 +2363,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 .map((s: string) => s.trim())
                 .filter(Boolean);
               return (
-                <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
+                <div className="ml-6 mt-1 w-full max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                   <Typography.Text type="secondary" className="w-full!">
                     共 {条目.length} 条归并条目（PUA 字根以字形显示）：
                   </Typography.Text>
