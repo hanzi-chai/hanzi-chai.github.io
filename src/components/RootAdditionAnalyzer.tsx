@@ -1793,12 +1793,19 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     }, 300);
   };
 
+  // —— 应用与显示共用的单一事实来源：将实际写入方案的 mapping ——
+  // 0 轮收敛（如全部动作被拒绝/无改进）时只有建议可应用；应用按钮与所有 diff 显示都必须
+  // 消费同一个 生效mapping，严禁各自推一遍"该用哪个"（曾因此显示无变化而应用加了根）
+  const 应用建议 = !!结果 && 结果.轮日志.length === 0 && !!结果.建议?.mapping;
+  const 生效mapping = 结果
+    ? 应用建议 && 结果.建议
+      ? 结果.建议.mapping
+      : 结果.mapping
+    : null;
+
   const 应用 = () => {
-    if (!结果) return;
-    // 零轮收敛（如全部动作被拒绝）时只有建议可应用
-    const 应用建议 = 结果.轮日志.length === 0 && 结果.建议?.mapping;
-    const mapping = 应用建议 ? 结果.建议!.mapping : 结果.mapping;
-    设配置({ ...配置, form: { ...配置.form, mapping } } as any);
+    if (!结果 || !生效mapping) return;
+    设配置({ ...配置, form: { ...配置.form, mapping: 生效mapping } } as any);
     message.success(
       应用建议
         ? `已按建议应用：${结果.建议!.动作}`
@@ -1806,32 +1813,24 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     );
   };
 
-  // 显示口径必须等于应用口径：0 轮收敛时「应用到方案」写入的是 建议.mapping（强制执行建议动作），
-  // 结果.mapping 只是起始态——diff 若算自 结果.mapping 就会出现"显示无变化、应用却加了根"的割裂
-  const 生效mapping = 结果
-    ? 结果.轮日志.length === 0 && 结果.建议?.mapping
-      ? 结果.建议.mapping
-      : 结果.mapping
-    : null;
   const 结果直设根 = 生效mapping
     ? Object.keys(生效mapping).filter((k) => typeof 生效mapping[k] === "string")
     : [];
-  const 结果根集 = 生效mapping
-    ? new Set(Object.keys(生效mapping).filter((k) => 是根身份(生效mapping[k])))
-    : new Set<string>();
-  // 新增/移除按根身份比较：string→数组（预置归并码位表达）不算增删，算"安排调整"
-  const 新增根 = [...结果根集].filter((k) => !起始根集.has(k));
-  const 安排调整 = [...结果根集].filter(
-    (k) =>
-      起始根集.has(k) &&
-      JSON.stringify(起始mapping[k]) !== JSON.stringify(生效mapping![k]),
-  );
-  const 连带删除别名 = 生效mapping
-    ? Object.keys(起始mapping).filter(
-        (k) => !是根身份(起始mapping[k]) && !(k in 生效mapping),
+  // diff 按键集比较：任何键的增删都是方案变化——别名条目（{element}，如自动归并相似根的
+  // "+X(并Y)"）同样是根身份的获得/失去，只认 string∪数组会把别名增删隐成"无变化"
+  const 起始键集 = new Set(Object.keys(起始mapping));
+  const 生效键集 = 生效mapping ? new Set(Object.keys(生效mapping)) : new Set<string>();
+  const 新增根 = 生效mapping ? [...生效键集].filter((k) => !起始键集.has(k)) : [];
+  const 移除项 = 生效mapping ? [...起始键集].filter((k) => !生效键集.has(k)) : [];
+  const 连带删除别名 = 移除项.filter((k) => !是根身份(起始mapping[k]));
+  const 移除根 = 移除项.filter((k) => 是根身份(起始mapping[k]));
+  const 安排调整 = 生效mapping
+    ? [...生效键集].filter(
+        (k) =>
+          起始键集.has(k) &&
+          JSON.stringify(起始mapping[k]) !== JSON.stringify(生效mapping![k]),
       )
     : [];
-  const 移除根 = [...起始根集].filter((k) => !结果根集.has(k));
 
   const 改规则 = (i: number, patch: Record<string, any>) =>
     设字根表((x) =>
@@ -2390,7 +2389,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           {结果.收敛 && 结果.建议 && (
             <div className="mt-1">
               <Typography.Text type="secondary">
-                {结果.轮日志.length === 0
+                {应用建议
                   ? "分数无改进故自动结束；点下方「应用到方案」将强制执行此动作："
                   : "分数无改进故自动结束（该行不会应用）："}
               </Typography.Text>
@@ -2414,15 +2413,24 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               })()}
             </div>
           )}
+          {结果.收敛 && 结果.轮日志.length === 0 && !结果.建议 && (
+            <Typography.Text type="secondary" className="mt-1 block">
+              0 轮收敛：没有可执行的改进动作（候选池为空，或候选均已是字根/归并绑定）；
+              相对当前方案无变化，应用不会改动字根映射。
+            </Typography.Text>
+          )}
           <div className="mt-1">
             {新增根.length > 0 && (
               <div>
                 新增根：
-                {新增根.map((k) => (
-                  <Tag key={k} color="green">
-                    +{k}
-                  </Tag>
-                ))}
+                {新增根.map((k) => {
+                  const v = 生效mapping![k];
+                  return (
+                    <Tag key={k} color="green">
+                      {typeof v === "string" ? `+${k}` : `+${k}（${安排文本(v)}）`}
+                    </Tag>
+                  );
+                })}
               </div>
             )}
             {移除根.length > 0 && (
@@ -2446,7 +2454,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 安排调整：
                 {安排调整.map((k) => (
                   <Tag key={k} color="orange">
-                    {k}→{安排文本(结果!.mapping[k])}
+                    {k}→{安排文本(生效mapping![k])}
                   </Tag>
                 ))}
                 <Typography.Text type="secondary" className="ml-2">
