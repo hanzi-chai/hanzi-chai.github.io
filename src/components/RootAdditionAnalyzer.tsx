@@ -1821,6 +1821,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           JSON.stringify(起始mapping[k]) !== JSON.stringify(生效mapping![k]),
       )
     : [];
+  // 新增/移除/安排调整全空 = 相对当前方案无变化 → 应用按钮禁用
+  const 无变化 = !!结果 && 新增根.length === 0 && 移除项.length === 0 && 安排调整.length === 0;
 
   const 改规则 = (i: number, patch: Record<string, any>) =>
     设字根表((x) =>
@@ -2428,7 +2430,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               最终直设根 {结果直设根.length} 个
             </Typography.Text>
           </div>
-          <Button type="primary" className="mt-2!" onClick={应用}>
+          <Button
+            type="primary"
+            className="mt-2!"
+            onClick={应用}
+            disabled={无变化}
+            title={无变化 ? "相对当前方案无变化" : undefined}
+          >
             应用到方案
           </Button>
         </div>
