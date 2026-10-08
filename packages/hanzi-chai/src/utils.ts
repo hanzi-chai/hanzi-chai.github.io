@@ -903,10 +903,11 @@ export const 生成 = (config: 配置): 生成配置 => {
               valid = false;
               break;
             }
-            // Variable placeholders may only substitute ASCII (string) keys
-            if (typeof cur !== "string" && 是变量(tpl)) {
-              valid = false;
-              break;
+            // 借码位（{element,index}，半归并/码位归并产物）钉住：它占掉的码位不属于该根的
+            // 自由编码位，模板的变量/字面/null 都不得改写——否则优化器拿整根编码会覆盖掉借码
+            if (typeof cur !== "string") {
+              combined.push(cur);
+              continue;
             }
             // null in template means placeholder: keep existing value
             combined.push(tpl === null ? cur : tpl);
