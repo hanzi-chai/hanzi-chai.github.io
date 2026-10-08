@@ -1322,6 +1322,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const [手动文本, 设手动文本] = useState<Record<number, string>>({});
   const 手动域引用 = useRef<any>(null);
   const [归并收起, 设归并收起] = useState(false);
+  const [归并查看, 设归并查看] = useState(false);
   const 归并域引用 = useRef<any>(null);
   // 删除规则后重排按索引记录的临时状态
   const 重排索引记录 = (记录: Record<number, string>, 删: number): Record<number, string> =>
@@ -2062,21 +2063,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   }}
                 />
               </div>
-              {r.类型 === "手动指定" && Array.isArray(r.字根) && r.字根.length > 0 && (
-                <div className="ml-6 mt-1 flex flex-wrap gap-1 items-center">
-                  <Typography.Text type="secondary" className="text-xs!">
-                    已指定：
-                  </Typography.Text>
-                  {r.字根.map((名) => {
-                    const 字符 = 笔顺索引.名到字符.get(名);
-                    return (
-                      <Tag key={名} style={{ cursor: "default" }}>
-                        {字符 ? <CharacterDisplay character={字符} /> : <span>{名}</span>}
-                      </Tag>
-                    );
-                  })}
-                </div>
-              )}
               {展开规则.includes(i) &&
                 r.类型 === "重码组挖掘" &&
                 (() => {
@@ -2366,19 +2352,57 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               "例：a=人，的 1=人 2",
               归并域引用,
             )}
+            <Button
+              size="small"
+              type="text"
+              onClick={() => 设归并查看(!归并查看)}
+            >
+              {归并查看 ? "▾ 收起" : "▸ 查看归并条目"}
+            </Button>
           </Flex>
-          {预置归并文本.trim() && (
+          {归并查看 && (
             <div className="ml-2 mt-1 flex flex-wrap gap-1 items-center">
-              <Typography.Text type="secondary" className="text-xs!">
-                当前条目：
-              </Typography.Text>
-              {富文本(
-                预置归并文本
+              {(() => {
+                const 条目 = 预置归并文本
                   .split(/[,,，\n]/)
                   .map((s: string) => s.trim())
-                  .filter(Boolean)
-                  .join("；"),
-              )}
+                  .filter(Boolean);
+                if (条目.length === 0)
+                  return (
+                    <Typography.Text type="secondary" className="text-xs!">
+                      （空——在上面的输入框里写归并条目，如 大=人）
+                    </Typography.Text>
+                  );
+                const 字形 = (名: string, key: string) => {
+                  const 字符 = 笔顺索引.名到字符.get(名);
+                  return 字符 ? (
+                    <CharacterDisplay key={key} character={字符} />
+                  ) : (
+                    <span key={key}>{名}</span>
+                  );
+                };
+                return 条目.map((条: string, i: number) => {
+                  const 等分 = 条.split(/[=＝]/);
+                  if (等分.length !== 2) return <Tag key={i}>{富文本(条)}</Tag>;
+                  const 解侧 = (s: string) => {
+                    const ts = s.trim().split(/\s+/).filter(Boolean);
+                    let 位: string | null = null;
+                    if (ts.length >= 2 && /^\d+$/.test(ts[ts.length - 1]!)) 位 = ts.pop()!;
+                    return { 名: ts[0] ?? "", 位 };
+                  };
+                  const L = 解侧(等分[0]!);
+                  const R = 解侧(等分[1]!);
+                  return (
+                    <Tag key={i} style={{ cursor: "default" }}>
+                      {字形(L.名, `${i}L`)}
+                      {L.位 && <span className="text-xs opacity-70">{L.位}</span>}
+                      <span className="opacity-60">=</span>
+                      {字形(R.名, `${i}R`)}
+                      {R.位 && <span className="text-xs opacity-70">{R.位}</span>}
+                    </Tag>
+                  );
+                });
+              })()}
             </div>
           )}
           <Flex gap={4} align="center">
