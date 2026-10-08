@@ -54,7 +54,7 @@ const 跑 = (预置: any[], 额外: any = {}, 奖励?: (m: any) => number) => {
 
 // ① 筛死：目标不在字根池 → 备注一句话，mapping 原样（无初始改写）
 const r1 = 跑([{ 根: 根A, 目标: "绝非字根X", 根位: 1, 目标位: 2 }]);
-断言("① 目标不在池：备注说明原因", !!r1.备注 && r1.备注.includes("预置归并用不了") && r1.备注.includes("不在字根池"), r1.备注 ?? "（无备注）");
+断言("① 目标不在池：备注说明原因", !!r1.备注 && r1.备注.includes("预置归并失败") && r1.备注.includes("不在字根池"), r1.备注 ?? "（无备注）");
 断言("① 目标不在池：根 A 安排原样", r1.mapping[根A] === 基线m[根A], JSON.stringify(r1.mapping[根A]));
 
 // ② 筛死：自引用
@@ -68,23 +68,22 @@ const r2 = 跑([{ 根: 根A, 目标: 根A, 根位: 1, 目标位: 2 }]);
   断言("②b 整体根不在池：不产生待执行动作（无未采用轮）", r.轮日志.length === 0, r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
 }
 
-// ③ 纯归并（双方都已是字根）：归并作为动作竞争获胜后 A 跟随 B；减 B 时 A 级联消失
+// ③ 纯归并（双方都已是字根）：义务触发——不占轮数、不看分数，代价如实计分；减 B 时 A 级联消失
 {
-  const r = 跑([{ 根: 根A, 目标: 根B }], {}, (m) =>
-    m[根A] && typeof m[根A] === "object" && !Array.isArray(m[根A]) && m[根A].element === 根B ? 1e6 : 0);
+  const r = 跑([{ 根: 根A, 目标: 根B }], { 轮数: 1 });
   断言("③ 纯归并：A 跟随 B", r.mapping[根A] && typeof r.mapping[根A] === "object" && r.mapping[根A].element === 根B, JSON.stringify(r.mapping[根A]));
-  断言("③ 纯归并：轨迹记录", r.轮日志.some((x: any) => x.动作.includes("归")), r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
+  断言("③ 纯归并：第1轮轨迹即归并（义务触发，无未采用）", r.轮日志[0]?.动作 === `${根A}=${根B}`, r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
   const 原型 = 智能选根核心.prototype as any;
   const 删B后 = 原型.变体mapping.call(null, r.mapping, [], [根B], "aa");
   断言("③ 同减：删 B 时 A 级联消失", !(根B in 删B后) && !(根A in 删B后));
 }
 
-// ④ 码位（双方都已是字根）：第1码借 B 第2码、其余位保留原字符
+// ④ 码位（双方都已是字根）：义务触发，第1码借 B 第2码、其余位保留原字符
 {
-  const r = 跑([{ 根: 根A, 目标: 根B, 根位: 1, 目标位: 2 }], {}, (m) =>
-    Array.isArray(m[根A]) && JSON.stringify(m[根A][0]) === JSON.stringify({ element: 根B, index: 1 }) ? 1e6 : 0);
+  const r = 跑([{ 根: 根A, 目标: 根B, 根位: 1, 目标位: 2 }], { 轮数: 1 });
   const 安排 = r.mapping[根A];
   断言("④ 码位：借码正确、其余位逐位保留", Array.isArray(安排) && JSON.stringify(安排[0]) === JSON.stringify({ element: 根B, index: 1 }) && 安排[1] === [...(基线m[根A] as string)][1]!, JSON.stringify(安排));
+  断言("④ 码位：第1轮轨迹即借码", r.轮日志[0]?.动作 === `${根A} 1=${根B} 2`, r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
 }
 
 // ⑤ 随行同轮（新根对）：A、B 都是池外新字，加 B 的同一轮内 A 以别名随行
@@ -148,6 +147,16 @@ const r2 = 跑([{ 根: 根A, 目标: 根A, 根位: 1, 目标位: 2 }]);
   const 安排 = r.mapping[新1];
   断言("⑧ 码位随行：新根入库即带借码安排", Array.isArray(安排) && JSON.stringify(安排[0]) === JSON.stringify({ element: 根B, index: 1 }), `${新1} → ${JSON.stringify(安排)}，轨迹 ${r.轮日志.map((x: any) => x.动作).join("、") || "（空）"}`);
   断言("⑧ 码位随行：一轮完成", r.轮日志.length === 1, r.轮日志.map((x: any) => x.动作).join("、") || "（空）");
+}
+
+// ⑨ 未触发备注：目标在池但加根关闭 → 永不触发，备注一句话说明
+{
+  const r = 跑([{ 根: 根A, 目标: 新2, 根位: 1, 目标位: 1 }], {
+    允许加根: false, 轮数: 1,
+    字根表列表: [{ 类型: "手动指定", 字根: [新2] }],
+  });
+  断言("⑨ 未触发：备注说明", !!r.备注 && r.备注.includes("预置归并未触发") && r.备注.includes(新2), r.备注 ?? "（无备注）");
+  断言("⑨ 未触发：根 A 安排原样", r.mapping[根A] === 基线m[根A], JSON.stringify(r.mapping[根A]));
 }
 
 console.log(失败 === 0 ? "\n全部通过" : `\n${失败} 项失败`);

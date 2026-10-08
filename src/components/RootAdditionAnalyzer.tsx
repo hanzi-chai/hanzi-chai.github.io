@@ -2267,7 +2267,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             />
           </Flex>
           <Flex gap={4} align="center" style={{ flex: 1, minWidth: 320 }}>
-            <span title="预登记归并绑定。整体归并：a=人（两边都不占键位，a 随人走）；码位归并：的 1=人 2（的的第一码改用人的第二码，的保留键位）。码位必须两边都写或都不写。元素可多字符（拼音/自定义）。条目用中英逗号或换行分隔，空格用于码位语法">
+            <span title="预登记归并绑定。整体归并：大=人（“大”归并入“人”）；码位归并：的 1=人 2（“的”的第一码使用“人”的第二码）条目用中英逗号或换行分隔，空格用于码位语法">
               预置归并
             </span>
             {渲染收放输入(
@@ -2348,8 +2348,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       {轮日志.length > 0 && (
         <div className="mt-2 rounded p-2 bg-gray-50 max-h-60 overflow-y-auto">
           <Typography.Text strong>搜索轨迹</Typography.Text>
-          {轮日志.map((r) => (
-            <div key={r.轮}>
+          {轮日志.map((r, i) => (
+            <div key={i}>
               第{r.轮}轮 <Tag color="green">{r.动作}</Tag>
               {r.前分} → {r.分数}（
               <Typography.Text type={r.变化 < 0 ? "success" : "danger"}>
