@@ -1806,22 +1806,29 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     );
   };
 
-  const 结果直设根 = 结果
-    ? Object.keys(结果.mapping).filter((k) => typeof 结果.mapping[k] === "string")
+  // 显示口径必须等于应用口径：0 轮收敛时「应用到方案」写入的是 建议.mapping（强制执行建议动作），
+  // 结果.mapping 只是起始态——diff 若算自 结果.mapping 就会出现"显示无变化、应用却加了根"的割裂
+  const 生效mapping = 结果
+    ? 结果.轮日志.length === 0 && 结果.建议?.mapping
+      ? 结果.建议.mapping
+      : 结果.mapping
+    : null;
+  const 结果直设根 = 生效mapping
+    ? Object.keys(生效mapping).filter((k) => typeof 生效mapping[k] === "string")
     : [];
-  const 结果根集 = 结果
-    ? new Set(Object.keys(结果.mapping).filter((k) => 是根身份(结果.mapping[k])))
+  const 结果根集 = 生效mapping
+    ? new Set(Object.keys(生效mapping).filter((k) => 是根身份(生效mapping[k])))
     : new Set<string>();
   // 新增/移除按根身份比较：string→数组（预置归并码位表达）不算增删，算"安排调整"
   const 新增根 = [...结果根集].filter((k) => !起始根集.has(k));
   const 安排调整 = [...结果根集].filter(
     (k) =>
       起始根集.has(k) &&
-      JSON.stringify(起始mapping[k]) !== JSON.stringify(结果!.mapping[k]),
+      JSON.stringify(起始mapping[k]) !== JSON.stringify(生效mapping![k]),
   );
-  const 连带删除别名 = 结果
+  const 连带删除别名 = 生效mapping
     ? Object.keys(起始mapping).filter(
-        (k) => !是根身份(起始mapping[k]) && !(k in 结果.mapping),
+        (k) => !是根身份(起始mapping[k]) && !(k in 生效mapping),
       )
     : [];
   const 移除根 = [...起始根集].filter((k) => !结果根集.has(k));
@@ -2383,7 +2390,9 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           {结果.收敛 && 结果.建议 && (
             <div className="mt-1">
               <Typography.Text type="secondary">
-                分数无改进故自动结束（该行不会应用）：
+                {结果.轮日志.length === 0
+                  ? "分数无改进故自动结束；点下方「应用到方案」将强制执行此动作："
+                  : "分数无改进故自动结束（该行不会应用）："}
               </Typography.Text>
               <Tag color="orange" style={{ marginLeft: 4 }}>
                 {结果.建议.动作}
