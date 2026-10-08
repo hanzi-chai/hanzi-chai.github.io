@@ -1739,7 +1739,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         case "完成":
           设结果(data.结果);
           设运行中(false);
-          设阶段("搜索完成");
+          设阶段(data.结果?.备注 ? `搜索完成（${data.结果.备注}）` : "搜索完成");
           worker.terminate();
           break;
         case "已停止":
@@ -1794,23 +1794,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   };
 
   // —— 应用与显示共用的单一事实来源：将实际写入方案的 mapping ——
-  // 0 轮收敛（如全部动作被拒绝/无改进）时只有建议可应用；应用按钮与所有 diff 显示都必须
-  // 消费同一个 生效mapping，严禁各自推一遍"该用哪个"（曾因此显示无变化而应用加了根）
-  const 应用建议 = !!结果 && 结果.轮日志.length === 0 && !!结果.建议?.mapping;
-  const 生效mapping = 结果
-    ? 应用建议 && 结果.建议
-      ? 结果.建议.mapping
-      : 结果.mapping
-    : null;
+  // （预置归并已是搜索内的普通动作，不再有"建议另有一份 mapping"的口径；轮轨迹含未采用轮）
+  const 生效mapping = 结果?.mapping ?? null;
 
   const 应用 = () => {
-    if (!结果 || !生效mapping) return;
+    if (!生效mapping) return;
     设配置({ ...配置, form: { ...配置.form, mapping: 生效mapping } } as any);
-    message.success(
-      应用建议
-        ? `已按建议应用：${结果.建议!.动作}`
-        : "已把结果写入字根映射",
-    );
+    message.success("已把结果写入字根映射");
   };
 
   const 结果直设根 = 生效mapping
@@ -2386,39 +2376,9 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             最终总分 {结果.总分}（{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
             {结果.轮日志.length} 轮）
           </Typography.Text>
-          {结果.收敛 && 结果.建议 && (
-            <div className="mt-1">
-              <Typography.Text type="secondary">
-                {应用建议
-                  ? "分数无改进故自动结束；点下方「应用到方案」将强制执行此动作："
-                  : "分数无改进故自动结束（该行不会应用）："}
-              </Typography.Text>
-              <Tag color="orange" style={{ marginLeft: 4 }}>
-                {结果.建议.动作}
-              </Tag>
-              {(() => {
-                const 差 = Math.round((结果.建议!.分数 - 结果.总分) * 100) / 100;
-                return (
-                  <Typography.Text type="secondary">
-                    执行后总分将为 {结果.建议!.分数}（
-                    <Typography.Text
-                      type={差 > 0 ? "danger" : 差 < 0 ? "success" : undefined}
-                    >
-                      {差 > 0 ? "变差 +" : 差 < 0 ? "改善 " : "不变 "}
-                      {差}
-                    </Typography.Text>
-                    ）
-                  </Typography.Text>
-                );
-              })()}
-            </div>
-          )}
-          {结果.收敛 && 结果.轮日志.length === 0 && !结果.建议 && (
+          {结果.收敛 && 结果.轮日志.length === 0 && (
             <Typography.Text type="secondary" className="mt-1 block">
-              0 轮收敛：没有可执行的改进动作（候选池为空，或候选均已是字根/归并绑定）。
-              {新增根.length + 移除根.length + 安排调整.length > 0
-                ? "下方列出的差异来自预置归并的起始改写（绑定根随行、码位借码），点「应用到方案」会写入方案。"
-                : "相对当前方案无变化，应用不会改动字根映射。"}
+              无可改进的动作
             </Typography.Text>
           )}
           <div className="mt-1">
