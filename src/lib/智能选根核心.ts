@@ -6,6 +6,7 @@
  * 本文件不含 DOM/fs 依赖，供 Web Worker 与 CLI 校验脚本共用。
  */
 import { range } from "lodash-es";
+import { 根安排描述 } from "./安排显示";
 import {
   原始字库,
   构建强类型决策与决策空间,
@@ -1194,7 +1195,6 @@ export class 智能选根核心 {
     // 成链时反复施加直至稳定。踢出可能让部分字无法拆分（需要 A 的字失去唯一拆法）——
     // 试建基态失败则回滚被踢的根并记录，待目标成根后经随行/触发转为归并。
     const 被踢: string[] = [];
-    const 已生效: string[] = [];
     {
       for (let 遍 = 0; 遍 < 8; 遍++) {
         let 变了 = false;
@@ -1242,21 +1242,6 @@ export class 智能选根核心 {
         }
         if (!变了) break;
       }
-      // 初态已满足的条目从待归并摘除：其效果已写入映射，结尾的"未触发"备注不再提及
-      const 已满足 = 待归并.filter(({ 条目: x }) => {
-        const 是码位 = x.根位 != null && x.目标位 != null;
-        const 现 = mapping[x.根];
-        if (是码位) {
-          if (现 === undefined || (typeof 现 !== "string" && !Array.isArray(现))) return false;
-          if ((typeof 现 === "string" ? [...现].length : 现.length) !== 归并码数) return false;
-          const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
-            i === x.根位! - 1 ? { element: x.目标, index: x.目标位! - 1 } : typeof 现 === "string" ? [...现][i]! : 现[i]);
-          return JSON.stringify(目标状态) === JSON.stringify(现);
-        }
-        return 现 !== undefined && typeof 现 === "object" && !Array.isArray(现) && 现.element === x.目标;
-      });
-      for (const y of 已满足) 待归并.splice(待归并.findIndex((z) => z.条目 === y.条目), 1);
-      if (已满足.length) 已生效.push(...已满足.map((y) => y.描述));
     }
     if (被踢.length) {
       try {
@@ -1297,12 +1282,14 @@ export class 智能选根核心 {
       if (触发.length) {
         const 前分0 = 当前分;
         const 描述列表: string[] = [];
-        for (const { 条目: x, 描述 } of 触发) {
+        for (const { 条目: x } of 触发) {
           const 原 = mapping[x.根];
           const 根位 = x.根位!, 目标位 = x.目标位!;
-          mapping[x.根] = Array.from({ length: 归并码数 }, (_, i) =>
+          const 新安排 = Array.from({ length: 归并码数 }, (_, i) =>
             i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i]! : 原[i]);
-          描述列表.push(描述);
+          mapping[x.根] = 新安排;
+          // 触发描述用「根=安排」用户语法（自由位保留原码），与差异区安排调整同款
+          描述列表.push(根安排描述(x.根, 新安排));
           待归并.splice(待归并.findIndex((y) => y.条目 === x), 1);
         }
         const 评 = this.评变体(mapping) as any;
@@ -1369,35 +1356,40 @@ export class 智能选根核心 {
       if (允许加根)
         for (const c of 可加) {
           const m0 = this.变体mapping(mapping, [c], [], 占位);
-          let 描述 = `+${c}`;
+          // 描述段：普通加根 +根；归并/借码类用「根=安排」用户语法（与差异区安排调整同款）
+          const 段: string[] = [`+${c}`];
+          let 相似并 = false,
+            随行并 = false;
           if (参数.自动归并相似根 !== false) {
             const 伴 = 查相似已映射根(c, mapping);
             if (伴 && mapping[伴] !== undefined) {
               m0[c] = { element: 伴 }; // 真归并：永久跟随兄弟根键位
-              描述 = `+${c}(并${伴})`;
+              段[0] = 根安排描述(c, m0[c]);
+              相似并 = true;
             }
           }
           // 预置归并随行：加目标时，待归并的根在同一动作内以 {element:目标} 入映射（永久跟随目标键位）
           const 随行根 = 随行表.get(c);
           if (随行根?.length) {
             for (const 根 of 随行根) m0[根] = { element: c };
-            描述 = `${描述}(并${随行根.join("、")})`;
+            段.push(...随行根.map((根) => 根安排描述(根, m0[根])));
+            随行并 = true;
           }
           // 预置归并码位随行：新根入库即带上借码安排（目标已是字根时）；目标未成根则先普通入库，
           // 借码安排等目标成根后作为独立动作再来
           const 码位条目 = 待归并.find(
             ({ 条目: x }) => x.根 === c && x.根位 != null && x.目标位 != null && mapping[x.目标] !== undefined,
           );
-          if (码位条目 && !(参数.自动归并相似根 !== false && 描述.includes("(并"))) {
+          if (码位条目 && !(参数.自动归并相似根 !== false && (相似并 || 随行并))) {
             const x = 码位条目.条目;
             m0[c] = Array.from({ length: 归并码数 }, (_, i) =>
               i === x.根位! - 1
                 ? { element: x.目标, index: x.目标位! - 1 }
                 : 占位[i] ?? 占位[0]!,
             );
-            描述 = `+${c}(${x.根位}=${x.目标} ${x.目标位})`;
+            段[0] = 根安排描述(c, m0[c]);
           }
-          动作.push({ 加: [c], 删: [], 描述, m: m0, 随行: 随行根 });
+          动作.push({ 加: [c], 删: [], 描述: 段.join("，"), m: m0, 随行: 随行根 });
         }
       // 预置归并不作为候选动作：它是用户预设的义务，条件满足就在轮首自动生效（见轮首触发段），
       // 代价如实计分但不由分数竞争否决
@@ -1446,7 +1438,7 @@ export class 智能选根核心 {
               当前分 = 合评分;
               const 轮r: 轮结果 = {
                 轮,
-                动作: 改善加根.map((x) => x.a.描述).join(""),
+                动作: 改善加根.map((x) => x.a.描述).join("，"),
                 分数: Math.round(合评分 * 100) / 100,
                 前分: Math.round(前分0 * 100) / 100,
                 变化: Math.round((合评分 - 前分0) * 100) / 100,
@@ -1569,9 +1561,8 @@ export class 智能选根核心 {
       cb.on阶段?.(`第${轮 + 1} 轮：重建基态……`);
       this.设置基态(mapping); // 下一轮以此为基态
     }
-    const 未触发 = 待归并.length
-      ? `预置归并未触发：${待归并.map((t) => t.描述).join("；")}（涉及的根尚未都成为字根）`
-      : undefined;
+    // 预置归并的触发与否完全反映在轮轨迹（命令行）里——哪根被加、哪种归并生效都已逐轮打印，
+    // 故结尾不再单列"未触发"备注（冗余且与轨迹重复）
     // 一轮都没跑（无任何可执行动作）时说明原因，最常见的是范围内候选均已是字根
     const 无动作说明 =
       轮日志.length === 0 && 收敛
@@ -1583,7 +1574,6 @@ export class 智能选根核心 {
     // 死归并也不进备注：候选池建好时就经 on预置归并失败 上报、UI 常驻显示，再进备注会与绿条重复
     const 备注段 = [
       无动作说明 ?? "",
-      未触发 ?? "",
     ].filter(Boolean).join("；");
     return {
       mapping,

@@ -73,6 +73,7 @@ import CharacterSelect from "~/components/CharacterSelect";
 import ElementSelect from "~/components/ElementSelect";
 import { CharacterDisplay, DeleteButton } from "~/components/Utils";
 import Value from "~/components/Value";
+import { 安排文本, 根安排描述 } from "~/lib/安排显示";
 
 export const combinations = (n: number, k: number): number[][] => {
   const result: number[][] = [];
@@ -227,19 +228,8 @@ const 估计选重 = (
   return total;
 };
 
-/** 安排显示文本（用于操作列表 Tag 与「已分析」行） */
-const 安排文本 = (安排: 根操作["安排"]) =>
-  typeof 安排 === "string"
-    ? 安排
-    : 安排 && !Array.isArray(安排)
-      ? `归并→${(安排 as { element: string }).element ?? ""}`
-      : (安排 ?? [])
-          .map((c) =>
-            typeof c === "string"
-              ? c
-              : `${typeof c.element === "string" ? c.element : (c.element as any)?.获取名称?.() ?? ""}${c.index ? "'" + c.index : ""}`,
-          )
-          .join("");
+// 安排显示文本改由 src/lib/安排显示.ts 提供（与智能选根核心共用同一份，轨迹与差异区同款写法）
+// ——此处不再本地定义
 
 // ==================== 页签一：手动分析 ====================
 
@@ -1831,7 +1821,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       参数: {
         轮数,
         单轮根数,
-        字根表列表: 字根表,
+        // 手动指定以原始文本为源（与预置归并一致：框内不格式化、搜索时才解析）；
+        // 传给核心前在此把原始文本拆成数组，核心仍按数组消费，语义不变
+        字根表列表: 字根表.map((r) =>
+          r.类型 === "手动指定" && typeof r.字根 === "string"
+            ? { ...r, 字根: r.字根.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean) }
+            : r,
+        ),
         占位安排: 占位,
         允许加根,
         允许减根,
@@ -1886,7 +1882,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     ? Object.keys(生效mapping).filter((k) => typeof 生效mapping[k] === "string")
     : [];
   // diff 按键集比较：任何键的增删都是方案变化——别名条目（{element}，如自动归并相似根的
-  // "+X(并Y)"）同样是根身份的获得/失去，只认 string∪数组会把别名增删隐成"无变化"
+  // "X→归并→Y"）同样是根身份的获得/失去，只认 string∪数组会把别名增删隐成"无变化"
   const 起始键集 = new Set(Object.keys(起始mapping));
   const 生效键集 = 生效mapping ? new Set(Object.keys(生效mapping)) : new Set<string>();
   const 新增根 = 生效mapping ? [...生效键集].filter((k) => !起始键集.has(k)) : [];
@@ -1945,7 +1941,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     类型 === "重码组挖掘"
                       ? { 类型, 根起: 1, 根止: 100, 允许复合体: true }
                       : 类型 === "手动指定"
-                        ? { 类型, 字根: [] as string[] }
+                        ? { 类型, 字根: "" }
                         : {
                             类型,
                             起: 1,
@@ -1983,11 +1979,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 )}
                 {r.类型 === "手动指定" &&
                   渲染收放输入(
-                    手动文本[i] ?? (Array.isArray(r.字根) ? r.字根 : [...r.字根]).join(","),
+                    手动文本[i] ?? (typeof r.字根 === "string" ? r.字根 : r.字根.join("，")),
                     (v) => {
                       设手动文本((t) => ({ ...t, [i]: v }));
                       改规则(i, {
-                        字根: v.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean),
+                        字根: v,
                       });
                     },
                     手动收起集.has(i),
@@ -2185,7 +2181,10 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                         </div>
                       );
                     }
-                    const 根列表 = Array.isArray(r.字根) ? r.字根 : [...(r.字根 ?? "")];
+                    const 根列表 =
+                      typeof r.字根 === "string"
+                        ? r.字根.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean)
+                        : r.字根;
                     const 见过 = new Set<string>();
                     for (const ch of 根列表) {
                       if (保护.has(ch) || 见过.has(ch)) continue;
@@ -2368,7 +2367,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             />
           </Flex>
           <Flex gap={4} align="center" style={{ flex: 1, minWidth: 320 }}>
-            <span title="预登记归并绑定。整体归并：大=人（“大”归并入“人”）；码位归并：的 1=人 2（“的”的第一码使用“人”的第二码）条目用中英逗号或换行分隔，空格用于码位语法">
+            <span title="整体归并：大=人（“大”归并入“人”）；码位归并：的 1=人 2（“的”的第一码使用“人”的第二码，根后加空格）条目用中英逗号或换行分隔。注：整体归并是强行归并，始终有效。码位归并时，只有等号右侧的根已存在时，才会考虑将左侧根加入并归并码位。">
               预置归并
             </span>
             {渲染收放输入(
@@ -2558,7 +2557,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   const v = 生效mapping![k];
                   return (
                     <Tag key={k} color="green">
-                      {富文本(typeof v === "string" ? `+${k}` : `+${k}（${安排文本(v)}）`)}
+                      {富文本(typeof v === "string" ? `+${k}` : `+${根安排描述(k, v)}`)}
                     </Tag>
                   );
                 })}
@@ -2585,7 +2584,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 安排调整：
                 {安排调整.map((k) => (
                   <Tag key={k} color="orange">
-                    {富文本(`${k}→${安排文本(生效mapping![k])}`)}
+                    {富文本(根安排描述(k, 生效mapping![k]))}
                   </Tag>
                 ))}
                 <Typography.Text type="secondary" className="ml-2">
