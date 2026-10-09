@@ -2476,26 +2476,42 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           className="mt-2!"
           type={运行中 ? "info" : 结果 ? "success" : "warning"}
           showIcon={!!错误}
-          message={运行中 ? 富文本(阶段 || "搜索中……") : 富文本(阶段)}
+          // 运行中固定最小高度：进度每轮会置 null、阶段文字长短不一，若不固定高度蓝框会来回跳，影响看轨迹
+          style={运行中 ? { minHeight: 104 } : undefined}
+          message={
+            <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {运行中 ? 富文本(阶段 || "搜索中……") : 富文本(阶段)}
+            </div>
+          }
           description={
-            运行中 && 进度 ? (
+            // 运行中恒定渲染（无进度时占位），保证蓝框高度不随进度有无而变
+            运行中 ? (
               <>
                 <Progress
-                  percent={Math.round((进度.已评 / Math.max(进度.总数, 1)) * 100)}
+                  percent={进度 ? Math.round((进度.已评 / Math.max(进度.总数, 1)) * 100) : 0}
                   size="small"
                 />
-                <Typography.Text type="secondary">
-                  本轮已评 {进度.已评}/{进度.总数}，当前最优 {富文本(进度.最优)}（
-                  {进度.变化 != null && isFinite(进度.变化) && (
-                    <Typography.Text
-                      type={进度.变化 < 0 ? "success" : "danger"}
-                      style={{ fontSize: "inherit" }}
-                    >
-                      {进度.变化 > 0 ? "+" : ""}
-                      {Math.round(进度.变化 * 100) / 100}，{" "}
-                    </Typography.Text>
+                <Typography.Text
+                  type="secondary"
+                  style={{ display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                >
+                  {进度 ? (
+                    <>
+                      本轮已评 {进度.已评}/{进度.总数}，当前最优 {富文本(进度.最优)}（
+                      {进度.变化 != null && isFinite(进度.变化) && (
+                        <Typography.Text
+                          type={进度.变化 < 0 ? "success" : "danger"}
+                          style={{ fontSize: "inherit" }}
+                        >
+                          {进度.变化 > 0 ? "+" : ""}
+                          {Math.round(进度.变化 * 100) / 100}，{" "}
+                        </Typography.Text>
+                      )}
+                      {isFinite(进度.最优分) ? Math.round(进度.最优分 * 100) / 100 : "∞"}）
+                    </>
+                  ) : (
+                    "\u00A0"
                   )}
-                  {isFinite(进度.最优分) ? Math.round(进度.最优分 * 100) / 100 : "∞"}）
                 </Typography.Text>
               </>
             ) : undefined
@@ -2562,7 +2578,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                 新增根：
                 {新增根.map((k) => (
                   <Tag key={k} color="green">
-                    {富文本(`+${k}`)}
+                    {富文本(
+                      Array.isArray(生效mapping?.[k])
+                        ? `+${根安排描述(k, 生效mapping[k])}`
+                        : `+${k}`,
+                    )}
                   </Tag>
                 ))}
               </div>

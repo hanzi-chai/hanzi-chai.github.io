@@ -1095,6 +1095,15 @@ export class 智能选根核心 {
     this.根数惩罚 = 参数.根数惩罚;
     let mapping = { ...起始mapping };
     const 归并码数 = this.配置0.form.mapping_type ?? 2;
+    // 实际码长：从映射中已有根取「决策图受理的真实码长」。mapping_type 未正确设置（与根实际码长不一致）时，
+    // 借码数组长度仍以真实码长为准，避免 A在&B在 等码位归并因 位数!==归并码数 失守而不触发
+    const 实际码长 = (() => {
+      for (const v of Object.values(mapping)) {
+        if (typeof v === "string") return [...v].length;
+        if (Array.isArray(v)) return v.length;
+      }
+      return 归并码数;
+    })();
     // 初态不变式的施加放在候选池筛死之后（见下）：只对活条目施加，判死条目不得动方案
     this.设置基态(mapping); // 必须在候选池之前：重码组挖掘规则需要基态词序列
     // 预置归并前的真实初态总分：此刻 mapping 还是「未施加初态不变式」的起始态，
@@ -1191,6 +1200,23 @@ export class 智能选根核心 {
     // 预置归并筛选：参与者都得是（或能成为）字根——在映射里或进了候选池，否则永远无法应用，
     // 判死并在绿框说明；判死条目完全不参与初态不变式（死条目不该动方案）
     const 在册 = (名: string) => mapping[名] !== undefined || 池Set.has(名);
+    // 根当前真实码长（码位数）：字符串取字符数、借码数组取长度、整体别名沿用目标码长；
+    // 每个根的码数可能不同。未成根（不在映射）返回 null，留给成根后再校验，避免误报。
+    const 码长 = (名: string): number | null => {
+      const v = mapping[名];
+      if (v === undefined) return null;
+      if (typeof v === "string") return [...v].length;
+      if (Array.isArray(v)) return v.length;
+      if (v && typeof v === "object" && "element" in (v as object)) {
+        const tv = mapping[(v as { element: string }).element];
+        if (typeof tv === "string") return [...tv].length;
+        if (Array.isArray(tv)) return tv.length;
+      }
+      return null;
+    };
+    // 侧界：某根「真实码长」的上界——已落库（在 mapping）按实际码长；尚未成根（候选根，搜索期会被占位补齐）按 占位安排 的码数。
+    // 半归并两边的根都可能是还没加进去的候选根；候选根由 变体mapping 赋 占位（长度=占位安排码数），故用 占位.length 兜底其将拥有的码长。
+    const 侧界 = (名: string): number => 码长(名) ?? 占位.length;
     const 待归并: { 条目: (typeof 预置归并表)[number]; 描述: string }[] = [];
     const 死归并: string[] = [];
     for (const x of 预置归并表) {
@@ -1220,6 +1246,24 @@ export class 智能选根核心 {
     //              B 不在 ⇒ A 被踢出（B 入后 A 才被允许入）
     // 成链时反复施加直至稳定。踢出可能让部分字无法拆分（需要 A 的字失去唯一拆法）——
     // 试建基态失败则该预置归并判失败（经 on预置归并失败 在橙框说明原因）；被踢的根回滚保留为独立根（否则部分字无法拆分）。
+    // 初态删除集：记录初态被踢出（含级联引用者）的根，失败回滚时一并恢复到起始状态
+    const 初态删除集 = new Set<string>();
+    // 引用闭包：把「（传递）引用 删集 中根的根」也纳入 删集——整体别名 {element:X}、码位借码数组里的 {element:X} 都引用 X。
+    // A 被踢出时，归并/借码到 A 的根必须一并随出，否则留下悬空引用会让决策图崩。
+    const 引用闭包 = (删集: Set<string>) => {
+      let 变了 = true;
+      while (变了) {
+        变了 = false;
+        for (const [k, v] of Object.entries(mapping)) {
+          if (删集.has(k)) continue;
+          const refs = new Set<string>();
+          收集引用(v, refs);
+          for (const r of refs) {
+            if (删集.has(r)) { 删集.add(k); 变了 = true; break; }
+          }
+        }
+      }
+    };
     const 被踢: (typeof 预置归并表)[number][] = [];
     {
       for (let 遍 = 0; 遍 < 8; 遍++) {
@@ -1242,11 +1286,15 @@ export class 智能选根核心 {
             } else {
               const 原 = mapping[x.根];
               if (typeof 原 === "string" || Array.isArray(原)) {
+                // 借码安排长度以「根自身实际码长」为准——A 已在映射里、其长度已被决策图受理，
+                // 故用 位数 而非固定的 归并码数（mapping_type 可能未正确设置，导致 位数===归并码数 失守、A在&B在 时归并不触发）
                 const 位数 = typeof 原 === "string" ? [...原].length : 原.length;
+                // 根位落在 A 自身码长内；目标位落在 B 自身码长内（每个根码数可能不同，不能用 A 的码长兜底 B）
+                const 长B = 码长(x.目标);
                 if (
-                  位数 === 归并码数 && x.根位! >= 1 && x.根位! <= 归并码数 && x.目标位! >= 1
+                  x.根位! >= 1 && x.根位! <= 位数 && x.目标位! >= 1 && x.目标位! <= (长B ?? 0)
                 ) {
-                  const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
+                  const 目标状态 = Array.from({ length: 位数 }, (_, i) =>
                     i === x.根位! - 1
                       ? { element: x.目标, index: x.目标位! - 1 }
                       : typeof 原 === "string"
@@ -1261,7 +1309,13 @@ export class 智能选根核心 {
               }
             }
           } else if (!B在 && A在) {
-            delete mapping[x.根]; // 被踢出：跟随 B 入出
+            // 被踢出：跟随 B 入出。级联——引用 A 的根（整体别名 C={element:A} / 码位借码 C 数组引用 A）一并随出，避免悬空引用
+            const 删集 = new Set<string>([x.根]);
+            引用闭包(删集);
+            for (const k of 删集) {
+              初态删除集.add(k);
+              delete mapping[k];
+            }
             被踢.push(x);
             变了 = true;
           }
@@ -1269,15 +1323,41 @@ export class 智能选根核心 {
         if (!变了) break;
       }
     }
+    // 半归并码位存在性检测（用户 2026-10-10 定案）：A、B 均已成根时，
+    // 根位必须落在 A 自身真实码长内、目标位必须落在 B 自身真实码长内（每个根码数可能不同）。
+    // 越界条目从待归并移出并计入死归并，经 on预置归并失败 在橙框上报；尚未成根的延后（加根/触发段另有守卫）。
+    for (let j = 待归并.length - 1; j >= 0; j--) {
+      const 项 = 待归并[j];
+      if (!项) continue;
+      const x = 项.条目;
+      if (x.根位 == null || x.目标位 == null) continue; // 整体归并不走码位
+      // 两边的根都可能是「还没加进去的候选根」：已落库按真实码长，候选根按归并码数（其搜索期将被补齐的码长）判定上界
+      const 界A = 侧界(x.根);
+      const 界B = 侧界(x.目标);
+      // 两侧各自独立判定越界：1 码的根第 1 位合法，不可与越界侧混报
+      const 根越界 = x.根位 < 1 || x.根位 > 界A;
+      const 目标越界 = x.目标位 < 1 || x.目标位 > 界B;
+      if (根越界 || 目标越界) {
+        const 片段: string[] = [];
+        if (根越界) 片段.push(`「${x.根}」共 ${界A} 码无第 ${x.根位} 位`);
+        if (目标越界) 片段.push(`「${x.目标}」共 ${界B} 码无第 ${x.目标位} 位`);
+        死归并.push(`${项.描述}（码位不存在：${片段.join("；")}）`);
+        待归并.splice(j, 1);
+      }
+    }
     if (被踢.length) {
       try {
         this.设置基态(mapping);
       } catch (e) {
-        // 踢出导致部分字无法拆分：回滚被踢的根保留为独立根（否则部分字无法拆分），该预置归并判失败
-        for (const x of 被踢) {
-          const 根 = x.根;
+        // 踢出导致部分字无法拆分：该预置归并直接判失败失效（从待归并移出，后续轮首触发/加根随行不再施加），
+        // 并把初态删掉的所有根（被踢 + 级联引用者）回滚到起始状态，保留为独立根（否则部分字无法拆分）
+        for (const 根 of 初态删除集) {
           if (起始mapping[根] === undefined) delete mapping[根];
           else mapping[根] = 起始mapping[根];
+        }
+        for (const x of 被踢) {
+          const idx = 待归并.findIndex((y) => y.条目 === x);
+          if (idx >= 0) 待归并.splice(idx, 1);
         }
         this.设置基态(mapping);
         死归并.push(
@@ -1332,9 +1412,11 @@ export class 智能选根核心 {
         const 原 = mapping[x.根];
         if (原 === undefined || (typeof 原 !== "string" && !Array.isArray(原))) return false;
         const 根位 = x.根位, 目标位 = x.目标位;
-        if ((typeof 原 === "string" ? [...原].length : 原.length) !== 归并码数) return false;
-        if (根位 < 1 || 根位 > 归并码数 || 目标位 < 1) return false;
-        const 目标状态 = Array.from({ length: 归并码数 }, (_, i) =>
+        if ((typeof 原 === "string" ? [...原].length : 原.length) !== 实际码长) return false;
+        // 根位落在 A 码长内；目标位落在 B 自身码长内（每个根码数可能不同；候选根按归并码数计）
+        const 界B触发 = 侧界(x.目标);
+        if (根位 < 1 || 根位 > 实际码长 || 目标位 < 1 || 目标位 > 界B触发) return false;
+        const 目标状态 = Array.from({ length: 实际码长 }, (_, i) =>
           i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i] : 原[i]);
         return JSON.stringify(目标状态) !== JSON.stringify(原);
       });
@@ -1344,11 +1426,11 @@ export class 智能选根核心 {
         for (const { 条目: x } of 触发) {
           const 原 = mapping[x.根];
           const 根位 = x.根位!, 目标位 = x.目标位!;
-          const 新安排 = Array.from({ length: 归并码数 }, (_, i) =>
+          const 新安排 = Array.from({ length: 实际码长 }, (_, i) =>
             i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i]! : 原[i]);
           mapping[x.根] = 新安排;
-          // 触发描述用「根=安排」用户语法（自由位保留原码），与差异区安排调整同款
-          描述列表.push(根安排描述(x.根, 新安排));
+          // 触发描述用「根=安排」用户语法（自由位保留原码）；加「+」前缀，与加根显示统一，避免轨迹里出现无符号的 根=(…)
+          描述列表.push(`+${根安排描述(x.根, 新安排)}`);
           待归并.splice(待归并.findIndex((y) => y.条目 === x), 1);
         }
         const 评 = this.评变体(mapping) as any;
@@ -1442,12 +1524,26 @@ export class 智能选根核心 {
           );
           if (码位条目 && !随行并) {
             const x = 码位条目.条目;
-            m0[c] = Array.from({ length: 归并码数 }, (_, i) =>
-              i === x.根位! - 1
-                ? { element: x.目标, index: x.目标位! - 1 }
-                : 占位[i] ?? 占位[0]!,
-            );
-            段[0] = `+${根安排描述(c, m0[c])}`; // 保留加根 + 前缀（与普通加根/差异区新增根统一）
+            // 码位存在性守卫：根位落在 A 码长内、目标位落在 B 码长内（每根码数可能不同；候选根按归并码数计其将拥有的码长）。
+            // 越界则不施加借码、按普通加根入库，并在橙框上报——避免静默错借。
+            const 界A加 = 侧界(x.根);
+            const 界B加 = 侧界(x.目标);
+            if (x.根位! >= 1 && x.根位! <= 界A加 && x.目标位! >= 1 && x.目标位! <= 界B加) {
+              m0[c] = Array.from({ length: 占位.length }, (_, i) =>
+                i === x.根位! - 1
+                  ? { element: x.目标, index: x.目标位! - 1 }
+                  : (占位[i] ?? 占位[0]!),
+              );
+              段[0] = `+${根安排描述(c, m0[c])}`; // 保留加根 + 前缀（与普通加根/差异区新增根统一）
+            } else {
+              // 只报真正越界的那一侧（1 码的根第 1 位合法，不可与越界侧混报）
+              const 片段: string[] = [];
+              if (x.根位! < 1 || x.根位! > 界A加) 片段.push(`「${x.根}」共 ${界A加} 码无第 ${x.根位} 位`);
+              if (x.目标位! < 1 || x.目标位! > 界B加) 片段.push(`「${x.目标}」共 ${界B加} 码无第 ${x.目标位} 位`);
+              cb.on预置归并失败?.(
+                `预置归并失败：${x.根} ${x.根位}=${x.目标} ${x.目标位}（码位不存在：${片段.join("；")}）`,
+              );
+            }
           }
           动作.push({ 加: [c], 删: [], 描述: 段.join("，"), m: m0, 随行: 随行根 });
         }

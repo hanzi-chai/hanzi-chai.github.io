@@ -17,9 +17,11 @@ export const 安排文本 = (安排: 可显示安排): string =>
       ? `归并→${(安排 as { element: string }).element ?? ""}`
       : (安排 ?? [])
           .map((c) =>
-            typeof c === "string"
-              ? c
-              : `${typeof c.element === "string" ? c.element : (c.element as { 获取名称?: () => string } | undefined)?.获取名称?.() ?? ""} ${c.index + 1}`,
+            c == null
+              ? ""
+              : typeof c === "string"
+                ? c
+                : `${typeof c.element === "string" ? c.element : (c.element as { 获取名称?: () => string } | undefined)?.获取名称?.() ?? ""} ${c.index + 1}`,
           )
           .join("，");
 
