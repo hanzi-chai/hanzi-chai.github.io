@@ -61,7 +61,6 @@ self.onmessage = async (e: MessageEvent) => {
       on轮进度: (已评: number, 总数: number, 最优: string, 最优分: number, 变化: number | null) =>
         post({ type: "轮进度", 已评, 总数, 最优, 最优分, 变化 }),
       on轮: (r: 轮结果) => post({ type: "轮", 轮结果: r }),
-      on日志: (文本: string) => post({ type: "日志", 文本 }),
       on预置归并失败: (文本: string) => post({ type: "预置归并失败", 文本 }),
       on手动指定问题: (文本: string) => post({ type: "手动指定问题", 文本 }),
       应停止: () => 停止,

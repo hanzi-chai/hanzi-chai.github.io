@@ -100,12 +100,12 @@ export const 模式名称 = (空位: number[], 总位数: number) => {
   return tokens.join("").trimEnd() || "*".repeat(总位数);
 };
 
-/** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋。显示统一 2 位小数 */
+/** 红加绿减：良性（重码减少）绿显示 −，恶性（重码增加）红显示 ＋。显示逻辑与搜索轨迹一致（Math.round(v*100)/100，不补零） */
 const 变化显示 = (v: number) => {
   const x = Math.round(v * 100) / 100;
-  if (x > 0) return { 文本: `−${x.toFixed(2)}`, 类: "text-green-600" };
-  if (x < 0) return { 文本: `＋${Math.abs(x).toFixed(2)}`, 类: "text-red-500" };
-  return { 文本: "0.00", 类: "" };
+  if (x > 0) return { 文本: `−${x}`, 类: "text-green-600" };
+  if (x < 0) return { 文本: `＋${Math.abs(x)}`, 类: "text-red-500" };
+  return { 文本: "0", 类: "" };
 };
 
 /** 与 如带归并组装结果原子 相同的归并展开后处理 */
@@ -721,7 +721,7 @@ function 手动分析面板() {
         width: 90,
         render: (v: number | string) =>
           typeof v === "number" ? (
-            <span title={`精确 ${v}`}>{v.toFixed(2)}</span>
+            <span title={`精确 ${v}`}>{Math.round(v * 100) / 100}</span>
           ) : (
             v
           ),
@@ -733,7 +733,7 @@ function 手动分析面板() {
         width: 100,
         render: (v: number | string) =>
           typeof v === "number" ? (
-            <span title={`精确 ${v}`}>{v.toFixed(2)}</span>
+            <span title={`精确 ${v}`}>{Math.round(v * 100) / 100}</span>
           ) : (
             v
           ),
@@ -950,15 +950,15 @@ function 手动分析面板() {
             </span>
             <Typography.Text type="secondary" className="text-base! font-normal!">
               （初{" "}
-              <span title={`精确 ${总初态}`}>{总初态.toFixed(2)}</span> → 末{" "}
-              <span title={`精确 ${总末态}`}>{总末态.toFixed(2)}</span>）
+              <span title={`精确 ${总初态}`}>{Math.round(总初态 * 100) / 100}</span> → 末{" "}
+              <span title={`精确 ${总末态}`}>{Math.round(总末态 * 100) / 100}</span>）
             </Typography.Text>
           </>
         ) : (
           <>
             总初态：
             <span className="text-black" title={`精确 ${总初态}`}>
-              {总初态.toFixed(2)}
+              {Math.round(总初态 * 100) / 100}
             </span>
             <Typography.Text type="secondary" className="text-base! font-normal!">
               （添加加/减根操作并点「分析」后显示末态）
@@ -1035,10 +1035,10 @@ function 手动分析面板() {
                 <Typography.Text type="secondary">
                   {候选
                     ? (<>（初{" "}
-                        <span title={`精确 ${表初态(表)}`}>{表初态(表).toFixed(2)}</span> → 末{" "}
-                        <span title={`精确 ${表末态(表)}`}>{表末态(表).toFixed(2)}</span>）</>)
+                        <span title={`精确 ${表初态(表)}`}>{Math.round(表初态(表) * 100) / 100}</span> → 末{" "}
+                        <span title={`精确 ${表末态(表)}`}>{Math.round(表末态(表) * 100) / 100}</span>）</>)
                     : (<>（初{" "}
-                        <span title={`精确 ${表初态(表)}`}>{表初态(表).toFixed(2)}</span>）</>)}
+                        <span title={`精确 ${表初态(表)}`}>{Math.round(表初态(表) * 100) / 100}</span>）</>)}
                 </Typography.Text>
                 <Select
                   mode="multiple"
@@ -1780,9 +1780,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           设进度(null);
           break;
         }
-        case "日志":
-          设阶段(data.文本);
-          break;
         case "预置归并失败":
           设归并失败提示((旧) => [...旧, data.文本]);
           break;
@@ -1891,12 +1888,18 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const 移除项 = 生效mapping ? [...起始键集].filter((k) => !生效键集.has(k)) : [];
   const 连带删除别名 = 移除项.filter((k) => !是根身份(起始mapping[k]));
   const 移除根 = 移除项.filter((k) => 是根身份(起始mapping[k]));
+  // 自动归并产生的新根（整体别名 {element} 或借码逐位安排）：安排不是独立键位，
+  // 按 2026-10-09 定案写入「安排调整」橙标展示，新增根只显示 +根
+  const 新增归并 = 新增根.filter((k) => typeof 生效mapping![k] !== "string");
   const 安排调整 = 生效mapping
-    ? [...生效键集].filter(
-        (k) =>
-          起始键集.has(k) &&
-          JSON.stringify(起始mapping[k]) !== JSON.stringify(生效mapping![k]),
-      )
+    ? [
+        ...[...生效键集].filter(
+          (k) =>
+            起始键集.has(k) &&
+            JSON.stringify(起始mapping[k]) !== JSON.stringify(生效mapping![k]),
+        ),
+        ...新增归并,
+      ]
     : [];
   // 新增/移除/安排调整全空 = 相对当前方案无变化 → 应用按钮禁用
   const 无变化 = !!结果 && 新增根.length === 0 && 移除项.length === 0 && 安排调整.length === 0;
@@ -1914,8 +1917,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           trigger="click"
           content={
             <div style={{ maxWidth: 420 }}>
-              算法：以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 /
-              加高频字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。
+              算法：算法可操作的空间称为「字根池」，包括所有待加根与当前轮次已在方案内的根。开始后，算法以当前方案的字根映射为起点，以评分表为评判标准，自动枚举「删现有根 /
+              加候选字根」两类单步动作，用增量重拆分快速评分（每步只重拆受影响的字），取改进最大的第一个根或前若干根。直到无单步改进。
             </div>
           }
         >
@@ -2489,10 +2492,10 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                       style={{ fontSize: "inherit" }}
                     >
                       {进度.变化 > 0 ? "+" : ""}
-                      {Math.round(进度.变化)}，{" "}
+                      {Math.round(进度.变化 * 100) / 100}，{" "}
                     </Typography.Text>
                   )}
-                  {isFinite(进度.最优分) ? Math.round(进度.最优分) : "∞"}）
+                  {isFinite(进度.最优分) ? Math.round(进度.最优分 * 100) / 100 : "∞"}）
                 </Typography.Text>
               </>
             ) : undefined
@@ -2514,39 +2517,61 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         />
       )}
       {轮日志.length > 0 && (
-        <div className="mt-2 rounded p-2 bg-gray-50 max-h-60 overflow-y-auto">
+        <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>搜索轨迹</Typography.Text>
-          {轮日志.map((r, i) => (
-            <div key={i}>
-              第{r.轮}轮 <Tag color="green">{富文本(r.动作)}</Tag>
-              {r.前分} → {r.分数}（
-              <Typography.Text type={r.变化 < 0 ? "success" : "danger"}>
-                {r.变化 > 0 ? "+" : ""}
-                {r.变化}
-              </Typography.Text>
-              ，根 {r.根数}，{r.动作数} 动作 / {r.耗时.toFixed(1)}s）
-              {r.单加明细 && (
-                <div className="ml-2 text-xs text-gray-500 leading-5">
-                  {r.单加明细.map((x) => (
-                    <div key={x.描述}>
-                      {x.描述} 单加预期 {x.预期变化 > 0 ? "+" : ""}
-                      {x.预期变化}
-                    </div>
-                  ))}
-                  <div>合评 {r.变化 > 0 ? "+" : ""}{r.变化}（单加之和≠合评：根间相互作用）</div>
-                </div>
-              )}
-            </div>
-          ))}
+          <div className="max-h-60 overflow-y-auto">
+            {轮日志.map((r, i) => (
+              <div key={i}>
+                {r.轮 === 0 ? "第零步" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>
+                {r.前分} → {r.分数}（
+                <Typography.Text type={r.变化 < 0 ? "success" : "danger"}>
+                  {r.变化 > 0 ? "+" : ""}
+                  {r.变化}
+                </Typography.Text>
+                ，根 {r.根数}，{r.动作数} 动作 / {r.耗时.toFixed(1)}s）
+                {r.单加明细 && (
+                  <div className="ml-2 text-xs text-gray-500 leading-5">
+                    {r.单加明细.map((x) => (
+                      <div key={x.描述}>
+                        {x.描述} 单加预期 {x.预期变化 > 0 ? "+" : ""}
+                        {x.预期变化}
+                      </div>
+                    ))}
+                    <div>合评 {r.变化 > 0 ? "+" : ""}{r.变化}（单加之和≠合评：根间相互作用）</div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
       {结果 && (
         <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>
-            最终总分 {结果.总分}（{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
-            {结果.轮日志.length} 轮）
+            {(() => {
+              const 非零轮 = 结果!.轮日志.filter((r) => r.轮 !== 0);
+              // 真正的初态 = 第零步的前分（预置归并前）；末态 = 结果.总分。直接相减得净变化，
+              // 绝不计各轮 变化 累加（每个变化已 2 位舍入，累加会累积误差）
+              const 初态 = 结果!.轮日志[0]?.前分 ?? 结果!.总分;
+              const 净 = 结果!.总分 - 初态;
+              // 与搜索轨迹同一套 +/− 与配色：升=＋红(danger)、降=−绿(success)
+              const 渲染变化 = (v: number) => (
+                <Typography.Text type={v < 0 ? "success" : "danger"}>
+                  {v > 0 ? "+" : ""}
+                  {Math.round(v * 100) / 100}
+                </Typography.Text>
+              );
+              const 零变化容差 = 0.005;
+              return (
+                <>
+                  最终总分 {结果!.总分}（
+                  {Math.abs(净) < 零变化容差 ? "0" : 渲染变化(净)}
+                  ，{结果!.收敛 ? "已收敛" : "未收敛"}，共 {非零轮.length} 轮）
+                </>
+              );
+            })()}
           </Typography.Text>
-          {结果.收敛 && 结果.轮日志.length === 0 && (
+          {结果.收敛 && 结果.轮日志.filter((r) => r.轮 !== 0).length === 0 && (
             <Typography.Text type="secondary" className="mt-1 block">
               无可改进的动作
             </Typography.Text>
@@ -2555,14 +2580,11 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             {新增根.length > 0 && (
               <div>
                 新增根：
-                {新增根.map((k) => {
-                  const v = 生效mapping![k];
-                  return (
-                    <Tag key={k} color="green">
-                      {富文本(typeof v === "string" ? `+${k}` : `+${根安排描述(k, v)}`)}
-                    </Tag>
-                  );
-                })}
+                {新增根.map((k) => (
+                  <Tag key={k} color="green">
+                    {富文本(`+${k}`)}
+                  </Tag>
+                ))}
               </div>
             )}
             {移除根.length > 0 && (
@@ -2590,7 +2612,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   </Tag>
                 ))}
                 <Typography.Text type="secondary" className="ml-2">
-                  （预置归并生效后的安排）
+                  （预置归并/自动归并生效后的安排）
                 </Typography.Text>
               </div>
             )}
