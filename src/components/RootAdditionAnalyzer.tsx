@@ -452,8 +452,10 @@ function 手动分析面板() {
       设错误("安排不能为「禁用」");
       return;
     } else if (typeof 码串 === "string") {
-      if (码串.length !== 编码类型 || [...码串].some((c) => !alphabet.includes(c))) {
-        设错误(`键位串「${码串}」应为 ${编码类型} 个字母表 ${alphabet} 中的键`);
+      // 放行短于编码类型的安排（含空串「空」）——双编码下给根安排单键或留空是有意为之，不应阻止；
+      // 仅保留两类真正非法的拦截：键数超过编码类型、或含字母表外的键。其余（安排赋值/分析应用/决策图等）逻辑不动。
+      if (码串.length > 编码类型 || [...码串].some((c) => !alphabet.includes(c))) {
+        设错误(`键位串「${码串}」不能多于 ${编码类型} 个键，且每个键须属于字母表 ${alphabet}`);
         return;
       }
       安排 = 码串;
@@ -1990,8 +1992,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     (收) =>
                       设手动收起集((s) => {
                         const n = new Set(s);
-                        if (收) n.delete(i);
-                        else n.add(i);
+                        if (收) n.add(i);
+                        else n.delete(i);
                         return n;
                       }),
                     "输入字根，逗号分隔",
