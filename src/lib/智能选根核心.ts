@@ -1385,7 +1385,9 @@ export class 智能选根核心 {
       const 禁删 = new Set(
         待归并.filter(({ 条目: x }) => x.根位 == null || x.目标位 == null).map(({ 条目: x }) => x.根),
       );
-      const 直设根 = Object.keys(mapping).filter((k) => typeof mapping[k] === "string");
+      // 可直接删的根：值为 string（普通根）或 数组（码位借码安排——归入根可单独出，见 A 1=B 1 第五/六种情况）；
+      // 整体系数别名 {element:B} 是对象、不在其列（须随 B 出，且已列入 禁删）——故 A=B 整体归入的根绝不被单独删除
+      const 直设根 = Object.keys(mapping).filter((k) => typeof mapping[k] === "string" || Array.isArray(mapping[k]));
       const 可删 = 直设根.filter(
         (k) => !保护.has(k) && !禁删.has(k) && (!减根正则 || 减根正则.test(k)),
       );
@@ -1445,7 +1447,7 @@ export class 智能选根核心 {
                 ? { element: x.目标, index: x.目标位! - 1 }
                 : 占位[i] ?? 占位[0]!,
             );
-            段[0] = 根安排描述(c, m0[c]);
+            段[0] = `+${根安排描述(c, m0[c])}`; // 保留加根 + 前缀（与普通加根/差异区新增根统一）
           }
           动作.push({ 加: [c], 删: [], 描述: 段.join("，"), m: m0, 随行: 随行根 });
         }

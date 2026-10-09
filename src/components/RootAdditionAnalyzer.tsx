@@ -2437,7 +2437,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               );
             })()}
           <Flex gap={4} align="center">
-            <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示150根起每根罚5万">
+            <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示151根起每根罚5万">
               根数罚分 f(n)
             </span>
             <Input
@@ -2522,7 +2522,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           <div className="max-h-60 overflow-y-auto">
             {轮日志.map((r, i) => (
               <div key={i}>
-                {r.轮 === 0 ? "第零步" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>
+                {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>
                 {r.前分} → {r.分数}（
                 <Typography.Text type={r.变化 < 0 ? "success" : "danger"}>
                   {r.变化 > 0 ? "+" : ""}
@@ -2548,28 +2548,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       {结果 && (
         <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>
-            {(() => {
-              const 非零轮 = 结果!.轮日志.filter((r) => r.轮 !== 0);
-              // 真正的初态 = 第零步的前分（预置归并前）；末态 = 结果.总分。直接相减得净变化，
-              // 绝不计各轮 变化 累加（每个变化已 2 位舍入，累加会累积误差）
-              const 初态 = 结果!.轮日志[0]?.前分 ?? 结果!.总分;
-              const 净 = 结果!.总分 - 初态;
-              // 与搜索轨迹同一套 +/− 与配色：升=＋红(danger)、降=−绿(success)
-              const 渲染变化 = (v: number) => (
-                <Typography.Text type={v < 0 ? "success" : "danger"}>
-                  {v > 0 ? "+" : ""}
-                  {Math.round(v * 100) / 100}
-                </Typography.Text>
-              );
-              const 零变化容差 = 0.005;
-              return (
-                <>
-                  最终总分 {结果!.总分}（
-                  {Math.abs(净) < 零变化容差 ? "0" : 渲染变化(净)}
-                  ，{结果!.收敛 ? "已收敛" : "未收敛"}，共 {非零轮.length} 轮）
-                </>
-              );
-            })()}
+            最终总分 {结果.总分}（{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
+            {结果.轮日志.filter((r) => r.轮 !== 0).length} 轮）
           </Typography.Text>
           {结果.收敛 && 结果.轮日志.filter((r) => r.轮 !== 0).length === 0 && (
             <Typography.Text type="secondary" className="mt-1 block">
