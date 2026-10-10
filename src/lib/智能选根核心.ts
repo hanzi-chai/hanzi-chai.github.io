@@ -1191,7 +1191,7 @@ export class 智能选根核心 {
       const 签名 = 形状签名(名到字形.get(名));
       if (签名) 已有签名.add(签名);
     }
-    const 池: string[] = 允许加根总开关
+    let 池: string[] = 允许加根总开关
       ? [...池Set].filter((w) => {
           const 签名 = 形状签名(名到字形.get(w));
           return !签名 || !已有签名.has(签名);
@@ -1217,6 +1217,39 @@ export class 智能选根核心 {
     // 侧界：某根「真实码长」的上界——已落库（在 mapping）按实际码长；尚未成根（候选根，搜索期会被占位补齐）按 占位安排 的码数。
     // 半归并两边的根都可能是还没加进去的候选根；候选根由 变体mapping 赋 占位（长度=占位安排码数），故用 占位.length 兜底其将拥有的码长。
     const 侧界 = (名: string): number => 码长(名) ?? 占位.length;
+    // 整体边：根 → 直接整体归并目标（值 = {element:目标}，非数组）。来源 = 起始映射里的别名 + 预置归并整体条目。
+    // 用于把"整体归并链"（A=B,B=C,C=D…）传递地展开：加底时把整条链的归根一并随行，中途不再逐轮补层。
+    const 整体边 = new Map<string, string>();
+    for (const [k, v] of Object.entries(起始mapping)) {
+      if (v && typeof v === "object" && !Array.isArray(v) && typeof (v as any).element === "string") {
+        整体边.set(k, (v as { element: string }).element);
+      }
+    }
+    for (const x of 预置归并表) {
+      if (x.根位 == null && x.目标位 == null) 整体边.set(x.根, x.目标);
+    }
+    // 反整体边（反向邻接）：目标 → 直接整体归并到它的根们。随机访问用它，避免每次全扫整体边（原 O(整体边²)）。
+    const 反整体边 = new Map<string, string[]>();
+    for (const [根, 目标] of 整体边) {
+      const 列 = 反整体边.get(目标);
+      if (列) 列.push(根);
+      else 反整体边.set(目标, [根]);
+    }
+    // 随行者(c)：c 入映射时，应随之入的归根们（沿反整体边传递地收集所有归并到 c 的根），按"从底到顶"排序（离 c 近者先）。
+    // 只走整体边——半根不随入（半根走它自己的独立动作）。复杂度 O(跟随者数 · log)，与整体边总数无关。
+    const 随行者 = (c: string): string[] => {
+      const 果: { 根: string; 深: number }[] = [];
+      const 见 = new Set<string>();
+      const 栈: [string, number][] = (反整体边.get(c) ?? []).map((r) => [r, 1]);
+      while (栈.length) {
+        const [u, d] = 栈.pop()!;
+        if (见.has(u)) continue;
+        见.add(u);
+        果.push({ 根: u, 深: d });
+        for (const v of 反整体边.get(u) ?? []) if (!见.has(v)) 栈.push([v, d + 1]);
+      }
+      return 果.sort((a, b) => a.深 - b.深).map((x) => x.根);
+    };
     const 待归并: { 条目: (typeof 预置归并表)[number]; 描述: string }[] = [];
     const 死归并: string[] = [];
     for (const x of 预置归并表) {
@@ -1238,6 +1271,37 @@ export class 智能选根核心 {
         // 相似归并休眠/无效条目静默跳过：不进待归并也不提示失败（软合并，区别于用户硬性预置归并）
         if (!x.相似) 死归并.push(`${描述}（${死因}）`);
       } else 待归并.push({ 条目: x, 描述 });
+    }
+    // 环检测：预置归并引用图（每条 根→目标 算一条边）若成环，线性化会报「循环依赖」——
+    // 借码环（A 1=B 2 且 B 1=A 2）/整体环（A=B 且 B=A）施加后映射不可线性化。故凡「从根出发能到达某个环」的条目判死、不施加。
+    {
+      const 边图 = new Map<string, string[]>();
+      for (const { 条目: x } of 待归并) {
+        const 列 = 边图.get(x.根);
+        if (列) 列.push(x.目标);
+        else 边图.set(x.根, [x.目标]);
+      }
+      const 有环可达 = (起: string): boolean => {
+        const 路径 = new Set<string>();
+        const 完成 = new Set<string>();
+        const dfs = (u: string): boolean => {
+          if (路径.has(u)) return true;
+          if (完成.has(u)) return false;
+          路径.add(u);
+          for (const v of 边图.get(u) ?? []) if (dfs(v)) return true;
+          路径.delete(u);
+          完成.add(u);
+          return false;
+        };
+        return dfs(起);
+      };
+      for (let j = 待归并.length - 1; j >= 0; j--) {
+        const 项 = 待归并[j]!;
+        if (有环可达(项.条目.根)) {
+          if (!项.条目.相似) 死归并.push(`${项.描述}（循环依赖：归并引用成环，无法线性化）`);
+          待归并.splice(j, 1);
+        }
+      }
     }
     // 死归并（参与者不都成根）先收集；与下方「被踢出导致无法拆分」的失败合并到同一条橙框消息，统一以「根=目标（原因）」格式上报（早于搜索开始，强杀也不会丢）
     // —— 初态不变式（只施加于活条目）——
@@ -1370,6 +1434,14 @@ export class 智能选根核心 {
         );
       }
     }
+    // 半-3：既有根 A 因半归并悬空被踢出后，放回候选池（B 入后 A 才可再被加入，同半-1→半-2）。
+    // 失败回滚、仍留在映射里的不算（判 mapping[根]===undefined），避免把已存在的根误当候选。
+    for (const x of 被踢) {
+      if (mapping[x.根] === undefined && !池.includes(x.根)) {
+        池.push(x.根);
+        池Set.add(x.根);
+      }
+    }
     // 死归并 与 被踢失败 合并为同一条橙框消息（「根=目标（原因）」格式，；连接），行为统一
     if (死归并.length) cb.on预置归并失败?.(`预置归并失败：${死归并.join("；")}`);
     // 预置归并处理已改写 mapping（别名/借码安排/被踢回滚）；以其结果重设基态，
@@ -1382,9 +1454,9 @@ export class 智能选根核心 {
     let 轮序 = 0;
     // 每轮结束（动作已应用到 mapping）后拍一份快照，供主线程强杀后抓包还原已选好的根
     const 快照 = () => JSON.parse(JSON.stringify(mapping)) as Record<string, any>;
-    // 第零轮：把预置归并处理单列一行，展示其对初态分数的影响；
-    // 否则第一轮前分直接显示归并后分数，初态分数无从可见
-    {
+    // 第零轮：把预置归并处理单列一行，展示其对初态分数的影响；否则第一轮前分直接显示归并后分数，初态分数无从可见。
+    // 只有确实有预置归并要处理（待归并非空）时才加这一轮——没有任何预归并时不显示，避免 0 变化噪声行。
+    if (待归并.length > 0) {
       const 轮零: 轮结果 = {
         轮: 0,
         动作: "预置归并处理",
@@ -1448,7 +1520,7 @@ export class 智能选根核心 {
         };
         轮日志.push(轮r);
         cb.on轮?.(轮r);
-        this.设置基态(mapping);
+        try { this.设置基态(mapping); } catch { /* 触发改写若致无法拆分，保持既有基态，避免抛到 worker 外 */ }
         continue; // 触发不消耗轮数
       }
       轮序++;
@@ -1482,25 +1554,22 @@ export class 智能选根核心 {
       const 可加 = 池.filter((k) => !在集.has(k) && !锁定.has(k));
       const 允许加根 = 参数.允许加根 !== false;
       const 允许减根 = 参数.允许减根 !== false;
-      // 预置归并随行表（每轮重建）：整体归并条目里目标还不在此映射的——目标从池里加进来时
-      // 同一动作内让根以 {element:目标} 随行（加根即归并，不分两轮）。根已是普通字根的也同样
-      // 随行转换（纯归并 = A、B 同进同出）；目标已在映射的状态由初态不变式保证。
-      const 随行表 = new Map<string, string[]>();
-      for (const { 条目: x } of 待归并) {
-        if (x.根位 != null && x.目标位 != null) continue; // 码位走借码安排/独立动作
-        if (mapping[x.目标] !== undefined) continue; // 目标已成根 → 独立归并动作
-        const 列表 = 随行表.get(x.目标) ?? [];
-        列表.push(x.根);
-        随行表.set(x.目标, 列表);
-      }
+      // 整体随行改用全局「随行者(c)」（见上）：加 c 时沿整体边把整条链的归根一并带入，
+      // 支持任意深度的链与分支（H→I、J→I），中途不再逐轮补层、也不再把整体根退化成普通占位。
       const 动作: { 加: string[]; 删: string[]; 描述: string; m: Record<string, any>; 随行?: string[] }[] = [];
       if (允许减根)
         for (const r of 可删) {
           const m0 = this.变体mapping(mapping, [], [r], 占位);
           // B 出经级联把跟随它的别名/借码根一并删掉（A 动不了、减 B 级联 A）——轮次表要同步显示，否则逻辑与显示不一致
           const 连带 = Object.keys(mapping).filter((k) => !(k in m0) && k !== r);
-          const 描述 = 连带.length
-            ? `-${r}，${连带.map((k) => 根安排描述(k, mapping[k])).join("，")}`
+          // 显示顺序统一：整体-归并到 r 的归根按"从底到顶"（随行者(r) 已排好），其余（半根等）随后
+          const 随行序 = 随行者(r);
+          const 有序连带 = [
+            ...随行序.filter((k) => 连带.includes(k)),
+            ...连带.filter((k) => !随行序.includes(k)),
+          ];
+          const 描述 = 有序连带.length
+            ? `-${r}，${有序连带.map((k) => 根安排描述(k, mapping[k])).join("，")}`
             : `-${r}`;
           动作.push({ 加: [], 删: [r, ...连带], 描述, m: m0 });
         }
@@ -1509,39 +1578,39 @@ export class 智能选根核心 {
           const m0 = this.变体mapping(mapping, [c], [], 占位);
           // 描述段：普通加根 +根；归并/借码类用「根=安排」用户语法（与差异区安排调整同款）
           const 段: string[] = [`+${c}`];
-          let 随行并 = false;
-          // 预置归并随行：加目标时，待归并的根在同一动作内以 {element:目标} 入映射（永久跟随目标键位）
-          const 随行根 = 随行表.get(c);
-          if (随行根?.length) {
-            for (const 根 of 随行根) m0[根] = { element: c };
-            段.push(...随行根.map((根) => 根安排描述(根, m0[根])));
-            随行并 = true;
+          // 预置归并随行：加 c 时，沿整体边传递地把它整条链的归根一并带入（任意深度/分支），各归其直接目标
+          const 随行根 = 随行者(c).filter((根) => mapping[根] === undefined);
+          if (随行根.length) {
+            for (const 根 of 随行根) m0[根] = { element: 整体边.get(根)! };
+            段.push(...随行根.map((根) => `${根}=${整体边.get(根)!}`));
           }
           // 预置归并码位随行：新根入库即带上借码安排（目标已是字根时）；目标未成根则先普通入库，
-          // 借码安排等目标成根后作为独立动作再来
-          const 码位条目 = 待归并.find(
+          // 借码安排等目标成根后作为独立动作再来。与整体随行独立（c 可同时是整体目标与半根）。
+          // 同一根可有多个半借位（如 九 1=三 2 且 九 2=三 1）——取该根**全部**半条目，一次合并写入一条数组。
+          const 该根半条目 = 待归并.filter(
             ({ 条目: x }) => x.根 === c && x.根位 != null && x.目标位 != null && mapping[x.目标] !== undefined,
           );
-          if (码位条目 && !随行并) {
-            const x = 码位条目.条目;
-            // 码位存在性守卫：根位落在 A 码长内、目标位落在 B 码长内（每根码数可能不同；候选根按归并码数计其将拥有的码长）。
-            // 越界则不施加借码、按普通加根入库，并在橙框上报——避免静默错借。
-            const 界A加 = 侧界(x.根);
-            const 界B加 = 侧界(x.目标);
-            if (x.根位! >= 1 && x.根位! <= 界A加 && x.目标位! >= 1 && x.目标位! <= 界B加) {
-              m0[c] = Array.from({ length: 占位.length }, (_, i) =>
-                i === x.根位! - 1
-                  ? { element: x.目标, index: x.目标位! - 1 }
-                  : (占位[i] ?? 占位[0]!),
-              );
+          if (该根半条目.length) {
+            // 码位存在性守卫：根位落在 c 码长内、目标位落在各自目标码长内（每根码数可能不同；候选根按 侧界 计）。
+            // 任一条目越界则不施加借码、按普通加根入库，并在橙框上报——避免静默错借。
+            const 界A加 = 侧界(c);
+            const 越界段: string[] = [];
+            for (const { 条目: x } of 该根半条目) {
+              const 界B加 = 侧界(x.目标);
+              if (x.根位! < 1 || x.根位! > 界A加) 越界段.push(`「${x.根}」共 ${界A加} 码无第 ${x.根位} 位`);
+              if (x.目标位! < 1 || x.目标位! > 界B加) 越界段.push(`「${x.目标}」共 ${界B加} 码无第 ${x.目标位} 位`);
+            }
+            if (越界段.length === 0) {
+              const 列 = 该根半条目.map(({ 条目: x }) => x);
+              m0[c] = Array.from({ length: 占位.length }, (_, i) => {
+                const e = 列.find((z) => z.根位 === i + 1);
+                return e ? { element: e.目标, index: e.目标位! - 1 } : (占位[i] ?? 占位[0]!);
+              });
               段[0] = `+${根安排描述(c, m0[c])}`; // 保留加根 + 前缀（与普通加根/差异区新增根统一）
             } else {
-              // 只报真正越界的那一侧（1 码的根第 1 位合法，不可与越界侧混报）
-              const 片段: string[] = [];
-              if (x.根位! < 1 || x.根位! > 界A加) 片段.push(`「${x.根}」共 ${界A加} 码无第 ${x.根位} 位`);
-              if (x.目标位! < 1 || x.目标位! > 界B加) 片段.push(`「${x.目标}」共 ${界B加} 码无第 ${x.目标位} 位`);
+              const 条目文本 = 该根半条目.map(({ 条目: x }) => `${x.根} ${x.根位}=${x.目标} ${x.目标位}`).join("；");
               cb.on预置归并失败?.(
-                `预置归并失败：${x.根} ${x.根位}=${x.目标} ${x.目标位}（码位不存在：${片段.join("；")}）`,
+                `预置归并失败：${条目文本}（码位不存在：${[...new Set(越界段)].join("；")}）`,
               );
             }
           }
@@ -1578,11 +1647,12 @@ export class 智能选根核心 {
           .slice(0, 单轮根数);
         if (改善加根.length > 1) {
           const 组合m = this.变体mapping(mapping, 改善加根.map((x) => x.a.加).flat(), [], 占位);
-          // 随行归并：选中动作里带归并的（自动归并相似根/预置归并随行）把 {element} 安排也带进组合
+          // 随行归并：选中动作里带归并的（自动归并相似根/预置归并随行）把各自安排也带进组合。
+          // 归根各自指向"它的直接整体目标"（链结构），不能一律指向 a.加[0]，故直接抄动作自带的 a.m。
           for (const { a } of 改善加根) {
             for (const k2 of a.加)
               if (组合m[k2] !== undefined) 组合m[k2] = a.m[k2];
-            for (const 根 of a.随行 ?? []) 组合m[根] = { element: a.加[0]! };
+            for (const 根 of a.随行 ?? []) if (a.m[根] !== undefined) 组合m[根] = a.m[根];
           }
           const 合评 = this.评变体(组合m);
           if (!("失败" in 合评)) {

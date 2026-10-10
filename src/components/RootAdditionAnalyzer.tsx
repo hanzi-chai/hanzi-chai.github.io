@@ -92,6 +92,12 @@ export const combinations = (n: number, k: number): number[][] => {
 
 const 数字标签 = (n: number) => "零一二三四五六七八九十"[n] ?? String(n);
 
+/** 收集安排值里的元素引用（只有 {element:名} 是引用；数组内裸串是键位字符，不算）——用于减根悬空引用的可读提示 */
+function 收集元素引用(v: any, out: string[]): void {
+  if (Array.isArray(v)) v.forEach((x) => 收集元素引用(x, out));
+  else if (v && typeof v === "object" && typeof v.element === "string") out.push(v.element);
+}
+
 /** 模式名：空位显示 *（每个 * 后带空格），保留位显示位数 */
 export const 模式名称 = (空位: number[], 总位数: number) => {
   const tokens = range(总位数).map((i) =>
@@ -524,16 +530,16 @@ function 手动分析面板() {
         return;
       }
     }
+    // 1. 候选决策：先应用减根，再应用加根（同根先减后加即“改根”）。放在 try 外，报错时用它找引用者
+    const 候选决策Record: Record<string, any> = { ...决策 };
+    for (const op of 操作列表) {
+      if (op.类型 === "减") delete 候选决策Record[op.名];
+    }
+    for (const op of 操作列表) {
+      if (op.类型 === "加") 候选决策Record[op.名] = op.安排;
+    }
     设运行中(true);
     try {
-      // 1. 候选决策：先应用减根，再应用加根（同根先减后加即“改根”）
-      const 候选决策Record: Record<string, any> = { ...决策 };
-      for (const op of 操作列表) {
-        if (op.类型 === "减") delete 候选决策Record[op.名];
-      }
-      for (const op of 操作列表) {
-        if (op.类型 === "加") 候选决策Record[op.名] = op.安排;
-      }
       const 强 = 构建强类型决策与决策空间(候选决策Record, 决策空间, 名称映射);
       const 如线性化 = new 决策图(强.决策).线性化();
       if (!如线性化.ok) throw 如线性化.error;
@@ -569,7 +575,26 @@ function 手动分析面板() {
           .join("、"),
       );
     } catch (e: any) {
-      设错误(String(e?.message ?? e));
+      const 原文 = String(e?.message ?? e);
+      // 悬空引用：chai 引擎线性化报「决策中不存在键: xx」——xx 是被别的根归并/借码引用、却已不在决策里的根（多因减根把它删了）。
+      // chai 官方不做级联删根（保留原味），故这里换成可读提示，而不是把原始报错丢给用户。
+      const m = /决策中不存在键\s*[:：]\s*(\S+)/.exec(原文);
+      if (m) {
+        const 名 = m[1]!;
+        const 引用者: string[] = [];
+        for (const [k, v] of Object.entries(候选决策Record)) {
+          if (k === 名) continue;
+          const refs: string[] = [];
+          收集元素引用(v, refs);
+          if (refs.includes(名)) 引用者.push(k);
+        }
+        const 谁 = 引用者.length ? `「${引用者.join("、")}」` : "别的根";
+        设错误(
+          `悬空引用：「${名}」不在方案里，但${谁}归并/借码引用了它。`,
+        );
+      } else {
+        设错误(原文);
+      }
       设候选(null);
     } finally {
       设运行中(false);
@@ -1688,7 +1713,9 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       .map((s: string) => s.trim())
       .filter(Boolean);
     const 预置: { 根: string; 目标: string; 根位?: number; 目标位?: number }[] = [];
-    const 已绑定 = new Set<string>();
+    const 整体根集 = new Set<string>(); // 已整体归并的根（整体归并独占该根）
+    const 半根集 = new Set<string>(); // 已有半归并的根（同根可多位并存）
+    const 半位集 = new Set<string>(); // "根#根位" —— 半归并按位去重
     const 解归并侧 = (
       s: string,
       条: string,
@@ -1732,11 +1759,27 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         设错误(`预置归并第 ${i + 1} 条：根与目标是同一个（${根}）`);
         return;
       }
-      if (已绑定.has(根)) {
-        设错误(`预置归并第 ${i + 1} 条：根 ${根} 被绑定了多次（一个根只能归并到一个目标）`);
-        return;
+      if (L.位 == null) {
+        // 整体归并：独占该根（不能同时有半归并/多条整体）
+        if (整体根集.has(根) || 半根集.has(根)) {
+          设错误(`预置归并第 ${i + 1} 条：根 ${根} 已参与其它归并（整体归并独占该根，不能再绑定）`);
+          return;
+        }
+        整体根集.add(根);
+      } else {
+        // 半归并：同根不同根位可并存；已有整体归并的根不能再半归并
+        if (整体根集.has(根)) {
+          设错误(`预置归并第 ${i + 1} 条：根 ${根} 已有整体归并，不能再半归并`);
+          return;
+        }
+        const 位键 = `${根}#${L.位}`;
+        if (半位集.has(位键)) {
+          设错误(`预置归并第 ${i + 1} 条：根 ${根} 的第 ${L.位} 位已绑定（同一位只能归并一次）`);
+          return;
+        }
+        半位集.add(位键);
+        半根集.add(根);
       }
-      已绑定.add(根);
       预置.push(
         L.位 == null
           ? { 根, 目标 }
