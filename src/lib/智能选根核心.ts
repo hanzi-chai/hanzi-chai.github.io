@@ -1242,7 +1242,9 @@ export class 智能选根核心 {
       } else 待归并.push({ 条目: x, 描述 });
     }
     // 环检测：预置归并引用图（每条 根→目标 算一条边）若成环，线性化会报「循环依赖」——
-    // 借码环（A 1=B 2 且 B 1=A 2）/整体环（A=B 且 B=A）施加后映射不可线性化。故凡「从根出发能到达某个环」的条目判死、不施加。
+    // 借码环（A 1=B 2 且 B 1=A 2）/整体环（A=B 且 B=A）施加后映射不可线性化。
+    // 判据：**只有"根自己就在环上"（沿边能回到自己）的条目才判死拆掉**——拆掉环上条目后，环节点回归普通根，
+    // 那些"只是指向环"的条目（如 三=四 而 四 在环上）就有效了，不该被误杀。
     {
       const 边图 = new Map<string, string[]>();
       const 加边 = (a: string, b: string) => {
@@ -1255,23 +1257,22 @@ export class 智能选根核心 {
         if (v && typeof v === "object" && !Array.isArray(v) && typeof (v as any).element === "string") 加边(k, (v as { element: string }).element);
       }
       for (const { 条目: x } of 待归并) 加边(x.根, x.目标);
-      const 有环可达 = (起: string): boolean => {
-        const 路径 = new Set<string>();
-        const 完成 = new Set<string>();
-        const dfs = (u: string): boolean => {
-          if (路径.has(u)) return true;
-          if (完成.has(u)) return false;
-          路径.add(u);
-          for (const v of 边图.get(u) ?? []) if (dfs(v)) return true;
-          路径.delete(u);
-          完成.add(u);
-          return false;
-        };
-        return dfs(起);
+      // 起 是否在环上：从 起 出发，沿边能否回到 起
+      const 在环上 = (起: string): boolean => {
+        const 见 = new Set<string>();
+        const 栈 = [...(边图.get(起) ?? [])];
+        while (栈.length) {
+          const u = 栈.pop()!;
+          if (u === 起) return true;
+          if (见.has(u)) continue;
+          见.add(u);
+          for (const v of 边图.get(u) ?? []) 栈.push(v);
+        }
+        return false;
       };
       for (let j = 待归并.length - 1; j >= 0; j--) {
         const 项 = 待归并[j]!;
-        if (有环可达(项.条目.根)) {
+        if (在环上(项.条目.根)) {
           if (!项.条目.相似) 死归并.push(`${项.描述}（循环依赖：归并引用成环，无法线性化）`);
           待归并.splice(j, 1);
         }
