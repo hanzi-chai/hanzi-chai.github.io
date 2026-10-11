@@ -1217,39 +1217,8 @@ export class 智能选根核心 {
     // 侧界：某根「真实码长」的上界——已落库（在 mapping）按实际码长；尚未成根（候选根，搜索期会被占位补齐）按 占位安排 的码数。
     // 半归并两边的根都可能是还没加进去的候选根；候选根由 变体mapping 赋 占位（长度=占位安排码数），故用 占位.length 兜底其将拥有的码长。
     const 侧界 = (名: string): number => 码长(名) ?? 占位.length;
-    // 整体边：根 → 直接整体归并目标（值 = {element:目标}，非数组）。来源 = 起始映射里的别名 + 预置归并整体条目。
-    // 用于把"整体归并链"（A=B,B=C,C=D…）传递地展开：加底时把整条链的归根一并随行，中途不再逐轮补层。
-    const 整体边 = new Map<string, string>();
-    for (const [k, v] of Object.entries(起始mapping)) {
-      if (v && typeof v === "object" && !Array.isArray(v) && typeof (v as any).element === "string") {
-        整体边.set(k, (v as { element: string }).element);
-      }
-    }
-    for (const x of 预置归并表) {
-      if (x.根位 == null && x.目标位 == null) 整体边.set(x.根, x.目标);
-    }
-    // 反整体边（反向邻接）：目标 → 直接整体归并到它的根们。随机访问用它，避免每次全扫整体边（原 O(整体边²)）。
-    const 反整体边 = new Map<string, string[]>();
-    for (const [根, 目标] of 整体边) {
-      const 列 = 反整体边.get(目标);
-      if (列) 列.push(根);
-      else 反整体边.set(目标, [根]);
-    }
-    // 随行者(c)：c 入映射时，应随之入的归根们（沿反整体边传递地收集所有归并到 c 的根），按"从底到顶"排序（离 c 近者先）。
-    // 只走整体边——半根不随入（半根走它自己的独立动作）。复杂度 O(跟随者数 · log)，与整体边总数无关。
-    const 随行者 = (c: string): string[] => {
-      const 果: { 根: string; 深: number }[] = [];
-      const 见 = new Set<string>();
-      const 栈: [string, number][] = (反整体边.get(c) ?? []).map((r) => [r, 1]);
-      while (栈.length) {
-        const [u, d] = 栈.pop()!;
-        if (见.has(u)) continue;
-        见.add(u);
-        果.push({ 根: u, 深: d });
-        for (const v of 反整体边.get(u) ?? []) if (!见.has(v)) 栈.push([v, d + 1]);
-      }
-      return 果.sort((a, b) => a.深 - b.深).map((x) => x.根);
-    };
+    // 整体边 / 反整体边 / 随行者 在「环检测」之后构建（见下）：必须用**清洗后的待归并条目**，
+    // 否则被判死（含成环）的整体条目仍会经「随行者」在加根时生效，造成"显示了失败却仍被使用"。
     const 待归并: { 条目: (typeof 预置归并表)[number]; 描述: string }[] = [];
     const 死归并: string[] = [];
     for (const x of 预置归并表) {
@@ -1276,11 +1245,16 @@ export class 智能选根核心 {
     // 借码环（A 1=B 2 且 B 1=A 2）/整体环（A=B 且 B=A）施加后映射不可线性化。故凡「从根出发能到达某个环」的条目判死、不施加。
     {
       const 边图 = new Map<string, string[]>();
-      for (const { 条目: x } of 待归并) {
-        const 列 = 边图.get(x.根);
-        if (列) 列.push(x.目标);
-        else 边图.set(x.根, [x.目标]);
+      const 加边 = (a: string, b: string) => {
+        const 列 = 边图.get(a);
+        if (列) 列.push(b);
+        else 边图.set(a, [b]);
+      };
+      // 起始映射里已有的整体别名也算边（可能与预置归并连成环）
+      for (const [k, v] of Object.entries(起始mapping)) {
+        if (v && typeof v === "object" && !Array.isArray(v) && typeof (v as any).element === "string") 加边(k, (v as { element: string }).element);
       }
+      for (const { 条目: x } of 待归并) 加边(x.根, x.目标);
       const 有环可达 = (起: string): boolean => {
         const 路径 = new Set<string>();
         const 完成 = new Set<string>();
@@ -1303,6 +1277,35 @@ export class 智能选根核心 {
         }
       }
     }
+    // 整体边：根 → 直接整体目标（来源 = 起始映射别名 + **清洗后的待归并整体条目**；判死的（含成环）不进，
+    // 保证"显示的失败"与"真实施加的逻辑"一致）。
+    const 整体边 = new Map<string, string>();
+    for (const [k, v] of Object.entries(起始mapping)) {
+      if (v && typeof v === "object" && !Array.isArray(v) && typeof (v as any).element === "string") 整体边.set(k, (v as { element: string }).element);
+    }
+    for (const { 条目: x } of 待归并) if (x.根位 == null && x.目标位 == null) 整体边.set(x.根, x.目标);
+    // 反整体边（反向邻接）：目标 → 直接整体归并到它的根们。随机访问用它，避免每次全扫整体边（原 O(整体边²)）。
+    const 反整体边 = new Map<string, string[]>();
+    for (const [根, 目标] of 整体边) {
+      const 列 = 反整体边.get(目标);
+      if (列) 列.push(根);
+      else 反整体边.set(目标, [根]);
+    }
+    // 随行者(c)：c 入映射时，应随之入的归根们（沿反整体边传递地收集所有归并到 c 的根），按"从底到顶"排序（离 c 近者先）。
+    // 只走整体边——半根不随入（半根走它自己的独立动作）。复杂度 O(跟随者数 · log)，与整体边总数无关。
+    const 随行者 = (c: string): string[] => {
+      const 果: { 根: string; 深: number }[] = [];
+      const 见 = new Set<string>();
+      const 栈: [string, number][] = (反整体边.get(c) ?? []).map((r) => [r, 1]);
+      while (栈.length) {
+        const [u, d] = 栈.pop()!;
+        if (见.has(u)) continue;
+        见.add(u);
+        果.push({ 根: u, 深: d });
+        for (const v of 反整体边.get(u) ?? []) if (!见.has(v)) 栈.push([v, d + 1]);
+      }
+      return 果.sort((a, b) => a.深 - b.深).map((x) => x.根);
+    };
     // 死归并（参与者不都成根）先收集；与下方「被踢出导致无法拆分」的失败合并到同一条橙框消息，统一以「根=目标（原因）」格式上报（早于搜索开始，强杀也不会丢）
     // —— 初态不变式（只施加于活条目）——
     // 整体 A=B：B 在映射 ⇒ A 以 {element:B} 入/转（AB 同在）；B 不在 ⇒ A 被踢出（A 只能跟随 B 存在）
