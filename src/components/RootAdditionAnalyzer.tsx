@@ -92,6 +92,36 @@ export const combinations = (n: number, k: number): number[][] => {
 
 const 数字标签 = (n: number) => "零一二三四五六七八九十"[n] ?? String(n);
 
+/**
+ * 生成「PUA 感知文本」渲染器：文本里的 PUA 码点（网站自定义字形、字体里没有的字）用 CharacterDisplay
+ * 渲染字形，其余保持纯文本。手动分析页与智能选根页共用，各自传入自己的「名→字符」映射。
+ */
+const 建富文本 =
+  (名到字符: Map<string, any>) =>
+  (文本: string): ReactNode => {
+    if (!文本) return 文本;
+    const 匹配 = [...文本.matchAll(/([\uE000-\uF8FF\u{F0000}-\u{FFFFD}\u{100000}-\u{10FFFD}])/gu)];
+    if (匹配.length === 0) return 文本;
+    const 段: ReactNode[] = [];
+    let 光标 = 0;
+    for (const m of 匹配) {
+      const 起 = m.index!;
+      const 码点 = m[1]!;
+      if (起 > 光标) 段.push(文本.slice(光标, 起));
+      const 字符 = 名到字符.get(码点);
+      段.push(
+        字符 ? (
+          <CharacterDisplay key={`${起}-${码点}`} character={字符} />
+        ) : (
+          <span key={`${起}-${码点}`}>{码点}</span>
+        ),
+      );
+      光标 = 起 + 码点.length;
+    }
+    if (光标 < 文本.length) 段.push(文本.slice(光标));
+    return 段;
+  };
+
 /** 收集安排值里的元素引用（只有 {element:名} 是引用；数组内裸串是键位字符，不算）——用于减根悬空引用的可读提示 */
 function 收集元素引用(v: any, out: string[]): void {
   if (Array.isArray(v)) v.forEach((x) => 收集元素引用(x, out));
@@ -253,6 +283,13 @@ function 手动分析面板() {
   const 汉字集合 = useAtomValue(汉字集合原子);
   const 如字库 = useAtomValue(如字库原子);
   const 字库 = 如字库?.ok ? 如字库.value : null;
+  // PUA 感知文本：手动分析页的错误 / 操作列表 / 已分析字根里也可能出现 PUA 字（网站自定义字形）
+  const 名到字符 = useMemo(() => {
+    const m = new Map<string, any>();
+    if (字库) for (const { 字符 } of 字库 as any) if (!m.has(字符.获取名称())) m.set(字符.获取名称(), 字符);
+    return m;
+  }, [字库]);
+  const 富文本 = 建富文本(名到字符);
   const 如全部合法元素 = useAtomValue(全部合法元素原子);
   const 合法元素 = 如全部合法元素?.ok ? 如全部合法元素.value : null;
   const 名称映射 = 如全部合法元素?.ok ? 如全部合法元素.value.名称映射 : null;
@@ -942,8 +979,8 @@ function 手动分析面板() {
               onClose={() => 设操作列表(操作列表.filter((y) => y.id !== x.id))}
             >
               {x.类型 === "减"
-                ? `减 ${x.名}`
-                : `加 ${x.名} → ${安排文本(x.安排).replace(/^归并→/, "并→")}`}
+                ? 富文本(`减 ${x.名}`)
+                : 富文本(`加 ${x.名} → ${安排文本(x.安排).replace(/^归并→/, "并→")}`)}
             </Tag>
           ))}
           <Button size="small" danger onClick={() => 设操作列表([])}>
@@ -955,14 +992,14 @@ function 手动分析面板() {
         <Button type="primary" onClick={分析} loading={运行中}>
           分析
         </Button>
-        {错误 && <Typography.Text type="danger">{错误}</Typography.Text>}
+        {错误 && <Typography.Text type="danger">{富文本(错误)}</Typography.Text>}
       </Flex>
       {已完成 && !运行中 && 候选 && (
         <Typography.Text
           className="mt-1! block text-base!"
           style={{ color: "#059669", fontWeight: 600 }}
         >
-          已分析：{已完成}
+          已分析：{富文本(已完成)}
         </Typography.Text>
       )}
       {运行中 && <Spin tip="正在重新拆分……" />}
@@ -1512,30 +1549,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     return { 串到代表, 名到串, 名到字符 };
   }, [字库, 频率表]);
 
-  // PUA 感知文本：文本里的 PUA 码点（网站自定义字形的字，字体里没有）用字形组件渲染，
-  // 其余保持纯文本——用于日志、轨迹、结果块等一切嵌入根名的说明文字
-  const 富文本 = (文本: string): ReactNode => {
-    if (!文本) return 文本;
-    const 匹配 = [...文本.matchAll(/([\uE000-\uF8FF\u{F0000}-\u{FFFFD}\u{100000}-\u{10FFFD}])/gu)];
-    if (匹配.length === 0) return 文本;
-    const 段: ReactNode[] = [];
-    let 光标 = 0;
-    for (const m of 匹配) {
-      const 起 = m.index!, 码点 = m[1]!;
-      if (起 > 光标) 段.push(文本.slice(光标, 起));
-      const 字符 = 笔顺索引.名到字符.get(码点);
-      段.push(
-        字符 ? (
-          <CharacterDisplay key={`${起}-${码点}`} character={字符} />
-        ) : (
-          <span key={`${起}-${码点}`}>{码点}</span>
-        ),
-      );
-      光标 = 起 + 码点.length;
-    }
-    if (光标 < 文本.length) 段.push(文本.slice(光标));
-    return 段;
-  };
+  // PUA 感知文本（与手动分析页共用 建富文本）：PUA 码点用字形组件渲染，其余纯文本
+  const 富文本 = 建富文本(笔顺索引.名到字符);
 
   // —— 字内部件挖掘：复/叶 双模式，各自后台 worker（带旗守卫防重复启动） ——
   const 空挖掘状态: 挖掘状态类型 = { 进行中: false, 阶段: "", 结果: null, 按名: null };
@@ -2512,7 +2527,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         <Button danger onClick={停止} disabled={!运行中}>
           停止
         </Button>
-        {错误 && <Typography.Text type="danger">{错误}</Typography.Text>}
+        {错误 && <Typography.Text type="danger">{富文本(错误)}</Typography.Text>}
       </Flex>
       {(运行中 || 阶段) && (
         <Alert
