@@ -1105,7 +1105,7 @@ function 手动分析面板() {
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="选择空位模式（默认全部）"
+                  placeholder="空位模式（置空为全选）"
                   value={表.模式}
                   className="min-w-80"
                   options={range(maxLength + 1).map((阶) => ({
@@ -1317,7 +1317,7 @@ function 评分表面板() {
                 allowClear
                 showSearch
                 className="min-w-60"
-                placeholder="指定空位模式"
+                placeholder="空位模式（置空为全选）"
                 value={(表.patterns ?? []).map((p) => JSON.stringify(p))}
                 options={模式选项}
                 onChange={(vs) =>
