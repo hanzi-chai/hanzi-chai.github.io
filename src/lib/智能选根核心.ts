@@ -1895,7 +1895,8 @@ export function 差异根(m1: Record<string, any>, m2: Record<string, any>): Set
   for (const k of a2) if (!a1.has(k)) 并入(k, m2[k]);
   return out;
 }
-/** 表模式展开：patterns 优先，否则按 orders 展开为空位组合 */
+/** 表模式展开：patterns 优先，否则按 orders 展开为空位组合；**两者都空 = 全选**（0..maxLength 全部空位组合），
+ *  与手动分析「空位模式不选=全选」口径统一。 */
 export function 展开表模式(t: { patterns?: number[][]; orders?: number[]; maxLength?: number }): number[][] {
   if (t.patterns && t.patterns.length) return t.patterns;
   const len = t.maxLength ?? 4;
@@ -1904,5 +1905,6 @@ export function 展开表模式(t: { patterns?: number[][]; orders?: number[]; m
     if (k === 0) out.push([]);
     else out.push(...combinations(len, k));
   }
-  return out;
+  if (out.length) return out;
+  return range(len + 1).flatMap((阶) => combinations(len, 阶));
 }
