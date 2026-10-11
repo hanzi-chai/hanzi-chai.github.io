@@ -2622,7 +2622,21 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       {结果 && (
         <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>
-            最终总分 {结果.总分}（{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
+            最终总分 {结果.总分}（
+            {(() => {
+              // 相对「初态」的净变化：真初态 = 第零步（预置归并处理）的前分；无预置归并时第一个搜索轮的前分即初态。
+              // 红=变差(+)、绿=变好(−)，带 +/- 号，与搜索轨迹同一套颜色；|净| < 0.005 按显示精度记 0。
+              const 初态 = 结果.轮日志[0]?.前分 ?? 结果.总分;
+              const 净 = 结果.总分 - 初态;
+              if (Math.abs(净) < 0.005) return "0";
+              return (
+                <Typography.Text type={净 < 0 ? "success" : "danger"} style={{ fontSize: "inherit" }}>
+                  {净 > 0 ? "+" : ""}
+                  {Math.round(净 * 100) / 100}
+                </Typography.Text>
+              );
+            })()}
+            ，{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
             {结果.轮日志.filter((r) => r.轮 !== 0).length} 轮）
           </Typography.Text>
           {结果.收敛 && 结果.轮日志.filter((r) => r.轮 !== 0).length === 0 && (
