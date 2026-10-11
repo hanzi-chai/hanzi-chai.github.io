@@ -1368,9 +1368,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       return {};
     }
   })();
-  // 可空：删空时保持空（不立刻跳默认），失焦才填默认——与「单轮根数」行为完全一致
-  const [轮数, 设轮数] = useState<number | null>(初始配置.轮数 ?? 12);
-  const [单轮根数, 设单轮根数] = useState<number | null>(初始配置.单轮根数 ?? 1);
+  const [轮数, 设轮数] = useState(初始配置.轮数 ?? 12);
+  const [单轮根数, 设单轮根数] = useState(初始配置.单轮根数 ?? 1);
   const [字根表, 设字根表] = useState<字根表规则[]>(初始配置.字根表 ?? []);
   // 手动指定输入域：收起索引集 + 打字中的原始文本（不即时归一，避免受控回写跳光标）
   const [手动收起集, 设手动收起集] = useState<Set<number>>(new Set());
@@ -1456,8 +1455,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       localStorage.setItem(
         自动搜索配置键,
         JSON.stringify({
-          轮数: 轮数 ?? 12,
-          单轮根数: 单轮根数 ?? 1,
+          轮数,
+          单轮根数,
           字根表,
           占位安排,
           允许加根,
@@ -1877,8 +1876,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       原始词典,
       mapping: 起始mapping,
       参数: {
-        轮数: 轮数 ?? 12,
-        单轮根数: 单轮根数 ?? 1,
+        轮数,
+        单轮根数,
         // 手动指定以原始文本为源（与预置归并一致：框内不格式化、搜索时才解析）；
         // 传给核心前在此把原始文本拆成数组，核心仍按数组消费，语义不变
         字根表列表: 字根表.map((r) =>
@@ -2380,25 +2379,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       <Flex gap="small" align="center" wrap="wrap">
           <Flex gap={4} align="center">
             轮数上限
-            <InputNumber
-              min={1}
-              max={200}
-              value={轮数}
-              onChange={(v) => 设轮数(v)}
-              onBlur={() => 设轮数((n) => n ?? 12)}
-            />
+            <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
           </Flex>
           <Flex gap={4} align="center">
             <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
               单轮根数
             </span>
-            <InputNumber
-              min={1}
-              max={200}
-              value={单轮根数}
-              onChange={(v) => 设单轮根数(v)}
-              onBlur={() => 设单轮根数((n) => n ?? 1)}
-            />
+            <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
           </Flex>
           <Flex gap={4} align="center">
             <Switch size="small" checked={允许加根} onChange={设允许加根} />
