@@ -2607,7 +2607,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                   <div className="ml-2 text-xs text-gray-500 leading-5">
                     {r.单加明细.map((x) => (
                       <div key={x.描述}>
-                        {x.描述} 单加预期 {x.预期变化 > 0 ? "+" : ""}
+                        {富文本(x.描述)} 单加预期 {x.预期变化 > 0 ? "+" : ""}
                         {x.预期变化}
                       </div>
                     ))}
