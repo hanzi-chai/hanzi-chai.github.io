@@ -1,6 +1,6 @@
 import { Button, Popconfirm } from "antd";
 import { 字符, type 强类型非空安排 } from "hanzi-chai";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   useAtomValueUnwrapped,
   useMapAddAtom,
@@ -10,6 +10,7 @@ import {
   当前元素原子,
 } from "~/atoms";
 import { CharacterDisplay } from "./Utils";
+import { 相似字根推荐原子 } from "./ElementPool";
 
 const GROUPS = [
   // 笔顺统一
@@ -81,6 +82,7 @@ export default function RootRecommendation({
   const addMapping = useMapAddAtom(强类型决策原子);
   const 决策快照 = useAtomValueUnwrapped(强类型决策原子);
   const set决策 = useSetAtom(强类型决策原子);
+  const [推荐相似字根] = useAtom(相似字根推荐原子);
 
   const children = (
     <Button type="primary" disabled={当前元素 === undefined || value === undefined} onClick={() => addMapping(当前元素!, value!)}>
@@ -88,6 +90,7 @@ export default function RootRecommendation({
     </Button>
   );
 
+  if (!推荐相似字根) return children;
   if (!(当前元素 instanceof 字符)) return children;
   const 元素列表 = 推荐映射.get(当前元素);
 

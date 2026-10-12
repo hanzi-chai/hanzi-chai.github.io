@@ -16,7 +16,7 @@ import { CharacterWithTooltip } from "./Utils";
 
 const 使用康熙部首原子 = atomWithStorage("使用康熙部首", false);
 const 使用部首补充原子 = atomWithStorage("使用部首补充", false);
-const 相似字根推荐原子 = atomWithStorage("相似字根推荐", true);
+export const 相似字根推荐原子 = atomWithStorage("相似字根推荐", true);
 
 export default function ElementPool({
   type,
