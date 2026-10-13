@@ -1,11 +1,5 @@
 import type { ProFormInstance } from "@ant-design/pro-components";
-import {
-  ProForm,
-  ProFormDigit,
-  ProFormGroup,
-  ProFormList,
-  ProFormText,
-} from "@ant-design/pro-components";
+import { ProForm, ProFormGroup, ProFormList } from "@ant-design/pro-components";
 import { Button, Flex, Input, Popconfirm } from "antd";
 import type {
   基本字形数据,
@@ -94,7 +88,7 @@ export const BatchGlyphRecommendation = () => {
       title={`推断其他来源字形`}
       description={
         <Flex vertical gap="small">
-          已完成：{ finished } / {CJKtotal} ({percentage.toFixed()}%)
+          已完成：{finished} / {CJKtotal} ({percentage.toFixed()}%)
           <Flex gap="small" align="center">
             从
             <Input
@@ -219,11 +213,8 @@ export default function GlyphRecommendation({
 const visitedRanges = [
   { start: 0x4e00, end: 0x6400 },
   { start: 0x7a70, end: 0x7aca },
-  { start: 0x7cf8, end: 0x7f35 },
-  { start: 0x8278, end: 0x866a },
-  { start: 0x89d2, end: 0x8c36 },
-  { start: 0x8d64, end: 0x8d6f },
-  { start: 0x8fb6, end: 0x9fff },
+  { start: 0x7cf8, end: 0x7fbc },
+  { start: 0x8278, end: 0x9fff },
 ];
 
 function 计算字形推荐(
