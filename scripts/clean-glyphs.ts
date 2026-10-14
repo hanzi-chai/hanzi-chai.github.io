@@ -1,13 +1,14 @@
 /**
- * 字形数据清理脚本：合并重复复合体 + 删除孤立字形。
+ * 字形数据清理脚本：合并重复复合体 + 删除孤立复合体。
  *
  * 第一步：找出完全相同的复合体（compound），保留 ID 最小的，将其余的通过
- *   ReplaceId 替换为最小 ID 后删除。
- * 第二步：删除所有没有被任何字符引用、也没有被其他字形引用的孤立字形。
+ *   ReplaceId 替换为最小 ID 后删除。合并后可能产生新的重复，因此反复执行直到没有重复。
+ * 第二步：删除所有没有被任何字符引用、也没有被其他字形引用的孤立复合体（部件不删除）。
+ *   删除后可能产生新的孤立复合体，因此反复执行直到没有孤立复合体。
  *
  * 用法：bun run scripts/clean-glyphs.ts [--dry-run]
  * 需要设置环境变量 JWT（API 鉴权 token）。
- * --dry-run 模式只检查不修改。
+ * --dry-run 模式只检查不修改，每步只执行一轮。
  */
 
 import "dotenv/config";
@@ -24,158 +25,106 @@ function 比较键(字形: 字形数据): string {
   return JSON.stringify(rest);
 }
 
+/** 从服务端获取最新的字符和字形数据。 */
+async function 获取数据() {
+  console.log("正在获取字符和字形数据...");
+  const 字符列表 = await get<字符数据[]>("/characters");
+  const 字形列表 = await get<字形数据[]>("/glyphs");
+  if (!Array.isArray(字符列表) || !Array.isArray(字形列表)) {
+    console.error("获取数据失败:", 字符列表, 字形列表);
+    process.exit(1);
+  }
+  console.log(
+    `共获取到 ${字符列表.length} 个字符、${字形列表.length} 个字形\n`,
+  );
+  return { 字符列表, 字形列表 };
+}
+
+/** 批量删除字形，失败则退出。 */
+async function 批量删除(ids: number[]) {
+  const 结果 = await del<true>("/glyphs/batch", { ids });
+  if (结果 !== true) {
+    console.error("删除失败:", 结果);
+    process.exit(1);
+  }
+  console.log(`成功删除 ${ids.length} 个字形。\n`);
+}
+
 // ============================================================
 // 第一步：合并重复复合体
 // ============================================================
 
+/** 合并一轮重复复合体，返回是否有修改。 */
 async function 合并重复复合体(字形列表: 字形数据[], dryRun: boolean) {
-  const 复合体列表 = 字形列表.filter((g) => g.type === "compound");
-  console.log(`其中复合体 ${复合体列表.length} 个`);
-
-  // 按比较键分组
-  const 分组 = new Map<string, 字形数据[]>();
-  for (const 字形 of 复合体列表) {
-    const key = 比较键(字形);
-    const group = 分组.get(key);
-    if (group) {
-      group.push(字形);
-    } else {
-      分组.set(key, [字形]);
-    }
-  }
-
+  const 分组 = Map.groupBy(
+    字形列表.filter((g) => g.type === "compound"),
+    比较键,
+  );
   const 重复分组 = [...分组.values()].filter((g) => g.length > 1);
 
   if (重复分组.length === 0) {
     console.log("没有发现完全相同的复合体。\n");
-    return;
+    return false;
   }
 
   console.log(`发现 ${重复分组.length} 组完全相同的复合体：\n`);
 
-  let 总删除数 = 0;
-  let 总替换数 = 0;
-
+  const 已替换ID列表: number[] = [];
   for (const [索引, 组] of 重复分组.entries()) {
-    组.sort((a, b) => a.id - b.id);
-    const [保留, ...待替换] = 组;
-    const 待替换ID列表 = 待替换.map((g) => g.id);
-
+    const [保留, ...待替换] = 组.sort((a, b) => a.id - b.id) as [
+      字形数据,
+      ...字形数据[],
+    ];
     console.log(
-      `第 ${索引 + 1} 组：保留 ${保留!.id}，替换 [${待替换ID列表.join(", ")}]（共 ${待替换.length} 个）`,
+      `第 ${索引 + 1} 组：保留 ${保留.id}，替换 [${待替换.map((g) => g.id).join(", ")}]`,
     );
-    console.log(`  operator: ${保留!.operator}`);
-    console.log(`  references: ${JSON.stringify(保留!.references)}`);
+    console.log(`  operator: ${保留.operator}`);
+    console.log(`  references: ${JSON.stringify(保留.references)}`);
+    if (dryRun) continue;
 
-    if (!dryRun) {
-      for (const 旧ID of 待替换ID列表) {
-        try {
-          const result = await put<true>("/glyphs", {
-            oldId: 旧ID,
-            newId: 保留!.id,
-          });
-          if (result === true) {
-            console.log(`  ✅ ReplaceId ${旧ID} → ${保留!.id} 成功`);
-            总替换数++;
-          } else {
-            console.error(`  ❌ ReplaceId ${旧ID} → ${保留!.id} 失败:`, result);
-          }
-        } catch (err) {
-          console.error(
-            `  ❌ ReplaceId ${旧ID} → ${保留!.id} 异常:`,
-            (err as Error).message,
-          );
-        }
-      }
-
-      for (const 旧ID of 待替换ID列表) {
-        try {
-          const result = await del<true>(`/glyphs/${旧ID}`);
-          if (result === true) {
-            console.log(`  ✅ 删除旧字形 ${旧ID} 成功`);
-            总删除数++;
-          } else {
-            console.error(`  ❌ 删除旧字形 ${旧ID} 失败:`, result);
-          }
-        } catch (err) {
-          console.error(
-            `  ❌ 删除旧字形 ${旧ID} 异常:`,
-            (err as Error).message,
-          );
-        }
-      }
+    for (const { id } of 待替换) {
+      const 结果 = await put<true>("/glyphs", { oldId: id, newId: 保留.id });
+      if (结果 === true) 已替换ID列表.push(id);
+      else console.error(`  ❌ ReplaceId ${id} → ${保留.id} 失败:`, 结果);
     }
-
-    console.log();
   }
+  console.log();
 
-  const 总涉及数 = 重复分组.reduce((sum, g) => sum + g.length - 1, 0);
-  if (dryRun) {
-    console.log(
-      `共计 ${重复分组.length} 组重复，涉及 ${总涉及数} 个待合并复合体。\n`,
-    );
-  } else {
-    console.log(
-      `完成：${总替换数} 次 ReplaceId 替换，${总删除数} 次删除，共处理 ${重复分组.length} 组重复。\n`,
-    );
-  }
+  if (已替换ID列表.length === 0) return false;
+  await 批量删除(已替换ID列表);
+  return true;
 }
 
 // ============================================================
-// 第二步：删除孤立字形
+// 第二步：删除孤立复合体
 // ============================================================
 
-async function 删除孤立字形(
+/** 删除一轮孤立复合体，返回是否有修改。 */
+async function 删除孤立复合体(
   字符列表: 字符数据[],
   字形列表: 字形数据[],
   dryRun: boolean,
 ) {
-  const 被引用ID集合 = new Set<number>();
+  const 被引用ID集合 = new Set([
+    ...字符列表.flatMap((c) => c.glyphs.map((g) => g.id)),
+    ...字形列表.flatMap((g) => g.references?.map((r) => r.id) ?? []),
+  ]);
+  const 孤立ID列表 = 字形列表
+    .filter((g) => g.type === "compound" && !被引用ID集合.has(g.id))
+    .map((g) => g.id);
 
-  // 从字符的 glyphs 字段中收集
-  for (const 字符 of 字符列表) {
-    for (const 字形来源 of 字符.glyphs) {
-      被引用ID集合.add(字形来源.id);
-    }
-  }
-  console.log(`从字符中收集到 ${被引用ID集合.size} 个被引用字形 ID`);
-
-  // 从字形的 references 字段中收集
-  for (const 字形 of 字形列表) {
-    if (!字形.references) continue;
-    for (const 引用 of 字形.references) {
-      被引用ID集合.add(引用.id);
-    }
-  }
-
-  const 孤立字形ID列表 = 字形列表
-    .filter((字形) => 字形.type !== "component")
-    .filter((字形) => !被引用ID集合.has(字形.id))
-    .map((字形) => 字形.id);
-
-  if (孤立字形ID列表.length === 0) {
-    console.log("没有发现孤立字形，无需删除。");
-    return;
+  if (孤立ID列表.length === 0) {
+    console.log("没有发现孤立复合体。\n");
+    return false;
   }
 
   console.log(
-    `发现 ${孤立字形ID列表.length} 个孤立字形：\n  IDs: ${孤立字形ID列表.join(", ")}`,
+    `发现 ${孤立ID列表.length} 个孤立复合体：\n  IDs: ${孤立ID列表.join(", ")}\n`,
   );
+  if (dryRun) return false;
 
-  if (dryRun) {
-    console.log("（DRY RUN：跳过实际删除）\n");
-    return;
-  }
-
-  console.log("\n正在批量删除孤立字形...");
-  const 结果 = await del<true>("/glyphs/batch", { ids: 孤立字形ID列表 });
-
-  if (结果 === true) {
-    console.log(`成功删除 ${孤立字形ID列表.length} 个孤立字形！\n`);
-  } else {
-    console.error("删除失败:", 结果);
-    process.exit(1);
-  }
+  await 批量删除(孤立ID列表);
+  return true;
 }
 
 // ============================================================
@@ -188,29 +137,18 @@ async function main() {
     console.log("⚠️  DRY RUN 模式：只检查不修改\n");
   }
 
-  console.log("正在获取所有字符数据...");
-  const 字符列表 = await get<字符数据[]>("/characters");
-  if (!Array.isArray(字符列表)) {
-    console.error("获取字符数据失败:", 字符列表);
-    process.exit(1);
-  }
-  console.log(`共获取到 ${字符列表.length} 个字符`);
+  // 每轮修改后重新获取数据，直到没有变化
+  let 数据 = await 获取数据();
 
-  console.log("正在获取所有字形数据...");
-  const 字形列表 = await get<字形数据[]>("/glyphs");
-  if (!Array.isArray(字形列表)) {
-    console.error("获取字形数据失败:", 字形列表);
-    process.exit(1);
-  }
-  console.log(`共获取到 ${字形列表.length} 个字形\n`);
-
-  // 第一步：合并重复复合体
   console.log("━━━ 第一步：合并重复复合体 ━━━\n");
-  await 合并重复复合体(字形列表, dryRun);
+  while (await 合并重复复合体(数据.字形列表, dryRun)) {
+    数据 = await 获取数据();
+  }
 
-  // 第二步：删除孤立字形
-  console.log("━━━ 第二步：删除孤立字形 ━━━\n");
-  await 删除孤立字形(字符列表, 字形列表, dryRun);
+  console.log("━━━ 第二步：删除孤立复合体 ━━━\n");
+  while (await 删除孤立复合体(数据.字符列表, 数据.字形列表, dryRun)) {
+    数据 = await 获取数据();
+  }
 
   if (dryRun) {
     console.log("使用不带 --dry-run 参数运行以实际执行修改。");
