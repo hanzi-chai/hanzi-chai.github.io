@@ -213,8 +213,7 @@ export default function GlyphRecommendation({
 const visitedRanges = [
   { start: 0x4e00, end: 0x6400 },
   { start: 0x7a70, end: 0x7aca },
-  { start: 0x7cf8, end: 0x7fbc },
-  { start: 0x8278, end: 0x9fff },
+  { start: 0x7cf8, end: 0x9fff },
 ];
 
 function 计算字形推荐(
@@ -286,10 +285,9 @@ function 计算字形推荐(
   for (const [来源, 引用统计列表] of 统计数据.entries()) {
     const 字形ID列表: number[] = [];
     for (const [index, 引用统计] of 引用统计列表.entries()) {
-      字形ID列表.push(
-        maxBy([...引用统计], ([_, count]) => count)?.[0] ??
-          参考字形数据.references[index]!.id,
-      );
+      const originalId = 参考字形数据.references[index]!.id;
+      const selectedId = maxBy([...引用统计], ([_, x]) => x)?.[0] ?? originalId;
+      字形ID列表.push(selectedId);
     }
     const 分组 = 分组推荐结果.find((g) =>
       isEqual(
