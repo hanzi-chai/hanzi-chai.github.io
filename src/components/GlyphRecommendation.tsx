@@ -211,9 +211,8 @@ export default function GlyphRecommendation({
 }
 
 const visitedRanges = [
-  { start: 0x4e00, end: 0x6400 },
-  { start: 0x7a70, end: 0x7aca },
-  { start: 0x7cf8, end: 0x9fff },
+  { start: 0x4e00, end: 0x652e },
+  { start: 0x7a70, end: 0x9fff },
 ];
 
 function 计算字形推荐(
