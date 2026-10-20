@@ -66,6 +66,7 @@ import {
   重码组信息,
   字根表规则,
   字形同形键,
+  相似根分组,
   type 搜索结果,
   type 轮结果,
 } from "../lib/智能选根核心";
@@ -2419,6 +2420,56 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             >
               自动归并相似根
             </span>
+            <Popover
+              trigger="click"
+              placement="bottomLeft"
+              content={
+                <div style={{ maxWidth: 420 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    共 {相似根分组.length} 组相似字形。组内任一成员在字根池（候选池 ∪
+                    当前映射）中就整组强制归并：不常用者整体归入组内最常用者（箭头右侧）；
+                    归入者不能单独增删，随右侧根进出。只有「整组都没入选」时静默、不提示；
+                    成环、被手写归并占位而让位等情况，与手写归并一样在橙框提示。
+                    若某根在下面「预置归并」里被手写过（含手写方向与这里相反），
+                    以手写条目为准，相应的自动归并取消。
+                  </Typography.Text>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      maxHeight: 260,
+                      overflowY: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    {相似根分组.map((group) => {
+                      const 名s = [...group];
+                      const 主导 = 名s[0]!;
+                      return (
+                        <div
+                          key={group}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            lineHeight: "20px",
+                          }}
+                        >
+                          {名s.slice(1).map((n, i) => (
+                            <span key={`${n}-${i}`}>{富文本(n)}</span>
+                          ))}
+                          <span style={{ color: "#999" }}>→</span>
+                          <span style={{ fontWeight: 600 }}>{富文本(主导)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              }
+            >
+              <InfoCircleOutlined style={{ cursor: "pointer" }} />
+            </Popover>
           </Flex>
           <Flex gap={4} align="center">
             字根编码
