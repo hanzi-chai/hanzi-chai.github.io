@@ -2613,7 +2613,7 @@ function 智能选根面板() {
         />
         轮重建一次加根池
       </Flex>
-      <Flex gap={16} align="center" className="mt-2">
+      <Flex gap={16} align="center" className="mt-6">
         <Button type="primary" onClick={开始} loading={运行中}>
           开始搜索
         </Button>
