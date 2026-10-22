@@ -2474,6 +2474,15 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       <Typography.Title level={3} className="mt-2!">根与归并</Typography.Title>
       <Flex gap="small" align="center" wrap="wrap">
           <Flex gap={4} align="center">
+            字根编码
+            <Input
+              className="w-16! text-center"
+              placeholder={(alphabet[0] ?? "a").repeat(编码类型)}
+              value={占位安排}
+              onChange={(e) => 设占位安排(e.target.value)}
+            />
+          </Flex>
+          <Flex gap={4} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
             <span style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}>自动归并相似根</span>
             <Popover
@@ -2526,15 +2535,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             >
               <InfoCircleOutlined style={{ cursor: "pointer" }} />
             </Popover>
-          </Flex>
-          <Flex gap={4} align="center">
-            字根编码
-            <Input
-              className="w-16! text-center"
-              placeholder={(alphabet[0] ?? "a").repeat(编码类型)}
-              value={占位安排}
-              onChange={(e) => 设占位安排(e.target.value)}
-            />
           </Flex>
           <Flex gap={4} align="center" style={{ flex: 1, minWidth: 320 }}>
             <span title="整体归并：大=人（“大”归并入“人”）；码位归并：的 1=人 2（“的”的第一码使用“人”的第二码，根后加空格）条目用中英逗号或换行分隔。注：整体归并是强行归并，始终有效。码位归并时，只有等号右侧的根已存在时，才会考虑将左侧根加入并归并码位。">
