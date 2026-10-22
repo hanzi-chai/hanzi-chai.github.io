@@ -362,6 +362,11 @@ export interface 搜索参数 {
   /** 单轮根数：每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评）。
    *  1 = 经典单步贪心（默认） */
   单轮根数?: number;
+  /** 每隔 N 轮重建一次加根池（0/缺省 = 不重建）。
+   *  时序为「建，1，2，建，3，4，建……」：第 1 轮用初始池，跑满 N 轮后在下轮开始前重建。
+   *  重建重算与映射相关的部分（重码组挖掘排行、形状去重、相似/预置归并拉入），
+   *  字频排序与字内部件名单复用初次结果；基态无需额外重建（每轮末尾与码位归并触发段都会重设）。 */
+  重建加根池间隔?: number;
   /** 根数惩罚：以 n（直设根数）为自变量的表达式，如 "max(0, n-150)*50000"；空=不惩罚 */
   根数惩罚?: string;
   /** 相似字形分组的强制归并（缺省开启）：组内任一成员进了字根池（候选池 ∪ 当前映射），整组即归并——
@@ -1069,6 +1074,9 @@ export class 智能选根核心 {
     const 池Set = new Set<string>();
     // 手动指定里字库找不到（无字形）且非合法元素、被跳过的字，收集后一次性上报 UI（橙条另起一行）
     const 手动指定问题: string[] = [];
+    // 每条规则**未经保护根/已有根过滤**的候选名单：初次建池与「每隔 N 轮重建加根池」都从这里取，
+    // 保证"重建"与"初次"走同一套过滤（保护根/当前映射），而不是两套代码各滤一遍。
+    const 各规则候选: { 规则: 字根表规则; 名单: string[] }[] = [];
     // 预置归并（2026-10-08 用户定案）：配对不变式——配对的根同进同出。
     // 初态先施加不变式（见下），搜索中由随行（B 入带 A）与级联（B 出带 A）维持；
     // 参与者不在（映射∪候选池）的条目判死（筛掉），已在初态产生的改写回滚。
@@ -1124,7 +1132,6 @@ export class 智能选根核心 {
         }
       }
     }
-    const 已有根 = new Set(Object.keys(起始mapping));
     this.根数惩罚 = 参数.根数惩罚;
     let mapping = { ...起始mapping };
     const 归并码数 = this.配置0.form.mapping_type ?? 2;
@@ -1142,25 +1149,33 @@ export class 智能选根核心 {
     // 预置归并前的真实初态总分：此刻 mapping 还是「未施加初态不变式」的起始态，
     // 记下它供「第零轮」展示预置归并带来的分数变化（否则第一轮前分直接显示归并后分数，初态不可见）
     const 初始分 = this.总分基 + this.根数罚分(起始mapping);
+    // 重码组挖掘的排行依赖**基态词序列**（随映射变化），所以「重建加根池」时必须重算；
+    // 其余规则（字频范围/字内部件/手动指定）与映射无关，重放初次算出的名单即可（省掉整库扫描）。
+    const 组挖掘候选 = (规则: Extract<字根表规则, { 类型: "重码组挖掘" }>): string[] => {
+      const { 根: 组根 } = this.重码组挖掘(
+        参数.表列表,
+        { 应停止: () => cb.应停止?.() ?? false, on阶段: (文本) => cb.on阶段?.(文本) },
+        规则.允许复合体 !== false,
+      );
+      return 组根
+        .slice(Math.floor(规则.根起) - 1, Math.min(Math.floor(规则.根止), 组根.length))
+        .map((x) => x.名);
+    };
     for (const 规则 of 规则列表) {
       if (规则.类型 === "重码组挖掘") {
-        const { 根: 组根 } = this.重码组挖掘(参数.表列表, { 应停止: () => cb.应停止?.() ?? false, on阶段: (文本) => cb.on阶段?.(文本) }, 规则.允许复合体 !== false);
-        for (let i = 规则.根起 - 1; i < Math.min(规则.根止, 组根.length); i++) {
-          const 名 = 组根[i]!.名;
-          if (保护.has(名) || 已有根.has(名)) continue;
-          池Set.add(名);
-        }
+        各规则候选.push({ 规则, 名单: 组挖掘候选(规则) });
         continue;
       }
       if (规则.类型 === "字频范围") {
         const 起 = Math.max(1, Math.floor(规则.起));
         const 止 = Math.max(起, Math.floor(规则.止));
+        const 名单: string[] = [];
         for (let i = 起 - 1; i < Math.min(止, 按频单字.length); i++) {
           const w = 按频单字[i]![0];
-          if (保护.has(w)) continue;
           if (this.字库.查询字形(this.字符对象映射.get(w))?.length === 0) continue;
-          池Set.add(w);
+          名单.push(w);
         }
+        各规则候选.push({ 规则, 名单 });
       } else if (规则.类型 === "字内部件") {
         const 起 = Math.max(1, Math.floor(规则.起));
         const 止 = Math.max(起, Math.floor(规则.止));
@@ -1172,17 +1187,16 @@ export class 智能选根核心 {
           规则.允许复合体 !== false,
         );
         cb.on阶段?.(`字内部件扫描完成（${候选.length} 个形状），构建候选池……`);
-        for (let i = 起 - 1; i < Math.min(止, 候选.length); i++) {
-          const 名 = 候选[i]!.名;
-          if (保护.has(名) || 已有根.has(名)) continue;
-          池Set.add(名);
-        }
+        各规则候选.push({
+          规则,
+          名单: 候选.slice(起 - 1, Math.min(止, 候选.length)).map((c) => c.名),
+        });
       } else if (规则.类型 === "手动指定") {
         // 字根列表两种形态：string[]（新版，一根一名，支持拼音/自定义等多字符元素）与
         // string（旧版单字符串，逐码点一根——仅兼容历史配置）
         const 根列表 = Array.isArray(规则.字根) ? 规则.字根 : [...规则.字根];
+        const 名单: string[] = [];
         for (const w of 根列表) {
-          if (保护.has(w) || 已有根.has(w)) continue;
           const 字符对象 = this.字符对象映射.get(w);
           if (!字符对象 || this.字库.查询字形(字符对象)?.length === 0) {
             // 拼音/自定义元素没有字形，但在名称映射中是合法元素，同样允许入池
@@ -1191,54 +1205,70 @@ export class 智能选根核心 {
               continue;
             }
           }
-          池Set.add(w);
+          名单.push(w);
         }
+        各规则候选.push({ 规则, 名单 });
       }
     }
-    // 相似归并候选池补入：组内任一成员已在候选池或起始映射，则把其余成员也拉入候选池，
-    // 保证「A=更常用的 B」两边都能成为根/别名（B 主导，A 跟随）；整组都没入选则保持休眠（不强行拉入）。
-    if (参数.自动归并相似根 !== false) {
-      for (const group of 相似根分组) {
-        const 名s = [...group];
-        if (名s.length < 2) continue;
-        if (名s.some((n) => 池Set.has(n) || mapping[n] !== undefined)) {
-          for (const n of 名s) 池Set.add(n);
-        }
-      }
-    }
-    // 预置归并放宽（用户 2026-10-11）：只要「后者/目标」在册（在映射或候选池）、且两边都是合法元素，
-    // 就把「前者/根」也补进候选池——不强行要求前者本来就在池里（条件松一点，实际用起来更舒服）。
-    // （相似归并已在上面按「组内任一在则全拉入」处理；此处覆盖用户手写的硬预置归并。）
-    for (const x of 预置归并表) {
-      if (x.根 === x.目标) continue;
-      if (!this.名称映射.has(x.根) || !this.名称映射.has(x.目标)) continue;
-      if (mapping[x.目标] === undefined && !池Set.has(x.目标)) continue; // 目标不在册 → 该归并本就无法应用，不动
-      if (mapping[x.根] === undefined) 池Set.add(x.根); // 前者入池（在册判定即通过）
-    }
-    if (手动指定问题.length)
-      cb.on手动指定问题?.(`手动指定失败：${手动指定问题.join("，")}（不是字库中的合法元素）`);
-    if (cb.应停止?.()) {
-      return { mapping: { ...起始mapping }, 总分: Math.round(this.总分基 * 100) / 100, 轮日志: [], 收敛: false, 已停止: true, 建议: null };
-    }
-
-    // 形状签名去重：与已有根（含别名）同形状+同拓扑的字形不是新根（如 ⼆/二/PUA 变体）
+    // —— 建池(重算挖掘)：初次建池与「每隔 N 轮重建加根池」共用同一套流程 ——
+    // 规则名单重放（重码组挖掘按 flag 重算，它的排行依赖基态词序列）→ 保护根/当前映射过滤
+    // → 相似＋预置归并拉入 → 形状签名去重（对着当前映射）。
     const 名到字形 = new Map<string, any>();
     for (const { 字符, 字形列表 } of this.字库 as any) {
       if (!名到字形.has(字符.获取名称())) 名到字形.set(字符.获取名称(), 字形列表?.[0]);
     }
     // 与挖掘去重共用「字形同形键」（匹配器判据同构），两层判据必须一致——见 字形同形键 注释
     const 形状签名 = (字形: any) => 字形同形键(字形);
-    const 已有签名 = new Set<string>();
-    for (const 名 of Object.keys(mapping)) {
-      const 签名 = 形状签名(名到字形.get(名));
-      if (签名) 已有签名.add(签名);
+    let 池: string[] = [];
+    const 建池 = (重算挖掘: boolean) => {
+      const 已有根 = new Set(Object.keys(mapping)); // 当前映射（含本轮已加入的根）；起点建池时等于起始映射
+      池Set.clear();
+      for (const { 规则, 名单 } of 各规则候选) {
+        const 有效 = 重算挖掘 && 规则.类型 === "重码组挖掘" ? 组挖掘候选(规则) : 名单;
+        for (const 名 of 有效) {
+          if (保护.has(名) || 已有根.has(名)) continue;
+          池Set.add(名);
+        }
+      }
+      // 相似归并候选池补入：组内任一成员已在候选池或起始映射，则把其余成员也拉入候选池，
+      // 保证「A=更常用的 B」两边都能成为根/别名（B 主导，A 跟随）；整组都没入选则保持休眠（不强行拉入）。
+      if (参数.自动归并相似根 !== false) {
+        for (const group of 相似根分组) {
+          const 名s = [...group];
+          if (名s.length < 2) continue;
+          if (名s.some((n) => 池Set.has(n) || mapping[n] !== undefined)) {
+            for (const n of 名s) 池Set.add(n);
+          }
+        }
+      }
+      // 预置归并放宽（用户 2026-10-11）：只要「后者/目标」在册（在映射或候选池）、且两边都是合法元素，
+      // 就把「前者/根」也补进候选池——不强行要求前者本来就在池里（条件松一点，实际用起来更舒服）。
+      // （相似归并已在上面按「组内任一在则全拉入」处理；此处覆盖用户手写的硬预置归并。）
+      for (const x of 预置归并表) {
+        if (x.根 === x.目标) continue;
+        if (!this.名称映射.has(x.根) || !this.名称映射.has(x.目标)) continue;
+        if (mapping[x.目标] === undefined && !池Set.has(x.目标)) continue; // 目标不在册 → 该归并本就无法应用，不动
+        if (mapping[x.根] === undefined) 池Set.add(x.根); // 前者入池（在册判定即通过）
+      }
+      // 形状签名去重：与已有根（含别名）同形状+同拓扑的字形不是新根（如 ⼆/二/PUA 变体）
+      const 已有签名 = new Set<string>();
+      for (const 名 of Object.keys(mapping)) {
+        const 签名 = 形状签名(名到字形.get(名));
+        if (签名) 已有签名.add(签名);
+      }
+      池 = 允许加根总开关
+        ? [...池Set].filter((w) => {
+            const 签名 = 形状签名(名到字形.get(w));
+            return !签名 || !已有签名.has(签名);
+          })
+        : [];
+    };
+    建池(false); // 初次：名单刚由上面的规则循环算出，重码组挖掘无需再跑一遍
+    if (手动指定问题.length)
+      cb.on手动指定问题?.(`手动指定失败：${手动指定问题.join("，")}（不是字库中的合法元素）`);
+    if (cb.应停止?.()) {
+      return { mapping: { ...起始mapping }, 总分: Math.round(this.总分基 * 100) / 100, 轮日志: [], 收敛: false, 已停止: true, 建议: null };
     }
-    let 池: string[] = 允许加根总开关
-      ? [...池Set].filter((w) => {
-          const 签名 = 形状签名(名到字形.get(w));
-          return !签名 || !已有签名.has(签名);
-        })
-      : [];
     // 预置归并筛选：参与者都得是（或能成为）字根——在映射里或进了候选池，否则永远无法应用，
     // 判死并在绿框说明；判死条目完全不参与初态不变式（死条目不该动方案）
     const 在册 = (名: string) => mapping[名] !== undefined || 池Set.has(名);
@@ -1517,6 +1547,7 @@ export class 智能选根核心 {
     let 收敛 = false, 已停止 = false;
     let 建议动作: { 动作: string; 分数: number; mapping: Record<string, any> } | null = null;
     let 轮序 = 0;
+    const 重建间隔 = Math.max(0, Math.floor(参数.重建加根池间隔 ?? 0)); // 0 = 不重建
     // 每轮结束（动作已应用到 mapping）后拍一份快照，供主线程强杀后抓包还原已选好的根
     const 快照 = () => JSON.parse(JSON.stringify(mapping)) as Record<string, any>;
     // 第零轮：把预置归并处理单列一行，展示其对初态分数的影响；否则第一轮前分直接显示归并后分数，初态分数无从可见。
@@ -1592,6 +1623,15 @@ export class 智能选根核心 {
       }
       轮序++;
       const 轮 = 轮序;
+      // 每隔 N 轮重建一次加根池（用户 2026-10-22）：时序「建，1，2，建，3，4，建……」——
+      // 第 1 轮用初始池，之后每跑满 N 轮、在下轮开始前重建；0/空 = 不重建。
+      // 基态不用另建：码位归并触发段（上面 continue 之前）与上一轮末尾都已 设置基态(mapping)，
+      // 此处基态就是当前映射，重码组挖掘直接按它重排即可。
+      if (重建间隔 > 0 && 轮 > 1 && (轮 - 1) % 重建间隔 === 0) {
+        cb.on阶段?.(`第 ${轮} 轮：重建加根池（每 ${重建间隔} 轮一次）……`);
+        建池(true);
+        if (cb.应停止?.()) { 已停止 = true; break; }
+      }
       const 范围文本 = (参数.减根范围 ?? "").trim();
       let 减根正则: RegExp | null = null;
       if (范围文本) {

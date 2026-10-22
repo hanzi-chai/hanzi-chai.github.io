@@ -76,6 +76,42 @@ import { CharacterDisplay, DeleteButton } from "~/components/Utils";
 import Value from "~/components/Value";
 import { 安排文本, 根安排描述 } from "~/lib/安排显示";
 
+/** 自动搜索参数：随方案 yaml 走，存顶层 `autoselect` 块（键名与页面 state 一一对应，1:1 落盘）。
+ *  只放"这次怎么跑"的旋钮；评分表仍在 `statistics.tables`，两者各司其职。 */
+export interface 自动搜索配置 {
+  轮数?: number;
+  单轮根数?: number;
+  重建间隔?: number;
+  占位安排?: string;
+  允许加根?: boolean;
+  允许减根?: boolean;
+  减根范围?: string;
+  罚分表达式?: string;
+  自动归并相似根?: boolean;
+  字根表?: 字根表规则[];
+  预置归并文本?: string;
+}
+
+/** 按固定键序规整成串：用于「页面状态」与「方案里的 autoselect」比较，避免键序差异造成无谓写回 */
+const 搜索配置串 = (o: 自动搜索配置 | undefined) =>
+  JSON.stringify(
+    (
+      [
+        "轮数",
+        "单轮根数",
+        "重建间隔",
+        "占位安排",
+        "允许加根",
+        "允许减根",
+        "减根范围",
+        "罚分表达式",
+        "自动归并相似根",
+        "字根表",
+        "预置归并文本",
+      ] as const
+    ).map((k) => [k, o?.[k]]),
+  );
+
 export const combinations = (n: number, k: number): number[][] => {
   const result: number[][] = [];
   const dfs = (start: number, current: number[]) => {
@@ -1192,7 +1228,7 @@ interface 评分表格式 {
 }
 
 const 默认四表 = (maxLength: number): 评分表格式[] => [
-  { name: "必撞", top: 0, weight: 1000, patterns: [[]] },
+  { name: "必撞", top: 0, weight: 9, patterns: [[]] },
   {
     name: "总阶重",
     top: 0,
@@ -1360,17 +1396,13 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const 编码类型 = useAtomValue(编码类型原子);
   const alphabet = useAtomValue(字母表原子);
 
-  // 自动搜索配置持久化（localStorage，跨刷新保留）
-  const 自动搜索配置键 = "智能选根-自动搜索配置";
-  const 初始配置 = (() => {
-    try {
-      return JSON.parse(localStorage.getItem(自动搜索配置键) ?? "{}");
-    } catch {
-      return {};
-    }
-  })();
+  // 自动搜索参数：只认方案 yaml 里的顶层 `autoselect` 块（导出即带上、换机器也在）。
+  // 历史上一度存在 localStorage（全局一份、不分方案），该做法已废弃，这里不做任何兼容读取。
+  const 初始配置: 自动搜索配置 = ((配置 as any).autoselect as 自动搜索配置 | undefined) ?? {};
   const [轮数, 设轮数] = useState(初始配置.轮数 ?? 12);
   const [单轮根数, 设单轮根数] = useState(初始配置.单轮根数 ?? 1);
+  // 每隔 N 轮重建一次加根池：默认 10 轮；0（或删空）= 不重建
+  const [重建间隔, 设重建间隔] = useState(初始配置.重建间隔 ?? 10);
   const [字根表, 设字根表] = useState<字根表规则[]>(初始配置.字根表 ?? []);
   // 手动指定输入域：收起索引集 + 打字中的原始文本（不即时归一，避免受控回写跳光标）
   const [手动收起集, 设手动收起集] = useState<Set<number>>(new Set());
@@ -1451,27 +1483,40 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
   const [允许减根, 设允许减根] = useState(初始配置.允许减根 ?? true);
   const [自动归并相似根, 设自动归并相似根] = useState(初始配置.自动归并相似根 ?? true);
   const [预置归并文本, 设预置归并文本] = useState(初始配置.预置归并文本 ?? "");
+  // 参数写回方案（`autoselect` 块）：与 配置 的其余部分一起存，导出 yaml 时自然带上。
+  // 口径与官方各段一致——**编辑才落盘**：打开面板不动参数不会凭空建块（focusAtom + valueOr 也是读时不建）；
+  // 防抖 600ms，值没变则不写，避免推进配置的撤销历史。
+  const 上次写入 = useRef("");
+  const 初始搜索串 = useRef<string | null>(null);
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        自动搜索配置键,
-        JSON.stringify({
-          轮数,
-          单轮根数,
-          字根表,
-          占位安排,
-          允许加根,
-          允许减根,
-          罚分表达式,
-          减根范围: 减根范围文本,
-          自动归并相似根,
-          预置归并文本,
-        }),
-      );
-    } catch {
-      /* 忽略存储失败 */
-    }
-  }, [轮数, 单轮根数, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本]);
+    const 定时 = setTimeout(() => {
+      const 值: 自动搜索配置 = {
+        轮数,
+        单轮根数,
+        重建间隔,
+        占位安排,
+        允许加根,
+        允许减根,
+        减根范围: 减根范围文本,
+        罚分表达式,
+        自动归并相似根,
+        字根表,
+        预置归并文本,
+      };
+      const 串 = 搜索配置串(值);
+      if (串 === 上次写入.current) return;
+      上次写入.current = 串;
+      // 第一次跑只记下「打开时」的参数快照；没动过就不写（含 StrictMode 的二次 effect）
+      if (初始搜索串.current === null) {
+        初始搜索串.current = 串;
+        return;
+      }
+      if (串 === 初始搜索串.current) return; // 改回原样 = 净变化为零，不落盘
+      // 方案里已是这组值 → 不写，免得推进撤销历史
+      if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
+    }, 600);
+    return () => clearTimeout(定时);
+  }, [轮数, 单轮根数, 重建间隔, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
@@ -1879,6 +1924,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       参数: {
         轮数,
         单轮根数,
+        重建加根池间隔: 重建间隔,
         // 手动指定以原始文本为源（与预置归并一致：框内不格式化、搜索时才解析）；
         // 传给核心前在此把原始文本拆成数组，核心仍按数组消费，语义不变
         字根表列表: 字根表.map((r) =>
@@ -2410,6 +2456,21 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </Flex>
           )}
         </Flex>
+      <Flex
+        gap={4}
+        align="center"
+        className="mt-1!"
+        title="每隔 N 轮重新按「可选字根配置」找一遍加根池（次序：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
+      >
+        每隔
+        <InputNumber
+          min={0}
+          max={200}
+          value={重建间隔}
+          onChange={(v) => 设重建间隔(v ?? 10)}
+        />
+        轮重建一次加根池
+      </Flex>
       <Typography.Title level={3} className="mt-2!">根与归并</Typography.Title>
       <Flex gap="small" align="center" wrap="wrap">
           <Flex gap={4} align="center">
