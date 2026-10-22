@@ -1387,7 +1387,7 @@ type 挖掘状态类型 = {
   按名: Map<string, 挖掘结果项> | null;
 };
 
-function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
+function 智能选根面板() {
   const 配置 = useAtomValue(配置原子);
   const 设配置 = useSetAtom(配置原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
@@ -2422,55 +2422,6 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </div>
           ))}
         </div>
-      <Typography.Title level={3} className="mt-2!">搜索行为</Typography.Title>
-      <Flex gap={16} align="center" wrap="wrap">
-          <Flex gap={6} align="center">
-            轮数上限
-            <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
-          </Flex>
-          <Flex gap={6} align="center">
-            <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
-              单轮根数
-            </span>
-            <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
-          </Flex>
-          <Flex gap={6} align="center">
-            <Switch size="small" checked={允许加根} onChange={设允许加根} />
-            <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
-          </Flex>
-          <Flex gap={6} align="center">
-            <Switch size="small" checked={允许减根} onChange={设允许减根} />
-            <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
-          </Flex>
-          {允许减根 && (
-            <Flex gap={6} align="center">
-              <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
-                减根范围
-              </span>
-              <Input
-                className="w-40! text-center"
-                placeholder="正则，留空=全部"
-                value={减根范围文本}
-                onChange={(e) => 设减根范围文本(e.target.value)}
-              />
-            </Flex>
-          )}
-        </Flex>
-      <Flex
-        gap={6}
-        align="center"
-        className="mt-2!"
-        title="每隔 N 轮重新按「候选字根」找一遍加根池（例如N为2时，流程为：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
-      >
-        每隔
-        <InputNumber
-          min={0}
-          max={200}
-          value={重建间隔}
-          onChange={(v) => 设重建间隔(v ?? 10)}
-        />
-        轮重建一次加根池
-      </Flex>
       <Typography.Title level={3} className="mt-2!">根与归并</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
           <Flex gap={6} align="center">
@@ -2495,7 +2446,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
                     当前映射）中就整组强制归并：不常用者整体归入组内最常用者（箭头右侧）；
                     归入者不能单独增删，随右侧根进出。只有「整组都没入选」时静默、不提示；
                     成环、被手写归并占位而让位等情况，与手写归并一样在橙框提示。
-                    若某根在下面「预置归并」里被手写过（含手写方向与这里相反），
+                    若某根在右侧「预置归并」里被手写过（含手写方向与这里相反），
                     以手写条目为准，相应的自动归并取消。
                   </Typography.Text>
                   <div
@@ -2613,20 +2564,55 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           />
           </Flex>
         </Flex>
-      <Typography.Title level={3} className="mt-2!">评判标准</Typography.Title>
+      <Typography.Title level={3} className="mt-2!">搜索行为</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
-          <Typography.Text type="secondary">
-            评分表：
-            {表列表.length === 0
-              ? "（未配置，请先到「评分表」页签）"
-              : 表列表.map((t) => t.name).join("、")}
-          </Typography.Text>
-          {!运行中 && 表列表.length === 0 && (
-            <Button size="small" onClick={转评分表}>
-              去配置评分表
-            </Button>
+          <Flex gap={6} align="center">
+            轮数上限
+            <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
+          </Flex>
+          <Flex gap={6} align="center">
+            <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
+              单轮根数
+            </span>
+            <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
+          </Flex>
+          <Flex gap={6} align="center">
+            <Switch size="small" checked={允许加根} onChange={设允许加根} />
+            <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
+          </Flex>
+          <Flex gap={6} align="center">
+            <Switch size="small" checked={允许减根} onChange={设允许减根} />
+            <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
+          </Flex>
+          {允许减根 && (
+            <Flex gap={6} align="center">
+              <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
+                减根范围
+              </span>
+              <Input
+                className="w-40! text-center"
+                placeholder="正则，留空=全部"
+                value={减根范围文本}
+                onChange={(e) => 设减根范围文本(e.target.value)}
+              />
+            </Flex>
           )}
         </Flex>
+      <Flex
+        gap={6}
+        align="center"
+        className="mt-2!"
+        title="每隔 N 轮重新按「候选字根」找一遍加根池（例如N为2时，流程为：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
+      >
+        每隔
+        <InputNumber
+          min={0}
+          max={200}
+          value={重建间隔}
+          onChange={(v) => 设重建间隔(v ?? 10)}
+        />
+        轮重建一次加根池
+      </Flex>
       <Flex gap={16} align="center" className="mt-2">
         <Button type="primary" onClick={开始} loading={运行中}>
           开始搜索
@@ -2829,7 +2815,7 @@ export default function RootAdditionAnalyzer() {
           {
             key: "智能",
             label: "自动搜索",
-            children: <智能选根面板 转评分表={() => 设页签("评分表")} />,
+            children: <智能选根面板 />,
           },
           { key: "评分表", label: "评分表", children: <评分表面板 /> },
         ]}
