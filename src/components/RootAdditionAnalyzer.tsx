@@ -2475,12 +2475,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
       <Flex gap="small" align="center" wrap="wrap">
           <Flex gap={4} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
-            <span
-              title="加根时若其相似字形分组（力/𠃛、木/朩、比/北 等）的兄弟已在方案中，自动归并到该根"
-              style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}
-            >
-              自动归并相似根
-            </span>
+            <span style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}>自动归并相似根</span>
             <Popover
               trigger="click"
               placement="bottomLeft"
