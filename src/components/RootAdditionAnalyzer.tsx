@@ -1569,7 +1569,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
     return 签名 ? 签名到已有根.get(签名) : undefined;
   };
 
-  // —— 可选字根配置的数据准备：全字库笔顺索引 ——
+  // —— 候选字根的数据准备：全字库笔顺索引 ——
   const 频率表 = useMemo(
     () => new Map(原始词典.map((d) => [d.词, d.频率] as [string, number])),
     [原始词典],
@@ -2030,7 +2030,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           <InfoCircleOutlined style={{ marginLeft: 6, cursor: "pointer" }} />
         </Popover>
       </Typography.Paragraph>
-      <Typography.Title level={3} className="mt-2!">可选字根配置</Typography.Title>
+      <Typography.Title level={3} className="mt-2!">候选字根</Typography.Title>
       <Flex gap="small" align="center" wrap="wrap">
           <Dropdown
             menu={{
@@ -2460,7 +2460,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         gap={4}
         align="center"
         className="mt-1!"
-        title="每隔 N 轮重新按「可选字根配置」找一遍加根池（例如N为2时，流程为：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
+        title="每隔 N 轮重新按「候选字根」找一遍加根池（例如N为2时，流程为：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
       >
         每隔
         <InputNumber
