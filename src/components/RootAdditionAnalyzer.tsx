@@ -2031,7 +2031,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         </Popover>
       </Typography.Paragraph>
       <Typography.Title level={3} className="mt-2!">候选字根</Typography.Title>
-      <Flex gap="small" align="center" wrap="wrap">
+      <Flex gap={16} align="center" wrap="wrap">
           <Dropdown
             menu={{
               items: [
@@ -2423,27 +2423,27 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           ))}
         </div>
       <Typography.Title level={3} className="mt-2!">搜索行为</Typography.Title>
-      <Flex gap="small" align="center" wrap="wrap">
-          <Flex gap={4} align="center">
+      <Flex gap={16} align="center" wrap="wrap">
+          <Flex gap={6} align="center">
             轮数上限
             <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
           </Flex>
-          <Flex gap={4} align="center">
+          <Flex gap={6} align="center">
             <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
               单轮根数
             </span>
             <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
           </Flex>
-          <Flex gap={4} align="center">
+          <Flex gap={6} align="center">
             <Switch size="small" checked={允许加根} onChange={设允许加根} />
             <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
           </Flex>
-          <Flex gap={4} align="center">
+          <Flex gap={6} align="center">
             <Switch size="small" checked={允许减根} onChange={设允许减根} />
             <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
           </Flex>
           {允许减根 && (
-            <Flex gap={4} align="center">
+            <Flex gap={6} align="center">
               <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
                 减根范围
               </span>
@@ -2457,9 +2457,9 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           )}
         </Flex>
       <Flex
-        gap={4}
+        gap={6}
         align="center"
-        className="mt-1!"
+        className="mt-2!"
         title="每隔 N 轮重新按「候选字根」找一遍加根池（例如N为2时，流程为：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
       >
         每隔
@@ -2472,8 +2472,8 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
         轮重建一次加根池
       </Flex>
       <Typography.Title level={3} className="mt-2!">根与归并</Typography.Title>
-      <Flex gap="small" align="center" wrap="wrap">
-          <Flex gap={4} align="center">
+      <Flex gap={16} align="center" wrap="wrap">
+          <Flex gap={6} align="center">
             字根编码
             <Input
               className="w-16! text-center"
@@ -2482,7 +2482,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               onChange={(e) => 设占位安排(e.target.value)}
             />
           </Flex>
-          <Flex gap={4} align="center">
+          <Flex gap={6} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
             <span style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}>自动归并相似根</span>
             <Popover
@@ -2536,7 +2536,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
               <InfoCircleOutlined style={{ cursor: "pointer" }} />
             </Popover>
           </Flex>
-          <Flex gap={4} align="center" style={{ flex: 1, minWidth: 320 }}>
+          <Flex gap={6} align="center" style={{ flex: 1, minWidth: 320 }}>
             <span title="整体归并：大=人（“大”归并入“人”）；码位归并：的 1=人 2（“的”的第一码使用“人”的第二码，根后加空格）条目用中英逗号或换行分隔。注：整体归并是强行归并，始终有效。码位归并时，只有等号右侧的根已存在时，才会考虑将左侧根加入并归并码位。">
               预置归并
             </span>
@@ -2614,7 +2614,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
           </Flex>
         </Flex>
       <Typography.Title level={3} className="mt-2!">评判标准</Typography.Title>
-      <Flex gap="small" align="center" wrap="wrap">
+      <Flex gap={16} align="center" wrap="wrap">
           <Typography.Text type="secondary">
             评分表：
             {表列表.length === 0
@@ -2627,7 +2627,7 @@ function 智能选根面板({ 转评分表 }: { 转评分表: () => void }) {
             </Button>
           )}
         </Flex>
-      <Flex gap="small" align="center" className="mt-2">
+      <Flex gap={16} align="center" className="mt-2">
         <Button type="primary" onClick={开始} loading={运行中}>
           开始搜索
         </Button>
