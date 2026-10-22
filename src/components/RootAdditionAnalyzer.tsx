@@ -1006,7 +1006,7 @@ function 手动分析面板() {
         <Button onClick={添加操作}>添加</Button>
       </Flex>
       {操作列表.length > 0 && (
-        <Flex gap="small" align="center" wrap="wrap" className="mt-2">
+        <Flex gap="small" align="center" wrap="wrap" className="mt-2!">
           <Typography.Text type="secondary">操作列表：</Typography.Text>
           {操作列表.map((x) => (
             <Tag
@@ -1068,7 +1068,7 @@ function 手动分析面板() {
           （绿减＝重码变少，红加＝重码变多）
         </Typography.Text>
       </Typography.Title>
-      <Flex gap="small" align="center" className="mb-2">
+      <Flex gap="small" align="center" className="mb-2!">
         <Switch size="small" checked={共享表} onChange={设共享表} />
         <Typography.Text type="secondary">
           {共享表
@@ -1097,7 +1097,7 @@ function 手动分析面板() {
           const 本表贡献 = 候选 ? 本表变化 * (已提交表?.权重 ?? 0) : 0;
           return (
             <div key={表.id}>
-              <Flex gap="small" align="center" wrap="wrap" className="mb-2">
+              <Flex gap="small" align="center" wrap="wrap" className="mb-2!">
                 <Tag>阶重</Tag>
                 <Input
                   className="w-24! text-center"
@@ -2613,7 +2613,7 @@ function 智能选根面板() {
         />
         轮重建一次加根池
       </Flex>
-      <Flex gap={16} align="center" className="mt-6">
+      <Flex gap={16} align="center" className="mt-6!">
         <Button type="primary" onClick={开始} loading={运行中}>
           开始搜索
         </Button>
