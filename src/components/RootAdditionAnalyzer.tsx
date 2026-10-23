@@ -73,6 +73,7 @@ import {
   type 搜索结果,
   type 轮结果,
 } from "../lib/智能选根核心";
+import { 抵消组变化, type 阶重变化组 } from "../lib/重码组抵消";
 import CharacterSelect from "~/components/CharacterSelect";
 import ElementSelect from "~/components/ElementSelect";
 import { CharacterDisplay, DeleteButton } from "~/components/Utils";
@@ -728,12 +729,7 @@ function 手动分析面板() {
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
     // 成员构成发生变化（人数或成员互换）的组
-    const 变化组: {
-      基线词: string[];
-      候选词: string[];
-      基线: number;
-      候选: number;
-    }[] = [];
+    const 变化组: 阶重变化组[] = [];
     const 全部键 = new Set([...基线分组.keys(), ...候选分组.keys()]);
     全部键.forEach((键) => {
       const 基线词 = 基线分组.get(键);
@@ -758,7 +754,7 @@ function 手动分析面板() {
       基线: 基线值,
       候选: 候选值,
       变化: 基线值 - 候选值,
-      变化组,
+      变化组: 抵消组变化(变化组),
     };
   };
 
@@ -819,15 +815,19 @@ function 手动分析面板() {
       let 候选合计 = 0;
       let 变化合计 = 0;
       const 行 = 表模式(表).map((空位) => {
-        const 基线值 = 估计选重(
-          分组按模式(基线预处理, 空位, 表.top, 表.类型, maxLength),
-          空位,
-          alphabet.length,
-        );
         const 变化结果 =
           候选预处理 && 候选
             ? 阶重变化(空位, 表.top, 表.类型, 基线预处理, 候选预处理)
             : null;
+        // 有候选时复用 阶重变化 里已经算好的基态值：同一份 基线分组 原先在这里被
+        // 分组按模式 建了两遍（每表每模式两遍），带词库时是实打实的重复开销。
+        const 基线值 =
+          变化结果?.基线 ??
+          估计选重(
+            分组按模式(基线预处理, 空位, 表.top, 表.类型, maxLength),
+            空位,
+            alphabet.length,
+          );
         原始合计 += 基线值;
         if (变化结果) {
           候选合计 += 变化结果.候选;
@@ -852,15 +852,8 @@ function 手动分析面板() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [表预处理, 分析源表, 候选, maxLength, alphabet]);
 
-  // 「全部/多字词」表需要词库里有词才有意义：词库全是单字时这些表恒为 0，先提醒一句
-  const 有词表 = useMemo(
-    () => 分析源表.some((t) => 安全类型(t.类型) !== "single"),
-    [分析源表],
-  );
-  const 词库有多字词 = useMemo(
-    () => (基线 ?? []).some((x) => [...x.词].length > 1),
-    [基线],
-  );
+  // 「全部/多字词」表的统计范围由表自己的 top 决定；词库里有没有词不在这里判——
+  // 整套表里留几张多字词表、有词时才生效，是正常用法，不提示。
 
   const 渲染表 = (表: 表配置) => {
     const 行 = 表分析.行数据.get(表.id) ?? [];
@@ -942,6 +935,13 @@ function 手动分析面板() {
                                 字不变
                               </div>
                             ))}
+                          {加入.length === 0 &&
+                            离开.length === 0 &&
+                            不变.length === 0 && (
+                              <div className="text-gray-500">
+                                （成员与其它组对抵，只是规模变了）
+                              </div>
+                            )}
                         </div>
                       );
                     })
@@ -1143,14 +1143,6 @@ function 手动分析面板() {
           </Button>
         )}
       </Flex>
-      {有词表 && !词库有多字词 && (
-        <Alert
-          type="warning"
-          showIcon
-          className="mb-2!"
-          message="有表设成了「全部」或「多字词」，但当前词库里没有多字词条目——这些表会恒为 0。请先换用带词的词典。"
-        />
-      )}
       <Flex vertical gap="middle">
         {表视图.map((表, 表序) => {
           // 显示数字一律读已提交值（分析源表与表视图同源同序）：键入/选模式期间保持不动，失焦后才更新
