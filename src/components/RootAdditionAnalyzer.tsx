@@ -334,6 +334,12 @@ const 安全类型 = (v?: string) => {
   }
 };
 
+/** 变化组的成员名单折叠：加一根常让整批字换组，名单动辄几百个，全列没法看 */
+const 名单行 = (词: string[], 上限 = 10) =>
+  词.length <= 上限
+    ? 词.join("、")
+    : `${词.slice(0, 上限).join("、")} 等 ${词.length} 字`;
+
 // ==================== 页签一：手动分析 ====================
 
 function 手动分析面板() {
@@ -918,12 +924,12 @@ function 手动分析面板() {
                           </div>
                           {加入.length > 0 && (
                             <div className="text-red-500">
-                              ＋{加入.join("、")}
+                              ＋{名单行(加入)}
                             </div>
                           )}
                           {离开.length > 0 && (
                             <div className="text-green-600">
-                              －{离开.join("、")}
+                              －{名单行(离开)}
                             </div>
                           )}
                           {不变.length > 0 &&
@@ -935,13 +941,6 @@ function 手动分析面板() {
                                 字不变
                               </div>
                             ))}
-                          {加入.length === 0 &&
-                            离开.length === 0 &&
-                            不变.length === 0 && (
-                              <div className="text-gray-500">
-                                （成员与其它组对抵，只是规模变了）
-                              </div>
-                            )}
                         </div>
                       );
                     })
