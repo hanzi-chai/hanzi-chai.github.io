@@ -2728,6 +2728,7 @@ function 智能选根面板() {
             运行中 ? (
               <>
                 <Progress
+                  className="无过渡进度条"
                   percent={进度 ? Math.round((进度.已评 / Math.max(进度.总数, 1)) * 100) : 0}
                   size="small"
                 />
@@ -2775,7 +2776,8 @@ function 智能选根面板() {
       {轮日志.length > 0 && (
         <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>搜索轨迹</Typography.Text>
-          <div className="max-h-60 overflow-y-auto">
+          {/* 轨迹不封顶：日志多少就多高，靠整页那一个滚动条看，不再套一层内部滚轮 */}
+          <div>
             {轮日志.map((r, i) => (
               <div key={i}>
                 {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>

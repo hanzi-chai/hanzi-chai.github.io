@@ -44,3 +44,9 @@
 .result-summary-list .ant-pro-form-list > .ant-form-item {
   margin-bottom: 4px;
 }
+
+/* 搜索单轮进度条：antd 给 .ant-progress-bg 挂了 0.3s 过渡，而评测是几十毫秒上报一次，
+   条形会一直追着真实进度滑、永远落后，一轮跑完才滑到一半；关掉即所见即进度。 */
+.无过渡进度条 .ant-progress-bg {
+  transition: none !important;
+}
