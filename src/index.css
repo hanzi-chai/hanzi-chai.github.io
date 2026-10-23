@@ -50,3 +50,11 @@
 .无过渡进度条 .ant-progress-bg {
   transition: none !important;
 }
+
+/* 「统计前 N 条」输入框里 0 后面的「（全部）」提示：
+   悬停或聚焦时右侧步进器会弹出来，提示被挤到数字上，数字就看不清了。
+   这两种状态下直接撤掉整个后缀（连它那圈留白一起），数字与步进器独占空间。 */
+.top-input:hover .ant-input-number-suffix,
+.top-input.ant-input-number-focused .ant-input-number-suffix {
+  display: none;
+}

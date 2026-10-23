@@ -233,6 +233,13 @@ interface 表配置 {
   名称?: string;
 }
 
+/** 「统计前 N 条」的输入框：0 = 全部。
+ *
+ *  0 后面挂一枚小灰括号「（全部）」——只在 0 时出现，所以平时不占地方、也不跟数字抢宽度；
+ *  值本身仍是数字（不从 0 改成文字），看得出来填的就是 0。 */
+const 全部后缀 = (top: number) =>
+  top === 0 ? <span className="text-gray-400">（全部）</span> : undefined;
+
 type 操作类型 = "加" | "减";
 
 interface 根操作 {
@@ -1151,7 +1158,7 @@ function 手动分析面板() {
           return (
             <div key={表.id}>
               <Flex gap="small" align="center" wrap="wrap" className="mb-2!">
-                <Tag>阶重</Tag>
+                {/* 表名已能表示身份；原先每张表名前都挂一枚「阶重」标签，纯噪声，已删 */}
                 <Input
                   className="w-24! text-center"
                   placeholder="表名"
@@ -1229,10 +1236,12 @@ function 手动分析面板() {
                     onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                   />
                   范围前
+                  {/* 0=全部：0 后面挂一枚小灰括号「（全部）」，只在 0 时出现 */}
                   <InputNumber
+                    className="w-28! top-input"
                     min={0}
-                    value={表.top || undefined}
-                    placeholder="全部"
+                    value={表.top}
+                    suffix={全部后缀(表.top)}
                     onChange={(v) => {
                       const top = v ?? 0;
                       共享表
@@ -1421,10 +1430,12 @@ function 评分表面板() {
                   }
                 />
                 统计前
+                {/* 与手动分析页的表行同一口径：0=全部，0 后面挂小灰括号「（全部）」 */}
                 <InputNumber
+                  className="w-28! top-input"
                   min={0}
                   value={表.top ?? 0}
-                  placeholder="全部"
+                  suffix={全部后缀(表.top ?? 0)}
                   onChange={(v) => 改草稿(i, { top: v ?? 0 })}
                   onBlur={失焦提交}
                   onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
@@ -1636,18 +1647,26 @@ function 智能选根面板() {
     }
     return m;
   }, [字库]);
+  // 签名 → 该形状在方案里的所有根名。存列表而不是单个名，是因为同一个签名可能被多个根占用
+  // （两个根字形完全一样），判定时要能跳过候选自己、去找「别人」。
   const 签名到已有根 = useMemo(() => {
-    const s = new Map<string, string>();
+    const s = new Map<string, string[]>();
     for (const 名 of Object.keys(起始mapping)) {
       const 签名 = 字形同形键(名到字形.get(名));
-      if (签名) s.set(签名, 名);
+      if (!签名) continue;
+      const 列 = s.get(签名);
+      if (列) 列.push(名);
+      else s.set(签名, [名]);
     }
     return s;
   }, [起始mapping, 名到字形]);
   // 候选名 → 同形的已有根名（无碰撞则 undefined）
   const 同形已有根 = (名: string) => {
     const 签名 = 字形同形键(名到字形.get(名));
-    return 签名 ? 签名到已有根.get(签名) : undefined;
+    if (!签名) return undefined;
+    // 必须排除自己：方案里每个根都按自己的签名登记，候选本身已在方案时一查就命中自己，
+    // 那不是「同形」，是「已在方案」（灰的理由不同，说成「与它自己同形」就荒唐了）。
+    return 签名到已有根.get(签名)?.find((x) => x !== 名);
   };
 
   // —— 候选字根的数据准备：全字库笔顺索引 ——
@@ -2202,7 +2221,7 @@ function 智能选根面板() {
                     <InputNumber
                       size="small"
                       min={1}
-                      max={9999}
+                      max={Number.MAX_SAFE_INTEGER}
                       value={r.起}
                       onChange={(v) => 改规则(i, { 起: v ?? r.起 })}
                     />
@@ -2210,7 +2229,7 @@ function 智能选根面板() {
                     <InputNumber
                       size="small"
                       min={1}
-                      max={9999}
+                      max={Number.MAX_SAFE_INTEGER}
                       value={r.止}
                       onChange={(v) => 改规则(i, { 止: v ?? r.止 })}
                     />
@@ -2223,7 +2242,7 @@ function 智能选根面板() {
                     <InputNumber
                       size="small"
                       min={1}
-                      max={9999}
+                      max={Number.MAX_SAFE_INTEGER}
                       value={r.根起}
                       onChange={(v) => 改规则(i, { 根起: v ?? r.根起 })}
                     />
@@ -2231,7 +2250,7 @@ function 智能选根面板() {
                     <InputNumber
                       size="small"
                       min={1}
-                      max={9999}
+                      max={Number.MAX_SAFE_INTEGER}
                       value={r.根止}
                       onChange={(v) => 改规则(i, { 根止: v ?? r.根止 })}
                     />
@@ -2296,20 +2315,29 @@ function 智能选根面板() {
                       </div>
                     );
                   }
+                  // 灰提示行与三种规则候选（字频范围/字内部件/手动指定）完全同款：
+                  // 「已生效 X 个，表内 Y 个（灰=…）」。灰 = 已在方案 或 与已有根同形，两者都不进池；
+                  // 不灰的那几个才是这条规则真正「已生效」的个数。
+                  const 显示根 = 状态.结果.根.slice(
+                    (r.根起 ?? 1) - 1,
+                    r.根止 ?? 状态.结果.根.length,
+                  );
+                  // 同形一次算好，提示行与标签共用，避免同一项把形状签名算两遍
+                  const 显示项 = 显示根.map((rk) => ({ rk, 同形: 同形已有根(rk.名) }));
+                  const 已生效数 = 显示项.filter(
+                    ({ rk, 同形 }) => 起始mapping[rk.名] === undefined && !同形,
+                  ).length;
                   return (
-                    <div className="ml-6 mt-1 rounded p-2 bg-gray-50">
-                      <Typography.Text strong>
+                    // 「注」放进滚动区，与下面「字频范围/字内部件」同一套结构：滚轮一推，
+                    // 说明和候选一起往上走。原先注在外层，滚动时它一动不动、其余在滚，很不统一。
+                    <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
+                      <Typography.Text strong className="w-full!">
                         注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
                       </Typography.Text>
                       <Typography.Text type="secondary" className="w-full!">
-                        共 {状态.结果.根.length} 个候选（灰=已在方案或与已有根同形，同形者不会入池），显示第 {r.根起 ?? 1}~
-                        {Math.min(r.根止 ?? 状态.结果.根.length, 状态.结果.根.length)} 名，改范围即时生效：
+                        已生效 {已生效数} 个，表内 {显示根.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字里：
                       </Typography.Text>
-                      <div className="mt-1 flex flex-wrap gap-1 max-h-44 overflow-y-auto items-start">
-                        {状态.结果.根
-                          .slice((r.根起 ?? 1) - 1, r.根止 ?? 状态.结果.根.length)
-                          .map((rk, ri) => {
-                            const 同形 = 同形已有根(rk.名);
+                      {显示项.map(({ rk, 同形 }, ri) => {
                             return (
                           <Popover
                             key={ri}
@@ -2345,7 +2373,6 @@ function 智能选根面板() {
                           </Popover>
                             );
                           })}
-                      </div>
                     </div>
                   );
                 })()}
@@ -2445,10 +2472,12 @@ function 智能选根面板() {
                       });
                     }
                   }
+                  // 不灰 = 既不在方案、也不与已有根同形，这几个才会真正入池，即「已生效」
+                  const 已生效数 = 成员.filter((m) => !m.在方案 && !m.同形).length;
                   return (
                     <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                       <Typography.Text type="secondary" className="w-full!">
-                        共 {成员.length} 个候选（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字里：
+                        已生效 {已生效数} 个，表内 {成员.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字里：
                       </Typography.Text>
                       {成员.map((m) => (
                         <Popover
