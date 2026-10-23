@@ -67,6 +67,9 @@ import {
   字根表规则,
   字形同形键,
   相似根分组,
+  规范表类型,
+  类型含,
+  type 表类型,
   type 搜索结果,
   type 轮结果,
 } from "../lib/智能选根核心";
@@ -220,6 +223,8 @@ const 带归并处理 = (组装结果: 组装条目[], 决策: 强类型决策):
 
 interface 表配置 {
   id: number;
+  /** 统计对象类型（照统计一）：all/single/multi，缺省 single */
+  类型: string;
   /** 空位模式，序列化为 JSON 字符串数组 */
   模式: string[];
   top: number;
@@ -240,11 +245,13 @@ interface 根操作 {
 let 表序号 = 0;
 let 操作序号 = 0;
 
-/** 预处理：过滤单字词 + 按频率降序 + 逐位下转换缓存。分组前公共开销只做一次——
- *  旧版每（表×模式）都重新 sort 全量条目并逐条 JSON.stringify，60 次调用就是打字卡顿的大头 */
-const 预处理单字 = (条目列表: 组装条目[], maxLength: number) =>
-  [...条目列表]
-    .filter((x) => [...x.词].length === 1)
+/** 预处理：按频率降序 + 逐位下转换缓存（不筛类型——类型过滤留给每张表的切片，与统计一
+ *  「sort → 按类型过滤 → 取前 N」同序）。分组前公共开销只做一次——旧版每（表×模式）都重新
+ *  sort 全量条目并逐条 JSON.stringify，60 次调用就是打字卡顿的大头。
+ *  含词 = false 时先丢多字词再排序：没有任何表要统计词时，这些条目逐表都会被 类型含 滤掉，
+ *  提前丢掉结果完全一致，但省掉全量数万条排序（带词库时 8230 → 77658 条的排序）。 */
+const 预处理条目 = (条目列表: 组装条目[], maxLength: number, 含词 = true) =>
+  [...(含词 ? 条目列表 : 条目列表.filter((x) => x.词.length === 1))]
     .sort((a, b) => b.频率 - a.频率)
     .map((条目) => {
       const 序列 = 条目.元素序列.元素序列;
@@ -262,14 +269,18 @@ const 预处理单字 = (条目列表: 组装条目[], maxLength: number) =>
  *  键构造与 阶重统计.ts/阶重序列键（统计一、智能选根核心口径）严格一致：
  *  按 maxLength 补齐全部码位（空位优先显示 *，序列越界补 "ε"）——
  *  短序列若不补位，尾部空位模式的通配符不会生成，会与同前缀长序列错误拆组。
- *  入参用 预处理单字 的结果（同一列表分多个模式时排序/下转换不重复做）。 */
+ *  统计范围 = 「该类型的条目」按频率降序取前 top 条（0=全部），两条判定都在切片前做，
+ *  与统计一的 阶重filterRelevant 完全同序。入参用 预处理条目 的结果（同一列表分多个
+ *  模式/类型时排序与下转换不重复做）。 */
 const 分组按模式 = (
   预处理: { 词: string; 码: string[] }[],
   空位: number[],
   top: number,
+  类型: string,
   maxLength: number,
 ) => {
-  const scope = top > 0 ? 预处理.slice(0, top) : 预处理;
+  const 类型内 = 类型 === "all" ? 预处理 : 预处理.filter((x) => 类型含(类型, x.词));
+  const scope = top > 0 ? 类型内.slice(0, top) : 类型内;
   const map = new Map<string, string[]>();
   for (const { 词, 码 } of scope) {
     const 键 = range(maxLength)
@@ -303,6 +314,24 @@ const 估计选重 = (
 
 // 安排显示文本改由 src/lib/安排显示.ts 提供（与智能选根核心共用同一份，轨迹与差异区同款写法）
 // ——此处不再本地定义
+
+/** 统计对象类型三档——字面与「统计一」的类型下拉完全一致（全部 / 一字词 / 多字词），
+ *  取值 all/single/multi 与 智能选根核心.规范表类型 同源（2026-10-23 定案）。 */
+const 类型选项 = [
+  { label: "全部", value: "all" },
+  { label: "一字词", value: "single" },
+  { label: "多字词", value: "multi" },
+];
+
+/** 显示/计算用的类型：能识别就归一成英文值，识别不了就原样留着
+ *  （下拉露空 + 点「分析」时报错点名，不静默按某个类型算） */
+const 安全类型 = (v?: string) => {
+  try {
+    return 规范表类型({ type: v });
+  } catch {
+    return v ?? "single";
+  }
+};
 
 // ==================== 页签一：手动分析 ====================
 
@@ -390,7 +419,8 @@ function 手动分析面板() {
       const 存 = JSON.parse(localStorage.getItem(自建表键) ?? "null") as 表配置[] | null;
       if (存?.length) {
         表序号 = Math.max(表序号, ...存.map((t) => t.id + 1)); // 新建表 id 不与恢复数据冲突
-        return 存;
+        // 老存档没有 类型 字段：按统计一的口径补「一字词」（不是报错，存档不该拦人）
+        return 存.map((t) => ({ ...t, 类型: 安全类型(t.类型) }));
       }
     } catch {
       // 存档损坏按无存档处理
@@ -398,7 +428,8 @@ function 手动分析面板() {
     return null;
   })();
   const [自建表, 设自建表] = useState<表配置[]>(
-    初始自建表 ?? [{ id: 表序号++, 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` }],
+    初始自建表 ??
+      [{ id: 表序号++, 类型: "single", 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` }],
   );
   useEffect(() => {
     try {
@@ -469,6 +500,7 @@ function 手动分析面板() {
       共享表
         ? 共享表有效.map((t, i) => ({
             id: 10000 + i,
+            类型: 安全类型(t.type),
             模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
             top: t.top ?? 0,
             权重: t.weight,
@@ -581,6 +613,13 @@ function 手动分析面板() {
       设错误("基础数据仍在加载中，请稍候再点分析");
       return;
     }
+    // 表类型同「自动搜索」：缺省补一字词，无法识别的值当场报错（不静默按某个类型算）
+    try {
+      for (const t of 分析源表) 规范表类型({ name: t.名称, type: t.类型 });
+    } catch (e: any) {
+      设错误(String(e?.message ?? e));
+      return;
+    }
     if (操作列表.length === 0) {
       // 空操作两段式：第一次点击提示，第二次点击清空对比结果，回到初态（只显示原始数据）
       if (!空操作确认) {
@@ -675,15 +714,17 @@ function 手动分析面板() {
     }
   };
 
-  /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 字，0 为全部；入参为预处理后的单字列表） */
+  /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 条，0 为全部；类型 = 统计对象，
+   *  与统计一的三档同义。入参为预处理后的全条目列表） */
   const 阶重变化 = (
     空位: number[],
     top: number,
+    类型: string,
     基线预处理: { 词: string; 码: string[] }[],
     候选预处理: { 词: string; 码: string[] }[],
   ) => {
-    const 基线分组 = 分组按模式(基线预处理, 空位, top, maxLength);
-    const 候选分组 = 分组按模式(候选预处理, 空位, top, maxLength);
+    const 基线分组 = 分组按模式(基线预处理, 空位, top, 类型, maxLength);
+    const 候选分组 = 分组按模式(候选预处理, 空位, top, 类型, maxLength);
     const 基线值 = 估计选重(基线分组, 空位, alphabet.length);
     const 候选值 = 估计选重(候选分组, 空位, alphabet.length);
     // 成员构成发生变化（人数或成员互换）的组
@@ -731,6 +772,7 @@ function 手动分析面板() {
       共享表
         ? 共享表数据.map((t, i) => ({
             id: 10000 + i,
+            类型: 安全类型(t.type),
             模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
             top: t.top ?? 0,
             权重: t.weight,
@@ -741,14 +783,14 @@ function 手动分析面板() {
     [共享表, 配置, 自建表],
   );
 
-  // 贵的公共开销（全量过滤+排序+逐位下转换）只在 基线/候选 变化时做一次，失焦重算时只剩廉价分组
-  const 表预处理 = useMemo(
-    () => ({
-      基线: 预处理单字(基线 ?? [], maxLength),
-      候选: 候选 ? 预处理单字(候选, maxLength) : null,
-    }),
-    [基线, 候选, maxLength],
-  );
+  // 贵的公共开销（全量排序+逐位下转换）只在 基线/候选 变化时做一次，失焦重算时只剩廉价分组
+  const 表预处理 = useMemo(() => {
+    const 含词 = 分析源表.some((t) => 安全类型(t.类型) !== "single");
+    return {
+      基线: 预处理条目(基线 ?? [], maxLength, 含词),
+      候选: 候选 ? 预处理条目(候选, maxLength, 含词) : null,
+    };
+  }, [基线, 候选, maxLength, 分析源表]);
 
   const 表分析 = useMemo(() => {
     const { 基线: 基线预处理, 候选: 候选预处理 } = 表预处理;
@@ -778,12 +820,14 @@ function 手动分析面板() {
       let 变化合计 = 0;
       const 行 = 表模式(表).map((空位) => {
         const 基线值 = 估计选重(
-          分组按模式(基线预处理, 空位, 表.top, maxLength),
+          分组按模式(基线预处理, 空位, 表.top, 表.类型, maxLength),
           空位,
           alphabet.length,
         );
         const 变化结果 =
-          候选预处理 && 候选 ? 阶重变化(空位, 表.top, 基线预处理, 候选预处理) : null;
+          候选预处理 && 候选
+            ? 阶重变化(空位, 表.top, 表.类型, 基线预处理, 候选预处理)
+            : null;
         原始合计 += 基线值;
         if (变化结果) {
           候选合计 += 变化结果.候选;
@@ -807,6 +851,16 @@ function 手动分析面板() {
     return { 行数据, 原始和, 候选和, 变化和 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [表预处理, 分析源表, 候选, maxLength, alphabet]);
+
+  // 「全部/多字词」表需要词库里有词才有意义：词库全是单字时这些表恒为 0，先提醒一句
+  const 有词表 = useMemo(
+    () => 分析源表.some((t) => 安全类型(t.类型) !== "single"),
+    [分析源表],
+  );
+  const 词库有多字词 = useMemo(
+    () => (基线 ?? []).some((x) => [...x.词].length > 1),
+    [基线],
+  );
 
   const 渲染表 = (表: 表配置) => {
     const 行 = 表分析.行数据.get(表.id) ?? [];
@@ -934,8 +988,8 @@ function 手动分析面板() {
     <>
       <Typography.Title level={2}>加减根分析</Typography.Title>
       <Typography.Paragraph type="secondary">
-        选一批候选字根，以「加根」「减根」任意组合试算：系统按操作重拆分，逐表对比分数变化；已在方案中的根配上新安排即为改根。每张表可自定义空位模式、统计前
-        N 字与权重。
+        选一批候选字根，以「加根」「减根」任意组合试算：系统按操作重拆分，逐表对比分数变化；已在方案中的根配上新安排即为改根。每张表可自定义统计对象（类型）、空位模式、范围前
+        N 条与权重。
         <Popover
           trigger="click"
           content={
@@ -1081,7 +1135,7 @@ function 手动分析面板() {
             onClick={() =>
               提交自建([
                 ...(自建草稿 ?? 自建表),
-                { id: 表序号++, 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` },
+                { id: 表序号++, 类型: "single", 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` },
               ])
             }
           >
@@ -1089,6 +1143,14 @@ function 手动分析面板() {
           </Button>
         )}
       </Flex>
+      {有词表 && !词库有多字词 && (
+        <Alert
+          type="warning"
+          showIcon
+          className="mb-2!"
+          message="有表设成了「全部」或「多字词」，但当前词库里没有多字词条目——这些表会恒为 0。请先换用带词的词典。"
+        />
+      )}
       <Flex vertical gap="middle">
         {表视图.map((表, 表序) => {
           // 显示数字一律读已提交值（分析源表与表视图同源同序）：键入/选模式期间保持不动，失焦后才更新
@@ -1164,6 +1226,17 @@ function 手动分析面板() {
                   onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                 />
                 <Flex gap="small" align="center">
+                  <Select
+                    className="w-28!"
+                    value={表.类型}
+                    options={类型选项}
+                    onChange={(v) => {
+                      共享表
+                        ? 更新共享表(表.id - 10000, { type: v as 表类型 })
+                        : 改自建草稿(表.id, { 类型: v as 表类型 });
+                    }}
+                    onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
+                  />
                   范围前
                   <InputNumber
                     min={0}
@@ -1178,7 +1251,6 @@ function 手动分析面板() {
                     onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
                     onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                   />
-                  字
                 </Flex>
                 <Flex gap="small" align="center">
                   权重
@@ -1222,15 +1294,18 @@ function 手动分析面板() {
 interface 评分表格式 {
   name: string;
   weight: number;
+  /** 统计对象类型（照统计一）：缺省 single = 一字词；非法值会在点「搜索」/「分析」时通报 */
+  type?: 表类型;
   top?: number;
   orders?: number[];
   patterns?: number[][];
 }
 
 const 默认四表 = (maxLength: number): 评分表格式[] => [
-  { name: "必撞", top: 0, weight: 9, patterns: [[]] },
+  { name: "必撞", type: "single", top: 0, weight: 9, patterns: [[]] },
   {
     name: "总阶重",
+    type: "single",
     top: 0,
     weight: 1,
     patterns: range(Math.min(4, maxLength)).flatMap((阶) =>
@@ -1239,12 +1314,14 @@ const 默认四表 = (maxLength: number): 评分表格式[] => [
   },
   {
     name: "四码拥挤",
+    type: "single",
     top: 1500,
     weight: 26,
     patterns: [[3], [0, 3], [1, 3], [2, 3], [0, 1, 3], [0, 2, 3], [1, 2, 3], [0, 1, 2, 3]],
   },
   {
     name: "二简拥挤",
+    type: "single",
     top: 800,
     weight: 676,
     patterns: [[2, 3], [0, 2, 3], [1, 2, 3], [0, 1, 2, 3]],
@@ -1296,12 +1373,14 @@ function 评分表面板() {
   return (
     <>
       <Typography.Paragraph type="secondary">
-        这些评分表是「智能选根」的优化目标（加权和最小者优先）。patterns =
-        手动指定空位模式（一个模式 = 一组计入统计的码位）。top =
-        只统计按字频前 N 字（0 为全部）。编辑在离开输入框（失焦）后才生效重算。
+        这些评分表是「智能选根」的优化目标（加权和最小者优先）。类型 =
+        统计对象（全部 = 一字词与多字词混排；一字词 / 多字词），与「统计一」的「类型」口径完全一致，
+        缺省为一字词。patterns = 手动指定空位模式（一个模式 =
+        一组计入统计的码位）。top =
+        范围只统计该类型按频率排序的前 N 条（0 为全部）。编辑在离开输入框（失焦）后才生效重算。
       </Typography.Paragraph>
       <Flex gap="small" style={{ marginBottom: 16 }}>
-        <Button onClick={() => 提交([...草稿, { name: `表${草稿.length + 1}`, weight: 1, top: 0, patterns: [] }])}>
+        <Button onClick={() => 提交([...草稿, { name: `表${草稿.length + 1}`, type: "single", weight: 1, top: 0, patterns: [] }])}>
           新建表
         </Button>
         <Button onClick={() => 提交(默认四表(maxLength))}>恢复默认四表</Button>
@@ -1338,6 +1417,18 @@ function 评分表面板() {
                 />
               </Flex>
               <Flex gap={4} align="center">
+                <Select
+                  className="w-28!"
+                  value={安全类型(表.type)}
+                  options={类型选项}
+                  onChange={(v) =>
+                    提交(
+                      草稿.map((x, xi) =>
+                        xi === i ? { ...x, type: v as 表类型 } : x,
+                      ),
+                    )
+                  }
+                />
                 统计前
                 <InputNumber
                   min={0}
@@ -1347,7 +1438,6 @@ function 评分表面板() {
                   onBlur={失焦提交}
                   onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
                 />
-                字
               </Flex>
               <Select
                 mode="multiple"
@@ -1763,6 +1853,14 @@ function 智能选根面板() {
   const 开始 = () => {
     if (表列表.length === 0) {
       设错误("请先在「评分表」页签配置至少一张评分表");
+      return;
+    }
+    // 表类型先校验再起 worker：缺省（没写 type）按统计一补「一字词」，
+    // 写了无法识别的值就当场报错，别等 worker 构建完再抛（省一次几秒的空等）
+    try {
+      for (const t of 表列表) 规范表类型(t);
+    } catch (e: any) {
+      设错误(String(e?.message ?? e));
       return;
     }
     // 清空上一轮的预置归并提示（解析出问题时再写入，避免旧提示残留）

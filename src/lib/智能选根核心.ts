@@ -26,9 +26,48 @@ import { 构建标准上下文, 装配输入自配置 } from "./标准装配";
 import { 阶重序列键, 阶重估计计数, 阶重加增量, 阶重减增量 } from "./阶重统计";
 
 // ---------- 类型 ----------
+/** 评分表的统计对象类型——与「统计一」的「类型」下拉完全同义（2026-10-23 定案）：
+ *  all = 全部（一字词与多字词混在同一个频率榜里排名）、single = 一字词、multi = 多字词。
+ *  缺省 = single：照统计一的做法（它的「类型」下拉不可清空，初始值就是「一字词」），
+ *  即「没写类型」等价于「一字词」，而不是报错。只有写了无法识别的值才抛错。 */
+export type 表类型 = "all" | "single" | "multi";
+
+/** 类型取值表：英文值与统计一的表单值同源（yaml 里写这个，UI 也写这个）；
+ *  中文别名只为手写 yaml 时别写错——写「一字词」和写 single 等价，不允许第三种写法。 */
+const 类型别名: Record<string, 表类型> = {
+  all: "all",
+  single: "single",
+  multi: "multi",
+  全部: "all",
+  一字词: "single",
+  多字词: "multi",
+};
+
+/** 规范化表类型：缺省补 single（统计一口径），非法值抛错（搜索点下去即报）。
+ *  评分表、手动分析的共享表/自建表共用本函数，禁止各处各写一套缺省。 */
+export function 规范表类型(t: { name?: string; type?: string }): 表类型 {
+  const v = t.type ?? "single";
+  const 规 = 类型别名[v];
+  if (规) return 规;
+  throw new Error(
+    `评分表「${t.name ?? "未命名"}」的类型「${v}」无法识别：只能是 全部 / 一字词 / 多字词（或 all / single / multi）`,
+  );
+}
+
+/** 类型判据（唯一实现）：按词的字符数，与统计一 filterRelevant 的 `[...词].length` 判定同义。
+ *  字符串入参是为了让「未规范化的原始 yaml 值」也能走同一判据（非法值按一字词处理，报错交给 规范表类型）。 */
+export function 类型含(类型: string, 名: string): boolean {
+  const 规 = 类型别名[类型] ?? "single";
+  if (规 === "all") return true;
+  const 单字 = [...名].length === 1;
+  return 规 === "multi" ? !单字 : 单字;
+}
+
 export interface 评分表输入 {
   name: string;
   weight: number;
+  /** 统计对象类型（照统计一）：缺省 single = 一字词。非法值在建核心时抛错 */
+  type?: 表类型;
   top?: number;
   orders?: number[];
   patterns?: number[][];
@@ -245,16 +284,19 @@ export function 挖掘重码组根(
   切片挖掘结果: 挖掘结果项[],
   cb?: { on阶段?: (文本: string) => void },
 ): { 组: 重码组信息[]; 根: 重码根候选[] } {
-  // 1) 组枚举与伤害排名
+  const 序列表 = [...词序列];
+  // 1) 组枚举与伤害排名（每张表只吃自己「类型」的条目，与统计一的类型口径一致）
   const 组全: 重码组信息[] = [];
   const 枚举步数 = 表列表.reduce((a, t) => a + 展开表模式(t).length, 0);
   let 已完成步 = 0;
   for (const t of 表列表) {
+    const 类型 = 规范表类型(t);
+    const 用序列 = 类型 === "all" ? 序列表 : 序列表.filter(([名]) => 类型含(类型, 名));
     const 模式列表 = 展开表模式(t);
     模式列表.forEach((空位) => {
       cb?.on阶段?.(`重码组挖掘 ${++已完成步}/${枚举步数}……`);
       const 组 = new Map<string, string[]>();
-      for (const [名, seq] of 词序列) {
+      for (const [名, seq] of 用序列) {
         const 键 = JSON.stringify(
           range(maxLength).map((i) => {
             if (空位.includes(i)) return "*";
@@ -421,7 +463,6 @@ interface 变体评分 {
   总分: number;
   表: Record<string, number>;
   字数: number;
-  脏字数: number;
 }
 
 const combinations = (n: number, k: number): number[][] => {
@@ -453,8 +494,15 @@ export class 智能选根核心 {
   父映射 = new Map<any, Set<any>>();
   按频词序: string[];
   词全集: Set<string>;
-  域缓存 = new Map<number, Set<string>>();
-  表配置: { 名: string; 权重: number; top: number | undefined; 模式: number[][] }[];
+  表配置: { 名: string; 权重: number; 类型: 表类型; top: number | undefined; 模式: number[][] }[];
+  /** 是否有表要统计多字词（类型 ≠ 一字词）。为 false 时 条目提取 直接丢掉多字词，
+   *  全站的单字方案（表全是一字词）就完全不受词分析影响——装机量最大的一条路零回归 */
+  需要词 = false;
+  /** 增量组装的索引（与 mapping 无关，构造时建一次）：
+   *  拼音分组 = 词名 → 该词的拼音分析条目（多音/多拼音全在内）；子集喂给 组装 只产出子集。
+   *  字到词名 = 字名 → 含该字的词名（含自身）：「根变 → 字变 → 这些词的码才可能变」。 */
+  拼音分组 = new Map<string, any[]>();
+  字到词名 = new Map<string, Set<string>>();
   /** 键盘按键数 = 方案字母表大小（阶重估计的底数，随方案而定，不写死 26） */
   按键数: number;
 
@@ -499,6 +547,9 @@ export class 智能选根核心 {
       };
       for (const g of this.字库.查询字形(字符) ?? []) 递归(g);
     }
+    // 单字按频序（原始词典口径，仅字频排名用：字频范围候选池）。
+    // 注意：表的统计切片不走这条——那是「组装条目按频率降序 + 类型过滤」（见 平铺排序），
+    // 与统计一完全同源；两者混用会重现 2026-10-23 之前「top=0 走单字、top>0 走全条目」的双轨。
     this.按频词序 = [...this.频率表.entries()]
       .filter(([w]) => [...w].length === 1)
       .sort((a, b) => b[1] - a[1])
@@ -507,9 +558,35 @@ export class 智能选根核心 {
     this.表配置 = (配置.statistics?.tables ?? []).map((t: any) => ({
       名: t.name as string,
       权重: t.weight as number,
+      类型: 规范表类型(t),
       top: t.top as number | undefined,
       模式: 展开表模式(t),
     }));
+    this.需要词 = this.表配置.some((t) => t.类型 !== "single");
+    this.建词索引();
+  }
+
+  /** 建增量组装索引（拼音分组 / 字到词名）。构造时按 表配置 自动建一次；
+   *  只有「构造后改 表配置」的场景（探针/校验脚本先把表类型改成 all）才需要手动重调。
+   *  词只在「有表统计词」时索引：否则多字词在 条目提取 就被丢掉，永远不会进词条。 */
+  建词索引() {
+    this.拼音分组 = new Map();
+    this.字到词名 = new Map();
+    for (const 项 of this.拼音分析 as any[]) {
+      const 单字 = 项.词.length === 1;
+      if (!单字 && !this.需要词) continue;
+      const 名 = 项.词.map((c: any) => c.获取名称()).join("");
+      let g = this.拼音分组.get(名);
+      if (!g) { g = []; this.拼音分组.set(名, g); }
+      g.push(项);
+      if (!this.需要词) continue;
+      for (const c of 项.词) {
+        const 字名 = c.获取名称();
+        let s = this.字到词名.get(字名);
+        if (!s) { s = new Set(); this.字到词名.set(字名, s); }
+        s.add(名);
+      }
+    }
   }
 
   // ---------- mapping 变换 ----------
@@ -607,11 +684,13 @@ export class 智能选根核心 {
   }
   条目提取(r: { value: 组装条目[] }, 决策?: Map<any, any>) {
     // 一字多条目全部保留：多音字/多字形字在面板与统计一里逐条参与分组，
-    // 在这里去重会让自动搜索的分母与手动分析不一致（词库里多音字越多差得越大）
+    // 在这里去重会让自动搜索的分母与手动分析不一致（词库里多音字越多差得越大）。
+    // 多字词只在「有表要统计词」（类型 ≠ 一字词）时才收：全部一字词的方案照旧只看单字，
+    // 既不多算也不变慢（2026-10-23 随评分表类型一起改）
     const out = new Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>();
     for (const 条目 of r.value) {
       const 词 = 条目.词.map((c: any) => c.获取名称()).join("");
-      if ([...词].length !== 1) continue;
+      if (!this.需要词 && [...词].length !== 1) continue;
       const 元素序列 = (条目.元素序列.元素序列 as any[]).map((c) => {
         let cur: any = c;
         if (typeof cur !== "string" && 决策) {
@@ -638,7 +717,16 @@ export class 智能选根核心 {
     }
     return out;
   }
-  运行组装(mapping: Record<string, any>, 强: any, 线性化: any, 分析结果: Map<any, any>, 字根部件列表: any[]) {
+  /** 组装。拼音默认全库（基态用）；传子集时只组装这批条目——组装是纯逐条函数
+   *  （只读 分析结果 与 配置），喂子集必然只产出对应的子集，见 评变体 的增量路径。 */
+  运行组装(
+    mapping: Record<string, any>,
+    强: any,
+    线性化: any,
+    分析结果: Map<any, any>,
+    字根部件列表: any[],
+    拼音: any = this.拼音分析,
+  ) {
     return 组装(
       {
         源映射: this.配置0.encoder.sources,
@@ -653,48 +741,36 @@ export class 智能选根核心 {
         决策空间: 强.决策空间,
         分类器: this.分类器,
       },
-      this.拼音分析,
+      拼音,
       { 分析结果, 字根部件列表 },
     );
   }
-
   // ---------- 计分 ----------
-  取域(top: number | undefined) {
-    const key = top ?? 0;
-    if (!this.域缓存.has(key))
-      this.域缓存.set(key, new Set(top && top > 0 ? this.按频词序.slice(0, top) : this.按频词序));
-    return this.域缓存.get(key)!;
+  /** 一张表的统计切片 = 「该类型的全部组装条目按频率降序」→ 取前 N（0 = 全部）。
+   *  这就是统计一「类型 + 范围」的唯一口径（sort → type 过滤 → slice），
+   *  全量计分、基态、增量评估三处共用，不再有「top=0 走单字按频序、top>0 走全条目」的双轨。 */
+  private 取切片(t: { 类型: 表类型; top: number | undefined }, 平铺: { j: string; 频率: number }[]) {
+    return t.top && t.top > 0 ? 平铺.slice(0, t.top) : 平铺;
   }
   全量计分(词条: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>) {
     const 表值: Record<string, number> = {};
     let 总分 = 0;
+    const 平铺缓存 = new Map<表类型, { j: string; 频率: number }[]>();
     for (const t of this.表配置) {
+      let 平 = 平铺缓存.get(t.类型);
+      if (!平) {
+        平 = this.平铺排序(词条, t.类型);
+        平铺缓存.set(t.类型, 平);
+      }
+      const 切片 = this.取切片(t, 平).map((x) => JSON.parse(x.j));
       let v = 0;
-      if (t.top) {
-        const 切片 = this.平铺排序(词条).slice(0, t.top);
-        for (const 空位 of t.模式) {
-          const 组 = new Map<string, number>();
-          for (const { j } of 切片) {
-            const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
-            组.set(键, (组.get(键) ?? 0) + 1);
-          }
-          v += 阶重估计计数(组, 空位, this.按键数);
+      for (const 空位 of t.模式) {
+        const 组 = new Map<string, number>();
+        for (const 序列 of 切片) {
+          const 键 = 阶重序列键(序列, 空位, 4);
+          组.set(键, (组.get(键) ?? 0) + 1);
         }
-      } else {
-        const 域 = this.取域(t.top);
-        for (const 空位 of t.模式) {
-          const 组 = new Map<string, number>();
-          for (const w of this.按频词序) {
-            if (!域.has(w)) continue;
-            const 列表 = 词条.get(w);
-            if (!列表) continue;
-            for (const { 元素序列 } of 列表) {
-              const 键 = 阶重序列键(元素序列, 空位, 4);
-              组.set(键, (组.get(键) ?? 0) + 1);
-            }
-          }
-          v += 阶重估计计数(组, 空位, this.按键数);
-        }
+        v += 阶重估计计数(组, 空位, this.按键数);
       }
       表值[t.名] = Math.round(v * 100) / 100;
       总分 += t.权重 * v;
@@ -710,16 +786,29 @@ export class 智能选根核心 {
   基态待分析部件!: Set<any>;
   基态根列表!: any[];
   基态词序列!: Map<string, string[]>;
-  /** 基态词条（含组装条目频率）；top>0 表的逐条目切片口径要用 */
+  /** 基态词条（含组装条目频率）；各类型表的切片口径要用 */
   基态词条!: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>;
-  基态平铺!: { j: string; 频率: number }[];
+  /** 基态「按类型」的条目级平铺（同类型多张表共用一次排序）。
+   *  `键 = 名#序号` 是该条目的身份：平铺顺序只由「频率 + 过滤词典顺序」决定，与 mapping 无关，
+   *  所以变体的切片成员与位置与基态逐个相同，差异只可能出现在序列值上（见 评变体）。 */
+  基态平铺!: Map<表类型, { j: string; 频率: number; 键: string }[]>;
+  /** 类型 → (键 → 平铺位置)：增量差分用它判断「这个脏条目是否落在切片里」 */
+  基态位置!: Map<表类型, Map<string, number>>;
+  /** 每张表的基态切片（j 序列列表）与其多重集计数——增量评估只跟变体切片求差，不再重算基态 */
+  基态切片!: string[][];
+  基态切片计数!: Map<string, number>[];
   表组!: { 名: string; 组: Map<string, number>[]; 值: number }[];
   总分基 = 0;
 
-  /** 条目级平铺并按组装频率降序稳定排序——与手动分析面板的 分组按模式 切片完全同序。
-   *  top>0 表是逐条目口径：多音字的多条序列各自占排名位（官方编码页同款，不合并）。 */
-  private 平铺排序(词条: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>) {
-    const 平铺: { j: string; 频率: number }[] = [];
+  /** 条目级平铺并按组装频率降序稳定排序——与统计一/手动分析的「按频率降序」完全同序。
+   *  逐条目口径：多音字的多条序列各自占排名位（官方编码页同款，不合并）。
+   *  类型过滤在此做（类型 → 只看该类型条目），排序后由调用方 slice，与统计一的
+   *  「sort → 按类型过滤 → 取前 N」等价。 */
+  private   平铺排序(
+    词条: Map<string, { 元素序列: { element: string; index: number }[]; 频率: number }[]>,
+    类型: 表类型 = "single",
+  ) {
+    const 平铺: { j: string; 频率: number; 键: string }[] = [];
     // 大词库同一字可能占多行（多音），组装侧已按 词+序列 合并频率；这里每字只取一次，
     // 首次出现位置 = 组装条目顺序，与面板的排序底序完全一致
     const 已见 = new Set<string>();
@@ -728,9 +817,11 @@ export class 智能选根核心 {
       const 名 = 词.map((c: any) => c.获取名称()).join("");
       if (已见.has(名)) continue;
       已见.add(名);
+      if (!类型含(类型, 名)) continue;
       const 列表 = 词条.get(名);
       if (!列表) continue;
-      for (const x of 列表) 平铺.push({ j: JSON.stringify(x.元素序列), 频率: x.频率 });
+      for (const [idx, x] of 列表.entries())
+        平铺.push({ j: JSON.stringify(x.元素序列), 频率: x.频率, 键: `${名}#${idx}` });
     }
     return 平铺.sort((a, b) => b.频率 - a.频率);
   }
@@ -748,41 +839,36 @@ export class 智能选根核心 {
     const 词条 = this.条目提取(r, 强.决策);
     this.基态词条 = 词条;
     this.基态词序列 = new Map([...词条].map(([w, 列表]) => [w, 列表.map((x) => JSON.stringify(x.元素序列))]));
-    this.基态平铺 = this.平铺排序(词条);
+    this.基态平铺 = new Map();
+    this.基态位置 = new Map();
+    this.基态切片 = [];
+    this.基态切片计数 = [];
     this.表组 = this.表配置.map((t) => ({ 名: t.名, 组: t.模式.map(() => new Map<string, number>()), 值: 0 }));
     let 总分 = 0;
     for (const [ti, t] of this.表配置.entries()) {
-      let v = 0;
-      if (t.top) {
-        // top>0：逐条目口径——按组装频率排序取前 N 条（多音字各序列独立占位，官方编码页同款）
-        const 切片 = this.基态平铺.slice(0, t.top);
-        t.模式.forEach((空位, pi) => {
-          const 组 = this.表组[ti]!.组[pi]!;
-          for (const { j } of 切片) {
-            const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
-            const m = 组.get(键) ?? 0;
-            v += 阶重加增量(空位.length, m, this.按键数);
-            组.set(键, m + 1);
-          }
-        });
-      } else {
-        const 域 = this.取域(t.top);
-        for (const w of this.按频词序) {
-          if (!域.has(w)) continue;
-          const 列表 = this.基态词序列.get(w);
-          if (!列表) continue;
-          for (const seqJson of 列表) {
-            const seq = JSON.parse(seqJson);
-            t.模式.forEach((空位, pi) => {
-              const 键 = 阶重序列键(seq, 空位, 4);
-              const 组 = this.表组[ti]!.组[pi]!;
-              const m = 组.get(键) ?? 0;
-              v += 阶重加增量(空位.length, m, this.按键数);
-              组.set(键, m + 1);
-            });
-          }
-        }
+      let 平 = this.基态平铺.get(t.类型);
+      if (!平) {
+        平 = this.平铺排序(词条, t.类型);
+        this.基态平铺.set(t.类型, 平);
+        // 位置索引：增量差分靠它判断「脏条目在不在切片里、旧序列是哪个」
+        this.基态位置.set(t.类型, new Map(平.map((x, i) => [x.键, i])));
       }
+      const js = this.取切片(t, 平).map((x) => x.j);
+      const 计数 = new Map<string, number>();
+      for (const j of js) 计数.set(j, (计数.get(j) ?? 0) + 1);
+      this.基态切片.push(js);
+      this.基态切片计数.push(计数);
+      const 解析 = js.map((j) => JSON.parse(j));
+      let v = 0;
+      t.模式.forEach((空位, pi) => {
+        const 组 = this.表组[ti]!.组[pi]!;
+        for (const seq of 解析) {
+          const 键 = 阶重序列键(seq, 空位, 4);
+          const m = 组.get(键) ?? 0;
+          v += 阶重加增量(空位.length, m, this.按键数);
+          组.set(键, m + 1);
+        }
+      });
       this.表组[ti]!.值 = v;
       总分 += t.权重 * v;
     }
@@ -831,32 +917,39 @@ export class 智能选根核心 {
       return { 失败: String(e) };
     }
     const 脏部件 = new Set<any>();
+    /** 变化根里只要有一个「没有部件/字形表示」（笔画根、拼音或自定义元素）就无法定位脏集——
+     *  这类根（如删掉笔画根 '3'）会改动全库所有用到它的字，而它不在 待分析部件 里也没有字形，
+     *  脏集必然算成空、增量组装会静默返回基态分。故直接走全量回退。实测删笔画根即触发。 */
+    let 无法定位 = false;
+    const 根表示列表: any[][] = [];
     if (!无变化) {
       const 变体根 = 准备.value.字根部件列表 as any[];
-      const 根表示列表: any[][] = [];
       for (const X of 变化根) {
         const seen = new Set<any>();
-        根表示列表.push(
-          [...this.基态根列表, ...变体根].filter((p: any) => {
-            if (p.字符?.获取名称?.() !== X) return false;
-            if (seen.has(p)) return false;
-            seen.add(p);
-            return true;
-          }),
-        );
+        const reps = [...this.基态根列表, ...变体根].filter((p: any) => {
+          if (p.字符?.获取名称?.() !== X) return false;
+          if (seen.has(p)) return false;
+          seen.add(p);
+          return true;
+        });
+        根表示列表.push(reps);
+        if (reps.length === 0) 无法定位 = true;
       }
-      for (const C of this.基态待分析部件) {
-        for (const reps of 根表示列表) {
-          for (const R of reps) {
-            if (C === R || C.生成二进制切片列表(R, this.基态退化配置).length) {
-              脏部件.add(C);
-              break;
+      if (!无法定位)
+        for (const C of this.基态待分析部件) {
+          for (const reps of 根表示列表) {
+            for (const R of reps) {
+              if (C === R || C.生成二进制切片列表(R, this.基态退化配置).length) {
+                脏部件.add(C);
+                break;
+              }
             }
+            if (脏部件.has(C)) break;
           }
-          if (脏部件.has(C)) break;
         }
-      }
     }
+    // 无法定位脏集 → 整个评估退回全量（连分析结果都要从头算：增量的 新分析结果 此时是脏的）
+    if (无法定位) return this.评变体全量(mapping);
     const 脏字形 = new Set<any>(脏部件);
     if (!无变化) {
       const 变体根 = 准备.value.字根部件列表 as any[];
@@ -884,6 +977,9 @@ export class 智能选根核心 {
       const 旧 = this.基态部件分析结果.get(C);
       if (旧) 替换表.set(旧, a.value);
     }
+    // ---------- 增量组装：只重组「脏字本身 + 含脏字的词」 ----------
+    // 依赖链：mapping 变 → 脏部件 → 脏字形 → 脏字符（以上照旧）→ 脏词名（字到词名倒排）→ 子集组装。
+    // 组的码 = 各字按构词规则组合，所以「字码没变」的词码必然没变——这就是根指向字、字指向词。
     准备.value.复合体分析器.部件分析结果 = 新部件分析结果;
     const 新分析结果 = new Map(this.基态分析结果);
     for (const w of 脏字符) {
@@ -913,111 +1009,156 @@ export class 智能选根核心 {
         if (变了) 新分析结果.set(字符对象, 新列表);
       }
     }
-    const r = this.运行组装(mapping, 强, 线性化, 新分析结果, 准备.value.字根部件列表);
+    const 脏词名 = new Set<string>();
+    for (const w of 脏字符) {
+      脏词名.add(w);
+      if (!this.需要词) continue;
+      for (const 词名 of this.字到词名.get(w) ?? []) 脏词名.add(词名);
+    }
+    const 子集: any[] = [];
+    for (const 名 of 脏词名) {
+      const g = this.拼音分组.get(名);
+      if (g) 子集.push(...g);
+    }
+    const r = this.运行组装(mapping, 强, 线性化, 新分析结果, 准备.value.字根部件列表, 子集);
     if (!r.ok) return { 失败: String(r.error) };
-    const 新词条 = this.条目提取(r, 强.决策);
+    const 子集词条 = this.条目提取(r, 强.决策);
+    // 结构不变校验：同一词名的条目数必须与基态一致。唯一的破例是多音字的两条读法在新映射下
+    // 序列变得相同 → 组装的末尾去重把它们并成一条（频率相加）→ 条目数变 → 平铺顺序与切片成员
+    // 整体错位，稀疏差分的前提（位置不变）失效。此时退回全量路径（罕见；实测未触发）。
+    let 结构变 = false;
+    for (const 名 of 脏词名) {
+      if ((子集词条.get(名)?.length ?? 0) !== (this.基态词条.get(名)?.length ?? 0)) { 结构变 = true; break; }
+    }
     const 组副本 = this.表组.map((t) => ({ 名: t.名, 组: t.组.map((g) => new Map(g)), 值: t.值 }));
-    let 总分 = this.总分基;
-    let 脏字数 = 0;
-    for (const [w, 新列表] of 新词条) {
-      // 新旧序列多重集对比：多音字/多字形字一个词可有多条序列，每条都独立参与分组
-      const 差 = new Map<string, number>();
-      for (const j of this.基态词序列.get(w) ?? []) 差.set(j, (差.get(j) ?? 0) - 1);
-      for (const x of 新列表) {
-        const j = JSON.stringify(x.元素序列);
-        差.set(j, (差.get(j) ?? 0) + 1);
+    const 字数 = this.基态词条.size;
+    if (!结构变) {
+      // 稀疏差分：平铺顺序只由「频率 + 过滤词典顺序」决定，mapping 改不了它 →
+      // 变体切片与基态切片的成员和位置逐个相同，差异只可能出在脏条目的序列值上。
+      // 脏条目的新序列只 stringify 一次；同类型（全部/一字词/多字词）的若干张表共用同一次
+      // 位置比对，各自只按自己的 top 截断——比逐表重算省掉 3/4 的重复活。
+      const 新序列 = new Map<string, string>();
+      for (const 名 of 脏词名) {
+        const 新列表 = 子集词条.get(名);
+        if (!新列表) continue;
+        for (const [idx, 条目] of 新列表.entries())
+          新序列.set(`${名}#${idx}`, JSON.stringify(条目.元素序列));
       }
-      let 变了 = false;
-      for (const 变化量 of 差.values()) if (变化量 !== 0) { 变了 = true; break; }
-      if (!变了) continue;
-      脏字数++;
+      const 按类型 = new Map<
+        表类型,
+        { ti: number; t: { 名: string; 权重: number; 类型: 表类型; top: number | undefined; 模式: number[][] } }[]
+      >();
       for (const [ti, t] of this.表配置.entries()) {
-        if (t.top) continue; // top>0 是逐条目切片口径，由下方平铺差分统一处理
-        const 表副本 = 组副本[ti]!;
-        t.模式.forEach((空位, pi) => {
-          const 组 = 表副本.组[pi]!;
-          for (const [j, 变化量] of 差) {
-            if (变化量 === 0) continue;
-            const seq = JSON.parse(j);
-            const 键 = 阶重序列键(seq, 空位, 4);
-            if (变化量 < 0) {
-              for (let k = 0; k < -变化量; k++) {
-                const n = 组.get(键) ?? 0;
-                表副本.值 += 阶重减增量(空位.length, n, this.按键数);
-                if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
-              }
-            } else {
-              for (let k = 0; k < 变化量; k++) {
-                const m = 组.get(键) ?? 0;
-                表副本.值 += 阶重加增量(空位.length, m, this.按键数);
-                组.set(键, m + 1);
-              }
-            }
-          }
-        });
+        const 组 = 按类型.get(t.类型);
+        if (组) 组.push({ ti, t });
+        else 按类型.set(t.类型, [{ ti, t }]);
       }
-    }
-    // 变体中拆分无解而被丢弃的字：基态有条目、新组装没有——必须扣掉它们的全部旧贡献，
-    // 否则增量分系统性高于全量分（删根的收益会被低估，搜索决策随之失真）
-    for (const [w, 旧列表] of this.基态词序列) {
-      if (新词条.has(w)) continue;
-      脏字数++;
-      for (const [ti, t] of this.表配置.entries()) {
-        if (t.top) continue; // 同上，top>0 由平铺差分处理
-        const 表副本 = 组副本[ti]!;
-        t.模式.forEach((空位, pi) => {
-          const 组 = 表副本.组[pi]!;
-          for (const j of 旧列表) {
-            const 键 = 阶重序列键(JSON.parse(j), 空位, 4);
-            const n = 组.get(键) ?? 0;
-            表副本.值 += 阶重减增量(空位.length, n, this.按键数);
-            if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
-          }
-        });
-      }
-    }
-    // top>0 表：逐条目切片差分——基态切片 vs 变体切片按序列多重集求差。
-    // 词频不随加删根变化，切片顺序稳定，条目进出与序列变化都能被这层差分精确覆盖
-    const 变体平铺 = this.平铺排序(新词条);
-    for (const [ti, t] of this.表配置.entries()) {
-      if (!t.top) continue;
-      const 基计数 = new Map<string, number>();
-      for (const { j } of this.基态平铺.slice(0, t.top))
-        基计数.set(j, (基计数.get(j) ?? 0) + 1);
-      const 变计数 = new Map<string, number>();
-      for (const { j } of 变体平铺.slice(0, t.top))
-        变计数.set(j, (变计数.get(j) ?? 0) + 1);
-      const 差 = new Map<string, number>();
-      for (const [j, n] of 基计数) 差.set(j, (差.get(j) ?? 0) - n);
-      for (const [j, n] of 变计数) 差.set(j, (差.get(j) ?? 0) + n);
-      const 表副本 = 组副本[ti]!;
-      t.模式.forEach((空位, pi) => {
-        const 组 = 表副本.组[pi]!;
-        for (const [j, 变化量] of 差) {
-          if (变化量 === 0) continue;
-          const seq = JSON.parse(j);
-          const 键 = 阶重序列键(seq, 空位, 4);
-          if (变化量 < 0) {
-            for (let k = 0; k < -变化量; k++) {
-              const n = 组.get(键) ?? 0;
-              表副本.值 += 阶重减增量(空位.length, n, this.按键数);
-              if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
-            }
-          } else {
-            for (let k = 0; k < 变化量; k++) {
-              const m = 组.get(键) ?? 0;
-              表副本.值 += 阶重加增量(空位.length, m, this.按键数);
-              组.set(键, m + 1);
-            }
-          }
+      for (const [类型, 表们] of 按类型) {
+        const 平 = this.基态平铺.get(类型)!;
+        const 位置 = this.基态位置.get(类型)!;
+        const 项: { pos: number; 旧j: string; 新j: string }[] = [];
+        for (const [键, 新j] of 新序列) {
+          const pos = 位置.get(键);
+          if (pos === undefined) continue; // 不在该类型的平铺里（类型过滤掉的多字词等）
+          const 旧j = 平[pos]!.j;
+          if (旧j !== 新j) 项.push({ pos, 旧j, 新j });
         }
-      });
+        if (!项.length) continue;
+        for (const { ti, t } of 表们) {
+          const 切片长 = t.top && t.top > 0 ? Math.min(t.top, 平.length) : 平.length;
+          const 差 = new Map<string, number>();
+          for (const { pos, 旧j, 新j } of 项) {
+            if (pos >= 切片长) continue; // 不在本表切片里，分数与它无关
+            差.set(旧j, (差.get(旧j) ?? 0) - 1);
+            差.set(新j, (差.get(新j) ?? 0) + 1);
+          }
+          for (const [j, n] of [...差]) if (n === 0) 差.delete(j);
+          if (差.size) this.应用差(组副本, ti, t, 差);
+        }
+      }
+    } else {
+      // 结构错位：分析结果本身是完整的（脏集只可能因为「多音合并」失真），直接走全量组装计分
+      return this.评变体全量(mapping, { 强, 线性化, 准备: 准备.value, 分析结果: 新分析结果 });
     }
+    let 总分 = this.总分基;
     for (const [ti, t] of this.表配置.entries())
       总分 += t.权重 * (组副本[ti]!.值 - this.表组[ti]!.值);
     const 表值: Record<string, number> = {};
     for (const g of 组副本) 表值[g.名] = Math.round(g.值 * 100) / 100;
-    return { 总分: Math.round(总分 * 100) / 100, 表: 表值, 字数: 新词条.size, 脏字数 };
+    return { 总分: Math.round(总分 * 100) / 100, 表: 表值, 字数 };
+  }
+
+  /** 全量评估（不依赖任何增量假设）：整体重算组装与计分。
+   *  无法定位脏集（笔画根/拼音元素等无字形根被加删、会改动全库）时从 全量分析 从头来；
+   *  只是条目结构错位时可由调用方传入已算好的分析结果，省掉一次全量重分析。 */
+  private 评变体全量(
+    mapping: Record<string, any>,
+    已算?: { 强: any; 线性化: any; 准备: any; 分析结果: Map<any, any> },
+  ): 变体评分 | { 失败: string } {
+    try {
+      const { 强, 线性化, 准备, 分析结果 } = 已算 ?? this.全量分析(mapping);
+      const r = this.运行组装(mapping, 强, 线性化, 分析结果, 准备.字根部件列表);
+      if (!r.ok) return { 失败: String(r.error) };
+      const 新词条 = this.条目提取(r, 强.决策);
+      const 组副本 = this.表组.map((t) => ({ 名: t.名, 组: t.组.map((g) => new Map(g)), 值: t.值 }));
+      const 平铺缓存 = new Map<表类型, { j: string; 频率: number }[]>();
+      for (const [ti, t] of this.表配置.entries()) {
+        let 平 = 平铺缓存.get(t.类型);
+        if (!平) {
+          平 = this.平铺排序(新词条, t.类型);
+          平铺缓存.set(t.类型, 平);
+        }
+        const 变计数 = new Map<string, number>();
+        for (const { j } of this.取切片(t, 平)) 变计数.set(j, (变计数.get(j) ?? 0) + 1);
+        const 差 = new Map<string, number>();
+        for (const [j, n] of 变计数) 差.set(j, n);
+        for (const [j, n] of this.基态切片计数[ti]!) 差.set(j, (差.get(j) ?? 0) - n);
+        for (const [j, n] of [...差]) if (n === 0) 差.delete(j);
+        if (差.size) this.应用差(组副本, ti, t, 差);
+      }
+      let 总分 = this.总分基;
+      for (const [ti, t] of this.表配置.entries())
+        总分 += t.权重 * (组副本[ti]!.值 - this.表组[ti]!.值);
+      const 表值: Record<string, number> = {};
+      for (const g of 组副本) 表值[g.名] = Math.round(g.值 * 100) / 100;
+      return { 总分: Math.round(总分 * 100) / 100, 表: 表值, 字数: 新词条.size };
+    } catch (e) {
+      return { 失败: String(e) };
+    }
+  }
+
+  /** 把「序列多重集差」应用到某张表的组副本（负=移出、正=移入）。增量与全量回退共用一处，
+   *  保证两条路的口径不会各自漂。 */
+  private 应用差(
+    组副本: { 名: string; 组: Map<string, number>[]; 值: number }[],
+    ti: number,
+    t: { 模式: number[][] },
+    差: Map<string, number>,
+  ) {
+    const 表副本 = 组副本[ti]!;
+    // 差集里存的是 stringify 过的序列（平铺里要按串比较，只能存串），用的时候得解析回来。
+    // 解析必须提到模式循环外面：「总阶重」这张表有十几个空位模式，同一串逐模式各解析一次就是
+    // 十几倍的重复开销。阶重序列键 只读 序列[i]、不修改入参，所以解析结果可安全复用给所有模式。
+    const 已解析: [any, number][] = [...差].map(([j, 变化量]) => [JSON.parse(j), 变化量]);
+    t.模式.forEach((空位, pi) => {
+      const 组 = 表副本.组[pi]!;
+      for (const [序列, 变化量] of 已解析) {
+        const 键 = 阶重序列键(序列, 空位, 4);
+        if (变化量 < 0) {
+          for (let k = 0; k < -变化量; k++) {
+            const n = 组.get(键) ?? 0;
+            表副本.值 += 阶重减增量(空位.length, n, this.按键数);
+            if (n <= 1) 组.delete(键); else 组.set(键, n - 1);
+          }
+        } else {
+          for (let k = 0; k < 变化量; k++) {
+            const m = 组.get(键) ?? 0;
+            表副本.值 += 阶重加增量(空位.length, m, this.按键数);
+            组.set(键, m + 1);
+          }
+        }
+      }
+    });
   }
 
   // ---------- 切片挖掘 ----------
@@ -1627,6 +1768,9 @@ export class 智能选根核心 {
       // 第 1 轮用初始池，之后每跑满 N 轮、在下轮开始前重建；0/空 = 不重建。
       // 基态不用另建：码位归并触发段（上面 continue 之前）与上一轮末尾都已 设置基态(mapping)，
       // 此处基态就是当前映射，重码组挖掘直接按它重排即可。
+      // **这两步的顺序不能反**：建池里的「重码组挖掘」读的是 基态词序列（分离收益按当前映射的组结构算），
+      // 所以必须「先 设置基态(mapping)，再 建池(true)」——与初次建池同一顺序（见 搜索 开头那行）。
+      // 若反过来先建池，重码组挖掘会用上一轮的基态，排行整整滞后一轮（正是本轮刚加的那根看不见）。
       if (重建间隔 > 0 && 轮 > 1 && (轮 - 1) % 重建间隔 === 0) {
         cb.on阶段?.(`第 ${轮} 轮：重建加根池（每 ${重建间隔} 轮一次）……`);
         建池(true);
@@ -1885,7 +2029,7 @@ export class 智能选根核心 {
     轮日志.push(轮r);
     cb.on轮?.(轮r);
       cb.on阶段?.(`第${轮 + 1} 轮：重建基态……`);
-      this.设置基态(mapping); // 下一轮以此为基态
+      this.设置基态(mapping); // 下一轮以此为基态；重建加根池也必须在它之后（重码组挖掘读基态词序列）
     }
     // 预置归并的触发与否完全反映在轮轨迹（命令行）里——哪根被加、哪种归并生效都已逐轮打印，
     // 故结尾不再单列"未触发"备注（冗余且与轨迹重复）
