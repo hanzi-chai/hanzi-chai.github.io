@@ -65,6 +65,7 @@ import {
   重码根候选,
   重码组信息,
   字根表规则,
+  字形同形键,
   相似根分组,
   规范表类型,
   类型含,
@@ -1642,9 +1643,38 @@ function 智能选根面板() {
     Object.keys(起始mapping).filter((k) => 是根身份(起始mapping[k])),
   );
 
-  // 不做「同形」判定：外形完全相同的两个根在方案设计里可能都要（如「土」与「⼟」各占键位），
-  // 没有任何结构判据能知道用户意图，所以界面上也不再把候选标成「与已有根同形」
-  // （2026-10-25 定案：删掉「笔顺去重」，预览与搜索池同款——不再有"看着能加、实际被滤"的差异）。
+  // 候选预览与搜索池同尺子：形状签名与已有根相同的候选不会入池（如 PUA 变体），
+  // 预览必须把这些标出来，否则"看着能加、实际被滤"就是显示与实际脱节
+  const 名到字形 = useMemo(() => {
+    const m = new Map<string, any>();
+    if (字库) {
+      for (const { 字符, 字形列表 } of 字库 as any) {
+        if (!m.has(字符.获取名称())) m.set(字符.获取名称(), 字形列表?.[0]);
+      }
+    }
+    return m;
+  }, [字库]);
+  // 签名 → 该形状在方案里的所有根名。存列表而不是单个名，是因为同一个签名可能被多个根占用
+  // （两个根字形完全一样），判定时要能跳过候选自己、去找「别人」。
+  const 签名到已有根 = useMemo(() => {
+    const s = new Map<string, string[]>();
+    for (const 名 of Object.keys(起始mapping)) {
+      const 签名 = 字形同形键(名到字形.get(名));
+      if (!签名) continue;
+      const 列 = s.get(签名);
+      if (列) 列.push(名);
+      else s.set(签名, [名]);
+    }
+    return s;
+  }, [起始mapping, 名到字形]);
+  // 候选名 → 同形的已有根名（无碰撞则 undefined）
+  const 同形已有根 = (名: string) => {
+    const 签名 = 字形同形键(名到字形.get(名));
+    if (!签名) return undefined;
+    // 必须排除自己：方案里每个根都按自己的签名登记，候选本身已在方案时一查就命中自己，
+    // 那不是「同形」，是「已在方案」（灰的理由不同，说成「与它自己同形」就荒唐了）。
+    return 签名到已有根.get(签名)?.find((x) => x !== 名);
+  };
 
   // —— 候选字根的数据准备：全字库笔顺索引 ——
   const 频率表 = useMemo(
@@ -2293,14 +2323,16 @@ function 智能选根面板() {
                     );
                   }
                   // 灰提示行与三种规则候选（字频范围/字内部件/手动指定）完全同款：
-                  // 「已生效 X 个，表内 Y 个（灰=…）」。灰 = 已在方案，不进池；
+                  // 「已生效 X 个，表内 Y 个（灰=…）」。灰 = 已在方案 或 与已有根同形，两者都不进池；
                   // 不灰的那几个才是这条规则真正「已生效」的个数。
                   const 显示根 = 状态.结果.根.slice(
                     (r.根起 ?? 1) - 1,
                     r.根止 ?? 状态.结果.根.length,
                   );
-                  const 已生效数 = 显示根.filter(
-                    (rk) => 起始mapping[rk.名] === undefined,
+                  // 同形一次算好，提示行与标签共用，避免同一项把形状签名算两遍
+                  const 显示项 = 显示根.map((rk) => ({ rk, 同形: 同形已有根(rk.名) }));
+                  const 已生效数 = 显示项.filter(
+                    ({ rk, 同形 }) => 起始mapping[rk.名] === undefined && !同形,
                   ).length;
                   return (
                     // 「注」放进滚动区，与下面「字频范围/字内部件」同一套结构：滚轮一推，
@@ -2310,9 +2342,9 @@ function 智能选根面板() {
                         注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
                       </Typography.Text>
                       <Typography.Text type="secondary" className="w-full!">
-                        已生效 {已生效数} 个，表内 {显示根.length} 个（灰=已在方案），点字形看它出现在哪些字/词里：
+                        已生效 {已生效数} 个，表内 {显示根.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字/词里：
                       </Typography.Text>
-                      {显示根.map((rk, ri) => {
+                      {显示项.map(({ rk, 同形 }, ri) => {
                             return (
                           <Popover
                             key={ri}
@@ -2323,11 +2355,16 @@ function 智能选根面板() {
                                   出现于 {字词数(rk.字列表)}：
                                 </div>
                                 {rk.字列表.join("、")}
+                                {同形 && (
+                                  <div className="text-gray-500 mt-1">
+                                    {富文本(`与已有根「${同形}」字形完全相同`)}（形状签名去重），加根搜索不会把它单独入池
+                                  </div>
+                                )}
                               </div>
                             }
                           >
                             <Tag
-                              color={起始mapping[rk.名] === undefined ? "purple" : "default"}
+                              color={起始mapping[rk.名] === undefined && !同形 ? "purple" : "default"}
                               style={{ cursor: "pointer" }}
                             >
                               {笔顺索引.名到字符.get(rk.名) ? (
@@ -2337,6 +2374,7 @@ function 智能选根面板() {
                               )}
                               <span className="text-xs ml-1 opacity-70">
                                 +{Math.round(rk.得分 * 100) / 100}
+                                {同形 ? 富文本(`·与「${同形}」同形`) : ""}
                               </span>
                             </Tag>
                           </Popover>
@@ -2364,6 +2402,7 @@ function 智能选根面板() {
                     名: string;
                     标注: string;
                     在方案: boolean;
+                    同形?: string;
                     字列表?: string[];
                   }[] = [];
                   if (r.类型 === "手动指定") {
@@ -2385,16 +2424,20 @@ function 智能选根面板() {
                       见过.add(ch);
                       const 字符 = 笔顺索引.名到字符.get(ch);
                       const 项 = 状态.按名?.get(ch);
+                      const 同形 = 同形已有根(ch);
                       成员.push({
                         名: ch,
                         标注: 字符
                           ? 已有.has(ch)
                             ? "已在方案"
-                            : `${项?.次数 ?? 0}字`
+                            : 同形
+                              ? `${项?.次数 ?? 0}字·与「${同形}」同形`
+                              : `${项?.次数 ?? 0}字`
                           : 名称映射?.has(ch)
                             ? "名称元素"
                             : "不在字库",
                         在方案: 已有.has(ch),
+                        同形,
                         字列表: 项?.字列表,
                       });
                     }
@@ -2405,10 +2448,12 @@ function 智能选根面板() {
                     for (let k = 起 - 1; k < Math.min(止, 排名单.length); k++) {
                       const [w, f] = 排名单[k]!;
                       if (!笔顺索引.名到串.has(w) || 保护.has(w)) continue;
+                      const 同形 = 同形已有根(w);
                       成员.push({
                         名: w,
-                        标注: `频${f}`,
+                        标注: 同形 ? `频${f}·与「${同形}」同形` : `频${f}`,
                         在方案: 已有.has(w),
+                        同形,
                         字列表: 状态.按名?.get(w)?.字列表,
                       });
                     }
@@ -2424,27 +2469,33 @@ function 智能选根面板() {
                     if (!状态.结果) return null;
                     for (let k = 起 - 1; k < Math.min(止, 状态.结果.length); k++) {
                       const c = 状态.结果[k]!;
+                      const 同形 = 同形已有根(c.名);
                       成员.push({
                         名: c.名,
-                        标注: `${c.次数}字`,
+                        标注: 同形 ? `${c.次数}字·与「${同形}」同形` : `${c.次数}字`,
                         在方案: 已有.has(c.名),
+                        同形,
                         字列表: c.字列表,
                       });
                     }
                   }
-                  // 不灰 = 不在方案，这几个才会真正入池，即「已生效」
-                  const 已生效数 = 成员.filter((m) => !m.在方案).length;
+                  // 不灰 = 既不在方案、也不与已有根同形，这几个才会真正入池，即「已生效」
+                  const 已生效数 = 成员.filter((m) => !m.在方案 && !m.同形).length;
                   return (
                     <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                       <Typography.Text type="secondary" className="w-full!">
-                        已生效 {已生效数} 个，表内 {成员.length} 个（灰=已在方案），点字形看它出现在哪些字里：
+                        已生效 {已生效数} 个，表内 {成员.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字里：
                       </Typography.Text>
                       {成员.map((m) => (
                         <Popover
                           key={m.名}
                           trigger="click"
                           content={
-                            m.字列表 ? (
+                            m.同形 && !m.在方案 ? (
+                              <div className="text-gray-500">
+                                {富文本(`与已有根「${m.同形}」字形完全相同`)}（形状签名去重），加根搜索不会把它单独入池
+                              </div>
+                            ) : m.字列表 ? (
                               <div className="max-w-120 max-h-80 overflow-y-auto">
                                 <div className="font-medium mb-1">
                                   出现于 {m.字列表.length} 字：
@@ -2471,7 +2522,7 @@ function 智能选根面板() {
                         >
                           <Tag
                             color={
-                              m.在方案
+                              m.在方案 || m.同形
                                 ? "default"
                                 : r.类型 === "字内部件"
                                   ? "purple"
