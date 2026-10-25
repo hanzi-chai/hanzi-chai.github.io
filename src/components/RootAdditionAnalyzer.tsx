@@ -303,7 +303,7 @@ const 分组按模式 = (
   return map;
 };
 
-/** 口径：n²/2÷26^阶（独立随机编码期望，含自身对），与统计一、智能选根、CLI 统一（src/lib/阶重统计.ts） */
+/** 口径：n²/2÷按键数^阶（独立随机编码期望，含自身对；按键数=方案字母表大小，26 键方案即 26），与统计一、智能选根、CLI 统一（src/lib/阶重统计.ts） */
 const 估计选重 = (
   分组: Map<string, string[]>,
   空位: number[],
@@ -346,6 +346,13 @@ const 名单行 = (词: string[], 上限 = 10) =>
   词.length <= 上限
     ? 词.join("、")
     : `${词.slice(0, 上限).join("、")} 等 ${词.length} 字`;
+
+/** 重码组挖掘的「字列表」在含词表时会有多字词（词与字同权后：能拆出该形状的词也算被它分离）。
+ *  只报「N 字」会误导，故按字/词分开数；没有词时保持原来的纯数字读法。 */
+const 字词数 = (列表: string[]) => {
+  const 词数 = 列表.filter((x) => [...x].length > 1).length;
+  return 词数 ? `${列表.length - 词数} 字、${词数} 词` : `${列表.length} 字`;
+};
 
 // ==================== 页签一：手动分析 ====================
 
@@ -2335,7 +2342,7 @@ function 智能选根面板() {
                         注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
                       </Typography.Text>
                       <Typography.Text type="secondary" className="w-full!">
-                        已生效 {已生效数} 个，表内 {显示根.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字里：
+                        已生效 {已生效数} 个，表内 {显示根.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字/词里：
                       </Typography.Text>
                       {显示项.map(({ rk, 同形 }, ri) => {
                             return (
@@ -2345,7 +2352,7 @@ function 智能选根面板() {
                             content={
                               <div className="max-w-100 max-h-60 overflow-y-auto leading-6 break-all">
                                 <div className="font-medium mb-1">
-                                  出现于 {rk.字列表.length} 字：
+                                  出现于 {字词数(rk.字列表)}：
                                 </div>
                                 {rk.字列表.join("、")}
                                 {同形 && (
