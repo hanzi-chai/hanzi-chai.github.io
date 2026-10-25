@@ -66,12 +66,15 @@ import {
   重码组信息,
   字根表规则,
   字形同形键,
+  部件同形,
+  默认退化配置,
   相似根分组,
   规范表类型,
   类型含,
   type 表类型,
   type 搜索结果,
   type 轮结果,
+  type 退化配置,
 } from "../lib/智能选根核心";
 import { 抵消组变化, type 阶重变化组 } from "../lib/重码组抵消";
 import CharacterSelect from "~/components/CharacterSelect";
@@ -1654,27 +1657,44 @@ function 智能选根面板() {
     }
     return m;
   }, [字库]);
-  // 签名 → 该形状在方案里的所有根名。存列表而不是单个名，是因为同一个签名可能被多个根占用
-  // （两个根字形完全一样），判定时要能跳过候选自己、去找「别人」。
-  const 签名到已有根 = useMemo(() => {
-    const s = new Map<string, string[]>();
+  // 判同形用的退化配置：与引擎 智能选根核心.退化器 同源（方案 analysis.degenerator，缺省默认）
+  const 退化器 = useMemo<退化配置>(
+    () => (配置 as any)?.analysis?.degenerator ?? 默认退化配置,
+    [配置],
+  );
+  // 候选名 → 同形的已有根名（无碰撞则 undefined）。
+  // **判据必须与引擎完全一致**：签名只是快筛，真同形还要双向切片互测（部件同形）。
+  // 只比签名会把「土/士」「人/入」「目/且」「口/囗」当成同一个根——签名相同但互切不出，
+  // 于是 土 会因为方案里有 士 而被误标灰、误说成"不进池"（2026-10-25 修，与引擎两处同步）。
+  // 结果按名字缓存：部件同形 是几何计算（生成二进制切片列表），不能每次 render 重跑。
+  const 同形已有根 = useMemo(() => {
+    // 签名 → 已有根（存列表：同一签名可能被多个根占用，判定时要能跳过候选自己）
+    const 签名到已有 = new Map<string, { 名: string; 字形: any }[]>();
     for (const 名 of Object.keys(起始mapping)) {
-      const 签名 = 字形同形键(名到字形.get(名));
+      const 字形 = 名到字形.get(名);
+      const 签名 = 字形同形键(字形);
       if (!签名) continue;
-      const 列 = s.get(签名);
-      if (列) 列.push(名);
-      else s.set(签名, [名]);
+      const 列 = 签名到已有.get(签名);
+      if (列) 列.push({ 名, 字形 });
+      else 签名到已有.set(签名, [{ 名, 字形 }]);
     }
-    return s;
-  }, [起始mapping, 名到字形]);
-  // 候选名 → 同形的已有根名（无碰撞则 undefined）
-  const 同形已有根 = (名: string) => {
-    const 签名 = 字形同形键(名到字形.get(名));
-    if (!签名) return undefined;
-    // 必须排除自己：方案里每个根都按自己的签名登记，候选本身已在方案时一查就命中自己，
-    // 那不是「同形」，是「已在方案」（灰的理由不同，说成「与它自己同形」就荒唐了）。
-    return 签名到已有根.get(签名)?.find((x) => x !== 名);
-  };
+    const 缓存 = new Map<string, string | undefined>();
+    return (名: string): string | undefined => {
+      if (缓存.has(名)) return 缓存.get(名);
+      let 结果: string | undefined;
+      const 字形 = 名到字形.get(名);
+      const 签名 = 字形同形键(字形);
+      // 必须排除自己：方案里每个根都按自己的签名登记，候选本身已在方案时一查就命中自己，
+      // 那不是「同形」，是「已在方案」（灰的理由不同，说成「与它自己同形」就荒唐了）。
+      if (签名) {
+        结果 = 签名到已有
+          .get(签名)
+          ?.find((x) => x.名 !== 名 && 部件同形(x.字形, 字形, 退化器))?.名;
+      }
+      缓存.set(名, 结果);
+      return 结果;
+    };
+  }, [起始mapping, 名到字形, 退化器]);
 
   // —— 候选字根的数据准备：全字库笔顺索引 ——
   const 频率表 = useMemo(
@@ -2357,7 +2377,7 @@ function 智能选根面板() {
                                 {rk.字列表.join("、")}
                                 {同形 && (
                                   <div className="text-gray-500 mt-1">
-                                    {富文本(`与已有根「${同形}」字形完全相同`)}（形状签名去重），加根搜索不会把它单独入池
+                                    {富文本(`与已有根「${同形}」字形完全相同`)}，加根搜索不会把它单独入池
                                   </div>
                                 )}
                               </div>
@@ -2493,7 +2513,7 @@ function 智能选根面板() {
                           content={
                             m.同形 && !m.在方案 ? (
                               <div className="text-gray-500">
-                                {富文本(`与已有根「${m.同形}」字形完全相同`)}（形状签名去重），加根搜索不会把它单独入池
+                                {富文本(`与已有根「${m.同形}」字形完全相同`)}，加根搜索不会把它单独入池
                               </div>
                             ) : m.字列表 ? (
                               <div className="max-w-120 max-h-80 overflow-y-auto">
