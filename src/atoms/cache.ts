@@ -223,10 +223,12 @@ export const 字形字符映射原子 = atom((get) => {
 export const 全部来源原子 = atom((get) => {
   const 字库 = get(字库原子);
   const 全部来源集合 = new Set<string>();
-  for (const [_, { final_extended_glyphs: final }] of 字库) {
-    for (const { source } of final) {
-      if (!source) continue;
-      全部来源集合.add(source);
+  for (const [_, { glyphs }] of 字库) {
+    for (const { sources } of glyphs) {
+      if (!sources) continue;
+      for (const source of sources) {
+        全部来源集合.add(source);
+      }
     }
   }
   return sortBy(Array.from(全部来源集合), (s) => 来源排序.indexOf(s));

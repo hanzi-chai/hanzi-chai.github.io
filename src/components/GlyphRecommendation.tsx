@@ -211,7 +211,7 @@ export default function GlyphRecommendation({
 }
 
 const visitedRanges = [
-  { start: 0x4e00, end: 0x652e },
+  { start: 0x4e00, end: 0x6900 },
   { start: 0x7a70, end: 0x9fff },
 ];
 
