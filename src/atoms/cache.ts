@@ -41,6 +41,7 @@ import type { Metric } from "~/components/MetricTable";
 import { get预加载数据 } from "~/preload";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
 import { 构建标准上下文, 展开归并码位 } from "~/lib/标准装配";
+import { 对齐决策空间 } from "~/lib/智能选根核心";
 import {
   优先简码原子,
   决策原子,
@@ -285,7 +286,14 @@ export const 强类型决策与决策空间原子 = atom((get) => {
   const 全部合法元素 = get(全部合法元素原子);
   if (!全部合法元素.ok) return 全部合法元素;
   return ok(
-    构建强类型决策与决策空间(决策, 决策空间, 全部合法元素.value.名称映射),
+    构建强类型决策与决策空间(
+      决策,
+      // 决策空间对齐到决策：某根被删出 mapping 后，它在空间里若只剩「禁用」这类纯 null 条目，
+      // 引擎会抛「元素 X 在决策空间中没有非空安排」（站点不跑 生成()，mapping 的码不补进空间）。
+      // 见 对齐决策空间 的注释
+      对齐决策空间(决策, 决策空间),
+      全部合法元素.value.名称映射,
+    ),
   );
 });
 

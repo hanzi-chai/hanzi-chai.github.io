@@ -538,6 +538,35 @@ export function 取手动指定白名单(规则列表: readonly 字根表规则[
   }
   return s;
 }
+
+/** 把决策空间对齐到某个 mapping：把「既不在决策里、又没有非空安排」的条目摘掉。
+ *
+ *  引擎 `计算当前或潜在长度`（utils.ts）对**每个不在决策里的空间元素**都要求它的安排列表里
+ *  至少有一条 `value !== null`，靠它推断"这个元素最多占几个码位"；一条非空都没有就直接
+ *  抛「元素 X 在决策空间中没有非空安排」。而站点走的是原始 `form.mapping_space`、不跑 `生成()`
+ *  （`生成()` 才会把 mapping 里的码补成空间列表的第一条），所以用户给某根点过「禁用」之后，
+ *  空间里就留下一条纯 null 条目 —— 该根还在 mapping 里时没事（决策兜住），一旦被删出决策就崩。
+ *
+ *  搜索的「减根」动作、差异区的「减」操作都会构造这种删掉根的 mapping，于是第一个动作就整条崩
+ *  （2026-10-27 实测：丁 有码 + 空间里一条 {value:null}，删丁即抛）。
+ *  这类条目在任何安排里都拿不到码位，摘掉只影响"能否无码参与拆分"，与用户在方案里标「禁用」的
+ *  意图一致；保留则连码长都算不出来，只能崩。 */
+export function 对齐决策空间(
+  mapping: Record<string, any>,
+  空间: Record<string, any> | undefined | null,
+): Record<string, any> {
+  if (!空间) return {};
+  const 结果: Record<string, any> = {};
+  for (const [名, 列表] of Object.entries(空间)) {
+    const 在决策 = mapping[名] !== undefined && mapping[名] !== null;
+    const 有非空 =
+      Array.isArray(列表) &&
+      列表.some((x: any) => x?.value !== undefined && x.value !== null);
+    if (在决策 || 有非空) 结果[名] = 列表;
+  }
+  return 结果;
+}
+
 export interface 搜索参数 {
   /** 轮数上限 */
   轮数: number;
@@ -780,7 +809,7 @@ export class 智能选根核心 {
   建决策(mapping: Record<string, any>) {
     const 强 = 构建强类型决策与决策空间(
       mapping as any,
-      this.配置0.form.mapping_space ?? {},
+      对齐决策空间(mapping, this.配置0.form.mapping_space),
       this.名称映射,
     );
     const 线性化 = new 决策图(强.决策).线性化();
