@@ -65,6 +65,8 @@ import {
   重码根候选,
   重码组信息,
   字根表规则,
+  取手动指定白名单,
+  解析手动指定,
   字形同形键,
   部件同形,
   特殊字根名,
@@ -1663,17 +1665,8 @@ function 智能选根面板() {
     () => (配置 as any)?.analysis?.degenerator ?? 默认退化配置,
     [配置],
   );
-  // 显式白名单 = 「手动指定」规则里的全部根，与引擎 搜索() 收集的 强制独立根 同源：
-  // 用户点名的根即使外形与已有根完全相同也不标灰、不被当成重复项。
-  const 手动指定白名单 = useMemo(() => {
-    const s = new Set<string>();
-    for (const r of 字根表) {
-      if (r.类型 !== "手动指定") continue;
-      const 根列表 = Array.isArray(r.字根) ? r.字根 : [...r.字根];
-      for (const w of 根列表) s.add(w);
-    }
-    return s;
-  }, [字根表]);
+  // 显式白名单 = 「手动指定」规则里的全部根，与引擎 搜索() / worker 挖榜用**同一个**提取函数。
+  const 手动指定白名单 = useMemo(() => 取手动指定白名单(字根表), [字根表]);
   // 候选名 → 同形的已有根名（无碰撞则 undefined）。
   // **判据必须与引擎完全一致**：签名只是快筛，真同形还要双向切片互测（部件同形）。
   // 只比签名会把「土/士」「人/入」「目/且」「口/囗」当成同一个根——签名相同但互切不出，
@@ -1811,6 +1804,8 @@ function 智能选根面板() {
         内置字库数据: Object.values(get预加载数据().原始字库数据),
         原始词典,
         允许复合体,
+        // worker 不跑 搜索()，白名单得靠字根表在那边自己算（取手动指定白名单 同一份实现）
+        字根表列表: 字根表,
       });
       return;
     }
@@ -1900,6 +1895,7 @@ function 智能选根面板() {
         根起: r.根起 ?? 1,
         根止: r.根止 ?? 100,
         允许复合体,
+        字根表列表: 字根表,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2452,10 +2448,7 @@ function 智能选根面板() {
                         </div>
                       );
                     }
-                    const 根列表 =
-                      typeof r.字根 === "string"
-                        ? r.字根.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean)
-                        : r.字根;
+                    const 根列表 = 解析手动指定(r.字根);
                     const 见过 = new Set<string>();
                     for (const ch of 根列表) {
                       if (保护.has(ch) || 见过.has(ch)) continue;
