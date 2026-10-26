@@ -1667,6 +1667,32 @@ function 智能选根面板() {
   );
   // 显式白名单 = 「手动指定」规则里的全部根，与引擎 搜索() / worker 挖榜用**同一个**提取函数。
   const 手动指定白名单 = useMemo(() => 取手动指定白名单(字根表), [字根表]);
+
+  // —— 挖榜结果跟着白名单失效（2026-10-26）——
+  // 两条挖榜 effect 原本是「有结果就 continue」，一次算完永不重算：白名单是挖掘的输入之一
+  // （它决定谁在「候选构建」那一步不被同形合并），改了手动指定后**榜单内容**就过期了，
+  // 不只是同形标注过期——必须重挖才准。
+  // 但也不是任何变化都值得重挖：写进手动指定的根若本来就不受合并支配，候选集一个字都不会变。
+  //   · 名字在 特殊字根名 → 无论写不写进白名单都自成一类，**严格无影响**，不重挖；
+  //   · 名字此刻已经在榜上 → 它本来就是该形状的代表，按用户要求视为「本来就能正常生效」，不重挖。
+  //     （近似：它若有被合并掉的兄弟，豁免后兄弟本该重新冒出来，这一次不会补，刷新后才补。兄弟们
+  //      本来就不在榜上，用户此刻关注的是写进去的这个根，按此取舍。）
+  // 删除一项则一定有效——它从「豁免」退回「受合并支配」，随时可能被兄弟吞掉。
+  const 挖榜白名单引用 = useRef<Record<string, Set<string>>>({});
+  const 组挖白名单引用 = useRef<Record<string, Set<string>>>({});
+  const 挖榜定时引用 = useRef<Record<string, any>>({});
+  const 组挖定时引用 = useRef<Record<string, any>>({});
+  const 白名单变化有效 = (
+    旧: Set<string> | undefined,
+    新: Set<string>,
+    榜上已有: Set<string> | null,
+  ) => {
+    if (!旧) return true; // 没有旧的基准（首次/刚被作废）→ 按需要挖
+    for (const w of 旧) if (!新.has(w) && !特殊字根名.has(w)) return true;
+    for (const w of 新)
+      if (!旧.has(w) && !特殊字根名.has(w) && !榜上已有?.has(w)) return true;
+    return false;
+  };
   // 候选名 → 同形的已有根名（无碰撞则 undefined）。
   // **判据必须与引擎完全一致**：签名只是快筛，真同形还要双向切片互测（部件同形）。
   // 只比签名会把「土/士」「人/入」「目/且」「口/囗」当成同一个根——签名相同但互切不出，
@@ -1756,61 +1782,87 @@ function 智能选根面板() {
     for (const 允许复合体 of [true, false]) {
       if (!需要模式.has(允许复合体)) continue;
       const 模式 = 允许复合体 ? "复" : "叶";
-      if (挖掘状态[模式].结果 || 挖掘worker引用.current[模式]) continue;
+      // 白名单变了且这次变化真会改变候选集 → 作废旧榜重挖（判定见 白名单变化有效 注释）
+      if (
+        白名单变化有效(
+          挖榜白名单引用.current[模式],
+          手动指定白名单,
+          挖掘状态[模式].按名 ? new Set(挖掘状态[模式].按名!.keys()) : null,
+        )
+      ) {
+        挖榜白名单引用.current[模式] = new Set(手动指定白名单);
+        clearTimeout(挖榜定时引用.current[模式]);
+        挖掘worker引用.current[模式]?.terminate();
+        delete 挖掘worker引用.current[模式];
+        设挖掘状态((x) => ({ ...x, [模式]: { ...空挖掘状态 } }));
+      }
+      if (
+        挖掘状态[模式].结果 ||
+        挖掘状态[模式].进行中 ||
+        挖掘worker引用.current[模式]
+      )
+        continue;
+      挖榜白名单引用.current[模式] = new Set(手动指定白名单);
       设挖掘状态((x) => ({
         ...x,
         [模式]: { ...x[模式], 进行中: true, 阶段: "启动后台挖掘……" },
       }));
-      const w = new Worker(new URL("../lib/智能选根.worker.ts", import.meta.url), {
-        type: "module",
-      });
-      挖掘worker引用.current[模式] = w;
-      w.onmessage = ({ data }: { data: any }) => {
-        switch (data.type) {
-          case "阶段":
-            设挖掘状态((x) => ({ ...x, [模式]: { ...x[模式], 阶段: data.文本 } }));
-            break;
-          case "挖掘完成": {
-            const 按名 = new Map<string, 挖掘结果项>(
-              data.结果.map((x: 挖掘结果项) => [x.名, x]),
-            );
-            设挖掘状态((x) => ({
-              ...x,
-              [模式]: { 进行中: false, 阶段: "", 结果: data.结果, 按名 },
-            }));
-            w.terminate();
-            if (挖掘worker引用.current[模式] === w) delete 挖掘worker引用.current[模式];
-            break;
+      // 防抖 500ms：「手动指定」是逐字输入的，每敲一个字白名单就变一次（作废→准备重挖）。
+      // 不防抖的话，一个 U+F001 要起五次 worker、每次都重建一遍字库。定时器按模式存 ref，
+      // 新一轮先 clearTimeout，只有停手后那一次真的开工。
+      clearTimeout(挖榜定时引用.current[模式]);
+      挖榜定时引用.current[模式] = setTimeout(() => {
+        const w = new Worker(new URL("../lib/智能选根.worker.ts", import.meta.url), {
+          type: "module",
+        });
+        挖掘worker引用.current[模式] = w;
+        w.onmessage = ({ data }: { data: any }) => {
+          switch (data.type) {
+            case "阶段":
+              设挖掘状态((x) => ({ ...x, [模式]: { ...x[模式], 阶段: data.文本 } }));
+              break;
+            case "挖掘完成": {
+              const 按名 = new Map<string, 挖掘结果项>(
+                data.结果.map((x: 挖掘结果项) => [x.名, x]),
+              );
+              设挖掘状态((x) => ({
+                ...x,
+                [模式]: { 进行中: false, 阶段: "", 结果: data.结果, 按名 },
+              }));
+              w.terminate();
+              if (挖掘worker引用.current[模式] === w) delete 挖掘worker引用.current[模式];
+              break;
+            }
+            case "错误":
+              设错误(`字内部件挖掘失败: ${data.错误}`);
+              设挖掘状态((x) => ({ ...x, [模式]: { ...x[模式], 进行中: false } }));
+              w.terminate();
+              if (挖掘worker引用.current[模式] === w) delete 挖掘worker引用.current[模式];
+              break;
           }
-          case "错误":
-            设错误(`字内部件挖掘失败: ${data.错误}`);
-            设挖掘状态((x) => ({ ...x, [模式]: { ...x[模式], 进行中: false } }));
-            w.terminate();
-            if (挖掘worker引用.current[模式] === w) delete 挖掘worker引用.current[模式];
-            break;
-        }
-      };
-      w.onerror = (e) => {
-        设错误(
-          `挖掘 Worker 加载/运行失败（${e.message || "无错误消息，多为页面版本过期"}）——请 Ctrl+Shift+R 强制刷新后重试`,
-        );
-        设挖掘状态((x) => ({ ...x, [模式]: { ...x[模式], 进行中: false } }));
-        w.terminate();
-        if (挖掘worker引用.current[模式] === w) delete 挖掘worker引用.current[模式];
-      };
-      w.postMessage({
-        type: "mine",
-        配置,
-        内置字库数据: Object.values(get预加载数据().原始字库数据),
-        原始词典,
-        允许复合体,
-        // worker 不跑 搜索()，白名单得靠字根表在那边自己算（取手动指定白名单 同一份实现）
-        字根表列表: 字根表,
-      });
+        };
+        w.onerror = (e) => {
+          设错误(
+            `挖掘 Worker 加载/运行失败（${e.message || "无错误消息，多为页面版本过期"}）——请 Ctrl+Shift+R 强制刷新后重试`,
+          );
+          设挖掘状态((x) => ({ ...x, [模式]: { ...x[模式], 进行中: false } }));
+          w.terminate();
+          if (挖掘worker引用.current[模式] === w) delete 挖掘worker引用.current[模式];
+        };
+        w.postMessage({
+          type: "mine",
+          配置,
+          内置字库数据: Object.values(get预加载数据().原始字库数据),
+          原始词典,
+          允许复合体,
+          // worker 不跑 搜索()，白名单得靠字根表在那边自己算（取手动指定白名单 同一份实现）
+          字根表列表: 字根表,
+        });
+      }, 500);
       return;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [展开规则, 挖掘状态, 字根表]);
+  }, [展开规则, 挖掘状态, 字根表, 手动指定白名单]);
 
   // —— 重码组挖掘：按规则×复/叶 各自后台 worker ——
   const [组挖掘状态, 设组挖掘状态] = useState<
@@ -1824,7 +1876,22 @@ function 智能选根面板() {
       const 允许复合体 = r.允许复合体 !== false;
       const 键 = `${i}:${允许复合体 ? "复" : "叶"}`;
       const 现状 = 组挖掘状态[键];
+      // 同「字内部件」：白名单是挖掘输入，变了就得重挖根榜（判定共用 白名单变化有效）
+      if (
+        白名单变化有效(
+          组挖白名单引用.current[键],
+          手动指定白名单,
+          现状?.结果 ? new Set(现状.结果.根.map((x) => x.名)) : null,
+        )
+      ) {
+        组挖白名单引用.current[键] = new Set(手动指定白名单);
+        clearTimeout(组挖定时引用.current[键]);
+        组挖掘worker引用.current[键]?.terminate();
+        delete 组挖掘worker引用.current[键];
+        设组挖掘状态((x) => ({ ...x, [键]: { 进行中: false, 阶段: "", 结果: null } }));
+      }
       if (现状?.结果 || 现状?.进行中 || 组挖掘worker引用.current[键]) continue;
+      组挖白名单引用.current[键] = new Set(手动指定白名单);
       设组挖掘状态((x) => ({
         ...x,
         [键]: {
@@ -1834,69 +1901,74 @@ function 智能选根面板() {
           结果: null,
         },
       }));
-      const w = new Worker(new URL("../lib/智能选根.worker.ts", import.meta.url), {
-        type: "module",
-      });
-      组挖掘worker引用.current[键] = w;
-      w.onmessage = ({ data }: { data: any }) => {
-        switch (data.type) {
-          case "阶段":
-            设组挖掘状态((x) => ({
-              ...x,
-              [键]: {
-                ...(x[键] ?? { 进行中: false, 阶段: "", 结果: null }),
-                阶段: data.文本,
-              },
-            }));
-            break;
-          case "组挖掘完成":
-            设组挖掘状态((x) => ({
-              ...x,
-              [键]: { 进行中: false, 阶段: "", 结果: data.结果 },
-            }));
-            w.terminate();
-            if (组挖掘worker引用.current[键] === w) delete 组挖掘worker引用.current[键];
-            break;
-          case "错误":
-            设错误(`重码组挖掘失败: ${data.错误}`);
-            设组挖掘状态((x) => ({
-              ...x,
-              [键]: {
-                ...(x[键] ?? { 进行中: false, 阶段: "", 结果: null }),
-                进行中: false,
-              },
-            }));
-            w.terminate();
-            if (组挖掘worker引用.current[键] === w) delete 组挖掘worker引用.current[键];
-            break;
-        }
-      };
-      w.onerror = (e) => {
-        设错误(
-          `组挖掘 Worker 加载/运行失败（${e.message || "无错误消息，多为页面版本过期，请 Ctrl+Shift+R 强刷"}）`,
-        );
-        设组挖掘状态((x) => ({
-          ...x,
-          [键]: {
-            ...(x[键] ?? { 进行中: false, 阶段: "", 结果: null }),
-            进行中: false,
-          },
-        }));
-        w.terminate();
-        if (组挖掘worker引用.current[键] === w) delete 组挖掘worker引用.current[键];
-      };
-      w.postMessage({
-        type: "组挖掘",
-        配置,
-        内置字库数据: Object.values(get预加载数据().原始字库数据),
-        原始词典,
-        mapping: 起始mapping,
-        表列表,
-        根起: r.根起 ?? 1,
-        根止: r.根止 ?? 100,
-        允许复合体,
-        字根表列表: 字根表,
-      });
+      // 防抖 500ms（同「字内部件」）：重码组挖掘要重建分析器，比字内部件更贵，
+      // 逐字输入手动指定时更不能每敲一下就来一遍。
+      clearTimeout(组挖定时引用.current[键]);
+      组挖定时引用.current[键] = setTimeout(() => {
+        const w = new Worker(new URL("../lib/智能选根.worker.ts", import.meta.url), {
+          type: "module",
+        });
+        组挖掘worker引用.current[键] = w;
+        w.onmessage = ({ data }: { data: any }) => {
+          switch (data.type) {
+            case "阶段":
+              设组挖掘状态((x) => ({
+                ...x,
+                [键]: {
+                  ...(x[键] ?? { 进行中: false, 阶段: "", 结果: null }),
+                  阶段: data.文本,
+                },
+              }));
+              break;
+            case "组挖掘完成":
+              设组挖掘状态((x) => ({
+                ...x,
+                [键]: { 进行中: false, 阶段: "", 结果: data.结果 },
+              }));
+              w.terminate();
+              if (组挖掘worker引用.current[键] === w) delete 组挖掘worker引用.current[键];
+              break;
+            case "错误":
+              设错误(`重码组挖掘失败: ${data.错误}`);
+              设组挖掘状态((x) => ({
+                ...x,
+                [键]: {
+                  ...(x[键] ?? { 进行中: false, 阶段: "", 结果: null }),
+                  进行中: false,
+                },
+              }));
+              w.terminate();
+              if (组挖掘worker引用.current[键] === w) delete 组挖掘worker引用.current[键];
+              break;
+          }
+        };
+        w.onerror = (e) => {
+          设错误(
+            `组挖掘 Worker 加载/运行失败（${e.message || "无错误消息，多为页面版本过期，请 Ctrl+Shift+R 强刷"}）`,
+          );
+          设组挖掘状态((x) => ({
+            ...x,
+            [键]: {
+              ...(x[键] ?? { 进行中: false, 阶段: "", 结果: null }),
+              进行中: false,
+            },
+          }));
+          w.terminate();
+          if (组挖掘worker引用.current[键] === w) delete 组挖掘worker引用.current[键];
+        };
+        w.postMessage({
+          type: "组挖掘",
+          配置,
+          内置字库数据: Object.values(get预加载数据().原始字库数据),
+          原始词典,
+          mapping: 起始mapping,
+          表列表,
+          根起: r.根起 ?? 1,
+          根止: r.根止 ?? 100,
+          允许复合体,
+          字根表列表: 字根表,
+        });
+      }, 500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [展开规则, 组挖掘状态, 字根表]);
