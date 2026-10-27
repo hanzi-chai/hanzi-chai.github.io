@@ -24,6 +24,17 @@ import {
 } from "../../packages/hanzi-chai/src/main";
 import { 构建标准上下文, 装配输入自配置 } from "./标准装配";
 import { 阶重序列键, 阶重估计计数, 阶重加增量, 阶重减增量 } from "./阶重统计";
+// 级联逻辑只有这一份实现：五处曾各自抄一遍，改一处漏一处就会撞「决策图线性化
+// 报决策中不存在键」。CLI 脚本也从这个零依赖模块取，见其头注释。
+import {
+  变体mapping as 构建变体mapping,
+  差异根,
+  收集引用,
+  根数,
+  根身份集,
+} from "./变体mapping";
+
+export { 差异根, 收集引用, 根数, 根身份集 };
 
 // 「两个字形是不是同一个根」的判据必须全站共用一套（见 字形同形键 注释），
 // 界面自己判同形时也要走 部件同形，所以把退化配置从这里一并转出去，别各处另造。
@@ -567,6 +578,28 @@ export function 对齐决策空间(
   return 结果;
 }
 
+/**
+ * 决策 + 线性化：核心与 CLI 脚本的唯一入口（2026-10-27 统一，CLI 地位低于核心）。
+ * **必须先 对齐决策空间 再建决策**——否则 space 里「既不在决策、又一条非空安排都
+ * 没有」的条目会让 计算当前或潜在长度 直接抛「元素 X 在决策空间中没有非空安排」。
+ * CLI 原先各自走 `获取决策与决策空间(配置, …)`，那条路把 配置.form.mapping_space
+ * 原样传下去，绕过了对齐，于是搜索的「减根」第一步就能把整条跑崩。
+ */
+export function 建决策与线性化(
+  mapping: Record<string, any>,
+  空间: Record<string, any> | undefined | null,
+  名称映射: Map<string, any>,
+) {
+  const 强 = 构建强类型决策与决策空间(
+    mapping as any,
+    对齐决策空间(mapping, 空间),
+    名称映射 as any,
+  );
+  const 线性化 = new 决策图(强.决策).线性化();
+  if (!线性化.ok) throw 线性化.error;
+  return { 强, 线性化: 线性化.value };
+}
+
 export interface 搜索参数 {
   /** 轮数上限 */
   轮数: number;
@@ -589,7 +622,8 @@ export interface 搜索参数 {
    *  重建重算与映射相关的部分（重码组挖掘排行、形状去重、相似/预置归并拉入），
    *  字频排序与字内部件名单复用初次结果；基态无需额外重建（每轮末尾与码位归并触发段都会重设）。 */
   重建加根池间隔?: number;
-  /** 根数惩罚：以 n（直设根数）为自变量的表达式，如 "max(0, n-150)*50000"；空=不惩罚 */
+  /** 根数惩罚：以 n（根数，可删根口径：string 键位安排 ∪ 数组逐位安排）为自变量的
+   *  表达式，如 "max(0, n-150)*50000"；空=不惩罚 */
   根数惩罚?: string;
   /** 相似字形分组的强制归并（缺省开启）：组内任一成员进了字根池（候选池 ∪ 当前映射），整组即归并——
    *  不常用者整体归入组内最常用者（{element: 最常用}）。与硬性预置归并同等强度，冲突时手写条目优先；
@@ -771,50 +805,25 @@ export class 智能选根核心 {
 
   // ---------- mapping 变换 ----------
   /**
-   * 应用加/删并级联失效（2026-10-08 修订，修复"连带删除别名 53 个"误删）。
-   * 条目三形态：string 键位安排（直设根）/ 数组逐位安排（带自身键位的根，可含 {element,index} 借码位）/
-   * 纯别名 {element: X}（整体归并，跟随 X 的码）。
-   * 级联规则（不动点）：非 string 条目引用的根**因本次动作从映射中消失**（被显式删除，或沿引用链上游失效）时
-   * 随之失效——数组条目也必须遵守：借码根悬空时决策图线性化硬报错"决策中不存在键"（实测）。
-   * 引用**从未入映射**的名字（基线悬空条目，如 {element:忄} 且 忄 不是根）不属本次动作的后果，保持原样
-   * ——这类条目在恢复安排里本就被跳过（死条目），删与不删不影响任何分数，动了反而惊扰用户。
-   * 旧 bug 双根因：①收集引用把数组里的键位字符（如 "j"）当引用根，所有数组条目被判引用不全；
-   * ②直设集只认 string 值，"引用数组根"的 444 个别名全被误判失效。
+   * 应用加/删并级联失效——规则、历史 bug 与条目三形态见 ./变体mapping 头注释。
+   * 实现只此一份（核心 + 四份 CLI 脚本共用），此处仅保留实例方法形态的转发。
    */
-  变体mapping(基: Record<string, any>, 加: string[], 删: string[], 占位 = "aa"): Record<string, any> {
-    const m: Record<string, any> = { ...基 };
-    const 加集 = new Set(加 ?? []);
-    const 死 = new Set(删 ?? []);
-    for (const r of 死) if (!加集.has(r)) delete m[r];
-    for (const r of 加集) if (!(r in m)) m[r] = 占位;
-    const 非串条目 = Object.entries(m).filter(([, v]) => typeof v !== "string") as [string, any][];
-    let 变了 = true;
-    while (变了) {
-      变了 = false;
-      for (const [k, v] of 非串条目) {
-        if (死.has(k)) continue;
-        const refs = new Set<string>();
-        收集引用(v, refs);
-        if ([...refs].some((r) => 死.has(r))) {
-          死.add(k);
-          delete m[k];
-          变了 = true;
-        }
-      }
-    }
-    return m;
+  变体mapping(
+    基: Record<string, any>,
+    加: string[],
+    删: string[],
+    占位 = "aa",
+  ): Record<string, any> {
+    return 构建变体mapping(基, 加, 删, 占位);
   }
 
   // ---------- 流水线 ----------
   建决策(mapping: Record<string, any>) {
-    const 强 = 构建强类型决策与决策空间(
-      mapping as any,
-      对齐决策空间(mapping, this.配置0.form.mapping_space),
+    return 建决策与线性化(
+      mapping,
+      this.配置0.form.mapping_space,
       this.名称映射,
     );
-    const 线性化 = new 决策图(强.决策).线性化();
-    if (!线性化.ok) throw 线性化.error;
-    return { 强, 线性化: 线性化.value };
   }
   建准备(强: any, 线性化: any) {
     return (this.字库 as any).准备分析(
@@ -1058,7 +1067,8 @@ export class 智能选根核心 {
 
   根数惩罚?: string;
   private 罚分缓存?: { 源: string; 函数: (...a: any[]) => number };
-  /** 根数惩罚：n=直设根数（mapping 中字符串值的键数），套用用户表达式。
+  /** 根数惩罚：n=根数（可删根口径，string 键位安排 ∪ 数组逐位安排，见 ./变体mapping.根数），
+   *  套用用户表达式。
    *  非法表达式 / 求值失败 / 非有限结果一律抛错（worker 会作为「错误」上报 UI），不做静默降级 */
   根数罚分(m: Record<string, any>): number {
     const 源 = (this.根数惩罚 ?? "").trim();
@@ -1069,19 +1079,19 @@ export class 智能选根核心 {
         函数 = new Function("n", "max", "min", `"use strict"; return (${源});`) as (...a: any[]) => number;
         函数(0, Math.max, Math.min); // 试编译+试运行：编译错误、引用未定义变量在此暴露
       } catch (err: any) {
-        throw new Error(`根数罚分表达式「${源}」非法（须为单个 JavaScript 表达式，变量 n=直设根数、max、min）：${err?.message ?? err}`);
+        throw new Error(`根数罚分表达式「${源}」非法（须为单个 JavaScript 表达式，变量 n=根数、max、min）：${err?.message ?? err}`);
       }
       this.罚分缓存 = { 源, 函数 };
     }
-    const 根数 = Object.values(m).filter((v) => typeof v === "string").length;
+    const n = 根数(m);
     let 值: unknown;
     try {
-      值 = this.罚分缓存.函数(根数, Math.max, Math.min);
+      值 = this.罚分缓存.函数(n, Math.max, Math.min);
     } catch (err: any) {
-      throw new Error(`根数罚分表达式「${源}」在 n=${根数} 时求值失败：${err?.message ?? err}`);
+      throw new Error(`根数罚分表达式「${源}」在 n=${n} 时求值失败：${err?.message ?? err}`);
     }
     if (typeof 值 !== "number" || !isFinite(值))
-      throw new Error(`根数罚分表达式「${源}」在 n=${根数} 时结果为 ${String(值)}，须为有限数`);
+      throw new Error(`根数罚分表达式「${源}」在 n=${n} 时结果为 ${String(值)}，须为有限数`);
     return 值;
   }
 
@@ -2040,9 +2050,10 @@ export class 智能选根核心 {
       const 禁删 = new Set(
         待归并.filter(({ 条目: x }) => x.根位 == null || x.目标位 == null).map(({ 条目: x }) => x.根),
       );
-      // 可直接删的根：值为 string（普通根）或 数组（码位借码安排——归入根可单独出，见 A 1=B 1 第五/六种情况）；
+      // 可直接删的根：可删根口径（string 键位安排 ∪ 数组逐位安排，见 ./变体mapping.根数）。
+      // 数组条目等于码位借码安排——归入根可单独出，见 A 1=B 1 第五/六种情况；
       // 整体系数别名 {element:B} 是对象、不在其列（须随 B 出，且已列入 禁删）——故 A=B 整体归入的根绝不被单独删除
-      const 直设根 = Object.keys(mapping).filter((k) => typeof mapping[k] === "string" || Array.isArray(mapping[k]));
+      const 直设根 = [...根身份集(mapping)];
       const 可删 = 直设根.filter(
         (k) => !保护.has(k) && !禁删.has(k) && (!减根正则 || 减根正则.test(k)),
       );
@@ -2356,44 +2367,6 @@ export function 查相似已映射根(c: string, mapping: Record<string, any>): 
   return null;
 }
 
-/**
- * 收集安排值里的**元素引用**：只有 {element: 名} 对象是引用。
- * 裸字符串（顶层或数组内）是键位安排（键位字符，如 "j"），不是引用——旧版把它们当引用根去校验，
- * 导致所有逐位安排数组被判"引用根不全"而遭级联误删（2026-10-08 修复）。
- */
-export function 收集引用(v: any, out: Set<string>) {
-  if (Array.isArray(v)) v.forEach((x) => 收集引用(x, out));
-  else if (v && typeof v === "object" && typeof v.element === "string") out.add(v.element);
-}
-/** 根身份 = string 键位安排 ∪ 数组逐位安排（都占键位，都是映射里的真根） */
-const 是根身份 = (v: any) => typeof v === "string" || Array.isArray(v);
-const 根身份集 = (m: Record<string, any>) => new Set(Object.keys(m).filter((k) => 是根身份(m[k])));
-const 活跃别名 = (m: Record<string, any>) => {
-  const 有 = 根身份集(m); // 引用数组根的别名同样有效（数组条目是真根，旧版只认 string 值导致误判失效）
-  const keys = new Set<string>();
-  for (const [k, v] of Object.entries(m)) {
-    if (是根身份(v)) continue;
-    const refs = new Set<string>();
-    收集引用(v, refs);
-    if ([...refs].every((r) => 有.has(r))) keys.add(k);
-  }
-  return keys;
-};
-/** 影响拆分的根差异：直接根增删 + 别名开/关（别名键自身获得/失去根身份）+ 开关别名的引用根 */
-export function 差异根(m1: Record<string, any>, m2: Record<string, any>): Set<string> {
-  const d1 = 根身份集(m1), d2 = 根身份集(m2);
-  const out = new Set<string>();
-  for (const k of d1) if (!d2.has(k)) out.add(k);
-  for (const k of d2) if (!d1.has(k)) out.add(k);
-  const a1 = 活跃别名(m1), a2 = 活跃别名(m2);
-  const 并入 = (k: string, v: any) => {
-    out.add(k);
-    收集引用(v, out);
-  };
-  for (const k of a1) if (!a2.has(k)) 并入(k, m1[k]);
-  for (const k of a2) if (!a1.has(k)) 并入(k, m2[k]);
-  return out;
-}
 /** 表模式展开：patterns 优先，否则按 orders 展开为空位组合；**两者都空 = 全选**（0..maxLength 全部空位组合），
  *  与手动分析「空位模式不选=全选」口径统一。 */
 export function 展开表模式(t: { patterns?: number[][]; orders?: number[]; maxLength?: number }): number[][] {
