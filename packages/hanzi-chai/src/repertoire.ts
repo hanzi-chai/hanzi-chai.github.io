@@ -177,6 +177,17 @@ function 蕴含(已有列表: 条件[], 目标列表: 条件[]): boolean {
 
 class 字库 {
   private repertoire: Map<字符, 字形[]>;
+  /**
+   * 复合体字形 → 渲染出的真部件。
+   *
+   * 渲染只取决于字形自身（部分列表 + 矢量图形），与决策/mapping 无关，故可按字形缓存。
+   * 不缓存时每次 `准备分析` 都要重算 `图形盒子` 并 `new 部件`（逐笔 笔画图形 + O(笔画²) 拓扑），
+   * 实测占智能选根单步评估里 `准备字形分析配置` 的大头。部件构造完成后不再被改写
+   * （`字形序号` 只在建库时写一次），跨调用共享同一实例是安全的。
+   */
+  private 渲染部件缓存: WeakMap<复合体, 部件> = new WeakMap();
+  /** 单字 → 其全部字形树里出现的部件。只取决于字库本身，与 汉字集合、mapping 都无关。 */
+  private 字部件缓存: Map<字符, 部件[]> = new Map();
 
   constructor(repertoire: Map<字符, 字形[]> = new Map()) {
     this.repertoire = repertoire;
@@ -194,6 +205,7 @@ class 字库 {
 
   添加(character: 字符, 字形列表: 字形[]) {
     this.repertoire.set(character, 字形列表);
+    this.字部件缓存.delete(character);
   }
 
   找到部件(key: string, 原始字库: 原始字库): 部件 | undefined {
@@ -239,17 +251,11 @@ class 字库 {
             部件字根列表.push(字根字形);
             所有字根.push(字根字形);
           } else {
-            const 图形盒子 = this.递归渲染复合体(字根字形);
-            if (!图形盒子.ok) return 图形盒子;
-            const 真部件 = new 部件(
-              元素,
-              字根字形.标签集合,
-              字根字形.兼容,
-              图形盒子.value.获取笔画列表(),
-            );
-            部件字根列表.push(真部件);
-            复合体字根映射.set(字根字形, 真部件);
-            所有字根.push(真部件);
+            const 真部件 = this.渲染为部件(元素, 字根字形);
+            if (!真部件.ok) return 真部件;
+            部件字根列表.push(真部件.value);
+            复合体字根映射.set(字根字形, 真部件.value);
+            所有字根.push(真部件.value);
           }
         }
       }
@@ -338,19 +344,26 @@ class 字库 {
    */
   获取待分析部件(汉字列表: Set<字符>) {
     const 待分析部件集合: Set<部件> = new Set();
-    const recurse = (glyph: 字形) => {
-      if (是部件(glyph)) 待分析部件集合.add(glyph);
-      else {
-        for (const 子字形 of glyph.部分列表) {
-          recurse(子字形);
-        }
-      }
-    };
     for (const 汉字 of 汉字列表) {
-      const 字形列表 = this.查询字形(汉字) ?? [];
-      for (const 字形 of 字形列表) {
-        recurse(字形);
+      // 单字的字形树只取决于字库，逐字缓存；命中时省掉整棵 部分列表 的递归。
+      let 部件们 = this.字部件缓存.get(汉字);
+      if (!部件们) {
+        const 收集: 部件[] = [];
+        const recurse = (glyph: 字形) => {
+          if (是部件(glyph)) 收集.push(glyph);
+          else {
+            for (const 子字形 of glyph.部分列表) {
+              recurse(子字形);
+            }
+          }
+        };
+        for (const 字形 of this.查询字形(汉字) ?? []) {
+          recurse(字形);
+        }
+        部件们 = 收集;
+        this.字部件缓存.set(汉字, 部件们);
       }
+      for (const 部件 of 部件们) 待分析部件集合.add(部件);
     }
     return 待分析部件集合;
   }
@@ -385,6 +398,27 @@ class 字库 {
         图形盒子列表,
       ),
     );
+  }
+
+  /**
+   * 复合体字形 → 真部件（递归渲染取的笔画列表 + 逐笔构造）。
+   *
+   * 只取决于字形本身，故按字形缓存；返回的部件跨调用是同一实例。组合体本身不可变，
+   * 部件构造后也不再被改写，所以缓存不改任何语义，只是省掉重复的 图形盒子 / 拓扑 构造。
+   */
+  private 渲染为部件(字符: 字符, 字形: 复合体): Result<部件, Error> {
+    const 缓存 = this.渲染部件缓存.get(字形);
+    if (缓存) return ok(缓存);
+    const 图形盒子 = this.递归渲染复合体(字形);
+    if (!图形盒子.ok) return 图形盒子;
+    const 部件结果 = new 部件(
+      字符,
+      字形.标签集合,
+      字形.兼容,
+      图形盒子.value.获取笔画列表(),
+    );
+    this.渲染部件缓存.set(字形, 部件结果);
+    return ok(部件结果);
   }
 
   准备分析(base: 字形分析基本配置, 汉字集合: Set<字符>) {
