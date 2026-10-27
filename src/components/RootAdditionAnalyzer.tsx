@@ -86,6 +86,7 @@ import ElementSelect from "~/components/ElementSelect";
 import { CharacterDisplay, DeleteButton } from "~/components/Utils";
 import Value from "~/components/Value";
 import { 安排文本, 根安排描述 } from "~/lib/安排显示";
+import { 按分隔拆分 } from "~/lib/分隔";
 
 /** 自动搜索参数：随方案 yaml 走，存顶层 `autoselect` 块（键名与页面 state 一一对应，1:1 落盘）。
  *  只放"这次怎么跑"的旋钮；评分表仍在 `statistics.tables`，两者各司其职。 */
@@ -1590,12 +1591,24 @@ function 智能选根面板() {
       </Flex>
     );
   };
-  const [占位安排, 设占位安排] = useState(
-    初始配置.占位安排 ?? (alphabet[0] ?? "a").repeat(编码类型),
+  // 字根编码：一个框里写一到多个码，逗号/换行分隔（与预置归并、手动指定同一套分隔符）。
+  // **第一个是默认码**，其余是候选——搜索时每个候选根在每个码上各评一次，取最好的「根 + 码」入轮。
+  // 不做「功能相同的码合并成一类」这类智能省略，用户自己决定试哪几个。
+  const [字根编码文本, 设字根编码文本] = useState(() =>
+    [
+      ...new Set(
+        [
+          初始配置.占位安排 ?? (alphabet[0] ?? "a").repeat(编码类型),
+          ...(初始配置.占位安排候选 ?? []),
+        ]
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+    ].join("，"),
   );
-  // 候选安排：留空 = 只用上面那一个（行为与旧版一致）；填了就逐根逐码各评一次取最优。
-  // 不做「功能相同的码合并成一类」这类智能省略——用户自己决定试哪几个。
-  const [候选编码, 设候选编码] = useState<string[]>(初始配置.占位安排候选 ?? []);
+  const 码列表 = useMemo(() => [...new Set(按分隔拆分(字根编码文本))], [字根编码文本]);
+  const 占位安排 = 码列表[0] ?? (alphabet[0] ?? "a").repeat(编码类型);
+  const 候选编码 = useMemo(() => (码列表.length > 1 ? 码列表 : []), [码列表]);
   const [罚分表达式, 设罚分表达式] = useState(初始配置.罚分表达式 ?? "");
   const [减根范围文本, 设减根范围文本] = useState(初始配置.减根范围 ?? "");
   const [允许加根, 设允许加根] = useState(初始配置.允许加根 ?? true);
@@ -1636,7 +1649,7 @@ function 智能选根面板() {
       if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
     }, 600);
     return () => clearTimeout(定时);
-  }, [轮数, 单轮根数, 重建间隔, 字根表, 占位安排, 候选编码, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
+  }, [轮数, 单轮根数, 重建间隔, 字根表, 字根编码文本, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
@@ -2005,10 +2018,7 @@ function 智能选根面板() {
     设归并失败提示([]);
     // 预置归并解析与校验（条目用中英逗号或换行分隔；空格是码位语法：的 1=人 2）
     const 占位 = 占位安排.trim() || (alphabet[0] ?? "a").repeat(编码类型);
-    const 条目 = 预置归并文本
-      .split(/[,,，\n]/)
-      .map((s: string) => s.trim())
-      .filter(Boolean);
+    const 条目 = 按分隔拆分(预置归并文本);
     const 预置: { 根: string; 目标: string; 根位?: number; 目标位?: number }[] = [];
     const 整体根集 = new Set<string>(); // 已整体归并的根（整体归并独占该根）
     const 半根集 = new Set<string>(); // 已有半归并的根（同根可多位并存）
@@ -2165,7 +2175,7 @@ function 智能选根面板() {
         // 传给核心前在此把原始文本拆成数组，核心仍按数组消费，语义不变
         字根表列表: 字根表.map((r) =>
           r.类型 === "手动指定" && typeof r.字根 === "string"
-            ? { ...r, 字根: r.字根.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean) }
+            ? { ...r, 字根: 按分隔拆分(r.字根) }
             : r,
         ),
         占位安排: 占位,
@@ -2666,46 +2676,11 @@ function 智能选根面板() {
           <Flex gap={6} align="center">
             字根编码
             <Input
-              className="w-16! text-center"
-              placeholder={(alphabet[0] ?? "a").repeat(编码类型)}
-              value={占位安排}
-              onChange={(e) => 设占位安排(e.target.value)}
+              className="w-36! text-center"
+              placeholder={`默认${(alphabet[0] ?? "a").repeat(编码类型)}，逗号分隔`}
+              value={字根编码文本}
+              onChange={(e) => 设字根编码文本(e.target.value)}
             />
-          </Flex>
-          <Flex gap={6} align="center">
-            候选编码
-            <Select
-              mode="tags"
-              size="small"
-              style={{ minWidth: 150 }}
-              value={候选编码}
-              // 直接敲码、回车/空格/逗号成词；重复的自动去重，不做别的加工
-              tokenSeparators={[",", "，", "、", " "]}
-              onChange={(v: string[]) =>
-                设候选编码([...new Set(v.map((s) => s.trim()).filter(Boolean))])
-              }
-              open={false}
-              suffixIcon={null}
-            />
-            <Popover
-              trigger="click"
-              placement="bottomLeft"
-              content={
-                <div style={{ maxWidth: 380 }}>
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    填了几个候选，算法就把每个候选根在每个候选码上各评一次，
-                    「加哪个根 + 用哪个码」一起穷举，取分数最好的那对入轮，轨迹里写成{" "}
-                    <Typography.Text code style={{ fontSize: 12 }}>
-                      +根=码
-                    </Typography.Text>
-                    。 不设个数上限，也不会替你合并「功能相同」的码——耗时按候选个数成倍增长，自己掂量。
-                    带预置归并借码的根不参与候选，它的码由借码固定。
-                  </Typography.Text>
-                </div>
-              }
-            >
-              <InfoCircleOutlined style={{ opacity: 0.5, cursor: "pointer", fontSize: 12 }} />
-            </Popover>
           </Flex>
           <Flex gap={6} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
@@ -2779,10 +2754,7 @@ function 智能选根面板() {
           </Flex>
           {归并查看 &&
             (() => {
-              const 条目 = 预置归并文本
-                .split(/[,,，\n]/)
-                .map((s: string) => s.trim())
-                .filter(Boolean);
+              const 条目 = 按分隔拆分(预置归并文本);
               return (
                 <div className="ml-6 mt-1 w-full max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                   <Typography.Text type="secondary" className="w-full!">

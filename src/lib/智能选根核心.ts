@@ -7,6 +7,7 @@
  */
 import { range } from "lodash-es";
 import { 根安排描述 } from "./安排显示";
+import { 分隔正则, 按分隔拆分 } from "./分隔";
 import {
   原始字库,
   构建强类型决策与决策空间,
@@ -530,7 +531,7 @@ export type 字根表规则 =
  */
 export function 解析手动指定(字根: string | string[]): string[] {
   if (Array.isArray(字根)) return 字根;
-  if (/[,,，\n]/.test(字根)) return 字根.split(/[,,，\n]/).map((s) => s.trim()).filter(Boolean);
+  if (分隔正则.test(字根)) return 按分隔拆分(字根);
   return [...字根];
 }
 
