@@ -2678,7 +2678,6 @@ function 智能选根面板() {
               mode="tags"
               size="small"
               style={{ minWidth: 150 }}
-              placeholder="留空=只用左边那一个"
               value={候选编码}
               // 直接敲码、回车/空格/逗号成词；重复的自动去重，不做别的加工
               tokenSeparators={[",", "，", "、", " "]}
@@ -2694,7 +2693,7 @@ function 智能选根面板() {
               content={
                 <div style={{ maxWidth: 380 }}>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    留空 = 所有新根都用左边那一个码。填了几个候选，算法就把每个候选根在每个候选码上各评一次，
+                    填了几个候选，算法就把每个候选根在每个候选码上各评一次，
                     「加哪个根 + 用哪个码」一起穷举，取分数最好的那对入轮，轨迹里写成{" "}
                     <Typography.Text code style={{ fontSize: 12 }}>
                       +根=码
