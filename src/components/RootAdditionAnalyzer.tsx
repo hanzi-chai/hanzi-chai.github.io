@@ -94,6 +94,9 @@ export interface 自动搜索配置 {
   单轮根数?: number;
   重建间隔?: number;
   占位安排?: string;
+  /** 候选安排：给了就逐个试，每个候选根在每个安排上各评一次，「根 + 码」一起穷举取最优。
+   *  不设上限、不做等价类归并。空/缺省 = 只用 占位安排。 */
+  占位安排候选?: string[];
   允许加根?: boolean;
   允许减根?: boolean;
   减根范围?: string;
@@ -112,6 +115,7 @@ const 搜索配置串 = (o: 自动搜索配置 | undefined) =>
         "单轮根数",
         "重建间隔",
         "占位安排",
+        "占位安排候选",
         "允许加根",
         "允许减根",
         "减根范围",
@@ -1589,6 +1593,9 @@ function 智能选根面板() {
   const [占位安排, 设占位安排] = useState(
     初始配置.占位安排 ?? (alphabet[0] ?? "a").repeat(编码类型),
   );
+  // 候选安排：留空 = 只用上面那一个（行为与旧版一致）；填了就逐根逐码各评一次取最优。
+  // 不做「功能相同的码合并成一类」这类智能省略——用户自己决定试哪几个。
+  const [候选编码, 设候选编码] = useState<string[]>(初始配置.占位安排候选 ?? []);
   const [罚分表达式, 设罚分表达式] = useState(初始配置.罚分表达式 ?? "");
   const [减根范围文本, 设减根范围文本] = useState(初始配置.减根范围 ?? "");
   const [允许加根, 设允许加根] = useState(初始配置.允许加根 ?? true);
@@ -1607,6 +1614,7 @@ function 智能选根面板() {
         单轮根数,
         重建间隔,
         占位安排,
+        ...(候选编码.length ? { 占位安排候选: 候选编码 } : {}),
         允许加根,
         允许减根,
         减根范围: 减根范围文本,
@@ -1628,7 +1636,7 @@ function 智能选根面板() {
       if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
     }, 600);
     return () => clearTimeout(定时);
-  }, [轮数, 单轮根数, 重建间隔, 字根表, 占位安排, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
+  }, [轮数, 单轮根数, 重建间隔, 字根表, 占位安排, 候选编码, 允许加根, 允许减根, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
@@ -2161,6 +2169,7 @@ function 智能选根面板() {
             : r,
         ),
         占位安排: 占位,
+        ...(候选编码.length ? { 占位安排候选: 候选编码 } : {}),
         允许加根,
         允许减根,
         减根范围: 减根范围文本,
@@ -2662,6 +2671,42 @@ function 智能选根面板() {
               value={占位安排}
               onChange={(e) => 设占位安排(e.target.value)}
             />
+          </Flex>
+          <Flex gap={6} align="center">
+            候选编码
+            <Select
+              mode="tags"
+              size="small"
+              style={{ minWidth: 150 }}
+              placeholder="留空=只用左边那一个"
+              value={候选编码}
+              // 直接敲码、回车/空格/逗号成词；重复的自动去重，不做别的加工
+              tokenSeparators={[",", "，", "、", " "]}
+              onChange={(v: string[]) =>
+                设候选编码([...new Set(v.map((s) => s.trim()).filter(Boolean))])
+              }
+              open={false}
+              suffixIcon={null}
+            />
+            <Popover
+              trigger="click"
+              placement="bottomLeft"
+              content={
+                <div style={{ maxWidth: 380 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    留空 = 所有新根都用左边那一个码。填了几个候选，算法就把每个候选根在每个候选码上各评一次，
+                    「加哪个根 + 用哪个码」一起穷举，取分数最好的那对入轮，轨迹里写成{" "}
+                    <Typography.Text code style={{ fontSize: 12 }}>
+                      +根=码
+                    </Typography.Text>
+                    。 不设个数上限，也不会替你合并「功能相同」的码——耗时按候选个数成倍增长，自己掂量。
+                    带预置归并借码的根不参与候选，它的码由借码固定。
+                  </Typography.Text>
+                </div>
+              }
+            >
+              <InfoCircleOutlined style={{ opacity: 0.5, cursor: "pointer", fontSize: 12 }} />
+            </Popover>
           </Flex>
           <Flex gap={6} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
