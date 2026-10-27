@@ -1096,8 +1096,8 @@ function 手动分析面板() {
               onClose={() => 设操作列表(操作列表.filter((y) => y.id !== x.id))}
             >
               {x.类型 === "减"
-                ? 富文本(`减 ${x.名}`)
-                : 富文本(`加 ${x.名} → ${安排文本(x.安排).replace(/^归并→/, "并→")}`)}
+                ? 富文本(`−${x.名}`)
+                : 富文本(`＋${x.名} → ${安排文本(x.安排).replace(/^归并→/, "并→")}`)}
             </Tag>
           ))}
           <Button size="small" danger onClick={() => 设操作列表([])}>
@@ -2269,7 +2269,7 @@ function 智能选根面板() {
                   key: "重码组挖掘",
                   label: "重码组挖掘（按有该根的字从组中分离出的收益排名）",
                 },
-                { key: "手动指定", label: "手动指定（标签输入，支持拼音/自定义元素）" },
+                { key: "手动指定", label: "手动指定（标签输入，支持拼音/自定义元素，逗号分隔）" },
               ],
               onClick: ({ key }) => {
                 const 类型 = key as "字频范围" | "字内部件" | "重码组挖掘" | "手动指定";
@@ -2392,15 +2392,13 @@ function 智能选根面板() {
                     </span>
                   </Flex>
                 )}
-                <Typography.Text type="secondary" style={{ fontSize: "0.85em" }}>
-                  {r.类型 === "字频范围"
-                    ? "（按词典单字字频）"
-                    : r.类型 === "字内部件"
-                      ? "（按包含该根的字数排名，可挖到整字与各层部件）"
-                      : r.类型 === "手动指定"
-                        ? "（自定义，逗号分隔）"
-                        : "（按有该根的字从组中分离出的收益排名）"}
-                </Typography.Text>
+                {/* 行的灰字只留「字频范围」这一句：其余三类在「+ 添加字根表」菜单里已经写明口径，
+                    行内再挂一遍是重复（2026-10-27 用户定案删掉） */}
+                {r.类型 === "字频范围" && (
+                  <Typography.Text type="secondary" style={{ fontSize: "0.85em" }}>
+                    （按词典单字字频）
+                  </Typography.Text>
+                )}
                 <Button
                   size="small"
                   type="text"
@@ -2410,11 +2408,7 @@ function 智能选根面板() {
                     )
                   }
                 >
-                  {展开规则.includes(i)
-                    ? "▾ 收起"
-                    : r.类型 === "重码组挖掘"
-                      ? "▸ 查看排行"
-                      : "▸ 查看候选"}
+                  {展开规则.includes(i) ? "▾ 收起" : "▸ 查看候选"}
                 </Button>
                 <DeleteButton
                   onClick={() => {
@@ -2452,7 +2446,7 @@ function 智能选根面板() {
                     // 说明和候选一起往上走。原先注在外层，滚动时它一动不动、其余在滚，很不统一。
                     <div className="ml-6 mt-1 max-h-44 overflow-y-auto flex flex-wrap gap-1 items-start bg-gray-50 p-1">
                       <Typography.Text strong className="w-full!">
-                        注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列：
+                        注：假设加的根可以把有该根的字从所有阶重码组中完全分离，计算其可消除的重码伤害，由大至小排列（标签上的 −X 就是预估能减少的总分）：
                       </Typography.Text>
                       <Typography.Text type="secondary" className="w-full!">
                         已生效 {已生效数} 个，表内 {显示根.length} 个（灰=已在方案或与已有根同形，同形者不会入池），点字形看它出现在哪些字/词里：
@@ -2486,7 +2480,8 @@ function 智能选根面板() {
                                 <span>{rk.名}</span>
                               )}
                               <span className="text-xs ml-1 opacity-70">
-                                +{Math.round(rk.得分 * 100) / 100}
+                                {/* 得分 = 可消除的重码伤害 = 预估能减少的总分，与轨迹同号（−） */}
+                                {变化显示(rk.得分).文本}
                                 {同形 ? 富文本(`·与「${同形}」同形`) : ""}
                               </span>
                             </Tag>
@@ -2887,7 +2882,9 @@ function 智能选根面板() {
                       本轮已评 {进度.已评}/{进度.总数}，当前最优 {富文本(进度.最优)}（
                       {进度.变化 != null && isFinite(进度.变化) && (
                         <Typography.Text
-                          type={进度.变化 < 0 ? "success" : "danger"}
+                          type={
+                            进度.变化 < 0 ? "success" : 进度.变化 > 0 ? "danger" : undefined
+                          }
                           style={{ fontSize: "inherit" }}
                         >
                           {进度.变化 > 0 ? "+" : ""}
@@ -2928,7 +2925,10 @@ function 智能选根面板() {
               <div key={i}>
                 {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>
                 {r.前分} → {r.分数}（
-                <Typography.Text type={r.变化 < 0 ? "success" : "danger"}>
+                {/* 绿减红加，0 = 没变好也不坏 → 无色（与差异分析那边同一口径） */}
+                <Typography.Text
+                  type={r.变化 < 0 ? "success" : r.变化 > 0 ? "danger" : undefined}
+                >
                   {r.变化 > 0 ? "+" : ""}
                   {r.变化}
                 </Typography.Text>
