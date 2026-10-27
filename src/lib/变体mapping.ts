@@ -108,8 +108,29 @@ export function 变体mapping(
 }
 
 /**
+ * 两个安排值是不是同一条（string 键位串 / 数组逐位安排 / 整体别名 `{element}`）。
+ * 三条形态的字段是 `{element, index?}` 与裸字符串，逐位递归比即可；**不用 JSON.stringify**
+ * ——键序不同会误判成不同。
+ */
+function 同安排(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (typeof a === "string" || typeof b === "string") return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    return a.length === b.length && a.every((x: any, i: number) => 同安排(x, b[i]));
+  }
+  return a?.element === b?.element && (a?.index ?? 0) === (b?.index ?? 0);
+}
+
+/**
  * 影响拆分的根差异：直接根增删 + 别名开/关（别名键自身获得/失去根身份）+
- * 开关别名的引用根（保守，覆盖归并安排对引用根选取的潜在影响）。
+ * 开关别名的引用根（保守，覆盖归并安排对引用根选取的潜在影响）+
+ * **两边都在、但安排值变了**（换键位串、string↔数组、借码位换了引用对象）。
+ *
+ * 最后一条是保底：搜索当前只产生「加根/删根」动作，改不到已有根的安排；但只要哪天
+ * 出现「改已有根安排」的动作（差异区手工调整、同根多个编码候选），漏掉它就会让
+ * `评变体` 判「无变化」**静默返回基态分**——实测把「土」改成借「口」的码，增量说
+ * 总分不变，全量真值是 +4057.89。
  */
 export function 差异根(
   m1: Record<string, any>,
@@ -128,5 +149,17 @@ export function 差异根(
   };
   for (const k of a1) if (!a2.has(k)) 并入(k, m1[k]);
   for (const k of a2) if (!a1.has(k)) 并入(k, m2[k]);
+  // 安排值变化：根与别名一视同仁（别名换了引用对象同样要重算）。
+  // 用 === 快路径挡住绝大多数同名同值的键，别用 Object.entries（406 键会白建 406 个数组）
+  for (const k in m1) {
+    const v1 = m1[k];
+    if (!(k in m2)) continue;
+    const v2 = m2[k];
+    if (v1 === v2) continue;
+    if (同安排(v1, v2)) continue;
+    out.add(k);
+    收集引用(v1, out);
+    收集引用(v2, out);
+  }
   return out;
 }
