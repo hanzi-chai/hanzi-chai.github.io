@@ -1994,18 +1994,23 @@ export class 智能选根核心 {
       if (触发.length) {
         const 前分0 = 当前分;
         const 描述列表: string[] = [];
+        // **必须换对象再写**：mapping 往往就是 this.基态mapping 本身（设置基态存的是引用，不克隆），
+        // 原地改写在 评变体 之前就把基态一起改了 → 差异根(基态, mapping) 恒空 → 评变体 静默返回基态分，
+        // 触发段改写的代价整个丢失（实测：改后差 1172.30 分却报 0 变化）。
+        const 新mapping = { ...mapping };
         for (const { 条目: x } of 触发) {
-          const 原 = mapping[x.根];
+          const 原 = 新mapping[x.根];
           const 根位 = x.根位!, 目标位 = x.目标位!;
           const 新安排 = Array.from({ length: 实际码长 }, (_, i) =>
             i === 根位 - 1 ? { element: x.目标, index: 目标位 - 1 } : typeof 原 === "string" ? [...原][i]! : 原[i]);
-          mapping[x.根] = 新安排;
+          新mapping[x.根] = 新安排;
           // 触发描述用「根=安排」用户语法（自由位保留原码）；加「+」前缀，与加根显示统一，避免轨迹里出现无符号的 根=(…)
           描述列表.push(`+${根安排描述(x.根, 新安排)}`);
           待归并.splice(待归并.findIndex((y) => y.条目 === x), 1);
         }
-        const 评 = this.评变体(mapping) as any;
-        if (!("失败" in 评)) 当前分 = 评.总分 + this.根数罚分(mapping);
+        const 评 = this.评变体(新mapping) as any;
+        if (!("失败" in 评)) 当前分 = 评.总分 + this.根数罚分(新mapping);
+        mapping = 新mapping;
         const 轮r: 轮结果 = {
           轮: 轮序 + 1,
           动作: 描述列表.join("、"),
