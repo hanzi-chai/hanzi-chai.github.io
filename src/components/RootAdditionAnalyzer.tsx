@@ -2680,7 +2680,7 @@ function 智能选根面板() {
           <Flex gap={6} align="center">
             字根编码
             <Input
-              className="w-36! text-center"
+              className="w-40! text-center"
               placeholder="可多个，逗号分隔"
               value={字根编码文本}
               onChange={(e) => 设字根编码文本(e.target.value)}
