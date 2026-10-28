@@ -5,10 +5,15 @@ import type { 基本部件数据, 字符数据, 字符数据补丁 } from "../sr
 const 部件数据: 基本部件数据 = {
   type: "component",
   id: 1,
+  ambiguous: false,
   operator: undefined,
   references: undefined,
   strokes: [
-    { feature: "横", start: [0, 0], curveList: [{ command: "h", parameterList: [100] }] },
+    {
+      feature: "横",
+      start: [0, 0],
+      curveList: [{ command: "h", parameterList: [100] }],
+    },
   ],
 };
 
@@ -21,12 +26,12 @@ describe("字形库与字库的分阶段构造", () => {
     const 字形库实例 = new 字形库([部件数据]);
     const 字库一 = new 字库(字符列表, 字形库实例, ["G"]);
     const 字库二 = new 字库(字符列表, 字形库实例, ["G"]);
-    const [[, 字形一]] = [...字库一.字形迭代器()];
-    const [[, 字形二]] = [...字库二.字形迭代器()];
+    const [, 字形一] = [...字库一.字形迭代器()][0]!;
+    const [, 字形二] = [...字库二.字形迭代器()][0]!;
     expect(字形一).toBe(字形二);
     // 不同字形库构建的字形实例相互独立
     const 另一字形库实例 = new 字形库([部件数据]);
-    const [[, 另一字形]] = [...另一字形库实例.字形迭代器()];
+    const [, 另一字形] = [...另一字形库实例.字形迭代器()][0]!;
     expect(字形一).not.toBe(另一字形);
   });
 

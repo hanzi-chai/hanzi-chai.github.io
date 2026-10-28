@@ -1,36 +1,39 @@
 import { describe, it, expect, beforeAll } from "bun:test";
 import { 部件字根, 默认退化配置 } from "../src/index.js";
-import type { 原始字库, 字符, 部件 } from "../src/index.js";
+import type { 字库, 字符, 部件 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 let 部件图形库: Map<字符, 部件>;
-let 原始字库实例: 原始字库;
+let 字库实例: 字库;
 
 beforeAll(() => {
   const 数据 = 获取数据();
   部件图形库 = 数据.部件图形库;
-  原始字库实例 = 数据.原始字库;
+  字库实例 = 数据.字库;
 });
 
 const 包含 = (字根名: string, 部件名: string, indices: number[]) => {
   const 字根实例 = h(字根名);
   const 部件 = g(部件名);
-  expect(部件.生成二进制切片列表(字根实例, 默认退化配置)).toContain(部件.索引转二进制(indices));
+  // 与生成二进制字根映射保持一致，检验当前运行时采用的切片算法。
+  expect(部件.生成新二进制切片列表(字根实例, 默认退化配置)).toContain(
+    部件.索引转二进制(indices),
+  );
 };
 
 const g = (字根字符串: string) => {
-  const 字符实例 = 原始字库实例.校验(字根字符串)!.character;
+  const 字符实例 = 字库实例.校验字符(字根字符串)!.character;
   const 部件 = 部件图形库.get(字符实例)!;
   if (!部件) throw new Error(`部件图形库中未找到字符 ${字根字符串} 的部件`);
   return 部件;
-}
+};
 
 const h = (字根字符串: string) => {
-  const 字符实例 = 原始字库实例.校验(字根字符串)!.character;
+  const 字符实例 = 字库实例.校验字符(字根字符串)!.character;
   const 部件 = 部件图形库.get(字符实例)!;
   if (!部件) throw new Error(`部件图形库中未找到字符 ${字根字符串} 的部件`);
   return new 部件字根(字符实例, 部件);
-}
+};
 
 interface 切片来源 {
   部件名: string;
@@ -100,9 +103,7 @@ const 切片系列数据: 切片系列[] = [
   },
   {
     字根名: "夫",
-    切片来源列表: [
-      { 部件名: "", 索引: [7, 8, 9, 10] },
-    ],
+    切片来源列表: [{ 部件名: "", 索引: [7, 8, 9, 10] }],
   },
   {
     字根名: "山",
@@ -173,7 +174,7 @@ describe("退化函数：特殊情况", () => {
   it("多次出现的字根", () => {
     const 丰 = g("丰");
     const 十 = h("十");
-    expect(丰.生成二进制切片列表(十, 默认退化配置)).toEqual([9, 5, 3]);
+    expect(丰.生成新二进制切片列表(十, 默认退化配置)).toEqual([9, 5, 3]);
   });
 
   it("区分「土」和「士」", () => {
@@ -181,10 +182,10 @@ describe("退化函数：特殊情况", () => {
     const 士 = h("士");
     const 王 = g("王");
     const 壬 = g("壬");
-    expect(王.生成二进制切片列表(土, 默认退化配置)).toEqual([7]);
-    expect(王.生成二进制切片列表(士, 默认退化配置)).toEqual([]);
-    expect(壬.生成二进制切片列表(土, 默认退化配置)).toEqual([]);
-    expect(壬.生成二进制切片列表(士, 默认退化配置)).toEqual([7]);
+    expect(王.生成新二进制切片列表(土, 默认退化配置)).toEqual([7]);
+    expect(王.生成新二进制切片列表(士, 默认退化配置)).toEqual([]);
+    expect(壬.生成新二进制切片列表(土, 默认退化配置)).toEqual([]);
+    expect(壬.生成新二进制切片列表(士, 默认退化配置)).toEqual([7]);
   });
 
   it("区分「未」和「末」", () => {
@@ -192,10 +193,10 @@ describe("退化函数：特殊情况", () => {
     const 末 = h("末");
     const 朱 = g("朱");
     const 耒 = g("耒");
-    expect(朱.生成二进制切片列表(未, 默认退化配置)).toEqual([31]);
-    expect(耒.生成二进制切片列表(未, 默认退化配置)).toEqual([47, 31]);
-    expect(朱.生成二进制切片列表(末, 默认退化配置)).toEqual([]);
-    expect(耒.生成二进制切片列表(末, 默认退化配置)).toEqual([]);
+    expect(朱.生成新二进制切片列表(未, 默认退化配置)).toEqual([31]);
+    expect(耒.生成新二进制切片列表(未, 默认退化配置)).toEqual([47, 31]);
+    expect(朱.生成新二进制切片列表(末, 默认退化配置)).toEqual([]);
+    expect(耒.生成新二进制切片列表(末, 默认退化配置)).toEqual([]);
   });
 
   it("区分「口」和「囗」", () => {
@@ -203,18 +204,18 @@ describe("退化函数：特殊情况", () => {
     const 囗 = h("囗");
     const 中 = g("中");
     const 日 = g("日");
-    expect(中.生成二进制切片列表(口, 默认退化配置)).toEqual([14]);
-    expect(中.生成二进制切片列表(囗, 默认退化配置)).toEqual([]);
-    expect(日.生成二进制切片列表(口, 默认退化配置)).toEqual([]);
-    expect(日.生成二进制切片列表(囗, 默认退化配置)).toEqual([13]);
+    expect(中.生成新二进制切片列表(口, 默认退化配置)).toEqual([14]);
+    expect(中.生成新二进制切片列表(囗, 默认退化配置)).toEqual([]);
+    expect(日.生成新二进制切片列表(口, 默认退化配置)).toEqual([]);
+    expect(日.生成新二进制切片列表(囗, 默认退化配置)).toEqual([13]);
   });
 
   it("区分「木无十」和「全字头」", () => {
     const 木无十 = h("");
     const 全字头 = h("");
     const 朱 = g("朱");
-    expect(朱.生成二进制切片列表(木无十, 默认退化配置)).toEqual([3]);
-    expect(朱.生成二进制切片列表(全字头, 默认退化配置)).toEqual([]);
+    expect(朱.生成新二进制切片列表(木无十, 默认退化配置)).toEqual([3]);
+    expect(朱.生成新二进制切片列表(全字头, 默认退化配置)).toEqual([]);
   });
 });
 

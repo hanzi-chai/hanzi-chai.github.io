@@ -1,13 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import {
-  模拟基本部件,
-  模拟复合体,
-  模拟拼接部件,
-  模拟衍生部件,
-  是基本或衍生部件,
-  字符,
-  解析原始词典
-} from "../src/index.js";
+import { 模拟矢量笔画, 字符, 解析原始词典 } from "../src/index.js";
 
 describe("Unicode 方法", () => {
   it("基本区汉字判断", () => {
@@ -28,21 +20,29 @@ describe("Unicode 方法", () => {
 });
 
 describe("数据工具", () => {
-  it("模拟函数返回正确的类型", () => {
-    const bc = 模拟基本部件();
-    const dc = 模拟衍生部件();
-    const sc = 模拟拼接部件();
-    const c = 模拟复合体("⿰");
-    expect(是基本或衍生部件(bc)).toBeTruthy();
-    expect(是基本或衍生部件(dc)).toBeTruthy();
-    expect(是基本或衍生部件(sc)).toBeFalsy();
-    expect(是基本或衍生部件(c)).toBeFalsy();
+  it("根据笔画名称创建默认矢量笔画", () => {
+    expect(模拟矢量笔画("横")).toEqual({
+      feature: "横",
+      start: [0, 0],
+      curveList: [{ command: "h", parameterList: [20] }],
+    });
+    expect(模拟矢量笔画("竖", [10, 30])).toEqual({
+      feature: "竖",
+      start: [10, 30],
+      curveList: [{ command: "v", parameterList: [20] }],
+    });
+  });
+  it("复用命令匹配的已有笔画绘制", () => {
+    const 绘制 = { command: "h" as const, parameterList: [80] as [number] };
+    expect(模拟矢量笔画("横", [5, 10], [绘制]).curveList[0]).toBe(绘制);
   });
 });
 
 describe("词典解析", () => {
   it("解析词典条目", () => {
     const text = [["的", "de5", "100"]];
-    expect(解析原始词典(text)).toEqual([{ 词: "的", 拼音: ["de5"], 频率: 100 }]);
+    expect(解析原始词典(text)).toEqual([
+      { 词: "的", 拼音: ["de5"], 频率: 100 },
+    ]);
   });
 });

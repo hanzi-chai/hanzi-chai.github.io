@@ -39,6 +39,12 @@ bun run deploy:api   # 部署到 Cloudflare Workers
 # 测试
 bun run --filter hanzi-chai test       # 运行核心算法测试
 bun run --filter hanzi-chai test:all   # 运行全部测试（含 spec/ 下所有文件）
+bun run --filter hanzi-chai test:scheme # 独立字库的方案运行与 CLI 测试
+
+# 无界面方案开发（完整用法见 packages/hanzi-chai/README.md）
+bun run chai --help
+bun run chai init --dir ./my-scheme
+bun run chai evaluate --project ./my-scheme --out ./runs/baseline --json
 
 # 发布
 bun run publish      # 版本 bump + git tag + commit + push

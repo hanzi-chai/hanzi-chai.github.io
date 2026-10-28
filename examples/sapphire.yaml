@@ -122,10 +122,6 @@ analysis:
       - '5'
       - '3'
       - '4'
-    秉:
-      - "\uf002"
-      - "\ue431"
-      - "\ue445"
 form:
   alphabet: qwertyuiopasdfghjklxcvbnm
   mapping:

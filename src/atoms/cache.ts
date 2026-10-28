@@ -1,8 +1,6 @@
 import {
   ok,
-  下转换,
   type 元素,
-  type 元素位或编码,
   决策图,
   分析拼音,
   动态组装,
@@ -16,17 +14,19 @@ import {
   type 字符数据,
   序列化强类型决策,
   序列化强类型决策空间,
+  序列化组装结果,
   type 强类型元素位或编码,
   type 强类型决策,
   type 强类型决策空间,
   type 当量映射,
   是强类型归并,
-  type 条件,
   来源排序,
+  构建优先简码映射,
   构建强类型决策与决策空间,
   构建强类型自定义分析,
+  构建组装配置,
+  构建编码输入,
   添加优先简码,
-  生成,
   用户字形终止点,
   用户字形起始点,
   用户字符终止点,
@@ -34,11 +34,9 @@ import {
   type 码表条目,
   组装,
   type 组装条目,
-  type 组装配置,
   type 自定义分析,
   计算全部合法元素与元素映射,
   计算拼音分析与元素映射,
-  识别符,
   type 键位分布目标,
 } from "hanzi-chai";
 import { atom } from "jotai";
@@ -61,13 +59,9 @@ import {
   字母表原子,
   字集指示原子,
   拼写运算自定义原子,
-  最大码长原子,
-  条件映射原子,
-  构词配置原子,
-  源映射原子,
   用户字形列表原子,
   用户字符列表原子,
-  组装器原子,
+  编码配置原子,
   自定义拆分原子,
   键盘原子,
   默认目标原子,
@@ -78,7 +72,9 @@ import { 位置原子, 配置原子 } from "./config";
 
 export const 远程原子 = atom((get) => {
   const location = get(位置原子);
-  return ["admin", "algorithm"].some(x => location.pathname === `/${x}` || location.hash === `#/${x}`);
+  return ["admin", "algorithm"].some(
+    (x) => location.pathname === `/${x}` || location.hash === `#/${x}`,
+  );
 });
 
 export const 字符列表原子 = atom((): 字符数据[] => get预加载数据().字符列表);
@@ -401,20 +397,18 @@ export const 组装配置原子 = atom((get) => {
   const 如线性化决策 = get(强类型线性化决策原子);
   if (!如线性化决策.ok) return 如线性化决策;
   const 线性化决策 = 如线性化决策.value;
-  const config: 组装配置 = {
-    源映射: get(源映射原子),
-    条件映射: get(条件映射原子),
-    线性化决策,
-    组装器: get(组装器原子),
-    构词规则列表: get(构词配置原子),
-    最大码长: get(最大码长原子),
-    键盘配置: get(键盘原子),
-    自定义分析映射,
+  const config = 构建组装配置(
+    {
+      encoder: get(编码配置原子),
+      form: get(键盘原子),
+      analysis: { classifier: 分类器 },
+      data: { glyph_sources: get(字形来源列表原子) },
+    },
     决策,
     决策空间,
-    分类器,
-    来源列表: get(字形来源列表原子),
-  };
+    线性化决策,
+    自定义分析映射,
+  );
   return ok(config);
 });
 
@@ -483,25 +477,9 @@ export const 如动态组装结果原子 = atom((get) => {
   return result;
 });
 
-export const 优先简码映射原子 = atom((get) => {
-  const 字库 = get(字库原子);
-  const 优先简码列表 = get(优先简码原子);
-  const map = new Map<string, number>();
-  for (const { word, sources, level } of 优先简码列表) {
-    const chars: 字符[] = [];
-    for (const char of word) {
-      const charInstance = 字库.校验字符(char);
-      if (!charInstance) {
-        console.warn(`优先简码中的字符不在字库中: ${char}`);
-        continue;
-      }
-      chars.push(charInstance.character);
-    }
-    const hash = 识别符(chars, sources);
-    map.set(hash, level);
-  }
-  return map;
-});
+export const 优先简码映射原子 = atom((get) =>
+  构建优先简码映射(get(字库原子), get(优先简码原子)),
+);
 
 export const 如组装结果与优先简码原子 = atom((get) => {
   const 如组装结果 = get(如组装结果原子);
@@ -517,62 +495,34 @@ export const 如动态组装结果与优先简码原子 = atom((get) => {
   return ok(添加优先简码(如动态组装结果.value, 优先简码映射));
 });
 
-type 序列化组装结果 = {
-  词: string;
-  全部元素序列: { 元素序列: 元素位或编码[]; 条件列表: 条件[] }[];
-  频率: number;
-  简码长度?: number;
-};
-
 export const 如导出组装结果原子 = atom((get) => {
-  const 序列化词列表: 序列化组装结果[] = [];
   const 词列表 = get(如组装结果与优先简码原子);
   if (!词列表.ok) return 词列表;
-  词列表.value.forEach((x) => {
-    const { 元素序列, ...rest } = x;
-    序列化词列表.push({
-      ...rest,
-      词: x.词.map((v) => v.获取名称()).join(""),
-      全部元素序列: [
-        { 元素序列: x.元素序列.元素序列.map(下转换), 条件列表: [] },
-      ],
-    });
-  });
-  return ok(序列化词列表);
+  return ok(序列化组装结果(词列表.value));
 });
 
 export const 如导出动态组装结果原子 = atom((get) => {
-  const 序列化词列表: 序列化组装结果[] = [];
   const 词列表 = get(如动态组装结果与优先简码原子);
   if (!词列表.ok) return 词列表;
-  词列表.value.forEach((x) => {
-    const { 元素序列, ...rest } = x;
-    序列化词列表.push({
-      ...rest,
-      词: x.词.map((v) => v.获取名称()).join(""),
-      全部元素序列: [...x.元素序列].map((x) => ({
-        元素序列: x.元素序列.map(下转换),
-        条件列表: x.条件列表,
-      })),
-    });
-  });
-  return ok(序列化词列表);
+  return ok(序列化组装结果(词列表.value));
 });
 
 export const 如前端输入原子 = atom((get) => {
-  const 配置 = 生成(get(配置原子));
+  const 配置 = get(配置原子);
   const 动态分析 = get(动态分析原子);
   const 序列化词列表 = 动态分析
     ? get(如导出动态组装结果原子)
     : get(如导出组装结果原子);
   if (!序列化词列表.ok) return 序列化词列表;
 
-  return ok({
-    配置,
-    词列表: 序列化词列表.value,
-    原始键位分布信息: get(用户键位分布目标原子) ?? get(默认键位分布目标原子),
-    原始当量信息: get(用户当量映射原子) ?? get(默认当量原子),
-  });
+  return ok(
+    构建编码输入(
+      配置,
+      序列化词列表.value,
+      get(用户键位分布目标原子) ?? get(默认键位分布目标原子),
+      get(用户当量映射原子) ?? get(默认当量原子),
+    ),
+  );
 });
 
 export const 如编码结果原子 = atom(async (get) => {

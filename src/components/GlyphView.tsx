@@ -37,7 +37,7 @@ const 三类钩列表: 笔画名称[] = ["斜钩", "横斜钩", "撇钩"];
 // 四类钩：末段为 h（向右），钩竖直向上 l(0, -钩长)，同时属于弯笔画
 const 四类钩列表: 笔画名称[] = ["竖弯钩", "横折弯钩"];
 
-const 处理路径 = (
+export const 处理路径 = (
   { start, feature, curveList }: 矢量笔画数据,
   strokeIndex: number,
   self: 矢量笔画数据[],

@@ -1,4 +1,5 @@
 import init, { Web } from "libchai";
+import { 编码评估 } from "hanzi-chai/evaluation";
 
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize";
@@ -85,8 +86,7 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
           await apiCall("sync", data[0]);
           result = await apiCall("encode", data[1]);
         } else {
-          webInterface.sync(data[0]);
-          result = webInterface.encode_evaluate(data[1]);
+          result = 编码评估(webInterface, data[0], data[1]);
         }
         port.postMessage({ type: "success", result });
         break;
@@ -113,6 +113,7 @@ self.onmessage = async (event: MessageEvent<WorkerInput>) => {
     console.error("Worker处理错误:", error);
     port.postMessage({ type: "error", error });
   } finally {
+    webInterface.free();
     currentPort = null; // 清理端口引用
   }
 };

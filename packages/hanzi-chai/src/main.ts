@@ -51,6 +51,10 @@ export * from "./pinyin.js";
 export * from "./registry.js";
 export * from "./repertoire.js";
 export * from "./selector.js";
+export * from "./scheme.js";
+export * from "./validation.js";
+export * from "./evaluation.js";
+export * from "./explain.js";
 export * from "./unicode.js";
 export * from "./utils.js";
 

@@ -30,6 +30,7 @@
     "fix": "bunx @biomejs/biome lint --fix --unsafe ./src",
     "format": "bunx @biomejs/biome format --write . && git add .",
     "build:pkg": "bun run --filter hanzi-chai build",
+    "chai": "bun packages/hanzi-chai/src/cli.ts",
     "build:BEX": "bun run build:pkg && vite build --mode BEX",
     "build:PAGES": "bun run build:pkg && vite build --mode PAGES",
     "build:CF": "bun run build:pkg && vite build --mode CF",

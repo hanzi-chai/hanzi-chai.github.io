@@ -246,6 +246,14 @@ function signedIndex<T>(a: T[], i: number): T | undefined {
   return i >= 0 ? a[i - 1] : a[a.length + i];
 }
 
+export interface 取码步骤 {
+  node: string;
+  next: string | null;
+  element?: string;
+  matched?: boolean;
+  positions: 强类型元素位或编码[];
+}
+
 export class 取码器 {
   private 当前或潜在长度: Map<元素, number>;
   private 谓词表: Record<
@@ -285,7 +293,7 @@ export class 取码器 {
     this.当前或潜在长度 = 当前或潜在长度.value;
   }
 
-  取码(汉字分析: 基本汉字分析) {
+  取码(汉字分析: 基本汉字分析, onStep?: (step: 取码步骤) => void) {
     let 节点: string | null = "s0";
     const 码位序列: 强类型元素位或编码[] = [];
     while (节点) {
@@ -293,10 +301,12 @@ export class 取码器 {
         const 源: 源节点配置 = this.sources[节点]!;
         const { object, next, index } = 源;
         if (节点 === "s0") {
+          onStep?.({ node: 节点, next, positions: [] });
           节点 = next;
           continue;
         }
         const 元素 = this.寻找(object!, 汉字分析);
+        const start = 码位序列.length;
         if (元素 === undefined) {
           // 如果找不到该元素，跳过
         } else if (元素 instanceof 未知元素) {
@@ -315,10 +325,19 @@ export class 取码器 {
             }
           }
         }
+        onStep?.({
+          node: 节点,
+          next,
+          element: 元素?.获取名称(),
+          positions: 码位序列.slice(start),
+        });
         节点 = next;
       } else {
         const 条件: 条件节点配置 = this.conditions[节点]!;
-        if (this.满足(条件, 汉字分析)) {
+        const matched = this.满足(条件, 汉字分析);
+        const next = matched ? 条件.positive : 条件.negative;
+        onStep?.({ node: 节点, next, matched, positions: [] });
+        if (matched) {
           节点 = 条件.positive;
         } else {
           节点 = 条件.negative;

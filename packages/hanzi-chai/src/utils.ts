@@ -417,53 +417,67 @@ export function 构建强类型决策与决策空间(
   return { 决策: 强类型决策, 决策空间: 强类型决策空间 };
 }
 
+/** 与 mapping 共用名称映射；字符匹配当前有效的所有部件字形。裸数字 ID 兼容旧配置。 */
+export function 解析自定义拆分部件(
+  字库: 字库,
+  名称映射: Map<string, 元素>,
+  名称: string,
+): 部件[] {
+  const 元素 = 名称映射.get(名称);
+  if (元素 instanceof 字符) {
+    return (字库.查询字符的字形(元素) ?? []).filter(
+      (字形): 字形 is 部件 => 字形 instanceof 部件,
+    );
+  }
+  if (元素 instanceof 部件) return [元素];
+  if (/^\d+$/.test(名称)) {
+    const 字形 = 字库.获取字形(Number(名称));
+    if (字形 instanceof 部件) return [字形];
+  }
+  return [];
+}
+
 export function 构建强类型自定义分析(
   字库: 字库,
   名称映射: Map<string, 元素>,
   自定义分析: Record<string, string[]>,
   动态自定义拆分: Record<string, string[][]>,
 ) {
-  const 自定义分析映射: Map<部件, 字根元素[]> = new Map();
-  const 动态自定义分析映射: Map<部件, 字根元素[][]> = new Map();
-  for (const [key, value] of Object.entries(自定义分析)) {
-    const 部件实例 = 字库.获取字形(Number(key));
-    if (!部件实例 || 部件实例 instanceof 复合体) continue;
-    const 字根列表: 字根元素[] = [];
-    for (const 字根名称 of value) {
-      const 字根 = 名称映射.get(字根名称);
-      if (
-        字根 instanceof 笔画 ||
-        字根 instanceof 二笔 ||
-        字根 instanceof 字符 ||
-        字根 instanceof 部件 ||
-        字根 instanceof 复合体
-      )
-        字根列表.push(字根);
+  const 恢复字根列表 = (名称列表: string[]): 字根元素[] =>
+    名称列表
+      .map((名称) => 名称映射.get(名称))
+      .filter(
+        (元素): 元素 is 字根元素 =>
+          元素 instanceof 笔画 ||
+          元素 instanceof 二笔 ||
+          元素 instanceof 字符 ||
+          元素 instanceof 部件 ||
+          元素 instanceof 复合体,
+      );
+  const 构建映射 = <T, U>(
+    记录: Record<string, T>,
+    转换: (value: T) => U,
+  ): Map<部件, U> => {
+    const 映射 = new Map<部件, U>();
+    // 先应用字符规则，再应用字形规则，确保具体字形的覆盖不依赖配置书写顺序。
+    const 条目 = Object.entries(记录).sort(
+      ([a], [b]) =>
+        Number(!(名称映射.get(a) instanceof 字符)) -
+        Number(!(名称映射.get(b) instanceof 字符)),
+    );
+    for (const [名称, value] of 条目) {
+      const 部件列表 = 解析自定义拆分部件(字库, 名称映射, 名称);
+      const 结果 = 转换(value);
+      for (const 部件 of 部件列表) 映射.set(部件, 结果);
     }
-    自定义分析映射.set(部件实例, 字根列表);
-  }
-  for (const [key, value] of Object.entries(动态自定义拆分)) {
-    const 部件实例 = 字库.获取字形(Number(key));
-    if (!部件实例 || 部件实例 instanceof 复合体) continue;
-    const 字根列表列表: 字根元素[][] = [];
-    for (const 字根名称列表 of value) {
-      const 字根列表: 字根元素[] = [];
-      for (const 字根名称 of 字根名称列表) {
-        const 字根 = 名称映射.get(字根名称);
-        if (
-          字根 instanceof 笔画 ||
-          字根 instanceof 二笔 ||
-          字根 instanceof 字符 ||
-          字根 instanceof 部件 ||
-          字根 instanceof 复合体
-        )
-          字根列表.push(字根);
-      }
-      字根列表列表.push(字根列表);
-    }
-    动态自定义分析映射.set(部件实例, 字根列表列表);
-  }
-  return { 自定义分析映射, 动态自定义分析映射 };
+    return 映射;
+  };
+  return {
+    自定义分析映射: 构建映射(自定义分析, 恢复字根列表),
+    动态自定义分析映射: 构建映射(动态自定义拆分, (列表) =>
+      列表.map(恢复字根列表),
+    ),
+  };
 }
 
 export function 序列化安排(安排: 强类型广义安排): 广义安排 {

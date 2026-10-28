@@ -1,49 +1,24 @@
 import { describe, expect, it } from "bun:test";
-import { 获取字库, 获取字形分析结果, 获取拼音分析结果, 获取组装结果, 获取原始词典, 读取配置, 配置, 计算拼音分析与元素映射, 合并拼写运算, 获取决策与决策空间, 决策图, 计算全部合法元素与元素映射, 默认分类器 } from "../../src/index.js";
-import { readdirSync } from "fs";
-import { 获取数据 } from "../index.js";
+import { readdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { 读取方案项目, 评估方案项目 } from "../../src/index.js";
 
-const { 原始字库 } = 获取数据();
+const 示例目录 = fileURLToPath(
+  new URL("../../../../examples/", import.meta.url),
+);
 
-describe("E2E", () => {
-  const 原始词典 = 获取原始词典(undefined);
-  const 词典 = 原始字库.校验词典(原始词典);
-  const 配置列表: 配置[] = [];
-  for (const path of readdirSync("../../examples")) {
-    if (!path.endsWith(".yaml")) {
-      continue;
-    }
-    const 配置 = 读取配置(`../../examples/${path}`);
-    配置列表.push(配置);
-  }
-
-  for (const 配置 of 配置列表) {
-    it(配置.info?.name ?? "Unnamed Test", () => {
-      const 字库 = 获取字库(配置);
-      const { 拼音元素映射, 拼音分析映射 } = 计算拼音分析与元素映射(词典, 合并拼写运算());
-      const 拼音分析 = 获取拼音分析结果(拼音分析映射, 词典);
-      const 字符列表 = [...字库].map(([字符]) => 字符);
-      const { 名称映射 } = 计算全部合法元素与元素映射(
-        字符列表,
-        默认分类器,
-        拼音元素映射,
-        new Map(),
-      );
-      const 字形分析 = 获取字形分析结果(配置, 字库, 词典, 名称映射, 原始字库);
-      if (!字形分析.ok) {
-        throw 字形分析.error;
-      }
-      const { 决策, 决策空间 } = 获取决策与决策空间(配置, 字库, 词典, 原始字库);
-      const 线性化决策 = new 决策图(决策).线性化();
-      if (!线性化决策.ok) {
-        throw 线性化决策.error;
-      }
-      const 如组装结果 = 获取组装结果(配置, 决策, 决策空间, 线性化决策.value, 拼音分析, 字形分析.value);
-      if (!如组装结果.ok) {
-        throw 如组装结果.error;
-      }
-      const 组装结果 = 如组装结果.value;
-      expect(组装结果).toBeDefined();
-    });
+describe("示例方案完整运行", () => {
+  for (const filename of readdirSync(示例目录)
+    .filter((name) => name.endsWith(".yaml"))
+    .sort()) {
+    it(filename, () => {
+      const 项目 = 读取方案项目(path.join(示例目录, filename));
+      const 记录 = 评估方案项目(项目);
+      expect(记录.analysis.length).toBeGreaterThan(0);
+      expect(记录.codes.length).toBeGreaterThan(0);
+      expect(记录.codes.some((x) => x.全码.length > 0)).toBe(true);
+      expect(记录.metrics.characters_full).toBeDefined();
+    }, 30_000);
   }
 });

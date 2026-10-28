@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unicode 18.0 字形核验</title>
+<style>
+  :root { font: 15px/1.6 system-ui, sans-serif; color: #253247; background: #f4f6fa; }
+  body { max-width: 1320px; margin: auto; padding: 24px; }
+  h1 { margin: 0; font-size: 24px; } h2 { font-size: 19px; margin: 0 0 16px; }
+  header, nav, .controls, .pictures { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  header { justify-content: space-between; } nav { margin: 20px 0; }
+  button, select, input, textarea { font: inherit; border: 1px solid #b7c3d3; border-radius: 7px; padding: 7px 12px; background: white; }
+  button { cursor: pointer; } button:hover { border-color: #345edb; } button.primary { color: white; background: #345edb; }
+  button:disabled { opacity: .45; cursor: default; } textarea { box-sizing: border-box; width: 100%; min-height: 70px; margin: 8px 0; }
+  section { background: white; border: 1px solid #e0e5ed; border-radius: 12px; padding: 22px; margin: 16px 0; }
+  .muted { color: #637188; font-size: 13px; } .warning { background: #fff4d6; border-radius: 7px; padding: 10px 14px; }
+  figure { margin: 0; text-align: center; } figure img { width: 210px; height: 210px; object-fit: contain; border: 1px solid #e5e9f0; background: white; }
+  figcaption { font-size: 13px; } .candidates { display: grid; grid-template-columns: repeat(auto-fit, minmax(225px, 1fr)); gap: 14px; }
+  .candidate { border: 2px solid #e1e6ef; border-radius: 8px; padding: 10px; } .candidate:has(input:checked) { border-color: #345edb; }
+  .candidate img { width: 100%; height: 205px; object-fit: contain; } details { font-size: 13px; } pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .row img { max-width: 100%; max-height: 300px; } #message { min-height: 24px; color: #2457c5; }
+  [hidden] { display: none !important; } label { cursor: pointer; } #taskSelect { min-width: 230px; }
+</style>
+<header>
+  <div><h1>Unicode 18.0 字形核验</h1><div id="meta" class="muted"></div></div>
+  <div class="controls"><button id="import">导入核验记录</button><button id="export">导出核验记录</button><input id="file" type="file" accept="application/json" hidden></div>
+</header>
+<p class="warning">候选依据包含尚未按 Unicode 18.0 重新核验的旧人工样本。先独立观察原图，再检查候选；纯粗细、衬线和比例差异通常忽略。图片不能确定的笔顺应暂缓。</p>
+<nav>
+  <button id="previous">← 上一个</button><select id="taskSelect" aria-label="选择字符来源任务"></select><button id="next">下一个 →</button>
+  <label><input id="pending" type="checkbox"> 仅看未核验</label><span id="progress" class="muted"></span>
+</nav>
+<div id="message" role="status"></div>
+<main>
+  <section>
+    <h2 id="heading"></h2><div id="source" class="muted"></div>
+    <div class="pictures" style="margin-top: 16px">
+      <figure><img id="referenceImage" alt="参考来源在 Unicode 18.0 码表中的原图"><figcaption id="referenceCaption"></figcaption></figure>
+      <figure><img id="targetImage" alt="目标来源在 Unicode 18.0 码表中的原图"><figcaption id="targetCaption"></figcaption></figure>
+    </div>
+    <details class="row"><summary>展开原始码表整行，检查来源编号及定位</summary><img id="rowImage" alt="原始码表整行"></details>
+    <p id="flags" class="muted"></p>
+    <h2>第一步：只观察来源原图</h2>
+    <div class="controls">
+      <label><input type="radio" name="relation" value="same"> 结构与笔画相同</label>
+      <label><input type="radio" name="relation" value="different"> 存在差异</label>
+      <label><input type="radio" name="relation" value="uncertain"> 无法确定</label>
+    </div>
+    <textarea id="difference" placeholder="差异位置及内容，例如：右下部件多一横；看不清时说明原因。" aria-label="原图差异观察"></textarea>
+    <button id="observe" class="primary">保存观察，显示候选</button>
+  </section>
+  <section id="phase2" hidden>
+    <h2>第二步：选择与目标匹配的候选</h2>
+    <details><summary>当前参考字形的数据库渲染</summary><figure><img id="baseline" alt="当前参考字形"></figure></details>
+    <p class="muted">排序分数仅用于排列候选，不是正确概率。允许所有候选都不匹配；需检查局部笔画和连接关系。</p>
+    <div id="candidates" class="candidates"></div>
+    <div class="controls" style="margin-top: 18px">
+      <label><input type="radio" name="choice" value="none"> 全部不匹配，需要补充候选或部件</label>
+      <label><input type="radio" name="choice" value="uncertain"> 无法确定，暂缓</label>
+    </div>
+    <textarea id="reason" placeholder="给出具体视觉依据；不要只填写‘看起来相似’。" aria-label="最终判定依据"></textarea>
+    <div class="controls">
+      <label>核验者类型 <select id="reviewerKind"><option value="human">人工</option><option value="agent">agent</option></select></label>
+      <input id="reviewerName" placeholder="核验者名称" aria-label="核验者名称">
+      <button id="save" class="primary">保存判定</button><button id="clear">清除此项判定</button>
+    </div>
+    <p class="muted">记录保存在当前浏览器；请导出 JSON 保存到磁盘。此页面和命令行都不会修改数据库。</p>
+  </section>
+</main>
+<script>
+const batch = __BATCH_DATA__;
+const initialDecisions = __INITIAL_DECISIONS__;
+const $ = id => document.getElementById(id);
+const storageKey = `chai-glyph-review:${batch.batchId}`;
+let state = { observations: {}, decisions: {} };
+try { state = JSON.parse(localStorage.getItem(storageKey)) || state; } catch {}
+for (const decision of initialDecisions) {
+  const previous = state.decisions[decision.taskId];
+  if (!previous || (previous.reviewer.kind !== 'human' || decision.reviewer.kind === 'human') && Date.parse(decision.reviewedAt) >= Date.parse(previous.reviewedAt)) {
+    state.decisions[decision.taskId] = decision;
+    state.observations[decision.taskId] = decision.phase1;
+  }
+}
+let currentId = batch.tasks[0].id;
+const task = () => batch.tasks.find(t => t.id === currentId);
+const say = text => { $('message').textContent = text; };
+const radioValue = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
+const setRadio = (name, value) => document.querySelectorAll(`input[name="${name}"]`).forEach(el => el.checked = el.value === value);
+function persist() {
+  try { localStorage.setItem(storageKey, JSON.stringify(state)); }
+  catch { say('浏览器无法持久保存，请立即导出记录。'); }
+  $('progress').textContent = `已核验 ${Object.keys(state.decisions).length} / ${batch.tasks.length}`;
+}
+function menu() {
+  const list = batch.tasks.filter(t => !$('pending').checked || !state.decisions[t.id]);
+  $('taskSelect').replaceChildren(...list.map(t => {
+    const option = document.createElement('option'); option.value = t.id;
+    option.textContent = `${state.decisions[t.id] ? '✓ ' : ''}U+${t.id} ${t.character}`; return option;
+  }));
+  if (!list.some(t => t.id === currentId) && list.length) currentId = list[0].id;
+  $('taskSelect').value = currentId;
+  $('previous').disabled = list.findIndex(t => t.id === currentId) <= 0;
+  $('next').disabled = list.findIndex(t => t.id === currentId) >= list.length - 1;
+  persist();
+}
+function loadImage(id, path) {
+  const img = $(id); img.hidden = !path;
+  if (path) img.src = path; else img.removeAttribute('src');
+}
+function show() {
+  menu(); const t = task(); if (!t) return;
+  $('heading').textContent = `${t.character} · U+${t.unicode.toString(16).toUpperCase()} · ${t.irgSource} 源（项目标记 ${t.source}）`;
+  $('source').textContent = `来源编号：${t.sourceReferences.join('、')}；PDF 第 ${t.target?.page ?? '?'} 页`;
+  $('referenceCaption').textContent = `参考来源 ${t.referenceSource}：${t.reference?.reference ?? '缺少原图'}`;
+  $('targetCaption').textContent = `目标来源 ${t.source}：${t.target?.reference ?? '缺少原图'}`;
+  loadImage('referenceImage', t.reference?.image); loadImage('targetImage', t.target?.image);
+  loadImage('rowImage', t.target?.rowImage); loadImage('baseline', t.baseline);
+  const messages = { 'non-G-reference': '此字无 G 源，以现有来源作参考', 'missing-pdf-image': '来源原图定位缺失，需暂缓核验',
+    'reference-render-failed': '参考字形渲染失败', 'component-reference': '基本部件：目前主要复用已知整字变体',
+    'no-supported-rule': '没有已标注实例支持替换，需仔细核对原样候选', 'no-renderable-candidate': '候选无法渲染，需人工处理' };
+  $('flags').textContent = t.flags.map(f => messages[f]).filter(Boolean).join('；');
+  const observation = state.observations[t.id] || state.decisions[t.id]?.phase1;
+  setRadio('relation', observation?.relation); $('difference').value = observation?.difference || '';
+  $('phase2').hidden = !observation;
+  $('candidates').replaceChildren(...t.candidates.map(c => {
+    const card = document.createElement('div'); card.className = 'candidate';
+    const label = document.createElement('label');
+    const input = document.createElement('input'); input.type = 'radio'; input.name = 'choice'; input.value = c.key;
+    label.append(input, ` 候选 ${c.key}`);
+    const img = document.createElement('img'); img.src = c.svg; img.alt = `候选 ${c.key}`;
+    const details = document.createElement('details'), summary = document.createElement('summary'), pre = document.createElement('pre');
+    summary.textContent = `依据 · ${c.existingId === null ? '新组合' : '已有字形 ' + c.existingId}`;
+    pre.textContent = JSON.stringify({ operator: c.glyph.operator, references: c.glyph.references, evidence: c.evidence }, null, 2);
+    details.append(summary, pre); card.append(label, img, details); return card;
+  }));
+  const decision = state.decisions[t.id];
+  setRadio('choice', decision?.candidateKey || decision?.verdict);
+  $('reason').value = decision?.reason || '';
+  if (decision) { $('reviewerKind').value = decision.reviewer.kind; $('reviewerName').value = decision.reviewer.name; }
+  say(decision ? `已保存：${decision.reviewer.kind} / ${decision.verdict}` : '');
+}
+$('observe').onclick = () => {
+  const relation = radioValue('relation'), difference = $('difference').value.trim();
+  if (!relation || (relation === 'different' && !difference)) return say('请选择观察结论，并描述差异位置和内容。');
+  const observation = { relation, difference };
+  if (JSON.stringify(observation) !== JSON.stringify(state.observations[currentId])) delete state.decisions[currentId];
+  state.observations[currentId] = observation; persist(); show();
+};
+$('save').onclick = () => {
+  const t = task(), choice = radioValue('choice'), reason = $('reason').value.trim(), name = $('reviewerName').value.trim();
+  const phase1 = state.observations[t.id] || state.decisions[t.id]?.phase1;
+  if (!choice || !reason || !name) return say('请选择候选或暂缓，并填写视觉依据和核验者名称。');
+  const candidate = t.candidates.find(c => c.key === choice);
+  const loaded = ['referenceImage', 'targetImage'].every(id => $(id).complete && $(id).naturalWidth > 0);
+  if (candidate && (!loaded || phase1.relation === 'uncertain')) return say('缺少原图或第一步无法确定时，请暂缓。');
+  state.decisions[t.id] = { batchId: batch.batchId, taskId: t.id, phase1,
+    verdict: candidate ? 'candidate' : choice, candidateKey: candidate ? choice : null, reason,
+    reviewer: { kind: $('reviewerKind').value, name }, reviewedAt: new Date().toISOString() };
+  persist(); show(); say('已保存到浏览器，请记得导出 JSON。');
+};
+$('clear').onclick = () => { delete state.decisions[currentId]; persist(); show(); };
+$('taskSelect').onchange = e => { currentId = e.target.value; show(); };
+$('pending').onchange = show;
+for (const [id, offset] of [['previous', -1], ['next', 1]]) $(id).onclick = () => {
+  const options = [...$('taskSelect').options], i = options.findIndex(o => o.value === currentId);
+  if (options[i + offset]) { currentId = options[i + offset].value; show(); }
+};
+$('export').onclick = () => {
+  const blob = new Blob([JSON.stringify({ batchId: batch.batchId, observations: state.observations, decisions: Object.values(state.decisions) }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = `glyph-review-${batch.batchId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+$('import').onclick = () => $('file').click();
+$('file').onchange = async e => {
+  try {
+    const imported = JSON.parse(await e.target.files[0].text());
+    const decisions = Array.isArray(imported) ? imported : imported.decisions;
+    if (!Array.isArray(decisions)) throw new Error('需要 decisions 数组');
+    for (const d of decisions) {
+      const t = batch.tasks.find(t => t.id === d.taskId);
+      if (d.batchId !== batch.batchId || !t || !d.phase1 || !['same','different','uncertain'].includes(d.phase1.relation) ||
+          !['candidate','none','uncertain'].includes(d.verdict) || !d.reason?.trim() || !['human','agent'].includes(d.reviewer?.kind) || !d.reviewer?.name?.trim() ||
+          (d.verdict === 'candidate' && (!t.target || !t.reference || d.phase1.relation === 'uncertain' || !t.candidates.some(c => c.key === d.candidateKey)))) throw new Error('记录不属于本批次或格式有误');
+      if (state.decisions[d.taskId]?.reviewer.kind === 'human' && d.reviewer.kind === 'agent') throw new Error('agent 不能覆盖已有人工判定');
+    }
+    for (const d of decisions) { state.decisions[d.taskId] = d; state.observations[d.taskId] = d.phase1; }
+    persist(); show(); say(`已导入 ${decisions.length} 条核验记录。`);
+  } catch (error) { say(`导入失败：${error.message}`); }
+};
+$('meta').textContent = `批次 ${batch.batchId} · ${batch.mode === 'pilot' ? '新字核验' : '历史标注留出'} · 仅离线核验`;
+show();
+</script>
+</html>

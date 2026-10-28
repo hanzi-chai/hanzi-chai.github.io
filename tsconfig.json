@@ -8,6 +8,7 @@
     "paths": {
       "~/*": ["./src/*"],
       "hanzi-chai": ["./packages/hanzi-chai/src/main.ts"],
+      "hanzi-chai/evaluation": ["./packages/hanzi-chai/src/evaluation.ts"],
       "@chai-api/client": ["./packages/api/src/client.ts"]
     },
     /* Bundler mode */

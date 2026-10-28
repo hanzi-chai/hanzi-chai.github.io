@@ -63,6 +63,11 @@ interface 动态组装条目 extends Omit<组装条目, "元素序列"> {
   元素序列: 优先表<元素序列>;
 }
 
+const 匹配词长 = (rule: 构词规则, length: number) =>
+  "length_equal" in rule
+    ? length === rule.length_equal
+    : length >= rule.length_in_range[0] && length <= rule.length_in_range[1];
+
 class 组词器 {
   constructor(private rules: 构词规则[]) {}
 
@@ -269,6 +274,11 @@ const 组装 = (
   const 组装结果: 组装条目[] = [];
   const 组装器 = 获取注册表().创建组装器(配置.组装器 || "默认", 配置)!;
   for (const { 词, 拼音, 频率, 元素映射 } of 拼音分析结果) {
+    if (
+      词.length > 1 &&
+      !配置.构词规则列表.some((rule) => 匹配词长(rule, 词.length))
+    )
+      continue;
     const 元素序列列表: 元素序列[] = [];
     if (词.length === 1) {
       const 字 = 词[0]!;
@@ -340,6 +350,11 @@ const 动态组装 = (
   const 组装结果: 动态组装条目[] = [];
   const 组装器 = 获取注册表().创建组装器(配置.组装器 || "默认", 配置)!;
   for (const { 词, 拼音, 频率, 元素映射 } of 拼音分析结果) {
+    if (
+      词.length > 1 &&
+      !配置.构词规则列表.some((rule) => 匹配词长(rule, 词.length))
+    )
+      continue;
     const 元素序列列表: 优先表<元素序列>[] = [];
     if (词.length === 1) {
       const 汉字 = 词[0]!;

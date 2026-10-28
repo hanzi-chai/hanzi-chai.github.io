@@ -3,6 +3,9 @@
   "version": "0.4.0",
   "description": "提取自主仓库的汉字拆分/编码核心算法包",
   "type": "module",
+  "bin": {
+    "chai": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "node": {
@@ -17,13 +20,27 @@
         "types": "./dist/main.d.ts",
         "default": "./dist/main.js"
       }
+    },
+    "./node": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
+    },
+    "./evaluation": {
+      "types": "./dist/evaluation.d.ts",
+      "default": "./dist/evaluation.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node -e \"require('fs').cpSync('src/data', 'dist/data', { recursive: true, force: true })\"",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "cli": "bun src/cli.ts",
+    "test:scheme": "bun test spec/scheme.spec.ts spec/cli.spec.ts",
     "test": "bun test ./spec/*.spec.ts",
     "test:all": "bun test spec",
     "prepublishOnly": "npm run build",
@@ -32,6 +49,7 @@
   "dependencies": {
     "d3-array": "^3.2.4",
     "js-yaml": "^4.1.1",
+    "libchai": "0.4.0",
     "lodash-es": "^4.18.1",
     "pako": "^2.1.0"
   },

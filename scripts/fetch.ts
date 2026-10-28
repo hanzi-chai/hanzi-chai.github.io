@@ -9,6 +9,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import pako from "pako";
 import { listCharacters, listGlyphs } from "../src/api";
+import { fetchIRGSources } from "./unicode.js";
 import { getLocalDataPath, VERSION } from "./utils.js";
 
 function saveCompressedJson(filename: string, data: unknown, debug = false) {
@@ -45,7 +46,6 @@ for (const filename of [
   "equivalence",
   "tygf",
   "gf0014",
-  "Unihan_IRGSources",
 ]) {
   const url = `${assetsEndpoint}${filename}.txt`;
   try {
@@ -59,6 +59,11 @@ for (const filename of [
     console.warn(`跳过 ${filename}.txt（服务器上不存在或者不可用）`);
   }
 }
+
+// 来源表固定使用官方 Unicode 18.0，避免被 assets 上的旧版本覆盖。
+const irgSources = await fetchIRGSources();
+writeFileSync(`${nodeOutputDir}/Unihan_IRGSources.txt`, irgSources);
+writeFileSync(`${webOutputDir}/Unihan_IRGSources.txt`, irgSources);
 
 console.log(`\n所有资源已保存到:`);
 console.log(`  Node.js: ${nodeOutputDir}`);

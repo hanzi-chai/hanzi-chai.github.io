@@ -243,15 +243,7 @@ export const makeDefaultAnalyzer = (maxLength: number) => {
   return form;
 };
 
-export interface 编码条目 {
-  词: string;
-  全码: string;
-  全码排名: number;
-  简码: string;
-  简码排名: number;
-}
-
-export type 编码结果 = 编码条目[];
+export type { 编码条目, 编码结果 } from "hanzi-chai";
 
 export const 数字 = (n: number) => {
   const absn = n >= 0 ? n : -n;

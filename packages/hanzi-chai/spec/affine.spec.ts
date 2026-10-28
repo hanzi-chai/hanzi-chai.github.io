@@ -1,15 +1,17 @@
 import type { 矢量图形数据 } from "../src/data.js";
+import { 仿射合并 } from "../src/utils.js";
 import { 图形盒子 } from "../src/affine.js";
 import { describe, expect, it } from "bun:test";
-import { 复合体树数据 } from "../src/primitive.js";
+import { 复合体数据 } from "../src/data.js";
 
 describe("仿射变换", () => {
   it("合并部件", () => {
-    const 复合体: 复合体树数据 = {
+    const 复合体: 复合体数据 = {
       id: 1,
       type: "compound",
       operator: "⿰",
-      references: [],
+      references: [{ id: 1 }, { id: 2 }],
+      ambiguous: false,
     };
     const 甲 = 图形盒子.从笔画列表构建([
       {
@@ -28,29 +30,34 @@ describe("仿射变换", () => {
     const 合并后: 矢量图形数据 = [
       {
         feature: "横",
-        start: [20, 50],
+        start: [10, 50],
         curveList: [{ command: "h", parameterList: [60] }],
       },
       {
         feature: "竖",
-        start: [100, 10],
+        start: [90, 10],
         curveList: [{ command: "v", parameterList: [80] }],
       },
     ];
 
-    expect(图形盒子.仿射合并(复合体, [甲, 乙]).获取笔画列表()).toEqual(合并后);
+    expect(
+      仿射合并(
+        [甲, 乙],
+        复合体.references,
+        复合体.operator,
+        复合体.strokes,
+      ).获取笔画列表(),
+    ).toEqual(合并后);
   });
 
   it("合并带有笔顺信息的部件", () => {
-    const 复合体: 复合体树数据 = {
+    const 复合体: 复合体数据 = {
       id: 2,
       type: "compound",
       operator: "⿴",
-      references: [],
-      strokes: [
-        { index: 1 },
-        { index: 0},
-      ],
+      references: [{ id: 1 }, { id: 2 }],
+      ambiguous: false,
+      strokes: [{ index: 1 }, { index: 0 }],
     };
     const 甲 = 图形盒子.从笔画列表构建([
       {
@@ -75,6 +82,13 @@ describe("仿射变换", () => {
       ...甲.获取笔画列表(),
     ];
 
-    expect(图形盒子.仿射合并(复合体, [甲, 乙]).获取笔画列表()).toEqual(合并后);
+    expect(
+      仿射合并(
+        [甲, 乙],
+        复合体.references,
+        复合体.operator,
+        复合体.strokes,
+      ).获取笔画列表(),
+    ).toEqual(合并后);
   });
 });

@@ -97,7 +97,7 @@ interface 动态字形分析结果<
   字根部件列表: 部件字根[];
 }
 
-interface 字形分析基本配置 {
+export interface 字形分析基本配置 {
   分析配置: 分析配置;
   决策: 强类型决策;
   决策空间: 强类型决策空间;
@@ -135,10 +135,7 @@ class 字形库 {
   private 字形表: Map<number, 字形>;
   private 字形查找表: Map<number, 基本字形数据>;
 
-  constructor(
-    字形数据列表: 基本字形数据[],
-    拼写运算列表: 字形拼写运算[] = [],
-  ) {
+  constructor(字形数据列表: 基本字形数据[], 拼写运算列表: 字形拼写运算[] = []) {
     this.字形表 = new Map();
     this.字形查找表 = new Map();
     // 新字形 ID 分配器
@@ -316,7 +313,13 @@ class 字形库 {
     // 递归合成子节点
     const 子字形列表: 字形[] = [];
     for (const 子模式 of references) {
-      const 子字形 = this.合成字形(子模式, 映射, 拼写运算列表, 取新ID, 最大深度 - 1);
+      const 子字形 = this.合成字形(
+        子模式,
+        映射,
+        拼写运算列表,
+        取新ID,
+        最大深度 - 1,
+      );
       if (!子字形) return undefined;
       子字形列表.push(子字形);
     }
@@ -665,7 +668,6 @@ class 字库 {
       const 字根 = 字根名称映射.get(name);
       if (字根) 弱字根列表.push(字根);
     }
-    console.log(复合体字根映射);
     return ok({
       决策,
       决策空间,

@@ -59,6 +59,10 @@ export default defineConfig(({ mode, command }) => {
           "packages/api/src/client.ts",
         ),
         ...(isDev && {
+          "hanzi-chai/evaluation": path.resolve(
+            __dirname,
+            "packages/hanzi-chai/src/evaluation.ts",
+          ),
           "hanzi-chai": path.resolve(
             __dirname,
             "packages/hanzi-chai/src/main.ts",

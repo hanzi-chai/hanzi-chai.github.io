@@ -10,33 +10,9 @@ import {
   默认目标类型原子,
 } from "~/atoms";
 
-interface LevelMetric {
-  length: number;
-  frequency: number;
-}
+export type { 评估指标 as Metric, 部分指标 as PartialMetric } from "hanzi-chai";
 
-interface TierMetric {
-  top?: number;
-  duplication?: number;
-  levels?: LevelMetric[];
-  fingering?: (number | undefined)[];
-}
-
-export interface PartialMetric {
-  tiers?: TierMetric[];
-  duplication?: number;
-  key_distribution?: number;
-  pair_equivalence?: number;
-  fingering?: (number | undefined)[];
-  levels?: LevelMetric[];
-}
-
-export interface Metric {
-  characters_full?: PartialMetric;
-  characters_short?: PartialMetric;
-  words_full?: PartialMetric;
-  words_short?: PartialMetric;
-}
+import type { 部分指标 as PartialMetric } from "hanzi-chai";
 
 const { SheetComponent } = await import("~/components/export/s2react");
 

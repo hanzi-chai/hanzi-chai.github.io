@@ -1,5 +1,6 @@
 import { Button, Flex, Popover } from "antd";
 import {
+  解析自定义拆分部件,
   type 元素,
   type 基本分析,
   type 复合体,
@@ -17,15 +18,12 @@ import {
   动态分析原子,
   动态自定义拆分原子,
   强类型自定义分析原子,
+  字库原子,
   自定义拆分原子,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
 import GlyphView from "./GlyphView";
-import {
-  BoxedElementWithTooltip,
-  DeleteButton,
-  PlusButton,
-} from "./Utils";
+import { BoxedElementWithTooltip, DeleteButton, PlusButton } from "./Utils";
 
 const Customize = ({
   component,
@@ -62,7 +60,7 @@ const Customize = ({
           type="primary"
           onClick={() =>
             add(
-              component.id.toString(),
+              component.获取名称(),
               content.map((x) => x.获取名称()),
             )
           }
@@ -137,7 +135,7 @@ const DynamicCustomize = ({
           type="primary"
           onClick={() =>
             add(
-              component.id.toString(),
+              component.获取名称(),
               content.map((g) => g.map((x) => x.获取名称())),
             )
           }
@@ -166,6 +164,21 @@ export default function ResultSummary({
   );
   const 移除自定义分析 = useRemoveAtom(自定义拆分原子);
   const 移除动态自定义分析 = useRemoveAtom(动态自定义拆分原子);
+  const 字库 = useAtomValue(字库原子);
+  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
+  const 自定义配置 = useAtomValue(自定义拆分原子);
+  const 动态自定义配置 = useAtomValue(动态自定义拆分原子);
+  const 清除自定义 = (
+    配置: Record<string, unknown>,
+    移除: (key: string) => void,
+  ) => {
+    for (const key of Object.keys(配置)) {
+      if (
+        解析自定义拆分部件(字库, 名称映射, key).some((part) => part === glyph)
+      )
+        移除(key);
+    }
+  };
   const 自定义字根序列 =
     glyph instanceof 部件 ? 自定义分析映射.get(glyph) : undefined;
   const 自定义字根序列列表 =
@@ -207,12 +220,14 @@ export default function ResultSummary({
       {glyph instanceof 部件 && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {自定义字根序列 && (
-            <Button onClick={() => 移除自定义分析(glyph.id.toString())}>
+            <Button onClick={() => 清除自定义(自定义配置, 移除自定义分析)}>
               取消自定义
             </Button>
           )}
           {自定义字根序列列表 && (
-            <Button onClick={() => 移除动态自定义分析(glyph.id.toString())}>
+            <Button
+              onClick={() => 清除自定义(动态自定义配置, 移除动态自定义分析)}
+            >
               取消自定义组
             </Button>
           )}
@@ -247,7 +262,9 @@ export default function ResultSummary({
                 component={glyph}
                 initialValues={
                   自定义字根序列 ??
-                  字根序列.map((x) => (x instanceof 部件字根 ? (x.元素 ?? x.获取部件()) : x))
+                  字根序列.map((x) =>
+                    x instanceof 部件字根 ? (x.元素 ?? x.获取部件()) : x,
+                  )
                 }
               />
             }

@@ -75,6 +75,7 @@ export interface 分析配置 {
   classifier?: Record<笔画名称, number>;
   degenerator?: 退化配置;
   selector?: string[];
+  // 键与 mapping 相同，支持字符或字形名称（字形-ID）；兼容旧版裸数字 ID。
   customize?: Record<string, string[]>;
   dynamic_customize?: Record<string, string[][]>;
   strong?: string[];

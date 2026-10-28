@@ -37,6 +37,7 @@ bun run dev
 本项目采用 monorepo 结构：
 
 - **`packages/hanzi-chai/`** — 核心算法库，负责汉字拆分与编码，可独立发布到 npm
+- **方案 CLI** — 无需打开网页即可校验、调试、生成和比较方案，使用 `bun run chai --help`；详见 [算法包与命令行文档](packages/hanzi-chai/README.md)
 - **`src/`** — 基于算法库构建的 React 网页应用
 
 ### 常用命令
