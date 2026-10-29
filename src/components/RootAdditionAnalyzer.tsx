@@ -2798,8 +2798,23 @@ function 智能选根面板() {
               <InfoCircleOutlined style={{ cursor: "pointer" }} />
             </Popover>
           </Flex>
-          <Flex gap={6} align="center" style={{ flex: 1, minWidth: 320 }}>
-            <span title="两种写法：归并「大=人」（“大”的所有码完全等同于“人”，强行生效）；键位引用「的 1=人 2」（“的”的第一码引用“人”的第二码，根与位之间留空格）。条目用逗号（中英文均可）或换行分隔。键位引用要等右侧的根已成根，左侧根才会带着它入库。">
+          <Flex gap={4} align="center">
+            <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示151根起每根罚5万">
+              根数罚分 f(n)
+            </span>
+            <Input
+              className="w-56! text-center"
+              placeholder="例：max(0, n-150)**2"
+              value={罚分表达式}
+              onChange={(e) => 设罚分表达式(e.target.value)}
+            />
+          </Flex>
+          {/* 预置归并整行独占：它是这一组里唯一的长文本域，跟短控件挤一行时标签会被压成竖排、
+             右边的「查看归并条目」会盖到「根数罚分」上（2026-10-30 报的）。
+             所以短控件（字根编码/相似根/罚分）先排完，它用 flex-basis 100% 强制换行；
+             自带 wrap 是给极窄窗口留后路——按钮自己掉到第二行，不再压标签。 */}
+          <Flex gap={6} align="center" wrap style={{ flex: "1 1 100%", minWidth: 0 }}>
+            <span style={{ whiteSpace: "nowrap" }} title="两种写法：归并「大=人」（“大”的所有码完全等同于“人”，强行生效）；键位引用「的 1=人 2」（“的”的第一码引用“人”的第二码，根与位之间留空格）。条目用逗号（中英文均可）或换行分隔。键位引用要等右侧的根已成根，左侧根才会带着它入库。">
               预置归并
             </span>
             {渲染收放输入(
@@ -2860,17 +2875,6 @@ function 智能选根面板() {
                 </div>
               );
             })()}
-          <Flex gap={4} align="center">
-            <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示151根起每根罚5万">
-              根数罚分 f(n)
-            </span>
-            <Input
-              className="w-56! text-center"
-              placeholder="例：max(0, n-150)**2"
-            value={罚分表达式}
-            onChange={(e) => 设罚分表达式(e.target.value)}
-          />
-          </Flex>
         </Flex>
       <Typography.Title level={3} className="mt-2!">搜索行为</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
