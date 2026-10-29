@@ -1601,6 +1601,8 @@ function 智能选根面板() {
   // 短到装不下要引用的位的那几条码自动落选（所以不必再提示"候选对它不参与"）。
   // 不做「功能相同的码合并成一类」这类智能省略，用户自己决定试哪几个。
   // 一个字都没配时就是空的：不给缺省值，让用户自己填（留空点「开始」会报错）。
+  // 「可多个」写在标题里而不是只放 placeholder（2026-10-30）：值会随参数写回方案，下次打开框里就有值，
+  // placeholder 只有一个方案的首次曝光窗口，之后再没人看得到——而那恰恰是"想加第二个候选码"的时候。
   const [字根编码文本, 设字根编码文本] = useState(() =>
     [
       ...new Set(
@@ -2732,10 +2734,10 @@ function 智能选根面板() {
       <Typography.Title level={3} className="mt-2!">根与归并</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
           <Flex gap={6} align="center">
-            字根编码
+            字根编码（可多个）
             <Input
               className="w-40! text-center"
-              placeholder="可多个，逗号分隔"
+              placeholder="如 qq"
               value={字根编码文本}
               onChange={(e) => 设字根编码文本(e.target.value)}
             />
