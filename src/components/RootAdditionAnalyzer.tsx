@@ -2336,6 +2336,10 @@ function 智能选根面板() {
     <>
       <Typography.Paragraph type="secondary">
         按「开始搜索」后，每轮自动试删、试加字根并显示各表分数变化，自动应用最有利的一步，直到没有改进或达到轮数上限；过程中可随时停止，结果可应用到方案。
+        {/* 说明的唯一入口（2026-10-30 定案）：界面各处不再挂 ⓘ／下划线，可发现性全交给这一句。
+            与正文同字号同色、紧贴在末尾（用户："字太小，改到小 i 前面，大小和前面一样大"），
+            别降成小灰字、也别另起一行占版面。 */}
+        <span>不知道某个名词是什么意思，点那几个字就会展开说明。</span>
         <Popover
           trigger="click"
           content={
@@ -2347,11 +2351,6 @@ function 智能选根面板() {
         >
           <InfoCircleOutlined style={{ marginLeft: 6, cursor: "pointer" }} />
         </Popover>
-        {/* 说明的唯一入口（2026-10-30 定案）：界面各处不再挂 ⓘ／下划线，可发现性全交给这一句。
-            别在这里加例子或展开讲，占版面。 */}
-        <Typography.Text type="secondary" className="text-xs!">
-          （不知道某个名词是什么意思，点那几个字就会展开说明）
-        </Typography.Text>
       </Typography.Paragraph>
       <Typography.Title level={3} className="mt-2!">候选字根</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
