@@ -2737,7 +2737,7 @@ function 智能选根面板() {
             字根编码（可多个）
             <Input
               className="w-40! text-center"
-              placeholder="如 qq"
+              placeholder="如 qq，逗号分隔"
               value={字根编码文本}
               onChange={(e) => 设字根编码文本(e.target.value)}
             />
