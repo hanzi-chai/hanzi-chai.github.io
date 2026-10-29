@@ -1670,8 +1670,10 @@ function 智能选根面板() {
   const [错误, 设错误] = useState("");
   const worker引用 = useRef<Worker | null>(null);
   // 预置归并筛死 / 手动指定字库找不到 等警告，点开始搜索后由核心上报，常驻显示到下次搜索。
-  // 按"实际处理顺序"自然排列：string[] 按发生先后 push，渲染即顺序（不强行调序）
-  const [归并失败提示, 设归并失败提示] = useState<string[]>([]);
+  // 按"实际处理顺序"自然排列：按发生先后 push，渲染即顺序（不强行调序）。
+  // `轮` = 判定发生在哪一轮（1 起）；null = 第 1 轮开始前就判死（注入期让位/成环/在册、初态越界、初次建池）。
+  // 分流见下方「顶部失败 / 按轮失败」。
+  const [归并失败提示, 设归并失败提示] = useState<{ 文本: string; 轮: number | null }[]>([]);
   useEffect(() => () => worker引用.current?.terminate(), []);
 
   const 表列表 = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
@@ -2141,10 +2143,10 @@ function 智能选根面板() {
           break;
         }
         case "预置归并失败":
-          设归并失败提示((旧) => [...旧, data.文本]);
+          设归并失败提示((旧) => [...旧, { 文本: data.文本, 轮: data.轮 ?? null }]);
           break;
         case "手动指定问题":
-          设归并失败提示((旧) => [...旧, data.文本]);
+          设归并失败提示((旧) => [...旧, { 文本: data.文本, 轮: null }]);
           break;
         case "完成":
           设结果(data.结果);
@@ -2265,6 +2267,26 @@ function 智能选根面板() {
     : [];
   // 新增/移除/安排调整全空 = 相对当前方案无变化 → 应用按钮禁用
   const 无变化 = !!结果 && 新增根.length === 0 && 移除项.length === 0 && 安排调整.length === 0;
+
+  // 失败提示按「什么时候判死」分流（用户 2026-10-29 定案）：
+  //  · 还没开跑就死的（注入期让位/成环/在册、初态越界、初次建池）→ 留顶部橙框，位置正确；
+  //  · 跑到第 N 轮才死的（轮首判死、重建池复检、算动作时加根守卫）→ 挂进「搜索轨迹」里第 N 轮**之前**，
+  //    与时间顺序一致。以前两类都堆在顶部，读起来成了「先说归不了 → 又说处理了 → 最后根还加上了」。
+  const 顶部失败 = 归并失败提示.filter((x) => x.轮 == null).map((x) => x.文本);
+  const 按轮失败 = new Map<number, string[]>();
+  for (const x of 归并失败提示) {
+    if (x.轮 == null) continue;
+    按轮失败.set(x.轮, [...(按轮失败.get(x.轮) ?? []), x.文本]);
+  }
+  // 同一轮号可能出现两行（预置归并触发不占轮数，与紧随其后的真轮共用轮号）→ 只在该轮号第一次出现处渲染一次。
+  // 判死后当轮就收敛、那一行压根没生成的，落到尾部兜底，不能吞掉。
+  const 已挂载轮 = new Set<number>();
+  const 轮内失败 = 轮日志.map((r) => {
+    if (已挂载轮.has(r.轮)) return [] as string[];
+    已挂载轮.add(r.轮);
+    return 按轮失败.get(r.轮) ?? [];
+  });
+  const 尾部失败 = [...按轮失败].filter(([轮]) => !已挂载轮.has(轮)).flatMap(([, v]) => v);
 
   const 改规则 = (i: number, patch: Record<string, any>) =>
     设字根表((x) =>
@@ -2928,27 +2950,33 @@ function 智能选根面板() {
           }
         />
       )}
-      {归并失败提示.length > 0 && (
+      {顶部失败.length > 0 && (
         <Alert
           className="mt-2!"
           type="warning"
           showIcon
           message={
             <div>
-              {归并失败提示.map((t, i) => (
+              {顶部失败.map((t, i) => (
                 <div key={i}>{富文本(t)}</div>
               ))}
             </div>
           }
         />
       )}
-      {轮日志.length > 0 && (
+      {(轮日志.length > 0 || 尾部失败.length > 0) && (
         <div className="mt-2 rounded p-2 bg-gray-50">
           <Typography.Text strong>搜索轨迹</Typography.Text>
           {/* 轨迹不封顶：日志多少就多高，靠整页那一个滚动条看，不再套一层内部滚轮 */}
           <div>
             {轮日志.map((r, i) => (
               <div key={i}>
+                {/* 这一轮判死的预置归并：写在轮号行**之前**——判死发生在该轮算动作之前，位置即时间顺序 */}
+                {轮内失败[i]!.map((t, j) => (
+                  <div key={`败${j}`} className="text-xs leading-5">
+                    <Typography.Text type="warning">{富文本(t)}</Typography.Text>
+                  </div>
+                ))}
                 {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>
                 {r.前分} → {r.分数}（
                 {/* 绿减红加，0 = 没变好也不坏 → 无色（与差异分析那边同一口径） */}
@@ -2970,6 +2998,12 @@ function 智能选根面板() {
                     <div>合评 {r.变化 > 0 ? "+" : ""}{r.变化}（单加之和≠合评：根间相互作用）</div>
                   </div>
                 )}
+              </div>
+            ))}
+            {/* 判死后当轮就收敛、那一轮的行根本没生成 → 落在轨迹末尾兜底，不能吞掉 */}
+            {尾部失败.map((t, j) => (
+              <div key={`尾${j}`} className="text-xs leading-5">
+                <Typography.Text type="warning">{富文本(t)}</Typography.Text>
               </div>
             ))}
           </div>

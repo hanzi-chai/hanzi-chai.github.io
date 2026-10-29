@@ -6,7 +6,7 @@
  *      {type:"组挖掘", 配置, 内置字库数据, 原始词典, mapping, 表列表, 组起, 组止, 根起, 根止}
  *      {type:"stop"}
  *  出: {type:"阶段",文本} | {type:"轮进度",已评,总数,最优,最优分} | {type:"轮",轮结果}
- *      | {type:"日志",文本} | {type:"预置归并失败",文本} | {type:"手动指定问题",文本}
+ *      | {type:"日志",文本} | {type:"预置归并失败",文本,轮} | {type:"手动指定问题",文本}
  *      | {type:"完成",结果} | {type:"已停止"} | {type:"错误",错误}
  */
 import {
@@ -76,7 +76,7 @@ self.onmessage = async (e: MessageEvent) => {
       on轮进度: (已评: number, 总数: number, 最优: string, 最优分: number, 变化: number | null) =>
         post({ type: "轮进度", 已评, 总数, 最优, 最优分, 变化 }),
       on轮: (r: 轮结果) => post({ type: "轮", 轮结果: r }),
-      on预置归并失败: (文本: string) => post({ type: "预置归并失败", 文本 }),
+      on预置归并失败: (文本: string, 轮?: number | null) => post({ type: "预置归并失败", 文本, 轮 }),
       on手动指定问题: (文本: string) => post({ type: "手动指定问题", 文本 }),
       应停止: () => 停止,
     };
