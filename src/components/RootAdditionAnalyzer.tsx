@@ -370,6 +370,35 @@ const 字词数 = (列表: string[]) => {
   return 词数 ? `${列表.length - 词数} 字、${词数} 词` : `${列表.length} 字`;
 };
 
+// ==================== 说明浮层的唯一形态（2026-10-30 定案） ====================
+
+/** 术语/参数说明：**界面上不留任何标记**，点一下那几个字才出浮层。
+ *
+ *  为什么把 `title=` 和 `ⓘ` 都换掉：原生 title 有 1 秒延迟、长文本不换行、触屏无效；
+ *  `ⓘ` 与点线下划线都是往界面上多加东西，而说明对象本来就是那几个字——点它自己最省。
+ *  可发现性交给面板顶部那句「不懂的名词点一下」，不靠逐处标记。
+ *
+ *  `宽` 默认 320：浮层里只放**最要紧的那一句**。placeholder / 灰字已经说过的别再重复，
+ *  否则一条说明就成了一条横条、还超格子。
+ *  ⚠ 数值的「精确 xx」浮层不走这里：那是看完整精度、每个数字都有，不是术语解释。 */
+const 点开提示 = ({
+  内容,
+  children,
+  宽 = 320,
+}: {
+  内容: ReactNode;
+  children: ReactNode;
+  宽?: number;
+}) => (
+  <Popover
+    trigger="click"
+    placement="bottomLeft"
+    content={<div style={{ maxWidth: 宽 }}>{内容}</div>}
+  >
+    <span style={{ cursor: "pointer" }}>{children}</span>
+  </Popover>
+);
+
 // ==================== 页签一：手动分析 ====================
 
 function 手动分析面板() {
@@ -2318,6 +2347,11 @@ function 智能选根面板() {
         >
           <InfoCircleOutlined style={{ marginLeft: 6, cursor: "pointer" }} />
         </Popover>
+        {/* 说明的唯一入口（2026-10-30 定案）：界面各处不再挂 ⓘ／下划线，可发现性全交给这一句。
+            别在这里加例子或展开讲，占版面。 */}
+        <Typography.Text type="secondary" className="text-xs!">
+          （不知道某个名词是什么意思，点那几个字就会展开说明）
+        </Typography.Text>
       </Typography.Paragraph>
       <Typography.Title level={3} className="mt-2!">候选字根</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
@@ -2414,9 +2448,9 @@ function 智能选根面板() {
                       value={r.止}
                       onChange={(v) => 改规则(i, { 止: v ?? r.止 })}
                     />
-                    <span title="起止按「第几个能加的」算：已在方案、保护根、与已有根同形的候选会跳过且不占名额，范围自动往后顺延到取满为止（所以把止设大到 300 也没关系，加不进来的不会浪费名额）">
+                    <点开提示 内容="按「第几个能加的」算：跳过已在方案／受保护／同形的，不占名额，自动往后顺延到取满为止。设大到 300 也不浪费名额。">
                       名
-                    </span>
+                    </点开提示>
                   </>
                 )}
                 {r.类型 === "重码组挖掘" && (
@@ -2437,9 +2471,9 @@ function 智能选根面板() {
                       value={r.根止}
                       onChange={(v) => 改规则(i, { 根止: v ?? r.根止 })}
                     />
-                    <span title="起止按「第几个能加的」算：已在方案、保护根、与已有根同形的候选会跳过且不占名额，范围自动往后顺延到取满为止（所以把根止设大到 300 也没关系，加不进来的不会浪费名额）">
+                    <点开提示 内容="按「第几个能加的」算：跳过已在方案／受保护／同形的，不占名额，自动往后顺延到取满为止。设大到 300 也不浪费名额。">
                       名
-                    </span>
+                    </点开提示>
                   </>
                 )}
                 {(r.类型 === "字内部件" || r.类型 === "重码组挖掘") && (
@@ -2449,21 +2483,13 @@ function 智能选根面板() {
                       checked={r.允许复合体 !== false}
                       onChange={(v) => 改规则(i, { 允许复合体: v })}
                     />
-                    <span
-                      title="允许把复合体（数据库里还有子结构的形状，如糹、你）也挖出来当候选；关闭=只挖叶部件"
-                      style={{ opacity: r.允许复合体 === false ? 0.4 : 1 }}
-                    >
-                      复合体
-                    </span>
+                    <点开提示 内容="允许把有子结构的形状（如糹、你）也当候选；关闭=只挖叶部件。">
+                      <span style={{ opacity: r.允许复合体 === false ? 0.4 : 1 }}>复合体</span>
+                    </点开提示>
                   </Flex>
                 )}
-                {/* 行的灰字只留「字频范围」这一句：其余三类在「+ 添加字根表」菜单里已经写明口径，
-                    行内再挂一遍是重复（2026-10-27 用户定案删掉） */}
-                {r.类型 === "字频范围" && (
-                  <Typography.Text type="secondary" style={{ fontSize: "0.85em" }}>
-                    （按词典单字字频）
-                  </Typography.Text>
-                )}
+                {/* 行内不再挂灰字说明：四类口径在「+ 添加字根表」菜单里都写了，
+                    行内再挂一遍是重复（2026-10-27 / 2026-10-30 两次定案）。 */}
                 <Button
                   size="small"
                   type="text"
@@ -2746,11 +2772,9 @@ function 智能选根面板() {
           </Flex>
           <Flex gap={6} align="center">
             <Switch size="small" checked={自动归并相似根} onChange={设自动归并相似根} />
-            <span style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}>自动归并相似根</span>
-            <Popover
-              trigger="click"
-              placement="bottomLeft"
-              content={
+            <点开提示
+              宽={420}
+              内容={
                 <div style={{ maxWidth: 420 }}>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     共 {相似根分组.length} 组相似字形。组内任一成员在字根池（候选池 ∪
@@ -2795,8 +2819,8 @@ function 智能选根面板() {
                 </div>
               }
             >
-              <InfoCircleOutlined style={{ cursor: "pointer" }} />
-            </Popover>
+              <span style={{ opacity: 自动归并相似根 ? 1 : 0.4 }}>自动归并相似根</span>
+            </点开提示>
           </Flex>
           {/* 与「手动指定」同一套：行内 wrap + 标签 nowrap + 输入域 flex:1 1 280。
               空间不够时「查看归并条目」自己掉到第二行（手动指定那边是「查看候选」），
@@ -2804,9 +2828,9 @@ function 智能选根面板() {
               flex-basis 420 是"内容完整一行"的宽度：不足 420 时由外层 wrap 整组换行，
               不会再把组挤到 320 以下（320 装不下 标签+280 输入域，标签就被压成竖排了）。 */}
           <Flex gap={6} align="center" wrap style={{ flex: "1 1 420px", minWidth: 360 }}>
-            <span style={{ whiteSpace: "nowrap" }} title="两种写法：归并「大=人」（“大”的所有码完全等同于“人”，强行生效）；键位引用「的 1=人 2」（“的”的第一码引用“人”的第二码，根与位之间留空格）。条目用逗号（中英文均可）或换行分隔。键位引用要等右侧的根已成根，左侧根才会带着它入库。">
-              预置归并
-            </span>
+            <点开提示 内容="「大=人」整体归并（所有码等同于“人”）；「的 1=人 2」键位引用（“的”的第 1 码借用“人”的第 2 码，两侧留空格）。要等右侧的根已成根才生效。">
+              <span style={{ whiteSpace: "nowrap" }}>预置归并</span>
+            </点开提示>
             {渲染收放输入(
               预置归并文本,
               设预置归并文本,
@@ -2866,9 +2890,9 @@ function 智能选根面板() {
               );
             })()}
           <Flex gap={4} align="center">
-            <span title="n=直设根数。须为单个 JavaScript 表达式（可用变量 n、max、min），非法会报错。留空=0。例：max(0, n-150)*50000 表示151根起每根罚5万">
+            <点开提示 内容="n = 直设根数，按这个表达式给总分加罚分（可为负）。留空=0。">
               根数罚分 f(n)
-            </span>
+            </点开提示>
             <Input
               className="w-56! text-center"
               placeholder="例：max(0, n-150)**2"
@@ -2884,9 +2908,9 @@ function 智能选根面板() {
             <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
           </Flex>
           <Flex gap={6} align="center">
-            <span title="每轮把改善最大的前 K 个加根动作同时应用（按各自单加收益降序选，组合后整体合评，根间相互作用以合评分为准）。1=经典单步贪心">
+            <点开提示 内容="每轮同时应用改善最大的前 K 个加根动作（按各自单独收益排），组合后整体合评——根之间互相影响时以合评分为准。1 = 经典单步贪心。">
               单轮根数
-            </span>
+            </点开提示>
             <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
           </Flex>
           <Flex gap={6} align="center">
@@ -2897,15 +2921,17 @@ function 智能选根面板() {
             <Switch size="small" checked={允许减根} onChange={设允许减根} />
             <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
           </Flex>
-          <Flex gap={6} align="center" title="关掉后：最优动作哪怕让分数变差或不变，也照样应用并一直跑到轮数上限。减根时「先变差、后面再加根吃回来」的路径只有这样才走得通。没有可执行动作时仍会停">
+          <Flex gap={6} align="center">
             <Switch size="small" checked={自动停止} onChange={设自动停止} />
-            <span style={{ opacity: 自动停止 ? 1 : 0.4 }}>自动停止</span>
+            <点开提示 内容="关掉后：最优动作即使让分数变差或不变也照样应用，一直跑到轮数上限。「先减根变差、后面加根吃回来」只有这样才能走通。没有可执行动作时仍会停。">
+              <span style={{ opacity: 自动停止 ? 1 : 0.4 }}>自动停止</span>
+            </点开提示>
           </Flex>
           {允许减根 && (
             <Flex gap={6} align="center">
-              <span title="正则，匹配根名称的才允许被删除。留空=全部可减。如 ^鹤声- 表示只删声母类元素">
+              <点开提示 内容="按根名称匹配的正则，匹配到的才允许删。如 ^鹤声- 只删声母类元素。">
                 减根范围
-              </span>
+              </点开提示>
               <Input
                 className="w-40! text-center"
                 placeholder="正则，留空=全部"
@@ -2915,12 +2941,7 @@ function 智能选根面板() {
             </Flex>
           )}
         </Flex>
-      <Flex
-        gap={6}
-        align="center"
-        className="mt-2!"
-        title="每隔 N 轮重新按「候选字根」找一遍加根池（例如N为2时，流程为：建，1，2，建，3，4，建…）。重码组挖掘按当前映射重排，字频范围/字内部件复用初次名单；0 = 不重建"
-      >
+      <Flex gap={6} align="center" className="mt-2!">
         每隔
         <InputNumber
           min={0}
@@ -2928,7 +2949,9 @@ function 智能选根面板() {
           value={重建间隔}
           onChange={(v) => 设重建间隔(v ?? 10)}
         />
-        轮重建一次加根池
+        <点开提示 内容="流程（N=2 时）：建，1，2，建，3，4，建…重码组挖掘按当前映射重排；字频范围／字内部件复用初次名单。0 = 不重建。">
+          轮重建一次加根池
+        </点开提示>
       </Flex>
       <Flex gap={16} align="center" className="mt-6!">
         <Button type="primary" onClick={开始} loading={运行中}>
