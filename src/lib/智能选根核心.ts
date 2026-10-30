@@ -556,18 +556,79 @@ export function 取手动指定白名单(规则列表: readonly 字根表规则[
   return s;
 }
 
-/** 把决策空间对齐到某个 mapping：把「既不在决策里、又没有非空安排」的条目摘掉。
+/** 一条安排值里通过 `{element: 名}` 引用到的名字（整体归并、键位引用都算）。
+ *  `{variable: X}` 是变量、`null` 是空位，都不引用元素，忽略。
+ *  用于「空间条目引用的根还在不在」——引擎自己不做这个检查，见 修剪悬空空间条目。 */
+const 取安排引用名 = (值: any, 出: string[] = []): string[] => {
+  if (Array.isArray(值)) {
+    for (const x of 值) 取安排引用名(x, 出);
+  } else if (
+    值 &&
+    typeof 值 === "object" &&
+    !("variable" in 值) &&
+    typeof 值.element === "string"
+  ) {
+    出.push(值.element);
+  }
+  return 出;
+};
+
+/** 摘掉空间里「引用了根本不可能存在的元素」的条目（迭代到不动点）。
  *
- *  引擎 `计算当前或潜在长度`（utils.ts）对**每个不在决策里的空间元素**都要求它的安排列表里
- *  至少有一条 `value !== null`，靠它推断"这个元素最多占几个位"；一条非空都没有就直接
- *  抛「元素 X 在决策空间中没有非空安排」。而站点走的是原始 `form.mapping_space`、不跑 `生成()`
- *  （`生成()` 才会把 mapping 里的码补成空间列表的第一条），所以用户给某根点过「禁用」之后，
- *  空间里就留下一条纯 null 条目 —— 该根还在 mapping 里时没事（决策兜住），一旦被删出决策就崩。
+ *  引擎的 `计算当前或潜在长度` 先把「决策 + 空间里的非空安排」合成增广决策再线性化
+ *  （utils.ts:704）。所以**空间里一条指向已删根的归并**会被当成真安排注进增广决策，
+ *  线性化走到那个不存在的键就抛「决策中不存在键: X」——而决策本身是干净的，
+ *  `建决策与线性化` 的自检也过不了这道关（它只看决策）。
  *
- *  搜索的「减根」动作、差异区的「减」操作都会构造这种删掉根的 mapping，于是第一个动作就整条崩
- *  （2026-10-27 实测：丁 有码 + 空间里一条 {value:null}，删丁即抛）。
- *  这类条目在任何安排里都拿不到位，摘掉只影响"能否无码参与拆分"，与用户在方案里标「禁用」的
- *  意图一致；保留则连码长都算不出来，只能崩。 */
+ *  实测（2026-10-30，呜喵码 㐄）：mapping 里 `㐄: [{element: 五, index: 0}, k]`，
+ *  另有几个 PUA 别名 `{element: 㐄}`。减根删掉 五 → 变体级联删掉 㐄、再删掉别名，
+ *  **mapping 已经干净**；但 `form.mapping_space` 里那几个别名条目仍是
+ *  `{value: {element: 㐄}}`（非空 → 上一段的对齐保留它们），增广时把 㐄 当归并目标，
+ *  于是每个减根变体都炸「键盘映射长度计算失败: 决策中不存在键: 㐄」。
+ *
+ *  判据只在**名字层**：引用的名字要么在决策里、要么在空间里（自己能给出非空安排）。
+ *  空间键被摘掉后，引用它的条目下一轮自然失效，所以跑不动点而不是一趟。 */
+function 修剪悬空空间条目(
+  mapping: Record<string, any>,
+  空间: Record<string, any>,
+): Record<string, any> {
+  const 存在 = new Set<string>();
+  for (const [名, 值] of Object.entries(mapping))
+    if (值 !== undefined && 值 !== null) 存在.add(名);
+  for (const 名 of Object.keys(空间)) 存在.add(名);
+  const 在决策 = (名: string) => mapping[名] !== undefined && mapping[名] !== null;
+  let 变了 = true;
+  while (变了) {
+    变了 = false;
+    for (const [名, 列表] of Object.entries(空间)) {
+      if (!Array.isArray(列表)) continue;
+      const 可用 = 列表.some(
+        (x: any) =>
+          x?.value !== undefined &&
+          x.value !== null &&
+          取安排引用名(x.value).every((r) => 存在.has(r)),
+      );
+      if (可用) continue;
+      delete 空间[名];
+      if (!在决策(名)) 存在.delete(名);
+      变了 = true;
+    }
+  }
+  return 空间;
+}
+
+/** 把决策空间对齐到某个 mapping：摘掉两类条目。
+ *
+ *  ① 「既不在决策里、又没有非空安排」的：引擎 `计算当前或潜在长度`（utils.ts）对**每个不在
+ *  决策里的空间元素**都要求它的安排列表里至少有一条 `value !== null`，靠它推断"这个元素最多占
+ *  几个位"；一条非空都没有就直接抛「元素 X 在决策空间中没有非空安排」。站点走的是原始
+ *  `form.mapping_space`、不跑 `生成()`（`生成()` 才会把 mapping 里的码补成空间列表的第一条），
+ *  所以用户给某根点过「禁用」之后，空间里就留下一条纯 null 条目 —— 该根还在 mapping 里时没事
+ *  （决策兜住），一旦被删出决策就崩。搜索的「减根」、差异区的「减」都会构造这种 mapping
+ *  （2026-10-27 实测：丁 有码 + 空间里一条 {value:null}，删丁即抛）。这类条目在任何安排里
+ *  都拿不到位，摘掉只影响"能否无码参与拆分"，与用户标「禁用」的意图一致。
+ *
+ *  ② 「引用的根已经不可能存在」的：见 修剪悬空空间条目（2026-10-30 㐄）。 */
 export function 对齐决策空间(
   mapping: Record<string, any>,
   空间: Record<string, any> | undefined | null,
@@ -581,7 +642,7 @@ export function 对齐决策空间(
       列表.some((x: any) => x?.value !== undefined && x.value !== null);
     if (在决策 || 有非空) 结果[名] = 列表;
   }
-  return 结果;
+  return 修剪悬空空间条目(mapping, 结果);
 }
 
 /**
@@ -1236,7 +1297,15 @@ export class 智能选根核心 {
       const g = this.拼音分组.get(名);
       if (g) 子集.push(...g);
     }
-    const r = this.运行组装(mapping, 强, 线性化, 新分析结果, 准备.value.字根部件列表, 子集);
+    // 取码器构造是**抛异常**而不是返回失败的 Result（引擎 `计算当前或潜在长度` 直接 throw），
+    // 所以这里必须自己兜住：坏变体只该算"这一步不可用"，不该把整条搜索炸掉。
+    // 2026-10-30 实测：减根变体里空间残留指向已删根的归并 → 「键盘映射长度计算失败」。
+    let r: any;
+    try {
+      r = this.运行组装(mapping, 强, 线性化, 新分析结果, 准备.value.字根部件列表, 子集);
+    } catch (e) {
+      return { 失败: String((e as any)?.message ?? e) };
+    }
     if (!r.ok) return { 失败: String(r.error) };
     const 子集词条 = this.条目提取(r, 强.决策);
     // 结构不变校验：同一词名的条目数必须与基态一致。唯一的破例是多音字的两条读法在新映射下

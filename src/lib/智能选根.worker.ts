@@ -18,6 +18,26 @@ import {
 
 let 停止 = false;
 
+/** 引擎抛的是英文 + 堆栈（`键盘映射长度计算失败: Error: 决策中不存在键: 㐄 at new 取码器…`），
+ *  堆到界面上对用户全是噪音。这里只把两类「方案自身有悬空引用」翻成人话，其余给 message 原文；
+ *  堆栈改走 console，开发者仍能在控制台看到完整调用链。 */
+const 错误文本 = (err: any): string => {
+  const 原文 = String(err?.message ?? err);
+  const 缺键 = /决策中不存在键\s*[:：]\s*(\S+)/.exec(原文);
+  if (缺键) {
+    const 名 = 缺键[1]!;
+    return `「${名}」不在方案的字根映射里，但别的根的归并／键位引用指着它——多半是删根时漏了随行的条目。请先补回「${名}」或删掉引用它的条目。`;
+  }
+  const 无安排 = /元素\s*(\S+)\s*在决策空间中没有非空安排/.exec(原文);
+  if (无安排)
+    return `「${无安排[1]}」既不在方案里，也没有任何可用安排（可能被标成「禁用」了）。`;
+  return 原文;
+};
+const 报错误 = (post: (m: any) => void, err: any) => {
+  console.error(err);
+  post({ type: "错误", 错误: 错误文本(err) });
+};
+
 self.onmessage = async (e: MessageEvent) => {
   const msg = e.data;
   if (msg.type === "stop") {
@@ -43,7 +63,7 @@ self.onmessage = async (e: MessageEvent) => {
       );
       post({ type: "挖掘完成", 结果 });
     } catch (err: any) {
-      post({ type: "错误", 错误: String(err?.message ?? err) + (err?.stack ? "\n" + String(err.stack).split("\n").slice(0,4).join("\n") : "") });
+      报错误(post, err);
     }
     return;
   }
@@ -62,7 +82,7 @@ self.onmessage = async (e: MessageEvent) => {
       );
       post({ type: "组挖掘完成", 结果 });
     } catch (err: any) {
-      post({ type: "错误", 错误: String(err?.message ?? err) + (err?.stack ? "\n" + String(err.stack).split("\n").slice(0,4).join("\n") : "") });
+      报错误(post, err);
     }
     return;
   }
@@ -84,6 +104,6 @@ self.onmessage = async (e: MessageEvent) => {
     if (结果.已停止) post({ type: "已停止", 结果 });
     else post({ type: "完成", 结果 });
   } catch (err: any) {
-    post({ type: "错误", 错误: String(err?.message ?? err) + (err?.stack ? "\n" + String(err.stack).split("\n").slice(0,4).join("\n") : "") });
+    报错误(post, err);
   }
 };
