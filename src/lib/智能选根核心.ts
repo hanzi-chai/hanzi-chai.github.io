@@ -723,6 +723,9 @@ export interface 轮结果 {
   分数: number;
   前分: number;
   变化: number;
+  /** 应用该动作之后的根数。**必须与 `根数罚分` 的 n 同口径**（可删根口径：string ∪ 数组逐位，
+   *  整体归并别名不算）——2026-10-30 之前这里写的是 `Object.keys(mapping).length`（键数），
+   *  别名一多就比 n 大出几百，用户照着轨迹里的数去设罚分阈值，永远罚不到。 */
   根数: number;
   动作数: number;
   耗时: number;
@@ -2253,7 +2256,7 @@ export class 智能选根核心 {
         分数: Math.round(当前分 * 100) / 100,
         前分: Math.round(初始分 * 100) / 100,
         变化: Math.round((当前分 - 初始分) * 100) / 100,
-        根数: Object.keys(mapping).length,
+        根数: 根数(mapping),
         动作数: 0,
         耗时: 0,
         mapping: 快照(),
@@ -2342,7 +2345,7 @@ export class 智能选根核心 {
           分数: Math.round(当前分 * 100) / 100,
           前分: Math.round(前分0 * 100) / 100,
           变化: Math.round((当前分 - 前分0) * 100) / 100,
-          根数: Object.keys(mapping).length,
+          根数: 根数(mapping),
           动作数: 0,
           耗时: 0,
           mapping: 快照(),
@@ -2567,7 +2570,7 @@ export class 智能选根核心 {
                 分数: Math.round(合评分 * 100) / 100,
                 前分: Math.round(前分0 * 100) / 100,
                 变化: Math.round((合评分 - 前分0) * 100) / 100,
-                根数: Object.keys(mapping).length,
+                根数: 根数(mapping),
                 动作数: 动作.length,
                 耗时: (Date.now() - t0) / 1000,
                 单加明细: 改善加根.map((x) => ({
@@ -2613,7 +2616,7 @@ export class 智能选根核心 {
             分数: Math.round(无代价减根.分 * 100) / 100,
             前分: Math.round(前分 * 100) / 100,
             变化: Math.round((无代价减根.分 - 前分) * 100) / 100,
-            根数: Object.keys(mapping).length,
+            根数: 根数(mapping),
           动作数: 动作.length,
           耗时,
           mapping: 快照(),
@@ -2632,7 +2635,7 @@ export class 智能选根核心 {
             分数: Math.round(best分 * 100) / 100,
             前分: Math.round(当前分 * 100) / 100,
             变化: Math.round((best分 - 当前分) * 100) / 100,
-            根数: Object.keys(mapping).length,
+            根数: 根数(mapping),
             动作数: 动作.length,
             耗时,
             mapping: 快照(),
@@ -2673,7 +2676,7 @@ export class 智能选根核心 {
         分数: Math.round(best分 * 100) / 100,
         前分: Math.round(前分0 * 100) / 100,
         变化: Math.round((best分 - 前分0) * 100) / 100,
-      根数: Object.keys(mapping).length,
+      根数: 根数(mapping),
       动作数: 动作.length,
       耗时,
       mapping: 快照(),
