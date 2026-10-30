@@ -46,17 +46,19 @@ export * from "./compound.js";
 export * from "./config.js";
 export * from "./data.js";
 export * from "./element.js";
+export * from "./enclosure.js";
+export * from "./evaluation.js";
+export * from "./explain.js";
 export * from "./math.js";
 export * from "./pinyin.js";
 export * from "./registry.js";
 export * from "./repertoire.js";
-export * from "./selector.js";
 export * from "./scheme.js";
-export * from "./validation.js";
-export * from "./evaluation.js";
-export * from "./explain.js";
+export * from "./selector.js";
+export * from "./stroke-render.js";
 export * from "./unicode.js";
 export * from "./utils.js";
+export * from "./validation.js";
 
 export function 注册内置组件(registry: 注册表) {
   for (const x of [

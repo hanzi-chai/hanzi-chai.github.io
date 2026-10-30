@@ -129,8 +129,8 @@ function show() {
     label.append(input, ` 候选 ${c.key}`);
     const img = document.createElement('img'); img.src = c.svg; img.alt = `候选 ${c.key}`;
     const details = document.createElement('details'), summary = document.createElement('summary'), pre = document.createElement('pre');
-    summary.textContent = `依据 · ${c.existingId === null ? '新组合' : '已有字形 ' + c.existingId}`;
-    pre.textContent = JSON.stringify({ operator: c.glyph.operator, references: c.glyph.references, evidence: c.evidence }, null, 2);
+    summary.textContent = `依据${c.poolOrigins ? ' · 生成来源 ' + [...new Set(c.poolOrigins.map(o => o.source))].join('、') : ''} · ${c.existingId === null ? '新组合' : '已有字形 ' + c.existingId}`;
+    pre.textContent = JSON.stringify({ operator: c.glyph.operator, references: c.glyph.references, evidenceSource: c.evidenceSource, poolOrigins: c.poolOrigins, evidence: c.evidence }, null, 2);
     details.append(summary, pre); card.append(label, img, details); return card;
   }));
   const decision = state.decisions[t.id];
@@ -188,6 +188,11 @@ $('file').onchange = async e => {
   } catch (error) { say(`导入失败：${error.message}`); }
 };
 $('meta').textContent = `批次 ${batch.batchId} · ${batch.mode === 'pilot' ? '新字核验' : '历史标注留出'} · 仅离线核验`;
+if (batch.selection) {
+  const s = batch.selection;
+  $('meta').textContent += ` · ${s.from}～${s.to} · ${s.selectedCount}/${s.eligibleCount} 字`;
+  if (s.referenceGlyphType === 'compound') $('meta').textContent += ' · 参考字形为复合体，至少两个不同字形 ID';
+}
 show();
 </script>
 </html>

@@ -1,7 +1,7 @@
 import { 图形盒子 } from "../../packages/hanzi-chai/src/affine";
 import type { 基本字形数据 } from "../../packages/hanzi-chai/src/data";
+import { 生成笔画路径 } from "../../packages/hanzi-chai/src/stroke-render";
 import { 仿射合并 } from "../../packages/hanzi-chai/src/utils";
-import { 处理路径 } from "../../src/components/GlyphView";
 
 /** 复用应用的仿射合并及笔画渲染，不构建算法分析用的拓扑。 */
 export class 字形渲染器 {
@@ -48,8 +48,8 @@ export class 字形渲染器 {
       )
         throw new Error("字形坐标不是有限数值");
     }
-    const paths = strokes
-      .map((stroke, index) => `<path d="${处理路径(stroke, index, strokes)}"/>`)
+    const paths = 生成笔画路径(strokes)
+      .map((path) => `<path d="${path}"/>`)
       .join("");
     return `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="-5 -5 110 110"><rect x="-5" y="-5" width="110" height="110" fill="white"/><g fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${paths}</g></svg>`;
   }

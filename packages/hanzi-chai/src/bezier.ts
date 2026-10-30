@@ -180,6 +180,9 @@ class 一次曲线 extends 曲线 {
       case "h":
         p1 = 加(start, [draw.parameterList[0], 0]);
         break;
+      case "l":
+        p1 = 加(start, draw.parameterList);
+        break;
       default:
         p1 = 加(start, [0, draw.parameterList[0]]);
         break;

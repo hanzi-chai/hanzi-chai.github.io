@@ -1,127 +1,123 @@
-# Unicode 18.0 离线字形核验原型
+# Unicode 18.0 字形核验
 
-使用已有人工多来源标注生成候选，再由 agent 或人工对照 Unicode 18.0 码表核验。整个流程离线运行，不调用数据库写入 API，也不会把 agent 判定自动加入训练样本。
+离线生成多来源候选，对照 Unicode 码表核验；判定独立保存，不自动修改数据库或加入训练样本。脚本均使用 TypeScript/Bun，PDF 使用 MuPDF，SVG 转 PNG 使用 resvg。
 
-## 已生成的数据
+## 当前保留结果
 
-本次下载和首批产物位于仓库根目录：
+已完成盲选回测中的最高命中率批次为 `output/glyph-review/backtest-100-enclosures-20261030/`。100 字、473 个非 G 来源任务，整字排除训练，拒绝也计错：
 
-- `output/glyph-review/unicode/18.0.0/`：官方基本集码表、IRGSources、输入 SHA-256、全部来源字形的位置索引。
-- `output/glyph-review/pilot-18/`：U+6901 起的首批 100 字，共 520 个字符来源任务及 607 个候选。
-- 打开 `output/glyph-review/pilot-18/review.html` 开始核验，页面支持本地文件直接打开。
+| 方法 | 正确 / 总数 | 命中率 |
+| --- | ---: | ---: |
+| 逐引用统计基线 | 390 / 473 | 82.45% |
+| 外框调整后 agent | 412 / 473 | 87.10% |
+| 候选覆盖上限 | 431 / 473 | 91.12% |
 
-固定来源为 [Unicode 18.0 基本集码表](https://www.unicode.org/Public/18.0.0/charts/PDF/U4E00.pdf) 和 [Unihan.zip](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip)。当前索引含 20,992 个字符、108,493 个来源字形，没有未定位项；其中 18 项使用来源编号字格定位，仍需按正常流程视觉核验。
+61 项错误包括候选缺失 42 项、误拒 6 项、覆盖但选错 13 项。严格结构签名命中为 409/473；主口径允许结构签名或冻结 SVG 完全一致。
 
-已另行生成 `output/glyph-review/holdout-18/` 的 300 字历史标注留出批次。1,211 个非参考来源中，前一候选命中 1,166 项，候选覆盖 1,184 项（97.8%）；历史数据有差异的 347 项中覆盖 320 项（92.2%）。这些数字仅反映旧标注的候选覆盖，不代表 Unicode 18.0 视觉准确率。首批新字中还保存了两条实际 agent 核验示例：一项匹配、一项暂缓，尚未进行整批 agent 核验。
+这是旧样本诊断，外框改进参考过旧错误；不能当作新样本泛化准确率。当前源码和字库已有后续布局、笔画改动，87.10% 仅对应该批冻结图片。后续共享池和递进实验没有超过此结果，已连同早期试验及专用复跑脚本清理。新实验统一从 `backtest.ts prepare` 开始，不依赖历史目录。
 
-下载数据、裁图、个人核验结果由 `output/glyph-review/.gitignore` 排除，不进入 Git。`scripts/fetch.ts` 也已固定从官方 Unicode 18.0 下载 IRGSources，避免下一次 fetch 退回 assets 服务器上的旧版本。
+- `best-result.json`：进入 Git 的结果摘要及关键文件 SHA-256。
+- 批次 `report.md`、`evaluation*.json`：完整报告及逐项结果。
+- 批次 `blind/`、`agent-submissions.json`：实际看过的图片、任务和冻结提交。
+- 批次 `scoring-renders.json`、`choices-private.json`、`truth-private.json`：评分依据。
+- 批次 `error-review.html`：按字符聚类的离线错误复盘，包含原始理由和历史正确候选。
 
-## 准备和重新生成
-
-需要 Bun、Python 3.14、uv；项目正常 fetch 额外使用系统 `unzip`。PyMuPDF 固定为 2.0，图像生成时采用已安装的离线环境。
+下载数据、图片、私人判定及迁移快照由 `output/glyph-review/.gitignore` 排除，不进入 Git。最佳批次保持原目录及原文件；其中历史对照字段是来源记录，所指的旧实验已清理。重新核对评分无需旧实验或当前字库：
 
 ```bash
-# 下载官方固定版本，验证并同步来源表到算法包和 public/data/<版本>/
-python3 scripts/glyph-review/unicode_pdf.py download --sync
-
-# 已下载文件可加 --cached 复用；不传 --sync 则只准备原型的数据
-python3 scripts/glyph-review/unicode_pdf.py download --cached --sync
-
-# 第一次运行会安装 Python 图像依赖，并建立整个基本集的来源索引
-uv run --python 3.14 --with pymupdf==2.0 python scripts/glyph-review/unicode_pdf.py index
-
-# 生成新批次；--limit 是字符数，每个字符按 18.0 的实际来源展开任务
-bun scripts/glyph-review/cli.ts generate \
-  --from 6901 --to 7A6F --limit 100 \
-  --out output/glyph-review/next-batch
+bun scripts/glyph-review/backtest.ts verify \
+  --out output/glyph-review/backtest-100-enclosures-20261030
 ```
 
-每次生成使用新的输出目录；已存在 `tasks.json` 的批次不会被覆盖。支持 `--sources J,T,N`、`--candidates 6`、`--no-images`。来源使用项目标记：KP→N，UK→B。原图同时记录 Unicode 的完整来源编号。
+## 下载、生成与人工核验
 
-仅生成数据时可使用 `--no-images`。若图像步骤中断，数据和 SVG 已保存，可用下面的命令恢复裁图；再通过 CLI 的 `import` 导入空数组 `[]`，即可从保存的任务重建核验页面：
+固定使用 [Unicode 18.0 基本集码表](https://www.unicode.org/Public/18.0.0/charts/PDF/U4E00.pdf) 和 [Unihan.zip](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip)。输入及来源索引位于 `output/glyph-review/unicode/18.0.0/`，生成和裁图验证 SHA-256。来源标记 KP→N、UK→B，完整来源编号保留。
 
 ```bash
-uv run --offline --python 3.14 --with pymupdf==2.0 python \
-  scripts/glyph-review/unicode_pdf.py crop \
+bun scripts/glyph-review/cli.ts download --cached --sync
+bun scripts/glyph-review/cli.ts index
+bun scripts/glyph-review/cli.ts generate \
+  --from 6901 --to 7A6F --limit 100 --out output/glyph-review/next-batch
+bun scripts/glyph-review/cli.ts serve --out output/glyph-review/next-batch --port 8765
+```
+
+`--sync` 同步来源表到算法包及网页缓存；首次下载可省略 `--cached`。每批使用新目录，不覆盖已有任务。`--sources J,T,N` 限定来源，`--candidates 6` 限定每个来源合并前的候选数，`--no-images` 只生成数据。
+
+CLI 默认将同字各来源候选按完整结构签名合并为共享池；`--source-local` 使用来源独立候选。`sourceCandidates` 保存合并前候选，`poolOrigins` 保存生成来源，统计证据不能解释为目标来源的正确概率。
+
+页面可直接打开 `review.html`。先只看原图记录 same/different/uncertain，再展开候选，选择匹配、全部不匹配或暂缓，并填写视觉理由和核验者。导出后导入：
+
+```bash
+bun scripts/glyph-review/cli.ts import --out output/glyph-review/next-batch --file /path/to/decisions.json
+bun scripts/glyph-review/cli.ts summary --out output/glyph-review/next-batch
+```
+
+agent 不能覆盖已有人工判定；其他覆盖会备份。未知候选、缺图或不确定的第一阶段不能导入为匹配。静态码表不能证明笔顺；判断关注笔画和结构，非字体粗细或衬线。
+
+图像生成中断后可以恢复，无需重建任务：
+
+```bash
+bun scripts/glyph-review/cli.ts crop \
   --request output/glyph-review/next-batch/crop-request.json \
   --out output/glyph-review/next-batch/images \
   --renders output/glyph-review/next-batch/renders
+bun scripts/glyph-review/cli.ts rasterize --renders output/glyph-review/next-batch/renders
 ```
 
-页面可直接打开，也可用仅本机可访问的服务器预览：
+PDF 定位精确匹配文本层中的完整来源编号，再定位其上方字形；无法定位字形时记录 `source-label-cell` 回退。缺失、歧义和重复项写入索引 issues，不按列号猜测来源。用户已确认切图可用，后续不以 `crop-ink-at-border` 阻止核验。
+
+## 留出与 agent 盲选
+
+历史人工范围为 U+4E00～U+6900、U+7A70～U+9FFF；这不意味着已按 Unicode 18.0 重新审核。候选按来源学习同操作符、同部分数的引用替换，保留布局和笔顺块，始终保留原样参考。候选生成不读取留出字符的目标标签。
 
 ```bash
-python3 -m http.server 8765 --bind 127.0.0.1 --directory output/glyph-review
+# 全量统计留出：复合体参考字形，至少两个不同字形 ID
+bun scripts/glyph-review/cli.ts generate --holdout --from 4E00 --to 68FF \
+  --out output/glyph-review/holdout-next
+bun scripts/glyph-review/cli.ts score --out output/glyph-review/holdout-next
+
+# 随机抽 100 字进行实际 agent 盲选；可用 --seed 指定可复现种子
+bun scripts/glyph-review/backtest.ts prepare --out output/glyph-review/backtest-next
+# 完成全部三个分片后冻结提交哈希、评分并自动生成错误复盘
+bun scripts/glyph-review/backtest.ts score --out output/glyph-review/backtest-next
+bun scripts/glyph-review/backtest.ts verify --out output/glyph-review/backtest-next
 ```
 
-## 核验流程
+全量留出和抽取 100 字的训练集不同，不能直接比较命中率。筛选条件、码位、种子保存在 `selection.json`，答案在 `blind/` 之外。
 
-1. 只看 Unicode 18.0 的参考来源和目标来源原图，记录 `same` / `different` / `uncertain`；有差异时描述具体位置。需要时展开原始码表整行核对来源编号。
-2. 保存观察后，查看候选渲染，选择匹配项、全部不匹配或暂缓。必须填写视觉依据和核验者身份。
-3. 页面将结果保存在当前浏览器，点击“导出核验记录”保存到磁盘。CLI 导入后将结果写入独立的 `decisions.json`，并更新页面的初始核验记录。
+通用两阶段任务为 `agent-stage1.json`（原图观察）和 `agent-stage2.json`（候选核验）。回测统一使用来源独立候选加统计基线组合，随机打乱字母，按字符分为三个分片。任务说明为 `agent-task/AGENTS.md`，实际提交写入 `blind/results/shard-{1,2,3}.json`；盲选者不得读取答案、统计排名、源数据库或其他分片结果。这里不自动调用模型 API。
+
+`prepare` 冻结评分需要的 SVG 哈希；`score` 校验完整任务及已有提交哈希，自动冻结新提交；`verify` 只读重算并对照已保存结果。评分不调用当前渲染器，因此后续代码与字库变化不会污染已有实验。
+
+错误复盘也可独立生成：
 
 ```bash
-bun scripts/glyph-review/cli.ts import \
-  --out output/glyph-review/pilot-18 --file /path/to/exported-decisions.json
-bun scripts/glyph-review/cli.ts summary --out output/glyph-review/pilot-18
+bun scripts/glyph-review/error-review.ts --batch output/glyph-review/backtest-100-enclosures-20261030
 ```
 
-来源原图缺失、第一阶段不确定、候选键不存在时，CLI 不接受“候选匹配”的判定。agent 结果不能覆盖已有人工判定；覆盖其他判定前会备份旧文件。浏览器导入提供相同的人工作业保护。
+复盘只使用该次实际看过的 panel 和原始理由，不重画历史输入；报告含答案，必须在 `blind/` 之外。人工备注单独导出，不改写提交。评分分类和 agent 理由都不能代替人工视觉仲裁。
 
-观察中的“相同”指影响本项目字形表达的笔画和结构相同，不要求匹配字体粗细、衬线、收笔风格或字面比例。静态码表不能证明笔顺，相关歧义应暂缓。
+## 外框及字形迁移工具
 
-## 交给 agent
+保留已上线字形的审核与恢复证据，不将其作为冗余实验删除：
 
-每批生成两个任务包：
+| 目录 | 用途 |
+| --- | --- |
+| `enclosure-inventory/` | 迁移前外框清单，审核方案的输入 |
+| `enclosure-profiles-18/` | 171 个外框、268 个例子、判断、拓扑及视觉审核 |
+| `enclosure-migration-18/` | 外框迁移前后快照、ID 映射、journal、计划及验证 |
+| `overlay-ti-migration-20261030/` | 叠加与提字形迁移的审核、计划、快照及 journal |
+| `directional-layout-20261030/`、`hooks-rounding-20261030/` | 当前布局和共用笔画渲染的最终对照与验证证据 |
 
-- `agent-stage1.json`：仅提供来源原图、整行图片及来源编号。先完成独立观察；此时不读取候选、`tasks.json` 或留出答案。
-- `agent-stage2.json`：提供候选 PNG、候选键和统计证据。完成第一阶段后再读取，根据目标原图逐项核验，允许 `none` 和 `uncertain`。
-
-图片路径为本机绝对路径，agent 可以直接调用图像查看工具。这里不自动调用收费模型 API；可由当前编码 agent 或其他具有视觉能力的 agent 消费任务包。建议每次处理少量任务，避免把整批图片缩进一个上下文。
-
-agent 的输出采用以下 JSON，`batchId`、`taskId` 和候选键必须来自当前批次。示例中的占位值需要替换，不应直接导入：
-
-```json
-{
-  "decisions": [{
-    "batchId": "当前批次 ID",
-    "taskId": "6902-J",
-    "phase1": {
-      "relation": "different",
-      "difference": "描述实际观察到的部件位置及笔画差异"
-    },
-    "verdict": "candidate",
-    "candidateKey": "A",
-    "reason": "描述候选与目标逐项一致的视觉依据",
-    "reviewer": { "kind": "agent", "name": "核验 agent 的名称" },
-    "reviewedAt": "2026-10-28T13:00:00.000Z"
-  }]
-}
-```
-
-`verdict` 为 `none` 或 `uncertain` 时，`candidateKey` 必须为 `null`。导入只保存核验记录，不生成数据库补丁。
-
-## 候选的构造与限制
-
-- 人工范围冻结自现有 `GlyphRecommendation.tsx`：U+4E00～U+6900、U+7A70～U+9FFF。范围只是历史样本来源，不能视为已按 Unicode 18.0 重新核验。
-- 为本批次选中的整字排除所有来源统计；候选生成不读取该字目标来源的标签。
-- 优先使用相同原引用、结构操作符、部分数量和部分位置的统计；上下文至少有 3 票时使用上下文统计，否则退回全局统计。按字符对各替代项去重计票，并保存支持实例码位。
-- 只有结构操作符与部分数量一致的人工字形对才用于按位置学习引用替换；结构变化可通过已知“整字字形→目标来源字形”映射复用，否则交给人工处理。
-- 每个部分最多保留 3 个统计替代项及原引用，用有限宽度组合生成候选；始终保留参考字形原样候选。排序分数不是正确概率。
-- 保留原引用布局和笔画块数据，按完整结构签名复用已有字形 ID。原型复用应用的仿射合并和笔画路径渲染，检查缺失引用、循环、非有限坐标和笔画块越界。
-- 未知基本部件目前主要提供原样字形或已有整字映射，不自动画新笔画；候选遗漏时应选择“全部不匹配”。
-- PDF 定位同时匹配码位所在行和 Unihan 来源编号。少量字形在 PDF 文本层不可见，此时按来源编号定位字格并检查非空，记录 `localization: source-label-cell`。定位数量完整不等于视觉内容已经逐项核验。
-
-## 可选的历史标注留出
+以上均位于 `output/glyph-review/`。独立模型部署目录属于本地服务资料，不纳入字形实验清理。
 
 ```bash
-bun scripts/glyph-review/cli.ts generate --holdout --limit 300 --seed unicode18 \
-  --out output/glyph-review/holdout-18
-bun scripts/glyph-review/cli.ts score --out output/glyph-review/holdout-18
+# 新清单使用新目录；不能覆盖迁移前审核输入
+bun scripts/glyph-review/enclosure-inventory.ts --out output/glyph-review/enclosure-inventory-next
 ```
 
-按种子确定性抽取历史人工范围内的字符，整字排除训练；答案独立放在 `heldout-private.json`，不嵌入核验页面或 agent 包。`score` 输出前一候选命中和候选覆盖数，分别统计历史数据中“有变化”和“无变化”的非参考来源。
+`enclosure-profiles.ts` 提供 prepare/render/verify；`enclosure-topology.ts` 用双向全笔画匹配审计变形；`upload-enclosures.ts` 提供 prepare/apply；`verify-enclosure-migration.ts` 核对迁移计划、回读数据及审核 SVG。`overlay-ti-migration.ts` 和 `apply-overlay-ti.ts` 保留叠加与提字形迁移工具。
 
-这是对旧数据结构签名的回看，不是 Unicode 18.0 视觉准确率，也不是按部件族隔离的泛化评估。若存在重复但等价的字形 ID，结构签名可能低估视觉覆盖率。最终应以码表核验结果和人工耗时衡量实际收益。
+这些迁移脚本仍含已完成批次的目录、数量或整表假设，不能直接用于下一批。扩展前须参数化输入、合并已有规则，并保存新的快照和日志。已有批次不可重新 prepare 或以新渲染器覆写审核证据；历史 SVG 与当前渲染器比较可能因后续改动而不同，原验证结果仅对应当时版本。
 
-按本轮要求，没有添加、修改或运行测试套件。
+外框独立字形与变形外框使用不同 ID；仅替换九种包围结构的首引用。内件矩形保存于 `packages/hanzi-chai/src/enclosure-layouts.json`，显式坐标优先，辅助内件替换必须明确列出。拓扑审计需使用该批次原始快照，保持笔画种类、顺序、连接点及分离子图关系。完整迁移约束见仓库 `AGENTS.md`。

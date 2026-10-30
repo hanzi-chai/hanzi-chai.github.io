@@ -10,11 +10,13 @@ import { UNICODE_VERSION } from "../unicode";
 import {
   人工范围,
   候选生成器,
-  在人工范围,
+  合并来源候选,
   字形签名,
   读取来源,
 } from "./candidates";
 import { 字形渲染器 } from "./render";
+import { 选择字符 } from "./selection";
+import { 下载Unicode, 建立索引, 渲染候选PNG, 生成裁图 } from "./unicode-pdf";
 
 const ROOT = resolve(import.meta.dir, "../..");
 const UNICODE = join(ROOT, "output/glyph-review/unicode", UNICODE_VERSION);
@@ -58,6 +60,7 @@ type 任务 = {
   })[];
   flags: string[];
   renderingErrors: { candidateKey: string; reason: string }[];
+  sourceCandidates?: 任务["candidates"];
 };
 type 批次 = {
   batchId: string;
@@ -66,7 +69,9 @@ type 批次 = {
   mode: string;
   inputHashes: Record<string, string>;
   training: Record<string, unknown>;
+  selection?: Record<string, unknown>;
   tasks: 任务[];
+  candidatePolicy?: string;
 };
 type 判定 = {
   batchId: string;
@@ -82,14 +87,18 @@ type 判定 = {
 function 帮助() {
   console.log(`Unicode 18.0 离线字形核验原型（不会写入 API 数据库）
 
-准备：python3 scripts/glyph-review/unicode_pdf.py download --sync
-索引：uv run --python 3.14 --with pymupdf==2.0 python scripts/glyph-review/unicode_pdf.py index
+准备：bun scripts/glyph-review/cli.ts download --sync（已有文件可加 --cached）
+索引：bun scripts/glyph-review/cli.ts index
 生成：bun scripts/glyph-review/cli.ts generate --from 6901 --to 7A6F --limit 100 --out output/glyph-review/pilot
-盲测：bun scripts/glyph-review/cli.ts generate --holdout --limit 300 --seed unicode18 --out output/glyph-review/holdout
+留出全部多字形复合体：bun scripts/glyph-review/cli.ts generate --holdout --from 4E00 --to 68FF --out output/glyph-review/holdout-multiglyph
+显式抽样：在以上命令中加 --limit 100 --seed unicode18（默认不抽样）
 可选：--sources J,T,N（用项目来源标记），--candidates 6，--no-images（仅生成数据）
+默认合并同一字符的全部来源候选；--source-local 恢复各来源独立候选
 导入：bun scripts/glyph-review/cli.ts import --out <批次目录> --file <核验 JSON>
 统计：bun scripts/glyph-review/cli.ts summary --out <批次目录>
 回看旧标注覆盖率：bun scripts/glyph-review/cli.ts score --out <盲测目录>
+恢复裁图：bun scripts/glyph-review/cli.ts crop --request <crop-request.json> --out <图片目录> --renders <SVG目录>
+预览：bun scripts/glyph-review/cli.ts serve --out <批次目录> --port 8765
 
 生成后直接打开批次目录的 review.html；agent 使用 agent-stage1.json / agent-stage2.json。`);
 }
@@ -107,9 +116,14 @@ async function 生成(values: Record<string, string | boolean | undefined>) {
   const out = resolve(String(values.out ?? "output/glyph-review/pilot"));
   if (existsSync(join(out, "tasks.json")))
     throw new Error("批次已存在，请使用新的 --out 目录以保留核验记录");
-  const limit = Number(values.limit ?? 100);
+  const holdout = values.holdout === true;
+  const limit =
+    values.limit === undefined ? (holdout ? null : 100) : Number(values.limit);
   const candidateLimit = Number(values.candidates ?? 6);
-  if (!Number.isInteger(limit) || limit < 1 || limit > 20992)
+  if (
+    limit !== null &&
+    (!Number.isInteger(limit) || limit < 1 || limit > 20992)
+  )
     throw new Error("--limit 须为 1～20992");
   if (
     !Number.isInteger(candidateLimit) ||
@@ -117,8 +131,8 @@ async function 生成(values: Record<string, string | boolean | undefined>) {
     candidateLimit > 12
   )
     throw new Error("--candidates 须为 2～12");
-  const from = 码位(String(values.from ?? "6901"));
-  const to = 码位(String(values.to ?? "7A6F"));
+  const from = 码位(String(values.from ?? (holdout ? "4E00" : "6901")));
+  const to = 码位(String(values.to ?? (holdout ? "68FF" : "7A6F")));
   if (from > to) throw new Error("起始码位大于结束码位");
   const charactersText = readFileSync(join(DATA, "characters.json"), "utf8");
   const glyphsText = readFileSync(join(DATA, "glyphs.json"), "utf8");
@@ -135,24 +149,23 @@ async function 生成(values: Record<string, string | boolean | undefined>) {
     index.pdfSha256 !== hash(readFileSync(join(UNICODE, "U4E00.pdf")))
   )
     throw new Error("码表、来源表与索引不匹配，请重新生成索引");
-  const holdout = values.holdout === true;
-  const selected = characters.filter(
-    (c) =>
-      sources.has(c.unicode) &&
-      (holdout ? 在人工范围(c.unicode) : c.unicode >= from && c.unicode <= to),
+  const glyphMap = new Map(glyphs.map((g) => [g.id, g]));
+  const { chosen, selection } = 选择字符(
+    characters,
+    glyphMap,
+    new Set(sources.keys()),
+    {
+      from,
+      to,
+      holdout,
+      limit,
+      seed: values.seed === undefined ? undefined : String(values.seed),
+    },
   );
-  if (holdout) {
-    const seed = String(values.seed ?? "unicode18");
-    selected.sort((a, b) =>
-      hash(`${seed}:${a.unicode}`).localeCompare(hash(`${seed}:${b.unicode}`)),
-    );
-  } else selected.sort((a, b) => a.unicode - b.unicode);
-  const chosen = selected.slice(0, limit);
   if (!chosen.length) throw new Error("指定范围内没有可处理字符");
   // 整字留出：该字符的任何来源均不进入部件统计和整字映射。
   const excluded = new Set(chosen.map((c) => c.unicode));
   const engine = new 候选生成器(characters, glyphs, excluded);
-  const glyphMap = new Map(glyphs.map((g) => [g.id, g]));
   const renderer = new 字形渲染器(glyphMap);
   mkdirSync(join(out, "renders"), { recursive: true });
   const filters = values.sources
@@ -252,18 +265,40 @@ async function 生成(values: Record<string, string | boolean | undefined>) {
     }
   }
   if (!tasks.length) throw new Error("来源过滤后没有任务");
+  if (!values["source-local"]) {
+    for (const character of chosen) {
+      const sameCharacter = tasks.filter(
+        (t) => t.unicode === character.unicode,
+      );
+      const pool = 合并来源候选(
+        sameCharacter.map((t) => ({
+          source: t.source,
+          candidates: t.candidates,
+        })),
+      );
+      for (const task of sameCharacter) {
+        task.sourceCandidates = task.candidates;
+        task.candidates = pool;
+      }
+    }
+  }
   const inputHashes = {
     characters: hash(charactersText),
     glyphs: hash(glyphsText),
     irgSources: hash(irgText),
     pdf: index.pdfSha256,
+    index: hash(readFileSync(join(UNICODE, "index.json"))),
   };
   const batch: 批次 = {
     batchId: hash(JSON.stringify({ inputHashes, tasks })).slice(0, 20),
     unicodeVersion: UNICODE_VERSION,
     generatedAt: new Date().toISOString(),
     mode: holdout ? "historical-holdout" : "pilot",
+    candidatePolicy: values["source-local"]
+      ? "source-local"
+      : "shared-per-character-pool",
     inputHashes,
+    selection,
     training: {
       historicalRanges: 人工范围,
       excludedCharacters: [...excluded],
@@ -276,35 +311,41 @@ async function 生成(values: Record<string, string | boolean | undefined>) {
     tasks,
   };
   write(join(out, "tasks.json"), batch);
+  write(join(out, "selection.json"), selection);
   write(join(out, "crop-request.json"), [...images]);
   if (holdout) write(join(out, "heldout-private.json"), expected);
+  写出核验资料(out, batch);
   if (!values["no-images"]) {
-    const result = Bun.spawnSync(
-      [
-        "uv",
-        "run",
-        "--offline",
-        "--python",
-        "3.14",
-        "--with",
-        "pymupdf==2.0",
-        "python",
-        join(import.meta.dir, "unicode_pdf.py"),
-        "crop",
-        "--request",
-        join(out, "crop-request.json"),
-        "--out",
-        join(out, "images"),
-        "--renders",
-        join(out, "renders"),
-      ],
-      { stdout: "inherit", stderr: "inherit" },
-    );
-    if (result.exitCode !== 0)
-      throw new Error(
-        "图像生成失败；数据已保存，可按 README 的恢复命令重新裁图",
-      );
+    生成裁图({
+      request: join(out, "crop-request.json"),
+      out: join(out, "images"),
+      renders: join(out, "renders"),
+    });
+    batch.batchId = hash(
+      JSON.stringify({ inputHashes, tasks: batch.tasks }),
+    ).slice(0, 20);
+    write(join(out, "tasks.json"), batch);
+    写出核验资料(out, batch);
   }
+  console.log(
+    JSON.stringify(
+      {
+        out,
+        batchId: batch.batchId,
+        characters: chosen.length,
+        selection: { ...selection, selectedCodepoints: undefined },
+        tasks: tasks.length,
+        candidates: tasks.reduce((sum, t) => sum + t.candidates.length, 0),
+        missingImages: tasks.filter((t) => !t.target || !t.reference).length,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+function 写出核验资料(out: string, batch: 批次, decisions: 判定[] = []) {
+  const tasks = batch.tasks;
   const packet = (task: 任务, stage: 1 | 2) => ({
     batchId: batch.batchId,
     taskId: task.id,
@@ -321,38 +362,32 @@ async function 生成(values: Record<string, string | boolean | undefined>) {
             key: c.key,
             image: resolve(out, c.image),
             evidence: c.evidence,
+            poolOrigins: c.poolOrigins,
+            evidenceSource: c.evidenceSource,
           })),
         }
       : {}),
   });
   write(join(out, "agent-stage1.json"), {
     instruction:
-      "先独立比较来源原图，输出 relation=same/different/uncertain 和可定位的 difference。忽略纯粗细、衬线、比例差异；关注笔画增减、连接及部件结构。看不清或缺图必须 uncertain。静态图片不推断笔顺。此阶段不可读取候选和 heldout-private.json。",
+      "先独立比较来源原图，输出 relation=same/different/uncertain 和可定位的 difference。忽略纯粗细、衬线、比例差异；关注笔画增减、连接及部件结构。用户已复核并确认切图可用，不因贴边标记暂缓。静态图片不推断笔顺。此阶段不可读取候选和 heldout-private.json。",
     tasks: tasks.map((t) => packet(t, 1)),
   });
   write(join(out, "agent-stage2.json"), {
     instruction:
-      "仅在完成第一阶段后打开。逐项检查候选与目标的结构和笔画，选择 candidate/none/uncertain，并给出视觉依据；允许全部不匹配。模型自报置信度不能作为入库依据。输出格式见 README。",
+      "仅在完成第一阶段后打开。逐项检查候选与目标的结构和笔画，选择 candidate/none/uncertain，并给出视觉依据；允许全部不匹配。模型自报置信度不能作为入库依据。输出格式见 README。" +
+      (batch.candidatePolicy === "shared-per-character-pool"
+        ? "同字所有来源共享完整候选池，可以选择任意候选；evidenceSource 只标明所附统计证据的生成来源，不是目标来源概率。"
+        : ""),
     tasks: tasks.map((t) => packet(t, 2)),
   });
   const html = readFileSync(join(import.meta.dir, "review.html"), "utf8")
     .replace("__BATCH_DATA__", JSON.stringify(batch).replaceAll("<", "\\u003c"))
-    .replace("__INITIAL_DECISIONS__", "[]");
+    .replace(
+      "__INITIAL_DECISIONS__",
+      JSON.stringify(decisions).replaceAll("<", "\\u003c"),
+    );
   writeFileSync(join(out, "review.html"), html);
-  console.log(
-    JSON.stringify(
-      {
-        out,
-        batchId: batch.batchId,
-        characters: chosen.length,
-        tasks: tasks.length,
-        candidates: tasks.reduce((sum, t) => sum + t.candidates.length, 0),
-        missingImages: tasks.filter((t) => !t.target || !t.reference).length,
-      },
-      null,
-      2,
-    ),
-  );
 }
 
 function 校验判定(value: 判定, batch: 批次, out: string) {
@@ -422,16 +457,7 @@ function 后处理(
         readFileSync(path),
       );
     write(path, decisions);
-    const html = readFileSync(join(import.meta.dir, "review.html"), "utf8")
-      .replace(
-        "__BATCH_DATA__",
-        JSON.stringify(batch).replaceAll("<", "\\u003c"),
-      )
-      .replace(
-        "__INITIAL_DECISIONS__",
-        JSON.stringify(decisions).replaceAll("<", "\\u003c"),
-      );
-    writeFileSync(join(out, "review.html"), html);
+    写出核验资料(out, batch, decisions);
   }
   if (command === "score") {
     const expected = read<
@@ -448,12 +474,14 @@ function 后处理(
       const matches = task.candidates.map(
         (c) => 字形签名(c.glyph) === truth.signature,
       );
+      const localFirst = (task.sourceCandidates ?? task.candidates)[0];
       for (const group of [
         groups.all,
         truth.changed ? groups.changed : groups.unchanged,
       ]) {
         group.count++;
-        if (matches[0]) group.top1++;
+        if (localFirst && 字形签名(localFirst.glyph) === truth.signature)
+          group.top1++;
         if (matches.some(Boolean)) group.covered++;
       }
     }
@@ -461,9 +489,27 @@ function 后处理(
       warning:
         "仅对旧人工数据的结构签名回看；不代表 Unicode 18.0 视觉准确率，且非按部件族划分。",
       groups,
+      candidatePolicy: batch.candidatePolicy ?? "source-local",
+      unscoredTaskIds: batch.tasks
+        .filter(
+          (task) => task.source !== task.referenceSource && !expected[task.id],
+        )
+        .map((task) => task.id),
+      selection: batch.selection ?? { warning: "旧批次未记录筛选条件" },
     };
     write(join(out, "coverage.json"), result);
-    console.log(JSON.stringify(result, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          ...result,
+          selection: batch.selection
+            ? { ...batch.selection, selectedCodepoints: undefined }
+            : result.selection,
+        },
+        null,
+        2,
+      ),
+    );
     return;
   }
   const counts: Record<string, number> = {};
@@ -500,12 +546,52 @@ try {
       file: { type: "string" },
       holdout: { type: "boolean" },
       "no-images": { type: "boolean" },
+      "source-local": { type: "boolean" },
       help: { type: "boolean" },
+      cached: { type: "boolean" },
+      sync: { type: "boolean" },
+      request: { type: "string" },
+      renders: { type: "string" },
+      port: { type: "string" },
     },
   });
   const command = positionals[0];
   if (!command || values.help) 帮助();
-  else if (command === "generate") await 生成(values);
+  else if (command === "download")
+    await 下载Unicode({ cached: values.cached, sync: values.sync });
+  else if (command === "index") 建立索引();
+  else if (command === "rasterize") {
+    if (!values.renders) throw new Error("rasterize 需要 --renders");
+    渲染候选PNG(resolve(values.renders));
+  } else if (command === "crop") {
+    if (!values.request || !values.out)
+      throw new Error("crop 需要 --request 和 --out");
+    生成裁图({
+      request: resolve(values.request),
+      out: resolve(values.out),
+      renders: values.renders ? resolve(values.renders) : undefined,
+    });
+  } else if (command === "serve") {
+    const out = resolve(values.out ?? "output/glyph-review/pilot-18");
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: Number(values.port ?? 8765),
+      async fetch(request) {
+        const pathname = decodeURIComponent(new URL(request.url).pathname);
+        const path = resolve(
+          out,
+          pathname === "/" ? "review.html" : `.${pathname}`,
+        );
+        if (!path.startsWith(`${out}/`))
+          return new Response("Forbidden", { status: 403 });
+        const file = Bun.file(path);
+        return (await file.exists())
+          ? new Response(file)
+          : new Response("Not found", { status: 404 });
+      },
+    });
+    console.log(`核验页面：http://127.0.0.1:${server.port}/`);
+  } else if (command === "generate") await 生成(values);
   else if (["import", "summary", "score"].includes(command))
     后处理(command, values);
   else throw new Error(`未知命令：${command}`);

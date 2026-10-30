@@ -1,0 +1,33 @@
+{
+  "batch": "output/glyph-review/backtest-100-enclosures-20261030",
+  "date": "2026-10-30",
+  "selectionCriterion": "已完成 agent 盲选回测中历史标注命中率最高；不是新样本泛化结论",
+  "overall": {
+    "total": 473,
+    "statisticalCorrect": 390,
+    "statisticalAccuracy": 0.8245243128964059,
+    "prototypeCorrect": 390,
+    "prototypeAccuracy": 0.8245243128964059,
+    "agentCorrect": 412,
+    "agentAccuracy": 0.8710359408033826,
+    "candidateCovered": 431,
+    "candidateCoverage": 0.9112050739957717,
+    "agentAbstentions": 33,
+    "statisticalStrict": 387,
+    "agentStrict": 409,
+    "falseRejections": 6,
+    "correctRejections": 27
+  },
+  "caveat": "同一旧样本诊断；当前源码与数据已有后续改动，87.10% 仅对应本批冻结图片。",
+  "sha256": {
+    "experiment.json": "d837f9c83ac780ffc21cec6ece77a7beb907a2bc6d0930db9d9885d73c1f811e",
+    "evaluation.json": "cb24a3eb208d22209d2089b11f04abdd21536e86ef4ff871e7818701ffad3215",
+    "evaluation-rows.json": "3f5ff3158c07e93f74cb9735afe8d330ff7663309bd3b3021c9e454d7ce993c7",
+    "agent-submissions.json": "8d191f6ae94b1bba9447d30430485135f981bfa0b44153a1e7b8b3c7a991d8f4",
+    "scoring-renders.json": "52020a03ee557ece85ca3a43f91f57b9de780766a50365a77db9e7a362e3824a",
+    "choices-private.json": "dd5d91607fa9b74fededf761ba4cb88c5dde5f1f442a1eeb763de222d232cddc",
+    "truth-private.json": "b66bfef2894f6c68abe8bfbc9d496bfe6bd8c594d00e21dc1ab07b5cce1c4933",
+    "renderer-recovery-verification.json": "ba6f524751689d7b1842dc761976a124a5f3c4f29c8b5ef188a0146d5859bcf9",
+    "report.md": "cfd51114e189bed10db199dfc5ba84ebcdbfcfafa8883437505629ecad190077"
+  }
+}

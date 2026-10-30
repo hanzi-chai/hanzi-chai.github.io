@@ -123,6 +123,9 @@ const StrokeForm = ({
                     ) : (
                       <ProFormGroup size="small">
                         <Digit name={["parameterList", 0]} />
+                        {command === "l" && (
+                          <Digit name={["parameterList", 1]} />
+                        )}
                       </ProFormGroup>
                     )
                   }

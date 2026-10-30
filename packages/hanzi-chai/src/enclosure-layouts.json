@@ -1,0 +1,1591 @@
+{
+  "schemaVersion": 1,
+  "unicodeVersion": "18.0.0",
+  "decisionsSha256": "4d9c8d849f754b406de26c731512cc9662dc39b17ed1dc62f786f55c0693c436",
+  "rules": {
+    "16": {
+      "sourceGlyphId": 16,
+      "rectangle": {
+        "xbegin": 3,
+        "ybegin": 20,
+        "xend": 76,
+        "yend": 89
+      }
+    },
+    "17": {
+      "sourceGlyphId": 17,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 9,
+        "xend": 67,
+        "yend": 100
+      }
+    },
+    "69": {
+      "sourceGlyphId": 69,
+      "rectangle": {
+        "xbegin": 12,
+        "ybegin": 26,
+        "xend": 61,
+        "yend": 75
+      }
+    },
+    "71": {
+      "sourceGlyphId": 71,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 19,
+        "xend": 96,
+        "yend": 98
+      }
+    },
+    "78": {
+      "sourceGlyphId": 78,
+      "rectangle": {
+        "xbegin": 15,
+        "ybegin": 13,
+        "xend": 97,
+        "yend": 88
+      }
+    },
+    "103": {
+      "sourceGlyphId": 103,
+      "rectangle": {
+        "xbegin": 14,
+        "ybegin": 17,
+        "xend": 86,
+        "yend": 85
+      }
+    },
+    "113": {
+      "sourceGlyphId": 113,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 20,
+        "xend": 96,
+        "yend": 99
+      }
+    },
+    "125": {
+      "sourceGlyphId": 125,
+      "rectangle": {
+        "xbegin": 25,
+        "ybegin": 15,
+        "xend": 79,
+        "yend": 88
+      }
+    },
+    "126": {
+      "sourceGlyphId": 126,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 25,
+        "xend": 77,
+        "yend": 88
+      }
+    },
+    "130": {
+      "sourceGlyphId": 130,
+      "rectangle": {
+        "xbegin": 27,
+        "ybegin": 26,
+        "xend": 77,
+        "yend": 83
+      }
+    },
+    "132": {
+      "sourceGlyphId": 132,
+      "rectangle": {
+        "xbegin": 8,
+        "ybegin": 32,
+        "xend": 73,
+        "yend": 88
+      }
+    },
+    "163": {
+      "sourceGlyphId": 163,
+      "rectangle": {
+        "xbegin": 14,
+        "ybegin": 0,
+        "xend": 86,
+        "yend": 83
+      }
+    },
+    "164": {
+      "sourceGlyphId": 164,
+      "rectangle": {
+        "xbegin": 32,
+        "ybegin": 25,
+        "xend": 72,
+        "yend": 76
+      }
+    },
+    "243": {
+      "sourceGlyphId": 243,
+      "rectangle": {
+        "xbegin": 34,
+        "ybegin": 40,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "247": {
+      "sourceGlyphId": 247,
+      "rectangle": {
+        "xbegin": 31,
+        "ybegin": 43,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "261": {
+      "sourceGlyphId": 261,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 49,
+        "xend": 45,
+        "yend": 98
+      }
+    },
+    "283": {
+      "sourceGlyphId": 283,
+      "rectangle": {
+        "xbegin": 13,
+        "ybegin": 13,
+        "xend": 87,
+        "yend": 87
+      }
+    },
+    "303": {
+      "sourceGlyphId": 303,
+      "rectangle": {
+        "xbegin": 31,
+        "ybegin": 48,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "311": {
+      "sourceGlyphId": 311,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 34,
+        "xend": 78,
+        "yend": 83
+      }
+    },
+    "312": {
+      "sourceGlyphId": 312,
+      "rectangle": {
+        "xbegin": 25,
+        "ybegin": 40,
+        "xend": 95,
+        "yend": 99
+      }
+    },
+    "341": {
+      "sourceGlyphId": 341,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 22,
+        "xend": 96,
+        "yend": 98
+      }
+    },
+    "344": {
+      "sourceGlyphId": 344,
+      "rectangle": {
+        "xbegin": 19,
+        "ybegin": 21,
+        "xend": 81,
+        "yend": 92
+      }
+    },
+    "359": {
+      "sourceGlyphId": 359,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 0,
+        "xend": 96,
+        "yend": 84
+      }
+    },
+    "360": {
+      "sourceGlyphId": 360,
+      "rectangle": {
+        "xbegin": 29,
+        "ybegin": 0,
+        "xend": 98,
+        "yend": 85
+      }
+    },
+    "390": {
+      "sourceGlyphId": 390,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 34,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "398": {
+      "sourceGlyphId": 398,
+      "rectangle": {
+        "xbegin": 29,
+        "ybegin": 42,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "432": {
+      "sourceGlyphId": 432,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 43,
+        "xend": 54,
+        "yend": 99
+      }
+    },
+    "439": {
+      "sourceGlyphId": 439,
+      "rectangle": {
+        "xbegin": 34,
+        "ybegin": 53,
+        "xend": 94,
+        "yend": 100
+      }
+    },
+    "556": {
+      "sourceGlyphId": 556,
+      "rectangle": {
+        "xbegin": 15,
+        "ybegin": 25,
+        "xend": 85,
+        "yend": 84
+      }
+    },
+    "570": {
+      "sourceGlyphId": 570,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 38,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "607": {
+      "sourceGlyphId": 607,
+      "rectangle": {
+        "xbegin": 29,
+        "ybegin": 0,
+        "xend": 98,
+        "yend": 85
+      }
+    },
+    "627": {
+      "sourceGlyphId": 627,
+      "rectangle": {
+        "xbegin": 30,
+        "ybegin": 48,
+        "xend": 75,
+        "yend": 85
+      }
+    },
+    "633": {
+      "sourceGlyphId": 633,
+      "rectangle": {
+        "xbegin": 29,
+        "ybegin": 43,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "795": {
+      "sourceGlyphId": 795,
+      "rectangle": {
+        "xbegin": 28,
+        "ybegin": 24,
+        "xend": 95,
+        "yend": 96
+      }
+    },
+    "804": {
+      "sourceGlyphId": 804,
+      "rectangle": {
+        "xbegin": 6,
+        "ybegin": 63,
+        "xend": 84,
+        "yend": 89
+      }
+    },
+    "834": {
+      "sourceGlyphId": 834,
+      "rectangle": {
+        "xbegin": 3,
+        "ybegin": 65,
+        "xend": 82,
+        "yend": 98
+      }
+    },
+    "835": {
+      "sourceGlyphId": 835,
+      "rectangle": {
+        "xbegin": 3,
+        "ybegin": 35,
+        "xend": 55,
+        "yend": 95
+      }
+    },
+    "866": {
+      "sourceGlyphId": 866,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 57,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "878": {
+      "sourceGlyphId": 878,
+      "rectangle": {
+        "xbegin": 66,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 30
+      }
+    },
+    "901": {
+      "sourceGlyphId": 901,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 66,
+        "xend": 82,
+        "yend": 94
+      }
+    },
+    "922": {
+      "sourceGlyphId": 922,
+      "rectangle": {
+        "xbegin": 12,
+        "ybegin": 45,
+        "xend": 61,
+        "yend": 86
+      }
+    },
+    "1009": {
+      "sourceGlyphId": 1009,
+      "rectangle": {
+        "xbegin": 55,
+        "ybegin": 61,
+        "xend": 87,
+        "yend": 88
+      }
+    },
+    "1023": {
+      "sourceGlyphId": 1023,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 53,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "1027": {
+      "sourceGlyphId": 1027,
+      "rectangle": {
+        "xbegin": 61,
+        "ybegin": 60,
+        "xend": 85,
+        "yend": 86
+      }
+    },
+    "1050": {
+      "sourceGlyphId": 1050,
+      "rectangle": {
+        "xbegin": 32,
+        "ybegin": 26,
+        "xend": 65,
+        "yend": 90
+      }
+    },
+    "1069": {
+      "sourceGlyphId": 1069,
+      "rectangle": {
+        "xbegin": 9,
+        "ybegin": 44,
+        "xend": 56,
+        "yend": 96
+      }
+    },
+    "1148": {
+      "sourceGlyphId": 1148,
+      "rectangle": {
+        "xbegin": 62,
+        "ybegin": 56,
+        "xend": 87,
+        "yend": 85
+      }
+    },
+    "1244": {
+      "sourceGlyphId": 954,
+      "rectangle": {
+        "xbegin": 46,
+        "ybegin": 0,
+        "xend": 98,
+        "yend": 83
+      }
+    },
+    "1245": {
+      "sourceGlyphId": 369,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 33,
+        "xend": 96,
+        "yend": 99
+      }
+    },
+    "1247": {
+      "sourceGlyphId": 535,
+      "rectangle": {
+        "xbegin": 44,
+        "ybegin": 12,
+        "xend": 100,
+        "yend": 83
+      }
+    },
+    "1250": {
+      "sourceGlyphId": 475,
+      "rectangle": {
+        "xbegin": 3,
+        "ybegin": 35,
+        "xend": 52,
+        "yend": 96
+      }
+    },
+    "1251": {
+      "sourceGlyphId": 536,
+      "rectangle": {
+        "xbegin": 7,
+        "ybegin": 41,
+        "xend": 68,
+        "yend": 98
+      }
+    },
+    "1252": {
+      "sourceGlyphId": 562,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 41,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "1253": {
+      "sourceGlyphId": 608,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 38,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "1254": {
+      "sourceGlyphId": 28,
+      "rectangle": {
+        "xbegin": 20,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 89
+      }
+    },
+    "1255": {
+      "sourceGlyphId": 251,
+      "rectangle": {
+        "xbegin": 43,
+        "ybegin": 0,
+        "xend": 94,
+        "yend": 79
+      }
+    },
+    "1256": {
+      "sourceGlyphId": 189,
+      "rectangle": {
+        "xbegin": 36,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 82
+      }
+    },
+    "1260": {
+      "sourceGlyphId": 480,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 79
+      }
+    },
+    "1261": {
+      "sourceGlyphId": 690,
+      "rectangle": {
+        "xbegin": 20,
+        "ybegin": 28,
+        "xend": 60,
+        "yend": 84
+      }
+    },
+    "1264": {
+      "sourceGlyphId": 72,
+      "rectangle": {
+        "xbegin": 32,
+        "ybegin": 36,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "1267": {
+      "sourceGlyphId": 102,
+      "rectangle": {
+        "xbegin": 14,
+        "ybegin": 28,
+        "xend": 86,
+        "yend": 66
+      }
+    },
+    "1268": {
+      "sourceGlyphId": 136,
+      "rectangle": {
+        "xbegin": 46,
+        "ybegin": 7,
+        "xend": 97,
+        "yend": 87
+      }
+    },
+    "1270": {
+      "sourceGlyphId": 427,
+      "rectangle": {
+        "xbegin": 44,
+        "ybegin": 0,
+        "xend": 94,
+        "yend": 80
+      }
+    },
+    "1271": {
+      "sourceGlyphId": 559,
+      "rectangle": {
+        "xbegin": 55,
+        "ybegin": 10,
+        "xend": 100,
+        "yend": 75
+      }
+    },
+    "1273": {
+      "sourceGlyphId": 22,
+      "rectangle": {
+        "xbegin": 44,
+        "ybegin": 15,
+        "xend": 94,
+        "yend": 83
+      }
+    },
+    "1274": {
+      "sourceGlyphId": 22,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 20,
+        "xend": 62,
+        "yend": 100
+      }
+    },
+    "1276": {
+      "sourceGlyphId": 250,
+      "rectangle": {
+        "xbegin": 45,
+        "ybegin": 0,
+        "xend": 96,
+        "yend": 79
+      }
+    },
+    "1278": {
+      "sourceGlyphId": 773,
+      "rectangle": {
+        "xbegin": 55,
+        "ybegin": 10,
+        "xend": 100,
+        "yend": 75
+      }
+    },
+    "1282": {
+      "sourceGlyphId": 869,
+      "rectangle": {
+        "xbegin": 49,
+        "ybegin": 0,
+        "xend": 97,
+        "yend": 79
+      }
+    },
+    "1283": {
+      "sourceGlyphId": 964,
+      "rectangle": {
+        "xbegin": 51,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 80
+      }
+    },
+    "1285": {
+      "sourceGlyphId": 1007,
+      "rectangle": {
+        "xbegin": 4,
+        "ybegin": 66,
+        "xend": 82,
+        "yend": 95
+      }
+    },
+    "1286": {
+      "sourceGlyphId": 1007,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 60,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "1287": {
+      "sourceGlyphId": 457,
+      "rectangle": {
+        "xbegin": 53,
+        "ybegin": 0,
+        "xend": 99,
+        "yend": 80
+      }
+    },
+    "1288": {
+      "sourceGlyphId": 1018,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 99,
+        "yend": 78
+      }
+    },
+    "1290": {
+      "sourceGlyphId": 176,
+      "rectangle": {
+        "xbegin": 18,
+        "ybegin": 45,
+        "xend": 75,
+        "yend": 92
+      }
+    },
+    "1291": {
+      "sourceGlyphId": 928,
+      "rectangle": {
+        "xbegin": 30,
+        "ybegin": 54,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "1292": {
+      "sourceGlyphId": 970,
+      "rectangle": {
+        "xbegin": 51,
+        "ybegin": 0,
+        "xend": 99,
+        "yend": 81
+      }
+    },
+    "1294": {
+      "sourceGlyphId": 26,
+      "rectangle": {
+        "xbegin": 4,
+        "ybegin": 21,
+        "xend": 72,
+        "yend": 96
+      }
+    },
+    "1295": {
+      "sourceGlyphId": 328,
+      "rectangle": {
+        "xbegin": 51,
+        "ybegin": 7,
+        "xend": 100,
+        "yend": 82
+      }
+    },
+    "1296": {
+      "sourceGlyphId": 623,
+      "rectangle": {
+        "xbegin": 52,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 77
+      }
+    },
+    "1297": {
+      "sourceGlyphId": 289,
+      "rectangle": {
+        "xbegin": 13,
+        "ybegin": 0,
+        "xend": 87,
+        "yend": 88
+      }
+    },
+    "1298": {
+      "sourceGlyphId": 466,
+      "rectangle": {
+        "xbegin": 56,
+        "ybegin": 22,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "1299": {
+      "sourceGlyphId": 620,
+      "rectangle": {
+        "xbegin": 29,
+        "ybegin": 46,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "1300": {
+      "sourceGlyphId": 465,
+      "rectangle": {
+        "xbegin": 53,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 79
+      }
+    },
+    "1301": {
+      "sourceGlyphId": 583,
+      "rectangle": {
+        "xbegin": 4,
+        "ybegin": 59,
+        "xend": 82,
+        "yend": 95
+      }
+    },
+    "1302": {
+      "sourceGlyphId": 583,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 62,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "1303": {
+      "sourceGlyphId": 533,
+      "rectangle": {
+        "xbegin": 26,
+        "ybegin": 50,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "1304": {
+      "sourceGlyphId": 611,
+      "rectangle": {
+        "xbegin": 52,
+        "ybegin": 4,
+        "xend": 99,
+        "yend": 82
+      }
+    },
+    "1305": {
+      "sourceGlyphId": 523,
+      "rectangle": {
+        "xbegin": 20,
+        "ybegin": 49,
+        "xend": 82,
+        "yend": 91
+      }
+    },
+    "1306": {
+      "sourceGlyphId": 525,
+      "rectangle": {
+        "xbegin": 48,
+        "ybegin": 0,
+        "xend": 96,
+        "yend": 78
+      }
+    },
+    "1307": {
+      "sourceGlyphId": 590,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 78
+      }
+    },
+    "1311": {
+      "sourceGlyphId": 331,
+      "rectangle": {
+        "xbegin": 46,
+        "ybegin": 0,
+        "xend": 92,
+        "yend": 88
+      }
+    },
+    "1312": {
+      "sourceGlyphId": 455,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 39,
+        "xend": 76,
+        "yend": 90
+      }
+    },
+    "1313": {
+      "sourceGlyphId": 809,
+      "rectangle": {
+        "xbegin": 59,
+        "ybegin": 7,
+        "xend": 96,
+        "yend": 74
+      }
+    },
+    "1314": {
+      "sourceGlyphId": 854,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 49,
+        "xend": 59,
+        "yend": 96
+      }
+    },
+    "1315": {
+      "sourceGlyphId": 923,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 35,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "1321": {
+      "sourceGlyphId": 414,
+      "rectangle": {
+        "xbegin": 31,
+        "ybegin": 49,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "1322": {
+      "sourceGlyphId": 1071,
+      "rectangle": {
+        "xbegin": 57,
+        "ybegin": 59,
+        "xend": 87,
+        "yend": 88
+      }
+    },
+    "1325": {
+      "sourceGlyphId": 264,
+      "rectangle": {
+        "xbegin": 32,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 59
+      }
+    },
+    "1326": {
+      "sourceGlyphId": 387,
+      "rectangle": {
+        "xbegin": 48,
+        "ybegin": 8,
+        "xend": 98,
+        "yend": 85
+      }
+    },
+    "1327": {
+      "sourceGlyphId": 446,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 38,
+        "xend": 77,
+        "yend": 92
+      }
+    },
+    "1328": {
+      "sourceGlyphId": 751,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 47,
+        "xend": 77,
+        "yend": 87
+      }
+    },
+    "1329": {
+      "sourceGlyphId": 864,
+      "rectangle": {
+        "xbegin": 7,
+        "ybegin": 34,
+        "xend": 48,
+        "yend": 80
+      }
+    },
+    "1330": {
+      "sourceGlyphId": 982,
+      "rectangle": {
+        "xbegin": 56,
+        "ybegin": 2,
+        "xend": 100,
+        "yend": 82
+      }
+    },
+    "1331": {
+      "sourceGlyphId": 1163,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 47,
+        "xend": 77,
+        "yend": 87
+      }
+    },
+    "1332": {
+      "sourceGlyphId": 1184,
+      "rectangle": {
+        "xbegin": 59,
+        "ybegin": 7,
+        "xend": 96,
+        "yend": 74
+      }
+    },
+    "4192": {
+      "sourceGlyphId": 4192,
+      "rectangle": {
+        "xbegin": 17,
+        "ybegin": 35,
+        "xend": 83,
+        "yend": 94
+      }
+    },
+    "4219": {
+      "sourceGlyphId": 4219,
+      "rectangle": {
+        "xbegin": 28,
+        "ybegin": 0,
+        "xend": 72,
+        "yend": 55
+      }
+    },
+    "62022": {
+      "sourceGlyphId": 62022,
+      "rectangle": {
+        "xbegin": 28,
+        "ybegin": 57,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136024": {
+      "sourceGlyphId": 4175,
+      "rectangle": {
+        "xbegin": 21,
+        "ybegin": 46,
+        "xend": 80,
+        "yend": 94
+      }
+    },
+    "136025": {
+      "sourceGlyphId": 4183,
+      "rectangle": {
+        "xbegin": 61,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 72
+      }
+    },
+    "136026": {
+      "sourceGlyphId": 4123,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 74
+      }
+    },
+    "136027": {
+      "sourceGlyphId": 4202,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 67,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136028": {
+      "sourceGlyphId": 4206,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 53,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "136029": {
+      "sourceGlyphId": 5881,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 78
+      }
+    },
+    "136030": {
+      "sourceGlyphId": 4116,
+      "rectangle": {
+        "xbegin": 59,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 73
+      }
+    },
+    "136031": {
+      "sourceGlyphId": 4164,
+      "rectangle": {
+        "xbegin": 56,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 78
+      }
+    },
+    "136032": {
+      "sourceGlyphId": 4694,
+      "rectangle": {
+        "xbegin": 49,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 79
+      }
+    },
+    "136033": {
+      "sourceGlyphId": 4109,
+      "rectangle": {
+        "xbegin": 55,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 78
+      }
+    },
+    "136034": {
+      "sourceGlyphId": 4203,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 80
+      }
+    },
+    "136035": {
+      "sourceGlyphId": 8664,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 67,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136036": {
+      "sourceGlyphId": 6090,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 53,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "136037": {
+      "sourceGlyphId": 4096,
+      "rectangle": {
+        "xbegin": 43,
+        "ybegin": 0,
+        "xend": 94,
+        "yend": 79
+      }
+    },
+    "136038": {
+      "sourceGlyphId": 7078,
+      "rectangle": {
+        "xbegin": 46,
+        "ybegin": 28,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "136040": {
+      "sourceGlyphId": 128923,
+      "rectangle": {
+        "xbegin": 59,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 77
+      }
+    },
+    "136041": {
+      "sourceGlyphId": 126935,
+      "rectangle": {
+        "xbegin": 61,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 72
+      }
+    },
+    "136042": {
+      "sourceGlyphId": 126970,
+      "rectangle": {
+        "xbegin": 57,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 74
+      }
+    },
+    "136043": {
+      "sourceGlyphId": 4223,
+      "rectangle": {
+        "xbegin": 59,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 77
+      }
+    },
+    "136044": {
+      "sourceGlyphId": 5435,
+      "rectangle": {
+        "xbegin": 57,
+        "ybegin": 0,
+        "xend": 98,
+        "yend": 80
+      }
+    },
+    "136045": {
+      "sourceGlyphId": 4545,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136046": {
+      "sourceGlyphId": 4127,
+      "rectangle": {
+        "xbegin": 54,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 80
+      }
+    },
+    "136047": {
+      "sourceGlyphId": 7659,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136048": {
+      "sourceGlyphId": 127264,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 53,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "136049": {
+      "sourceGlyphId": 7132,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 40,
+        "xend": 96,
+        "yend": 100
+      }
+    },
+    "136050": {
+      "sourceGlyphId": 14061,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 60,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136051": {
+      "sourceGlyphId": 5145,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 66,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136052": {
+      "sourceGlyphId": 127372,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136055": {
+      "sourceGlyphId": 4171,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 63,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136056": {
+      "sourceGlyphId": 127371,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136057": {
+      "sourceGlyphId": 5384,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 69,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136058": {
+      "sourceGlyphId": 6259,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 55,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136059": {
+      "sourceGlyphId": 13273,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136060": {
+      "sourceGlyphId": 13871,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 52,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136061": {
+      "sourceGlyphId": 127637,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136063": {
+      "sourceGlyphId": 4226,
+      "rectangle": {
+        "xbegin": 28,
+        "ybegin": 65,
+        "xend": 75,
+        "yend": 94
+      }
+    },
+    "136064": {
+      "sourceGlyphId": 4286,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136066": {
+      "sourceGlyphId": 6098,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 79,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136067": {
+      "sourceGlyphId": 6356,
+      "rectangle": {
+        "xbegin": 52,
+        "ybegin": 0,
+        "xend": 99,
+        "yend": 81
+      }
+    },
+    "136068": {
+      "sourceGlyphId": 8267,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136069": {
+      "sourceGlyphId": 14094,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 55,
+        "xend": 97,
+        "yend": 100
+      }
+    },
+    "136071": {
+      "sourceGlyphId": 4125,
+      "rectangle": {
+        "xbegin": 20,
+        "ybegin": 43,
+        "xend": 80,
+        "yend": 87
+      }
+    },
+    "136072": {
+      "sourceGlyphId": 4125,
+      "rectangle": {
+        "xbegin": 10,
+        "ybegin": 43,
+        "xend": 74,
+        "yend": 87
+      }
+    },
+    "136073": {
+      "sourceGlyphId": 4133,
+      "rectangle": {
+        "xbegin": 32,
+        "ybegin": 54,
+        "xend": 72,
+        "yend": 91
+      }
+    },
+    "136074": {
+      "sourceGlyphId": 4133,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "136076": {
+      "sourceGlyphId": 5373,
+      "rectangle": {
+        "xbegin": 3,
+        "ybegin": 49,
+        "xend": 49,
+        "yend": 99
+      }
+    },
+    "136077": {
+      "sourceGlyphId": 6003,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 68,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136078": {
+      "sourceGlyphId": 13200,
+      "rectangle": {
+        "xbegin": 55,
+        "ybegin": 0,
+        "xend": 100,
+        "yend": 84
+      }
+    },
+    "136079": {
+      "sourceGlyphId": 27798,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 67,
+        "xend": 98,
+        "yend": 100
+      }
+    },
+    "136080": {
+      "sourceGlyphId": 127248,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136081": {
+      "sourceGlyphId": 7428,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 65,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136082": {
+      "sourceGlyphId": 16170,
+      "rectangle": {
+        "xbegin": 23,
+        "ybegin": 40,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136083": {
+      "sourceGlyphId": 126882,
+      "rectangle": {
+        "xbegin": 57,
+        "ybegin": 5,
+        "xend": 100,
+        "yend": 85
+      }
+    },
+    "136084": {
+      "sourceGlyphId": 4946,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 64,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "136085": {
+      "sourceGlyphId": 5121,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 65,
+        "xend": 64,
+        "yend": 100
+      }
+    },
+    "136086": {
+      "sourceGlyphId": 5294,
+      "rectangle": {
+        "xbegin": 12,
+        "ybegin": 65,
+        "xend": 67,
+        "yend": 91
+      }
+    },
+    "136087": {
+      "sourceGlyphId": 5398,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 65,
+        "xend": 64,
+        "yend": 100
+      }
+    },
+    "136088": {
+      "sourceGlyphId": 6039,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 78,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136089": {
+      "sourceGlyphId": 6042,
+      "rectangle": {
+        "xbegin": 0,
+        "ybegin": 62,
+        "xend": 100,
+        "yend": 100
+      }
+    },
+    "136090": {
+      "sourceGlyphId": 6157,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 43,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136092": {
+      "sourceGlyphId": 6191,
+      "rectangle": {
+        "xbegin": 3,
+        "ybegin": 49,
+        "xend": 49,
+        "yend": 99
+      }
+    },
+    "136093": {
+      "sourceGlyphId": 8602,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 68,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136094": {
+      "sourceGlyphId": 14726,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 78,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136095": {
+      "sourceGlyphId": 126850,
+      "rectangle": {
+        "xbegin": 12,
+        "ybegin": 65,
+        "xend": 67,
+        "yend": 91
+      }
+    },
+    "136096": {
+      "sourceGlyphId": 127114,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 68,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136097": {
+      "sourceGlyphId": 127115,
+      "rectangle": {
+        "xbegin": 22,
+        "ybegin": 68,
+        "xend": 99,
+        "yend": 100
+      }
+    },
+    "136098": {
+      "sourceGlyphId": 129428,
+      "rectangle": {
+        "xbegin": 24,
+        "ybegin": 65,
+        "xend": 97,
+        "yend": 100
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { isEqual, range, sumBy } from "lodash-es";
+import { isEqual, range } from "lodash-es";
 import { 仿射变换, 图形盒子 } from "./affine.js";
 import type { 动态组装条目, 组装条目 } from "./assembly.js";
 import { 区间 } from "./bezier.js";
@@ -41,6 +41,8 @@ import {
   结构符元素,
   type 自定义元素,
 } from "./element.js";
+import { 获取包围内部范围 } from "./enclosure.js";
+import { 复杂度布局 } from "./layout.js";
 import { 应用拼写运算, type 拼音分析映射 } from "./pinyin.js";
 import type { 字库, 字形 } from "./repertoire.js";
 import { 字符 } from "./unicode.js";
@@ -91,7 +93,11 @@ export const 模拟矢量笔画 = (
         case "v":
           return { command, parameterList: [20] };
         case "l":
-          return { command, parameterList: [20, 20] };
+          if (旧绘制列表[index]?.command === "h" && 名称.endsWith("提")) {
+            const dx = 旧绘制列表[index]!.parameterList[0];
+            return { command, parameterList: [dx, -0.15 * dx] };
+          }
+          return { command, parameterList: [20, -10] };
         default:
           return { command, parameterList: [10, 10, 20, 20, 30, 30] };
       }
@@ -951,26 +957,6 @@ export function 合并笔画顺序(
   return result;
 }
 
-function 弹性布局(区间列表: 区间[]) {
-  const 盒子总长度 = sumBy(区间列表, (x) => x.长度());
-  const 间隙 = Math.max((100 - 盒子总长度) / 区间列表.length, 10);
-  const 主轴长度 = 盒子总长度 + 间隙 * 区间列表.length;
-  const results: 区间[] = [];
-  for (const [index, item] of 区间列表.entries()) {
-    const 主轴起点 =
-      sumBy(区间列表.slice(0, index), (x) => x.长度()) + 间隙 * (index + 0.5);
-    const 主轴终点 = 主轴起点 + item.长度();
-    const 目标区间 = new 区间(
-      (主轴起点 / 主轴长度) * 100,
-      (主轴终点 / 主轴长度) * 100,
-    );
-    const 缩放 = item.长度() === 0 ? 1 : 目标区间.长度() / item.长度();
-    const 平移 = 目标区间.起点() - item.起点() * 缩放;
-    results.push(new 区间(Math.round(平移), Math.round(平移 + 100 * 缩放)));
-  }
-  return results;
-}
-
 /**
  * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
  * @param 复合体 - 复合体数据
@@ -986,9 +972,9 @@ export function 仿射合并(
   const 变换列表: 仿射变换[] = [];
   let 布局结果: 区间[] = [];
   if (/[⿰⿲]/.test(operator ?? "")) {
-    布局结果 = 弹性布局(部分列表.map((part) => part.横向区间));
+    布局结果 = 复杂度布局(部分列表, 0);
   } else if (/[⿱⿳]/.test(operator ?? "")) {
-    布局结果 = 弹性布局(部分列表.map((part) => part.纵向区间));
+    布局结果 = 复杂度布局(部分列表, 1);
   }
   for (const [index, params] of references.entries()) {
     let [xb, xe, yb, ye] = [0, 100, 0, 100];
@@ -1004,6 +990,15 @@ export function 仿射合并(
       yb = yInterval.起点();
       ye = yInterval.终点();
     }
+    if (index === 1) {
+      const range = 获取包围内部范围(references[0], operator);
+      if (range) {
+        xb = range.xbegin;
+        xe = range.xend;
+        yb = range.ybegin;
+        ye = range.yend;
+      }
+    }
     const xInterval = new 区间(params.xbegin ?? xb, params.xend ?? xe);
     const yInterval = new 区间(params.ybegin ?? yb, params.yend ?? ye);
     const 变换 = new 仿射变换(xInterval, yInterval);
@@ -1013,7 +1008,9 @@ export function 仿射合并(
     变换列表[index]!.变换笔画列表(part.获取笔画列表()),
   );
   const 合并图形 = 合并笔画顺序(变换后图形列表, strokes);
-  return new 图形盒子(合并图形);
+  return 合并图形.length === 0
+    ? new 图形盒子(合并图形)
+    : 图形盒子.从笔画列表构建(合并图形);
 }
 
 export const 用户字形起始点 = 0xf_0000;

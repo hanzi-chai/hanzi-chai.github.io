@@ -12,6 +12,25 @@ export const 在人工范围 = (unicode: number) =>
   人工范围.some(({ start, end }) => unicode >= start && unicode <= end);
 export const 来源映射: Record<string, string> = { KP: "N", UK: "B" };
 
+export function 获取参考字形(
+  character: 字符数据,
+  glyphs: Map<number, 基本字形数据>,
+) {
+  const association =
+    character.glyphs.find((g) => g.sources.includes("G")) ??
+    character.glyphs.find((g) => g.sources.length > 0);
+  if (!association) return null;
+  const glyph = glyphs.get(association.id);
+  return glyph
+    ? {
+        glyph,
+        source: association.sources.includes("G")
+          ? "G"
+          : association.sources[0]!,
+      }
+    : null;
+}
+
 export type 来源记录 = {
   irgSource: string;
   references: string[];
@@ -50,6 +69,43 @@ export function 字形签名(glyph: 基本字形数据): string {
   return JSON.stringify(normalize(shape));
 }
 
+/** 同一字符的跨来源候选并集；按完整结构签名去重，不读取目标答案。 */
+export function 合并来源候选<T extends { key: string; glyph: 基本字形数据 }>(
+  groups: { source: string; candidates: T[] }[],
+) {
+  const pool = new Map<
+    string,
+    T & {
+      poolOrigins: { source: string; key: string }[];
+      evidenceSource: string;
+    }
+  >();
+  for (const group of groups) {
+    for (const candidate of group.candidates) {
+      const signature = 字形签名(candidate.glyph);
+      let entry = pool.get(signature);
+      if (!entry) {
+        entry = { ...candidate, evidenceSource: group.source, poolOrigins: [] };
+        pool.set(signature, entry);
+      }
+      entry.poolOrigins.push({ source: group.source, key: candidate.key });
+    }
+  }
+  return [...pool.values()].map((candidate, index) => {
+    return { ...candidate, key: 候选字母(index) };
+  });
+}
+
+export function 候选字母(index: number) {
+  let n = index + 1,
+    key = "";
+  while (n) {
+    key = String.fromCharCode(65 + ((n - 1) % 26)) + key;
+    n = Math.floor((n - 1) / 26);
+  }
+  return key;
+}
+
 type 票 = Map<number, Set<number>>;
 export type 证据 = {
   position: number | null;
@@ -67,6 +123,8 @@ export type 候选 = {
   evidence: 证据[];
   rankingScore: number;
   kind: "whole" | "substitution" | "unchanged";
+  poolOrigins?: { source: string; key: string }[];
+  evidenceSource?: string;
 };
 
 export class 候选生成器 {
@@ -125,16 +183,7 @@ export class 候选生成器 {
 
   获取参考(character: 字符数据) {
     // 无 G 的字符显式采用其首个实际来源，不把它虚构成 G。
-    const association =
-      character.glyphs.find((g) => g.sources.includes("G")) ??
-      character.glyphs.find((g) => g.sources.length > 0);
-    if (!association) return null;
-    const glyph = this.glyphs.get(association.id);
-    if (!glyph) return null;
-    return {
-      glyph,
-      source: association.sources.includes("G") ? "G" : association.sources[0]!,
-    };
+    return 获取参考字形(character, this.glyphs);
   }
 
   private 上下文键(prefix: string, glyph: 复合体数据, index: number) {
