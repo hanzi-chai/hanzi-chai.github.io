@@ -22,6 +22,7 @@ import InfoCircleOutlined from "@ant-design/icons/InfoCircleOutlined";
 import CaretDownOutlined from "@ant-design/icons/CaretDownOutlined";
 import CaretUpOutlined from "@ant-design/icons/CaretUpOutlined";
 import type { ColumnsType } from "antd/es/table";
+import type { InputNumberProps, InputProps, SelectProps } from "antd";
 import type { 元素 } from "hanzi-chai";
 import {
   下转换,
@@ -32,14 +33,20 @@ import {
   组装,
   笔画,
   type 强类型广义安排,
-  type 强类型广义引用,
   type 强类型决策,
   type 强类型元素位或编码,
   type 组装条目,
 } from "hanzi-chai";
 import { useAtomValue, useSetAtom } from "jotai";
-import { range, sumBy } from "lodash-es";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { range } from "lodash-es";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   useAtomValueUnwrapped,
   如带归并组装结果原子,
@@ -249,12 +256,153 @@ interface 表配置 {
   名称?: string;
 }
 
+/** 一张表的一行（= 一个空位模式）的统计结果，供表格渲染 */
+interface 表行 {
+  key: string;
+  模式: string;
+  阶: string;
+  原始: number;
+  加减根后: number | "—";
+  变化: number | "—";
+  变化组: {
+    基线词: string[];
+    候选词: string[];
+    基线: number;
+    候选: number;
+  }[];
+}
+
+/** 单表分析结果（逐表缓存的最小单位：一张表 + 它的全部模式） */
+interface 单表分析 {
+  行: 表行[];
+  原始: number;
+  候选和: number;
+  变化和: number;
+}
+
 /** 「统计前 N 条」的输入框：0 = 全部。
  *
  *  0 后面挂一枚小灰括号「（全部）」——只在 0 时出现，所以平时不占地方、也不跟数字抢宽度；
- *  值本身仍是数字（不从 0 改成文字），看得出来填的就是 0。 */
-const 全部后缀 = (top: number) =>
-  top === 0 ? <span className="text-gray-400">（全部）</span> : undefined;
+ *  值本身仍是数字（不从 0 改成文字），看得出来填的就是 0。
+ *
+ *  **必须恒返回一个元素，绝不能返回 undefined**：InputNumber 在「有后缀 ↔ 无后缀」之间切换时，
+ *  rc-input 的 BaseInput 会把 input 包进／拿出 affix-wrapper（结构不同 → React 整棵卸载重建），
+ *  输入框焦点当场丢掉。于是「删空 → 回填 0 → 冒括号」这一步自己就把焦点弄没了，
+ *  失焦提交永远等不到，草稿里的 0 写不回配置（显示 0、内部还是原值、刷新还原）。
+ *  非 0 时给空字符串即可：结构恒定，只有内容变。 */
+const 全部后缀 = (top: number) => (
+  <span className="text-gray-400">{top === 0 ? "（全部）" : ""}</span>
+);
+
+/** 数字框：**一律失焦才生效**（回车也算失焦），中途只改本地草稿。
+ *
+ *  原先一律写成 `onChange={(v) => 设n(v ?? 默认)}`：全选删除的那一瞬间就被填回默认值，
+ *  光标还在框里，接着打的字直接接在默认值后面（12 → 删空 → 回填 12 → 打「3」变成 123），
+ *  每改一次都得先清两遍。现在的语义：
+ *    · 打字期间只更新草稿，不生效、也不回填，空着就空着；
+ *    · 失焦（或回车）才把草稿交给上层：空 → 回填默认值，非空 → 就是它。
+ *  外部改值（恢复默认、换方案、写回后重新读进来）会同步回草稿。 */
+function 数字框({
+  值,
+  设值,
+  回填,
+  后缀,
+  ...其余
+}: {
+  值: number;
+  设值: (v: number) => void;
+  /** 删空后失焦时填回去的数（一般就是默认值／原值） */
+  回填: number;
+  /** 按当前草稿渲染后缀（例如 0 后面的「（全部）」）：删空那一刻也跟着变，不留残影 */
+  后缀?: (当前: number | null) => ReactNode;
+} & Omit<InputNumberProps<number>, "value" | "onChange" | "suffix">) {
+  const [草稿, 设草稿] = useState<number | null>(值);
+  useEffect(() => {
+    设草稿(值);
+  }, [值]);
+  const 提交 = () => {
+    const 最终 = 草稿 ?? 回填;
+    设草稿(最终);
+    if (最终 !== 值) 设值(最终);
+  };
+  return (
+    <InputNumber
+      {...其余}
+      value={草稿}
+      suffix={后缀?.(草稿)}
+      onChange={设草稿}
+      onBlur={提交}
+      onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+    />
+  );
+}
+
+/** 文本输入框：**失焦（或回车）才提交**，打字期间只改本地草稿。
+ *  与 数字框 同一套语义，只是没有"删空回填"——文本空着就是空着。 */
+function 失焦输入框({
+  值,
+  设值,
+  ...其余
+}: {
+  值: string;
+  设值: (v: string) => void;
+} & Omit<InputProps, "value" | "onChange">) {
+  const [草稿, 设草稿] = useState(值);
+  useEffect(() => {
+    设草稿(值);
+  }, [值]);
+  return (
+    <Input
+      {...其余}
+      value={草稿}
+      onChange={(e) => 设草稿(e.target.value)}
+      onBlur={() => {
+        if (草稿 !== 值) 设值(草稿);
+      }}
+      onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+    />
+  );
+}
+
+/** 两个字符串数组元素是否逐个相同（Select 的 value 每次都是新数组，比引用没意义） */
+const 同数组 = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
+
+/** 多选下拉：勾选期间只改本地草稿，**失焦才提交**（勾一半不该就重算）。 */
+function 失焦多选框({
+  值,
+  设值,
+  ...其余
+}: {
+  值: string[];
+  设值: (v: string[]) => void;
+} & Omit<SelectProps<string[]>, "value" | "onChange" | "mode">) {
+  const [草稿, 设草稿] = useState(值);
+  // 依赖用拼接串而不是数组：数组每次渲染都是新引用，父组件随便重渲染一下就会把
+  // 用户正在勾的草稿冲掉。串相同 = 内容没变 = 别动草稿。
+  const 值串 = 值.join("\u0001");
+  useEffect(() => {
+    设草稿(值串 ? 值串.split("\u0001") : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [值串]);
+  return (
+    <Select
+      {...其余}
+      mode="multiple"
+      value={草稿}
+      onChange={(vs) => 设草稿(vs)}
+      onBlur={() => {
+        if (!同数组(草稿, 值)) 设值(草稿);
+      }}
+    />
+  );
+}
+
+/** 本页的两个本地存档键（都只影响本页交互，不进方案）。
+ *  提到模块级：读和写共用同一份字符串，改名只改一处。**键名不能随手改**，改了等于把
+ *  用户已有的自建表/开关丢掉。 */
+const 自建表键 = "智能选根-手动分析自建表";
+const 共享表键 = "智能选根-手动分析共享表";
 
 type 操作类型 = "加" | "减";
 
@@ -370,6 +518,136 @@ const 字词数 = (列表: string[]) => {
   return 词数 ? `${列表.length - 词数} 字、${词数} 词` : `${列表.length} 字`;
 };
 
+/** 变化组的弹层内容。抽成独立组件是为了**惰性**：这里每组要建两个 Set、跑三次 filter，
+ *  有候选时变化组动辄上百组、每组几十字；而 Popover 的 content 是在 render 时就求值的
+ *  （哪怕从没打开过），几百个单元格一起构建就是白烧的秒级开销。 */
+const 变化组内容 = ({ 组列表 }: { 组列表: 表行["变化组"] }) => (
+  <div className="max-w-130 max-h-96 overflow-y-auto">
+    {组列表.length === 0 ? (
+      <div>无组变化</div>
+    ) : (
+      组列表.map((组, gi) => {
+        const 基线集 = new Set(组.基线词);
+        const 候选集 = new Set(组.候选词);
+        const 不变 = 组.基线词.filter((x) => 候选集.has(x));
+        const 加入 = 组.候选词.filter((x) => !基线集.has(x));
+        const 离开 = 组.基线词.filter((x) => !候选集.has(x));
+        return (
+          <div key={gi} className="mb-1">
+            <div className="font-medium">
+              组（{组.基线}→{组.候选}）：
+            </div>
+            {加入.length > 0 && (
+              <div className="text-red-500">＋{名单行(加入)}</div>
+            )}
+            {离开.length > 0 && (
+              <div className="text-green-600">－{名单行(离开)}</div>
+            )}
+            {不变.length > 0 &&
+              (不变.length <= 8 ? (
+                <div>＝{不变.join("、")}</div>
+              ) : (
+                <div className="text-gray-500">
+                  ＝{不变.slice(0, 8).join("、")} 等 {不变.length} 字不变
+                </div>
+              ))}
+          </div>
+        );
+      })
+    )}
+  </div>
+);
+
+/** 「变化」单元格：memo + 受控开关，弹层内容只在真正点开时才构建。 */
+const 变化单元格 = memo(function 变化单元格({
+  v,
+  组列表,
+}: {
+  v: number;
+  组列表: 表行["变化组"];
+}) {
+  const [开, 设开] = useState(false);
+  const 显示 = 变化显示(v);
+  return (
+    <Popover
+      trigger="click"
+      open={开}
+      onOpenChange={设开}
+      content={开 ? <变化组内容 组列表={组列表} /> : null}
+    >
+      <span className={显示.类} title={`精确 ${v}`}>
+        {显示.文本}
+      </span>
+    </Popover>
+  );
+});
+
+/** 单表统计结果表。
+ *
+ *  **memo 是这条路上的关键**：一张表的行由 表分析 的逐表缓存给出，没变过就是同一个数组
+ *  引用 → props 不变 → 整张表跳过渲染。否则改一张表的 top，整套表都要重画一遍（实测
+ *  20 张表就是 4 段 60~160ms 的长任务：数字已经显示出来之后，用户还要接着卡半秒）。
+ *  columns 是纯静态的（render 里只调模块级的 变化显示 / 名单行），不必跟着重渲染重建。 */
+const 表列: ColumnsType<表行> = [
+  { title: "阶", dataIndex: "阶", key: "阶", width: 56 },
+  { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
+  {
+    title: "原始",
+    dataIndex: "原始",
+    key: "原始",
+    width: 90,
+    render: (v: number | string) =>
+      typeof v === "number" ? (
+        <span title={`精确 ${v}`}>{Math.round(v * 100) / 100}</span>
+      ) : (
+        v
+      ),
+  },
+  {
+    title: "加减根后",
+    dataIndex: "加减根后",
+    key: "加减根后",
+    width: 100,
+    render: (v: number | string) =>
+      typeof v === "number" ? (
+        <span title={`精确 ${v}`}>{Math.round(v * 100) / 100}</span>
+      ) : (
+        v
+      ),
+  },
+  {
+    title: (
+      <Flex vertical>
+        <span>变化</span>
+        <Typography.Text
+          type="secondary"
+          className="text-xs! font-normal! whitespace-nowrap"
+        >
+          点击展开变化组
+        </Typography.Text>
+      </Flex>
+    ),
+    dataIndex: "变化",
+    key: "变化",
+    width: 120,
+    render: (v, record) =>
+      typeof v === "number" ? (
+        <变化单元格 v={v} 组列表={record.变化组} />
+      ) : (
+        "—"
+      ),
+  },
+];
+
+/** 没有结果时也返回同一个空数组：否则每次渲染都造新数组，memo 白设 */
+const 空行: 表行[] = [];
+
+const 表表格 = memo(function 表表格({ 行 }: { 行: 表行[] }) {
+  return (
+    <Table dataSource={行} columns={表列} size="small" pagination={false} />
+  );
+});
+
 // ==================== 说明浮层的唯一形态（2026-10-30 定案） ====================
 
 /** 术语/参数说明：**界面上不留任何标记**，点一下那几个字才出浮层。
@@ -427,24 +705,36 @@ function 手动分析面板() {
   const 名称映射 = 如全部合法元素?.ok ? 如全部合法元素.value.名称映射 : null;
   // 加根类别（与元素页元素选择器同分类）：字形/字音/自定义
   const [加根类别, 设加根类别] = useState<[string, string]>(["字形", "字根"]);
-  const 加根类别选项 = [
-    {
-      value: "字形",
-      label: "字形",
-      children: ["字根", "二笔", "笔画", "结构"].map((v) => ({ value: v, label: v })),
-    },
-    {
-      value: "字音",
-      label: "字音",
-      children: [...(合法元素?.拼音元素映射?.keys() ?? [])].map((v) => ({ value: v, label: v })),
-    },
-    {
-      value: "自定义",
-      label: "自定义",
-      children: [...(合法元素?.自定义元素映射?.keys() ?? [])].map((v) => ({ value: v, label: v })),
-      disabled: (合法元素?.自定义元素映射?.size ?? 0) === 0,
-    },
-  ];
+  const 加根类别选项 = useMemo(
+    () => [
+      {
+        value: "字形",
+        label: "字形",
+        children: ["字根", "二笔", "笔画", "结构"].map((v) => ({
+          value: v,
+          label: v,
+        })),
+      },
+      {
+        value: "字音",
+        label: "字音",
+        children: [...(合法元素?.拼音元素映射?.keys() ?? [])].map((v) => ({
+          value: v,
+          label: v,
+        })),
+      },
+      {
+        value: "自定义",
+        label: "自定义",
+        children: [...(合法元素?.自定义元素映射?.keys() ?? [])].map((v) => ({
+          value: v,
+          label: v,
+        })),
+        disabled: (合法元素?.自定义元素映射?.size ?? 0) === 0,
+      },
+    ],
+    [合法元素],
+  );
   const 决策 = useAtomValue(决策原子);
   const 决策空间 = useAtomValue(决策空间原子);
 
@@ -478,8 +768,8 @@ function 手动分析面板() {
   const [错误, 设错误] = useState("");
   const [已完成, 设已完成] = useState("");
   const [候选, 设候选] = useState<组装条目[] | null>(null);
-  // 自建表持久化（localStorage，跨刷新保留；与自动搜索配置同模式）
-  const 自建表键 = "智能选根-手动分析自建表";
+  // 自建表持久化（localStorage，跨刷新保留）。注意自动搜索参数早已改成只认方案 yaml 的
+  // `autoselect` 块，不再走 localStorage——别拿它当"同款"照抄。
   const 初始自建表 = (() => {
     try {
       const 存 = JSON.parse(localStorage.getItem(自建表键) ?? "null") as 表配置[] | null;
@@ -504,37 +794,21 @@ function 手动分析面板() {
       // 存储失败不影响本页使用
     }
   }, [自建表]);
-  // 自建表键入草稿：名称/top/权重 输入期间只改本地，失焦才提交（与共享表同一交互，见下）
-  const [自建草稿, 设自建草稿] = useState<表配置[] | null>(null);
-  const 自建已提交 = useRef(自建表);
-  useEffect(() => {
-    if (自建表 !== 自建已提交.current) {
-      自建已提交.current = 自建表; // 外部变更 → 丢弃本地草稿
-      设自建草稿(null);
-    }
-  }, [自建表]);
+  // 自建表：增删改一律立即落到 state（上面的 effect 负责写 localStorage）
   const 提交自建 = (新表: 表配置[]) => {
-    自建已提交.current = 新表;
-    设自建草稿(null);
     设自建表(新表);
   };
-  const 失焦提交自建 = () => {
-    if (自建草稿) 提交自建(自建草稿);
-  };
-  // 键入路径（名称/top/权重）：只进草稿
-  const 改自建草稿 = (id: number, patch: Partial<表配置>) =>
-    设自建草稿(当前 => (当前 ?? 自建表).map((t) => (t.id === id ? { ...t, ...patch } : t)));
-  // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables（键入入草稿，失焦写回）
+  // 共享评分表开关：开 = 读写「评分表」页签的 statistics.tables
   const [共享表, 设共享表] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("智能选根-手动分析共享表") ?? "null") ?? true;
+      return JSON.parse(localStorage.getItem(共享表键) ?? "null") ?? true;
     } catch {
       return true;
     }
   });
   useEffect(() => {
     try {
-      localStorage.setItem("智能选根-手动分析共享表", JSON.stringify(共享表));
+      localStorage.setItem(共享表键, JSON.stringify(共享表));
     } catch {
       // 存储失败不影响本页使用
     }
@@ -542,46 +816,54 @@ function 手动分析面板() {
   const 配置 = useAtomValue(配置原子);
   const 设配置 = useSetAtom(配置原子);
   const 共享表数据 = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
-  // 共享表键入草稿：输入期间只改本地，失焦才写回配置（逐键写回会让三个重页签全部跟着重算，打字卡顿）
-  const [共享草稿, 设共享草稿] = useState<评分表格式[] | null>(null);
-  const 共享已提交 = useRef(共享表数据);
-  useEffect(() => {
-    if (共享表数据 !== 共享已提交.current) {
-      共享已提交.current = 共享表数据; // 外部变更（评分表页签编辑等）→ 丢弃本地草稿
-      设共享草稿(null);
-    }
-  }, [共享表数据]);
   const 提交共享 = (新表: 评分表格式[]) => {
-    共享已提交.current = 新表;
-    设共享草稿(null);
     设配置({ ...配置, statistics: { tables: 新表 } } as any);
   };
-  const 失焦提交共享 = () => {
-    if (共享草稿) 提交共享(共享草稿);
-  };
-  const 共享表有效 = 共享草稿 ?? 共享表数据; // 编辑期间草稿为显示与提交的基准
-  const 自建表有效 = 自建草稿 ?? 自建表;
-  const 表视图 = useMemo<表配置[]>(
-    () =>
-      共享表
-        ? 共享表有效.map((t, i) => ({
-            id: 10000 + i,
-            类型: 安全类型(t.type),
-            模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
-            top: t.top ?? 0,
-            权重: t.weight,
-            名称: t.name,
-          }))
-        : 自建表有效,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [共享表, 配置, 自建表有效, 共享表有效],
-  );
-  // 键入路径（名称/top/权重/空位模式下拉）：只进草稿，失焦提交
-  const 更新共享表 = (索引: number, patch: Partial<评分表格式>) => {
-    设共享草稿(共享表有效.map((t, i) => (i === 索引 ? { ...t, ...patch } : t)));
-  };
   const 删除共享表 = (索引: number) => {
-    提交共享(共享表有效.filter((_, i) => i !== 索引));
+    提交共享(共享表数据.filter((_, i) => i !== 索引));
+  };
+
+  /** 表列表：**显示和分析用的是同一份已提交值**。
+   *  输入期间表格数字之所以不动，靠的是每个控件自己持草稿、失焦才写配置——配置没变，
+   *  整条表分析链就不会重算。组件里不再维护一层"全表草稿"（那层曾和控件各持一份，
+   *  两次提交容易互相覆盖）。 */
+  const 表列表 = useMemo<表配置[]>(
+    () => (共享表 ? 共享表数据.map(评分表到表配置) : 自建表),
+    [共享表, 共享表数据, 自建表],
+  );
+
+  // —— 编辑写入的统一入口 ——
+  // 表配置用中文名、statistics.tables 用英文字段名，两套名字只在这里对应一次。
+  const 转评分表patch = (patch: Partial<表配置>): Partial<评分表格式> => ({
+    ...(patch.名称 === undefined ? {} : { name: patch.名称 }),
+    ...(patch.类型 === undefined ? {} : { type: patch.类型 as 表类型 }),
+    ...(patch.top === undefined ? {} : { top: patch.top }),
+    ...(patch.权重 === undefined ? {} : { weight: patch.权重 }),
+    ...(patch.模式 === undefined
+      ? {}
+      : { patterns: patch.模式.map((v) => JSON.parse(v) as number[]) }),
+  });
+  /** 唯一写入入口：立即提交。数字框与「类型」选完就调；文本、多选在失焦那一刻调。 */
+  const 写表 = (序: number, patch: Partial<表配置>) => {
+    if (共享表) {
+      提交共享(
+        共享表数据.map((t, i) =>
+          i === 序 ? { ...t, ...转评分表patch(patch) } : t,
+        ),
+      );
+      return;
+    }
+    const 表 = 表列表[序];
+    if (!表) return;
+    提交自建(自建表.map((t) => (t.id === 表.id ? { ...t, ...patch } : t)));
+  };
+  const 删除表 = (序: number) => {
+    if (共享表) {
+      删除共享表(序);
+      return;
+    }
+    const id = 表列表[序]?.id;
+    提交自建(自建表.filter((t) => t.id !== id));
   };
 
   const 已映射元素集 = useMemo(() => new Set(Object.keys(决策)), [决策]);
@@ -681,7 +963,7 @@ function 手动分析面板() {
     }
     // 表类型同「自动搜索」：缺省补一字词，无法识别的值当场报错（不静默按某个类型算）
     try {
-      for (const t of 分析源表) 规范表类型({ name: t.名称, type: t.类型 });
+      for (const t of 表列表) 规范表类型({ name: t.名称, type: t.类型 });
     } catch (e: any) {
       设错误(String(e?.message ?? e));
       return;
@@ -834,54 +1116,42 @@ function 手动分析面板() {
 
   // 分析基准 = 已提交的表（非编辑草稿）：手动分析页所有编辑（名称/权重/top/空位模式）统一失焦后才重算。
   // 键入期间草稿不进这里 → 表分析/总分行/逐表数字全部保持不动；失焦提交（或删除/新建等按钮）才更新。
-  const 分析源表 = useMemo<表配置[]>(
-    () =>
-      共享表
-        ? 共享表数据.map((t, i) => ({
-            id: 10000 + i,
-            类型: 安全类型(t.type),
-            模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
-            top: t.top ?? 0,
-            权重: t.weight,
-            名称: t.name,
-          }))
-        : 自建表,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [共享表, 配置, 自建表],
+  // 贵的公共开销（全量排序+逐位下转换）只在 基线/候选 变化时做一次，失焦重算时只剩廉价分组。
+  // 含词 单独提出来当依赖：它只由「有没有非一字词的表」决定，与 top/权重/模式无关。
+  // 否则依赖写在 表列表 上——那是一改任何表参数就换引用的新数组——改个 top 就把这几万条
+  // 的全量排序+逐位下转换全部作废重做，白白多出一百多毫秒。
+  const 含词 = useMemo(
+    () => 表列表.some((t) => 安全类型(t.类型) !== "single"),
+    [表列表],
   );
-
-  // 贵的公共开销（全量排序+逐位下转换）只在 基线/候选 变化时做一次，失焦重算时只剩廉价分组
-  const 表预处理 = useMemo(() => {
-    const 含词 = 分析源表.some((t) => 安全类型(t.类型) !== "single");
-    return {
+  const 表预处理 = useMemo(
+    () => ({
       基线: 预处理条目(基线 ?? [], maxLength, 含词),
       候选: 候选 ? 预处理条目(候选, maxLength, 含词) : null,
-    };
-  }, [基线, 候选, maxLength, 分析源表]);
+    }),
+    [基线, 候选, maxLength, 含词],
+  );
+
+  // 逐表缓存：签名 → 单表结果。改一张表的 top，只该重算那一张——没命中就得把
+  // 每张表的每个空位模式都把全量条目重新分组一遍（默认四表就是 29 遍，实测一百多毫秒）。
+  // 底料（预处理）或对比基准一变就整体作废，那时每张表的结果都会变。
+  // 权重不进签名：它只在渲染层乘，改权重不必重算任何分组。
+  const 表缓存 = useRef<{
+    表预处理: typeof 表预处理 | null;
+    候选: typeof 候选;
+    字母数: number;
+    码长: number;
+    结果: Map<string, 单表分析>;
+  }>({ 表预处理: null, 候选: null, 字母数: 0, 码长: 0, 结果: new Map() });
 
   const 表分析 = useMemo(() => {
     const { 基线: 基线预处理, 候选: 候选预处理 } = 表预处理;
-    const 行数据 = new Map<
-      number,
-      {
-        key: string;
-        模式: string;
-        阶: string;
-        原始: number;
-        加减根后: number | "—";
-        变化: number | "—";
-        变化组: {
-          基线词: string[];
-          候选词: string[];
-          基线: number;
-          候选: number;
-        }[];
-      }[]
-    >();
+    const 行数据 = new Map<number, 表行[]>();
     const 原始和 = new Map<number, number>();
     const 候选和 = new Map<number, number>();
     const 变化和 = new Map<number, number>();
-    for (const 表 of 分析源表) {
+
+    const 算一张表 = (表: 表配置): 单表分析 => {
       let 原始合计 = 0;
       let 候选合计 = 0;
       let 变化合计 = 0;
@@ -914,119 +1184,49 @@ function 手动分析面板() {
           变化组: 变化结果?.变化组 ?? [],
         };
       });
-      行数据.set(表.id, 行);
-      原始和.set(表.id, 原始合计);
-      候选和.set(表.id, 候选合计);
-      变化和.set(表.id, 变化合计);
+      return { 行, 原始: 原始合计, 候选和: 候选合计, 变化和: 变化合计 };
+    };
+
+    const 旧 = 表缓存.current;
+    const 可复用 =
+      旧.表预处理 === 表预处理 &&
+      旧.候选 === 候选 &&
+      旧.字母数 === alphabet.length &&
+      旧.码长 === maxLength;
+    const 上次 = 可复用 ? 旧.结果 : new Map<string, 单表分析>();
+    const 本轮 = new Map<string, 单表分析>();
+    for (const 表 of 表列表) {
+      const 签名 = `${表.类型}|${表.top}|${表.模式.join(",")}`;
+      let 单 = 上次.get(签名);
+      if (!单) {
+        单 = 算一张表(表);
+        本轮.set(签名, 单);
+      } else {
+        本轮.set(签名, 单);
+      }
+      行数据.set(表.id, 单.行);
+      原始和.set(表.id, 单.原始);
+      候选和.set(表.id, 单.候选和);
+      变化和.set(表.id, 单.变化和);
     }
+    表缓存.current = {
+      表预处理,
+      候选,
+      字母数: alphabet.length,
+      码长: maxLength,
+      结果: 本轮,
+    };
     return { 行数据, 原始和, 候选和, 变化和 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [表预处理, 分析源表, 候选, maxLength, alphabet]);
+  }, [表预处理, 表列表, 候选, maxLength, alphabet]);
 
   // 「全部/多字词」表的统计范围由表自己的 top 决定；词库里有没有词不在这里判——
   // 整套表里留几张多字词表、有词时才生效，是正常用法，不提示。
 
-  const 渲染表 = (表: 表配置) => {
-    const 行 = 表分析.行数据.get(表.id) ?? [];
-    const columns: ColumnsType<(typeof 行)[number]> = [
-      { title: "阶", dataIndex: "阶", key: "阶", width: 56 },
-      { title: "模式", dataIndex: "模式", key: "模式", width: 130 },
-      {
-        title: "原始",
-        dataIndex: "原始",
-        key: "原始",
-        width: 90,
-        render: (v: number | string) =>
-          typeof v === "number" ? (
-            <span title={`精确 ${v}`}>{Math.round(v * 100) / 100}</span>
-          ) : (
-            v
-          ),
-      },
-      {
-        title: "加减根后",
-        dataIndex: "加减根后",
-        key: "加减根后",
-        width: 100,
-        render: (v: number | string) =>
-          typeof v === "number" ? (
-            <span title={`精确 ${v}`}>{Math.round(v * 100) / 100}</span>
-          ) : (
-            v
-          ),
-      },
-      {
-        title: (
-          <Flex vertical>
-            <span>变化</span>
-            <Typography.Text type="secondary" className="text-xs! font-normal! whitespace-nowrap">
-              点击展开变化组
-            </Typography.Text>
-          </Flex>
-        ),
-        dataIndex: "变化",
-        key: "变化",
-        width: 120,
-        render: (v, record) =>
-          typeof v === "number" ? (
-            <Popover
-              trigger="click"
-              content={
-                <div className="max-w-130 max-h-96 overflow-y-auto">
-                  {record.变化组.length === 0 ? (
-                    <div>无组变化</div>
-                  ) : (
-                    record.变化组.map((组, gi) => {
-                      const 基线集 = new Set(组.基线词);
-                      const 候选集 = new Set(组.候选词);
-                      const 不变 = 组.基线词.filter((x) => 候选集.has(x));
-                      const 加入 = 组.候选词.filter((x) => !基线集.has(x));
-                      const 离开 = 组.基线词.filter((x) => !候选集.has(x));
-                      return (
-                        <div key={gi} className="mb-1">
-                          <div className="font-medium">
-                            组（{组.基线}→{组.候选}）：
-                          </div>
-                          {加入.length > 0 && (
-                            <div className="text-red-500">
-                              ＋{名单行(加入)}
-                            </div>
-                          )}
-                          {离开.length > 0 && (
-                            <div className="text-green-600">
-                              －{名单行(离开)}
-                            </div>
-                          )}
-                          {不变.length > 0 &&
-                            (不变.length <= 8 ? (
-                              <div>＝{不变.join("、")}</div>
-                            ) : (
-                              <div className="text-gray-500">
-                                ＝{不变.slice(0, 8).join("、")} 等 {不变.length}{" "}
-                                字不变
-                              </div>
-                            ))}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              }
-            >
-              <span
-                className={变化显示(v).类}
-                title={typeof v === "number" ? `精确 ${v}` : undefined}
-              >
-                {变化显示(v).文本}
-              </span>
-            </Popover>
-          ) : (
-            "—"
-          ),
-      },
-    ];
-    return <Table dataSource={行} columns={columns} size="small" pagination={false} />;
-  };
+  // 行数据直接来自逐表缓存：没变过的表拿到的是同一个数组引用，表表格 的 memo 会整表跳过
+  const 渲染表 = (表: 表配置) => (
+    <表表格 行={表分析.行数据.get(表.id) ?? 空行} />
+  );
 
   const 表变化值 = (表: 表配置) => (候选 ? 表分析.变化和.get(表.id) ?? 0 : 0);
   // 初/末态取精确值（显示层负责舍入到 2 位 + 悬浮展示精确值）
@@ -1037,7 +1237,7 @@ function 手动分析面板() {
     let 预期 = 0;
     let 初 = 0;
     let 末 = 0;
-    for (const 表 of 分析源表) {
+    for (const 表 of 表列表) {
       // 总分用未舍入的逐表和累加（与智能选根核心 Σ权重×未舍入表值 同口径），
       // 逐表四舍五入只用于表内显示，进总分会让手动初态与自动搜索分数差在小数位
       预期 += (候选 ? 表分析.变化和.get(表.id) ?? 0 : 0) * 表.权重;
@@ -1046,7 +1246,7 @@ function 手动分析面板() {
     }
     return { 总预期值: 预期, 总初态: 初, 总末态: 末 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [表分析, 分析源表, 候选]);
+  }, [表分析, 表列表, 候选]);
 
   return (
     <>
@@ -1198,7 +1398,7 @@ function 手动分析面板() {
             size="small"
             onClick={() =>
               提交自建([
-                ...(自建草稿 ?? 自建表),
+                ...自建表,
                 { id: 表序号++, 类型: "single", 模式: [], top: 0, 权重: 1, 名称: `表${表序号}` },
               ])
             }
@@ -1208,27 +1408,19 @@ function 手动分析面板() {
         )}
       </Flex>
       <Flex vertical gap="middle">
-        {表视图.map((表, 表序) => {
-          // 显示数字一律读已提交值（分析源表与表视图同源同序）：键入/选模式期间保持不动，失焦后才更新
-          const 已提交表 = 分析源表[表序];
+        {表列表.map((表, 表序) => {
+          const 已提交表 = 表列表[表序];
           const 本表变化 = 候选 ? 表变化值(表) : 0;
           const 本表贡献 = 候选 ? 本表变化 * (已提交表?.权重 ?? 0) : 0;
           return (
             <div key={表.id}>
               <Flex gap="small" align="center" wrap="wrap" className="mb-2!">
                 {/* 表名已能表示身份；原先每张表名前都挂一枚「阶重」标签，纯噪声，已删 */}
-                <Input
+                <失焦输入框
                   className="w-24! text-center"
                   placeholder="表名"
-                  value={表.名称 ?? ""}
-                  onChange={(e) => {
-                    const 名称 = e.target.value;
-                    共享表
-                      ? 更新共享表(表.id - 10000, { name: 名称 })
-                      : 改自建草稿(表.id, { 名称 });
-                  }}
-                  onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
-                  onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+                  值={表.名称 ?? ""}
+                  设值={(v) => 写表(表序, { 名称: v })}
                 />
                 <Typography.Text strong>
                   总变化{" "}
@@ -1257,11 +1449,10 @@ function 手动分析面板() {
                     : (<>（初{" "}
                         <span title={`精确 ${表初态(表)}`}>{Math.round(表初态(表) * 100) / 100}</span>）</>)}
                 </Typography.Text>
-                <Select
-                  mode="multiple"
+                <失焦多选框
                   allowClear
                   placeholder="空位模式（置空为全选）"
-                  value={表.模式}
+                  值={表.模式}
                   className="min-w-80"
                   options={range(maxLength + 1).map((阶) => ({
                     label: `${数字标签(阶)}阶`,
@@ -1270,70 +1461,36 @@ function 手动分析面板() {
                       value: JSON.stringify(空位),
                     })),
                   }))}
-                  onChange={(vs) => {
-                    const 模式 = vs as string[];
-                    // 只进草稿：勾选期间不重算，下拉关闭且失焦后才提交
-                    共享表
-                      ? 更新共享表(表.id - 10000, {
-                          patterns: 模式.map((v) => JSON.parse(v)),
-                        })
-                      : 改自建草稿(表.id, { 模式 });
-                  }}
-                  onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
+                  设值={(vs) => 写表(表序, { 模式: vs })}
                 />
                 <Flex gap="small" align="center">
                   <Select
                     className="w-28!"
                     value={表.类型}
                     options={类型选项}
-                    onChange={(v) => {
-                      共享表
-                        ? 更新共享表(表.id - 10000, { type: v as 表类型 })
-                        : 改自建草稿(表.id, { 类型: v as 表类型 });
-                    }}
-                    onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
+                    onChange={(v) => 写表(表序, { 类型: v as 表类型 })}
                   />
                   范围前
                   {/* 0=全部：0 后面挂一枚小灰括号「（全部）」，只在 0 时出现 */}
-                  <InputNumber
+                  <数字框
                     className="w-28! top-input"
                     min={0}
-                    value={表.top}
-                    suffix={全部后缀(表.top)}
-                    onChange={(v) => {
-                      const top = v ?? 0;
-                      共享表
-                        ? 更新共享表(表.id - 10000, { top })
-                        : 改自建草稿(表.id, { top });
-                    }}
-                    onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
-                    onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+                    值={表.top}
+                    设值={(v) => 写表(表序, { top: v })}
+                    回填={0}
+                    后缀={(v) => 全部后缀(v ?? 0)}
                   />
                 </Flex>
                 <Flex gap="small" align="center">
                   权重
-                  <InputNumber
+                  <数字框
                     step={0.1}
-                    value={表.权重}
-                    onChange={(v) => {
-                      const 权重 = v ?? 0;
-                      共享表
-                        ? 更新共享表(表.id - 10000, { weight: 权重 })
-                        : 改自建草稿(表.id, { 权重 });
-                    }}
-                    onBlur={共享表 ? 失焦提交共享 : 失焦提交自建}
-                    onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+                    值={表.权重}
+                    设值={(v) => 写表(表序, { 权重: v })}
+                    回填={0}
                   />
                 </Flex>
-                <Button
-                  size="small"
-                  danger
-                  onClick={() => {
-                    共享表
-                      ? 删除共享表(表.id - 10000)
-                      : 提交自建((自建草稿 ?? 自建表).filter((t) => t.id !== 表.id));
-                  }}
-                >
+                <Button size="small" danger onClick={() => 删除表(表序)}>
                   删除
                 </Button>
               </Flex>
@@ -1358,6 +1515,18 @@ interface 评分表格式 {
   orders?: number[];
   patterns?: number[][];
 }
+
+/** 评分表里的一张表（配置 statistics.tables 的形状）→ 本页统一使用的 表配置。
+ *  显示层（表列表，跟草稿走）和分析层（表列表，跟已提交值走）共用这一份映射，
+ *  免得两处各写一遍、日后改一处忘一处。 */
+const 评分表到表配置 = (t: 评分表格式, i: number): 表配置 => ({
+  id: 10000 + i,
+  类型: 安全类型(t.type),
+  模式: (t.patterns ?? []).map((p) => JSON.stringify(p)),
+  top: t.top ?? 0,
+  权重: t.weight,
+  名称: t.name,
+});
 
 const 默认四表 = (maxLength: number): 评分表格式[] => [
   { name: "必撞", type: "single", top: 0, weight: 9, patterns: [[]] },
@@ -1392,34 +1561,11 @@ function 评分表面板() {
   const maxLength = useAtomValue(最大码长原子);
   const tables = ((配置 as any).statistics?.tables ?? []) as 评分表格式[];
 
-  // 输入期间只改本地草稿，失焦才写回配置。配置一变，常挂载的「手动分析」「自动搜索」两个重页签
-  // 会全部跟着重算——逐键写回就是打字卡顿的根源（用户要求：有光标不重算，失焦才重算）。
-  const [草稿, 设草稿] = useState<评分表格式[]>(() => tables);
-  const 已提交引用 = useRef(tables); // 本组件最近一次写回配置的内容：识别外部变更、避免回声覆盖
-  const 有未提交 = useRef(false);
-  useEffect(() => {
-    if (tables !== 已提交引用.current) {
-      // 外部变更（手动分析共享编辑、其他入口）→ 以配置为准覆盖草稿
-      已提交引用.current = tables;
-      有未提交.current = false;
-      设草稿(tables);
-    }
-  }, [tables]);
+  // 输入期间不重算：每个控件自己持草稿、失焦才提交，配置没变就不会触发重算。
+  // 这里不再留第二层「全表草稿」——那层和控件各持一份，两次提交容易互相覆盖。
   const 提交 = (新表: 评分表格式[]) => {
-    已提交引用.current = 新表;
-    有未提交.current = false;
-    设草稿(新表);
     设配置({ ...配置, statistics: { tables: 新表 } } as any);
   };
-  const 失焦提交 = () => {
-    if (有未提交.current) 提交(草稿);
-  };
-  // 键入路径：只进草稿
-  const 改草稿 = (i: number, patch: Partial<评分表格式>) => {
-    有未提交.current = true;
-    设草稿(草稿.map((t, ti) => (ti === i ? { ...t, ...patch } : t)));
-  };
-  // 离散操作（多选下拉/按钮）：立即提交，基于草稿叠加以免覆盖未失焦的键入
 
   const 模式选项 = range(maxLength + 1).flatMap((阶) =>
     combinations(maxLength, 阶).map((空位) => ({
@@ -1438,40 +1584,43 @@ function 评分表面板() {
         范围只统计该类型按频率排序的前 N 条（0 为全部）。编辑在离开输入框（失焦）后才生效重算。
       </Typography.Paragraph>
       <Flex gap="small" style={{ marginBottom: 16 }}>
-        <Button onClick={() => 提交([...草稿, { name: `表${草稿.length + 1}`, type: "single", weight: 1, top: 0, patterns: [] }])}>
+        <Button onClick={() => 提交([...tables, { name: `表${tables.length + 1}`, type: "single", weight: 1, top: 0, patterns: [] }])}>
           新建表
         </Button>
         <Button onClick={() => 提交(默认四表(maxLength))}>恢复默认四表</Button>
-        {草稿.length > 0 && (
+        {tables.length > 0 && (
           <Button danger onClick={() => 提交([])}>
             清空
           </Button>
         )}
       </Flex>
-      {草稿.length === 0 && (
+      {tables.length === 0 && (
         <Alert type="warning" showIcon message="尚无评分表，请新建或恢复默认四表。" />
       )}
       <Flex vertical gap="middle">
-        {草稿.map((表, i) => (
+        {tables.map((表, i) => (
           <div key={i}>
             <Flex gap="small" align="center" wrap="wrap">
-              <Input
+              <失焦输入框
                 className="w-32!"
-                value={表.name}
+                值={表.name}
                 addonBefore="名"
-                onChange={(e) => 改草稿(i, { name: e.target.value })}
-                onBlur={失焦提交}
-                onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+                设值={(v) =>
+                  提交(tables.map((x, xi) => (xi === i ? { ...x, name: v } : x)))
+                }
               />
               <Flex gap={4} align="center">
                 权重
-                <InputNumber
+                <数字框
                   step={0.1}
                   min={0}
-                  value={表.weight}
-                  onChange={(v) => 改草稿(i, { weight: v ?? 0 })}
-                  onBlur={失焦提交}
-                  onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+                  值={表.weight}
+                  设值={(v) =>
+                    提交(
+                      tables.map((x, xi) => (xi === i ? { ...x, weight: v } : x)),
+                    )
+                  }
+                  回填={0}
                 />
               </Flex>
               <Flex gap={4} align="center">
@@ -1481,7 +1630,7 @@ function 评分表面板() {
                   options={类型选项}
                   onChange={(v) =>
                     提交(
-                      草稿.map((x, xi) =>
+                      tables.map((x, xi) =>
                         xi === i ? { ...x, type: v as 表类型 } : x,
                       ),
                     )
@@ -1489,30 +1638,35 @@ function 评分表面板() {
                 />
                 统计前
                 {/* 与手动分析页的表行同一口径：0=全部，0 后面挂小灰括号「（全部）」 */}
-                <InputNumber
+                <数字框
                   className="w-28! top-input"
                   min={0}
-                  value={表.top ?? 0}
-                  suffix={全部后缀(表.top ?? 0)}
-                  onChange={(v) => 改草稿(i, { top: v ?? 0 })}
-                  onBlur={失焦提交}
-                  onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
+                  值={表.top ?? 0}
+                  设值={(v) =>
+                    提交(tables.map((x, xi) => (xi === i ? { ...x, top: v } : x)))
+                  }
+                  回填={0}
+                  后缀={(v) => 全部后缀(v ?? 0)}
                 />
               </Flex>
-              <Select
-                mode="multiple"
+              <失焦多选框
                 allowClear
                 showSearch
                 className="min-w-60"
                 placeholder="空位模式（置空为全选）"
-                value={(表.patterns ?? []).map((p) => JSON.stringify(p))}
+                值={(表.patterns ?? []).map((p) => JSON.stringify(p))}
                 options={模式选项}
-                onChange={(vs) =>
-                  改草稿(i, { patterns: (vs as string[]).map((s) => JSON.parse(s)) })
+                设值={(vs) =>
+                  提交(
+                    tables.map((x, xi) =>
+                      xi === i
+                        ? { ...x, patterns: vs.map((s) => JSON.parse(s)) }
+                        : x,
+                    ),
+                  )
                 }
-                onBlur={失焦提交}
               />
-              <Button danger size="small" onClick={() => 提交(草稿.filter((_, ti) => ti !== i))}>
+              <Button danger size="small" onClick={() => 提交(tables.filter((_, ti) => ti !== i))}>
                 删除
               </Button>
             </Flex>
@@ -1543,8 +1697,6 @@ function 智能选根面板() {
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 字库 = useAtomValueUnwrapped(如字库原子);
   const 原始词典 = useAtomValue(原始词典原子);
-  const 编码类型 = useAtomValue(编码类型原子);
-  const alphabet = useAtomValue(字母表原子);
 
   // 自动搜索参数：只认方案 yaml 里的顶层 `autoselect` 块（导出即带上、换机器也在）。
   // 历史上一度存在 localStorage（全局一份、不分方案），该做法已废弃，这里不做任何兼容读取。
@@ -1689,8 +1841,9 @@ function 智能选根面板() {
         初始搜索串.current = 串;
         return;
       }
-      if (串 === 初始搜索串.current) return; // 改回原样 = 净变化为零，不落盘
-      // 方案里已是这组值 → 不写，免得推进撤销历史
+      // 之后一律以「方案里实际存的是什么」为准。不能再拿"打开时的快照"当挡箭牌：
+      // 改 5 又改回 12 时，串确实回到了快照值，可文件里还留着 5——那样界面显示 12、
+      // 配置却是 5，下次打开又跳回 5。方案里已是这组值才真的不必写。
       if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
     }, 600);
     return () => clearTimeout(定时);
@@ -1720,9 +1873,6 @@ function 智能选根面板() {
   // 根身份 = string 键位安排 ∪ 数组逐位安排（键位引用把根从 string 改写成数组，仍是根——
   // 增删判定必须按根身份，只认 string 会把"改逐位安排"的根误报成"移除根"）
   const 是根身份 = (v: any) => typeof v === "string" || Array.isArray(v);
-  const 起始根集 = new Set(
-    Object.keys(起始mapping).filter((k) => 是根身份(起始mapping[k])),
-  );
 
   // 候选预览与搜索池同尺子：形状签名与已有根相同的候选不会入池（如 PUA 变体），
   // 预览必须把这些标出来，否则"看着能加、实际被滤"就是显示与实际脱节
@@ -2432,20 +2582,22 @@ function 智能选根面板() {
                 {(r.类型 === "字频范围" || r.类型 === "字内部件") && (
                   <>
                     第
-                    <InputNumber
+                    <数字框
                       size="small"
                       min={1}
                       max={Number.MAX_SAFE_INTEGER}
-                      value={r.起}
-                      onChange={(v) => 改规则(i, { 起: v ?? r.起 })}
+                      值={r.起 ?? 1}
+                      设值={(v) => 改规则(i, { 起: v })}
+                      回填={r.起 ?? 1}
                     />
                     ~
-                    <InputNumber
+                    <数字框
                       size="small"
                       min={1}
                       max={Number.MAX_SAFE_INTEGER}
-                      value={r.止}
-                      onChange={(v) => 改规则(i, { 止: v ?? r.止 })}
+                      值={r.止 ?? 1}
+                      设值={(v) => 改规则(i, { 止: v })}
+                      回填={r.止 ?? 1}
                     />
                     <点开提示 内容="按「第几个能加的」算：跳过已在方案／受保护／同形的，不占名额，自动往后顺延到取满为止。设大到 300 也不浪费名额。">
                       名
@@ -2455,20 +2607,22 @@ function 智能选根面板() {
                 {r.类型 === "重码组挖掘" && (
                   <>
                     第
-                    <InputNumber
+                    <数字框
                       size="small"
                       min={1}
                       max={Number.MAX_SAFE_INTEGER}
-                      value={r.根起}
-                      onChange={(v) => 改规则(i, { 根起: v ?? r.根起 })}
+                      值={r.根起 ?? 1}
+                      设值={(v) => 改规则(i, { 根起: v })}
+                      回填={r.根起 ?? 1}
                     />
                     ~
-                    <InputNumber
+                    <数字框
                       size="small"
                       min={1}
                       max={Number.MAX_SAFE_INTEGER}
-                      value={r.根止}
-                      onChange={(v) => 改规则(i, { 根止: v ?? r.根止 })}
+                      值={r.根止 ?? 100}
+                      设值={(v) => 改规则(i, { 根止: v })}
+                      回填={r.根止 ?? 100}
                     />
                     <点开提示 内容="按「第几个能加的」算：跳过已在方案／受保护／同形的，不占名额，自动往后顺延到取满为止。设大到 300 也不浪费名额。">
                       名
@@ -2904,13 +3058,13 @@ function 智能选根面板() {
       <Flex gap={16} align="center" wrap="wrap">
           <Flex gap={6} align="center">
             轮数上限
-            <InputNumber min={1} max={200} value={轮数} onChange={(v) => 设轮数(v ?? 12)} />
+            <数字框 min={1} max={200} 值={轮数} 设值={设轮数} 回填={12} />
           </Flex>
           <Flex gap={6} align="center">
             <点开提示 内容="每轮同时应用改善最大的前 K 个加根动作（按各自单独收益排），组合后整体合评——根之间互相影响时以合评分为准。1 = 经典单步贪心。">
               单轮根数
             </点开提示>
-            <InputNumber min={1} max={200} value={单轮根数} onChange={(v) => 设单轮根数(v ?? 1)} />
+            <数字框 min={1} max={200} 值={单轮根数} 设值={设单轮根数} 回填={1} />
           </Flex>
           <Flex gap={6} align="center">
             <Switch size="small" checked={允许加根} onChange={设允许加根} />
@@ -2942,12 +3096,7 @@ function 智能选根面板() {
         </Flex>
       <Flex gap={6} align="center" className="mt-2!">
         每隔
-        <InputNumber
-          min={0}
-          max={200}
-          value={重建间隔}
-          onChange={(v) => 设重建间隔(v ?? 10)}
-        />
+        <数字框 min={0} max={200} 值={重建间隔} 设值={设重建间隔} 回填={10} />
         <点开提示 内容="流程（N=2 时）：建，1，2，建，3，4，建…重码组挖掘按当前映射重排；字频范围／字内部件复用初次名单。0 = 不重建。">
           轮重建一次加根池
         </点开提示>
