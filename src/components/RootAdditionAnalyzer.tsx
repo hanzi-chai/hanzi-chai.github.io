@@ -338,7 +338,9 @@ function 数字框({
 }
 
 /** 文本输入框：**失焦（或回车）才提交**，打字期间只改本地草稿。
- *  与 数字框 同一套语义，只是没有"删空回填"——文本空着就是空着。 */
+ *  与 数字框 同一套语义，只是没有"删空回填"——文本空着就是空着。
+ *  参数类文本框逐键提交在界面上看不出任何区别（只是把配置写早了），所以统一压到失焦，
+ *  全页只有一种"什么时候算数"的规则。 */
 function 失焦输入框({
   值,
   设值,
@@ -361,6 +363,79 @@ function 失焦输入框({
       }}
       onPressEnter={(e) => (e.target as HTMLInputElement).blur()}
     />
+  );
+}
+
+/** 可收放的多行输入（预置归并 / 手动指定共用）：**失焦才提交**，回车留给换行。
+ *  收起时是一行只读预览，点它展开并聚焦到末尾。 */
+function 收放输入({
+  原文,
+  设原文,
+  收起,
+  设收起,
+  占位,
+  引用,
+}: {
+  原文: string;
+  设原文: (v: string) => void;
+  收起: boolean;
+  设收起: (收: boolean) => void;
+  占位: string;
+  引用: { current: any };
+}) {
+  const [草稿, 设草稿] = useState(原文);
+  useEffect(() => {
+    设草稿(原文);
+  }, [原文]);
+  const 聚焦末尾 = () => {
+    requestAnimationFrame(() => {
+      const el: HTMLTextAreaElement | null =
+        引用.current?.nativeElement ?? 引用.current;
+      if (el) {
+        el.focus();
+        const 末 = 草稿.length;
+        el.setSelectionRange(末, 末);
+      }
+    });
+  };
+  return (
+    <Flex gap={4} style={{ flex: "1 1 280px", minWidth: 280 }} align="flex-start">
+      {收起 ? (
+        <Input
+          size="small"
+          readOnly
+          style={{ cursor: "text" }}
+          value={草稿}
+          placeholder={占位}
+          onClick={() => {
+            设收起(false);
+            聚焦末尾();
+          }}
+        />
+      ) : (
+        <Input.TextArea
+          size="small"
+          ref={引用}
+          style={{ resize: "none" }}
+          placeholder={占位}
+          autoSize={{ minRows: 1, maxRows: 5 }}
+          value={草稿}
+          onChange={(e) => 设草稿(e.target.value)}
+          onBlur={() => {
+            if (草稿 !== 原文) 设原文(草稿);
+          }}
+        />
+      )}
+      <Button
+        size="small"
+        type="text"
+        icon={收起 ? <CaretDownOutlined /> : <CaretUpOutlined />}
+        onClick={() => {
+          设收起(!收起);
+          if (!收起) 聚焦末尾();
+        }}
+      />
+    </Flex>
   );
 }
 
@@ -1144,6 +1219,17 @@ function 手动分析面板() {
     结果: Map<string, 单表分析>;
   }>({ 表预处理: null, 候选: null, 字母数: 0, 码长: 0, 结果: new Map() });
 
+  /** 只参与计算的那部分字段拼成的串。
+   *  表名是给人看的标签，不进任何计算——把它挡在 表分析 的依赖之外，改名字才不会让整套
+   *  表分析白跑一轮（逐表缓存本来都命中，但那一轮循环本身就是多余的）。 */
+  const 表计算串 = useMemo(
+    () =>
+      表列表
+        .map((t) => `${t.类型}|${t.top}|${t.权重}|${t.模式.join(",")}`)
+        .join("\n"),
+    [表列表],
+  );
+
   const 表分析 = useMemo(() => {
     const { 基线: 基线预处理, 候选: 候选预处理 } = 表预处理;
     const 行数据 = new Map<number, 表行[]>();
@@ -1218,7 +1304,7 @@ function 手动分析面板() {
     };
     return { 行数据, 原始和, 候选和, 变化和 };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [表预处理, 表列表, 候选, maxLength, alphabet]);
+  }, [表预处理, 表计算串, 候选, maxLength, alphabet]);
 
   // 「全部/多字词」表的统计范围由表自己的 top 决定；词库里有没有词不在这里判——
   // 整套表里留几张多字词表、有词时才生效，是正常用法，不提示。
@@ -1721,61 +1807,6 @@ function 智能选根面板() {
         .map(([j, v]) => [Number(j) > 删 ? Number(j) - 1 : Number(j), v]),
     );
   // 可收放的多行输入域（手动指定/预置归并共用渲染函数——直接调用返回 JSX，不产生新组件类型，避免失焦重挂）
-  const 渲染收放输入 = (
-    原文: string,
-    设原文: (v: string) => void,
-    收起: boolean,
-    设收起: (收: boolean) => void,
-    占位: string,
-    引用: { current: any },
-  ) => {
-    const 聚焦末尾 = () => {
-      requestAnimationFrame(() => {
-        const el: HTMLTextAreaElement | null = 引用.current?.nativeElement ?? 引用.current;
-        if (el) {
-          el.focus();
-          const 末 = 原文.length;
-          el.setSelectionRange(末, 末);
-        }
-      });
-    };
-    return (
-      <Flex gap={4} style={{ flex: "1 1 280px", minWidth: 280 }} align="flex-start">
-        {收起 ? (
-          <Input
-            size="small"
-            readOnly
-            style={{ cursor: "text" }}
-            value={原文}
-            placeholder={占位}
-            onClick={() => {
-              设收起(false);
-              聚焦末尾();
-            }}
-          />
-        ) : (
-          <Input.TextArea
-            size="small"
-            ref={引用}
-            style={{ resize: "none" }}
-            placeholder={占位}
-            autoSize={{ minRows: 1, maxRows: 5 }}
-            value={原文}
-            onChange={(e) => 设原文(e.target.value)}
-          />
-        )}
-        <Button
-          size="small"
-          type="text"
-          icon={收起 ? <CaretDownOutlined /> : <CaretUpOutlined />}
-          onClick={() => {
-            设收起(!收起);
-            if (!收起) 聚焦末尾();
-          }}
-        />
-      </Flex>
-    );
-  };
   // 字根编码：一个框里写一到多个码，逗号/换行分隔（与预置归并、手动指定同一套分隔符，见 分隔.ts）。
   // **但这格是单行 Input**：回车打不进、粘贴带换行的文本也会被浏览器剥掉，
   // 所以提示只写「逗号分隔」——写「或换行」是骗人。多行框（手动指定 / 预置归并）才提换行。
@@ -1812,41 +1843,40 @@ function 智能选根面板() {
   const [自动归并相似根, 设自动归并相似根] = useState(初始配置.自动归并相似根 ?? true);
   const [预置归并文本, 设预置归并文本] = useState(初始配置.预置归并文本 ?? "");
   // 参数写回方案（`autoselect` 块）：与 配置 的其余部分一起存，导出 yaml 时自然带上。
-  // 口径与官方各段一致——**编辑才落盘**：打开面板不动参数不会凭空建块（focusAtom + valueOr 也是读时不建）；
-  // 防抖 600ms，值没变则不写，避免推进配置的撤销历史。
+  // 口径与官方各段一致——**编辑才落盘**：打开面板不动参数不会凭空建块（focusAtom + valueOr 也是读时不建）。
+  // 值没变则不写（`搜索配置串` 是固定键序的规整串，比对它即可）。
+  // 原先这里套了 600ms 防抖来吸收逐键输入，2026-11-02 按用户要求去掉：参数是改一次就点「开始搜索」
+  // 的东西，不值得单为它多一层"什么时候才算写完"的隐式状态。改一次就写一次。
   const 上次写入 = useRef("");
   const 初始搜索串 = useRef<string | null>(null);
   useEffect(() => {
-    const 定时 = setTimeout(() => {
-      const 值: 自动搜索配置 = {
-        轮数,
-        单轮根数,
-        重建间隔,
-        占位安排,
-        ...(候选编码.length ? { 占位安排候选: 候选编码 } : {}),
-        允许加根,
-        允许减根,
-        自动停止,
-        减根范围: 减根范围文本,
-        罚分表达式,
-        自动归并相似根,
-        字根表,
-        预置归并文本,
-      };
-      const 串 = 搜索配置串(值);
-      if (串 === 上次写入.current) return;
-      上次写入.current = 串;
-      // 第一次跑只记下「打开时」的参数快照；没动过就不写（含 StrictMode 的二次 effect）
-      if (初始搜索串.current === null) {
-        初始搜索串.current = 串;
-        return;
-      }
-      // 之后一律以「方案里实际存的是什么」为准。不能再拿"打开时的快照"当挡箭牌：
-      // 改 5 又改回 12 时，串确实回到了快照值，可文件里还留着 5——那样界面显示 12、
-      // 配置却是 5，下次打开又跳回 5。方案里已是这组值才真的不必写。
-      if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
-    }, 600);
-    return () => clearTimeout(定时);
+    const 值: 自动搜索配置 = {
+      轮数,
+      单轮根数,
+      重建间隔,
+      占位安排,
+      ...(候选编码.length ? { 占位安排候选: 候选编码 } : {}),
+      允许加根,
+      允许减根,
+      自动停止,
+      减根范围: 减根范围文本,
+      罚分表达式,
+      自动归并相似根,
+      字根表,
+      预置归并文本,
+    };
+    const 串 = 搜索配置串(值);
+    if (串 === 上次写入.current) return;
+    上次写入.current = 串;
+    // 第一次跑只记下「打开时」的参数快照；没动过就不写（含 StrictMode 的二次 effect）
+    if (初始搜索串.current === null) {
+      初始搜索串.current = 串;
+      return;
+    }
+    // 一律以「方案里实际存的是什么」为准。不能再拿"打开时的快照"当挡箭牌：
+    // 改 5 又改回 12 时，串确实回到了快照值，可文件里还留着 5——那样界面显示 12、
+    // 配置却是 5，下次打开又跳回 5。方案里已是这组值才真的不必写。
+    if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
   }, [轮数, 单轮根数, 重建间隔, 字根表, 字根编码文本, 允许加根, 允许减根, 自动停止, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
@@ -2559,26 +2589,29 @@ function 智能选根面板() {
                 ) : (
                   <Tag color="magenta">重码组挖掘</Tag>
                 )}
-                {r.类型 === "手动指定" &&
-                  渲染收放输入(
-                    手动文本[i] ?? (typeof r.字根 === "string" ? r.字根 : r.字根.join("，")),
-                    (v) => {
+                {r.类型 === "手动指定" && (
+                  <收放输入
+                    原文={
+                      手动文本[i] ??
+                      (typeof r.字根 === "string" ? r.字根 : r.字根.join("，"))
+                    }
+                    设原文={(v) => {
                       设手动文本((t) => ({ ...t, [i]: v }));
-                      改规则(i, {
-                        字根: v,
-                      });
-                    },
-                    手动收起集.has(i),
-                    (收) =>
+                      改规则(i, { 字根: v });
+                    }}
+                    收起={手动收起集.has(i)}
+                    设收起={(收) =>
                       设手动收起集((s) => {
                         const n = new Set(s);
                         if (收) n.add(i);
                         else n.delete(i);
                         return n;
-                      }),
-                    "输入字根，逗号或换行分隔",
-                    手动域引用,
-                  )}
+                      })
+                    }
+                    占位="输入字根，逗号或换行分隔"
+                    引用={手动域引用}
+                  />
+                )}
                 {(r.类型 === "字频范围" || r.类型 === "字内部件") && (
                   <>
                     第
@@ -2916,11 +2949,11 @@ function 智能选根面板() {
       <Flex gap={16} align="center" wrap="wrap">
           <Flex gap={6} align="center">
             字根编码（可多个）
-            <Input
+            <失焦输入框
               className="w-40! text-center"
               placeholder="如 qq，逗号分隔"
-              value={字根编码文本}
-              onChange={(e) => 设字根编码文本(e.target.value)}
+              值={字根编码文本}
+              设值={设字根编码文本}
             />
           </Flex>
           <Flex gap={6} align="center">
@@ -2984,14 +3017,14 @@ function 智能选根面板() {
             <点开提示 内容="「大=人」整体归并（所有码等同于“人”）；「的 1=人 2」键位引用（“的”的第 1 码借用“人”的第 2 码，两侧留空格）。要等右侧的根已成根才生效。">
               <span style={{ whiteSpace: "nowrap" }}>预置归并</span>
             </点开提示>
-            {渲染收放输入(
-              预置归并文本,
-              设预置归并文本,
-              归并收起,
-              设归并收起,
-              "例：八=人，的 1=人 2",
-              归并域引用,
-            )}
+            <收放输入
+              原文={预置归并文本}
+              设原文={设预置归并文本}
+              收起={归并收起}
+              设收起={设归并收起}
+              占位="例：八=人，的 1=人 2"
+              引用={归并域引用}
+            />
             <Button size="small" onClick={() => 设归并查看(!归并查看)}>
               {归并查看 ? "▾ 收起" : "▸ 查看归并条目"}
             </Button>
@@ -3046,11 +3079,11 @@ function 智能选根面板() {
             <点开提示 内容="n = 可删根数（只数真正占键位的根：一段码或逐位安排算一个；整体归并的别名不占键位、不算），与轨迹里「根」后面的数字同口径。按这个表达式给总分加罚分（可为负），留空=0。">
               根数罚分 f(n)
             </点开提示>
-            <Input
+            <失焦输入框
               className="w-56! text-center"
               placeholder="例：max(0, n-150)**2"
-              value={罚分表达式}
-              onChange={(e) => 设罚分表达式(e.target.value)}
+              值={罚分表达式}
+              设值={设罚分表达式}
             />
           </Flex>
         </Flex>
@@ -3085,11 +3118,11 @@ function 智能选根面板() {
               <点开提示 内容="按根名称匹配的正则，匹配到的才允许删。如 ^鹤声- 只删声母类元素。">
                 减根范围
               </点开提示>
-              <Input
+              <失焦输入框
                 className="w-40! text-center"
                 placeholder="正则，留空=全部"
-                value={减根范围文本}
-                onChange={(e) => 设减根范围文本(e.target.value)}
+                值={减根范围文本}
+                设值={设减根范围文本}
               />
             </Flex>
           )}

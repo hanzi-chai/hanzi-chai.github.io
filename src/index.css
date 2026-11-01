@@ -53,8 +53,11 @@
 
 /* 「统计前 N 条」输入框里 0 后面的「（全部）」提示：
    悬停或聚焦时右侧步进器会弹出来，提示被挤到数字上，数字就看不清了。
-   这两种状态下直接撤掉整个后缀（连它那圈留白一起），数字与步进器独占空间。 */
+   这两种状态下直接撤掉整个后缀（连它那圈留白一起），数字与步进器独占空间。
+   聚焦用 :focus-within 而不是 antd 的 focused 类名：一旦挂了 suffix，antd 会把根元素换成
+   affix-wrapper 结构、聚焦类随之改名，写死 -focused 就会漏掉「光标在框里、鼠标已移开」这一刻
+   —— 那时提示正好压在数字上。:focus-within 只看内部有没有焦点，跟类名叫什么无关。 */
 .top-input:hover .ant-input-number-suffix,
-.top-input.ant-input-number-focused .ant-input-number-suffix {
+.top-input:focus-within .ant-input-number-suffix {
   display: none;
 }
