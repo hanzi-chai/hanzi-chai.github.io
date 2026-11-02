@@ -641,15 +641,13 @@ const 变化单元格 = memo(function 变化单元格({
   v: number;
   组列表: 表行["变化组"];
 }) {
-  const [开, 设开] = useState(false);
   const 显示 = 变化显示(v);
   return (
-    <Popover
-      trigger="click"
-      open={开}
-      onOpenChange={设开}
-      content={开 ? <变化组内容 组列表={组列表} /> : null}
-    >
+    // content 给的是**组件元素**而不是现算好的 JSX：antd 只在浮层真正打开时才渲染它，
+    // 这样几百个单元格不会在每次重渲染时都把变化组跑一遍（每组两个 Set、三次 filter）。
+    // 注意别改成「受控 open + 内容为空时传 null」：content 为空时浮层压根不会打开，
+    // 点了没反应，等于把功能删了。
+    <Popover trigger="click" content={<变化组内容 组列表={组列表} />}>
       <span className={显示.类} title={`精确 ${v}`}>
         {显示.文本}
       </span>
