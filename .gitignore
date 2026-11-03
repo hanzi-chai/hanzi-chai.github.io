@@ -31,3 +31,4 @@ data/
 .env
 .dev.vars
 package/hanzi-chai/src/data
+output/
