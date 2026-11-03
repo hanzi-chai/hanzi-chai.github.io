@@ -207,6 +207,34 @@ const 斜钩 = new Set<笔画名称>(["斜钩", "横斜钩", "撇钩"]);
 const format = (p: 向量) => p.map((x) => Number(x.toFixed(6))).join(" ");
 const cubic = (p: 曲线) => `C${format(p[1])} ${format(p[2])} ${format(p[3])}`;
 
+/** 冖类顶盖：将同起点的竖点原样平移到横钩末端。 */
+function coverHook(
+  stroke: 矢量笔画数据,
+  index: number,
+  self: 矢量图形数据,
+  all: 段[][],
+): 段[] | undefined {
+  const previous = self[index - 1],
+    point = all[index - 1],
+    tail = all[index]?.at(-1);
+  if (
+    stroke.feature !== "横钩" ||
+    previous?.feature !== "点" ||
+    norm(sub(previous.start, stroke.start)) >= epsilon ||
+    !point?.length ||
+    !tail ||
+    tail.length <= epsilon
+  )
+    return;
+  const delta = sub(point.at(-1)!.points[3], previous.start);
+  if (delta[1] <= 0 || Math.abs(delta[0]) >= delta[1] * 0.3) return;
+  const offset = sub(tail.points[3], previous.start);
+  return point.map((segment) => ({
+    ...segment,
+    points: segment.points.map((p) => move(p, offset, 1)) as 曲线,
+  }));
+}
+
 function render(
   stroke: 矢量笔画数据,
   index: number,
@@ -266,24 +294,21 @@ function render(
     }
   }
 
+  const obstacles = stroke.feature.endsWith("钩")
+    ? [...others, ...lines(segments.slice(0, -1))]
+    : [];
+  const cover = coverHook(stroke, index, self, all);
+  // 完整复制不受通用钩长上限影响，也不裁剪横画；遇到邻笔仍采用通用避让。
+  const copiedHook =
+    cover && !touches(lines(cover), obstacles) ? cover : undefined;
   let hook: 曲线 | undefined;
-  if (stroke.feature.endsWith("钩") && tail.length > epsilon) {
+  if (!copiedHook && stroke.feature.endsWith("钩") && tail.length > epsilon) {
     const incoming = tangent(tail.points, true);
     let direction: 向量;
     if (stroke.feature === "横钩") {
-      direction = unit([-0.65 * (Math.sign(incoming[0]) || 1), 0.76]);
-      // 同起点的竖点和横钩组成对称的顶盖：由实际笔画关系确定下垂方向。
-      const previous = self[index - 1],
-        prevSegments = all[index - 1];
-      if (
-        previous?.feature === "点" &&
-        norm(sub(previous.start, stroke.start)) < epsilon &&
-        prevSegments?.length
-      ) {
-        const delta = sub(prevSegments.at(-1)!.points[3], previous.start);
-        if (delta[1] > 0 && Math.abs(delta[0]) < delta[1] * 0.3)
-          direction = [0, 1];
-      }
+      direction = cover
+        ? [0, 1]
+        : unit([-0.65 * (Math.sign(incoming[0]) || 1), 0.76]);
     } else if (上钩.has(stroke.feature)) {
       direction = unit([incoming[1], -Math.abs(incoming[0])]);
     } else if (斜钩.has(stroke.feature)) {
@@ -295,7 +320,6 @@ function render(
         0.8 * incoming[0] - 0.6 * incoming[1],
       ]);
     }
-    const obstacles = [...others, ...lines(segments.slice(0, -1))];
     // 复合笔画的短末段还要参考整笔尺度；但钩不能超过末段的 35%。
     // 等比缩小时两种尺度同步缩小，不使用固定最小钩长。
     const strokeLength = segments.reduce((sum, s) => sum + s.length, 0);
@@ -342,6 +366,10 @@ function render(
     commands.push(segment.line ? `L${format(p[3])}` : cubic(p));
     if (joins.has(i)) commands.push(cubic(joins.get(i)!));
   }
+  for (const segment of copiedHook ?? [])
+    commands.push(
+      segment.line ? `L${format(segment.points[3])}` : cubic(segment.points),
+    );
   if (hook) commands.push(cubic(hook));
   return commands.join(" ");
 }

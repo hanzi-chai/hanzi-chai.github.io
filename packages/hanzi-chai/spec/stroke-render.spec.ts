@@ -84,8 +84,66 @@ describe("显示用钩和圆角", () => {
       start: [20, 20],
       curveList: [{ command: "h", parameterList: [60] }],
     };
-    expect(tip(生成笔画路径([point, horizontal])[1]!)[0]).toBe(80);
+    expect(parse(生成笔画路径([point, horizontal])[1]!)).toEqual([
+      { command: "M", points: [20, 20] },
+      { command: "L", points: [80, 20] },
+      { command: "C", points: [80, 23, 80, 27, 80, 30] },
+    ]);
     expect(tip(render(horizontal))[0]).toBeLessThan(80);
+  });
+  it("顶盖补钩复制竖点的全部曲线与直线段，缩放后仍然等长同形", () => {
+    for (const scale of [0.1, 1, 2]) {
+      const point: 矢量笔画数据 = {
+        feature: "点",
+        start: [20 * scale, 20 * scale],
+        curveList: [
+          {
+            command: "c",
+            parameterList: [scale, 3 * scale, -scale, 7 * scale, 0, 10 * scale],
+          },
+          { command: "l", parameterList: [scale, 2 * scale] },
+        ],
+      };
+      const horizontal: 矢量笔画数据 = {
+        feature: "横钩",
+        start: [...point.start],
+        curveList: [{ command: "h", parameterList: [60 * scale] }],
+      };
+      const strokes = [point, horizontal];
+      const before = structuredClone(strokes);
+      const paths = 生成笔画路径(strokes);
+      const translated = parse(paths[0]!).slice(1).map(({ command, points }) => ({
+        command,
+        points: points.map((x, i) => (i % 2 === 0 ? x + 60 * scale : x)),
+      }));
+      const right = parse(paths[1]!);
+      expect(right[1]).toEqual({ command: "L", points: [80 * scale, 20 * scale] });
+      expect(right.slice(2)).toEqual(translated);
+      expect(paths).toEqual(strokes.map(处理路径));
+      expect(strokes).toEqual(before);
+    }
+  });
+  it("顶盖复制会碰到邻笔时仍缩短补钩避让", () => {
+    const point: 矢量笔画数据 = {
+      feature: "点",
+      start: [20, 20],
+      curveList: [{ command: "v", parameterList: [12] }],
+    };
+    const horizontal: 矢量笔画数据 = {
+      feature: "横钩",
+      start: [20, 20],
+      curveList: [{ command: "h", parameterList: [60] }],
+    };
+    const obstacle: 矢量笔画数据 = {
+      feature: "横",
+      start: [75, 25],
+      curveList: [{ command: "h", parameterList: [10] }],
+    };
+    expect(tip(生成笔画路径([point, horizontal])[1]!)).toEqual([80, 32]);
+    const constrained = tip(生成笔画路径([point, horizontal, obstacle])[1]!);
+    expect(constrained[0]).toBe(80);
+    expect(constrained[1]).toBeGreaterThan(20);
+    expect(constrained[1]).toBeLessThan(25);
   });
   it("反向线段也正确圆角，非钩笔画的末端不漂移", () => {
     for (const dx of [-60, 60])
