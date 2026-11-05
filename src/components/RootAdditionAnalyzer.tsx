@@ -3089,13 +3089,13 @@ function 智能选根面板() {
       <Flex gap={16} align="center" wrap="wrap">
           <Flex gap={6} align="center">
             轮数上限
-            <数字框 min={1} max={200} 值={轮数} 设值={设轮数} 回填={12} />
+            <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={轮数} 设值={设轮数} 回填={12} />
           </Flex>
           <Flex gap={6} align="center">
             <点开提示 内容="每轮同时应用改善最大的前 K 个加根动作（按各自单独收益排），组合后整体合评——根之间互相影响时以合评分为准。1 = 经典单步贪心。">
               单轮根数
             </点开提示>
-            <数字框 min={1} max={200} 值={单轮根数} 设值={设单轮根数} 回填={1} />
+            <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={单轮根数} 设值={设单轮根数} 回填={1} />
           </Flex>
           <Flex gap={6} align="center">
             <Switch size="small" checked={允许加根} onChange={设允许加根} />
@@ -3127,7 +3127,7 @@ function 智能选根面板() {
         </Flex>
       <Flex gap={6} align="center" className="mt-2!">
         每隔
-        <数字框 min={0} max={200} 值={重建间隔} 设值={设重建间隔} 回填={10} />
+        <数字框 min={0} max={Number.MAX_SAFE_INTEGER} 值={重建间隔} 设值={设重建间隔} 回填={10} />
         <点开提示 内容="流程（N=2 时）：建，1，2，建，3，4，建…重码组挖掘按当前映射重排；字频范围／字内部件复用初次名单。0 = 不重建。">
           轮重建一次加根池
         </点开提示>
