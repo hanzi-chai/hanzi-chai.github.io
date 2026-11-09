@@ -99,7 +99,9 @@ import { 按分隔拆分 } from "~/lib/分隔";
  *  只放"这次怎么跑"的旋钮；评分表仍在 `statistics.tables`，两者各司其职。 */
 export interface 自动搜索配置 {
   轮数?: number;
-  单轮根数?: number;
+  加根数?: number;
+  /** 每轮同时应用改善最大的前 K 个减根动作（连带删掉的别名一起算），合并后整体合评 */
+  减根数?: number;
   重建间隔?: number;
   占位安排?: string;
   /** 候选安排：给了就逐个试，每个候选根在每个安排上各评一次，「根 + 码」一起穷举取最优。
@@ -123,7 +125,8 @@ const 搜索配置串 = (o: 自动搜索配置 | undefined) =>
     (
       [
         "轮数",
-        "单轮根数",
+        "加根数",
+        "减根数",
         "重建间隔",
         "占位安排",
         "占位安排候选",
@@ -841,6 +844,9 @@ function 手动分析面板() {
   const [错误, 设错误] = useState("");
   const [已完成, 设已完成] = useState("");
   const [候选, 设候选] = useState<组装条目[] | null>(null);
+  /** 分析用的那份候选决策（就是 form.mapping 的格式）：留着给「应用到方案」用。
+   *  与 候选 同生共死——分析成功才有，失败/清空一律置 null。 */
+  const [候选mapping, 设候选mapping] = useState<Record<string, any> | null>(null);
   // 自建表持久化（localStorage，跨刷新保留）。注意自动搜索参数早已改成只认方案 yaml 的
   // `autoselect` 块，不再走 localStorage——别拿它当"同款"照抄。
   const 初始自建表 = (() => {
@@ -1050,6 +1056,7 @@ function 手动分析面板() {
       }
       设空操作确认(false);
       设候选(null);
+      设候选mapping(null);
       设已完成("");
       return;
     }
@@ -1107,6 +1114,7 @@ function 手动分析面板() {
       );
       if (!组装结果.ok) throw 组装结果.error;
       设候选(带归并处理(组装结果.value, 强.决策));
+      设候选mapping(候选决策Record);
       设已完成(
         操作列表
           .map((x) =>
@@ -1136,9 +1144,23 @@ function 手动分析面板() {
         设错误(原文);
       }
       设候选(null);
+      设候选mapping(null);
     } finally {
       设运行中(false);
     }
+  };
+
+  /** 把这次分析用的候选决策写回方案的字根映射。
+   *  写完基线就变了，原来那份对比不再成立，所以顺手清掉结果与操作列表——
+   *  留着操作再点「分析」会报「根不在当前方案的字根映射中」（减根已经生效了）。 */
+  const 应用 = () => {
+    if (!候选mapping) return;
+    设配置({ ...配置, form: { ...配置.form, mapping: 候选mapping } } as any);
+    设候选(null);
+    设候选mapping(null);
+    设已完成("");
+    设操作列表([]);
+    message.success("已把分析结果写入方案的字根映射");
   };
 
   /** 单个阶重模式的变化量与变化组（top 为统计范围前 N 条，0 为全部；类型 = 统计对象，
@@ -1431,6 +1453,9 @@ function 手动分析面板() {
         <Button type="primary" onClick={分析} loading={运行中}>
           分析
         </Button>
+        <Button onClick={应用} disabled={!候选mapping || 运行中}>
+          应用到方案
+        </Button>
         {错误 && <Typography.Text type="danger">{富文本(错误)}</Typography.Text>}
       </Flex>
       {已完成 && !运行中 && 候选 && (
@@ -1445,7 +1470,7 @@ function 手动分析面板() {
       <Typography.Title level={3} className="mt-2!">
         {候选 ? (
           <>
-            总预期值：
+            总分变化：
             <span className={变化显示(总预期值).类}>
               {变化显示(总预期值).文本}
             </span>
@@ -1466,15 +1491,12 @@ function 手动分析面板() {
             </Typography.Text>
           </>
         )}
-        <Typography.Text type="secondary" className="text-base! font-normal!">
-          （绿减＝重码变少，红加＝重码变多）
-        </Typography.Text>
       </Typography.Title>
       <Flex gap="small" align="center" className="mb-2!">
         <Switch size="small" checked={共享表} onChange={设共享表} />
         <Typography.Text type="secondary">
           {共享表
-            ? "已共享「评分表」页签的表（此处编辑在失焦后写回评分表）"
+            ? "已共享「评分表」页签的表"
             : "使用本页自建阶重表"}
         </Typography.Text>
         {!共享表 && (
@@ -1493,9 +1515,8 @@ function 手动分析面板() {
       </Flex>
       <Flex vertical gap="middle">
         {表列表.map((表, 表序) => {
-          const 已提交表 = 表列表[表序];
           const 本表变化 = 候选 ? 表变化值(表) : 0;
-          const 本表贡献 = 候选 ? 本表变化 * (已提交表?.权重 ?? 0) : 0;
+          const 本表贡献 = 候选 ? 本表变化 * 表.权重 : 0;
           return (
             <div key={表.id}>
               <Flex gap="small" align="center" wrap="wrap" className="mb-2!">
@@ -1507,7 +1528,7 @@ function 手动分析面板() {
                   设值={(v) => 写表(表序, { 名称: v })}
                 />
                 <Typography.Text strong>
-                  总变化{" "}
+                  表变化{" "}
                   <span
                     className={变化显示(本表变化).类}
                     title={`精确 ${本表变化}`}
@@ -1522,8 +1543,7 @@ function 手动分析面板() {
                     title={`精确 ${本表贡献}`}
                   >
                     {变化显示(本表贡献).文本}
-                  </span>{" "}
-                  （{变化显示(本表变化).文本} × {已提交表?.权重 ?? 0}）
+                  </span>
                 </Typography.Text>
                 <Typography.Text type="secondary">
                   {候选
@@ -1697,7 +1717,6 @@ function 评分表面板() {
                 权重
                 <数字框
                   step={0.1}
-                  min={0}
                   值={表.weight}
                   设值={(v) =>
                     提交(
@@ -1786,7 +1805,9 @@ function 智能选根面板() {
   // 历史上一度存在 localStorage（全局一份、不分方案），该做法已废弃，这里不做任何兼容读取。
   const 初始配置: 自动搜索配置 = ((配置 as any).autoselect as 自动搜索配置 | undefined) ?? {};
   const [轮数, 设轮数] = useState(初始配置.轮数 ?? 12);
-  const [单轮根数, 设单轮根数] = useState(初始配置.单轮根数 ?? 1);
+  const [加根数, 设加根数] = useState(初始配置.加根数 ?? 1);
+  // 减根数：每轮最多同时删几个（1 = 每轮删一个）
+  const [减根数, 设减根数] = useState(初始配置.减根数 ?? 1);
   // 每隔 N 轮重建一次加根池：默认 10 轮；0（或删空）= 不重建
   const [重建间隔, 设重建间隔] = useState(初始配置.重建间隔 ?? 10);
   const [字根表, 设字根表] = useState<字根表规则[]>(初始配置.字根表 ?? []);
@@ -1850,7 +1871,8 @@ function 智能选根面板() {
   useEffect(() => {
     const 值: 自动搜索配置 = {
       轮数,
-      单轮根数,
+      加根数,
+      减根数,
       重建间隔,
       占位安排,
       ...(候选编码.length ? { 占位安排候选: 候选编码 } : {}),
@@ -1875,7 +1897,7 @@ function 智能选根面板() {
     // 改 5 又改回 12 时，串确实回到了快照值，可文件里还留着 5——那样界面显示 12、
     // 配置却是 5，下次打开又跳回 5。方案里已是这组值才真的不必写。
     if (搜索配置串((配置 as any).autoselect) !== 串) 设配置({ ...配置, autoselect: 值 } as any);
-  }, [轮数, 单轮根数, 重建间隔, 字根表, 字根编码文本, 允许加根, 允许减根, 自动停止, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
+  }, [轮数, 加根数, 减根数, 重建间隔, 字根表, 字根编码文本, 允许加根, 允许减根, 自动停止, 罚分表达式, 减根范围文本, 自动归并相似根, 预置归并文本, 配置]);
 
   const [展开规则, 设展开规则] = useState<number[]>([]);
   const [运行中, 设运行中] = useState(false);
@@ -2397,7 +2419,8 @@ function 智能选根面板() {
       mapping: 起始mapping,
       参数: {
         轮数,
-        单轮根数,
+        加根数,
+        减根数,
         重建加根池间隔: 重建间隔,
         // 手动指定以原始文本为源（与预置归并一致：框内不格式化、搜索时才解析）；
         // 传给核心前在此把原始文本拆成数组，核心仍按数组消费，语义不变
@@ -3087,50 +3110,52 @@ function 智能选根面板() {
         </Flex>
       <Typography.Title level={3} className="mt-2!">搜索行为</Typography.Title>
       <Flex gap={16} align="center" wrap="wrap">
-          <Flex gap={6} align="center">
-            轮数上限
-            <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={轮数} 设值={设轮数} 回填={12} />
-          </Flex>
-          <Flex gap={6} align="center">
-            <点开提示 内容="每轮同时应用改善最大的前 K 个加根动作（按各自单独收益排），组合后整体合评——根之间互相影响时以合评分为准。1 = 经典单步贪心。">
-              单轮根数
-            </点开提示>
-            <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={单轮根数} 设值={设单轮根数} 回填={1} />
-          </Flex>
-          <Flex gap={6} align="center">
-            <Switch size="small" checked={允许加根} onChange={设允许加根} />
-            <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
-          </Flex>
-          <Flex gap={6} align="center">
-            <Switch size="small" checked={允许减根} onChange={设允许减根} />
-            <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
-          </Flex>
-          <Flex gap={6} align="center">
-            <Switch size="small" checked={自动停止} onChange={设自动停止} />
-            <点开提示 内容="关掉后：最优动作即使让分数变差或不变也照样应用，一直跑到轮数上限。「先减根变差、后面加根吃回来」只有这样才能走通。没有可执行动作时仍会停。">
-              <span style={{ opacity: 自动停止 ? 1 : 0.4 }}>自动停止</span>
-            </点开提示>
-          </Flex>
-          {允许减根 && (
-            <Flex gap={6} align="center">
-              <点开提示 内容="按根名称匹配的正则，匹配到的才允许删。如 ^鹤声- 只删声母类元素。">
-                减根范围
-              </点开提示>
-              <失焦输入框
-                className="w-40! text-center"
-                placeholder="正则，留空=全部"
-                值={减根范围文本}
-                设值={设减根范围文本}
-              />
-            </Flex>
-          )}
+        <Flex gap={6} align="center">
+          轮数上限
+          <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={轮数} 设值={设轮数} 回填={12} />
         </Flex>
-      <Flex gap={6} align="center" className="mt-2!">
-        每隔
-        <数字框 min={0} max={Number.MAX_SAFE_INTEGER} 值={重建间隔} 设值={设重建间隔} 回填={10} />
-        <点开提示 内容="流程（N=2 时）：建，1，2，建，3，4，建…重码组挖掘按当前映射重排；字频范围／字内部件复用初次名单。0 = 不重建。">
-          轮重建一次加根池
-        </点开提示>
+        <Flex gap={6} align="center">
+          <Switch size="small" checked={自动停止} onChange={设自动停止} />
+          <点开提示 内容="关掉后：最优动作即使让分数变差或不变也照样应用，一直跑到轮数上限。「先减根变差、后面加根吃回来」只有这样才能走通。没有可执行动作时仍会停。">
+            <span style={{ opacity: 自动停止 ? 1 : 0.4 }}>自动停止</span>
+          </点开提示>
+        </Flex>
+        <Flex gap={6} align="center">
+          每隔
+          <数字框 min={0} max={Number.MAX_SAFE_INTEGER} 值={重建间隔} 设值={设重建间隔} 回填={10} />
+          <点开提示 内容="流程（N=2 时）：建，1，2，建，3，4，建…重码组挖掘按当前映射重排；字频范围／字内部件复用初次名单。0 = 不重建。">
+            轮重建一次加根池
+          </点开提示>
+        </Flex>
+      </Flex>
+      <Flex gap={16} align="center" wrap="wrap" className="mt-2!">
+        <Flex gap={6} align="center">
+          <Switch size="small" checked={允许加根} onChange={设允许加根} />
+          <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根</span>
+          <点开提示 内容="每轮同时应用改善最大的前 K 个加根动作（按各自单独收益排），组合后整体合评——根之间互相影响时以合评分为准。1 = 经典单步贪心。">
+            <span style={{ opacity: 允许加根 ? 1 : 0.4 }}>加根数</span>
+          </点开提示>
+          <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={加根数} 设值={设加根数} 回填={1} />
+        </Flex>
+        <Flex gap={6} align="center">
+          <Switch size="small" checked={允许减根} onChange={设允许减根} />
+          <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根</span>
+          <点开提示 内容="每轮一起删掉收益最好的前 K 个根——删了分数一点不动的那些也算（它们单看是 0 收益，正是要攒成一批删的），连带删掉的别名一起算；合并后整体合评，不比现在差、也不比只删一个差才采用，否则退回只删一个。">
+            <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根数</span>
+          </点开提示>
+          <数字框 min={1} max={Number.MAX_SAFE_INTEGER} 值={减根数} 设值={设减根数} 回填={1} />
+        </Flex>
+        <Flex gap={6} align="center">
+          <点开提示 内容="按根名称匹配的正则，匹配到的才允许删。如 ^鹤声- 只删声母类元素。">
+            <span style={{ opacity: 允许减根 ? 1 : 0.4 }}>减根范围</span>
+          </点开提示>
+          <失焦输入框
+            className="w-40! text-center"
+            placeholder="正则，留空=全部"
+            值={减根范围文本}
+            设值={设减根范围文本}
+          />
+        </Flex>
       </Flex>
       <Flex gap={16} align="center" className="mt-6!">
         <Button type="primary" onClick={开始} loading={运行中}>
@@ -3232,11 +3257,11 @@ function 智能选根面板() {
                   <div className="ml-2 text-xs text-gray-500 leading-5">
                     {r.单加明细.map((x) => (
                       <div key={x.描述}>
-                        {富文本(x.描述)} 单加预期 {x.预期变化 > 0 ? "+" : ""}
+                        {富文本(x.描述)} {r.多删 ? "单删" : "单加"}预期 {x.预期变化 > 0 ? "+" : ""}
                         {x.预期变化}
                       </div>
                     ))}
-                    <div>合评 {r.变化 > 0 ? "+" : ""}{r.变化}（单加之和≠合评：根间相互作用）</div>
+                    <div>合评 {r.变化 > 0 ? "+" : ""}{r.变化}（{r.多删 ? "单删" : "单加"}之和≠合评：根间相互作用）</div>
                   </div>
                 )}
               </div>
