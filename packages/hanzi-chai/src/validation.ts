@@ -1,6 +1,6 @@
 import { 字集指示列表, 运算符列表, type 配置 } from "./config.js";
 import { 获取注册表 } from "./registry.js";
-import { 解析自定义拆分部件 } from "./utils.js";
+import { 解析自定义拆分字形 } from "./utils.js";
 import { type 方案上下文, type 方案诊断, 方案错误 } from "./scheme.js";
 
 export const 是记录 = (x: unknown): x is Record<string, unknown> =>
@@ -77,6 +77,24 @@ export function 校验配置结构(value: unknown): asserts value is 配置 {
       !value.analysis.selector.every((x: unknown) => typeof x === "string"))
   )
     fail("/analysis/selector", "必须是筛选器名称列表");
+  if (是记录(value.analysis)) {
+    const { fusion, degenerator } = value.analysis;
+    if (
+      是记录(degenerator) &&
+      degenerator.no_insert_between_heng !== undefined &&
+      typeof degenerator.no_insert_between_heng !== "boolean"
+    )
+      fail("/analysis/degenerator/no_insert_between_heng", "必须是布尔值");
+    if (
+      fusion !== undefined &&
+      typeof fusion !== "boolean" &&
+      !(
+        Array.isArray(fusion) &&
+        fusion.every((id) => Number.isSafeInteger(id) && id >= 0)
+      )
+    )
+      fail("/analysis/fusion", "必须是布尔值或非负整数字形 ID 列表");
+  }
   if (errors.length) throw new 方案错误(errors);
 }
 
@@ -220,13 +238,13 @@ export function 检查方案元素(上下文: 方案上下文): 方案诊断[] {
   for (const field of ["customize", "dynamic_customize"] as const) {
     for (const [id, roots] of Object.entries(配置.analysis?.[field] ?? {})) {
       const path = `/analysis/${field}/${指针(id)}`;
-      if (解析自定义拆分部件(字库, 名称映射, id).length === 0)
+      if (解析自定义拆分字形(字库, 名称映射, id, 配置.analysis).length === 0)
         errors.push({
           code: "UNKNOWN_GLYPH",
           path,
           message: 名称映射.has(id)
-            ? "该元素没有当前方案可自定义的部件字形；复合体暂不支持自定义拆分"
-            : "无法识别自定义拆分目标：请使用字符或部件字形名称（如 字形-123），也兼容裸数字字形 ID",
+            ? "该元素没有当前分析器可自定义的字形"
+            : "无法识别自定义拆分目标：请使用字符或字形名称（如 字形-123），也兼容裸数字字形 ID",
         });
       for (const root of roots.flat()) {
         if (!名称映射.has(root))
@@ -265,9 +283,16 @@ export const 方案结构Schema = {
         selector: { type: "array", items: { type: "string" } },
         component_analyzer: { type: "string" },
         compound_analyzer: { type: "string" },
+        fusion: {
+          oneOf: [
+            { type: "boolean" },
+            { type: "array", items: { type: "integer", minimum: 0 } },
+          ],
+        },
         customize: {
           type: "object",
-          description: "键为字符或部件字形名称（字形-ID），兼容裸数字 ID",
+          description:
+            "键为字符或字形名称（字形-ID），兼容裸数字 ID；默认复合体分析器支持指定复合体字形",
           additionalProperties: { type: "array", items: { type: "string" } },
         },
         dynamic_customize: {

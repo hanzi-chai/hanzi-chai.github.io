@@ -82,12 +82,16 @@ export interface 分析配置 {
   weak?: string[];
   component_analyzer?: string;
   compound_analyzer?: string;
+  /** 布尔值开关默认集合，字形 ID 列表替换默认集合。 */
+  fusion?: boolean | number[];
   dynamic?: boolean;
 }
 
 export interface 退化配置 {
   feature?: Record<笔画名称, 笔画名称>;
   no_cross?: boolean;
+  /** 排除有外笔穿入两道相连横画之间的字根切片。 */
+  no_insert_between_heng?: boolean;
 }
 // config.analysis end
 

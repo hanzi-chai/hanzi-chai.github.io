@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -6,40 +7,76 @@ import {
   保存运行记录,
   内容哈希,
   分析方案,
-  初始化方案项目,
+  type 字集指示,
+  字集过滤查找表,
   对比运行记录,
+  按格式解析码表,
   方案结构Schema,
   方案错误,
   本地编码评估,
+  校对码表,
   查询字符,
   汇总拆分,
   获取注册表,
   获取重码组,
   获取默认目标,
   规范序列化,
+  码表格式列表,
   解释取码,
   解释拆分,
   评估方案项目,
   读取方案项目,
   读取运行记录,
   运行方案,
+  默认数据目录,
 } from "./index.js";
+
+const 方案命令 = [
+  "validate",
+  "inspect",
+  "analyze",
+  "explain",
+  "proofread",
+  "build",
+  "evaluate",
+];
+const 校对范围列表 = [
+  "components",
+  ...(Object.keys(字集过滤查找表) as 字集指示[]),
+] as const;
+const 校对方向列表 = ["forward", "reverse"] as const;
+const 校对状态列表 = ["incorrect", "correct", "unknown", "all"] as const;
 
 const help = `汉字方案命令行工具
 
-chai init --dir <新目录> [--example <示例名称或 YAML 路径>]
-chai validate --project <目录或 YAML> [--json]
-chai inspect --project <目录或 YAML> --text <汉字>
+chai evaluate <方案.yml> [--out <新运行目录>]
+chai validate <方案.yml>
+chai inspect <方案.yml> --text <汉字>
+chai analyze <方案.yml> [--text <汉字>]
+chai explain <方案.yml> --text <字词>
+chai proofread <方案.yml> --reference <参考码表路径>
+                         [--format <码表格式>] [--scope <字集>] [--direction forward|reverse]
+                         [--status incorrect|correct|unknown|all]
+chai build <方案.yml> --out <新运行目录>
 chai inspect --components
-chai analyze --project <目录或 YAML> [--text <汉字>]
-chai explain --project <目录或 YAML> --text <字词>
-chai build --project <目录或 YAML> --out <新运行目录>
-chai evaluate --project <目录或 YAML> [--out <新运行目录>]
 chai compare <基线运行目录> <候选运行目录>
 chai schema
 
+默认数据目录为 ${默认数据目录}
+命令行路径相对于当前工作目录解析。
+  --data-dir <目录>                 更换整套默认数据
+  --characters <文件>               字符数据，默认 characters.json.deflate
+  --glyphs <文件>                   字形数据，默认 glyphs.json.deflate
+  --dictionary <文件>               词典，默认 dictionary.txt
+  --distribution <文件>             键位分布，默认 distribution.txt
+  --equivalence <文件>              当量映射，默认 equivalence.txt
+  --custom-analysis <类别>=<文件>   自定义分析 TSV，可多次指定
+
 查询支持 --limit（默认 20）和 --offset；--json 输出紧凑 JSON。
-build/evaluate 写入 run.json、codes.tsv 和完整输入快照 project/。
+proofread 比对单字全码，默认正向、全部字集、仅列出错误。
+  --format: ${码表格式列表.join(", ")}（默认 char_tab_code）
+  --scope: ${校对范围列表.join(", ")}（默认 maximal）
+指定 --out 时写入 run.json、codes.tsv 和完整输入快照 project/。
 退出码：0 成功，1 配置或运行错误，2 命令参数错误。`;
 
 function 参数错误(message: string): never {
@@ -54,11 +91,20 @@ export function 执行命令(args: string[]) {
     allowPositionals: true,
     strict: true,
     options: {
-      project: { type: "string" },
       text: { type: "string" },
       out: { type: "string" },
-      dir: { type: "string" },
-      example: { type: "string" },
+      "data-dir": { type: "string" },
+      characters: { type: "string" },
+      glyphs: { type: "string" },
+      dictionary: { type: "string" },
+      distribution: { type: "string" },
+      equivalence: { type: "string" },
+      "custom-analysis": { type: "string", multiple: true },
+      reference: { type: "string" },
+      format: { type: "string" },
+      scope: { type: "string" },
+      direction: { type: "string" },
+      status: { type: "string" },
       limit: { type: "string", default: "20" },
       offset: { type: "string", default: "0" },
       json: { type: "boolean" },
@@ -66,7 +112,7 @@ export function 执行命令(args: string[]) {
       components: { type: "boolean" },
     },
   });
-  const [command, ...rest] = positionals;
+  const [command, target, ...rest] = positionals;
   if (values.help || !command || command === "help") return help;
   const limit = Number(values.limit),
     offset = Number(values.offset);
@@ -85,13 +131,10 @@ export function 执行命令(args: string[]) {
     items: entries.slice(offset, offset + limit),
   });
   if (command === "schema") return 方案结构Schema;
-  if (command === "init") {
-    if (!values.dir) 参数错误("init 需要 --dir");
-    return { project: 初始化方案项目(values.dir, values.example) };
-  }
   if (command === "compare") {
-    if (rest.length !== 2) 参数错误("compare 需要两个运行目录或 run.json 路径");
-    const result = 对比运行记录(读取运行记录(rest[0]!), 读取运行记录(rest[1]!));
+    if (!target || rest.length !== 1)
+      参数错误("compare 需要两个运行目录或 run.json 路径");
+    const result = 对比运行记录(读取运行记录(target), 读取运行记录(rest[0]!));
     return {
       ...result,
       metrics: page(result.metrics),
@@ -99,8 +142,8 @@ export function 执行命令(args: string[]) {
       analysis: page(result.analysis),
     };
   }
-  if (rest.length) 参数错误(`多余的位置参数：${rest.join(" ")}`);
   if (command === "inspect" && values.components) {
+    if (target !== undefined) 参数错误("inspect --components 不接收位置参数");
     const r = 获取注册表();
     return {
       componentAnalyzers: [...r.部件分析器映射.keys()],
@@ -110,22 +153,87 @@ export function 执行命令(args: string[]) {
       pinyinAnalyzers: [...r.拼音分析器映射.keys()],
     };
   }
-  if (
-    ![
-      "validate",
-      "inspect",
-      "analyze",
-      "explain",
-      "build",
-      "evaluate",
-    ].includes(command)
-  )
-    参数错误(`未知命令：${command}`);
+  if (rest.length) 参数错误(`多余的位置参数：${rest.join(" ")}`);
+  if (!方案命令.includes(command)) 参数错误(`未知命令：${command}`);
+  const 方案文件 = target;
+  if (!方案文件) 参数错误(`${command} 需要方案 YAML 路径`);
   if (["inspect", "explain"].includes(command) && !values.text)
     参数错误(`${command} 需要 --text`);
   if (command === "build" && !values.out)
     参数错误("build 需要 --out（码表写入运行目录中的 codes.tsv）");
-  const 项目 = 读取方案项目(values.project ?? ".");
+  const customAnalysis = Object.fromEntries(
+    (values["custom-analysis"] ?? []).map((value) => {
+      const separator = value.indexOf("=");
+      if (separator < 1 || separator === value.length - 1)
+        参数错误("--custom-analysis 需要 <类别>=<文件>");
+      return [value.slice(0, separator), value.slice(separator + 1)];
+    }),
+  );
+  const 读取方案 = () =>
+    读取方案项目(方案文件, {
+      directory: values["data-dir"],
+      characters: values.characters,
+      glyphs: values.glyphs,
+      dictionary: values.dictionary,
+      distribution: values.distribution,
+      equivalence: values.equivalence,
+      customAnalysis,
+    });
+  if (command === "proofread") {
+    if (!values.reference) 参数错误("proofread 需要 --reference");
+    const 选项 = <T extends string>(
+      名称: string,
+      值: string,
+      可选值: readonly T[],
+    ) =>
+      可选值.find((x) => x === 值) ??
+      参数错误(`--${名称} 必须是以下之一：${可选值.join(", ")}`);
+    const format = 选项(
+      "format",
+      values.format ?? "char_tab_code",
+      码表格式列表,
+    );
+    const scope = 选项("scope", values.scope ?? "maximal", 校对范围列表);
+    const direction = 选项(
+      "direction",
+      values.direction ?? "forward",
+      校对方向列表,
+    );
+    const status = 选项("status", values.status ?? "incorrect", 校对状态列表);
+
+    const 参考码表 = 按格式解析码表(
+      readFileSync(values.reference, "utf8"),
+      format,
+    );
+    const { 上下文, 配置 } = 读取方案();
+    const { 输入, 词列表 } = 运行方案(上下文);
+    const [编码结果] = 本地编码评估(输入, 获取默认目标(配置.encoder));
+    const 系统码表 = 编码结果.map(({ 词, 全码 }, i) => {
+      const 组装 = 词列表[i];
+      return {
+        词,
+        编码: 全码,
+        元素序列: 组装?.词 === 词 ? 组装.全部元素序列 : [],
+      };
+    });
+    const { 条目, 统计, 准确率 } = 校对码表(系统码表, 参考码表, {
+      字库: 上下文.字库,
+      汉字集合: 上下文.汉字集合,
+      范围: scope,
+      方向: direction,
+    });
+    return {
+      direction,
+      scope,
+      status,
+      summary: 统计,
+      accuracy: 准确率,
+      entries: page(
+        status === "all" ? 条目 : 条目.filter((x) => x.状态 === status),
+      ),
+    };
+  }
+  const 项目 = 读取方案();
   const { 上下文 } = 项目;
   if (command === "inspect")
     return { characters: page(查询字符(上下文, values.text!)) };

@@ -1,5 +1,6 @@
 import type { 字形数据, 字符数据, 结构描述字符 } from "hanzi-chai";
 import type { IRequest } from "itty-router";
+import { 校验字库整数 } from "../../../hanzi-chai/src/data";
 import type { Env } from "../dto/context";
 import { Err, ErrCode } from "../error/error";
 import type { 字符模型 } from "./characters";
@@ -33,6 +34,8 @@ function 转数据(数据: 字形模型): 字形数据 {
 }
 
 function 转模型(数据: 字形数据): 字形模型 {
+  const 错误 = 校验字库整数(数据);
+  if (错误) throw new Error(错误);
   return {
     ...数据,
     name: 数据.name ?? null,
@@ -91,22 +94,22 @@ export async function Create(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } =
-    转模型(body);
-  const [id] = await getNextId(type, env);
   try {
+    const { name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } =
+      转模型(body);
+    const [id] = await getNextId(type, env);
     await env.CHAI.prepare(
       `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes, gf0014_id, gf3001_id, ambiguous) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(id, name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous)
       .run();
+    return id;
   } catch (err) {
     return new Err(
       ErrCode.DataCreateFailed,
       `创建失败（${(err as Error).message}）`,
     );
   }
-  return id;
 }
 
 /** POST:/glyphs/batch */
@@ -167,9 +170,9 @@ export async function Update(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } =
-    转模型(body);
   try {
+    const { name, type, operator, references, strokes, gf0014_id, gf3001_id, ambiguous } =
+      转模型(body);
     await env.CHAI.prepare(
       `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=?, gf0014_id=?, gf3001_id=?, ambiguous=? WHERE id=?`,
     )

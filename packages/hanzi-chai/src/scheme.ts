@@ -91,6 +91,7 @@ export function 构建字形分析配置(
       名称映射,
       配置.analysis?.customize ?? {},
       配置.analysis?.dynamic_customize ?? {},
+      配置.analysis,
     ),
     决策,
     决策空间,

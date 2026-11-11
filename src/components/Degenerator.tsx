@@ -13,6 +13,7 @@ export default function Degenerator() {
   const [degenerator, setDegenerator] = useAtom(退化配置原子);
   const initialValue = {
     no_cross: degenerator.no_cross,
+    no_insert_between_heng: degenerator.no_insert_between_heng,
     feature: Object.entries(degenerator.feature ?? {}).map(([from, to]) => ({
       from,
       to,
@@ -25,6 +26,7 @@ export default function Degenerator() {
   return (
     <ModalForm<{
       no_cross: boolean;
+      no_insert_between_heng: boolean;
       feature: { from: 笔画名称; to: 笔画名称 }[];
     }>
       trigger={<Button>配置字根认同规则</Button>}
@@ -36,7 +38,11 @@ export default function Degenerator() {
         values.feature.forEach(({ from, to }) => {
           acc[from] = to;
         });
-        setDegenerator({ no_cross: values.no_cross, feature: acc });
+        setDegenerator({
+          no_cross: values.no_cross,
+          no_insert_between_heng: values.no_insert_between_heng,
+          feature: acc,
+        });
         return true;
       }}
     >
@@ -57,6 +63,7 @@ export default function Degenerator() {
         </ProFormGroup>
       </ProFormListMovable>
       <ProFormSwitch name="no_cross" label="相交不拆" />
+      <ProFormSwitch name="no_insert_between_heng" label="横间不穿心" />
     </ModalForm>
   );
 }

@@ -123,6 +123,41 @@ describe("完整方案运行", () => {
     ]);
     expect(diagnostics.every((x) => x.code === "UNKNOWN_GLYPH")).toBe(true);
   });
+
+  it("归并字根在整部件和笔画切片中使用相同的匹配规则", () => {
+    const config = fixtureConfig();
+    config.form.mapping.一 = "b";
+    config.form.mapping["字形-2"] = { element: "一" };
+    const 字库 = 构建字库(
+      config,
+      [
+        ...characters,
+        { unicode: 0x4e09, tygf: 1, glyphs: [{ id: 3, sources: ["G"] }] },
+      ],
+      [
+        ...glyphs,
+        {
+          ...glyphs[1]!,
+          id: 3,
+          strokes: [
+            ...glyphs[1]!.strokes,
+            { ...glyphs[0]!.strokes[0]!, start: [10, 80] },
+          ],
+        },
+      ],
+    );
+    const data = {
+      字库,
+      原始词典: [...dictionary, { 词: "三", 拼音: ["san1"], 频率: 10 }],
+    };
+    const context = 准备方案(config, data);
+    expect(检查方案元素(context)).toEqual([]);
+    const { 输入 } = 运行方案(context);
+    const [codes] = 本地编码评估(输入, 获取默认目标(config.encoder));
+    expect(codes.find((x) => x.词 === "二")?.全码).toBe("b");
+    expect(codes.find((x) => x.词 === "三")?.全码).toBe("bb");
+  });
+
   it("与前端分阶段流程产生相同的拆分、组装和序列化输入", () => {
     const config = fixtureConfig();
     config.encoder.rules = [{ length_equal: 2, formula: "AaBa" }];
@@ -214,6 +249,96 @@ describe("完整方案运行", () => {
     expect(
       本地编码评估(dynamicRun.输入, 获取默认目标(config.encoder))[0],
     ).toEqual(本地编码评估(staticRun.输入, 获取默认目标(config.encoder))[0]);
+  });
+
+  it("复合体的空笔画块列表按引用顺序拆分", () => {
+    const config = fixtureConfig();
+    const 字库 = 构建字库(config, characters, [
+      glyphs[0]!,
+      {
+        id: 2,
+        type: "compound",
+        operator: "⿱",
+        references: [{ id: 1 }, { id: 1 }],
+        ambiguous: false,
+        strokes: [],
+      },
+    ]);
+    const context = 准备方案(config, { 字库, 原始词典: dictionary });
+    const { 输入 } = 运行方案(context);
+    const [编码结果] = 本地编码评估(输入, 获取默认目标(config.encoder));
+    expect(编码结果.find((x) => x.词 === "二")?.全码).toBe("aa");
+  });
+
+  it("默认分析器融合字形，保留来源和字库结构，并支持显式覆盖", () => {
+    const config = fixtureConfig();
+    校验方案配置({ ...config, analysis: { fusion: [910] } });
+    config.form.mapping.二 = "b";
+    const compound = {
+      type: "compound",
+      operator: "⿱",
+      references: [{ id: 1 }, { id: 1 }],
+      ambiguous: false,
+    } as const;
+    const 字库 = 构建字库(
+      config,
+      [
+        ...characters,
+        {
+          unicode: "吕".codePointAt(0)!,
+          tygf: 1,
+          glyphs: [{ id: 910, sources: ["G"] }],
+        },
+        {
+          unicode: "品".codePointAt(0)!,
+          tygf: 1,
+          glyphs: [{ id: 3, sources: ["G"] }],
+        },
+      ],
+      [
+        ...glyphs,
+        { ...compound, id: 910, references: [...compound.references] },
+        { ...compound, id: 3, references: [{ id: 910 }, { id: 1 }] },
+      ],
+    );
+    const data = {
+      字库,
+      原始词典: [
+        ...dictionary,
+        { 词: "吕", 拼音: ["lv3"], 频率: 1 },
+        { 词: "品", 拼音: ["pin3"], 频率: 1 },
+      ],
+    };
+    const run = (analysis: typeof config.analysis) => {
+      const context = 准备方案({ ...config, analysis }, data);
+      const { 输入, 分析 } = 运行方案(context);
+      const [codes] = 本地编码评估(输入, 获取默认目标(config.encoder));
+      return {
+        品: codes.find((x) => x.词 === "品")?.全码,
+        吕: 分析.value.分析结果.get(字库.校验字符("吕")!.character)?.[0],
+      };
+    };
+    const 默认 = run(undefined);
+    expect(默认.品).toBe("ba");
+    expect(默认.吕).toMatchObject({ 部件: { id: 910 }, sources: ["G"] });
+    expect(字库.获取字形(910)?.type).toBe("compound");
+    expect(run({ fusion: false }).品).toBe("aaa");
+    expect(run({ fusion: [] }).品).toBe("aaa");
+    expect(run({ compound_analyzer: "真码" }).品).toBe("aaa");
+    expect(run({ compound_analyzer: "真码", fusion: true }).品).toBe("ba");
+    expect(run({ component_analyzer: "逸码" }).吕).toHaveProperty("复合体");
+    expect(run({ dynamic: true, fusion: [910] }).品).toBe("ba");
+    expect(run({ customize: { "字形-910": ["1", "1"] } }).品).toBe("aaa");
+    const 覆盖复合体 = run({ fusion: false, customize: { "字形-910": ["1"] } });
+    expect(覆盖复合体.品).toBe("aa");
+    expect(覆盖复合体.吕).toHaveProperty("复合体");
+    expect(
+      run({
+        fusion: false,
+        dynamic: true,
+        dynamic_customize: { "字形-910": [["1"]] },
+      }).品,
+    ).toBe("aa");
   });
 
   it("优先简码包含缺字时整体忽略，不误作用于其他词", () => {

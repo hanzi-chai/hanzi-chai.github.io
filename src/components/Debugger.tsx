@@ -12,15 +12,17 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import {
   type 元素,
-  type 字集指示,
-  字集过滤查找表,
   字集过滤选项,
-  是部件,
-  type 码表条目,
+  按格式解析码表,
+  type 校对方向,
+  type 校对条目,
+  type 校对范围,
+  校对码表,
+  type 码表格式,
 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useAtomValueUnwrapped,
   字库原子,
@@ -36,12 +38,7 @@ import {
   CodePositionDisplay,
   Uploader,
 } from "~/components/Utils";
-
-type 码表格式 =
-  | "char_tab_code"
-  | "char_space_code"
-  | "code_tab_char"
-  | "code_space_char";
+import BorderItem from "./BorderItem";
 
 const 码表格式选项: { label: string; value: 码表格式 }[] = [
   { label: "单字 ⇥ 编码", value: "char_tab_code" },
@@ -50,46 +47,17 @@ const 码表格式选项: { label: string; value: 码表格式 }[] = [
   { label: "编码 ␣ 单字", value: "code_space_char" },
 ];
 
-function 按格式解析码表(content: string, format: 码表格式): 码表条目[] {
-  const separator = format.includes("tab") ? "\t" : /\s+/;
-  const charFirst = format.startsWith("char");
-  const lines = content.trim().split("\n");
-  const result: 码表条目[] = [];
-  for (const line of lines) {
-    const parts = line.split(separator);
-    const [first, second] = parts;
-    if (first === undefined || second === undefined) continue;
-    const [词, 编码] = charFirst ? [first, second] : [second, first];
-    result.push({ 词: 词!, 编码: 编码! });
-  }
-  return result;
-}
-
-import BorderItem from "./BorderItem";
-
-type 校对结果 = "correct" | "incorrect" | "unknown";
-
-interface 校对条目 {
-  词: string;
-  编码: string;
-  元素序列: 联合条目["元素序列"][];
-  参考编码列表: string[];
-  状态: 校对结果;
-  标识符: string;
-}
-
-type 扩展字集指示 = 字集指示 | "components";
-type 过滤 = (typeof 字集过滤查找表)[字集指示];
-
-const 校对范围原子 = atomWithStorage(
+const 校对范围原子 = atomWithStorage<校对范围>(
   "debug-filter-option",
-  "maximal" as 扩展字集指示,
+  "maximal",
 );
 
-const 校对方向原子 = atomWithStorage(
-  "debug-direction",
-  "forward" as "forward" | "reverse",
-);
+const 校对方向原子 = atomWithStorage<校对方向>("debug-direction", "forward");
+
+const filterOptions = [
+  { label: "成字部件", value: "components" },
+  ...字集过滤选项,
+];
 
 export default function Debugger() {
   const config = useAtomValue(配置原子) as any;
@@ -105,36 +73,27 @@ export default function Debugger() {
   const [码表格式, 设置码表格式] = useState<码表格式>("char_tab_code");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<元素 | null>(null);
-  const 字符是部件: 过滤 = (c, _) => {
-    return (
-      characters.has(c) && repertoire.查询字符的字形(c)?.some(是部件) === true
-    );
-  };
-  const 过滤函数 =
-    校对范围 === "components" ? 字符是部件 : 字集过滤查找表[校对范围];
-  const filterOptions = [
-    {
-      label: "成字部件",
-      value: "components",
-    },
-  ].concat(字集过滤选项);
-
-  const 外部编码映射 = new Map<string, string[]>();
-  for (const { 词, 编码 } of 外部码表 || []) {
-    if (!外部编码映射.has(词)) {
-      外部编码映射.set(词, []);
-    }
-    外部编码映射.get(词)!.push(编码);
-  }
-
-  const 内部编码映射 = new Map<string, 联合条目[]>();
-  for (const x of 联合结果) {
-    const 字符串 = x.词.map((x) => x.获取名称()).join("");
-    if (!内部编码映射.has(字符串)) {
-      内部编码映射.set(字符串, []);
-    }
-    内部编码映射.get(字符串)!.push(x);
-  }
+  const { 条目, 统计, 准确率 } = useMemo(
+    () =>
+      校对码表(
+        联合结果.map(({ 词, 全码, 元素序列 }) => ({
+          词: 词.map((x) => x.获取名称()).join(""),
+          编码: 全码,
+          元素序列: [元素序列],
+        })),
+        外部码表 ?? [],
+        {
+          字库: repertoire,
+          汉字集合: characters,
+          范围: 校对范围,
+          方向: 校对方向,
+        },
+      ),
+    [联合结果, 外部码表, repertoire, characters, 校对范围, 校对方向],
+  );
+  const dataSource = 只显示不正确
+    ? 条目.filter((x) => x.状态 === "incorrect")
+    : 条目;
 
   // 处理点击元素的函数
   const handleElementClick = (element: 元素) => {
@@ -142,63 +101,7 @@ export default function Debugger() {
     setModalOpen(true);
   };
 
-  const 获取状态 = (编码列表: string[], 编码: string): 校对结果 => {
-    if (编码列表.length === 0) return "unknown";
-    if (!编码列表.includes(编码)) return "incorrect";
-    return "correct";
-  };
-  const 合法 = (词: string) => {
-    const data = repertoire.校验字符(词);
-    if (!data) return false;
-    return 过滤函数(data.character, data);
-  };
-
-  const 状态统计: Record<校对结果, number> = {
-    correct: 0,
-    incorrect: 0,
-    unknown: 0,
-  };
-  let dataSource: 校对条目[] = [];
-  if (校对方向 === "forward") {
-    for (const { 词, 全码, 元素序列 } of 联合结果) {
-      const 字符串 = 词.map((x) => x.获取名称()).join("");
-      if (!合法(字符串)) continue;
-      const 参考编码列表 = 外部编码映射.get(字符串) ?? [];
-      const 状态 = 获取状态(参考编码列表, 全码);
-      状态统计[状态]++;
-      dataSource.push({
-        词: 字符串,
-        编码: 全码,
-        元素序列: [元素序列],
-        参考编码列表,
-        状态,
-        标识符: `${字符串}-${全码}`,
-      });
-    }
-  } else {
-    for (const { 词, 编码 } of 外部码表 || []) {
-      if (!合法(词)) continue;
-      const 内部列表 = 内部编码映射.get(词) ?? [];
-      const 参考编码列表 = 内部列表.map((x) => x.全码);
-      const 状态 = 获取状态(参考编码列表, 编码);
-      状态统计[状态]++;
-      dataSource.push({
-        词,
-        编码,
-        元素序列: 内部列表.map((x) => x.元素序列),
-        参考编码列表,
-        状态,
-        标识符: `${词}-${编码}`,
-      });
-    }
-  }
-
-  dataSource = dataSource.filter((x) => {
-    if (只显示不正确 && x.状态 !== "incorrect") return false;
-    return true;
-  });
-
-  const columns: ColumnsType<校对条目> = [
+  const columns: ColumnsType<校对条目<联合条目["元素序列"]>> = [
     {
       title: "词",
       key: "词",
@@ -299,13 +202,13 @@ export default function Debugger() {
           <Switch checked={只显示不正确} onChange={设置只显示不正确} />
         </Form.Item>
         <Flex>
-          <Statistic className="w-20" title="正确" value={状态统计.correct} />
-          <Statistic className="w-20" title="错误" value={状态统计.incorrect} />
-          <Statistic className="w-20" title="未知" value={状态统计.unknown} />
+          <Statistic className="w-20" title="正确" value={统计.correct} />
+          <Statistic className="w-20" title="错误" value={统计.incorrect} />
+          <Statistic className="w-20" title="未知" value={统计.unknown} />
           <Statistic
             className="w-20"
             title="准确率"
-            value={`${Math.round((状态统计.correct / (状态统计.correct + 状态统计.incorrect)) * 100)}%`}
+            value={准确率 === null ? "—" : `${Math.round(准确率 * 100)}%`}
           />
         </Flex>
       </Flex>
@@ -313,7 +216,7 @@ export default function Debugger() {
         dataSource={dataSource}
         columns={columns}
         size="small"
-        rowKey="标识符"
+        rowKey={(x) => `${x.词}-${x.编码}`}
         pagination={{
           pageSize: 50,
         }}

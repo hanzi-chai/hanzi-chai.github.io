@@ -19,13 +19,17 @@ import type { BaseOptionType } from "antd/es/select";
 import {
   isVectorStroke,
   仿射合并,
+  仿射变换,
   切片,
+  区间,
   图形盒子,
   type 基本字形数据,
   type 字库,
   type 字形数据,
   type 引用数据,
   type 引用笔画块数据,
+  获取并列布局主轴,
+  校验字库整数,
   模拟矢量笔画,
   type 矢量笔画数据,
   type 笔画名称,
@@ -43,8 +47,15 @@ import ProFormListMovable from "./ProFormListMovable";
 import { Box, EditorColumn, EditorRow } from "./Utils";
 
 const Digit = ({ name }: { name: (string | number)[] }) => (
-  <ProFormDigit width={56} name={name} fieldProps={{ min: -100, max: 100 }} />
+  <ProFormDigit
+    width={56}
+    name={name}
+    fieldProps={{ min: -100, max: 100, precision: 0 }}
+  />
 );
+
+const 整数坐标变换 = new 仿射变换(new 区间(0, 100), new 区间(0, 100));
+const 取整笔画 = (笔画: 矢量笔画数据) => 整数坐标变换.变换笔画(笔画);
 
 function StaticList<T>(props: ProFormListProps<T>) {
   return (
@@ -207,7 +218,7 @@ const StrokeForm = ({
                 newStrokes.splice(
                   meta.name,
                   1,
-                  ...图形.slice(startIndex, endIndex),
+                  ...图形.slice(startIndex, endIndex).map(取整笔画),
                 );
                 formRef.current?.setFieldValue("strokes", newStrokes);
               }}
@@ -289,16 +300,23 @@ export default function GlyphForm({
       omitNil={true}
       trigger={trigger}
       initialValues={initialValues}
-      onFinish={(glyph) => {
-        if (glyph.type === "compound") return onFinish(glyph);
-        const strokes = 临时渲染(glyph, 字库).获取笔画列表();
-        return onFinish({
-          ...glyph,
-          type: "component",
-          strokes,
-          operator: undefined,
-          references: undefined,
-        });
+      onFinish={async (glyph) => {
+        const 字形: 基本字形数据 =
+          glyph.type === "compound"
+            ? glyph
+            : {
+                ...glyph,
+                type: "component",
+                strokes: 临时渲染(glyph, 字库).获取笔画列表().map(取整笔画),
+                operator: undefined,
+                references: undefined,
+              };
+        const 错误 = 校验字库整数(字形);
+        if (错误) {
+          alert(错误);
+          return false;
+        }
+        return onFinish(字形);
       }}
       readonly={readonly}
       submitter={readonly ? false : undefined}
@@ -349,43 +367,67 @@ export default function GlyphForm({
           </Flex>
           <Typography.Title level={5}>引用</Typography.Title>
           <ProFormListMovable name="references" alwaysShowItemLabel>
-            <ProFormGroup size="small">
-              <ProFormItem name="id">
-                <GlyphSelect className="w-32!" />
-              </ProFormItem>
-              <ProFormDigit
-                name="xbegin"
-                label="x0"
-                width={56}
-                min={-100}
-                max={200}
-                placeholder=""
-              />
-              <ProFormDigit
-                name="ybegin"
-                label="y0"
-                width={56}
-                min={-100}
-                max={200}
-                placeholder=""
-              />
-              <ProFormDigit
-                name="xend"
-                label="x1"
-                width={56}
-                min={-100}
-                max={200}
-                placeholder=""
-              />
-              <ProFormDigit
-                name="yend"
-                label="y1"
-                width={56}
-                min={-100}
-                max={200}
-                placeholder=""
-              />
-            </ProFormGroup>
+            {(meta) => (
+              <ProFormGroup size="small">
+                <ProFormItem name="id">
+                  <GlyphSelect className="w-32!" />
+                </ProFormItem>
+                <ProFormDigit
+                  name="xbegin"
+                  label="x0"
+                  width={56}
+                  min={-100}
+                  max={200}
+                  fieldProps={{ precision: 0 }}
+                  placeholder=""
+                />
+                <ProFormDigit
+                  name="ybegin"
+                  label="y0"
+                  width={56}
+                  min={-100}
+                  max={200}
+                  fieldProps={{ precision: 0 }}
+                  placeholder=""
+                />
+                <ProFormDigit
+                  name="xend"
+                  label="x1"
+                  width={56}
+                  min={-100}
+                  max={200}
+                  fieldProps={{ precision: 0 }}
+                  placeholder=""
+                />
+                <ProFormDigit
+                  name="yend"
+                  label="y1"
+                  width={56}
+                  min={-100}
+                  max={200}
+                  fieldProps={{ precision: 0 }}
+                  placeholder=""
+                />
+                {meta.name > 0 && (
+                  <ProFormDependency name={["operator"]} ignoreFormListField>
+                    {({ operator }) =>
+                      获取并列布局主轴(operator) !== undefined && (
+                        <ProFormCheckbox
+                          name="attach_to_previous"
+                          normalize={(checked: boolean) => checked || undefined}
+                          fieldProps={{
+                            title:
+                              "沿排列方向平移，使当前部分的笔画包围盒紧贴前一部分",
+                          }}
+                        >
+                          贴合前部
+                        </ProFormCheckbox>
+                      )
+                    }
+                  </ProFormDependency>
+                )}
+              </ProFormGroup>
+            )}
           </ProFormListMovable>
           <Typography.Title level={5}>笔画</Typography.Title>
           <ProFormDependency name={["references"]}>

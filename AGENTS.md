@@ -43,8 +43,8 @@ bun run --filter hanzi-chai test:scheme # 独立字库的方案运行与 CLI 测
 
 # 无界面方案开发（完整用法见 packages/hanzi-chai/README.md）
 bun run chai --help
-bun run chai init --dir ./my-scheme
-bun run chai evaluate --project ./my-scheme --out ./runs/baseline --json
+bun run chai validate ./examples/snow4.yaml --json
+bun run chai evaluate ./scheme.yml --out ./runs/baseline --json
 
 # 发布
 bun run publish      # 版本 bump + git tag + commit + push
@@ -220,5 +220,7 @@ Cloudflare Worker，使用 itty-router。目录结构：
 - **`publish.yml`**：推送到 `main`，比较 `packages/hanzi-chai/package.json` 版本与 npm 已发布版本，不同则安装算法包依赖、构建并发布到 npm
 
 ## 关于字符与字形数据库的约定
+
+数据库和配置文件的新字段使用 `snake_case`。字符与字形数据库的数值字段只存整数，包括 JSON 中嵌套的坐标、笔画参数和索引。
 
 参见[DATA.md](./DATA.md)。

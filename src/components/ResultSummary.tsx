@@ -1,6 +1,6 @@
 import { Button, Flex, Popover } from "antd";
 import {
-  解析自定义拆分部件,
+  解析自定义拆分字形,
   type 元素,
   type 基本分析,
   type 复合体,
@@ -15,6 +15,7 @@ import {
   useAtomValueUnwrapped,
   useRemoveAtom,
   全部合法元素原子,
+  分析配置原子,
   动态分析原子,
   动态自定义拆分原子,
   强类型自定义分析原子,
@@ -29,7 +30,7 @@ const Customize = ({
   component,
   initialValues,
 }: {
-  component: 部件;
+  component: 部件 | 复合体;
   initialValues: 元素[];
 }) => {
   const add = useAddAtom(自定义拆分原子);
@@ -76,7 +77,7 @@ const DynamicCustomize = ({
   component,
   initialValues,
 }: {
-  component: 部件;
+  component: 部件 | 复合体;
   initialValues: 元素[][];
 }) => {
   const add = useAddAtom(动态自定义拆分原子);
@@ -165,6 +166,7 @@ export default function ResultSummary({
   const 移除自定义分析 = useRemoveAtom(自定义拆分原子);
   const 移除动态自定义分析 = useRemoveAtom(动态自定义拆分原子);
   const 字库 = useAtomValue(字库原子);
+  const 分析配置 = useAtomValue(分析配置原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 自定义配置 = useAtomValue(自定义拆分原子);
   const 动态自定义配置 = useAtomValue(动态自定义拆分原子);
@@ -174,27 +176,31 @@ export default function ResultSummary({
   ) => {
     for (const key of Object.keys(配置)) {
       if (
-        解析自定义拆分部件(字库, 名称映射, key).some((part) => part === glyph)
+        解析自定义拆分字形(字库, 名称映射, key, 分析配置).some(
+          (part) => part.id === glyph.id,
+        )
       )
         移除(key);
     }
   };
-  const 自定义字根序列 =
-    glyph instanceof 部件 ? 自定义分析映射.get(glyph) : undefined;
-  const 自定义字根序列列表 =
-    glyph instanceof 部件 ? 动态自定义分析映射.get(glyph) : undefined;
+  const 配置字形 =
+    glyph instanceof 部件 ? glyph : (字库.获取字形(glyph.id) ?? glyph);
+  const 自定义字根序列 = 自定义分析映射.get(配置字形);
+  const 自定义字根序列列表 = 动态自定义分析映射.get(配置字形);
+  const 可自定义 =
+    glyph instanceof 部件 || (分析配置.compound_analyzer || "默认") === "默认";
+  const 当前元素序列 = 字根序列.map((字根) =>
+    字根 instanceof 部件字根 ? (字根.元素 ?? 字根.获取部件()) : 字根,
+  );
   return (
     <Flex gap="middle" justify="space-between">
       <Flex onClick={(e) => e.stopPropagation()} gap="small" align="center">
         <GlyphView glyph={glyph.图形盒子} />
-        {字根序列.map((x, index) => {
-          const element = x instanceof 部件字根 ? (x.元素 ?? x.获取部件()) : x;
-          return (
-            <Flex key={index} align="center">
-              <BoxedElementWithTooltip element={element} />
-            </Flex>
-          );
-        })}
+        {当前元素序列.map((元素, index) => (
+          <Flex key={index} align="center">
+            <BoxedElementWithTooltip element={元素} />
+          </Flex>
+        ))}
         {自定义字根序列 && (
           <Flex gap="small" align="center">
             <span>（自定义：）</span>
@@ -217,7 +223,7 @@ export default function ResultSummary({
           </Flex>
         )}
       </Flex>
-      {glyph instanceof 部件 && (
+      {可自定义 && (
         <Flex onClick={(e) => e.stopPropagation()} gap="middle">
           {自定义字根序列 && (
             <Button onClick={() => 清除自定义(自定义配置, 移除自定义分析)}>
@@ -231,41 +237,41 @@ export default function ResultSummary({
               取消自定义组
             </Button>
           )}
-          {"全部拆分方式" in analysis && 是否动态分析 && (
-            <Popover
-              title="自定义动态拆分"
-              trigger="click"
-              content={
-                <DynamicCustomize
-                  component={glyph}
-                  initialValues={
-                    自定义字根序列列表 ??
-                    analysis.全部拆分方式
-                      .filter((x) => x.可用)
-                      .map((x) =>
-                        x.拆分方式.map((y) =>
-                          y.字根 instanceof 部件字根 ? y.字根.元素 : y.字根,
-                        ),
-                      )
-                  }
-                />
-              }
-            >
-              <Button>自定义组</Button>
-            </Popover>
-          )}
+          {是否动态分析 &&
+            ("全部拆分方式" in analysis || !(glyph instanceof 部件)) && (
+              <Popover
+                title="自定义动态拆分"
+                trigger="click"
+                content={
+                  <DynamicCustomize
+                    component={glyph}
+                    initialValues={
+                      自定义字根序列列表 ??
+                      ("全部拆分方式" in analysis
+                        ? analysis.全部拆分方式
+                            .filter((x) => x.可用)
+                            .map((x) =>
+                              x.拆分方式.map((y) =>
+                                y.字根 instanceof 部件字根
+                                  ? y.字根.元素
+                                  : y.字根,
+                              ),
+                            )
+                        : [当前元素序列])
+                    }
+                  />
+                }
+              >
+                <Button>自定义组</Button>
+              </Popover>
+            )}
           <Popover
             title="自定义拆分"
             trigger="click"
             content={
               <Customize
                 component={glyph}
-                initialValues={
-                  自定义字根序列 ??
-                  字根序列.map((x) =>
-                    x instanceof 部件字根 ? (x.元素 ?? x.获取部件()) : x,
-                  )
-                }
+                initialValues={自定义字根序列 ?? 当前元素序列}
               />
             }
           >

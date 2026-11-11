@@ -2,7 +2,7 @@ import { max } from "lodash-es";
 import { type 分类器, 合并分类器 } from "./classifier.js";
 import { type 基本部件分析, 部件, 默认退化配置 } from "./component.js";
 import type { 基本复合体分析 } from "./compound.js";
-import { 复合体 } from "./compound.js";
+import { 复合体, 冰雪飞花意符优先字 } from "./compound.js";
 import type {
   分析配置,
   字形拼写运算,
@@ -19,11 +19,13 @@ import type {
   结构描述字符,
 } from "./data.js";
 import { 二笔, type 元素, 笔画, 自定义元素 } from "./element.js";
+import { 获取分析部件, 获取融合字形集合 } from "./fusion.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符, 字集过滤查找表 } from "./unicode.js";
 import {
   ok,
+  default_err,
   type Result,
   优先表,
   type 原始词典,
@@ -41,8 +43,8 @@ import {
 
 // 模式变量映射：记录模式匹配过程中变量的绑定
 interface 模式变量映射 {
-  id映射: Map<number, number>; // variable -> glyph id
-  operator映射: Map<number, 结构描述字符>; // variable -> operator
+  字形映射: Map<number, 字形>;
+  operator映射: Map<number, 结构描述字符>;
 }
 
 type 字形单一来源数据 = { id: number; source?: string };
@@ -102,12 +104,13 @@ export interface 字形分析基本配置 {
   决策: 强类型决策;
   决策空间: 强类型决策空间;
   线性化决策: Map<元素, string>;
-  自定义分析映射: Map<部件, 字根元素[]>;
-  动态自定义分析映射: Map<部件, 字根元素[][]>;
+  自定义分析映射: Map<字形, 字根元素[]>;
+  动态自定义分析映射: Map<字形, 字根元素[][]>;
   字形来源列表: string[];
 }
 
 interface 字形分析配置 {
+  意符优先字形?: ReadonlySet<number>;
   决策: 强类型决策;
   决策空间: 强类型决策空间;
   线性化决策: Map<元素, string>;
@@ -117,8 +120,8 @@ interface 字形分析配置 {
   分类器: 分类器; // 已经填充过默认值
   部件字根列表: 部件字根[];
   复合体字根映射: Map<复合体, 部件字根>;
-  自定义分析映射: Map<部件, 字根[]>;
-  动态自定义分析映射: Map<部件, 字根[][]>;
+  自定义分析映射: Map<字形, 字根[]>;
+  动态自定义分析映射: Map<字形, 字根[][]>;
   退化配置: 退化配置;
   筛选器列表: [string, 筛选器][];
   强字根列表: 字根[];
@@ -128,7 +131,7 @@ interface 字形分析配置 {
 /**
  * 字形库：解引用并构建所有字形（部件/复合体），并应用拼写运算。
  *
- * 新合成的字形使用占位符 ID。
+ * 变换保留原字形 ID，新合成的子字形使用占位符 ID。
  * 字符数据变化时无需重建字形库，可复用同一实例。
  */
 class 字形库 {
@@ -211,26 +214,33 @@ class 字形库 {
     }
     const 原始字形 = new 复合体(字形数据, 子字形列表);
     // 尝试应用拼写运算列表，匹配 from 模式并执行 to 模式的增删改
-    const 模式变量映射: 模式变量映射 = {
-      id映射: new Map(),
+    const 映射: 模式变量映射 = {
+      字形映射: new Map(),
       operator映射: new Map(),
     };
     let 当前字形: 字形 = 原始字形;
     for (const { from, to } of 拼写运算列表) {
-      if (this.匹配模式(当前字形, from, 模式变量映射)) {
-        const 新字形 = this.合成字形(
-          to,
-          模式变量映射,
-          拼写运算列表,
-          取新ID,
-          最大深度 - 1,
-        );
-        if (新字形) {
-          当前字形 = 新字形;
-        }
-      }
+      映射.字形映射.clear();
+      映射.operator映射.clear();
+      if (!this.匹配模式(当前字形, from, 映射)) continue;
+      const 新字形 = this.合成字形(
+        to,
+        映射,
+        拼写运算列表,
+        取新ID,
+        最大深度 - 1,
+        id,
+      );
+      if (!新字形) continue;
+      // 保留字符和父字形引用的 ID，也避免修改被复用的目标字形。
+      const { name, gf0014_id, gf3001_id, ambiguous } = 原始字形;
+      当前字形 = Object.assign(
+        Object.create(Object.getPrototypeOf(新字形)) as 字形,
+        新字形,
+        { id, name, gf0014_id, gf3001_id, ambiguous },
+      );
     }
-    this.字形表.set(当前字形.id, 当前字形);
+    this.字形表.set(id, 当前字形);
     return 当前字形;
   }
 
@@ -247,9 +257,9 @@ class 字形库 {
     if (!("references" in 模式)) {
       const { variable, id_set } = 模式;
       if (id_set && !id_set.includes(字形.id)) return false;
-      const bound = 映射.id映射.get(variable);
-      if (bound !== undefined) return bound === 字形.id;
-      映射.id映射.set(variable, 字形.id);
+      const bound = 映射.字形映射.get(variable);
+      if (bound !== undefined) return bound.id === 字形.id;
+      映射.字形映射.set(variable, 字形);
       return true;
     }
     // 复合模式：匹配复合体树数据
@@ -264,7 +274,7 @@ class 字形库 {
       if (opearator_set && !opearator_set.includes(字形.结构描述字符))
         return false;
       const bound = 映射.operator映射.get(variable);
-      if (bound !== undefined) return bound !== 字形.结构描述字符;
+      if (bound !== undefined && bound !== 字形.结构描述字符) return false;
       映射.operator映射.set(variable, 字形.结构描述字符);
     }
     // 匹配子节点
@@ -278,7 +288,7 @@ class 字形库 {
 
   /**
    * 根据 to 模式和变量绑定合成新的已解引用字形。
-   * 新字形使用取新ID()分配的占位符 ID。
+   * 仅合成的子字形使用占位符 ID。
    */
   private 合成字形(
     模式: 模式,
@@ -286,6 +296,7 @@ class 字形库 {
     拼写运算列表: 字形拼写运算[],
     取新ID: () => number,
     最大深度 = 10,
+    根字形ID?: number,
   ): 字形 | undefined {
     // ID：直接查表返回
     if (typeof 模式 === "number") {
@@ -294,10 +305,7 @@ class 字形库 {
     }
     // IDVariable：根据变量绑定查找对应的字形
     if (!("references" in 模式)) {
-      const glyphId = 映射.id映射.get(模式.variable);
-      if (glyphId === undefined) return undefined;
-      if (!this.字形查找表.has(glyphId)) return undefined;
-      return this.构建并变换字形(glyphId, 拼写运算列表, 取新ID, 最大深度 - 1);
+      return 映射.字形映射.get(模式.variable);
     }
     // 复合模式：递归合成新的字形
     const { operator, references } = 模式;
@@ -326,7 +334,7 @@ class 字形库 {
     return new 复合体(
       {
         type: "compound",
-        id: 取新ID(),
+        id: 根字形ID ?? 取新ID(),
         operator: 已解析Operator,
         references: 子字形列表.map((glyph) => ({ id: glyph.id })),
         ambiguous: false,
@@ -559,8 +567,9 @@ class 字库 {
     决策: 强类型决策,
     决策空间: 强类型决策空间,
     线性化决策: Map<元素, string>,
-    自定义分析映射: Map<部件, 字根元素[]>,
-    动态自定义分析映射: Map<部件, 字根元素[][]>,
+    自定义分析映射: Map<字形, 字根元素[]>,
+    动态自定义分析映射: Map<字形, 字根元素[][]>,
+    取分析字形 = (字形: 字形) => 字形,
   ): Result<字形分析配置, Error> {
     const 字根决策 = new Map<字根, 强类型安排>();
     const 字根决策空间 = new Map<字根, 强类型安排描述[]>();
@@ -586,8 +595,9 @@ class 字库 {
         } else {
           字形列表.push(元素);
         }
-        for (const 字根字形 of 字形列表) {
-          if (字根字形 instanceof 部件) {
+        for (const 原字形 of 字形列表) {
+          const 字根字形 = 取分析字形(原字形);
+          if (是部件(字根字形)) {
             const 字根实例 = new 部件字根(元素, 字根字形);
             部件字根列表.push(字根实例);
             所有字根.push(字根实例);
@@ -616,9 +626,9 @@ class 字库 {
       }
     }
     const 全部字根 = [...字根决策空间.keys()];
-    const 新自定义分析映射 = new Map<部件, 字根[]>();
-    const 新动态自定义分析映射 = new Map<部件, 字根[][]>();
-    for (const [部件实例, 元素列表] of 自定义分析映射) {
+    const 新自定义分析映射 = new Map<字形, 字根[]>();
+    const 新动态自定义分析映射 = new Map<字形, 字根[][]>();
+    for (const [字形, 元素列表] of 自定义分析映射) {
       const 字根列表: 字根[] = [];
       for (const 元素 of 元素列表) {
         if (元素 instanceof 笔画 || 元素 instanceof 二笔) 字根列表.push(元素);
@@ -629,9 +639,9 @@ class 字库 {
           if (字根) 字根列表.push(字根);
         }
       }
-      新自定义分析映射.set(部件实例, 字根列表);
+      新自定义分析映射.set(取分析字形(字形), 字根列表);
     }
-    for (const [部件实例, 元素列表列表] of 动态自定义分析映射) {
+    for (const [字形, 元素列表列表] of 动态自定义分析映射) {
       const 字根列表列表: 字根[][] = [];
       for (const 元素列表 of 元素列表列表) {
         const 字根列表: 字根[] = [];
@@ -646,7 +656,7 @@ class 字库 {
         }
         字根列表列表.push(字根列表);
       }
-      新动态自定义分析映射.set(部件实例, 字根列表列表);
+      新动态自定义分析映射.set(取分析字形(字形), 字根列表列表);
     }
     const 字根名称映射 = new Map(
       [...字根决策.keys()].map((x) => [x.获取名称(), x] as const),
@@ -668,7 +678,17 @@ class 字库 {
       const 字根 = 字根名称映射.get(name);
       if (字根) 弱字根列表.push(字根);
     }
+    // 从当前来源的字符→字形关系解析兼容字，不把汉字与数字 ID 比较。
+    const 意符优先字形 = new Set<number>();
+    if (分析配置.compound_analyzer === "冰雪飞花") {
+      for (const 汉字 of 冰雪飞花意符优先字) {
+        for (const { id } of this.校验字符(汉字)?.final_glyphs ?? []) {
+          意符优先字形.add(id);
+        }
+      }
+    }
     return ok({
+      意符优先字形,
       决策,
       决策空间,
       线性化决策,
@@ -690,7 +710,10 @@ class 字库 {
   /**
    * 确定需要分析的字符
    */
-  获取待分析部件和复合体集合(汉字列表: Set<字符>) {
+  获取待分析部件和复合体集合(
+    汉字列表: Set<字符>,
+    取分析字形 = (字形: 字形) => 字形,
+  ) {
     const 待分析部件集合: Set<部件> = new Set();
     const 待分析复合体集合: Set<复合体> = new Set();
     const recurse = (glyph: 字形) => {
@@ -703,7 +726,8 @@ class 字库 {
     };
     for (const 汉字 of 汉字列表) {
       const 字形列表 = this.查询字符的字形(汉字) ?? [];
-      for (const 字形 of 字形列表) {
+      for (const 原字形 of 字形列表) {
+        const 字形 = 取分析字形(原字形);
         recurse(字形);
         if (是复合体(字形)) {
           待分析复合体集合.add(字形);
@@ -722,6 +746,32 @@ class 字库 {
       自定义分析映射,
       动态自定义分析映射,
     } = base;
+    const 融合字形集合 = 获取融合字形集合(分析配置);
+    for (const id of 融合字形集合) {
+      const 字形 = this.获取字形(id);
+      if (!字形 || 是部件(字形)) continue;
+      const 笔画数 = 字形.图形盒子.获取笔画列表().length;
+      if (笔画数 < 1 || 笔画数 > 30)
+        return default_err(`融合字形 ${id} 必须有 1 到 30 笔`);
+    }
+    const 分析字形映射 = new Map<复合体, 字形>();
+    const 取分析字形 = (字形: 字形): 字形 => {
+      if (融合字形集合.size === 0 || 是部件(字形)) return 字形;
+      const 已解析 = 分析字形映射.get(字形);
+      if (已解析) return 已解析;
+      let 分析字形: 字形;
+      const 部件 = 获取分析部件(字形, 融合字形集合);
+      if (部件) {
+        分析字形 = 部件;
+      } else {
+        const 部分列表 = 字形.部分列表.map(取分析字形);
+        分析字形 = 部分列表.some((部分, i) => 部分 !== 字形.部分列表[i])
+          ? 字形.替换分析部分(部分列表)
+          : 字形;
+      }
+      分析字形映射.set(字形, 分析字形);
+      return 分析字形;
+    };
     const 如配置 = this.准备字形分析配置(
       分析配置,
       决策,
@@ -729,11 +779,12 @@ class 字库 {
       线性化决策,
       自定义分析映射,
       动态自定义分析映射,
+      取分析字形,
     );
     if (!如配置.ok) return 如配置;
     const 配置 = 如配置.value;
     const { 待分析部件集合, 待分析复合体集合 } =
-      this.获取待分析部件和复合体集合(汉字集合);
+      this.获取待分析部件和复合体集合(汉字集合, 取分析字形);
     const 部件分析器 = 获取注册表().创建部件分析器(
       分析配置.component_analyzer || "默认",
       配置,
@@ -747,6 +798,7 @@ class 字库 {
       待分析复合体集合,
       部件分析器,
       复合体分析器,
+      取分析字形,
       字根部件列表: 配置.部件字根列表,
       复合体字根映射: 配置.复合体字根映射,
     });
@@ -783,8 +835,9 @@ class 字库 {
       const 分析列表: 基本字符字形分析[] = [];
       for (const 字形来源数据 of 字形来源列表) {
         const { id, ...rest } = 字形来源数据;
-        const 字形 = this.字形库.获取字形(id);
-        if (!字形) continue;
+        const 原字形 = this.字形库.获取字形(id);
+        if (!原字形) continue;
+        const 字形 = 分析配置.取分析字形(原字形);
         if (是部件(字形)) {
           const 分析 = 部件分析结果.get(字形);
           if (分析) 分析列表.push({ ...分析, ...rest });
@@ -834,8 +887,9 @@ class 字库 {
       const 字形来源列表 = this.字符表.get(汉字.toNumber())?.final_glyphs ?? [];
       const 分析列表: 分析结果类型[] = [];
       for (const { id, ...rest } of 字形来源列表) {
-        const 字形 = this.字形库.获取字形(id);
-        if (!字形) continue;
+        const 原字形 = this.字形库.获取字形(id);
+        if (!原字形) continue;
+        const 字形 = 分析配置.取分析字形(原字形);
         if (是部件(字形)) {
           const 分析 = 动态部件分析结果.get(字形);
           if (分析) 分析列表.push(new 优先表([...分析], rest.sources, false));

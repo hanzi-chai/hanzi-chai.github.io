@@ -143,6 +143,91 @@ describe("仿射变换", () => {
     expect(合并后.纵向区间.toArray()).toEqual([50, 50]);
   });
 
+  it.each([
+    ["⿰", [22, 24], [58, 40]],
+    ["⿱", [22, 24], [36, 48]],
+    ["⿲", [22, 24], [58, 40], [106, 64]],
+    ["⿳", [22, 24], [36, 48], [60, 68]],
+  ] as const)("沿 %s 主轴逐段贴合并保留各部分缩放", (operator, ...起点列表) => {
+    const 部分 = 图形盒子.从笔画列表构建([
+      {
+        feature: "横折",
+        start: [20, 20],
+        curveList: [
+          { command: "h", parameterList: [60] },
+          { command: "v", parameterList: [40] },
+        ],
+      },
+    ]);
+    const 引用 = [
+      { id: 1, xbegin: 10, xend: 70, ybegin: 12, yend: 72 },
+      {
+        id: 1,
+        xbegin: 20,
+        xend: 100,
+        ybegin: 30,
+        yend: 80,
+        attach_to_previous: true,
+      },
+      {
+        id: 1,
+        xbegin: 50,
+        xend: 100,
+        ybegin: 55,
+        yend: 100,
+        attach_to_previous: true,
+      },
+    ].slice(0, 起点列表.length);
+    const 部分列表 = 引用.map(() => 部分);
+    const 原笔画 = 仿射合并(
+      部分列表,
+      引用.map(({ attach_to_previous: _, ...ref }) => ref),
+      operator,
+    ).获取笔画列表();
+    const 笔画 = 仿射合并(部分列表, 引用, operator).获取笔画列表();
+    expect(笔画.map((笔) => 笔.start)).toEqual(起点列表);
+    expect(笔画.map((笔) => 笔.curveList)).toEqual(
+      原笔画.map((笔) => 笔.curveList),
+    );
+  });
+
+  it("用可见笔画的曲线极值贴合，笔画块仍可逆序排列", () => {
+    const 左 = 图形盒子.从笔画列表构建([
+      {
+        feature: "弯钩",
+        start: [10, 10],
+        curveList: [{ command: "c", parameterList: [40, 20, 40, 50, 0, 60] }],
+      },
+      {
+        feature: "横",
+        start: [0, 80],
+        curveList: [{ command: "h", parameterList: [90] }],
+      },
+    ]);
+    const 右 = 图形盒子.从笔画列表构建([
+      {
+        feature: "竖",
+        start: [80, 10],
+        curveList: [{ command: "v", parameterList: [60] }],
+      },
+    ]);
+    const 复合 = 仿射合并(
+      [左, 右],
+      [
+        { id: 1, xbegin: 0, xend: 100 },
+        { id: 2, xbegin: 0, xend: 100, attach_to_previous: true },
+      ],
+      "⿰",
+      [{ index: 1 }, { index: 0, to: 0 }],
+    );
+    expect(复合.获取笔画列表().map((笔) => 笔.start)).toEqual([
+      [40, 10],
+      [10, 10],
+    ]);
+    expect(复合.横向区间.toArray()).toEqual([10, 40]);
+    expect(右.获取笔画列表()[0]!.start).toEqual([80, 10]);
+  });
+
   it("空图形保留有限的默认包围盒", () => {
     const 合并后 = 仿射合并([], []);
     expect(合并后.获取笔画列表()).toEqual([]);

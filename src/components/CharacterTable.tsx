@@ -2,7 +2,6 @@ import { Checkbox, Flex, Form, Space, Tooltip } from "antd";
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import Table from "antd/es/table";
 import { 区块列表, 图形盒子, type 扩展字符数据, 是用户字符 } from "hanzi-chai";
-import { atomWithStorage } from "jotai/utils";
 import { useMemo, useState } from "react";
 import { createCharacter, removeCharacter, updateCharacter } from "~/api";
 import {
@@ -23,7 +22,9 @@ import BorderItem from "./BorderItem";
 import CharacterForm from "./CharacterForm";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
 import FilterForm from "./FilterForm";
-import GlyphRecommendation, { BatchGlyphRecommendation } from "./GlyphRecommendation";
+import GlyphRecommendation, {
+  BatchGlyphRecommendation,
+} from "./GlyphRecommendation";
 import { EditOrRedrawGraph } from "./GlyphTable";
 import GlyphView from "./GlyphView";
 import PatchForm from "./PatchForm";
@@ -133,7 +134,6 @@ export default function CharacterTable() {
     }
     return result;
   }, [按笔顺排序字符, 字库, filter]);
-  const [currentPage, setCurrentPage] = useAtom(currentPageAtom);
 
   const unicodeColumn: Column = {
     title: "Unicode",
@@ -153,7 +153,6 @@ export default function CharacterTable() {
     sorter: (a, b) => a.unicode - b.unicode,
     sortDirections: ["ascend", "descend"],
     width: 128,
-    sortOrder: "ascend",
   };
 
   const tygfColumn: Column = {
@@ -300,11 +299,9 @@ export default function CharacterTable() {
         columns={columns}
         size="small"
         rowKey="unicode"
-        pagination={{ defaultPageSize: 50, current: currentPage, onChange: (page) => setCurrentPage(page) }}
+        pagination={{ defaultPageSize: 50 }}
         className="max-w-480"
       />
     </Flex>
   );
 }
-
-const currentPageAtom = atomWithStorage("character-table-current-page", 400);

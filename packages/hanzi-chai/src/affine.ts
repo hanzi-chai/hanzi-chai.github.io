@@ -158,6 +158,24 @@ class 仿射变换 {
   }
 }
 
+/** 三次 Bézier 曲线在一个坐标轴上除端点外的极值，坐标相对于起点。 */
+function 三次曲线极值(p1: number, p2: number, p3: number) {
+  const a = 3 * (p1 - p2) + p3;
+  const b = 2 * (p2 - 2 * p1);
+  const 判别式 = b * b - 4 * a * p1;
+  if (判别式 < 0 || (a === 0 && b === 0)) return [];
+  const 参数 =
+    a === 0
+      ? [-p1 / b]
+      : [
+          (-b - Math.sqrt(判别式)) / (2 * a),
+          (-b + Math.sqrt(判别式)) / (2 * a),
+        ];
+  return 参数
+    .filter((t) => t > 0 && t < 1)
+    .map((t) => ((a * t + 1.5 * b) * t + 3 * p1) * t);
+}
+
 class 图形盒子 {
   constructor(
     private 笔画列表: 矢量笔画数据[] = [],
@@ -176,7 +194,7 @@ class 图形盒子 {
     return { strokeWidth, viewBox };
   }
 
-  static 从笔画列表构建(笔画列表: 矢量笔画数据[]) {
+  static 从笔画列表构建(笔画列表: 矢量笔画数据[], 包含曲线极值 = false) {
     let [xmin, ymin, xmax, ymax] = [
       Number.POSITIVE_INFINITY,
       Number.POSITIVE_INFINITY,
@@ -206,8 +224,19 @@ class 图形盒子 {
             x += parameterList[0];
             y += parameterList[1];
             break;
-          default: {
-            const [_x1, _y1, _x2, _y2, x3, y3] = parameterList;
+          case "c":
+          case "z": {
+            const [x1, y1, x2, y2, x3, y3] = parameterList;
+            if (包含曲线极值) {
+              for (const dx of 三次曲线极值(x1, x2, x3)) {
+                xmin = Math.min(xmin, x + dx);
+                xmax = Math.max(xmax, x + dx);
+              }
+              for (const dy of 三次曲线极值(y1, y2, y3)) {
+                ymin = Math.min(ymin, y + dy);
+                ymax = Math.max(ymax, y + dy);
+              }
+            }
             x += x3;
             y += y3;
             break;

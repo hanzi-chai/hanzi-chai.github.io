@@ -1,5 +1,6 @@
 import type { 字符数据 } from "hanzi-chai";
 import type { IRequest } from "itty-router";
+import { 校验字库整数 } from "../../../hanzi-chai/src/data";
 import type { Env } from "../dto/context";
 import { Err, ErrCode } from "../error/error";
 
@@ -25,6 +26,8 @@ function 转数据(数据: 字符模型): 字符数据 {
 }
 
 function 转模型(数据: 字符数据): 字符模型 {
+  const 错误 = 校验字库整数(数据);
+  if (错误) throw new Error(错误);
   return {
     ...数据,
     tygf: 数据.tygf ?? null,
@@ -63,20 +66,20 @@ export async function Create(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { unicode, tygf, gb2312, glyphs, name, ambiguous } = 转模型(body);
   try {
+    const { unicode, tygf, gb2312, glyphs, name, ambiguous } = 转模型(body);
     await env.CHAI.prepare(
       `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name, ambiguous) VALUES (?, ?, ?, ?, ?, ?)`,
     )
       .bind(unicode, tygf, gb2312, glyphs, name, ambiguous)
       .run();
+    return unicode;
   } catch (err) {
     return new Err(
       ErrCode.DataCreateFailed,
       `创建失败（${(err as Error).message}）`,
     );
   }
-  return unicode;
 }
 
 /** POST:/characters/batch */
@@ -118,8 +121,8 @@ export async function Update(request: IRequest, env: Env) {
   } catch (err) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
-  const { tygf, gb2312, glyphs, name, ambiguous } = 转模型(body);
   try {
+    const { tygf, gb2312, glyphs, name, ambiguous } = 转模型(body);
     await env.CHAI.prepare(
       `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=?, ambiguous=? WHERE unicode=?`,
     )

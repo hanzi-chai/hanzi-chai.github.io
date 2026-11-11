@@ -38,6 +38,7 @@ import {
 } from "./selector.js";
 
 export * from "./affine.js";
+export * from "./analysis-execution.js";
 export * from "./assembly.js";
 export * from "./bezier.js";
 export * from "./classifier.js";
@@ -49,8 +50,10 @@ export * from "./element.js";
 export * from "./enclosure.js";
 export * from "./evaluation.js";
 export * from "./explain.js";
+export { 默认融合字形 } from "./fusion.js";
 export * from "./math.js";
 export * from "./pinyin.js";
+export * from "./proofread.js";
 export * from "./registry.js";
 export * from "./repertoire.js";
 export * from "./scheme.js";

@@ -1,6 +1,12 @@
 import { bisectLeft, bisectRight } from "d3-array";
 import { isEqual, range } from "lodash-es";
 import { 图形盒子 } from "./affine.js";
+import {
+  type 分析执行环境,
+  字根存在,
+  推导动态分析,
+  选择分析,
+} from "./analysis-execution.js";
 import { 区间, 拓扑, 笔画图形 } from "./bezier.js";
 import { type 分类器, type 笔画名称, 默认分类器 } from "./classifier.js";
 import type { 条件, 退化配置 } from "./config.js";
@@ -17,7 +23,6 @@ import {
   优先表,
   type 字根,
   存在,
-  type 带条件,
   type 强类型安排描述,
   type 强类型条件,
   是强类型归并,
@@ -43,6 +48,43 @@ const 笔画名称等价 = (退化器: 退化配置, s1: 笔画名称, s2: 笔�
   const d2 = 合并[s2] ?? s2;
   return d1 === d2;
 };
+
+type 曲线位置 = [笔画索引: number, 曲线索引: number];
+type 穿心区域 = [上横: 曲线位置, 下横: 曲线位置, 连笔: 曲线位置];
+const 穿心区域缓存 = new WeakMap<部件, 穿心区域[]>();
+
+function 获取穿心区域(字根: 部件) {
+  const 缓存 = 穿心区域缓存.get(字根);
+  if (缓存) return 缓存;
+  const 曲线列表 = 字根.笔画列表.flatMap((笔画, i) =>
+    笔画.curveList.map((曲线, j) => {
+      const [x, y] = 曲线.获取区间();
+      return {
+        曲线,
+        位置: [i, j] as 曲线位置,
+        是横画:
+          x.长度() > y.长度() &&
+          (曲线.获取类型() === "linear" || 笔画.feature === "平撇"),
+      };
+    }),
+  );
+  const 横画列表 = 曲线列表.filter((x) => x.是横画);
+  const 区域: 穿心区域[] = [];
+  for (const 连笔 of 曲线列表.filter((x) => !x.是横画)) {
+    // 框边只连横画的端点，和孤立横画一样，不构成穿心位置。
+    const 相连横画 = 横画列表.filter((横画) => {
+      const 关系 = 横画.曲线.计算关系(连笔.曲线);
+      return 关系.type === "交" || (关系.type === "连" && 关系.first === "中");
+    });
+    for (const [i, a] of 相连横画.entries()) {
+      for (const b of 相连横画.slice(i + 1)) {
+        if (a.位置[0] !== b.位置[0]) 区域.push([a.位置, b.位置, 连笔.位置]);
+      }
+    }
+  }
+  穿心区域缓存.set(字根, 区域);
+  return 区域;
+}
 
 /**
  * 计算后的部件
@@ -122,7 +164,10 @@ class 部件 {
     if (部件笔画列表.length < 字根笔画列表.length) return [];
     let 切片队列: number[][] = [[]];
     for (const [字根索引, 字根笔画] of 字根笔画列表.entries()) {
-      const 字根笔画前向关系列表 = 字根拓扑.关系矩阵[字根索引]?.slice(0, 字根索引);
+      const 字根笔画前向关系列表 = 字根拓扑.关系矩阵[字根索引]?.slice(
+        0,
+        字根索引,
+      );
       const 搜索终止 = 部件笔画列表.length - 字根笔画列表.length + 字根索引 + 1;
       for (let _ = 切片队列.length; _ !== 0; --_) {
         const 切片 = 切片队列.shift()!;
@@ -131,8 +176,8 @@ class 部件 {
           if (部件索引 < 搜索起始 || 部件索引 >= 搜索终止) continue;
           if (!笔画名称等价(退化配置, 部件笔画.feature, 字根笔画.feature))
             continue;
-          const 部件笔画前向关系列表 = 部件拓扑.关系矩阵[部件索引]?.filter((_, i) =>
-            切片.includes(i),
+          const 部件笔画前向关系列表 = 部件拓扑.关系矩阵[部件索引]?.filter(
+            (_, i) => 切片.includes(i),
           );
           if (!isEqual(部件笔画前向关系列表, 字根笔画前向关系列表)) continue;
           切片队列.push(切片.concat(部件索引));
@@ -154,7 +199,7 @@ class 部件 {
       });
     }
     return 切片队列
-      .filter((x) => this.验证特殊字根(字根, x))
+      .filter((x) => this.验证特殊字根(字根, x, 退化配置))
       .map(this.索引转二进制.bind(this));
   }
 
@@ -171,7 +216,10 @@ class 部件 {
     if (部件笔画列表.length < 字根笔画列表.length) return [];
     let 切片队列: number[][] = [[]];
     for (const [字根索引, 字根笔画] of 字根笔画列表.entries()) {
-      const 字根笔画前向关系列表 = 字根拓扑.新关系矩阵[字根索引]?.slice(0, 字根索引);
+      const 字根笔画前向关系列表 = 字根拓扑.新关系矩阵[字根索引]?.slice(
+        0,
+        字根索引,
+      );
       const 搜索终止 = 部件笔画列表.length - 字根笔画列表.length + 字根索引 + 1;
       for (let _ = 切片队列.length; _ !== 0; --_) {
         const 切片 = 切片队列.shift()!;
@@ -180,8 +228,8 @@ class 部件 {
           if (部件索引 < 搜索起始 || 部件索引 >= 搜索终止) continue;
           if (!笔画名称等价(退化配置, 部件笔画.feature, 字根笔画.feature))
             continue;
-          const 部件笔画前向关系列表 = 部件拓扑.新关系矩阵[部件索引]?.filter((_, i) =>
-            切片.includes(i),
+          const 部件笔画前向关系列表 = 部件拓扑.新关系矩阵[部件索引]?.filter(
+            (_, i) => 切片.includes(i),
           );
           if (!isEqual(部件笔画前向关系列表, 字根笔画前向关系列表)) continue;
           切片队列.push(切片.concat(部件索引));
@@ -189,7 +237,9 @@ class 部件 {
       }
       if (切片队列.length === 0) return [];
     }
-    切片队列 = 切片队列.filter((indices) => 字根拓扑.验证子图关系(部件笔画列表, 部件拓扑, indices));
+    切片队列 = 切片队列.filter((indices) =>
+      字根拓扑.验证子图关系(部件笔画列表, 部件拓扑, indices),
+    );
     if (退化配置.no_cross) {
       const allindices = [...Array(部件笔画列表.length).keys()];
       切片队列 = 切片队列.filter((indices) => {
@@ -204,7 +254,7 @@ class 部件 {
       });
     }
     return 切片队列
-      .filter((x) => this.验证特殊字根(字根, x))
+      .filter((x) => this.验证特殊字根(字根, x, 退化配置))
       .map(this.索引转二进制.bind(this));
   }
 
@@ -302,7 +352,13 @@ class 部件 {
    * @param root - 字根
    * @param indices - 笔画索引列表
    */
-  验证特殊字根(root: 部件字根, indices: number[]) {
+  验证特殊字根(root: 部件字根, indices: number[], 配置?: 退化配置) {
+    if (
+      配置?.no_insert_between_heng &&
+      this.有横间穿心(root.获取部件(), indices)
+    ) {
+      return false;
+    }
     const id = root.获取部件().id;
     if ([221, 222].includes(id)) {
       const [i1, _, i3] = indices as [number, number, number];
@@ -351,6 +407,39 @@ class 部件 {
       return id === 123 ? pieAndNaIsSeparated : !pieAndNaIsSeparated;
     }
     return true;
+  }
+
+  private 有横间穿心(字根: 部件, 切片: number[]) {
+    if (切片.length === this.笔画数()) return false;
+    const 查询曲线 = ([i, j]: 曲线位置) =>
+      this.笔画列表[切片[i]!]!.curveList[j];
+    for (const [a, b, c] of 获取穿心区域(字根)) {
+      const 前横 = 查询曲线(a);
+      const 后横 = 查询曲线(b);
+      const 连笔 = 查询曲线(c);
+      if (!前横 || !后横 || !连笔) continue;
+      const [ax, ay] = 前横.获取区间();
+      const [bx, by] = 后横.获取区间();
+      const 左 = Math.max(ax.起点(), bx.起点());
+      const 右 = Math.min(ax.终点(), bx.终点());
+      const 上 = Math.min(ay.终点(), by.终点());
+      const 下 = Math.max(ay.起点(), by.起点());
+      if (左 >= 右 || 上 >= 下) continue;
+      const 连笔关系 = this.拓扑.关系矩阵[切片[c[0]]!]!;
+      for (const [i, 笔画] of this.笔画列表.entries()) {
+        if (切片.includes(i)) continue;
+        // 每个矩阵单元依次记录连笔各曲线与外笔各曲线的关系。
+        const 偏移 = c[1] * 笔画.curveList.length;
+        for (const [j, 曲线] of 笔画.curveList.entries()) {
+          if (连笔关系[i]![偏移 + j]?.type !== "交") continue;
+          const 交点 = 连笔.寻找交点(曲线);
+          if (!交点) continue;
+          const [x, y] = 交点;
+          if (左 < x && x < 右 && 上 < y && y < 下) return true;
+        }
+      }
+    }
+    return false;
   }
 
   生成二进制字根映射(
@@ -493,18 +582,18 @@ interface 拆分方式与评价 {
 }
 
 abstract class 部件分析器<部件分析 extends 基本部件分析 = 基本部件分析> {
-  /**
-   * 分析部件并返回分析结果
-   */
-  分析(_: 部件): Result<部件分析, Error> {
+  constructor(protected 配置: 字形分析配置) {}
+
+  protected 基本分析(部件: 部件, 环境?: 分析执行环境) {
+    return new 默认部件分析器(this.配置).分析(部件, 环境);
+  }
+
+  分析(_: 部件, _环境?: 分析执行环境): Result<部件分析, Error> {
     return default_err("分析未实现");
   }
 
-  /**
-   * 动态分析部件并返回分析结果组
-   */
-  动态分析(_: 部件): Result<优先表<部件分析>, Error> {
-    return default_err("动态分析未实现");
+  动态分析(部件: 部件): Result<优先表<部件分析>, Error> {
+    return 推导动态分析((环境) => this.分析(部件, 环境));
   }
 }
 
@@ -519,95 +608,80 @@ interface 默认部件分析 extends 基本部件分析 {
   被覆盖拆分方式?: 拆分方式与评价;
 }
 
+function 伪造拆分方式(字根序列: 字根[]): 拆分方式与评价 {
+  return {
+    拆分方式: 字根序列.map((字根) => ({
+      字根,
+      笔画索引: [0], // 自定义拆分没有笔画对应，用首笔位置兼容复合体笔顺。
+      笔画二进制表示: 0,
+    })),
+    评价: new Map(),
+    可用: true,
+  };
+}
+
 class 默认部件分析器 extends 部件分析器<默认部件分析> {
   static readonly type = "默认";
-  constructor(private 配置: 字形分析配置) {
-    super();
+
+  覆盖自定义(分析: 默认部件分析, 字根序列: 字根[]): 默认部件分析 {
+    const 当前拆分方式 =
+      分析.全部拆分方式.find((x) =>
+        isEqual(
+          x.拆分方式.map((y) => y.字根.获取名称()),
+          字根序列.map((y) => y.获取名称()),
+        ),
+      ) ?? 伪造拆分方式(字根序列);
+    return { ...分析, 当前拆分方式, 字根序列 };
   }
 
-  伪造当前拆分方式(_: 部件, 字根序列: 字根[]) {
-    return {
-      拆分方式: 字根序列.map((x) => ({
-        字根: x,
-        笔画索引: [0], // 为了让复合体执行笔顺能通过。
-        笔画二进制表示: 0,
-      })),
-      评价: new Map(),
-      可用: true,
-    };
-  }
-
-  分析(部件: 部件) {
+  分析(部件: 部件, 环境?: 分析执行环境): Result<默认部件分析, Error> {
+    if (环境) {
+      const 候选 = 环境.缓存(this.配置, 部件, () => this.动态分析(部件));
+      if (!候选.ok) return 候选;
+      const { 条件列表, ...分析 } = 选择分析(候选.value, 环境);
+      return ok(分析);
+    }
     const 如分析 = 部件.给出部件分析(this.配置);
     if (!如分析.ok) return 如分析;
     const 分析 = 如分析.value;
-    const 自定义字根序列 = this.配置.自定义分析映射.get(部件);
-    if (自定义字根序列 === undefined) return ok(分析);
-    const 新分析: 默认部件分析 = {
-      ...分析,
-      字根序列: 自定义字根序列,
-      被覆盖拆分方式: 分析.当前拆分方式,
-    };
-    // 尝试在所有拆分方式中找到与自定义字根序列完全匹配的一种，如果找到了，就把它设为当前拆分方式
-    const 当前拆分方式 = 新分析.全部拆分方式.find((x) => {
-      return isEqual(
-        x.拆分方式.map((y) => y.字根.获取名称()),
-        自定义字根序列.map((y) => y.获取名称()),
-      );
-    });
-    新分析.当前拆分方式 =
-      当前拆分方式 ?? this.伪造当前拆分方式(部件, 自定义字根序列);
-    return ok(新分析);
+    const 自定义 = this.配置.自定义分析映射.get(部件);
+    return ok(
+      自定义 === undefined
+        ? 分析
+        : {
+            ...this.覆盖自定义(分析, 自定义),
+            被覆盖拆分方式: 分析.当前拆分方式,
+          },
+    );
   }
 
-  动态分析(部件: 部件) {
+  动态分析(部件: 部件): Result<优先表<默认部件分析>, Error> {
     const 如分析 = 部件.给出部件分析(this.配置);
     if (!如分析.ok) return 如分析;
-    const 基本分析 = 如分析.value;
-    const 带条件分析列表: 带条件<默认部件分析>[] = 基本分析.全部拆分方式
-      .filter((x) => x.可用)
-      .map((x) => {
-        const 字根序列 = x.拆分方式.map((y) => y.字根);
-        const 可选字根集 = this.配置.可选字根.intersection(new Set(字根序列));
-        const 条件列表: 条件[] = [...可选字根集].map(存在);
-        return {
-          ...基本分析,
-          当前拆分方式: x,
-          字根序列,
-          条件列表,
-        };
-      });
-    let 自定义字根序列列表 = this.配置.动态自定义分析映射.get(部件);
-    if (自定义字根序列列表 === undefined) {
-      const 自定义分析 = this.配置.自定义分析映射.get(部件);
-      if (自定义分析) 自定义字根序列列表 = [自定义分析];
-    }
-    if (自定义字根序列列表 === undefined) return ok(new 优先表(带条件分析列表));
-    const 定制化分析列表: 带条件<默认部件分析>[] = [];
-    for (const 字根序列 of 自定义字根序列列表) {
-      const 可选字根集 = this.配置.可选字根.intersection(new Set(字根序列));
-      const 条件列表: 条件[] = [...可选字根集].map(存在);
-      const 分析 = 带条件分析列表.find((x) =>
-        isEqual(
-          x.字根序列.map((y) => y.获取名称()),
-          字根序列.map((y) => y.获取名称()),
-        ),
-      );
-      if (分析) {
-        定制化分析列表.push(分析);
-      } else {
-        const 假装分析: 带条件<默认部件分析> = {
-          部件,
-          字根笔画映射: 基本分析.字根笔画映射,
-          全部拆分方式: 基本分析.全部拆分方式,
-          当前拆分方式: this.伪造当前拆分方式(部件, 字根序列),
-          字根序列,
-          条件列表,
-        };
-        定制化分析列表.push(假装分析);
-      }
-    }
-    return ok(new 优先表(定制化分析列表));
+    const 分析 = 如分析.value;
+    const 静态自定义 = this.配置.自定义分析映射.get(部件);
+    const 自定义 =
+      this.配置.动态自定义分析映射.get(部件) ??
+      (静态自定义 ? [静态自定义] : undefined);
+    const 候选 = 自定义
+      ? 自定义.map((序列) => this.覆盖自定义(分析, 序列))
+      : 分析.全部拆分方式
+          .filter((x) => x.可用)
+          .map((当前拆分方式) => ({
+            ...分析,
+            当前拆分方式,
+            字根序列: 当前拆分方式.拆分方式.map((x) => x.字根),
+          }));
+    return ok(
+      new 优先表(
+        候选.map((分析) => ({
+          ...分析,
+          条件列表: [...new Set(分析.字根序列)]
+            .filter((根) => this.配置.可选字根.has(根))
+            .map(存在),
+        })),
+      ),
+    );
   }
 }
 
@@ -621,8 +695,8 @@ class 首末取大部件分析器 extends 部件分析器<首末取大部件分�
   private 正序取大分析器: 默认部件分析器;
   private 逆序取大分析器: 默认部件分析器;
 
-  constructor(private 配置: 字形分析配置) {
-    super();
+  constructor(配置: 字形分析配置) {
+    super(配置);
     const 注册表 = 获取注册表();
     const 正序取大配置: 字形分析配置 = {
       ...配置,
@@ -644,13 +718,13 @@ class 首末取大部件分析器 extends 部件分析器<首末取大部件分�
     this.逆序取大分析器 = new 默认部件分析器(逆序取大配置);
   }
 
-  分析(部件: 部件) {
-    const 如结果 = 部件.给出部件分析(this.配置);
+  分析(部件: 部件, 环境?: 分析执行环境) {
+    const 如结果 = this.基本分析(部件, 环境);
     if (!如结果.ok) return 如结果;
     const 分析 = 如结果.value;
-    const 如正序取大分析 = this.正序取大分析器.分析(部件);
+    const 如正序取大分析 = this.正序取大分析器.分析(部件, 环境);
     if (!如正序取大分析.ok) return 如正序取大分析;
-    const 如逆序取大分析 = this.逆序取大分析器.分析(部件);
+    const 如逆序取大分析 = this.逆序取大分析器.分析(部件, 环境);
     if (!如逆序取大分析.ok) return 如逆序取大分析;
     const 结果: 首末取大部件分析 = {
       ...分析,
@@ -663,9 +737,6 @@ class 首末取大部件分析器 extends 部件分析器<首末取大部件分�
 
 class 二笔部件分析器 extends 部件分析器<基本部件分析> {
   static readonly type = "二笔";
-  constructor(private 配置: 字形分析配置) {
-    super();
-  }
 
   前两笔和末笔(部件: 部件) {
     const 笔画列表 = 部件.获取笔画序列(this.配置.分类器);
@@ -679,44 +750,13 @@ class 二笔部件分析器 extends 部件分析器<基本部件分析> {
     return ok(字根序列);
   }
 
-  分析(部件: 部件) {
-    const 结果: 基本部件分析 = { 字根序列: [], 部件 };
-    const 部件字根 = this.配置.部件字根列表.find((x) => x.获取部件() === 部件);
-    if (部件字根) {
-      结果.字根序列.push(部件字根);
-      return ok(结果);
-    } else {
-      const 前两笔和末笔 = this.前两笔和末笔(部件);
-      if (!前两笔和末笔.ok) return 前两笔和末笔;
-      结果.字根序列 = 前两笔和末笔.value;
-      return ok(结果);
+  分析(部件: 部件, 环境?: 分析执行环境) {
+    const 根 = this.配置.部件字根列表.find((x) => x.获取部件() === 部件);
+    if (根 && 字根存在(this.配置, 根, 环境)) {
+      return ok({ 部件, 字根序列: [根] });
     }
-  }
-
-  动态分析(部件: 部件) {
-    const 结果列表: 带条件<基本部件分析>[] = [];
-    const 部件字根 = this.配置.部件字根列表.find((x) => x.获取部件() === 部件);
-    let 考虑隐式字根 = true;
-    if (部件字根) {
-      const 条件列表 = this.配置.可选字根.has(部件字根) ? [存在(部件字根)] : [];
-      结果列表.push({ 字根序列: [部件字根], 部件, 条件列表 });
-      if (
-        this.配置.字根决策.has(部件字根) &&
-        !this.配置.可选字根.has(部件字根)
-      ) {
-        考虑隐式字根 = false;
-      }
-    }
-    if (考虑隐式字根) {
-      const 前两笔和末笔 = this.前两笔和末笔(部件);
-      if (!前两笔和末笔.ok) return 前两笔和末笔;
-      结果列表.push({
-        字根序列: 前两笔和末笔.value,
-        部件,
-        条件列表: [],
-      });
-    }
-    return ok(new 优先表(结果列表));
+    const 序列 = this.前两笔和末笔(部件);
+    return 序列.ok ? ok({ 部件, 字根序列: 序列.value }) : 序列;
   }
 }
 
@@ -749,21 +789,6 @@ interface 张码部件分析 extends 默认部件分析 {
 
 class 张码部件分析器 extends 部件分析器<张码部件分析> {
   static readonly type = "张码";
-  constructor(private 配置: 字形分析配置) {
-    super();
-  }
-
-  伪造当前拆分方式(_: 部件, 字根序列: 字根[]) {
-    return {
-      拆分方式: 字根序列.map((x) => ({
-        字根: x,
-        笔画索引: [0], // 为了让复合体执行笔顺能通过。
-        笔画二进制表示: 0,
-      })),
-      评价: new Map(),
-      可用: true,
-    };
-  }
 
   添加张码特殊分析(分析: 默认部件分析) {
     const 补码 = 计算张码补码(分析.字根序列, this.配置.分类器);
@@ -776,31 +801,9 @@ class 张码部件分析器 extends 部件分析器<张码部件分析> {
     });
   }
 
-  分析(部件: 部件) {
-    const 如分析 = 部件.给出部件分析(this.配置);
-    if (!如分析.ok) return 如分析;
-    const 分析 = 如分析.value;
-    const 自定义字根序列 = this.配置.自定义分析映射.get(部件);
-    if (自定义字根序列 === undefined) return this.添加张码特殊分析(分析);
-    const 新分析: 默认部件分析 = {
-      ...分析,
-      字根序列: 自定义字根序列,
-      被覆盖拆分方式: 分析.当前拆分方式,
-    };
-    // 尝试在所有拆分方式中找到与自定义字根序列完全匹配的一种，如果找到了，就把它设为当前拆分方式
-    const 当前拆分方式 = 新分析.全部拆分方式.find((x) => {
-      return isEqual(
-        x.拆分方式.map((y) => y.字根.获取名称()),
-        自定义字根序列.map((y) => y.获取名称()),
-      );
-    });
-    新分析.当前拆分方式 =
-      当前拆分方式 ?? this.伪造当前拆分方式(部件, 自定义字根序列);
-    return this.添加张码特殊分析(新分析);
-  }
-
-  动态分析(_: 部件) {
-    return default_err("动态分析未实现");
+  分析(部件: 部件, 环境?: 分析执行环境) {
+    const 分析 = this.基本分析(部件, 环境);
+    return 分析.ok ? this.添加张码特殊分析(分析.value) : 分析;
   }
 }
 
@@ -817,9 +820,6 @@ interface 逸码部件分析 extends 基本部件分析 {
 
 class 逸码部件分析器 extends 部件分析器<逸码部件分析> {
   static readonly type = "逸码";
-  constructor(private 配置: 字形分析配置) {
-    super();
-  }
 
   private 限制字根数量(拆分方式: 拆分方式, n: number, 图形: 部件) {
     const get = (i: number) =>
@@ -871,10 +871,9 @@ class 逸码部件分析器 extends 部件分析器<逸码部件分析> {
     return 新拆分方式;
   }
 
-  分析(部件: 部件) {
-    const 可选分析 = 部件.给出部件分析(this.配置);
+  分析(部件: 部件, 环境?: 分析执行环境) {
+    const 可选分析 = this.基本分析(部件, 环境);
     if (!可选分析.ok) return 可选分析;
-    // TODO: 这里没有定制化
     const 分析 = 可选分析.value;
     let 余二拆分方式: 逸码拆分方式,
       余一拆分方式: 逸码拆分方式,
@@ -911,9 +910,8 @@ interface 冰雪飞花部件分析 extends 默认部件分析 {
 }
 
 class 冰雪飞花分析器 {
-  public 可选字根 = new Set<字根>();
   public 可选字根与必要一般字根 = new Set<字根>();
-  public 小集合 = /[eiuoav;/]/;
+  public 小集合 = /^[eiuoav;/]$/;
 
   证明该字根只会出现在小集合(元素: 元素) {
     const 全部安排列表: 强类型安排描述[] = [];
@@ -956,15 +954,20 @@ class 冰雪飞花分析器 {
     return 条件;
   }
 
-  当前在小集合(字根: 字根) {
+  当前在小集合(字根: 字根, 环境?: 分析执行环境) {
+    if (环境) {
+      return (
+        字根存在(this.配置, 字根, 环境) &&
+        (!this.可选字根与必要一般字根.has(字根) ||
+          环境.判断(this.在小集合(字根)))
+      );
+    }
     const 元素 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
     return this.小集合.test(this.配置.线性化决策.get(元素) ?? "");
   }
 
   private constructor(private 配置: 字形分析配置) {
-    // this.可选字根：可选小集合字根、可选一般字根
-    // this.配置.可选字根：必要一般字根、可选小集合字根、可选一般字根
-    this.可选字根 = new Set(配置.可选字根);
+    // 小集合判定还要覆盖始终存在、但可能移到一般集合的字根。
     this.可选字根与必要一般字根 = new Set(配置.可选字根);
     for (const [字根] of 配置.字根决策.entries()) {
       const 元素 = 字根 instanceof 部件字根 ? 字根.元素 : 字根;
@@ -972,7 +975,6 @@ class 冰雪飞花分析器 {
         this.可选字根与必要一般字根.add(字根);
       }
     }
-    // const 必要字根 = new Set(配置.字根决策.keys()).difference(this.可选字根与必要一般字根);
   }
 
   static 创建(配置: 字形分析配置): 冰雪飞花分析器 {
@@ -984,8 +986,8 @@ class 冰雪飞花部件分析器 extends 部件分析器<冰雪飞花部件分�
   static readonly type = "冰雪飞花";
   private 分析器: 冰雪飞花分析器;
 
-  constructor(private 配置: 字形分析配置) {
-    super();
+  constructor(配置: 字形分析配置) {
+    super(配置);
     this.分析器 = 冰雪飞花分析器.创建(配置);
   }
 
@@ -1000,33 +1002,25 @@ class 冰雪飞花部件分析器 extends 部件分析器<冰雪飞花部件分�
     if (自定义字根序列 === undefined) return ok(分析);
     const 新分析: 默认部件分析 = {
       ...分析,
-      全部拆分方式: 自定义字根序列.map((字根序列) => {
-        return {
-          拆分方式: 字根序列.map((x) => ({
-            字根: x,
-            笔画索引: [0], // 为了让复合体执行笔顺能通过。
-            笔画二进制表示: 0,
-          })),
-          评价: new Map(),
-          可用: true,
-        };
-      }),
+      全部拆分方式: 自定义字根序列.map(伪造拆分方式),
     };
     return ok(新分析);
   }
 
-  分析(部件: 部件) {
-    const 分析 = this.给出真实或自定义分析(部件);
+  分析(部件: 部件, 环境?: 分析执行环境) {
+    const 分析 = 环境
+      ? 环境.缓存(this.分析器, 部件, () => this.给出真实或自定义分析(部件))
+      : this.给出真实或自定义分析(部件);
     if (!分析.ok) return 分析;
     const { 当前拆分方式, 字根序列, ...rest } = 分析.value;
     const 实际拆分方式 = rest.全部拆分方式.find((x) =>
-      x.拆分方式.every((y) => this.分析器.当前在小集合(y.字根)),
+      x.拆分方式.every((y) => this.分析器.当前在小集合(y.字根, 环境)),
     );
     const 全字根当前拆分方式 = rest.全部拆分方式.find(
       (x) =>
         (x.拆分方式.length === 1 &&
-          this.配置.字根决策.has(x.拆分方式[0]!.字根)) ||
-        x.拆分方式.every((y) => this.分析器.当前在小集合(y.字根)),
+          字根存在(this.配置, x.拆分方式[0]!.字根, 环境)) ||
+        x.拆分方式.every((y) => this.分析器.当前在小集合(y.字根, 环境)),
     );
     if (!实际拆分方式 || !全字根当前拆分方式) {
       return default_err("无法找到符合当前字根名称的拆分方式");
@@ -1041,56 +1035,6 @@ class 冰雪飞花部件分析器 extends 部件分析器<冰雪飞花部件分�
         .slice(0, 3),
     };
     return ok(新分析);
-  }
-
-  动态分析(部件: 部件) {
-    const 分析 = this.给出真实或自定义分析(部件);
-    if (!分析.ok) return 分析;
-    const { 当前拆分方式, 字根序列, ...rest } = 分析.value;
-    const 全集合分析列表: 带条件<默认部件分析>[] = [];
-    const 小集合分析列表: 带条件<默认部件分析>[] = [];
-    const 可用拆分方式列表 = rest.全部拆分方式.filter((x) => x.可用);
-    let 考虑全集合 = true;
-    for (const 拆分方式 of 可用拆分方式列表) {
-      const 小集合分析: 带条件<默认部件分析> = {
-        ...rest,
-        当前拆分方式: 拆分方式,
-        字根序列: 拆分方式.拆分方式.map((y) => y.字根).slice(0, 3),
-        条件列表: [],
-      };
-      // 对于小集合拆分，所有涉及到的元素必须都在小集合
-      for (const { 字根 } of 拆分方式.拆分方式) {
-        if (this.分析器.可选字根与必要一般字根.has(字根)) {
-          小集合分析.条件列表.push(this.分析器.在小集合(字根));
-        }
-      }
-      小集合分析列表.push(小集合分析);
-      if (!考虑全集合) continue;
-      const 全集合分析: 带条件<默认部件分析> = {
-        ...rest,
-        当前拆分方式: 拆分方式,
-        字根序列: 拆分方式.拆分方式.map((y) => y.字根).slice(0, 3),
-        条件列表: [],
-      };
-      if (全集合分析.字根序列.length === 1) {
-        const 字根 = 全集合分析.字根序列[0]!;
-        if (this.分析器.可选字根.has(字根)) {
-          全集合分析.条件列表.push(存在(字根));
-        } else {
-          考虑全集合 = false;
-        }
-      } else {
-        for (const { 字根 } of 拆分方式.拆分方式) {
-          if (this.分析器.可选字根.has(字根)) {
-            全集合分析.条件列表.push(存在(字根));
-          }
-        }
-      }
-      全集合分析列表.push(全集合分析);
-    }
-    const a = new 优先表(小集合分析列表) as any;
-    a.__magic = new 优先表(全集合分析列表);
-    return ok(a);
   }
 }
 

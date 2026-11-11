@@ -169,7 +169,9 @@ export const EditOrRedrawGraph = ({
   const 统一字形列表 = useAtomValue(统一字形列表原子);
   const [可编辑字形列表, set可编辑字形列表] = useAtom(可编辑字形列表原子);
   const [用户字形列表, set用户字形列表] = useAtom(用户字形列表原子);
-  const record = 统一字形列表.find((x) => x.id === id);
+  const record =
+    (远程 ? undefined : 用户字形列表.find((x) => x.id === id)) ??
+    统一字形列表.find((x) => x.id === id);
   if (!record) return null;
   return (
     <GlyphForm

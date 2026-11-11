@@ -1,4 +1,4 @@
-/** 本地方案项目及运行记录。所有文件路径相对于项目清单解析。 */
+/** 加载本地方案与数据，保存可复现的运行记录。 */
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -43,17 +43,18 @@ const 数据文件 = {
   distribution: "distribution.txt",
   equivalence: "equivalence.txt",
 } as const;
+const 数据文件角色 = Object.keys(数据文件) as (keyof typeof 数据文件)[];
+
+export interface 方案数据文件
+  extends Partial<Record<keyof typeof 数据文件, string>> {
+  directory?: string;
+  customAnalysis?: Record<string, string>;
+}
 
 export interface 方案项目清单 {
   formatVersion: 1;
   config: string;
-  data?: {
-    directory?: string;
-    dictionary?: string;
-    distribution?: string;
-    equivalence?: string;
-    customAnalysis?: Record<string, string>;
-  };
+  data?: 方案数据文件;
 }
 
 export const 最小方案: 配置 = {
@@ -96,7 +97,7 @@ export function 规范序列化(value: unknown): string {
 export const 内容哈希 = (content: string | Uint8Array) =>
   createHash("sha256").update(content).digest("hex");
 
-export function 读取方案项目(输入路径: string) {
+export function 读取方案项目(输入路径: string, 数据路径: 方案数据文件 = {}) {
   const resolved = path.resolve(输入路径);
   const file = statSync(resolved).isDirectory()
     ? path.join(resolved, "chai.project.yaml")
@@ -120,12 +121,7 @@ export function 读取方案项目(输入路径: string) {
       ]);
     }
     manifest = value as unknown as 方案项目清单;
-    for (const key of [
-      "directory",
-      "dictionary",
-      "distribution",
-      "equivalence",
-    ] as const) {
+    for (const key of ["directory", ...数据文件角色] as const) {
       const item = manifest.data?.[key];
       if (item !== undefined && typeof item !== "string")
         throw new 方案错误([
@@ -155,29 +151,43 @@ export function 读取方案项目(输入路径: string) {
     配置 = value;
   }
   校验方案配置(配置);
-  const directory = manifest.data?.directory
-    ? path.resolve(root, manifest.data.directory)
-    : 默认数据目录;
+  const 清单数据 = manifest.data;
+  const directory =
+    数据路径.directory !== undefined
+      ? path.resolve(数据路径.directory)
+      : 清单数据?.directory
+        ? path.resolve(root, 清单数据.directory)
+        : 默认数据目录;
   const files: Record<string, string> = {};
   const buffers: Record<string, Buffer> = {};
-  for (const [role, name] of Object.entries(数据文件)) {
-    const override =
-      role === "dictionary" || role === "distribution" || role === "equivalence"
-        ? manifest.data?.[role]
-        : undefined;
-    const filename = override
-      ? path.resolve(root, override)
-      : path.join(directory, name);
+  for (const role of 数据文件角色) {
+    const 指定路径 = 数据路径[role];
+    const 清单路径 = 清单数据?.[role];
+    const filename =
+      指定路径 !== undefined
+        ? path.resolve(指定路径)
+        : 清单路径
+          ? path.resolve(root, 清单路径)
+          : path.join(directory, 数据文件[role]);
     files[role] = filename;
     buffers[role] = readFileSync(filename);
   }
   const 自定义元素集合: Record<string, 自定义分析> = {};
+  const 自定义分析文件 = new Map<string, string>();
   for (const [name, filename] of Object.entries(
-    manifest.data?.customAnalysis ?? {},
+    清单数据?.customAnalysis ?? {},
   )) {
+    自定义分析文件.set(name, path.resolve(root, filename));
+  }
+  for (const [name, filename] of Object.entries(
+    数据路径.customAnalysis ?? {},
+  )) {
+    自定义分析文件.set(name, path.resolve(filename));
+  }
+  for (const [name, filename] of 自定义分析文件) {
     const role = `custom:${name}`;
-    files[role] = path.resolve(root, filename);
-    buffers[role] = readFileSync(files[role]!);
+    files[role] = filename;
+    buffers[role] = readFileSync(filename);
     自定义元素集合[name] = Object.fromEntries(
       读取表格(buffers[role]!.toString("utf8"))
         .filter((r) => r.length >= 2 && r[0])
@@ -343,7 +353,8 @@ export function 保存运行记录(目录: string, 记录: 运行记录, 项目:
         message: "运行目录已存在，请使用新目录",
       },
     ]);
-  保存方案项目(path.join(目录, "project"), 记录.config, 项目.buffers);
+  // 记录已按键排序，快照须保留实际参与拆分的字根映射顺序。
+  保存方案项目(path.join(目录, "project"), 项目.配置, 项目.buffers);
   writeFileSync(path.join(目录, "run.json"), JSON.stringify(记录, null, 2));
   writeFileSync(
     path.join(目录, "codes.tsv"),

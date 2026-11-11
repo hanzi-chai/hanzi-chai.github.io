@@ -10,6 +10,7 @@ import {
   type 元素位,
   type 决策,
   type 决策空间,
+  type 分析配置,
   type 安排,
   type 安排描述,
   type 广义安排,
@@ -23,6 +24,7 @@ import {
   type 非空安排,
 } from "./config.js";
 import {
+  获取并列布局主轴,
   type 向量,
   type 引用数据,
   type 引用笔画块数据,
@@ -42,6 +44,7 @@ import {
   type 自定义元素,
 } from "./element.js";
 import { 获取包围内部范围 } from "./enclosure.js";
+import { 获取分析部件, 获取融合字形集合 } from "./fusion.js";
 import { 复杂度布局 } from "./layout.js";
 import { 应用拼写运算, type 拼音分析映射 } from "./pinyin.js";
 import type { 字库, 字形 } from "./repertoire.js";
@@ -428,19 +431,39 @@ export function 解析自定义拆分部件(
   字库: 字库,
   名称映射: Map<string, 元素>,
   名称: string,
+  分析配置?: 分析配置,
 ): 部件[] {
   const 元素 = 名称映射.get(名称);
+  const 融合字形集合 = 获取融合字形集合(分析配置);
   if (元素 instanceof 字符) {
-    return (字库.查询字符的字形(元素) ?? []).filter(
-      (字形): 字形 is 部件 => 字形 instanceof 部件,
-    );
+    return (字库.查询字符的字形(元素) ?? [])
+      .map((字形) => 获取分析部件(字形, 融合字形集合))
+      .filter((部件) => 部件 !== undefined);
   }
-  if (元素 instanceof 部件) return [元素];
-  if (/^\d+$/.test(名称)) {
-    const 字形 = 字库.获取字形(Number(名称));
-    if (字形 instanceof 部件) return [字形];
-  }
-  return [];
+  const 字形 =
+    元素 instanceof 部件 || 元素 instanceof 复合体
+      ? 元素
+      : /^\d+$/.test(名称)
+        ? 字库.获取字形(Number(名称))
+        : undefined;
+  const 部件实例 = 字形 && 获取分析部件(字形, 融合字形集合);
+  return 部件实例 ? [部件实例] : [];
+}
+
+/** 默认复合体分析器允许按具体字形覆盖，字符名称沿用原有的部件来源范围。 */
+export function 解析自定义拆分字形(
+  字库: 字库,
+  名称映射: Map<string, 元素>,
+  名称: string,
+  分析配置?: 分析配置,
+): 字形[] {
+  const 部件列表 = 解析自定义拆分部件(字库, 名称映射, 名称, 分析配置);
+  if (部件列表.length || (分析配置?.compound_analyzer || "默认") !== "默认")
+    return 部件列表;
+  const 字形 =
+    名称映射.get(名称) ??
+    (/^\d+$/.test(名称) ? 字库.获取字形(Number(名称)) : undefined);
+  return 字形 instanceof 复合体 ? [字形] : [];
 }
 
 export function 构建强类型自定义分析(
@@ -448,6 +471,7 @@ export function 构建强类型自定义分析(
   名称映射: Map<string, 元素>,
   自定义分析: Record<string, string[]>,
   动态自定义拆分: Record<string, string[][]>,
+  分析配置?: 分析配置,
 ) {
   const 恢复字根列表 = (名称列表: string[]): 字根元素[] =>
     名称列表
@@ -463,8 +487,8 @@ export function 构建强类型自定义分析(
   const 构建映射 = <T, U>(
     记录: Record<string, T>,
     转换: (value: T) => U,
-  ): Map<部件, U> => {
-    const 映射 = new Map<部件, U>();
+  ): Map<字形, U> => {
+    const 映射 = new Map<字形, U>();
     // 先应用字符规则，再应用字形规则，确保具体字形的覆盖不依赖配置书写顺序。
     const 条目 = Object.entries(记录).sort(
       ([a], [b]) =>
@@ -472,9 +496,9 @@ export function 构建强类型自定义分析(
         Number(!(名称映射.get(b) instanceof 字符)),
     );
     for (const [名称, value] of 条目) {
-      const 部件列表 = 解析自定义拆分部件(字库, 名称映射, 名称);
+      const 字形列表 = 解析自定义拆分字形(字库, 名称映射, 名称, 分析配置);
       const 结果 = 转换(value);
-      for (const 部件 of 部件列表) 映射.set(部件, 结果);
+      for (const 字形 of 字形列表) 映射.set(字形, 结果);
     }
     return 映射;
   };
@@ -957,6 +981,46 @@ export function 合并笔画顺序(
   return result;
 }
 
+function 贴合相邻部分(
+  图形列表: 矢量图形数据[],
+  references: 引用数据[],
+  主轴: 0 | 1,
+  strokes?: (矢量笔画数据 | 引用笔画块数据)[],
+) {
+  // 笔画块可以交错或只选取一部分。包围盒只计算最终会绘制的引用笔画。
+  const 可见笔画列表 = strokes?.length
+    ? 图形列表.map((): 矢量图形数据 => [])
+    : 图形列表;
+  for (const stroke of strokes ?? []) {
+    if (isVectorStroke(stroke)) continue;
+    const 图形 = 图形列表[stroke.index];
+    if (图形) 可见笔画列表[stroke.index]!.push(...切片(图形, stroke));
+  }
+
+  let 前一部分终点: number | undefined;
+  for (const [index, 笔画] of 可见笔画列表.entries()) {
+    if (!笔画.length) {
+      前一部分终点 = undefined;
+      continue;
+    }
+    const 盒子 = 图形盒子.从笔画列表构建(笔画, true);
+    const 区间 = 主轴 === 0 ? 盒子.横向区间 : 盒子.纵向区间;
+    const 平移量 =
+      references[index]?.attach_to_previous === true &&
+      前一部分终点 !== undefined
+        ? 前一部分终点 - 区间.起点()
+        : 0;
+    if (平移量 !== 0) {
+      图形列表[index] = 图形列表[index]!.map((笔画) => {
+        const start: 向量 = [...笔画.start];
+        start[主轴] += 平移量;
+        return { ...笔画, start };
+      });
+    }
+    前一部分终点 = 区间.终点() + 平移量;
+  }
+}
+
 /**
  * 给定复合体数据和各部分渲染后的 SVG 图形，返回合并后的 SVG 图形
  * @param 复合体 - 复合体数据
@@ -970,17 +1034,13 @@ export function 仿射合并(
   strokes?: (矢量笔画数据 | 引用笔画块数据)[],
 ): 图形盒子 {
   const 变换列表: 仿射变换[] = [];
-  let 布局结果: 区间[] = [];
-  if (/[⿰⿲]/.test(operator ?? "")) {
-    布局结果 = 复杂度布局(部分列表, 0);
-  } else if (/[⿱⿳]/.test(operator ?? "")) {
-    布局结果 = 复杂度布局(部分列表, 1);
-  }
+  const 主轴 = 获取并列布局主轴(operator);
+  const 布局结果 = 主轴 === undefined ? [] : 复杂度布局(部分列表, 主轴);
   for (const [index, params] of references.entries()) {
     let [xb, xe, yb, ye] = [0, 100, 0, 100];
-    if (operator === "⿰" || operator === "⿲") {
+    if (主轴 === 0) {
       [xb, xe] = 布局结果[index]!.toArray();
-    } else if (operator === "⿱" || operator === "⿳") {
+    } else if (主轴 === 1) {
       [yb, ye] = 布局结果[index]!.toArray();
     } else if (operator !== undefined) {
       const [xInterval, yInterval] =
@@ -1007,10 +1067,16 @@ export function 仿射合并(
   const 变换后图形列表 = 部分列表.map((part, index) =>
     变换列表[index]!.变换笔画列表(part.获取笔画列表()),
   );
+  const 启用贴合 =
+    主轴 !== undefined &&
+    references.some(
+      (ref, index) => index > 0 && ref.attach_to_previous === true,
+    );
+  if (启用贴合) 贴合相邻部分(变换后图形列表, references, 主轴, strokes);
   const 合并图形 = 合并笔画顺序(变换后图形列表, strokes);
   return 合并图形.length === 0
     ? new 图形盒子(合并图形)
-    : 图形盒子.从笔画列表构建(合并图形);
+    : 图形盒子.从笔画列表构建(合并图形, 启用贴合);
 }
 
 export const 用户字形起始点 = 0xf_0000;

@@ -23,6 +23,7 @@ import {
   type 字根,
   type 字根元素,
   获取注册表,
+  部件,
   部件字根,
   默认分类器,
   type 默认部件分析,
@@ -144,10 +145,14 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   const { 自定义分析映射, 动态自定义分析映射 } = useAtomValueUnwrapped(
     强类型自定义分析原子,
   );
-  const 全部自定义字符 = new Set([
+  const 全部自定义字形 = new Set([
     ...自定义分析映射.keys(),
     ...动态自定义分析映射.keys(),
   ]);
+  const 自定义部件数 = [...全部自定义字形].filter(
+    (字形) => 字形 instanceof 部件,
+  ).length;
+  const 自定义字形ID = new Set([...全部自定义字形].map((字形) => 字形.id));
   const 决策 = useAtomValueUnwrapped(强类型决策原子);
   const [过滤必要字根, 设置过滤必要字根] = useState(true);
   const 过滤器 = new 字符字形过滤器(filter);
@@ -190,6 +195,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
   }
   for (const [复合体, 复合体分析] of 复合体分析结果) {
     if (!过滤器.过滤字形(复合体, 字库)) continue;
+    if (只显示自定义 && !自定义字形ID.has(复合体.id)) continue;
     复合体分析内容.push({
       key: 复合体.id,
       label: <ResultSummary glyph={复合体} analysis={复合体分析} />,
@@ -290,11 +296,11 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
         <Col span={5}>
           <Statistic
             title="自动拆分部件数"
-            value={需拆分部件数 - 全部自定义字符.size}
+            value={需拆分部件数 - 自定义部件数}
           />
         </Col>
         <Col span={5}>
-          <Statistic title="自定义部件数" value={全部自定义字符.size} />
+          <Statistic title="自定义部件数" value={自定义部件数} />
         </Col>
         <Col span={4}>
           <Space>
