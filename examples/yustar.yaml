@@ -36,6 +36,26 @@ analysis:
     - 少弱字根
     - 取大优先
   customize:
+    # 両的冂和山候选已存在，沿用星陈取根。
+    字形-850: ['1', 冂, 山]
+    # 包围外框与整字按同一个字根取码。
+    字形-136024: [門]
+    字形-136025: [風]
+    字形-136041: [風]
+    # 台标華字底已有一、艹、奉下的切片。
+    字形-1189: ['1', 艹, ]
+    # 為的兼容形仍按官方拆分取首点和爲下。
+    字形-9149: ['4', ]
+    # 台标璺的字形已由共享库提供，沿用星陈的字根次序。
+    字形-137311: [冂, '1', 丅, , 冖, 王, '4']
+    # 目标切片已存在，按星陈取根约定从候选中选取。
+    字形-663: ['1', 字形-190004]
+    字形-829: [二, 字形-190004]
+    字形-700: ['2', '1', '2', '5', '1']
+    字形-846: ['1', 冂, ]
+    字形-461: ['1', ]
+    # 兼容码分别取两个十，通常字形仍取艹。
+    字形-191101: [千, 十, 十, 二]
     :
       - 耳
       - 戈
@@ -99,6 +119,13 @@ analysis:
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping:
+    # 港、台标微字心的横与儿分离，同样归入兀。
+    字形-233000: {element: 兀}
+    # 韩标双点辶也按同一字根取码。
+    字形-607: {element: 辶}
+    字形-218001: xv
+    字形-218002: {element: 字形-218001}
+    字形-218000: {element: }
     '1': fi
     '2': us
     '3': gp
@@ -753,18 +780,13 @@ form:
     𘠐: {element: 八}
     # 形近根参与普通笔画切片匹配，并归并到既有键位。
     字形-190004: {element: 戈}
-    字形-190027: {element: 隹}
-    字形-190062: {element: 立}
     字形-190063: {element: 戈}
     字形-191142: {element: 合}
-    字形-190088: {element: 尸}
     字形-190109: {element: 水}
     字形-190113: {element: }
     字形-190131: {element: 豕}
-    字形-190139: {element: }
     字形-1156: {element: 雨}
     字形-1295: {element: 夊}
-    字形-190155: {element: 夕}
     字形-190158: {element: 千}
     字形-190159: {element: 黑}
     字形-190187: {element: }
@@ -858,7 +880,6 @@ data:
     # 「主」首点离开顶横，自动按丶、王取根。
     - id: 793
       type: component
-      gf0014_id: 503
       ambiguous: false
       strokes:
         - {feature: 点, start: [46, 4], curveList: [{command: c, parameterList: [4, 6, 6, 11, 7, 15]}]}
@@ -868,101 +889,9 @@ data:
         - {feature: 横, start: [8, 89], curveList: [{command: h, parameterList: [84]}]}
     - {id: 196000, name: 宂的儿底字形, type: compound, operator: ⿱, references: [{id: 357}, {id: 128}], ambiguous: false}
     # 等形副本只用于「曰」的 T 来源，避免与共用原形的「日」串根。
-    - {id: 196010, type: compound, operator: "⿰", references: [{id: 5615}, {id: 4143}], ambiguous: false}
-    - {id: 196011, type: compound, operator: "⿰", references: [{id: 350}, {id: 562}], ambiguous: false}
-    - {id: 196012, type: compound, operator: "⿰", references: [{id: 599}, {id: 562}], ambiguous: false}
-    - {id: 196013, type: compound, operator: "⿰", references: [{id: 599}, {id: 126931}], ambiguous: false}
-    - {id: 196014, type: compound, operator: "⿰", references: [{id: 542}, {id: 126931}], ambiguous: false}
-    - {id: 196015, type: compound, operator: "⿰", references: [{id: 686}, {id: 126931}], ambiguous: false}
-    - {id: 196016, type: compound, operator: "⿰", references: [{id: 599}, {id: 126987}], ambiguous: false}
-    - {id: 196017, type: compound, operator: "⿸", references: [{id: 1252}, {id: 969}], name: "牖字边", ambiguous: false}
-    - {id: 196018, type: compound, operator: "⿰", references: [{id: 550}, {id: 196017}], ambiguous: false}
-    - {id: 196019, type: compound, operator: "⿰", references: [{id: 350}, {id: 775}], ambiguous: false}
-    - {id: 196020, type: compound, operator: "⿰", references: [{id: 417}, {id: 775}], ambiguous: false}
-    - {id: 196021, type: compound, operator: "⿰", references: [{id: 775}, {id: 480}], ambiguous: false}
-    - {id: 196022, type: compound, operator: "⿱", references: [{id: 564}, {id: 282}], ambiguous: false}
-    - {id: 196023, type: compound, operator: "⿰", references: [{id: 599}, {id: 196022}], ambiguous: false}
-    - {id: 196024, type: compound, operator: "⿱", references: [{id: 564}, {id: 612}], ambiguous: false}
-    - {id: 196025, type: compound, operator: "⿰", references: [{id: 763}, {id: 196024}], ambiguous: false}
-    - {id: 196026, type: compound, operator: "⿰", references: [{id: 686}, {id: 783}], ambiguous: false}
-    - {id: 196027, type: compound, operator: "⿰", references: [{id: 610}, {id: 783}], ambiguous: false}
-    - {id: 196028, type: compound, operator: "⿰", references: [{id: 350}, {id: 4887}], ambiguous: false}
-    - {id: 196029, type: compound, operator: "⿰", references: [{id: 324}, {id: 4887}], ambiguous: false}
-    - {id: 196030, type: compound, operator: "⿰", references: [{id: 4887}, {id: 4149}], ambiguous: false}
-    - {id: 196031, type: compound, operator: "⿰", references: [{id: 712}, {id: 4887}], ambiguous: false}
-    - {id: 196032, type: compound, operator: "⿰", references: [{id: 350}, {id: 6484}], ambiguous: false}
-    - {id: 196033, type: compound, operator: "⿰", references: [{id: 417}, {id: 6484}], ambiguous: false}
-    - {id: 196034, type: compound, operator: "⿰", references: [{id: 712}, {id: 4634}], ambiguous: false}
-    - {id: 196035, type: compound, operator: "⿰", references: [{id: 763}, {id: 7378}], ambiguous: false}
-    - {id: 196036, type: compound, operator: "⿰", references: [{id: 350}, {id: 8578}], ambiguous: false}
-    - {id: 196037, type: compound, operator: "⿰", references: [{id: 599}, {id: 8578}], ambiguous: false}
-    - {id: 196038, type: compound, operator: "⿰", references: [{id: 550}, {id: 6413}], ambiguous: false}
-    - {id: 196039, type: compound, operator: "⿰", references: [{id: 727}, {id: 6413}], ambiguous: false}
-    - {id: 196040, type: compound, operator: "⿰", references: [{id: 768}, {id: 6413}], ambiguous: false}
-    - {id: 196041, type: compound, operator: "⿱", references: [{id: 5683}, {id: 605}], ambiguous: false}
-    - {id: 196042, type: compound, operator: "⿱", references: [{id: 5683}, {id: 462}], ambiguous: false}
-    - {id: 196043, type: compound, operator: "⿰", references: [{id: 220}, {id: 4541}], ambiguous: false}
-    - {id: 196044, type: compound, operator: "⿰", references: [{id: 448}, {id: 4471}], ambiguous: false}
-    - {id: 196045, type: compound, operator: "⿰", references: [{id: 350}, {id: 4471}], ambiguous: false}
-    - {id: 196046, type: compound, operator: "⿰", references: [{id: 712}, {id: 4471}], ambiguous: false}
-    - {id: 196047, type: compound, operator: "⿸", references: [{id: 795}, {id: 4619}], ambiguous: false}
-    - {id: 196048, type: compound, operator: "⿰", references: [{id: 610}, {id: 4930}], ambiguous: false}
-    - {id: 196049, type: compound, operator: "⿰", references: [{id: 350}, {id: 4209}], ambiguous: false}
-    - {id: 196050, type: compound, operator: "⿰", references: [{id: 417}, {id: 4209}], ambiguous: false}
-    - {id: 196051, type: compound, operator: "⿸", references: [{id: 795}, {id: 4209}], ambiguous: false}
-    - {id: 196052, type: compound, operator: "⿰", references: [{id: 686}, {id: 4209}], ambiguous: false}
     # 星陈台标表的兼容形，供没有 T 来源的简体字使用。
     # 为错挂的前、觜补全剪、嘴的外部结构。
-    - {id: 196096, type: compound, operator: "⿱", references: [{id: 126919}, {id: 173}], ambiguous: false}
-    - {id: 196097, type: compound, operator: "⿰", references: [{id: 282}, {id: 127605}], ambiguous: false}
-    - {id: 196098, type: compound, operator: "⿰", references: [{id: 282}, {id: 127604}], ambiguous: false}
-    - {id: 196099, type: compound, operator: "⿱", references: [{id: 263}, {id: 310}], ambiguous: false}
-    - {id: 196100, type: compound, operator: "⿰", references: [{id: 350}, {id: 196099}], ambiguous: false}
-    - {id: 196101, type: compound, operator: "⿰", references: [{id: 417}, {id: 196099}], ambiguous: false}
-    - {id: 196102, type: compound, operator: "⿰", references: [{id: 686}, {id: 196099}], ambiguous: false}
-    - {id: 196103, type: compound, operator: "⿱", references: [{id: 196099}, {id: 744}], name: "醯字边", ambiguous: false}
-    - {id: 196104, type: compound, operator: "⿰", references: [{id: 977}, {id: 196103}], ambiguous: false}
-    - {id: 196105, type: compound, operator: "⿰", references: [{id: 5579}, {id: 545}], name: "澈字边", ambiguous: false}
-    - {id: 196106, type: compound, operator: "⿰", references: [{id: 350}, {id: 196105}], ambiguous: false}
-    - {id: 196110, type: compound, operator: "⿰", references: [{id: 448}, {id: 7766}], ambiguous: false}
-    - {id: 196111, type: compound, operator: "⿰", references: [{id: 350}, {id: 7766}], ambiguous: false}
-    - {id: 196113, type: compound, operator: "⿰", references: [{id: 148}, {id: 8646}], ambiguous: false}
-    - {id: 196114, type: compound, operator: "⿱", references: [{id: 437}, {id: 8646}], ambiguous: false}
-    - {id: 196115, type: compound, operator: "⿰", references: [{id: 712}, {id: 127233}], ambiguous: false}
-    - {id: 196117, type: compound, operator: "⿰", references: [{id: 763}, {id: 9194}], ambiguous: false}
-    - {id: 196119, type: compound, operator: "⿰", references: [{id: 108}, {id: 9044}], ambiguous: false}
-    - {id: 196120, type: compound, operator: "⿰", references: [{id: 448}, {id: 9044}], ambiguous: false}
-    - {id: 196121, type: compound, operator: "⿰", references: [{id: 686}, {id: 13843}], ambiguous: false}
-    - {id: 196122, type: compound, operator: "⿹", references: [{id: 1251}, {id: 13843}], ambiguous: false}
-    - {id: 196123, type: compound, operator: "⿰", references: [{id: 350}, {id: 585}], ambiguous: false}
-    - {id: 196125, type: compound, operator: "⿰", references: [{id: 448}, {id: 4130}], ambiguous: false}
-    - {id: 196126, type: compound, operator: "⿰", references: [{id: 350}, {id: 19475}], ambiguous: false}
-    - {id: 196127, type: compound, operator: "⿰", references: [{id: 350}, {id: 15488}], ambiguous: false}
-    - {id: 196128, type: compound, operator: "⿰", references: [{id: 599}, {id: 15488}], ambiguous: false}
-    - {id: 196129, type: compound, operator: "⿰", references: [{id: 417}, {id: 745}], ambiguous: false}
-    - {id: 196130, type: compound, operator: "⿱", references: [{id: 14895}, {id: 612}], ambiguous: false}
-    - {id: 196131, type: compound, operator: "⿰", references: [{id: 417}, {id: 196130}], ambiguous: false}
-    - {id: 196134, type: compound, operator: "⿸", references: [{id: 795}, {id: 15815}], ambiguous: false}
-    - {id: 196135, type: compound, operator: "⿰", references: [{id: 686}, {id: 5603}], ambiguous: false}
-    - {id: 196142, type: compound, operator: "⿰", references: [{id: 686}, {id: 10355}], ambiguous: false}
-    - {id: 196143, type: compound, operator: "⿰", references: [{id: 4110}, {id: 602}], ambiguous: false}
-    - {id: 196144, type: compound, operator: "⿰", references: [{id: 448}, {id: 196143}], ambiguous: false}
-    - {id: 196145, type: compound, operator: "⿰", references: [{id: 4110}, {id: 5391}], ambiguous: false}
-    - {id: 196146, type: compound, operator: "⿰", references: [{id: 324}, {id: 196145}], ambiguous: false}
-    - {id: 196147, type: compound, operator: "⿰", references: [{id: 686}, {id: 4110}], ambiguous: false}
-    - {id: 196153, type: compound, operator: "⿱", references: [{id: 16789}, {id: 530}], ambiguous: false}
-    - {id: 196649, type: compound, operator: "⿰", references: [{id: 350}, {id: 4629}], ambiguous: false}
-    - {id: 196650, type: compound, operator: "⿰", references: [{id: 466}, {id: 103545}], ambiguous: false}
-    - {id: 196501, type: compound, operator: "⿱", references: [{id: 196500}, {id: 529}], ambiguous: true}
-    - {id: 196502, type: compound, operator: "⿰", references: [{id: 807}, {id: 196501}], ambiguous: false}
-    - {id: 196154, type: compound, operator: ⿰, references: [{id: 686}, {id: 4682}], ambiguous: false}
-    - {id: 196155, type: compound, operator: ⿰, references: [{id: 763}, {id: 4682}], ambiguous: false}
-    - {id: 196159, type: compound, operator: ⿰, references: [{id: 763}, {id: 13220}], ambiguous: false}
-    - {id: 196161, type: compound, operator: ⿱, references: [{id: 263}, {id: 310}], ambiguous: false}
-    - {id: 196162, type: compound, operator: ⿰, references: [{id: 5302}, {id: 196161}], ambiguous: false}
-    - {id: 196163, type: compound, operator: ⿰, references: [{id: 818}, {id: 196161}], ambiguous: false}
     - {id: 196164, type: compound, operator: ⿳, references: [{id: 196563}, {id: 4207}, {id: 21431}], ambiguous: true}
-    - {id: 196165, type: compound, operator: ⿱, references: [{id: 196563}, {id: 651}], ambiguous: false}
     - id: 196562
       type: component
       strokes:
@@ -981,29 +910,6 @@ data:
       ambiguous: false
     - {id: 196563, type: compound, operator: ⿱, references: [{id: 196562}, {id: 155}], strokes: [], ambiguous: false}
     # 按实笔画建立分部。归并根仍用普通匹配规则。
-    - id: 190001
-      name: 戋上横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [13, 30], curveList: [{command: h, parameterList: [76]}]}
-    - id: 190002
-      name: 戋下部戈形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [80]}]}
-        - {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}
-        - {feature: 撇, start: [81, 56], curveList: [{command: z, parameterList: [-8, 12, -35, 29, -69, 34]}]}
-        - {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}
-    - {id: 663, type: compound, operator: ⿻, references: [{id: 190001}, {id: 190002}], ambiguous: false}
-    - id: 190003
-      name: 㦮上横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [13, 25], curveList: [{command: h, parameterList: [76]}]}
-        - {feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [80]}]}
     - id: 190004
       name: 㦮下部戈形
       type: component
@@ -1013,253 +919,25 @@ data:
         - {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}
         - {feature: 撇, start: [85, 61], curveList: [{command: z, parameterList: [-8, 11, -35, 25, -69, 30]}]}
         - {feature: 点, start: [64, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}
-    - {id: 829, type: compound, operator: ⿻, references: [{id: 190003}, {id: 190004}], ambiguous: false}
-    - id: 190010
-      name: 我平撇
+    # 「卞」采用陆标、台标的点横留隙写法。
+    - id: 589
       type: component
-      ambiguous: false
-      strokes:
-        - {feature: 平撇, start: [45, 8], curveList: [{command: z, parameterList: [-8, 5, -17, 7, -35, 9]}]}
-    - id: 190011
-      name: 我的扌形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [7, 35], curveList: [{command: h, parameterList: [86]}]}
-        - {feature: 竖钩, start: [29, 13], curveList: [{command: v, parameterList: [81]}]}
-        - {feature: 提, start: [8, 64], curveList: [{command: l, parameterList: [42, -6]}]}
-    - id: 190012
-      name: 我字戈无横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 斜钩, start: [60, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 27, 87]}]}
-        - {feature: 撇, start: [85, 47], curveList: [{command: c, parameterList: [-5, 14, -25, 33, -43, 42]}]}
-        - {feature: 点, start: [74, 10], curveList: [{command: c, parameterList: [4, 6, 8, 10, 14, 25]}]}
-    - {id: 190013, type: compound, operator: ⿻, references: [{id: 190011}, {id: 190012}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
-    - id: 1003
-      type: compound
-      operator: ⿻
-      references: [{id: 190010}, {id: 190013}]
-      strokes: [{index: 0}, {index: 1}]
       ambiguous: true
-      gf0014_id: 383
-      gf3001_id: 378
-    - id: 190014
-      name: 羲下框的禾形
-      type: component
-      ambiguous: false
       strokes:
-        - {feature: 平撇, start: [46, 8], curveList: [{command: z, parameterList: [-10, 2, -20, 3, -33, 3]}]}
-        - {feature: 横, start: [9, 24], curveList: [{command: h, parameterList: [82]}]}
-        - {feature: 竖, start: [32, 10], curveList: [{command: v, parameterList: [32]}]}
-        - {feature: 撇, start: [32, 24], curveList: [{command: c, parameterList: [-4, 6, -12, 10, -21, 14]}]}
-        - {feature: 点, start: [32, 24], curveList: [{command: c, parameterList: [6, 5, 13, 10, 18, 14]}]}
-    - id: 190015
-      name: 羲下框戈无横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}
-        - {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}
-        - {feature: 点, start: [76, 8], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 16]}]}
-    - id: 1060
-      name: 羲下框
-      type: compound
-      operator: ⿻
-      references: [{id: 190014}, {id: 190015}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - id: 190016
-      name: 凸竖
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖, start: [33, 10], curveList: [{command: v, parameterList: [33]}]}
-    - id: 190017
-      name: 凸横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [12, 43], curveList: [{command: h, parameterList: [21]}]}
-    - id: 190018
-      name: 凸竖
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖, start: [12, 43], curveList: [{command: v, parameterList: [45]}]}
-    - id: 190019
-      name: 凸横折折折
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横折折折, start: [33, 10], curveList: [{command: h, parameterList: [34]}, {command: v, parameterList: [33]}, {command: h, parameterList: [21]}, {command: v, parameterList: [45]}]}
-    - id: 190020
-      name: 凸横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [12, 88], curveList: [{command: h, parameterList: [76]}]}
-    - id: 190021
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190019, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190020, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - id: 190022
-      type: compound
-      operator: ⿰
-      references:
-        - {id: 190018, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190021, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - {id: 190023, type: compound, operator: ⿻, references: [{id: 190017}, {id: 190022}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
-    - id: 700
-      type: compound
-      operator: ⿻
-      references: [{id: 190016}, {id: 190023}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 367
-      gf3001_id: 555
-    - id: 190026
-      name: 隺的冖形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 点, start: [13, 19], curveList: [{command: c, parameterList: [0, 5, 0, 10, 0, 16]}]}
-        - {feature: 横钩, start: [13, 19], curveList: [{command: h, parameterList: [74]}]}
-    - id: 190027
-      name: 隺的隹形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [44, 6], curveList: [{command: c, parameterList: [-7, 15, -27, 44, -39, 55]}]}
-        - {feature: 竖, start: [22, 40], curveList: [{command: v, parameterList: [56]}]}
-        - {feature: 点, start: [54, 29], curveList: [{command: c, parameterList: [3, 4, 6, 6, 8, 11]}]}
-        - {feature: 横, start: [22, 40], curveList: [{command: h, parameterList: [68]}]}
-        - {feature: 横, start: [29, 58], curveList: [{command: h, parameterList: [58]}]}
-        - {feature: 横, start: [29, 74], curveList: [{command: h, parameterList: [58]}]}
-        - {feature: 竖, start: [59, 40], curveList: [{command: v, parameterList: [52]}]}
-        - {feature: 横, start: [22, 92], curveList: [{command: h, parameterList: [73]}]}
-    - id: 1109
-      type: compound
-      operator: ⿻
-      references: [{id: 190026}, {id: 190027}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: true
-      gf0014_id: 136
-    - id: 190042
-      name: 卞点
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 点, start: [44, 5], curveList: [{command: c, parameterList: [4, 7, 7, 11, 10, 20]}]}
-    - id: 190043
-      name: 卞的下形
-      type: component
-      ambiguous: false
-      strokes:
+        - {feature: 点, start: [44, 5], curveList: [{command: c, parameterList: [4, 6, 7, 9, 10, 17]}]}
         - {feature: 横, start: [10, 25], curveList: [{command: h, parameterList: [80]}]}
         - {feature: 竖, start: [50, 25], curveList: [{command: v, parameterList: [70]}]}
         - {feature: 平点, start: [50, 50], curveList: [{command: z, parameterList: [13, 7, 20, 11, 30, 18]}]}
-    - id: 589
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190042, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190043, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: true
-    - id: 190044
-      name: 再横
+    # 湽上角采用巛在前、横在后的笔顺，保留原有笔画位置。
+    - id: 481
       type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [10, 12], curveList: [{command: h, parameterList: [80]}]}
-    - id: 190045
-      name: 再的冂形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖, start: [20, 26], curveList: [{command: v, parameterList: [69]}]}
-        - {feature: 横折钩, start: [20, 26], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [69]}]}
-    - id: 190046
-      name: 再的形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖, start: [50, 12], curveList: [{command: v, parameterList: [56]}]}
-        - {feature: 横, start: [20, 46], curveList: [{command: h, parameterList: [60]}]}
-        - {feature: 横, start: [6, 68], curveList: [{command: h, parameterList: [88]}]}
-    - {id: 190047, type: compound, operator: ⿻, references: [{id: 190045}, {id: 190046}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
-    - id: 846
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190044, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190047, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 477
-    - id: 190056
-      name: 宺字底无口横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [8, 15], curveList: [{command: h, parameterList: [84]}]}
-    - id: 190057
-      name: 宺字底无口的形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [30, 15], curveList: [{command: c, parameterList: [0, 36, 0, 57, -20, 78]}]}
-        - {feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [78]}]}
-        - {feature: 竖弯钩, start: [70, 15], curveList: [{command: v, parameterList: [78]}, {command: h, parameterList: [20]}]}
-    - id: 461
-      name: 宺字底无口
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190056, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190057, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - id: 190058
-      name: 湽上角的巛形
-      type: component
+      name: 湽上角
       ambiguous: false
       strokes:
         - {feature: 撇点, start: [36, 6], curveList: [{command: c, parameterList: [-6, 16, -14, 29, -23, 44]}, {command: c, parameterList: [12, 19, 13, 21, 23, 41]}]}
         - {feature: 撇点, start: [62, 6], curveList: [{command: c, parameterList: [-6, 16, -14, 29, -23, 44]}, {command: c, parameterList: [12, 19, 13, 21, 23, 41]}]}
         - {feature: 撇点, start: [88, 6], curveList: [{command: c, parameterList: [-6, 16, -14, 29, -23, 44]}, {command: c, parameterList: [12, 19, 13, 21, 23, 41]}]}
-    - id: 190059
-      name: 湽上角横
-      type: component
-      ambiguous: false
-      strokes:
         - {feature: 横, start: [5, 50], curveList: [{command: h, parameterList: [90]}]}
-    - id: 481
-      name: 湽上角
-      type: compound
-      operator: ⿻
-      references: [{id: 190058}, {id: 190059}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf3001_id: 191
-    - id: 190062
-      name: 戠字框的立形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 点, start: [27, 5], curveList: [{command: c, parameterList: [2, 4, 4, 8, 5, 13]}]}
-        - {feature: 横, start: [12, 18], curveList: [{command: h, parameterList: [39]}]}
-        - {feature: 点, start: [18, 18], curveList: [{command: c, parameterList: [2, 7, 4, 14, 5, 20]}]}
-        - {feature: 撇, start: [43, 18], curveList: [{command: c, parameterList: [-1, 8, -2, 14, -5, 20]}]}
-        - {feature: 横, start: [8, 38], curveList: [{command: h, parameterList: [85]}]}
     - id: 190063
       name: 戠字框戈无横
       type: component
@@ -1268,86 +946,6 @@ data:
         - {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}
         - {feature: 撇, start: [86, 50], curveList: [{command: c, parameterList: [-2, 15, -18, 34, -30, 42]}]}
         - {feature: 点, start: [76, 15], curveList: [{command: c, parameterList: [4, 6, 9, 16, 11, 23]}]}
-    - id: 1069
-      name: 戠字框
-      type: compound
-      operator: ⿻
-      references: [{id: 190062}, {id: 190063}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - id: 190064
-      name: 字形-248的形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [10, 25], curveList: [{command: h, parameterList: [80]}]}
-        - {feature: 撇, start: [61, 6], curveList: [{command: c, parameterList: [0, 38, 0, 64, -54, 88]}]}
-    - id: 190065
-      name: 字形-248捺
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 捺, start: [23, 36], curveList: [{command: c, parameterList: [6, 20, 28, 44, 70, 58]}]}
-    - id: 248
-      type: compound
-      operator: ⿻
-      references: [{id: 190064}, {id: 190065}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 479
-      gf3001_id: 517
-    - id: 190072
-      name: 字形-466横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [10, 14], curveList: [{command: h, parameterList: [80]}]}
-    - id: 190073
-      name: 字形-466的夕形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [46, 14], curveList: [{command: c, parameterList: [-4, 13, -11, 26, -34, 44]}]}
-        - {feature: 横撇, start: [33, 35], curveList: [{command: h, parameterList: [47]}, {command: c, parameterList: [-10, 18, -19, 45, -67, 57]}]}
-        - {feature: 平点, start: [32, 53], curveList: [{command: z, parameterList: [10, 5, 19, 12, 25, 18]}]}
-    - id: 466
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190072, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190073, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 64
-      gf3001_id: 248
-    - id: 190088
-      name: 字形-623的尸形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横折, start: [22, 12], curveList: [{command: h, parameterList: [57]}, {command: v, parameterList: [30]}]}
-        - {feature: 横, start: [20, 42], curveList: [{command: h, parameterList: [59]}]}
-        - {feature: 撇, start: [22, 12], curveList: [{command: c, parameterList: [0, 36, 0, 60, -14, 81]}]}
-    - id: 190089
-      name: 字形-623捺
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 捺, start: [50, 42], curveList: [{command: c, parameterList: [8, 27, 19, 40, 43, 51]}]}
-    - id: 623
-      type: compound
-      operator: ⿻
-      references: [{id: 190088}, {id: 190089}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 47
-      gf3001_id: 429
-    - id: 190108
-      name: 字形-809点
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 点, start: [40, 5], curveList: [{command: c, parameterList: [6, 2, 15, 6, 25, 12]}]}
     - id: 190109
       name: 字形-809的水形
       type: component
@@ -1357,25 +955,6 @@ data:
         - {feature: 横撇, start: [8, 46], curveList: [{command: h, parameterList: [30]}, {command: c, parameterList: [-4, 15, -13, 29, -30, 41]}]}
         - {feature: 平撇, start: [85, 39], curveList: [{command: z, parameterList: [-6, 5, -13, 10, -22, 13]}]}
         - {feature: 捺, start: [62, 46], curveList: [{command: c, parameterList: [5, 15, 14, 31, 30, 41]}]}
-    - id: 809
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190108, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190109, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 455
-      gf3001_id: 469
-    - id: 190112
-      name: 字形-830的龶形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [15, 12], curveList: [{command: h, parameterList: [70]}]}
-        - {feature: 横, start: [20, 32], curveList: [{command: h, parameterList: [60]}]}
-        - {feature: 竖, start: [50, 3], curveList: [{command: v, parameterList: [50]}]}
-        - {feature: 横, start: [6, 53], curveList: [{command: h, parameterList: [88]}]}
     - id: 190113
       name: 字形-830的勹形
       type: component
@@ -1383,44 +962,6 @@ data:
       strokes:
         - {feature: 横折钩, start: [37, 69], curveList: [{command: h, parameterList: [44]}, {command: v, parameterList: [27]}]}
         - {feature: 撇, start: [39, 53], curveList: [{command: c, parameterList: [0, 13, 2, 33, -31, 43]}]}
-    - id: 830
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190112, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190113, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 3
-    - id: 190120
-      name: 字形-937的冖形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 点, start: [15, 23], curveList: [{command: c, parameterList: [0, 6, 0, 12, 0, 18]}]}
-        - {feature: 横钩, start: [15, 23], curveList: [{command: h, parameterList: [71]}]}
-    - id: 190121
-      name: 字形-937的形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [52, 7], curveList: [{command: c, parameterList: [-1, 16, -21, 51, -45, 65]}]}
-        - {feature: 竖提, start: [28, 52], curveList: [{command: v, parameterList: [40]}, {command: l, parameterList: [30, -4]}]}
-        - {feature: 平撇, start: [83, 49], curveList: [{command: z, parameterList: [-8, 8, -13, 12, -19, 14]}]}
-        - {feature: 捺, start: [52, 32], curveList: [{command: c, parameterList: [6, 25, 19, 44, 39, 60]}]}
-    - id: 937
-      type: compound
-      operator: ⿻
-      references: [{id: 190120}, {id: 190121}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 260
-    - id: 190130
-      name: 蒙字底横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [20, 12], curveList: [{command: h, parameterList: [60]}]}
     - id: 190131
       name: 蒙字底的豕形
       type: component
@@ -1433,69 +974,20 @@ data:
         - {feature: 平撇, start: [57, 65], curveList: [{command: z, parameterList: [-15, 10, -29, 20, -50, 26]}]}
         - {feature: 平撇, start: [86, 42], curveList: [{command: z, parameterList: [-6, 7, -18, 13, -33, 19]}]}
         - {feature: 捺, start: [66, 54], curveList: [{command: c, parameterList: [4, 10, 9, 24, 28, 34]}]}
+    # 蒙字底用单个部件保留星陈的豕形及其来源区分。
     - id: 1035
+      type: component
       name: 蒙字底
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190130, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190131, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - id: 190136
-      name: 字形-1101的䒑形
-      type: component
       ambiguous: false
       strokes:
-        - {feature: 点, start: [18, 9], curveList: [{command: c, parameterList: [10, 6, 16, 12, 21, 17]}]}
-        - {feature: 撇, start: [82, 9], curveList: [{command: c, parameterList: [-5, 6, -12, 12, -21, 17]}]}
-        - {feature: 横, start: [10, 26], curveList: [{command: h, parameterList: [80]}]}
-    - id: 190137
-      name: 字形-1101的形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 平撇, start: [52, 26], curveList: [{command: z, parameterList: [-12, 14, -26, 19, -41, 22]}]}
-        - {feature: 弯钩, start: [39, 36], curveList: [{command: c, parameterList: [12, 10, 22, 24, 19, 58]}]}
-        - {feature: 平撇, start: [50, 47], curveList: [{command: z, parameterList: [-9, 8, -21, 15, -40, 21]}]}
-        - {feature: 平撇, start: [57, 62], curveList: [{command: z, parameterList: [-15, 11, -29, 22, -50, 28]}]}
-        - {feature: 平撇, start: [86, 37], curveList: [{command: z, parameterList: [-6, 8, -18, 14, -33, 21]}]}
-        - {feature: 捺, start: [66, 50], curveList: [{command: c, parameterList: [4, 10, 9, 26, 28, 36]}]}
-    - id: 1101
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190136, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190137, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: true
-    - id: 190138
-      name: 字形-1102的彑形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖折, start: [26, 5], curveList: [{command: v, parameterList: [23]}, {command: h, parameterList: [46]}]}
-        - {feature: 横折, start: [26, 15], curveList: [{command: h, parameterList: [46]}, {command: v, parameterList: [24]}]}
-        - {feature: 横, start: [10, 39], curveList: [{command: h, parameterList: [80]}]}
-    - id: 190139
-      name: 字形-1102的形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 平撇, start: [52, 39], curveList: [{command: z, parameterList: [-12, 11, -26, 16, -41, 18]}]}
-        - {feature: 弯钩, start: [39, 47], curveList: [{command: c, parameterList: [12, 9, 22, 20, 19, 48]}]}
-        - {feature: 平撇, start: [50, 56], curveList: [{command: z, parameterList: [-9, 6, -21, 13, -40, 17]}]}
-        - {feature: 平撇, start: [57, 69], curveList: [{command: z, parameterList: [-15, 9, -29, 18, -50, 23]}]}
-        - {feature: 平撇, start: [86, 48], curveList: [{command: z, parameterList: [-6, 6, -18, 11, -33, 17]}]}
-        - {feature: 捺, start: [66, 59], curveList: [{command: c, parameterList: [4, 9, 9, 21, 28, 30]}]}
-    - id: 1102
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190138, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190139, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: true
+        - {feature: 横, start: [20, 12], curveList: [{command: h, parameterList: [60]}]}
+        - {feature: 横, start: [10, 31], curveList: [{command: h, parameterList: [80]}]}
+        - {feature: 平撇, start: [52, 31], curveList: [{command: z, parameterList: [-12, 13, -26, 18, -41, 20]}]}
+        - {feature: 弯钩, start: [39, 40], curveList: [{command: c, parameterList: [12, 10, 22, 22, 19, 54]}]}
+        - {feature: 平撇, start: [50, 50], curveList: [{command: z, parameterList: [-9, 7, -21, 14, -40, 19]}]}
+        - {feature: 平撇, start: [57, 65], curveList: [{command: z, parameterList: [-15, 10, -29, 20, -50, 26]}]}
+        - {feature: 平撇, start: [86, 42], curveList: [{command: z, parameterList: [-6, 7, -18, 13, -33, 19]}]}
+        - {feature: 捺, start: [66, 54], curveList: [{command: c, parameterList: [4, 10, 9, 24, 28, 34]}]}
     - id: 190140
       name: 象的形
       type: component
@@ -1503,26 +995,20 @@ data:
       strokes:
         - {feature: 撇, start: [41, 2], curveList: [{command: c, parameterList: [-5, 8, -12, 16, -32, 25]}]}
         - {feature: 横撇, start: [33, 11], curveList: [{command: h, parameterList: [41]}, {command: c, parameterList: [-7, 6, -12, 11, -21, 16]}]}
-    - id: 190141
-      name: 象的口形
+    - id: 190143
+      name: 象下兼容形
       type: component
       ambiguous: false
       strokes:
         - {feature: 竖, start: [20, 27], curveList: [{command: v, parameterList: [17]}]}
         - {feature: 横折, start: [20, 27], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [17]}]}
         - {feature: 横, start: [20, 44], curveList: [{command: h, parameterList: [67]}]}
-    - id: 190142
-      name: 象的形
-      type: component
-      ambiguous: false
-      strokes:
         - {feature: 平撇, start: [53, 27], curveList: [{command: z, parameterList: [-4, 18, -19, 29, -41, 32]}]}
         - {feature: 弯钩, start: [39, 48], curveList: [{command: c, parameterList: [12, 8, 22, 20, 19, 48]}]}
         - {feature: 平撇, start: [50, 57], curveList: [{command: z, parameterList: [-9, 6, -21, 13, -40, 17]}]}
         - {feature: 平撇, start: [57, 69], curveList: [{command: z, parameterList: [-15, 9, -29, 18, -50, 22]}]}
         - {feature: 平撇, start: [86, 49], curveList: [{command: z, parameterList: [-6, 6, -18, 11, -33, 17]}]}
         - {feature: 捺, start: [66, 59], curveList: [{command: c, parameterList: [4, 8, 9, 21, 28, 29]}]}
-    - {id: 190143, type: compound, operator: ⿻, references: [{id: 190141}, {id: 190142}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
     - id: 1115
       name: 象
       type: compound
@@ -1532,25 +1018,6 @@ data:
         - {id: 190143, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
       strokes: [{index: 0}, {index: 1}]
       ambiguous: true
-      gf0014_id: 402
-      gf3001_id: 485
-    - id: 190155
-      name: 466·包围外框的夕形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [30, 14], curveList: [{command: c, parameterList: [-3, 13, -7, 26, -22, 44]}]}
-        - {feature: 横撇, start: [21, 35], curveList: [{command: h, parameterList: [31]}, {command: c, parameterList: [-6, 18, -12, 45, -44, 57]}]}
-        - {feature: 平点, start: [21, 53], curveList: [{command: z, parameterList: [6, 5, 12, 12, 16, 18]}]}
-    - id: 1298
-      name: 466·包围外框
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190072, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190155, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
     - id: 190158
       name: 字形-9869的千形
       type: component
@@ -1581,104 +1048,6 @@ data:
       references: [{id: 190158}, {id: 190159}]
       strokes: [{index: 0}, {index: 1}]
       ambiguous: true
-      gf0014_id: 418
-      gf3001_id: 462
-    - id: 190166
-      name: 字形-845横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [9, 17], curveList: [{command: h, parameterList: [82]}]}
-    - id: 190167
-      name: 字形-845的口形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖, start: [17, 28], curveList: [{command: v, parameterList: [27]}]}
-        - {feature: 横折, start: [17, 28], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [27]}]}
-        - {feature: 横, start: [17, 55], curveList: [{command: h, parameterList: [67]}]}
-    - id: 190168
-      name: 字形-845的乂形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [50, 9], curveList: [{command: c, parameterList: [0, 65, 0, 71, -43, 86]}]}
-        - {feature: 捺, start: [19, 62], curveList: [{command: c, parameterList: [12, 13, 31, 30, 75, 34]}]}
-    - {id: 190169, type: compound, operator: ⿻, references: [{id: 190167}, {id: 190168}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
-    - id: 845
-      type: compound
-      operator: ⿻
-      references: [{id: 190166}, {id: 190169}]
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 210
-      gf3001_id: 543
-    - id: 190170
-      name: 字形-854的戊形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}
-        - {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}
-        - {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}
-        - {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}
-        - {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}
-    - id: 190171
-      name: 字形-854横
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [16, 54], curveList: [{command: h, parameterList: [30]}]}
-    - id: 854
-      type: compound
-      operator: ⿴
-      references:
-        - {id: 190170, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190171, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0, from: 0, to: 1}, {index: 1}, {index: 0, from: 2, to: 4}]
-      ambiguous: true
-      gf0014_id: 411
-    - id: 190180
-      name: 字形-1080横撇
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横撇, start: [22, 10], curveList: [{command: h, parameterList: [56]}, {command: c, parameterList: [-6, 5, -14, 11, -28, 17]}]}
-    - id: 190181
-      name: 字形-1080的水形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 竖钩, start: [50, 27], curveList: [{command: v, parameterList: [67]}]}
-        - {feature: 横撇, start: [8, 35], curveList: [{command: h, parameterList: [19]}, {command: c, parameterList: [-1, 19, -9, 40, -20, 52]}]}
-        - {feature: 平撇, start: [93, 33], curveList: [{command: z, parameterList: [-4, 6, -8, 11, -17, 18]}]}
-        - {feature: 捺, start: [75, 30], curveList: [{command: c, parameterList: [1, 20, 4, 41, 18, 57]}]}
-    - id: 190182
-      name: 字形-1080的三形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [35, 40], curveList: [{command: h, parameterList: [30]}]}
-        - {feature: 横, start: [34, 54], curveList: [{command: h, parameterList: [32]}]}
-        - {feature: 横, start: [30, 70], curveList: [{command: h, parameterList: [40]}]}
-    - id: 190183
-      type: compound
-      operator: ⿴
-      references:
-        - {id: 190181, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190182, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0, from: 0, to: 0}, {index: 1}, {index: 0, from: 1, to: 3}]
-      ambiguous: false
-    - id: 1080
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190180, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190183, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-      gf0014_id: 46
-      gf3001_id: 558
     - id: 190186
       name: 字形-1116的立形
       type: component
@@ -1708,63 +1077,25 @@ data:
         - {id: 190187, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
       strokes: [{index: 0}, {index: 1}]
       ambiguous: true
-    - id: 190236
-      name: 字形-196500的乂形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [60, 2], curveList: [{command: c, parameterList: [-2, 9, -9, 17, -24, 23]}]}
-        - {feature: 捺, start: [40, 2], curveList: [{command: c, parameterList: [2, 9, 9, 17, 24, 23]}]}
-    - id: 190237
-      name: 字形-196500的乂形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 撇, start: [60, 28], curveList: [{command: c, parameterList: [-2, 9, -9, 17, -24, 23]}]}
-        - {feature: 捺, start: [40, 28], curveList: [{command: c, parameterList: [2, 9, 9, 17, 24, 23]}]}
-    - id: 190238
-      name: 字形-196500的木形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [2, 16], curveList: [{command: h, parameterList: [30]}]}
-        - {feature: 竖, start: [17, 4], curveList: [{command: v, parameterList: [46]}]}
-        - {feature: 撇, start: [17, 16], curveList: [{command: c, parameterList: [-4, 12, -9, 20, -14, 26]}]}
-        - {feature: 捺, start: [17, 16], curveList: [{command: c, parameterList: [4, 12, 9, 20, 14, 26]}]}
-    - id: 190239
-      name: 字形-196500的木形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [68, 16], curveList: [{command: h, parameterList: [30]}]}
-        - {feature: 竖, start: [83, 4], curveList: [{command: v, parameterList: [46]}]}
-        - {feature: 撇, start: [83, 16], curveList: [{command: c, parameterList: [-4, 12, -9, 20, -14, 26]}]}
-        - {feature: 捺, start: [83, 16], curveList: [{command: c, parameterList: [4, 12, 9, 20, 14, 26]}]}
-    - id: 190240
-      name: 字形-196500的大形
-      type: component
-      ambiguous: false
-      strokes:
-        - {feature: 横, start: [7, 70], curveList: [{command: h, parameterList: [86]}]}
-        - {feature: 撇, start: [50, 57], curveList: [{command: c, parameterList: [0, 12, 0, 30, -43, 40]}]}
-        - {feature: 捺, start: [48, 70], curveList: [{command: c, parameterList: [8, 10, 22, 20, 45, 27]}]}
-    - id: 190241
-      type: compound
-      operator: ⿱
-      references:
-        - {id: 190239, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-        - {id: 190240, xbegin: 0, xend: 100, ybegin: 0, yend: 100}
-      strokes: [{index: 0}, {index: 1}]
-      ambiguous: false
-    - {id: 190242, type: compound, operator: ⿻, references: [{id: 190238}, {id: 190241}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
-    - {id: 190243, type: compound, operator: ⿻, references: [{id: 190237}, {id: 190242}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
-    - {id: 196500, type: compound, operator: ⿻, references: [{id: 190236}, {id: 190243}], strokes: [{index: 0}, {index: 1}], ambiguous: false}
+    # 台标「樊」保持上下结构，上部先写中间两个乂。
     # 台标「彘」先写中间的矢，再写两边。
     - {id: 128568, type: compound, operator: ⿲, references: [{id: 81}, {id: 758}, {id: 1128}], strokes: [{index: 1}, {index: 0}, {index: 2}], ambiguous: false}
     - {id: 191001, name: 黃字底, type: compound, operator: ⿱, references: [{id: 727}, {id: 116}], ambiguous: false}
     # 以下为星陈的兼容字形。
-    - {id: 191100, type: compound, operator: ⿰, references: [{id: 66, xbegin: 0, xend: 46, ybegin: 20, yend: 80}, {id: 66, xbegin: 50, xend: 96, ybegin: 20, yend: 80}], ambiguous: false, name: "垂的并排十"}
-    - {id: 191101, type: compound, operator: ⿻, references: [{id: 762}, {id: 191100, xbegin: 7, xend: 96, ybegin: 24, yend: 82}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - id: 191101
+      name: 垂兼容形
+      type: component
+      ambiguous: false
+      strokes:
+        - {feature: 平撇, start: [82, 8], curveList: [{command: z, parameterList: [-12, 2, -40, 4, -64, 5]}]}
+        - {feature: 横, start: [8, 24], curveList: [{command: h, parameterList: [84]}]}
+        - {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [80]}]}
+        - {feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [35]}]}
+        - {feature: 竖, start: [27, 38], curveList: [{command: v, parameterList: [30]}]}
+        - {feature: 横, start: [54, 50], curveList: [{command: h, parameterList: [36]}]}
+        - {feature: 竖, start: [72, 38], curveList: [{command: v, parameterList: [30]}]}
+        - {feature: 横, start: [12, 77], curveList: [{command: h, parameterList: [76]}]}
+        - {feature: 横, start: [8, 91], curveList: [{command: h, parameterList: [84]}]}
     - {id: 191102, type: compound, operator: ⿰, references: [{id: 282}, {id: 191101}], ambiguous: false}
     - {id: 191103, type: compound, operator: ⿰, references: [{id: 220}, {id: 191101}], ambiguous: false}
     - {id: 191104, type: compound, operator: ⿰, references: [{id: 448}, {id: 191101}], ambiguous: false}
@@ -1772,37 +1103,33 @@ data:
     - {id: 191106, type: compound, operator: ⿰, references: [{id: 407}, {id: 191101}], ambiguous: false}
     - {id: 191107, type: compound, operator: ⿰, references: [{id: 755}, {id: 191101}], ambiguous: false}
     - {id: 191108, type: compound, operator: ⿰, references: [{id: 162}, {id: 191101}], ambiguous: false}
-    # 「𢦏」的土和戈无横分开，宿主内件的笔顺放在两者之间。
-    - id: 191110
+    # 「𢦏」是六笔部件。包围字把内件插在框的前三笔和后三笔之间。
+    - id: 191111
+      name: 𢦏兼容形
       type: component
-      name: 载字框土
       ambiguous: false
       strokes:
         - {feature: 横, start: [14, 15], curveList: [{command: h, parameterList: [40]}]}
         - {feature: 竖, start: [34, 5], curveList: [{command: v, parameterList: [25]}]}
         - {feature: 横, start: [9, 30], curveList: [{command: h, parameterList: [82]}]}
-    - {id: 191111, type: compound, operator: ⿻, references: [{id: 191110}, {id: 190063}], ambiguous: false}
-    - {id: 191112, type: compound, operator: ⿹, references: [{id: 190063}, {id: 282}], strokes: [{index: 1}, {index: 0}], ambiguous: false}
-    - {id: 191113, type: compound, operator: ⿻, references: [{id: 191110}, {id: 191112}], ambiguous: false}
-    - {id: 191114, type: compound, operator: ⿹, references: [{id: 190063}, {id: 1064}], strokes: [{index: 1}, {index: 0}], ambiguous: false}
-    - {id: 191115, type: compound, operator: ⿻, references: [{id: 191110}, {id: 191114}], ambiguous: false}
-    - {id: 191116, type: compound, operator: ⿹, references: [{id: 190063}, {id: 4826}], strokes: [{index: 1}, {index: 0}], ambiguous: false}
-    - {id: 191117, type: compound, operator: ⿻, references: [{id: 191110}, {id: 191116}], ambiguous: false}
-    - {id: 191118, type: compound, operator: ⿹, references: [{id: 190063}, {id: 448}], strokes: [{index: 1}, {index: 0}], ambiguous: false}
-    - {id: 191119, type: compound, operator: ⿻, references: [{id: 191110}, {id: 191118}], ambiguous: false}
-    - {id: 191120, type: compound, operator: ⿹, references: [{id: 190063}, {id: 921}], strokes: [{index: 1}, {index: 0}], ambiguous: true}
-    - {id: 191121, type: compound, operator: ⿻, references: [{id: 191110}, {id: 191120}], ambiguous: false}
-    - {id: 191122, type: compound, operator: ⿹, references: [{id: 190063}, {id: 470}], strokes: [{index: 1}, {index: 0}], ambiguous: true}
-    - {id: 191123, type: compound, operator: ⿻, references: [{id: 191110}, {id: 191122}], ambiguous: false}
+        - {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}
+        - {feature: 撇, start: [86, 50], curveList: [{command: c, parameterList: [-2, 15, -18, 34, -30, 42]}]}
+        - {feature: 点, start: [76, 15], curveList: [{command: c, parameterList: [4, 6, 9, 16, 11, 23]}]}
+    - {id: 191113, type: compound, operator: ⿹, references: [{id: 191111}, {id: 282}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 191115, type: compound, operator: ⿹, references: [{id: 191111}, {id: 1064}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 191117, type: compound, operator: ⿹, references: [{id: 191111}, {id: 4826}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 191119, type: compound, operator: ⿹, references: [{id: 191111}, {id: 448}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 191121, type: compound, operator: ⿹, references: [{id: 191111}, {id: 921}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: true}
+    - {id: 191123, type: compound, operator: ⿹, references: [{id: 191111}, {id: 470}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: true}
     - {id: 191124, type: compound, operator: ⿰, references: [{id: 407}, {id: 407}], ambiguous: false}
     - {id: 191125, type: compound, operator: ⿰, references: [{id: 282}, {id: 191124}], ambiguous: false}
     - {id: 191126, type: compound, operator: ⿱, references: [{id: 191124}, {id: 791}], ambiguous: false}
     - {id: 191127, type: compound, operator: ⿵, references: [{id: 344}, {id: 7073}], ambiguous: false}
     - {id: 191128, type: compound, operator: ⿰, references: [{id: 324}, {id: 128544}], ambiguous: false}
     # 「羲」的一长横拆成相接的两笔，分别落在禾、戈。
-    - id: 191129
+    - id: 191132
+      name: 羲字底断笔兼容形
       type: component
-      name: 羲兼容形的禾
       ambiguous: false
       strokes:
         - {feature: 平撇, start: [46, 8], curveList: [{command: z, parameterList: [-10, 2, -20, 3, -33, 3]}]}
@@ -1810,17 +1137,12 @@ data:
         - {feature: 竖, start: [32, 10], curveList: [{command: v, parameterList: [31]}]}
         - {feature: 撇, start: [32, 24], curveList: [{command: c, parameterList: [-4, 6, -12, 10, -21, 14]}]}
         - {feature: 点, start: [32, 24], curveList: [{command: c, parameterList: [6, 5, 13, 10, 18, 14]}]}
-    - id: 191130
-      type: component
-      name: 羲兼容形的戈
-      ambiguous: false
-      strokes:
+        - {feature: 横, start: [14, 47], curveList: [{command: h, parameterList: [42]}]}
+        - {feature: 竖折折钩, start: [25, 47], curveList: [{command: v, parameterList: [17]}, {command: h, parameterList: [24]}, {command: v, parameterList: [22]}]}
         - {feature: 横, start: [49, 24], curveList: [{command: h, parameterList: [42]}]}
         - {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}
         - {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}
         - {feature: 点, start: [76, 8], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 16]}]}
-    - {id: 191131, type: compound, operator: ⿻, references: [{id: 191129}, {id: 84, xbegin: 10, xend: 60, ybegin: 40, yend: 90}], ambiguous: false}
-    - {id: 191132, type: compound, operator: ⿻, references: [{id: 191131}, {id: 191130}], ambiguous: false}
     - {id: 191133, type: compound, operator: ⿱, references: [{id: 929}, {id: 191132}], ambiguous: false}
     - {id: 191134, type: compound, operator: ⿰, references: [{id: 506}, {id: 191133}], ambiguous: false}
     # 「命」保持上部覆盖「卩」，「夜」只重排右下角的点。
@@ -1851,6 +1173,119 @@ data:
     - {id: 191139, type: compound, operator: ⿲, references: [{id: 599}, {id: 1021}, {id: 599}], strokes: [{index: 0}, {index: 1}, {index: 2}], ambiguous: true}
     - {id: 191140, type: compound, operator: ⿱, references: [{id: 191139}, {id: 188}], ambiguous: false}
     - {id: 191141, type: compound, operator: ⿰, references: [{id: 995}, {id: 191140}], ambiguous: false}
+    # 基本集收录的兼容拆分，复用实际分部和笔画。
+    - {id: 219000, type: compound, operator: ⿰, references: [{id: 108}, {id: 191101}], ambiguous: false}
+    - {id: 219001, type: compound, operator: ⿹, references: [{id: 191111}, {id: 470}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: true}
+    - {id: 219002, type: compound, operator: ⿰, references: [{id: 108}, {id: 219001}], ambiguous: false}
+    - {id: 219003, type: compound, operator: ⿹, references: [{id: 191111}, {id: 967}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219004, type: compound, operator: ⿰, references: [{id: 108}, {id: 219003}], ambiguous: false}
+    - {id: 219005, type: compound, operator: ⿲, references: [{id: 4101}, {id: 1021}, {id: 4101}], strokes: [{index: 0}, {index: 1}, {index: 2}], ambiguous: false, name: 龻按糸、言、糸取根}
+    - {id: 219006, type: compound, operator: ⿱, references: [{id: 219005}, {id: 66}], ambiguous: false}
+    - {id: 219007, type: compound, operator: ⿸, references: [{id: 71}, {id: 191101}], ambiguous: false}
+    - {id: 219008, type: compound, operator: ⿱, references: [{id: 219005}, {id: 448}], ambiguous: false}
+    - {id: 219009, type: compound, operator: ⿴, references: [{id: 283}, {id: 219008}], strokes: [{index: 0, to: 1}, {index: 1}, {index: 0, from: 2}], ambiguous: false}
+    - {id: 219010, type: compound, operator: ⿰, references: [{id: 221}, {id: 191101}], ambiguous: false}
+    - {id: 219011, type: compound, operator: ⿱, references: [{id: 219005}, {id: 374}], ambiguous: false}
+    - {id: 219012, type: compound, operator: ⿰, references: [{id: 221}, {id: 219011}], ambiguous: false}
+    - {id: 219013, type: compound, operator: ⿱, references: [{id: 219005}, {id: 244}], ambiguous: false}
+    - {id: 219014, type: compound, operator: ⿰, references: [{id: 389}, {id: 191101}], ambiguous: false}
+    - {id: 219015, type: compound, operator: ⿹, references: [{id: 1069}, {id: 506}], strokes: [{index: 0, to: 4}, {index: 1}, {index: 0, from: 5}], ambiguous: false, name: 戠按共享交错笔顺取根}
+    - {id: 219016, type: compound, operator: ⿰, references: [{id: 389}, {id: 219015}], ambiguous: false}
+    - {id: 219017, type: compound, operator: ⿱, references: [{id: 219005}, {id: 389}], ambiguous: false}
+    - {id: 219018, type: compound, operator: ⿱, references: [{id: 219005}, {id: 378}], ambiguous: false}
+    - {id: 219019, type: compound, operator: ⿰, references: [{id: 289}, {id: 191101}], ambiguous: false}
+    - {id: 219020, type: compound, operator: ⿹, references: [{id: 191111}, {id: 1064}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219021, type: compound, operator: ⿱, references: [{id: 289}, {id: 219020}], ambiguous: false}
+    - {id: 219022, type: compound, operator: ⿱, references: [{id: 219005}, {id: 289}], ambiguous: false}
+    - {id: 219023, type: compound, operator: ⿰, references: [{id: 290}, {id: 219015}], ambiguous: false}
+    - {id: 219024, type: compound, operator: ⿹, references: [{id: 191111}, {id: 4180}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219025, type: compound, operator: ⿰, references: [{id: 351}, {id: 219024}], ambiguous: false}
+    - {id: 219026, type: compound, operator: ⿱, references: [{id: 219005}, {id: 612}], ambiguous: false}
+    - {id: 219027, type: compound, operator: ⿰, references: [{id: 220}, {id: 219020}], ambiguous: false}
+    - {id: 219028, type: compound, operator: ⿱, references: [{id: 219005}, {id: 529}], ambiguous: false}
+    - {id: 219029, type: compound, operator: ⿰, references: [{id: 593}, {id: 219015}], ambiguous: false}
+    - {id: 219030, type: compound, operator: ⿱, references: [{id: 219005}, {id: 506}], ambiguous: false}
+    - {id: 219031, type: compound, operator: ⿰, references: [{id: 448}, {id: 219015}], ambiguous: false}
+    - {id: 219032, type: compound, operator: ⿰, references: [{id: 466}, {id: 219024}], ambiguous: false}
+    - {id: 219033, type: compound, operator: ⿹, references: [{id: 191111}, {id: 282}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219034, type: compound, operator: ⿰, references: [{id: 350}, {id: 219033}], ambiguous: false}
+    - {id: 219035, type: compound, operator: ⿹, references: [{id: 191111}, {id: 448}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219036, type: compound, operator: ⿰, references: [{id: 350}, {id: 219035}], ambiguous: false}
+    - {id: 219037, type: compound, operator: ⿰, references: [{id: 350}, {id: 219024}], ambiguous: false}
+    - {id: 219038, type: compound, operator: ⿹, references: [{id: 191111}, {id: 4826}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219039, type: compound, operator: ⿰, references: [{id: 350}, {id: 219038}], ambiguous: false}
+    - {id: 219040, type: compound, operator: ⿱, references: [{id: 219005}, {id: 522}], ambiguous: false}
+    - {id: 219041, type: compound, operator: ⿰, references: [{id: 350}, {id: 219011}], ambiguous: false}
+    - {id: 219042, type: compound, operator: ⿰, references: [{id: 350}, {id: 219008}], ambiguous: false}
+    - {id: 219043, type: compound, operator: ⿹, references: [{id: 191111}, {id: 599}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219044, type: compound, operator: ⿰, references: [{id: 599}, {id: 219015}], ambiguous: false}
+    - {id: 219045, type: compound, operator: ⿸, references: [{id: 795}, {id: 219028}], ambiguous: false}
+    - {id: 219046, type: compound, operator: ⿱, references: [{id: 219005}, {id: 4159}], ambiguous: false}
+    - {id: 219047, type: compound, operator: ⿸, references: [{id: 795}, {id: 219046}], ambiguous: false}
+    - {id: 219048, type: compound, operator: ⿰, references: [{id: 712}, {id: 219033}], ambiguous: false}
+    - {id: 219049, type: compound, operator: ⿱, references: [{id: 219005}, {id: 712}], ambiguous: false}
+    - {id: 219050, type: compound, operator: ⿰, references: [{id: 686}, {id: 191101}], ambiguous: false}
+    - {id: 219051, type: compound, operator: ⿱, references: [{id: 4100}, {id: 191101}], ambiguous: false}
+    - {id: 219052, type: compound, operator: ⿱, references: [{id: 4100}, {id: 219024}], ambiguous: false}
+    - {id: 219053, type: compound, operator: ⿰, references: [{id: 4101}, {id: 191101}], ambiguous: false}
+    - {id: 219054, type: compound, operator: ⿹, references: [{id: 191111}, {id: 703}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], name: 繊字边, ambiguous: false}
+    - {id: 219055, type: compound, operator: ⿰, references: [{id: 4101}, {id: 219054}], ambiguous: false}
+    - {id: 219056, type: compound, operator: ⿰, references: [{id: 4101}, {id: 219015}], ambiguous: false}
+    - {id: 219057, type: compound, operator: ⿰, references: [{id: 4101}, {id: 219024}], ambiguous: false}
+    - {id: 219058, type: compound, operator: ⿰, references: [{id: 4101}, {id: 219026}], ambiguous: false}
+    - {id: 219059, type: compound, operator: ⿰, references: [{id: 836}, {id: 219015}], ambiguous: false}
+    - {id: 219060, type: compound, operator: ⿹, references: [{id: 191111}, {id: 4159}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219061, type: compound, operator: ⿰, references: [{id: 4107}, {id: 191101}], ambiguous: false}
+    - {id: 219062, type: compound, operator: ⿰, references: [{id: 569}, {id: 219015}], ambiguous: false}
+    - {id: 219064, type: compound, operator: ⿹, references: [{id: 191111}, {id: 4160}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219065, type: compound, operator: ⿱, references: [{id: 437}, {id: 191101}], ambiguous: false}
+    - {id: 219066, type: compound, operator: ⿱, references: [{id: 228}, {id: 219059}], ambiguous: false}
+    - {id: 219068, type: compound, operator: ⿱, references: [{id: 228}, {id: 219008}], ambiguous: false}
+    - {id: 219070, type: compound, operator: ⿹, references: [{id: 191111}, {id: 880}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219071, type: compound, operator: ⿰, references: [{id: 880}, {id: 219015}], ambiguous: false}
+    - {id: 219072, type: compound, operator: ⿰, references: [{id: 880}, {id: 219020}], ambiguous: false}
+    - {id: 219073, type: compound, operator: ⿱, references: [{id: 219005}, {id: 880}], ambiguous: false}
+    - {id: 219074, type: compound, operator: ⿰, references: [{id: 807}, {id: 219038}], ambiguous: false}
+    - {id: 219075, type: compound, operator: ⿰, references: [{id: 1021}, {id: 191101}], ambiguous: false}
+    - {id: 219076, type: compound, operator: ⿰, references: [{id: 1021}, {id: 219015}], ambiguous: false}
+    - {id: 219077, type: compound, operator: ⿱, references: [{id: 219005}, {id: 545}], ambiguous: false}
+    - {id: 219078, type: compound, operator: ⿰, references: [{id: 4170}, {id: 219033}], ambiguous: false}
+    - {id: 219079, type: compound, operator: ⿰, references: [{id: 1006}, {id: 219015}], ambiguous: false}
+    - {id: 219080, type: compound, operator: ⿰, references: [{id: 191101}, {id: 162}], ambiguous: false}
+    - {id: 219081, type: compound, operator: ⿹, references: [{id: 191111}, {id: 977}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], ambiguous: false}
+    - {id: 219082, type: compound, operator: ⿰, references: [{id: 4174}, {id: 191101}], ambiguous: false}
+    - {id: 219083, type: compound, operator: ⿹, references: [{id: 191111}, {id: 4169}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], name: 鐡字边, ambiguous: false}
+    - {id: 219084, type: compound, operator: ⿰, references: [{id: 4174}, {id: 219083}], ambiguous: false}
+    - {id: 219085, type: compound, operator: ⿹, references: [{id: 191111}, {id: 9193}], strokes: [{index: 0, to: 2}, {index: 1}, {index: 0, from: 3}], name: 䟈字心, ambiguous: false}
+    - {id: 219086, type: compound, operator: ⿰, references: [{id: 4174}, {id: 219085}], ambiguous: false}
+    - {id: 219089, type: compound, operator: ⿱, references: [{id: 219005}, {id: 4174}], ambiguous: false}
+    - {id: 219090, type: compound, operator: ⿰, references: [{id: 4187}, {id: 219085}], ambiguous: false}
+    - {id: 219092, type: compound, operator: ⿱, references: [{id: 219005}, {id: 4199}], ambiguous: false}
+    - {id: 218000, name: 港台标黽中, type: component, ambiguous: false, strokes: [{feature: 竖, start: [15, 11], curveList: [{command: v, parameterList: [16]}]}, {feature: 横折, start: [15, 11], curveList: [{command: h, parameterList: [70]}, {command: v, parameterList: [16]}]}, {feature: 横, start: [15, 27], curveList: [{command: h, parameterList: [25]}]}, {feature: 横, start: [60, 27], curveList: [{command: h, parameterList: [25]}]}, {feature: 竖, start: [60, 11], curveList: [{command: v, parameterList: [64]}]}, {feature: 竖弯钩, start: [40, 11], curveList: [{command: v, parameterList: [82]}, {command: h, parameterList: [53]}]}]}
+    # 奐字头由负字头和包围八或人的字腰构成。
+    - {id: 218001, name: 奐字头, type: compound, operator: ⿱, references: [{id: 127}, {id: 7039}], ambiguous: false}
+    - {id: 218002, name: 奐字头·港台标, type: compound, operator: ⿱, references: [{id: 127}, {id: 4587}], ambiguous: false}
+    # 复用已核实的命、垂、羲、夜兼容形及港标於，补充基本集宿主。
+    - {id: 221000, type: compound, operator: ⿰, references: [{id: 220}, {id: 191135}]}
+    - {id: 221001, type: compound, operator: ⿰, references: [{id: 448}, {id: 191135}]}
+    - {id: 221002, type: compound, operator: ⿰, references: [{id: 350}, {id: 191101}]}
+    - {id: 221003, type: compound, operator: ⿰, references: [{id: 191101}, {id: 480}]}
+    - {id: 221004, type: compound, operator: ⿰, references: [{id: 599}, {id: 191133}]}
+    - {id: 221005, type: compound, operator: ⿰, references: [{id: 542}, {id: 191133}]}
+    - {id: 221006, type: compound, operator: ⿰, references: [{id: 191138}, {id: 4199}]}
+    - {id: 221007, type: compound, operator: ⿰, references: [{id: 4198}, {id: 7073}]}
+    # 與字头接点修复后，兼容形沿原分部取根，保留已收录的调整码。
+    - {id: 232000, type: compound, name: 與字头·保留分部兼容, operator: ⿱, references: [{id: 4296}, {id: 1, attach_to_previous: true}]}
+    - {id: 232001, type: compound, operator: ⿱, references: [{id: 232000}, {id: 116}]}
+    - {id: 232002, type: compound, operator: ⿱, references: [{id: 232001}, {id: 529}]}
+    - {id: 232003, type: compound, operator: ⿰, references: [{id: 232001}, {id: 4143}]}
+    - {id: 232004, type: compound, operator: ⿱, references: [{id: 232001}, {id: 686}]}
+    - {id: 232005, type: compound, operator: ⿱, references: [{id: 232001}, {id: 209}]}
+    - {id: 232006, type: compound, operator: ⿱, references: [{id: 232001}, {id: 1021}]}
+    - {id: 232007, type: compound, operator: ⿱, references: [{id: 232001}, {id: 967}]}
+    - {id: 232008, type: compound, operator: ⿱, references: [{id: 232001}, {id: 4199}]}
+    # 从共享微字心的实际三笔提取，按普通字根规则匹配。
+    - {id: 233000, type: component, name: 兀·横儿分离形, strokes: [{feature: 横, start: [6, 45], curveList: [{command: h, parameterList: [88]}]}, {feature: 撇, start: [34, 50], curveList: [{command: c, parameterList: [0, 28, 0, 39, -26, 48]}]}, {feature: 竖弯钩, start: [66, 50], curveList: [{command: v, parameterList: [48]}, {command: h, parameterList: [26]}]}]}
   character_customization:
     # 港、台标「垂」保留两个「十」，并给相关字补兼容形。
     垂: [{type: insert, id: 191101, sources: []}]
@@ -1890,98 +1325,126 @@ data:
     # 「壬、曰」统一使用能和「王、日」区分的字形。
     壬: [{type: update, id: 541, sources: [H, T]}]
     曰: [{type: update, id: 507, sources: [T]}]
-    歃: [{type: update, id: 196010, sources: [T]}]
-    沪: [{type: update, id: 196011, sources: [T]}]
-    炉: [{type: update, id: 196012, sources: [T]}]
-    煸: [{type: update, id: 196013, sources: [T]}]
-    犏: [{type: update, id: 196014, sources: [T]}]
-    碥: [{type: update, id: 196015, sources: [T]}]
-    煽: [{type: update, id: 196016, sources: [T]}]
-    牖: [{type: update, id: 196018, sources: [T]}]
-    泠: [{type: update, id: 196019, sources: [T]}]
-    玲: [{type: update, id: 196020, sources: [T]}]
-    瓴: [{type: update, id: 196021, sources: [T]}]
-    焓: [{type: update, id: 196023, sources: [T]}]
-    稔: [{type: update, id: 196025, sources: [T]}]
-    砥: [{type: update, id: 196026, sources: [T]}]
-    祗: [{type: update, id: 196027, sources: [T]}]
-    浚: [{type: update, id: 196028, sources: [T]}]
-    狻: [{type: update, id: 196029, sources: [T]}]
-    皴: [{type: update, id: 196030, sources: [T]}]
-    睃: [{type: update, id: 196031, sources: [T]}]
-    深: [{type: update, id: 196032, sources: [T]}]
-    琛: [{type: update, id: 196033, sources: [T]}]
-    睦: [{type: update, id: 196034, sources: [T]}]
-    稷: [{type: update, id: 196035, sources: [T]}]
-    漫: [{type: update, id: 196036, sources: [T]}]
-    熳: [{type: update, id: 196037, sources: [T]}]
-    版: [{type: update, id: 196038, sources: [T]}]
-    畈: [{type: update, id: 196039, sources: [T]}]
-    皈: [{type: update, id: 196040, sources: [T]}]
-    熬: [{type: update, id: 196041, sources: [T]}]
-    獒: [{type: update, id: 196042, sources: [T]}]
-    摇: [{type: update, id: 196043, sources: [T]}]
-    橄: [{type: update, id: 196044, sources: [T]}]
-    澉: [{type: update, id: 196045, sources: [T]}]
-    瞰: [{type: update, id: 196046, sources: [T]}]
-    痊: [{type: update, id: 196047, sources: [T]}]
-    祓: [{type: update, id: 196048, sources: [T]}]
-    潢: [{type: update, id: 196049, sources: [T]}]
-    璜: [{type: update, id: 196050, sources: [T]}]
-    癀: [{type: update, id: 196051, sources: [T]}]
-    磺: [{type: update, id: 196052, sources: [T]}]
-    剪: [{type: update, id: 196096, sources: [T]}]
-    嘴: [{type: update, id: 196097, sources: [H]}, {type: update, id: 196098, sources: [T]}]
-    嘘: [{type: update, id: 14656, sources: [T]}]
     岙: [{type: update, id: 16202, sources: [T]}]
-    流: [{type: update, id: 196100, sources: [T]}]
-    琉: [{type: update, id: 196101, sources: [T]}]
-    硫: [{type: update, id: 196102, sources: [T]}]
-    醯: [{type: update, id: 196104, sources: [T]}]
-    澈: [{type: update, id: 196106, sources: [T]}]
-    榻: [{type: update, id: 196110, sources: [T]}]
-    溻: [{type: update, id: 196111, sources: [T]}]
-    凄: [{type: update, id: 196113, sources: [T]}]
-    萋: [{type: update, id: 196114, sources: [T]}]
-    瞎: [{type: update, id: 196115, sources: [T]}]
-    程: [{type: update, id: 196117, sources: [T]}]
-    像: [{type: update, id: 196119, sources: [T]}]
-    橡: [{type: update, id: 196120, sources: [T]}]
-    碌: [{type: update, id: 196121, sources: [T]}]
-    氯: [{type: update, id: 196122, sources: [T]}]
-    汲: [{type: update, id: 196123, sources: [T]}]
-    横: [{type: update, id: 196125, sources: [T]}]
-    潴: [{type: update, id: 196126, sources: [T]}]
-    澳: [{type: update, id: 196127, sources: [T]}]
-    燠: [{type: update, id: 196128, sources: [T]}]
-    珊: [{type: update, id: 196129, sources: [T]}]
-    璁: [{type: update, id: 196131, sources: [T]}]
-    瘟: [{type: update, id: 196134, sources: [T]}]
-    碳: [{type: update, id: 196135, sources: [T]}]
-    碡: [{type: update, id: 196142, sources: [T]}]
-    槲: [{type: update, id: 196144, sources: [T]}]
-    獬: [{type: update, id: 196146, sources: [T]}]
-    确: [{type: update, id: 196147, sources: [T]}]
-    犟: [{type: update, id: 196153, sources: [T]}]
-    沿: [{type: update, id: 196649, sources: [T]}]
-    殛: [{type: update, id: 196650, sources: [T]}]
-    樊: [{type: update, id: 196500, sources: [T]}]
-    攀: [{type: update, id: 196501, sources: [T]}]
-    襻: [{type: update, id: 196502, sources: [T]}]
-    碉: [{type: update, id: 196154, sources: [H]}]
-    稠: [{type: update, id: 196155, sources: [H]}]
-    稆: [{type: update, id: 196159, sources: [T]}]
-    毓: [{type: update, id: 196162, sources: [T]}]
-    疏: [{type: update, id: 196163, sources: [T]}]
     爨: [{type: update, id: 196164, sources: [T]}]
-    璺: [{type: update, id: 196165, sources: [T]}]
-    邻: [{type: update, id: 28635, sources: [H]}]
+    # 基本集兼容码。
+    倕: [{type: insert, id: 219000, sources: []}]
+    傤: [{type: insert, id: 219002, sources: []}]
+    儎: [{type: insert, id: 219004, sources: []}]
+    卛: [{type: insert, id: 219006, sources: []}]
+    厜: [{type: insert, id: 219007, sources: []}]
+    圞: [{type: insert, id: 219009, sources: []}]
+    埵: [{type: insert, id: 219010, sources: []}]
+    壪: [{type: insert, id: 219012, sources: []}]
+    奱: [{type: insert, id: 219013, sources: []}]
+    娷: [{type: insert, id: 219014, sources: []}]
+    嬂: [{type: insert, id: 219016, sources: []}]
+    孌: [{type: insert, id: 219017, sources: []}]
+    孿: [{type: insert, id: 219018, sources: []}]
+    崜: [{type: insert, id: 219019, sources: []}]
+    嶻: [{type: insert, id: 219021, sources: []}]
+    巒: [{type: insert, id: 219022, sources: []}]
+    幟: [{type: insert, id: 219023, sources: []}]
+    彎: [{type: insert, id: 219011, sources: []}]
+    懴: [{type: insert, id: 219025, sources: []}]
+    戀: [{type: insert, id: 219026, sources: []}]
+    戠: [{type: insert, id: 219015, sources: []}]
+    擮: [{type: insert, id: 219027, sources: []}]
+    攣: [{type: insert, id: 219028, sources: []}]
+    旘: [{type: insert, id: 219029, sources: []}]
+    曫: [{type: insert, id: 219030, sources: []}]
+    樴: [{type: insert, id: 219031, sources: []}]
+    欒: [{type: insert, id: 219008, sources: []}]
+    殱: [{type: insert, id: 219032, sources: []}]
+    渽: [{type: insert, id: 219034, sources: []}]
+    溨: [{type: insert, id: 219036, sources: []}]
+    瀐: [{type: insert, id: 219037, sources: []}]
+    瀻: [{type: insert, id: 219039, sources: []}]
+    灓: [{type: insert, id: 219040, sources: []}]
+    灣: [{type: insert, id: 219041, sources: []}]
+    灤: [{type: insert, id: 219042, sources: []}]
+    烖: [{type: insert, id: 219043, sources: []}]
+    熾: [{type: insert, id: 219044, sources: []}]
+    癴: [{type: insert, id: 219045, sources: []}]
+    癵: [{type: insert, id: 219047, sources: []}]
+    睵: [{type: insert, id: 219048, sources: []}]
+    矕: [{type: insert, id: 219049, sources: []}]
+    硾: [{type: insert, id: 219050, sources: []}]
+    箠: [{type: insert, id: 219051, sources: []}]
+    籖: [{type: insert, id: 219052, sources: []}]
+    綞: [{type: insert, id: 219053, sources: []}]
+    繊: [{type: insert, id: 219055, sources: []}]
+    織: [{type: insert, id: 219056, sources: []}]
+    纎: [{type: insert, id: 219057, sources: []}]
+    纞: [{type: insert, id: 219058, sources: []}]
+    職: [{type: insert, id: 219059, sources: []}]
+    胾: [{type: insert, id: 219060, sources: []}]
+    腄: [{type: insert, id: 219061, sources: []}]
+    膱: [{type: insert, id: 219062, sources: []}]
+    臠: [{type: insert, id: 219046, sources: []}]
+    臷: [{type: insert, id: 219064, sources: []}]
+    菙: [{type: insert, id: 219065, sources: []}]
+    蘵: [{type: insert, id: 219066, sources: []}]
+    虊: [{type: insert, id: 219068, sources: []}]
+    蛓: [{type: insert, id: 219070, sources: []}]
+    蟙: [{type: insert, id: 219071, sources: []}]
+    蠘: [{type: insert, id: 219072, sources: []}]
+    蠻: [{type: insert, id: 219073, sources: []}]
+    襶: [{type: insert, id: 219074, sources: []}]
+    諈: [{type: insert, id: 219075, sources: []}]
+    識: [{type: insert, id: 219076, sources: []}]
+    變: [{type: insert, id: 219077, sources: []}]
+    賳: [{type: insert, id: 219078, sources: []}]
+    軄: [{type: insert, id: 219079, sources: []}]
+    載: [{type: insert, id: 219003, sources: []}]
+    郵: [{type: insert, id: 219080, sources: []}]
+    酨: [{type: insert, id: 219081, sources: []}]
+    錘: [{type: insert, id: 219082, sources: []}]
+    鐡: [{type: insert, id: 219084, sources: []}]
+    鐵: [{type: insert, id: 219086, sources: []}]
+    鑾: [{type: insert, id: 219089, sources: []}]
+    韯: [{type: insert, id: 219024, sources: []}]
+    驖: [{type: insert, id: 219090, sources: []}]
+    鸞: [{type: insert, id: 219092, sources: []}]
+    龻: [{type: insert, id: 219005, sources: []}]
+    # 发布包中已收录的宿主兼容码。
+    掵: [{type: insert, id: 221000, sources: []}]
+    椧: [{type: insert, id: 221001, sources: []}]
+    涶: [{type: insert, id: 221002, sources: []}]
+    甀: [{type: insert, id: 221003, sources: []}]
+    爔: [{type: insert, id: 221004, sources: []}]
+    犧: [{type: insert, id: 221005, sources: []}]
+    鵺: [{type: insert, id: 221006, sources: []}]
+    鯲: [{type: insert, id: 221007, sources: []}]
+    # 與系原有兼容码。
+    擧: [{type: insert, id: 232002, sources: []}]
+    歟: [{type: insert, id: 232003, sources: []}]
+    礜: [{type: insert, id: 232004, sources: []}]
+    與: [{type: insert, id: 232001, sources: []}]
+    舉: [{type: insert, id: 232005, sources: []}]
+    譽: [{type: insert, id: 232006, sources: []}]
+    轝: [{type: insert, id: 232007, sources: []}]
+    鸒: [{type: insert, id: 232008, sources: []}]
   character_set: basic
   glyph_sources:
     - G
     - H
     - T
   glyph_algebra:
+    # 星陈把奐的前两部分合取一个字根。
+    - from: {operator: ⿳, references: [127, 7039, {variable: 1, id_set: [244, 599]}]}
+      to: {operator: ⿱, references: [218001, {variable: 1}]}
+    - from: 127488
+      to: {operator: ⿱, references: [218002, 244]}
+    # 克作为包围外框时仍取古、儿。
+    - from: 1283
+      to: {operator: ⿱, references: [675, 1262]}
+    # 羲字底先取原部件 #1060 的禾、戈无横，再取丂。
+    - from: 7569
+      to: {operator: ⿹, references: [1060, 84]}
+    # 戠系先取字框内的立和戈无横，再取日。
+    - from: 15888
+      to: {operator: ⿹, references: [1069, 506]}
     # 复用「宂」的儿底字形，保留抭、鴧、邉对应来源的取根。
     - from: {operator: ⿰, references: [220, 9401]}
       to: {operator: ⿰, references: [220, 196000]}

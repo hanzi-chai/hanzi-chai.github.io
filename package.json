@@ -22,6 +22,7 @@
   },
   "scripts": {
     "fetch": "bun scripts/fetch.ts",
+    "check:code-tables": "bun scripts/check-code-tables.ts",
     "start": "vite --mode PAGES",
     "dev": "vite --mode PAGES",
     "preview": "vite preview --mode PAGES --outDir dist/pages",

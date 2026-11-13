@@ -17,10 +17,17 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { 元素位或编码, 强类型元素位或编码, 组装条目 } from "hanzi-chai";
-import { 下转换, 反序列化, 序列化 } from "hanzi-chai";
+import type { 元素位或编码, 强类型元素位或编码 } from "hanzi-chai";
+import {
+  估计阶重码,
+  分析原始重码,
+  分析边际重码,
+  筛选组装结果,
+  反序列化,
+  序列化,
+} from "hanzi-chai";
 import { useAtomValue } from "jotai";
-import { isEqual, range, sumBy } from "lodash-es";
+import { range, sumBy } from "lodash-es";
 import { Suspense, useState } from "react";
 import {
   useAtomValueUnwrapped,
@@ -36,55 +43,6 @@ import {
   PlusButton,
 } from "~/components/Utils";
 import { type AnalyzerForm, useChaifenTitle, 数字 } from "~/utils";
-
-const filterRelevant = (result: 组装条目[], analyzer: AnalyzerForm) => {
-  let relevant = result.sort((a, b) => b.频率 - a.频率);
-  if (analyzer.type === "single")
-    relevant = relevant.filter((x) => [...x.词].length === 1);
-  if (analyzer.type === "multi")
-    relevant = relevant.filter((x) => [...x.词].length > 1);
-  if (analyzer.top > 0) {
-    relevant = relevant.slice(0, analyzer.top);
-  }
-  return relevant;
-};
-
-const 分析原始重码 = (
-  分析配置: AnalyzerForm,
-  result: 组装条目[],
-  maxLength: number,
-  合并组列表: 强类型元素位或编码[][] = [],
-) => {
-  const 反向映射 = new Map<string, string[]>();
-  const 相关结果 = filterRelevant(result, 分析配置);
-  for (const 条目 of 相关结果) {
-    const { 词, 元素序列 } = 条目;
-    const 处理后元素序列: (强类型元素位或编码 | undefined)[] = [];
-    for (const i of range(maxLength)) {
-      if (分析配置.position.includes(i)) {
-        const 码位 = 元素序列.元素序列[i];
-        const index = 合并组列表.findIndex((group) =>
-          group.some((y) => isEqual(y, 码位)),
-        );
-        处理后元素序列.push(
-          index !== -1 ? String.fromCodePoint(0x100000 + index) : 码位,
-        );
-      } else {
-        处理后元素序列.push("*");
-      }
-    }
-    const summary = JSON.stringify(
-      处理后元素序列.map((x) => (x !== undefined ? 下转换(x) : "ε")),
-    );
-    反向映射.set(
-      summary,
-      (反向映射.get(summary) || []).concat(
-        词.map((c) => c.获取名称()).join(""),
-      ),
-    );
-  }
-  return 反向映射;
-};
 
 interface Density {
   name: string;
@@ -165,12 +123,17 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   const maxLength = useAtomValue(最大码长原子);
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
-  const reverseMap = 分析原始重码(analyzer, assemblyResult, maxLength);
+  const reverseMap = 分析原始重码(
+    analyzer,
+    assemblyResult,
+    maxLength,
+    [],
+    true,
+  );
   const alphabet = useAtomValue(字母表原子);
   const dataSource = [...reverseMap]
     .sort((a, b) => b[1].length - a[1].length)
     .map(([name, items]) => ({ name, items }));
-  const lengths = dataSource.map((x) => x.items.length);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const columns: ColumnsType<Density> = [
     {
@@ -210,9 +173,10 @@ const MultiDistribution = ({ init }: { init: AnalyzerForm }) => {
   ];
 
   const coorder = 数字(maxLength - analyzer.position.length);
-  const space = alphabet.length ** (maxLength - analyzer.position.length);
-  const estimation = sumBy(lengths, (x) =>
-    analyzer.position.length === maxLength ? x - 1 : (x * x) / 2 / space,
+  const estimation = 估计阶重码(
+    reverseMap,
+    maxLength - analyzer.position.length,
+    alphabet.length,
   );
   return (
     <>
@@ -241,7 +205,7 @@ const UnaryDistribution = ({ init }: { init: AnalyzerForm }) => {
   const [analyzer, setAnalyzer] = useState(init);
   const assemblyResult = useAtomValueUnwrapped(如带归并组装结果原子);
   const reverseMap = new Map<string, Set<string>[]>();
-  const relevant = filterRelevant(assemblyResult, analyzer);
+  const relevant = 筛选组装结果(assemblyResult, analyzer);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   for (const assembly of relevant) {
     const { 词, 元素序列 } = assembly;
@@ -329,16 +293,13 @@ const MarginalFirstOrderDuplication = () => {
     top: 0,
   });
 
-  const rmBefore = 分析原始重码(analyzer, assemblyResult, maxLength);
-  const szBefore = new Set<string>();
-  rmBefore.forEach((items) => {
-    if (items.length > 1) items.map((x) => szBefore.add(x));
-  });
-  const rmAfter = 分析原始重码(analyzer, assemblyResult, maxLength, 合并组列表);
-  const szAfter = new Set<string>();
-  rmAfter.forEach((items) => {
-    if (items.length > 1) items.map((x) => szAfter.add(x));
-  });
+  const { 新增对象 } = 分析边际重码(
+    analyzer,
+    assemblyResult,
+    maxLength,
+    合并组列表,
+    true,
+  );
   const { 笔画列表 } = useAtomValueUnwrapped(全部合法元素原子);
   const defaultItem = (): 强类型元素位或编码 => ({
     element: 笔画列表[0]!,
@@ -406,7 +367,7 @@ const MarginalFirstOrderDuplication = () => {
       </Flex>
       <Typography.Paragraph>
         将增加重码：
-        {[...szAfter].filter((x) => !szBefore.has(x)).join("、")}
+        {新增对象.join("、")}
       </Typography.Paragraph>
     </>
   );

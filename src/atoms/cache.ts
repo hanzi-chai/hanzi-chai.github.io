@@ -1,5 +1,6 @@
 import {
   ok,
+  归并组装结果,
   type 元素,
   决策图,
   分析拼音,
@@ -15,11 +16,9 @@ import {
   序列化强类型决策,
   序列化强类型决策空间,
   序列化组装结果,
-  type 强类型元素位或编码,
   type 强类型决策,
   type 强类型决策空间,
   type 当量映射,
-  是强类型归并,
   来源排序,
   构建优先简码映射,
   构建强类型决策与决策空间,
@@ -43,6 +42,7 @@ import { atom } from "jotai";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
 import type { Metric } from "~/components/MetricTable";
+import { GF0014映射 } from "~/gf";
 import { get预加载数据 } from "~/preload";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
 import {
@@ -186,7 +186,8 @@ export const GF0014映射原子 = atom((get) => {
   const tsv = get预加载数据().GF0014;
   const map = new Map<number, { gf0014_id: number; pinyin: string[] }>();
   const 字形列表 = get(字形列表原子);
-  for (const { id, gf0014_id } of 字形列表) {
+  for (const { id } of 字形列表) {
+    const gf0014_id = GF0014映射.get(id);
     if (gf0014_id !== undefined) {
       map.set(id, { gf0014_id, pinyin: tsv[gf0014_id - 1] ?? [] });
     }
@@ -434,42 +435,7 @@ export const 如带归并组装结果原子 = atom((get) => {
   if (!如组装结果.ok) return 如组装结果;
   const 决策与决策空间 = get(强类型决策与决策空间原子);
   if (!决策与决策空间.ok) return 决策与决策空间;
-  const 带归并组装结果: 组装条目[] = [];
-  for (const 条目 of 如组装结果.value) {
-    const 新元素序列: 强类型元素位或编码[] = [];
-    for (const 码位 of 条目.元素序列.元素序列) {
-      if (typeof 码位 === "string") {
-        新元素序列.push(码位);
-      } else {
-        // 判断当前元素位是自由还是归并的
-        let 当前码位 = 码位;
-        let i = 0;
-        while (true) {
-          i += 1;
-          if (i > 100) break; // 防止死循环
-          const 安排 = 决策与决策空间.value.决策.get(当前码位.element);
-          if (!安排) continue;
-          if (是强类型归并(安排)) {
-            // 如果当前元素是归并的，更新元素为归并元素，位置不变
-            当前码位 = { ...当前码位, element: 安排.element };
-          } else if (Array.isArray(安排)) {
-            const 引用码位 = 安排[当前码位.index];
-            if (引用码位 === undefined || typeof 引用码位 === "string") {
-              break;
-            } else {
-              当前码位 = 引用码位;
-            }
-          }
-        }
-        新元素序列.push(当前码位);
-      }
-    }
-    带归并组装结果.push({
-      ...条目,
-      元素序列: { ...条目.元素序列, 元素序列: 新元素序列 },
-    });
-  }
-  return ok(带归并组装结果);
+  return ok(归并组装结果(如组装结果.value, 决策与决策空间.value.决策));
 });
 
 export const 如动态组装结果原子 = atom((get) => {

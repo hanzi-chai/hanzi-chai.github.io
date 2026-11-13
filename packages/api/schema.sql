@@ -3,10 +3,7 @@ CREATE TABLE IF NOT EXISTS repertoire (
   tygf INTEGER NOT NULL,
   gb2312 INTEGER NOT NULL,
   glyphs TEXT NOT NULL,
-  name TEXT,
-  gf0014_id INTEGER,
-  gf3001_id INTEGER,
-  ambiguous INTEGER NOT NULL
+  name TEXT
 );
 
 CREATE TABLE IF NOT EXISTS characters (
@@ -14,8 +11,7 @@ CREATE TABLE IF NOT EXISTS characters (
   `tygf` INTEGER,
   `gb2312` INTEGER,
   `glyphs` TEXT NOT NULL,
-  `name` TEXT,
-  `ambiguous` INTEGER
+  `name` TEXT
 );
 
 CREATE TABLE IF NOT EXISTS glyphs (
@@ -24,10 +20,7 @@ CREATE TABLE IF NOT EXISTS glyphs (
   `type` TEXT NOT NULL,
   `operator` TEXT,
   `references` TEXT,
-  `strokes` TEXT,
-  `gf0014_id` INTEGER,
-  `gf3001_id` INTEGER,
-  `ambiguous` INTEGER NOT NULL
+  `strokes` TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (

@@ -1,7 +1,14 @@
-import type { 原始汉字模型 } from "../../schema/types";
 import { Env } from "../dto/context";
 import { Err, ErrCode, Result } from "../error/error";
-import { loadNumber, loadString } from "../dto/load";
+import { loadNumber } from "../dto/load";
+
+export interface 原始汉字模型 {
+  unicode: number;
+  tygf: number;
+  gb2312: number;
+  glyphs: string;
+  name: string | null;
+}
 
 const table = "repertoire";
 
@@ -13,7 +20,7 @@ export class Model {
     let res: 原始汉字模型 | null;
     try {
       res = await env.CHAI.prepare(
-        `SELECT * FROM ${table} WHERE unicode=? LIMIT 1`,
+        `SELECT unicode, tygf, gb2312, glyphs, name FROM ${table} WHERE unicode=? LIMIT 1`,
       )
         .bind(unicode)
         .first();
@@ -111,7 +118,9 @@ export class Model {
   ): Promise<Result<原始汉字模型[]>> {
     var res;
     try {
-      res = await env.CHAI.prepare(`SELECT * FROM ${table} LIMIT ? OFFSET ?`)
+      res = await env.CHAI.prepare(
+        `SELECT unicode, tygf, gb2312, glyphs, name FROM ${table} LIMIT ? OFFSET ?`,
+      )
         .bind(limit, offset)
         .all();
     } catch (err) {
@@ -126,30 +135,12 @@ export class Model {
     env: Env,
     character: 原始汉字模型,
   ): Promise<Result<number>> {
-    const {
-      unicode,
-      tygf,
-      gb2312,
-      glyphs,
-      name,
-      gf0014_id,
-      gf3001_id,
-      ambiguous,
-    } = character;
+    const { unicode, tygf, gb2312, glyphs, name } = character;
     try {
       await env.CHAI.prepare(
-        `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name, gf0014_id, gf3001_id, ambiguous) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name) VALUES (?, ?, ?, ?, ?)`,
       )
-        .bind(
-          unicode,
-          tygf,
-          gb2312,
-          glyphs,
-          name,
-          gf0014_id,
-          gf3001_id,
-          ambiguous,
-        )
+        .bind(unicode, tygf, gb2312, glyphs, name)
         .run();
     } catch (err) {
       return new Err(
@@ -166,30 +157,12 @@ export class Model {
   ): Promise<Result<boolean>> {
     try {
       const statement = env.CHAI.prepare(
-        `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name, gf0014_id, gf3001_id, ambiguous) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name) VALUES (?, ?, ?, ?, ?)`,
       );
       await env.CHAI.batch(
         characters.map((character) => {
-          const {
-            unicode,
-            tygf,
-            gb2312,
-            glyphs,
-            name,
-            gf0014_id,
-            gf3001_id,
-            ambiguous,
-          } = character;
-          return statement.bind(
-            unicode,
-            tygf,
-            gb2312,
-            glyphs,
-            name,
-            gf0014_id,
-            gf3001_id,
-            ambiguous,
-          );
+          const { unicode, tygf, gb2312, glyphs, name } = character;
+          return statement.bind(unicode, tygf, gb2312, glyphs, name);
         }),
       );
     } catch (err) {
@@ -223,29 +196,11 @@ export class Model {
     character: 原始汉字模型,
   ): Promise<Result<boolean>> {
     try {
-      const {
-        unicode,
-        tygf,
-        gb2312,
-        glyphs,
-        name,
-        gf0014_id,
-        gf3001_id,
-        ambiguous,
-      } = character;
+      const { unicode, tygf, gb2312, glyphs, name } = character;
       await env.CHAI.prepare(
-        `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=?, gf0014_id=?, gf3001_id=?, ambiguous=? WHERE unicode=?`,
+        `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=? WHERE unicode=?`,
       )
-        .bind(
-          tygf,
-          gb2312,
-          glyphs,
-          name,
-          gf0014_id,
-          gf3001_id,
-          ambiguous,
-          unicode,
-        )
+        .bind(tygf, gb2312, glyphs, name, unicode)
         .run();
     } catch (err) {
       return new Err(
@@ -262,30 +217,12 @@ export class Model {
   ): Promise<Result<boolean>> {
     try {
       const statement = env.CHAI.prepare(
-        `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=?, gf0014_id=?, gf3001_id=?, ambiguous=? WHERE unicode=?`,
+        `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=? WHERE unicode=?`,
       );
       await env.CHAI.batch(
         characters.map((character) => {
-          const {
-            unicode,
-            tygf,
-            gb2312,
-            glyphs,
-            name,
-            gf0014_id,
-            gf3001_id,
-            ambiguous,
-          } = character;
-          return statement.bind(
-            tygf,
-            gb2312,
-            glyphs,
-            name,
-            gf0014_id,
-            gf3001_id,
-            ambiguous,
-            unicode,
-          );
+          const { unicode, tygf, gb2312, glyphs, name } = character;
+          return statement.bind(tygf, gb2312, glyphs, name, unicode);
         }),
       );
     } catch (err) {

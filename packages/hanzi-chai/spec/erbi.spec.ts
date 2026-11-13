@@ -78,6 +78,62 @@ function 上下文(mask: number, dynamic: boolean) {
 }
 
 describe("二笔共享分析规则", () => {
+  it("自定义取根优先于整根，并传播到父复合体且静态动态编码一致", () => {
+    const 编码 = (dynamic: boolean) => {
+      const base = 上下文(1, dynamic);
+      const 配置 = structuredClone(base.配置);
+      配置.analysis!.customize = { "字形-2": ["10", "1"] };
+      const ctx = 准备方案(配置, base.数据);
+      const 运行 = 运行方案(ctx);
+      if (!运行.分析.dynamic) {
+        const 分析 = [...运行.分析.value.复合体分析结果].find(
+          ([字形]) => 字形.id === 20,
+        )![1];
+        expect(分析.字根序列.map((根) => 根.获取名称())).toEqual([
+          "10", "10", "10",
+        ]);
+      }
+      return 本地编码评估(运行.输入, 获取默认目标(ctx.配置.encoder))[0];
+    };
+    expect(编码(true)).toEqual(编码(false));
+  });
+
+  it("融合复合体可通过自定义取根保留方案抽象，无需改字形", () => {
+    const base = 上下文(0, false);
+    const 配置 = structuredClone(base.配置);
+    配置.analysis!.fusion = [20];
+    配置.analysis!.customize = { "字形-20": ["1", "10"] };
+    const 分析 = 分析方案(准备方案(配置, base.数据));
+    if (分析.dynamic) throw new Error("应为静态分析");
+    const 结果 = [...分析.value.部件分析结果].find(
+      ([字形]) => 字形.id === 20,
+    )![1];
+    expect(结果.字根序列.map((根) => 根.获取名称())).toEqual(["1", "10"]);
+    expect(base.数据.字库.获取字形(20)!.type).toBe("compound");
+  });
+
+  it("动态自定义按可选字根条件选择优先候选", () => {
+    const base = 上下文(0, true);
+    const 配置 = structuredClone(base.配置);
+    配置.analysis!.dynamic_customize = {
+      "字形-2": [["字形-2"], ["10", "1"]],
+    };
+    const 分析 = 分析方案(准备方案(配置, base.数据));
+    if (!分析.dynamic) throw new Error("应为动态分析");
+    const 候选 = [...分析.value.部件分析结果].find(
+      ([字形]) => 字形.id === 2,
+    )![1];
+    for (const 存在 of [true, false]) {
+      const 环境 = 创建静态分析环境((条件) =>
+        条件.op === "不是" ? 存在 : !存在,
+      );
+      const 匹配 = [...候选].find((项) => 项.条件列表.every(环境.判断))!;
+      expect(匹配.字根序列.map((根) => 根.获取名称())).toEqual(
+        存在 ? ["字形-2"] : ["10", "1"],
+      );
+    }
+  });
+
   it("全部 16 种字根选择下，自动推导结果与完整静态结果一致", () => {
     // 动态分析只生成一次，不能随待验证的当前配置重新生成候选。
     const 动态 = 分析方案(上下文(0, true));

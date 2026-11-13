@@ -1,5 +1,5 @@
 import type { IRequest } from "itty-router";
-import type { 原始汉字模型 } from "../../../../scripts/utils";
+import type { 原始汉字模型 } from "../model/repertoire";
 import type { Ctx, Env } from "../dto/context";
 import { DataList } from "../dto/list";
 import { loadString } from "../dto/load";
@@ -38,7 +38,9 @@ export async function checkNotExist(_request: IRequest, env: Env, ctx: Ctx) {
 }
 
 export async function ListAll(_request: Request, env: Env) {
-  const { results } = await env.CHAI.prepare("SELECT * FROM repertoire").all();
+  const { results } = await env.CHAI.prepare(
+    "SELECT unicode, tygf, gb2312, glyphs, name FROM repertoire",
+  ).all();
   return results;
 }
 
@@ -143,9 +145,6 @@ export async function CreatePUA(
     gb2312: 0,
     glyphs: "[]",
     name: glyph.name,
-    gf0014_id: null,
-    gf3001_id: null,
-    ambiguous: 0,
   };
 
   return await Model.create(env, model);

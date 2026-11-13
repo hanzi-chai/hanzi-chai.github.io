@@ -45,6 +45,95 @@ describe("字形库与字库的分阶段构造", () => {
     expect(空字库实例.校验字符("一")).toBeUndefined();
   });
 
+  it("缺少指定来源时按全局来源顺序选一个字形，并保留真实来源", () => {
+    const 字形库实例 = new 字形库([1, 2, 3].map((id) => ({ ...部件数据, id })));
+    const 字符数据: 字符数据[] = [
+      {
+        unicode: "一".codePointAt(0)!,
+        glyphs: [
+          { id: 3, sources: ["U", "V"] },
+          { id: 2, sources: ["K", "J"] },
+          { id: 1, sources: ["G", "T"] },
+        ],
+      },
+    ];
+    const 用例: [string[], 字符数据["glyphs"]][] = [
+      [["H"], [{ id: 1, sources: ["G"] }]],
+      [[], [{ id: 1, sources: ["G"] }]],
+      [
+        ["J", "V"],
+        [
+          { id: 3, sources: ["V"] },
+          { id: 2, sources: ["J"] },
+        ],
+      ],
+    ];
+    for (const [来源, 预期] of 用例) {
+      const 字库实例 = new 字库(字符数据, 字形库实例, [...来源]);
+      expect(字库实例.校验字符("一")?.final_glyphs).toEqual(预期);
+    }
+    const 仅其他来源 = new 字库(
+      [{ ...字符数据[0]!, glyphs: 字符数据[0]!.glyphs.slice(0, 2) }],
+      字形库实例,
+      ["G", "H", "T"],
+    );
+    expect(仅其他来源.校验字符("一")?.final_glyphs).toEqual([
+      { id: 2, sources: ["J"] },
+    ]);
+  });
+
+  it("兼容形与缺省来源共存，缺省选择采用补丁后的字形", () => {
+    const 字形库实例 = new 字形库([1, 2, 3].map((id) => ({ ...部件数据, id })));
+    const 字符数据: 字符数据[] = [
+      {
+        unicode: "一".codePointAt(0)!,
+        glyphs: [
+          { id: 1, sources: ["J"] },
+          { id: 2, sources: ["K"] },
+        ],
+      },
+    ];
+    const 字库实例 = new 字库(字符数据, 字形库实例, ["G"], {
+      一: [
+        { type: "delete", sources: ["J"] },
+        { type: "update", id: 1, sources: ["K"] },
+        { type: "insert", id: 3, sources: [] },
+      ],
+    });
+    expect(字库实例.校验字符("一")?.final_glyphs).toEqual([
+      { id: 1, sources: ["K"] },
+      { id: 3, sources: [] },
+    ]);
+    const 全部删除 = new 字库(字符数据, 字形库实例, ["G"], {
+      一: [{ type: "delete", sources: ["J", "K"] }],
+    });
+    expect(全部删除.校验字符("一")?.final_glyphs).toEqual([]);
+    const 仅兼容形 = new 字库(
+      [{ ...字符数据[0]!, glyphs: [{ id: 3, sources: [] }] }],
+      字形库实例,
+      ["G"],
+    );
+    expect(仅兼容形.校验字符("一")?.final_glyphs).toEqual([
+      { id: 3, sources: [] },
+    ]);
+  });
+
+  it("新增来源未登记优先级时仍可作为缺省字形", () => {
+    const 字库实例 = new 字库(
+      [
+        {
+          unicode: "一".codePointAt(0)!,
+          glyphs: [{ id: 1, sources: ["新来源"] }],
+        },
+      ],
+      new 字形库([部件数据]),
+      ["G"],
+    );
+    expect(字库实例.校验字符("一")?.final_glyphs).toEqual([
+      { id: 1, sources: ["新来源"] },
+    ]);
+  });
+
   it("字形运算保留字符与父字形的引用，并在规则间独立绑定变量", () => {
     const 变量 = { variable: 1 };
     const 字形库实例 = new 字形库(

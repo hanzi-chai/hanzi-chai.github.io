@@ -12,7 +12,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 㗊上
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿰, operandList: [口, 口]}]
       ambiguous: false
@@ -21,7 +20,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 其字头无横
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue414", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
       ambiguous: false
@@ -30,7 +28,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 囱字框省
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue02d", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
       ambiguous: false
@@ -39,7 +36,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 乑省
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 乑, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
       ambiguous: false
@@ -48,7 +44,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 㗊下
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿰, operandList: [口, 口]}]
       ambiguous: false
@@ -57,7 +52,6 @@ data:
       tygf: 0
       gb2312: 0
       name: null
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [艹, 日]}]
       ambiguous: false

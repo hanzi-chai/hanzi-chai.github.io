@@ -39,6 +39,7 @@ import {
   type 自定义分析映射,
   type 词典,
   部件字根,
+  来源排序,
 } from "./utils.js";
 
 // 模式变量映射：记录模式匹配过程中变量的绑定
@@ -233,11 +234,11 @@ class 字形库 {
       );
       if (!新字形) continue;
       // 保留字符和父字形引用的 ID，也避免修改被复用的目标字形。
-      const { name, gf0014_id, gf3001_id, ambiguous } = 原始字形;
+      const { name } = 原始字形;
       当前字形 = Object.assign(
         Object.create(Object.getPrototypeOf(新字形)) as 字形,
         新字形,
-        { id, name, gf0014_id, gf3001_id, ambiguous },
+        { id, name },
       );
     }
     this.字形表.set(id, 当前字形);
@@ -337,7 +338,6 @@ class 字形库 {
         id: 根字形ID ?? 取新ID(),
         operator: 已解析Operator,
         references: 子字形列表.map((glyph) => ({ id: glyph.id })),
-        ambiguous: false,
       },
       子字形列表,
     );
@@ -433,8 +433,21 @@ class 字库 {
 
     for (const 字形历史 of this.字符表.values()) {
       const last = 字形历史.expanded_glyphs_history.at(-1) ?? [];
+      const 选定来源字形 = last.filter(
+        (x) => x.source !== undefined && 字形来源列表.includes(x.source),
+      );
+      // 先应用补丁，再为没有选定来源的字符取一个缺省字形。
+      const 缺省字形 = 选定来源字形.length
+        ? undefined
+        : (Array.from(来源排序)
+            .map((source) => last.find((x) => x.source === source))
+            .find((x) => x !== undefined) ??
+          last.find((x) => x.source !== undefined));
       字形历史.final_extended_glyphs = last.filter(
-        (x) => x.source === undefined || 字形来源列表.includes(x.source),
+        (x) =>
+          x.source === undefined ||
+          字形来源列表.includes(x.source) ||
+          x === 缺省字形,
       );
       const groupById = new Map<number, Set<string | undefined>>();
       for (const { id, source } of 字形历史.final_extended_glyphs) {
@@ -608,7 +621,6 @@ class 字库 {
               strokes: 字根字形.图形盒子.获取笔画列表(),
               operator: undefined,
               references: undefined,
-              ambiguous: false,
             });
             const 字根实例 = new 部件字根(元素, 部件字形);
             部件字根列表.push(字根实例);

@@ -148,7 +148,7 @@ async function handle(
   const 参考字形数据 = 可编辑字形列表.find((g) => g.id === 参考字形)!;
   if (参考字形数据.type !== "compound") return;
   if (推荐结果.length === 1) return;
-  const { id, gf0014_id, gf3001_id, name, references, ...rest } = 参考字形数据;
+  const { id, name, references, ...rest } = 参考字形数据;
   for (const { sources, id, references } of 推荐结果) {
     if (sources.length === 0) continue;
     if (id === 0) {
@@ -223,7 +223,7 @@ function 计算字形推荐(
   const 字形查找表 = new Map(可编辑字形列表.map((glyph) => [glyph.id, glyph]));
   const 字形哈希表 = new Map(
     可编辑字形列表.map((glyph) => {
-      const { id, gf0014_id, gf3001_id, name, ...rest } = glyph;
+      const { id, name, ...rest } = glyph;
       return [JSON.stringify(rest), glyph];
     }),
   );
@@ -297,7 +297,7 @@ function 计算字形推荐(
     if (分组) {
       分组.sources.push(来源);
     } else {
-      const { id: _, name, gf0014_id, gf3001_id, ...rest } = 参考字形数据;
+      const { id: _, name, ...rest } = 参考字形数据;
       const references = 字形ID列表.map((id) => ({ id }));
       const x = { ...rest, references };
       const 字形数据 = 字形哈希表.get(JSON.stringify(x));

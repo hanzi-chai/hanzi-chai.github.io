@@ -9,17 +9,15 @@ const table = "characters";
 export interface 字符模型 extends Pick<字符数据, "unicode"> {
   tygf: 1 | 2 | 3 | null;
   gb2312: 1 | 2 | null;
-  ambiguous: 1 | null;
   name: string | null;
   glyphs: string; // JSON 字符串
 }
 
 function 转数据(数据: 字符模型): 字符数据 {
   return {
-    ...数据,
+    unicode: 数据.unicode,
     tygf: 数据.tygf ?? undefined,
     gb2312: 数据.gb2312 ?? undefined,
-    ambiguous: 数据.ambiguous ?? undefined,
     name: 数据.name ?? undefined,
     glyphs: JSON.parse(数据.glyphs) as 字符数据["glyphs"],
   };
@@ -29,10 +27,9 @@ function 转模型(数据: 字符数据): 字符模型 {
   const 错误 = 校验字库整数(数据);
   if (错误) throw new Error(错误);
   return {
-    ...数据,
+    unicode: 数据.unicode,
     tygf: 数据.tygf ?? null,
     gb2312: 数据.gb2312 ?? null,
-    ambiguous: 数据.ambiguous ?? null,
     name: 数据.name ?? null,
     glyphs: JSON.stringify(数据.glyphs),
   };
@@ -41,7 +38,7 @@ function 转模型(数据: 字符数据): 字符模型 {
 /** GET:/characters */
 export async function List(_request: Request, env: Env) {
   const { results } = await env.CHAI.prepare(
-    `SELECT * FROM ${table}`,
+    `SELECT unicode, tygf, gb2312, glyphs, name FROM ${table}`,
   ).all<字符模型>();
   return results.map(转数据);
 }
@@ -51,7 +48,9 @@ export async function Info(request: IRequest, env: Env) {
   const unicode = parseInt(request.params.unicode, 10);
   if (!Number.isInteger(unicode))
     return new Err(ErrCode.ParamInvalid, "Unicode不正确");
-  const res = await env.CHAI.prepare(`SELECT * FROM ${table} WHERE unicode=?`)
+  const res = await env.CHAI.prepare(
+    `SELECT unicode, tygf, gb2312, glyphs, name FROM ${table} WHERE unicode=?`,
+  )
     .bind(unicode)
     .first<字符模型>();
   if (!res) return new Err(ErrCode.RecordNotFound, "字符不存在");
@@ -67,11 +66,11 @@ export async function Create(request: IRequest, env: Env) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
   try {
-    const { unicode, tygf, gb2312, glyphs, name, ambiguous } = 转模型(body);
+    const { unicode, tygf, gb2312, glyphs, name } = 转模型(body);
     await env.CHAI.prepare(
-      `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name, ambiguous) VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name) VALUES (?, ?, ?, ?, ?)`,
     )
-      .bind(unicode, tygf, gb2312, glyphs, name, ambiguous)
+      .bind(unicode, tygf, gb2312, glyphs, name)
       .run();
     return unicode;
   } catch (err) {
@@ -92,12 +91,12 @@ export async function CreateBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(
-      `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name, ambiguous) VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${table} (unicode, tygf, gb2312, glyphs, name) VALUES (?, ?, ?, ?, ?)`,
     );
     await env.CHAI.batch(
       body.map((item: any) => {
-        const { unicode, tygf, gb2312, glyphs, name, ambiguous } = 转模型(item);
-        return statement.bind(unicode, tygf, gb2312, glyphs, name, ambiguous);
+        const { unicode, tygf, gb2312, glyphs, name } = 转模型(item);
+        return statement.bind(unicode, tygf, gb2312, glyphs, name);
       }),
     );
   } catch (err) {
@@ -122,11 +121,11 @@ export async function Update(request: IRequest, env: Env) {
     return new Err(ErrCode.UnknownInnerError, (err as Error).message);
   }
   try {
-    const { tygf, gb2312, glyphs, name, ambiguous } = 转模型(body);
+    const { tygf, gb2312, glyphs, name } = 转模型(body);
     await env.CHAI.prepare(
-      `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=?, ambiguous=? WHERE unicode=?`,
+      `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=? WHERE unicode=?`,
     )
-      .bind(tygf, gb2312, glyphs, name, ambiguous, unicode)
+      .bind(tygf, gb2312, glyphs, name, unicode)
       .run();
   } catch (err) {
     return new Err(
@@ -147,12 +146,12 @@ export async function UpdateBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(
-      `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=?, ambiguous=? WHERE unicode=?`,
+      `UPDATE ${table} SET tygf=?, gb2312=?, glyphs=?, name=? WHERE unicode=?`,
     );
     await env.CHAI.batch(
       body.map((item: any) => {
-        const { unicode, tygf, gb2312, glyphs, name, ambiguous } = 转模型(item);
-        return statement.bind(tygf, gb2312, glyphs, name, ambiguous, unicode);
+        const { unicode, tygf, gb2312, glyphs, name } = 转模型(item);
+        return statement.bind(tygf, gb2312, glyphs, name, unicode);
       }),
     );
   } catch (err) {
@@ -191,7 +190,9 @@ export async function DeleteBatch(request: IRequest, env: Env) {
   }
   try {
     const statement = env.CHAI.prepare(`DELETE FROM ${table} WHERE unicode=?`);
-    await env.CHAI.batch(body.unicodes.map((unicode) => statement.bind(unicode)));
+    await env.CHAI.batch(
+      body.unicodes.map((unicode) => statement.bind(unicode)),
+    );
   } catch (err) {
     return new Err(
       ErrCode.DataDeleteFailed,

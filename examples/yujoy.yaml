@@ -1317,7 +1317,6 @@ data:
       unicode: 61440
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [亠, 吅]}]
       ambiguous: false
@@ -1326,7 +1325,6 @@ data:
       unicode: 61443
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [亼, "\ue0e4"]}]
       ambiguous: false
@@ -1335,7 +1333,6 @@ data:
       unicode: 61444
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 亙, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
       ambiguous: false
@@ -1344,7 +1341,6 @@ data:
       unicode: 61445
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue120", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
       ambiguous: false
@@ -1353,7 +1349,6 @@ data:
       unicode: 61446
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 亚, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
       ambiguous: false
@@ -1362,7 +1357,6 @@ data:
       unicode: 61447
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue112", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 5}]}]
       ambiguous: false
@@ -1371,7 +1365,6 @@ data:
       unicode: 61448
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue123", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
       ambiguous: false
@@ -1380,7 +1373,6 @@ data:
       unicode: 61449
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue115", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
       ambiguous: false
@@ -1389,7 +1381,6 @@ data:
       unicode: 61450
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue10a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 6}]}]
       ambiguous: false
@@ -1398,7 +1389,6 @@ data:
       unicode: 61451
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue10a", strokes: [{feature: reference, index: 1}, {feature: reference, index: 4}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
       ambiguous: false
@@ -1407,7 +1397,6 @@ data:
       unicode: 61452
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 粛, strokes: [{feature: reference, index: 3}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}]}]
       ambiguous: false
@@ -1416,7 +1405,6 @@ data:
       unicode: 61453
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: "\ue12e", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 4}]}]
       ambiguous: false
@@ -1425,7 +1413,6 @@ data:
       unicode: 61454
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [亼, 吅]}]
       ambiguous: false
@@ -1434,7 +1421,6 @@ data:
       unicode: 61455
       tygf: 0
       gb2312: 0
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 㣺, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
       ambiguous: false

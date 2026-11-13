@@ -46,6 +46,7 @@ export * from "./component.js";
 export * from "./compound.js";
 export * from "./config.js";
 export * from "./data.js";
+export * from "./dispersion.js";
 export * from "./element.js";
 export * from "./enclosure.js";
 export * from "./evaluation.js";

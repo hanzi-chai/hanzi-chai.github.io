@@ -96,21 +96,15 @@ class 部件 {
   public readonly type = "component";
   public id: number;
   public name: string | undefined;
-  public gf0014_id: number | undefined;
-  public gf3001_id: number | undefined;
   public 笔画列表: 笔画图形[];
   public 矢量图形: 矢量图形数据;
   public 拓扑: 拓扑;
   public 图形盒子: 图形盒子;
   public 标准笔顺: string;
-  public ambiguous: boolean;
 
   constructor(数据: 基本部件数据) {
     this.id = 数据.id;
     this.name = 数据.name;
-    this.gf0014_id = 数据.gf0014_id;
-    this.gf3001_id = 数据.gf3001_id;
-    this.ambiguous = 数据.ambiguous ?? false;
     this.矢量图形 = 数据.strokes;
     this.笔画列表 = 数据.strokes.map((x) => new 笔画图形(x));
     this.拓扑 = new 拓扑(this.笔画列表);
@@ -249,7 +243,7 @@ class 部件 {
         );
         return allCombinations.every(([x, y]) => {
           const relation = 部件拓扑.新关系矩阵[y]![x]!;
-          return relation.type !== "交";
+          return relation?.type !== "交";
         });
       });
     }
@@ -751,6 +745,25 @@ class 二笔部件分析器 extends 部件分析器<基本部件分析> {
   }
 
   分析(部件: 部件, 环境?: 分析执行环境) {
+    const 静态自定义 = this.配置.自定义分析映射.get(部件);
+    if (!环境 && 静态自定义) {
+      return ok({ 部件, 字根序列: 静态自定义 });
+    }
+    const 自定义 =
+      this.配置.动态自定义分析映射.get(部件) ??
+      (静态自定义 ? [静态自定义] : undefined);
+    if (环境 && 自定义) {
+      const { 字根序列 } = 选择分析(
+        自定义.map((字根序列) => ({
+          字根序列,
+          条件列表: [...new Set(字根序列)]
+            .filter((根) => this.配置.可选字根.has(根))
+            .map(存在),
+        })),
+        环境,
+      );
+      return ok({ 部件, 字根序列 });
+    }
     const 根 = this.配置.部件字根列表.find((x) => x.获取部件() === 部件);
     if (根 && 字根存在(this.配置, 根, 环境)) {
       return ok({ 部件, 字根序列: [根] });

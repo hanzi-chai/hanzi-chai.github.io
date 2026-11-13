@@ -8,7 +8,7 @@
  * 需要设置环境变量 JWT（用于 API 认证）。
  * 新字形的 ID 由脚本分配（部件从 64 起、复合体从 4096 起取首个空闲 ID），
  * 与服务器 POST /glyphs 的自动分配逻辑一致。
- * 如果引用 360 的等价字形已存在（排除 id、gf0014_id、gf3001_id），则跳过，
+ * 如果引用 360 的等价字形已存在（排除 id），则跳过，
  * 因此重复运行本脚本是安全的。
  */
 
@@ -19,9 +19,9 @@ import { get, post } from "./utils";
 const 源ID = 228;
 const 目标ID = 437;
 
-/** 返回字形的比较键（排除 id、gf0014_id、gf3001_id），用于判断等价字形是否已存在。 */
+/** 返回字形的比较键（排除 id），用于判断等价字形是否已存在。 */
 function 比较键(字形: 字形数据): string {
-  const { id: _, gf0014_id: __, gf3001_id: ___, ...rest } = 字形;
+  const { id: _, ...rest } = 字形;
   return JSON.stringify(rest);
 }
 
@@ -49,8 +49,6 @@ async function main() {
     if (字形.operator !== "⿱") continue;
     if (字形.references[0]?.id !== 源ID) continue;
     const 副本 = structuredClone(字形);
-    副本.gf0014_id = undefined;
-    副本.gf3001_id = undefined;
     副本.name = undefined;
     副本.references = 副本.references.map((ref) =>
       ref.id === 源ID ? { ...ref, id: 目标ID } : ref,

@@ -1,0 +1,39 @@
+name: Example code tables
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Fetch character and glyph data
+        run: bun run fetch
+
+      - name: Compare examples with published full codes
+        run: bun run check:code-tables
+
+      - name: Upload full comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-code-table-report
+          path: output/code-table-report/
+          if-no-files-found: warn

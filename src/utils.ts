@@ -1,4 +1,4 @@
-import { 字库, 字符, 字形, 字符数据, type 结构描述字符, type 配置, 复合体, 字形数据 } from "hanzi-chai";
+import { 字库, 字符, 字形, 字符数据, type 结构描述字符, type 配置, type 离散分析配置, 复合体, 字形数据 } from "hanzi-chai";
 import useTitle from "ahooks/es/useTitle";
 import init, { validate } from "libchai";
 import { notification } from "antd";
@@ -228,11 +228,7 @@ export interface 过滤器参数 {
   operator?: 结构描述字符;
 }
 
-export interface AnalyzerForm {
-  type: "single" | "multi" | "all";
-  position: number[];
-  top: number;
-}
+export type AnalyzerForm = 离散分析配置;
 
 export const makeDefaultAnalyzer = (maxLength: number) => {
   const form: AnalyzerForm = {

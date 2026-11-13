@@ -348,8 +348,6 @@ export default function GlyphForm({
         <EditorColumn span={15}>
           <Flex align="flex-start" gap="large">
             <ProFormDigit name="id" label="id" disabled width={64} />
-            <ProFormDigit name="gf0014_id" label="GF0014" width={64} readonly />
-            <ProFormDigit name="gf3001_id" label="GF3001" width={64} readonly />
             <ProFormText name="name" label="名称" width={128} readonly />
             <ProFormSelect
               label="类型"
@@ -497,9 +495,6 @@ export default function GlyphForm({
                 );
               }}
             </ProFormDependency>
-          </Flex>
-          <Flex>
-            <ProFormCheckbox label="歧义" name="ambiguous" />
           </Flex>
         </EditorColumn>
       </EditorRow>

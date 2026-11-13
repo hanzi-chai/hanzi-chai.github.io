@@ -19,9 +19,9 @@ import { del, get, put } from "./utils";
 // 工具函数
 // ============================================================
 
-/** 返回字形的比较键（排除 id、gf0014_id、gf3001_id）。 */
+/** 返回字形的比较键（排除 id）。 */
 function 比较键(字形: 字形数据): string {
-  const { id: _, gf0014_id: __, gf3001_id: ___, ...rest } = 字形;
+  const { id: _, ...rest } = 字形;
   return JSON.stringify(rest);
 }
 

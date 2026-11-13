@@ -11,6 +11,7 @@ import type {
 import { isVectorStroke, 是用户字形, 结构描述字符列表 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { type ReactElement, useMemo, useState } from "react";
+import { 歧义字形 } from "~/ambiguous";
 import { createGlyph, removeGlyph, replaceGlyph, updateGlyph } from "~/api";
 import {
   下一个用户字形ID原子,
@@ -22,6 +23,7 @@ import {
   统一字形列表原子,
   远程原子,
 } from "~/atoms";
+import { GF0014映射, GF3001映射 } from "~/gf";
 import { errorFeedback, 字符字形过滤器, type 过滤器参数 } from "~/utils";
 import BorderItem from "./BorderItem";
 import CharacterGlyphSwitcher from "./CharacterGlyphSwitcher";
@@ -44,19 +46,17 @@ const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
     strokes: [],
     operator: undefined,
     references: undefined,
-    ambiguous: false,
   };
   const dummyCompound: 复合体数据 = {
     id: 0,
     type: "compound",
     operator: "⿰",
     references: [{ id: 1 }, { id: 1 }],
-    ambiguous: false,
   };
   const initialValues = type === "component" ? dummyComponent : dummyCompound;
   const hashset = new Set<string>();
   for (const glyph of 统一字形列表) {
-    const { id, name, gf0014_id, gf3001_id, ...rest } = glyph;
+    const { id, name, ...rest } = glyph;
     const key = JSON.stringify(rest);
     hashset.add(key);
   }
@@ -65,7 +65,7 @@ const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
       trigger={<Button>新建{type === "component" ? "部件" : "复合体"}</Button>}
       initialValues={initialValues}
       onFinish={async (record) => {
-        const { id, name, gf0014_id, gf3001_id, ...rest } = record;
+        const { id, name, ...rest } = record;
         const key = JSON.stringify(rest);
         if (hashset.has(key)) {
           alert("已存在相同的字形，请修改后再提交。");
@@ -216,25 +216,6 @@ export default function GlyphTable() {
   const 字形字符映射 = useAtomValue(字形字符映射原子);
   const 远程 = useAtomValue(远程原子);
 
-  const gf0014set = new Set(
-    Array(514)
-      .keys()
-      .map((x) => x + 1),
-  );
-  const gf3001set = new Set(
-    Array(560)
-      .keys()
-      .map((x) => x + 1),
-  );
-  for (const 字形 of 统一字形列表) {
-    if (字形.gf0014_id) {
-      gf0014set.delete(字形.gf0014_id);
-    }
-    if (字形.gf3001_id) {
-      gf3001set.delete(字形.gf3001_id);
-    }
-  }
-
   const dataSource = useMemo(() => {
     const 过滤器 = new 字符字形过滤器(filter);
     const result: 字形[] = [];
@@ -331,18 +312,22 @@ export default function GlyphTable() {
     },
     {
       title: "GF0014",
-      dataIndex: "gf0014_id",
+      key: "gf0014_id",
       filters: [{ text: "只看非空", value: 1 }],
-      onFilter: (_, record) => record.gf0014_id !== undefined,
-      sorter: (a, b) => (a.gf0014_id ?? 0) - (b.gf0014_id ?? 0),
+      onFilter: (_, record) => GF0014映射.has(record.id),
+      sorter: (a, b) =>
+        (GF0014映射.get(a.id) ?? 0) - (GF0014映射.get(b.id) ?? 0),
+      render: (_, record) => GF0014映射.get(record.id),
       width: 96,
     },
     {
       title: "GF3001",
-      dataIndex: "gf3001_id",
+      key: "gf3001_id",
       filters: [{ text: "只看非空", value: 1 }],
-      onFilter: (_, record) => record.gf3001_id !== undefined,
-      sorter: (a, b) => (a.gf3001_id ?? 0) - (b.gf3001_id ?? 0),
+      onFilter: (_, record) => GF3001映射.has(record.id),
+      sorter: (a, b) =>
+        (GF3001映射.get(a.id) ?? 0) - (GF3001映射.get(b.id) ?? 0),
+      render: (_, record) => GF3001映射.get(record.id),
       width: 96,
     },
     {
@@ -366,15 +351,15 @@ export default function GlyphTable() {
     },
     {
       title: "歧义",
-      dataIndex: "ambiguous",
+      key: "ambiguous",
       render: (_, record) => {
-        return <Checkbox checked={record.ambiguous} />;
+        return <Checkbox checked={歧义字形.has(record.id)} />;
       },
       filters: [
         { text: "只看有歧义", value: 1 },
         { text: "只看无歧义", value: 0 },
       ],
-      onFilter: (value, record) => Number(record.ambiguous) === value,
+      onFilter: (value, record) => Number(歧义字形.has(record.id)) === value,
       width: 64,
     },
     {

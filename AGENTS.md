@@ -56,6 +56,7 @@ bun run version      # 类型检查并构建 BEX、PAGES、CF（不含 CLIENT）
 ### 修改与验证
 
 - 优先沿用现有中文领域命名和模块划分。前端交互改动放在 `src/`，拆分与组装规则放在 `packages/hanzi-chai/`。
+- 仅 `packages/hanzi-chai/` 核心算法库编写和保留 spec 测试；其他代码通过类型检查、lint 和实际运行验证，不添加 spec 测试。
 - 算法改动运行相关 Bun 测试；需要覆盖示例方案时运行 `test:all`。前端改动运行 `bun run lint` 和 `bunx tsc --noEmit`，构建验证选择对应目标。
 - 首次安装或缺少字库文件时运行 `bun run fetch`；该命令需要联网，已有可用数据时不必每次重复下载。单独的 `build:*` 脚本不会自动 fetch。
 - 局部格式化优先使用 `bunx biome format --write <文件路径>`；`bun run format` 会执行 `git add .`，可能暂存用户已有改动。
@@ -217,7 +218,54 @@ Cloudflare Worker，使用 itty-router。目录结构：
 
 - **`static.yml`**：推送到 `main` 或手动触发 → `bun install` → `bun run fetch` → `bun run build:PAGES` → 部署到 GitHub Pages
 - **`test.yml`**：PR 或推送到 `main` → `bun install` → `bun run fetch` → `bun run --filter hanzi-chai test:all`
+- **`code-tables.yml`**：每次推送、PR 或手动触发 → 下载共享数据 → `bun run check:code-tables` → 输出校对摘要和完整报告 artifact
 - **`publish.yml`**：推送到 `main`，比较 `packages/hanzi-chai/package.json` 版本与 npm 已发布版本，不同则安装算法包依赖、构建并发布到 npm
+
+## 示例方案单字全码 CI 校对
+
+`scripts/` 中的码表脚本只保留 CI 所需的通用校对工具，不包含 Rime 发布表解析、码表生成或具体方案的提取规则。
+
+- `scripts/check-code-tables.ts`：读取参考码表、运行示例方案、校验哈希并生成报告。
+- `scripts/compare-code-tables.ts`：解析两列单字全码 TSV，按字集双向比较全码集合。
+
+### 参考码表
+
+使用已上传的 9 份主表：`cqkm`、`huma`、`mswb`、`sapphire`、`tianma`、`xkjd`、`yustar`、`zhangma`、`zhenma`。每套方案只读取同名的一个 TSV 文件。
+
+默认从 `https://assets.chaifen.app/code-tables/` 下载 `manifest.json` 和 `<方案>.tsv`。清单使用 `format_version: 1`，`schemes` 中每项提供 `id`、`file`、`sha256`、`characters`、`pairs`。码表为无表头的 UTF-8 文本，每行只有 `单字<TAB>全码`，同字异码分行。
+
+脚本校验文件哈希、字数和去重后的码对数，按每个示例的 `data.character_set` 确定目标字集。字库中属于目标字集但未生成编码的字符也参与比较；参考表中超出目标字集的字符不算差异。仅比较全码集合，不比较简码或候选排名。
+
+### 运行
+
+```bash
+# 与 CI 相同，从远程读取参考表
+bun run check:code-tables
+
+# 只检查一套方案
+bun run check:code-tables --scheme huma
+
+# 使用已整理好的本地参考表
+bun run check:code-tables --reference-dir output/code-tables
+
+# 指定下载地址、报告目录
+bun run check:code-tables --base-url https://assets.chaifen.app/code-tables --out output/custom-report
+```
+
+### 报告与 CI
+
+默认写入 Git 已忽略的 `output/code-table-report/`：
+
+- `report.md`：目标字数、完全相符字数、多码、缺码、参考缺字、生成缺字，以及未提供参考表的示例。
+- `report.json`：全部方案的结构化结果。
+- `<方案>.tsv` / `<方案>.json`：逐字差异；JSON 还包含配置和运行数据哈希。
+- `reference-manifest.json`：本次参考清单快照。
+
+有差异、缺字、下载失败、哈希不符或运行错误时退出码为 1；单套方案出错后继续检查其余方案。兼容码、地区字形码和多音码产生的差异需要进一步复核。检查器不自动改写参考表或示例配置。
+
+`.github/workflows/code-tables.yml` 在每次 push、PR 和手动触发时下载共享数据、校对这 9 套示例，将摘要写入 GitHub Actions Summary，并在失败时仍上传完整报告 artifact。其余示例明确列为未校对。
+
+`output/` 中已有的码表、压缩包和历史实验文件保留。
 
 ## 关于字符与字形数据库的约定
 

@@ -45,13 +45,10 @@ class 复合体 {
   public readonly type = "compound";
   public id: number;
   public name: string | undefined;
-  public gf0014_id: number | undefined;
-  public gf3001_id: number | undefined;
   public 结构描述字符: 结构描述字符;
   public 笔画列表: 引用笔画块数据[];
   public 图形盒子: 图形盒子;
   public 标准笔顺: string;
-  public ambiguous: boolean;
 
   constructor(
     数据: 复合体数据,
@@ -59,9 +56,6 @@ class 复合体 {
   ) {
     this.id = 数据.id;
     this.name = 数据.name;
-    this.gf0014_id = 数据.gf0014_id;
-    this.gf3001_id = 数据.gf3001_id;
-    this.ambiguous = 数据.ambiguous;
     this.结构描述字符 = 数据.operator;
     this.笔画列表 = 数据.strokes?.length
       ? 数据.strokes
@@ -271,27 +265,35 @@ class 首末取大复合体分析器 extends 复合体分析器<
 class 真码复合体分析器 extends 复合体分析器<默认部件分析> {
   static readonly type = "真码";
 
-  分析(复合体: 复合体, 环境?: 分析执行环境) {
-    const 分析: 基本复合体分析 = {
-      复合体,
-      字根序列: [],
-    };
-    const 字根 = this.查找字根(复合体, 环境);
-    if (字根 !== undefined) {
-      分析.字根序列.push(字根);
-    } else {
-      if (复合体.结构描述字符 === "⿶") {
-        // 下包围结构优先取内部
-        for (const 字形 of [...复合体.部分列表].reverse()) {
-          分析.字根序列.push(...this.顺序取根(字形, 环境));
-        }
-      } else {
-        for (const 字形 of 复合体.部分列表) {
-          分析.字根序列.push(...this.顺序取根(字形, 环境));
-        }
-      }
+  override 顺序取根(字形: 字形, 环境?: 分析执行环境): 字根[] {
+    if (是部件(字形)) return super.顺序取根(字形, 环境);
+    const 字根 = this.查找字根(字形, 环境);
+    if (字根 !== undefined) return [字根];
+    // 并列和包围结构嵌套时仍按结构取根；交叠结构保留交错笔顺。
+    if (/[⿰⿱⿲⿳⿺]/u.test(字形.结构描述字符)) {
+      return 字形.部分列表.flatMap((子字形) => this.顺序取根(子字形, 环境));
     }
-    return ok(分析);
+    if (字形.结构描述字符 === "⿶") {
+      return [...字形.部分列表]
+        .reverse()
+        .flatMap((子字形) => this.顺序取根(子字形, 环境));
+    }
+    return super.顺序取根(字形, 环境);
+  }
+
+  分析(复合体: 复合体, 环境?: 分析执行环境) {
+    const 部分 =
+      复合体.结构描述字符 === "⿶"
+        ? [...复合体.部分列表].reverse()
+        : 复合体.部分列表;
+    const 字根 = this.查找字根(复合体, 环境);
+    return ok({
+      复合体,
+      字根序列:
+        字根 === undefined
+          ? 部分.flatMap((字形) => this.顺序取根(字形, 环境))
+          : [字根],
+    });
   }
 }
 
@@ -407,8 +409,15 @@ class 星空键道复合体分析器 extends 复合体分析器<
       return ok(分析);
     }
     分析.字根序列 = this.顺序取根(复合体, 环境);
-    if (复合体.笔画列表[0]?.index === 1) {
-      // 第一个书写的部分只写了一笔，视同独体字取码
+    const 首块 = 复合体.笔画列表[0]!;
+    const 首部 = 复合体.部分列表[首块.index]!;
+    let 首部起笔数 = 0;
+    for (const 块 of 复合体.笔画列表) {
+      if (块.index !== 首块.index) break;
+      首部起笔数 += (块.to ?? 首部.标准笔顺.length - 1) - (块.from ?? 0) + 1;
+    }
+    if (首部起笔数 === 1) {
+      // 第一个书写的部分只写了一笔，视同独体字取码。
     } else {
       const 排序部分结果 = 复合体.按首笔排序部分();
       for (const [index, part] of 排序部分结果.entries()) {

@@ -197,7 +197,37 @@ analysis:
     "\ue0b3":
       - 二
       - "\ue420"
+    字形-600: [丷, '6', '4']
+    字形-641: [八, 力]
+    字形-640: [八, 刀]
+    字形-7818: [丷, 三]
+    字形-1270: [二, 儿]
+    字形-4832: [音, 十]
+    字形-7370: [穴, 人, 口]
+    字形-1315: ["\ue054", 厂]
+    字形-1079: ["\ue431", 冂, '2']
+    字形-1111: [廿, 口, 丰]
+    字形-878: [日, '8', '3']
+    字形-11743: ['8', '3', 又, '4']
+    字形-8567: [忄, '8', '8', '4']
+    字形-10436: [川, 米]
+    字形-20424: [儿, '8', '8', '4', 月]
+    字形-925: ["\ue054", 冖]
+    字形-7569: [禾, 戈]
+    字形-861: [戈, '6']
+    字形-907: [字形-113, "\ue431", '6']
+    字形-6476: ["\ue057", 丷, 卩, '4']
+    字形-380: [也, '1']
+    字形-1020: ['3', 糸]
+    字形-1000: ['2', '6', '2', '1', 儿]
+    字形-12944: [禾, 北]
+    字形-582: [夂, '4']
+    字形-458: ['1', '2', '8', '6']
+    字形-893: ['3', 土, 厶]
+    字形-4204: [木, 人, 人]
   compound_analyzer: 真码
+  # 真码使用结构取根；这些分部另需在整组笔画中识根。
+  fusion: [869, 894, 910, 923, 930, 932, 964, 1018, 1024, 1025, 1026, 1027, 1066, 1070, 1072, 1100, 1102, 1106, 1116, 1282, 1283, 1291, 4295, 5222, 5375, 5714, 6476, 7137, 7757, 7818, 11743, 14053, 1270, 4832, 7370, 8567, 10436, 20424, 925, 7569, 4204]
 form:
   alphabet: qwertyuiopasdfghjklxcvbnm
   mapping:
@@ -803,6 +833,16 @@ form:
       element: 目
     "\ue02a":
       element: 目
+    字形-710: {element: 水}
+    字形-913: {element: 豕}
+    字形-1128: {element: 匕}
+    字形-1244: {element: 走}
+    字形-1357: {element: 厂}
+    字形-136026: {element: 鬼}
+    字形-136027: {element: 鹿}
+    字形-136055: {element: 辰}
+    字形-136099: {element: 亼}
+    字形-113: {element: 犭}
   mapping_type: 2
 encoder:
   max_length: 4
@@ -812,7 +852,7 @@ encoder:
   sources:
     s0:
       object: null
-      next: s1
+      next: c6
     s1:
       object: {type: 字根, rootIndex: 1}
       next: c0
@@ -843,6 +883,10 @@ encoder:
     s8:
       object: {type: 固定, key: i}
       next: null
+    s9: {object: {type: 字根, rootIndex: 1}, next: s10}
+    s10: {object: {type: 固定, key: i}, next: s11}
+    s11: {object: {type: 固定, key: i}, next: s12}
+    s12: {object: {type: 固定, key: i}, next: null}
   conditions:
     c0:
       object: {type: 字根, rootIndex: 2}
@@ -877,6 +921,8 @@ encoder:
       positive: null
       negative: s8
       value: '[月土八了1]'
+    # 发布表的偏旁补足四码，常用成字字根沿用原补码规则。
+    c6: {object: {type: 汉字}, operator: 匹配, value: '^[丨丬丶丿亠亻兀冂冈冉冖冫凵刂勹勺匚卩厂厶囗士壬夂孑宀尢屮巛廴廾彐彡彳忄戊戋扌攵曰殳氵灬犭疋疒皿礻糸纟缶耒聿肩臼艮艹虍衤讠豕豸辶酉钅阝隹饣髟]$', positive: s9, negative: s1}
   short_code:
     - length_equal: 1
       schemes: [{prefix: 1}, {prefix: 2, count: 1}, {prefix: 3, count: 1}]
@@ -889,64 +935,11 @@ encoder:
       formula: AaBaCaZa
 data:
   character_set: gb2312
-  glyph_customization:
-    兰:
-      type: compound
-      operator: ⿱
-      operandList: [丷, 三]
-      tags: []
-    章:
-      type: compound
-      operator: ⿱
-      operandList: [音, 十]
-    "\ue9d0":
-      type: compound
-      tags: [横向包夹]
-      operator: ⿴
-      operandList: ["\ue0e3", 米]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    "\uea02":
-      type: compound
-      operator: ⿴
-      operandList: ["\ue42b", 幺]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    "\ue0a5":
-      type: compound
-      tags: [戈部截断]
-      operator: ⿰
-      operandList: ["\ue81f", 戈]
-    刅:
-      type: compound
-      operator: ⿴
-      operandList: ["\ue446", 刀]
-    办:
-      type: compound
-      operator: ⿴
-      operandList: ["\ue446", 力]
-    容:
-      type: compound
-      operator: ⿳
-      operandList: [穴, "\ue43d", 口]
-    隺:
-      type: compound
-      operator: ⿻
-      operandList: [冖, 隹]
-      tags: [笔画搭挂]
-    胤:
-      type: compound
-      tags: [横向包夹]
-      operator: ⿴
-      operandList: [儿, "\ue99d"]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    "\ue9f0":
-      type: compound
-      operator: ⿱
-      operandList: ["\ue425", 大]
-    "\ue819":
-      type: compound
-      operator: ⿱
-      operandList: ["\uebc6", 冖]
-    "\ue90f":
-      type: compound
-      operator: ⿴
-      operandList: ["\ue0af", 车]
+  # 行的两侧先合为字根，再取内部；保留可变内件。
+  glyph_algebra:
+    - from:
+        operator: ⿲
+        references: [313, {variable: 0}, 211]
+      to:
+        operator: ⿰
+        references: [4163, {variable: 0}]

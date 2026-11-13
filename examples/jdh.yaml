@@ -12,7 +12,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 禺字底
-      gf0014_id: null
       readings: []
       glyphs: [{type: derived_component, source: 禺, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
       ambiguous: false
@@ -21,7 +20,6 @@ data:
       tygf: 0
       gb2312: 0
       name: 草头
-      gf0014_id: null
       readings: []
       glyphs: [{type: compound, operator: ⿱, operandList: [艹, 日]}]
       ambiguous: false
