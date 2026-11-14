@@ -508,7 +508,6 @@ form:
     "\ue0c1": 'y'
     "\ue0f9": 'y'
     "\ue0dd": 'y'
-    "\uf01a": 'y'
     钅: z
     孑: z
     孓: z
@@ -568,7 +567,6 @@ form:
     "\ue0e7": r
     "\ue068": x
     "\ue043": r
-    "\ue449": r
     夨: r
     "\uf026": r
     㬰: r
@@ -737,365 +735,94 @@ encoder:
       positive: s14
       negative: s15
 data:
-  repertoire:
-    "\uf000":
-      unicode: 61440
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 冘, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 冘二
-    "\uf003":
-      unicode: 61443
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue036", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 姊字边二
-    "\uf006":
-      unicode: 61446
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 疌, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
-      ambiguous: false
-      name: 疌无人
-    "\uf007":
-      unicode: 61447
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 甫, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
-      ambiguous: false
-      name: 甫无丶
-    "\uf008":
-      unicode: 61448
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 永, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
-      ambiguous: false
-      name: 永二
-    "\uf009":
-      unicode: 61449
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 氏, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
-      ambiguous: false
-      name: 氏二
-    "\uf00a":
-      unicode: 61450
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue07e", strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}]}]
-      ambiguous: false
-      name: 旅下角后二
-    "\uf00b":
-      unicode: 61451
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue00c", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
-      ambiguous: false
-      name: 冒字头二
-    "\uf00c":
-      unicode: 61452
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 艮, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
-      ambiguous: false
-      name: 艮四
-    "\uf00f":
-      unicode: 61455
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue0e9", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
-      ambiguous: false
-      name: 象下四
-    "\uf010":
-      unicode: 61456
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: []
-      ambiguous: false
-      name: 象下后四
-    "\uf011":
-      unicode: 61457
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue0e9", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
-      ambiguous: false
-      name: 象下后五
-    "\uf012":
-      unicode: 61458
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue069", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
-      ambiguous: false
-      name: 卑六无丿
-    "\uf013":
-      unicode: 61459
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 疋, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 疋无人
-    "\uf014":
-      unicode: 61460
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 斥, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 斥下
-    "\uf015":
-      unicode: 61461
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue03a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 定字底三
-    "\uf017":
-      unicode: 61463
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue03a", strokes: [{feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 定字底人
-    "\uf018":
-      unicode: 61464
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 肃, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
-      ambiguous: false
-      name: 肃下
-    "\uf019":
-      unicode: 61465
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue0d0", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
-      ambiguous: false
-      name: 雨四点
-    "\uf01b":
-      unicode: 61467
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: []
-      ambiguous: false
-      name: 承中
-    "\uf01c":
-      unicode: 61468
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 承, strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 承中
-    "\uf01e":
-      unicode: 61470
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue12f", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
-      ambiguous: false
-      name: 挿字边无丿
-    "\uf01f":
-      unicode: 61471
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue132", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
-      ambiguous: false
-      name: 揷字边无丿
-    "\uf020":
-      unicode: 61472
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue158", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 5}]}]
-      ambiguous: false
-      name: 飛字底四
-    "\uf021":
-      unicode: 61473
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
-      ambiguous: false
-      name: 亀无头
-    "\uf024":
-      unicode: 61476
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
-      ambiguous: false
-      name: 壺无士
-    "\uf025":
-      unicode: 61477
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [冖, "\ue137"]}]
-      ambiguous: false
-      name: 壺无士
-    "\uf026":
-      unicode: 61478
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 㑒, strokes: [{feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}]}]
-      ambiguous: false
-      name: 㑒无人
-    "\uf027":
-      unicode: 61479
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue104", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}, {feature: reference, index: 10}]}]
-      ambiguous: false
-      name: 漢字边下
-    "\uf028":
-      unicode: 61480
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue150", strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}, {feature: reference, index: 9}]}]
-      ambiguous: false
-      name: 㵮下角下
-    "\uf029":
-      unicode: 61481
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [冖, "\ue136"]}]
-      ambiguous: false
-      name: 壷无士
-    "\uf02a":
-      unicode: 61482
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 一, strokes: [{feature: reference, index: 0}]}]
-      ambiguous: false
-      name: 州二
-    "\uf02c":
-      unicode: 61484
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: []
-      ambiguous: false
-      name: 鳏下角四点
-    "\uf02d":
-      unicode: 61485
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue0d9", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 鳏下角无竖
-    "\uf02e":
-      unicode: 61486
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue16d", strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
-      ambiguous: false
-      name: 畱字头无横
-    "\uf02f":
-      unicode: 61487
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue10a", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
-      ambiguous: false
-      name: 淵字边无横
-    "\uf032":
-      unicode: 61490
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: compound, operator: ⿰, operandList: [刀, "\ue107"]}]
-      ambiguous: false
-      name: 齊字无丫
-    "\uf033":
-      unicode: 61491
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 丣, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}]}]
-      ambiguous: false
-      name: 丣无横
-    "\uf034":
-      unicode: 61492
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue120", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-      name: 虛字底无横
-    "\uf035":
-      unicode: 61493
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue129", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
-      ambiguous: false
-      name: 斲字旁无横
-    "\uf036":
-      unicode: 61494
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: 之, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-      name: 之下
-    "\uf037":
-      unicode: 61495
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue0d0", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}]}]
-      ambiguous: false
-      name: 雨字头无四点
-    "\uf038":
-      unicode: 61496
-      tygf: 0
-      gb2312: 0
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue0b7", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}]}]
-      ambiguous: false
-      name: 衣省二
-  glyph_customization:
-    "\uea02":
-      type: compound
-      operator: ⿴
-      operandList: ["\ue42b", 幺]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    "\ue995":
-      type: compound
-      operator: ⿴
-      operandList: [北, 口]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    "\ue9ab":
-      type: compound
-      operator: ⿴
-      operandList: ["\ue863", 白]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
   character_set: gb2312
+
+  character_customization:
+    : [{type: insert, id: 983080, sources: []}]
+    : [{type: insert, id: 983081, sources: []}]
+    : [{type: insert, id: 983082, sources: []}]
+  characters:
+    - {unicode: 61440, glyphs: [{id: 983040, sources: []}]}
+    - {unicode: 61443, glyphs: [{id: 983041, sources: []}]}
+    - {unicode: 61446, glyphs: [{id: 983042, sources: []}]}
+    - {unicode: 61447, glyphs: [{id: 983043, sources: []}]}
+    - {unicode: 61448, glyphs: [{id: 983044, sources: []}]}
+    - {unicode: 61449, glyphs: [{id: 983045, sources: []}]}
+    - {unicode: 61450, glyphs: [{id: 983046, sources: []}]}
+    - {unicode: 61451, glyphs: [{id: 983047, sources: []}]}
+    - {unicode: 61452, glyphs: [{id: 983048, sources: []}]}
+    - {unicode: 61455, glyphs: [{id: 983049, sources: []}]}
+    - {unicode: 61457, glyphs: [{id: 983050, sources: []}]}
+    - {unicode: 61458, glyphs: [{id: 983051, sources: []}]}
+    - {unicode: 61459, glyphs: [{id: 983052, sources: []}]}
+    - {unicode: 61460, glyphs: [{id: 983053, sources: []}]}
+    - {unicode: 61461, glyphs: [{id: 983054, sources: []}]}
+    - {unicode: 61463, glyphs: [{id: 983055, sources: []}]}
+    - {unicode: 61464, glyphs: [{id: 983056, sources: []}]}
+    - {unicode: 61465, glyphs: [{id: 983057, sources: []}]}
+    - {unicode: 61468, glyphs: [{id: 983058, sources: []}]}
+    - {unicode: 61470, glyphs: [{id: 983059, sources: []}]}
+    - {unicode: 61471, glyphs: [{id: 983060, sources: []}]}
+    - {unicode: 61472, glyphs: [{id: 983061, sources: []}]}
+    - {unicode: 61473, glyphs: [{id: 983062, sources: []}]}
+    - {unicode: 61476, glyphs: [{id: 983063, sources: []}]}
+    - {unicode: 61477, glyphs: [{id: 983064, sources: []}]}
+    - {unicode: 61478, glyphs: [{id: 983065, sources: []}]}
+    - {unicode: 61479, glyphs: [{id: 983066, sources: []}]}
+    - {unicode: 61480, glyphs: [{id: 983067, sources: []}]}
+    - {unicode: 61481, glyphs: [{id: 983068, sources: []}]}
+    - {unicode: 61482, glyphs: [{id: 983069, sources: []}]}
+    - {unicode: 61485, glyphs: [{id: 983070, sources: []}]}
+    - {unicode: 61486, glyphs: [{id: 983071, sources: []}]}
+    - {unicode: 61487, glyphs: [{id: 983072, sources: []}]}
+    - {unicode: 61490, glyphs: [{id: 983073, sources: []}]}
+    - {unicode: 61491, glyphs: [{id: 983074, sources: []}]}
+    - {unicode: 61492, glyphs: [{id: 983075, sources: []}]}
+    - {unicode: 61493, glyphs: [{id: 983076, sources: []}]}
+    - {unicode: 61494, glyphs: [{id: 983077, sources: []}]}
+    - {unicode: 61495, glyphs: [{id: 983078, sources: []}]}
+    - {unicode: 61496, glyphs: [{id: 983079, sources: []}]}
+  glyphs:
+    - {id: 983040, name: 冘二, type: component, strokes: [{feature: 点, start: [14, 25], curveList: [{command: c, parameterList: [0, 7, 0, 10, 0, 20]}]}, {feature: 横钩, start: [14, 25], curveList: [{command: h, parameterList: [73]}]}, {feature: 撇, start: [50, 6], curveList: [{command: c, parameterList: [0, 38, 0, 68, -41, 88]}]}]}
+    - {id: 983041, name: 姊字边二, type: component, strokes: [{feature: 平撇, start: [85, 16], curveList: [{command: z, parameterList: [-16, 6, -37, 9, -67, 9]}]}, {feature: 竖折折钩, start: [18, 25], curveList: [{command: v, parameterList: [24]}, {command: h, parameterList: [68]}, {command: v, parameterList: [32]}]}, {feature: 竖, start: [51, 7], curveList: [{command: v, parameterList: [86]}]}]}
+    - {id: 983042, name: 疌无人, type: component, strokes: [{feature: 横, start: [11, 15], curveList: [{command: h, parameterList: [78]}]}, {feature: 横折, start: [14, 28], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [31]}]}, {feature: 横, start: [7, 44], curveList: [{command: h, parameterList: [86]}]}, {feature: 横, start: [14, 59], curveList: [{command: h, parameterList: [67]}]}, {feature: 竖, start: [50, 5], curveList: [{command: v, parameterList: [86]}]}, {feature: 横, start: [50, 73], curveList: [{command: h, parameterList: [35]}]}]}
+    - {id: 983043, name: 甫无丶, type: component, strokes: [{feature: 横, start: [8, 18], curveList: [{command: h, parameterList: [84]}]}, {feature: 竖, start: [19, 35], curveList: [{command: v, parameterList: [59]}]}, {feature: 横折钩, start: [19, 35], curveList: [{command: h, parameterList: [62]}, {command: v, parameterList: [59]}]}, {feature: 横, start: [19, 53], curveList: [{command: h, parameterList: [62]}]}, {feature: 横, start: [19, 70], curveList: [{command: h, parameterList: [62]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [89]}]}]}
+    - {id: 983044, name: 永二, type: component, strokes: [{feature: 点, start: [40, 5], curveList: [{command: c, parameterList: [6, 2, 15, 6, 25, 12]}]}, {feature: 横折钩, start: [21, 27], curveList: [{command: h, parameterList: [31]}, {command: v, parameterList: [67]}]}]}
+    - {id: 983045, name: 氏二, type: component, strokes: [{feature: 平撇, start: [81, 9], curveList: [{command: z, parameterList: [-14, 4, -37, 7, -63, 8]}]}, {feature: 竖提, start: [18, 17], curveList: [{command: v, parameterList: [75]}, {command: l, parameterList: [32, -5]}]}]}
+    - {id: 983046, name: 旅下角后二, type: component, strokes: [{feature: 平撇, start: [75, 38], curveList: [{command: z, parameterList: [-2, 3, -9, 7, -19, 9]}]}, {feature: 捺, start: [49, 15], curveList: [{command: c, parameterList: [4, 40, 21, 59, 39, 73]}]}]}
+    - {id: 983047, name: 冒字头二, type: component, strokes: [{feature: 竖, start: [14, 28], curveList: [{command: v, parameterList: [37]}]}, {feature: 横折, start: [14, 28], curveList: [{command: h, parameterList: [72]}, {command: v, parameterList: [37]}]}]}
+    - {id: 983048, name: 艮四, type: component, strokes: [{feature: 横折, start: [20, 12], curveList: [{command: h, parameterList: [57]}, {command: v, parameterList: [38]}]}, {feature: 横, start: [20, 31], curveList: [{command: h, parameterList: [57]}]}, {feature: 横, start: [20, 50], curveList: [{command: h, parameterList: [57]}]}, {feature: 竖提, start: [20, 12], curveList: [{command: v, parameterList: [80]}, {command: l, parameterList: [19, -3]}]}]}
+    - {id: 983049, name: 象下四, type: component, strokes: [{feature: 竖, start: [20, 13], curveList: [{command: v, parameterList: [20]}]}, {feature: 横折, start: [20, 13], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [20]}]}, {feature: 横, start: [20, 33], curveList: [{command: h, parameterList: [67]}]}, {feature: 平撇, start: [53, 13], curveList: [{command: z, parameterList: [-4, 21, -19, 35, -41, 38]}]}]}
+    - {id: 983050, name: 象下后五, type: component, strokes: [{feature: 弯钩, start: [39, 38], curveList: [{command: c, parameterList: [12, 10, 22, 24, 19, 57]}]}, {feature: 平撇, start: [50, 49], curveList: [{command: z, parameterList: [-9, 7, -21, 15, -40, 20]}]}, {feature: 平撇, start: [57, 63], curveList: [{command: z, parameterList: [-15, 11, -29, 21, -50, 26]}]}, {feature: 平撇, start: [86, 39], curveList: [{command: z, parameterList: [-6, 7, -18, 13, -32, 19]}]}, {feature: 捺, start: [67, 52], curveList: [{command: c, parameterList: [3, 9, 8, 24, 27, 34]}]}]}
+    - {id: 983051, name: 卑六无丿, type: component, strokes: [{feature: 竖, start: [20, 17], curveList: [{command: v, parameterList: [41]}]}, {feature: 横折, start: [20, 17], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [41]}]}, {feature: 横, start: [20, 37], curveList: [{command: h, parameterList: [60]}]}, {feature: 横, start: [20, 58], curveList: [{command: h, parameterList: [60]}]}, {feature: 撇, start: [50, 17], curveList: [{command: c, parameterList: [0, 24, 0, 62, -41, 74]}]}]}
+    - {id: 983052, name: 疋无人, type: component, strokes: [{feature: 横钩, start: [11, 13], curveList: [{command: h, parameterList: [78]}]}, {feature: 竖, start: [50, 13], curveList: [{command: v, parameterList: [73]}]}, {feature: 横, start: [50, 50], curveList: [{command: h, parameterList: [36]}]}]}
+    - {id: 983053, name: 斥下, type: component, strokes: [{feature: 横, start: [19, 40], curveList: [{command: h, parameterList: [70]}]}, {feature: 竖, start: [63, 40], curveList: [{command: v, parameterList: [52]}]}, {feature: 点, start: [37, 57], curveList: [{command: c, parameterList: [19, 6, 29, 10, 50, 22]}]}]}
+    - {id: 983054, name: 定字底三, type: component, strokes: [{feature: 横, start: [11, 13], curveList: [{command: h, parameterList: [78]}]}, {feature: 竖, start: [50, 13], curveList: [{command: v, parameterList: [73]}]}, {feature: 横, start: [50, 50], curveList: [{command: h, parameterList: [36]}]}]}
+    - {id: 983055, name: 定字底人, type: component, strokes: [{feature: 撇, start: [29, 32], curveList: [{command: c, parameterList: [-2, 10, -5, 37, -21, 60]}]}, {feature: 平捺, start: [23, 56], curveList: [{command: z, parameterList: [8, 16, 8, 36, 72, 36]}]}]}
+    - {id: 983056, name: 肃下, type: component, strokes: [{feature: 撇, start: [20, 53], curveList: [{command: c, parameterList: [0, 16, 0, 30, -13, 40]}]}, {feature: 竖, start: [82, 53], curveList: [{command: v, parameterList: [40]}]}, {feature: 撇, start: [36, 58], curveList: [{command: c, parameterList: [0, 8, -3, 15, -7, 27]}]}, {feature: 点, start: [64, 58], curveList: [{command: c, parameterList: [2, 6, 5, 13, 7, 27]}]}]}
+    - {id: 983057, name: 雨四点, type: component, strokes: [{feature: 平点, start: [15, 55], curveList: [{command: z, parameterList: [5, 0, 10, 0, 20, 0]}]}, {feature: 平点, start: [15, 75], curveList: [{command: z, parameterList: [5, 0, 10, 0, 20, 0]}]}, {feature: 平点, start: [65, 55], curveList: [{command: z, parameterList: [5, 0, 10, 0, 20, 0]}]}, {feature: 平点, start: [65, 75], curveList: [{command: z, parameterList: [5, 0, 10, 0, 20, 0]}]}]}
+    - {id: 983058, name: 承中, type: component, strokes: [{feature: 横撇, start: [22, 10], curveList: [{command: h, parameterList: [56]}, {command: c, parameterList: [-6, 5, -14, 11, -28, 17]}]}, {feature: 竖钩, start: [50, 27], curveList: [{command: v, parameterList: [67]}]}, {feature: 横, start: [35, 40], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [34, 54], curveList: [{command: h, parameterList: [32]}]}, {feature: 横, start: [30, 70], curveList: [{command: h, parameterList: [40]}]}]}
+    - {id: 983059, name: 挿字边无丿, type: component, strokes: [{feature: 横, start: [7, 28], curveList: [{command: h, parameterList: [85]}]}, {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [84]}]}, {feature: 竖, start: [15, 44], curveList: [{command: v, parameterList: [32]}]}, {feature: 横折, start: [15, 44], curveList: [{command: h, parameterList: [70]}, {command: v, parameterList: [32]}]}, {feature: 横, start: [15, 60], curveList: [{command: h, parameterList: [70]}]}, {feature: 横, start: [15, 76], curveList: [{command: h, parameterList: [70]}]}]}
+    - {id: 983060, name: 揷字边无丿, type: component, strokes: [{feature: 横, start: [7, 28], curveList: [{command: h, parameterList: [85]}]}, {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [84]}]}, {feature: 平撇, start: [45, 36], curveList: [{command: z, parameterList: [-8, 3, -19, 5, -30, 6]}]}, {feature: 竖, start: [15, 42], curveList: [{command: v, parameterList: [34]}]}, {feature: 横, start: [15, 59], curveList: [{command: h, parameterList: [30]}]}, {feature: 横折, start: [55, 42], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [34]}]}, {feature: 横, start: [55, 59], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [15, 76], curveList: [{command: h, parameterList: [70]}]}]}
+    - {id: 983061, name: 飛字底四, type: component, strokes: [{feature: 平撇, start: [33, 14], curveList: [{command: z, parameterList: [-3, 3, -14, 6, -25, 6]}]}, {feature: 撇, start: [25, 17], curveList: [{command: c, parameterList: [0, 27, 0, 65, -16, 77]}]}, {feature: 横斜钩, start: [9, 37], curveList: [{command: h, parameterList: [56]}, {command: c, parameterList: [0, 32, 0, 56, 22, 57]}]}, {feature: 竖, start: [46, 17], curveList: [{command: v, parameterList: [77]}]}]}
+    - {id: 983062, name: 亀无头, type: component, strokes: [{feature: 横, start: [6, 50], curveList: [{command: h, parameterList: [88]}]}]}
+    - {id: 983063, name: 壺无士, type: component, strokes: [{feature: 横, start: [6, 50], curveList: [{command: h, parameterList: [88]}]}]}
+    - {id: 983064, name: 壺无士, type: compound, operator: ⿱, references: [{id: 373}, {id: 1579}]}
+    - {id: 983065, name: 㑒无人, type: component, strokes: [{feature: 横, start: [29, 31], curveList: [{command: h, parameterList: [42]}]}, {feature: 竖, start: [22, 45], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [22, 45], curveList: [{command: h, parameterList: [56]}, {command: v, parameterList: [23]}]}, {feature: 横, start: [22, 69], curveList: [{command: h, parameterList: [56]}]}, {feature: 撇, start: [50, 31], curveList: [{command: c, parameterList: [0, 46, 0, 50, -42, 63]}]}, {feature: 捺, start: [47, 69], curveList: [{command: c, parameterList: [4, 7, 5, 12, 45, 25]}]}]}
+    - {id: 983066, name: 漢字边下, type: component, strokes: [{feature: 竖, start: [28, 42], curveList: [{command: v, parameterList: [14]}]}, {feature: 横折, start: [28, 42], curveList: [{command: h, parameterList: [41]}, {command: v, parameterList: [14]}]}, {feature: 横, start: [28, 56], curveList: [{command: h, parameterList: [41]}]}, {feature: 横, start: [16, 66], curveList: [{command: h, parameterList: [68]}]}, {feature: 横, start: [8, 78], curveList: [{command: h, parameterList: [86]}]}, {feature: 撇, start: [50, 35], curveList: [{command: c, parameterList: [0, 48, 0, 56, -36, 61]}]}, {feature: 捺, start: [46, 78], curveList: [{command: c, parameterList: [8, 6, 17, 11, 40, 19]}]}]}
+    - {id: 983067, name: 㵮下角下, type: component, strokes: [{feature: 竖, start: [20, 41], curveList: [{command: v, parameterList: [17]}]}, {feature: 横折, start: [20, 41], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [17]}]}, {feature: 横, start: [20, 58], curveList: [{command: h, parameterList: [60]}]}, {feature: 横, start: [13, 69], curveList: [{command: h, parameterList: [74]}]}, {feature: 横, start: [16, 82], curveList: [{command: h, parameterList: [68]}]}, {feature: 竖, start: [50, 28], curveList: [{command: v, parameterList: [65]}]}]}
+    - {id: 983068, name: 壷无士, type: compound, operator: ⿱, references: [{id: 373}, {id: 1343}]}
+    - {id: 983069, name: 州二, type: component, strokes: [{feature: 横, start: [6, 50], curveList: [{command: h, parameterList: [88]}]}]}
+    - {id: 983070, name: 鳏下角无竖, type: component, strokes: [{feature: 撇, start: [32, 26], curveList: [{command: c, parameterList: [-4, 8, -17, 17, -25, 20]}]}, {feature: 撇, start: [32, 58], curveList: [{command: c, parameterList: [-4, 8, -17, 16, -25, 20]}]}, {feature: 点, start: [68, 26], curveList: [{command: c, parameterList: [9, 5, 18, 12, 25, 20]}]}, {feature: 点, start: [68, 58], curveList: [{command: c, parameterList: [9, 5, 18, 12, 25, 20]}]}]}
+    - {id: 983071, name: 畱字头无横, type: component, strokes: [{feature: 竖, start: [40, 13], curveList: [{command: v, parameterList: [80]}]}, {feature: 竖, start: [60, 13], curveList: [{command: v, parameterList: [80]}]}, {feature: 横, start: [13, 33], curveList: [{command: h, parameterList: [27]}]}, {feature: 竖折, start: [13, 33], curveList: [{command: v, parameterList: [29]}, {command: h, parameterList: [27]}]}, {feature: 横折, start: [60, 33], curveList: [{command: h, parameterList: [27]}, {command: v, parameterList: [29]}]}, {feature: 横, start: [60, 62], curveList: [{command: h, parameterList: [27]}]}]}
+    - {id: 983072, name: 淵字边无横, type: component, strokes: [{feature: 撇, start: [19, 5], curveList: [{command: c, parameterList: [0, 64, 0, 79, -9, 88]}]}, {feature: 竖, start: [88, 5], curveList: [{command: v, parameterList: [88]}]}, {feature: 竖, start: [43, 7], curveList: [{command: v, parameterList: [25]}]}, {feature: 横, start: [18, 32], curveList: [{command: h, parameterList: [25]}]}, {feature: 竖折, start: [61, 7], curveList: [{command: v, parameterList: [25]}, {command: h, parameterList: [27]}]}, {feature: 横折, start: [18, 63], curveList: [{command: h, parameterList: [25]}, {command: v, parameterList: [28]}]}, {feature: 横, start: [61, 63], curveList: [{command: h, parameterList: [27]}]}, {feature: 竖, start: [61, 63], curveList: [{command: v, parameterList: [28]}]}]}
+    - {id: 983073, name: 齊字无丫, type: compound, operator: ⿰, references: [{id: 392}, {id: 659}]}
+    - {id: 983074, name: 丣无横, type: component, strokes: [{feature: 撇, start: [40, 13], curveList: [{command: c, parameterList: [0, 50, 0, 67, -29, 80]}]}, {feature: 竖, start: [60, 13], curveList: [{command: v, parameterList: [80]}]}, {feature: 横, start: [13, 33], curveList: [{command: h, parameterList: [27]}]}, {feature: 竖折, start: [13, 33], curveList: [{command: v, parameterList: [29]}, {command: h, parameterList: [25]}]}, {feature: 横折, start: [60, 33], curveList: [{command: h, parameterList: [27]}, {command: v, parameterList: [29]}]}, {feature: 横, start: [60, 62], curveList: [{command: h, parameterList: [27]}]}]}
+    - {id: 983075, name: 虛字底无横, type: component, strokes: [{feature: 竖, start: [40, 7], curveList: [{command: v, parameterList: [83]}]}, {feature: 竖, start: [60, 7], curveList: [{command: v, parameterList: [83]}]}, {feature: 竖折, start: [15, 30], curveList: [{command: v, parameterList: [30]}, {command: h, parameterList: [25]}]}, {feature: 竖, start: [85, 30], curveList: [{command: v, parameterList: [30]}]}, {feature: 横, start: [60, 60], curveList: [{command: h, parameterList: [25]}]}]}
+    - {id: 983076, name: 斲字旁无横, type: component, strokes: [{feature: 横折, start: [20, 10], curveList: [{command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}, {feature: 竖折折, start: [20, 10], curveList: [{command: v, parameterList: [20]}, {command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}, {feature: 横, start: [20, 50], curveList: [{command: h, parameterList: [20]}]}, {feature: 竖折折, start: [20, 50], curveList: [{command: v, parameterList: [20]}, {command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}, {feature: 横折, start: [60, 10], curveList: [{command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}, {feature: 横, start: [60, 30], curveList: [{command: h, parameterList: [20]}]}, {feature: 竖折折, start: [60, 10], curveList: [{command: v, parameterList: [40]}, {command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}, {feature: 横, start: [60, 70], curveList: [{command: h, parameterList: [20]}]}, {feature: 竖, start: [60, 70], curveList: [{command: v, parameterList: [20]}]}]}
+    - {id: 983077, name: 之下, type: component, strokes: [{feature: 横撇, start: [10, 24], curveList: [{command: h, parameterList: [80]}, {command: c, parameterList: [-22, 25, -37, 41, -80, 59]}]}, {feature: 平捺, start: [10, 83], curveList: [{command: z, parameterList: [14, 4, 36, 8, 80, 9]}]}]}
+    - {id: 983078, name: 雨字头无四点, type: component, strokes: [{feature: 横, start: [10, 12], curveList: [{command: h, parameterList: [80]}]}, {feature: 点, start: [5, 35], curveList: [{command: c, parameterList: [0, 5, 0, 10, 0, 30]}]}, {feature: 横钩, start: [5, 35], curveList: [{command: h, parameterList: [90]}]}, {feature: 竖, start: [50, 12], curveList: [{command: v, parameterList: [60]}]}]}
+    - {id: 983079, name: 衣省二, type: component, strokes: [{feature: 撇, start: [53, 11], curveList: [{command: c, parameterList: [-6, 11, -30, 25, -46, 31]}]}, {feature: 竖提, start: [20, 35], curveList: [{command: v, parameterList: [52]}, {command: l, parameterList: [20, -3]}]}]}
+    - {id: 983080, name: （表形码）, type: compound, operator: ⿴, references: [{id: 978}, {id: 755}], strokes: [{index: 1, from: 0}, {index: 0, from: 0}]}
+    - {id: 983081, name: （表形码）, type: compound, operator: ⿴, references: [{id: 86532}, {id: 600}], strokes: [{index: 1, from: 0}, {index: 0, from: 0}]}
+    - {id: 983082, name: （表形码）, type: compound, operator: ⿴, references: [{id: 16969}, {id: 1171}], strokes: [{index: 1, from: 0}, {index: 0, from: 0}]}

@@ -43,7 +43,7 @@ export class Claims {
       if (!(await verify(token, key || env.JWT_KEY))) {
         return new Err(ErrCode.Unauthorized, "invalid token");
       }
-    } catch (err) {
+    } catch (_err) {
       return new Err(ErrCode.Unauthorized, "invalid token");
     }
 

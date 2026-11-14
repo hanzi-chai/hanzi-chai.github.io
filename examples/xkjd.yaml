@@ -42,23 +42,8 @@ analysis:
     平: ['1', '4', '3', '1', '2']
     缶: ['3', '1', '1', '2', '5', '2']
     臿: ['3', '1', '2', '3', '2', '1', '5', '1', '1']
-    字形-502: ['2', '3', '4', '4']
+    字形-00366: ['2', '3', '4', '4']
   compound_analyzer: 星空键道
-  fusion:
-    - 8246 # 丞：按独体字笔顺取形
-    - 500 # 少：按独体字笔顺取形
-    - 10885 # 卣：按独体字笔顺取形
-    - 4124 # 卤：按独体字笔顺取形
-    - 1067 # 鱼：按独体字笔顺取形
-    - 1102 # 彖：按独体字笔顺取形
-    - 6752 # 亨：按独体字笔顺取形
-    - 5124 # 享：按独体字笔顺取形
-    - 4744 # 亶：按独体字笔顺取形
-    - 10567 # 禀：按独体字笔顺取形
-    - 6339 # 曾：按独体字笔顺取形
-    - 593 # 方：按独体字笔顺取形
-    - 791 # 鸟：按独体字笔顺取形
-    - 5484 # 卂：按独体字笔顺取形
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping:
@@ -243,242 +228,261 @@ algebra:
       from: ^.*?([aeêiouv].*|m|ng?)\d$
       to: $1
 data:
+  # 帚的共享字形统一三层；键道仍按原首部、巾两部分组装。
+  glyph_algebra:
+    - from: {operator: ⿳, references: [0x002bb, 0x00175, 0x00262]}
+      to: {operator: ⿱, references: [0x3a110, 0x00262]}
+  fusion:
+    - 0x014cc # 丞：按独体字笔顺取形
+    - 0x04202 # 少：按独体字笔顺取形
+    - 0x1940c # 卣：按独体字笔顺取形
+    - 0x1940a # 卤：按独体字笔顺取形
+    - 0x016f1 # 鱼：按独体字笔顺取形
+    - 0x3a51d # 彖：按独体字笔顺取形
+    - 0x08414 # 亨：按独体字笔顺取形
+    - 0x27405 # 享：按独体字笔顺取形
+    - 0x08a2e # 亶：按独体字笔顺取形
+    - 0x7171c # 禀：按独体字笔顺取形
+    - 0x487e7 # 曾：按独体字笔顺取形
+    - 0x0810e # 方：按独体字笔顺取形
+    - 0x01391 # 鸟：按独体字笔顺取形
+    - 0x05115 # 卂：按独体字笔顺取形
   character_set: general
   # 以下覆盖限定于本方案，保留真实分部并调整键道首部／余部的边界。
   glyphs:
-    - id: 1082 # 革：键道首部／余部分组
+    - id: 0x00803 # 革：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 444}, {id: 719}]
-    - id: 1024 # 辛：键道首部／余部分组
+      references: [{id: 0x00326}, {id: 0x00458}]
+    - id: 0x08421 # 辛：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 797}, {id: 66}]
-    - id: 893 # 丢：键道首部／余部分组
+      references: [{id: 0x08217}, {id: 0x00105}]
+    - id: 0x00550 # 丢：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 541}, {id: 187}]
-    - id: 5398 # 咸：键道首部／余部分组
+      references: [{id: 0x00398}, {id: 0x00197}]
+    - id: 0x01770 # 咸：键道首部／余部分组
       type: compound
       operator: ⿵
-      references: [{id: 854}, {id: 282}]
+      references: [{id: 0x0051f}, {id: 0x00258}]
       strokes: [{index: 0, from: 0, to: 2}, {index: 1, from: 0}, {index: 0, from: 3}]
-    - id: 5323 # 威：键道首部／余部分组
+    - id: 0x01772 # 威：键道首部／余部分组
       type: compound
       operator: ⿵
-      references: [{id: 854}, {id: 389}]
+      references: [{id: 0x0051f}, {id: 0x002da}]
       strokes: [{index: 0, from: 0, to: 2}, {index: 1, from: 0}, {index: 0, from: 3}]
-    - id: 854 # 戌：键道首部／余部分组
+    - id: 0x0051f # 戌：键道首部／余部分组
       type: compound
       operator: ⿵
-      references: [{id: 690}, {id: 1}]
+      references: [{id: 0x00436}, {id: 0x00000}]
       strokes: [{index: 0, from: 0, to: 1}, {index: 1, from: 0}, {index: 0, from: 2}]
-    - id: 18946 # 桌：键道首部／余部分组
+    - id: 0x19707 # 桌：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 699}, {id: 448}]
-    - id: 6670 # 卓：键道首部／余部分组
+      references: [{id: 0x19201}, {id: 0x0032b}]
+    - id: 0x19507 # 卓：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 699}, {id: 66}]
-    - id: 859 # 戍：键道首部／余部分组
+      references: [{id: 0x19201}, {id: 0x00105}]
+    - id: 0x00524 # 戍：键道首部／余部分组
       type: compound
       operator: ⿵
-      references: [{id: 690}, {id: 7}]
+      references: [{id: 0x00436}, {id: 0x00006}]
       strokes: [{index: 0, from: 0, to: 1}, {index: 1, from: 0}, {index: 0, from: 2}]
-    - id: 869 # 光：键道首部／余部分组
+    - id: 0x2a210 # 光：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 501}, {id: 128}]
-    - id: 9988 # 局：键道首部／余部分组
+      references: [{id: 0x00365}, {id: 0x0014f}]
+    - id: 0xd7113 # 局：键道首部／余部分组
       type: compound
       operator: ⿸
-      references: [{id: 369}, {id: 9989}]
-    - id: 7008 # 甚：键道首部／余部分组
+      references: [{id: 0x002c2}, {id: 0x1e00b}]
+    - id: 0x05706 # 甚：键道首部／余部分组
       type: compound
       operator: ⿷
-      references: [{id: 957}, {id: 117}]
-    - id: 7680 # 卖：键道首部／余部分组
+      references: [{id: 0x00605}, {id: 0x00143}]
+    - id: 0x01672 # 卖：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 66}, {id: 7681}]
-    - id: 9036 # 矍：键道首部／余部分组
+      references: [{id: 0x00105}, {id: 0x0548d}]
+    - id: 0x1df08 # 矍：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 5239}, {id: 6072}]
-    - id: 7205 # 燕：键道首部／余部分组
+      references: [{id: 0x6d41f}, {id: 0xac10b}]
+    - id: 0x56b10 # 燕：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 7207}, {id: 605}]
-    - id: 4832 # 章：键道首部／余部分组
+      references: [{id: 0x1e805}, {id: 0x003e0}]
+    - id: 0x7550c # 章：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 4181}, {id: 66}]
-    - id: 5400 # 詹：键道首部／余部分组
+      references: [{id: 0x75311}, {id: 0x00105}]
+    - id: 0x12a26 # 詹：键道首部／余部分组
       type: compound
       operator: ⿸
-      references: [{id: 5402}, {id: 1021}]
-    - id: 793 # 主：键道首部／余部分组
+      references: [{id: 0x0c324}, {id: 0x08405}]
+    - id: 0x004ac # 主：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 7}, {id: 417}]
-    - id: 988 # 芈：键道首部／余部分组
+      references: [{id: 0x00006}, {id: 0x00307}]
+    - id: 0x0062a # 芈：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 486}, {id: 209}]
-    - id: 13649 # 兖：键道首部／余部分组
+      references: [{id: 0x19104}, {id: 0x00201}]
+    - id: 0x08525 # 兖：键道首部／余部分组
       type: compound
       operator: ⿳
-      references: [{id: 149}, {id: 4914}, {id: 128}]
-    - id: 6526 # 亟：键道首部／余部分组
+      references: [{id: 0x0016e}, {id: 0x0c115}, {id: 0x0014f}]
+    - id: 0xd7025 # 亟：键道首部／余部分组
       type: compound
       operator: ⿳
-      references: [{id: 165}, {id: 6528}, {id: 1}]
-    - id: 15434 # 夐：键道首部／余部分组
+      references: [{id: 0x00180}, {id: 0x1e13d}, {id: 0x00000}]
+    - id: 0x6d882 # 夐：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 15435}, {id: 328}]
-    - id: 18370 # 斝：键道首部／余部分组
+      references: [{id: 0x12328}, {id: 0x00291}]
+    - id: 0x0e911 # 斝：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 4698}, {id: 602}]
-    - id: 11437 # 疐：键道首部／余部分组
+      references: [{id: 0x1e22a}, {id: 0x003dd}]
+    - id: 0x66803 # 疐：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 452}, {id: 820}]
-    - id: 192001
+      references: [{id: 0x0032f}, {id: 0x004c8}]
+    - id: 0xf007b
       type: component
       name: 键道堇字底
       strokes: [{feature: 竖, start: [20, 39], curveList: [{command: v, parameterList: [16]}]}, {feature: 横折, start: [20, 39], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [16]}]}, {feature: 横, start: [20, 55], curveList: [{command: h, parameterList: [60]}]}, {feature: 横, start: [13, 66], curveList: [{command: h, parameterList: [74]}]}, {feature: 横, start: [16, 78], curveList: [{command: h, parameterList: [68]}]}, {feature: 竖, start: [50, 27], curveList: [{command: v, parameterList: [62]}]}, {feature: 横, start: [7, 89], curveList: [{command: h, parameterList: [86]}]}]
-    - id: 1111 # 堇：键道首部／余部分组
+    - id: 0x00a00 # 堇：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 444}, {id: 192001}]
-    - id: 192002
+      references: [{id: 0x00326}, {id: 0xf007b}]
+    - id: 0xf007c
       type: compound
       operator: ⿱
-      references: [{id: 151}, {id: 282}]
-    - id: 1028 # 兑：键道首部／余部分组
+      references: [{id: 0x00170}, {id: 0x00258}]
+    - id: 0x1e3f9 # 兑：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 192002}, {id: 128}]
-    - id: 1000 # 兕：键道首部／余部分组
+      references: [{id: 0xf007c}, {id: 0x0014f}]
+    - id: 0x00635 # 兕：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 747}, {id: 128}]
-    - id: 192003
+      references: [{id: 0x0047c}, {id: 0x0014f}]
+    - id: 0xf007d
       type: compound
       operator: ⿱
-      references: [{id: 187}, {id: 244}]
-    - id: 14104 # 叁：键道首部／余部分组
+      references: [{id: 0x00197}, {id: 0x00227}]
+    - id: 0x1c50a # 叁：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 192003}, {id: 208}]
-    - id: 192004
+      references: [{id: 0xf007d}, {id: 0x00200}]
+    - id: 0xf007e
       type: compound
       operator: ⿱
-      references: [{id: 244}, {id: 529}]
-    - id: 18226 # 攀：键道首部／余部分组
+      references: [{id: 0x00227}, {id: 0x00385}]
+    - id: 0x40e6e # 攀：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 6101}, {id: 192004}]
-    - id: 192005
+      references: [{id: 0x4b7cb}, {id: 0xf007e}]
+    - id: 0xf007f
       type: compound
       operator: ⿱
-      references: [{id: 612}, {id: 720}]
-    - id: 10449 # 甯：键道首部／余部分组
+      references: [{id: 0x003e9}, {id: 0x00459}]
+    - id: 0x28878 # 甯：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 357}, {id: 192005}]
-    - id: 192006
+      references: [{id: 0x002b5}, {id: 0xf007f}]
+    - id: 0xf0080
       type: compound
       operator: ⿱
-      references: [{id: 282}, {id: 5731}]
-    - id: 5729 # 嬴：键道首部／余部分组
+      references: [{id: 0x00258}, {id: 0x4a590}]
+    - id: 0xd74f3 # 嬴：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 342}, {id: 192006}]
-    - id: 192007
+      references: [{id: 0x002a6}, {id: 0xf0080}]
+    - id: 0xf0081
       type: compound
       operator: ⿱
-      references: [{id: 282}, {id: 7214}]
-    - id: 7213 # 羸：键道首部／余部分组
+      references: [{id: 0x00258}, {id: 0x4a886}]
+    - id: 0xd75e6 # 羸：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 342}, {id: 192007}]
-    - id: 192008
+      references: [{id: 0x002a6}, {id: 0xf0081}]
+    - id: 0xf0082
       type: compound
       operator: ⿱
-      references: [{id: 282}, {id: 26610}]
-    - id: 26609 # 蠃：键道首部／余部分组
+      references: [{id: 0x00258}, {id: 0x4a84a}]
+    - id: 0xd75da # 蠃：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 342}, {id: 192008}]
-    - id: 192009
+      references: [{id: 0x002a6}, {id: 0xf0082}]
+    - id: 0xf0083
       type: compound
       operator: ⿱
-      references: [{id: 282}, {id: 27861}]
-    - id: 27860 # 赢：键道首部／余部分组
+      references: [{id: 0x00258}, {id: 0x4a657}]
+    - id: 0x1edd2 # 赢：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 342}, {id: 192009}]
-    - id: 192010
+      references: [{id: 0x002a6}, {id: 0xf0083}]
+    - id: 0xf0084
       type: compound
       operator: ⿳
-      references: [{id: 712}, {id: 244}, {id: 187}]
-    - id: 23698 # 篡：键道首部／余部分组
+      references: [{id: 0x00451}, {id: 0x00227}, {id: 0x00197}]
+    - id: 0x1cd01 # 篡：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 4100}, {id: 192010}]
-    - id: 192011
+      references: [{id: 0x0442b}, {id: 0xf0084}]
+    - id: 0xf0085
       type: compound
       operator: ⿳
-      references: [{id: 712}, {id: 244}, {id: 948}]
-    - id: 18272 # 纂：键道首部／余部分组
+      references: [{id: 0x00451}, {id: 0x00227}, {id: 0x34204}]
+    - id: 0x78d02 # 纂：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 4100}, {id: 192011}]
-    - id: 192012
+      references: [{id: 0x0442b}, {id: 0xf0085}]
+    - id: 0xf0086
       type: compound
       operator: ⿱
-      references: [{id: 228}, {id: 155}]
-    - id: 25455 # 荤：键道首部／余部分组
+      references: [{id: 0x00215}, {id: 0x00175}]
+    - id: 0xd7f65 # 荤：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 192012}, {id: 468}]
-    - id: 192013
+      references: [{id: 0xf0086}, {id: 0x00340}]
+    - id: 0xf0087
       type: compound
       operator: ⿱
-      references: [{id: 105}, {id: 8287}]
-    - id: 18425 # 旞：键道首部／余部分组
+      references: [{id: 0x00134}, {id: 0xa28a8}]
+    - id: 0x46d0e # 旞：键道首部／余部分组
       type: compound
       operator: ⿸
-      references: [{id: 593}, {id: 192013}]
-    - id: 192014
+      references: [{id: 0x0810e}, {id: 0xf0087}]
+    - id: 0xf0088
       type: component
       name: 键道丧字头
       strokes: [{feature: 横, start: [14, 24], curveList: [{command: h, parameterList: [72]}]}, {feature: 竖, start: [50, 3], curveList: [{command: v, parameterList: [49]}]}, {feature: 点, start: [22, 36], curveList: [{command: c, parameterList: [5, 3, 12, 10, 14, 16]}]}, {feature: 撇, start: [78, 36], curveList: [{command: c, parameterList: [-2, 3, -6, 10, -14, 16]}]}, {feature: 横, start: [7, 52], curveList: [{command: h, parameterList: [86]}]}]
-    - id: 192015
+    - id: 0xf0089
       type: component
       name: 键道丧字底
       strokes: [{feature: 竖提, start: [20, 52], curveList: [{command: v, parameterList: [40]}, {command: l, parameterList: [20, -3]}]}, {feature: 平撇, start: [84, 69], curveList: [{command: z, parameterList: [-10, 7, -20, 10, -23, 10]}]}, {feature: 捺, start: [47, 52], curveList: [{command: c, parameterList: [3, 17, 11, 30, 45, 41]}]}]
-    - id: 1042 # 丧：键道首部／余部分组
+    - id: 0x00705 # 丧：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 192014}, {id: 192015}]
-    - id: 192016
+      references: [{id: 0xf0088}, {id: 0xf0089}]
+    - id: 0xf008a
       type: component
       name: 键道系字头
       strokes: [{feature: 平撇, start: [88, 10], curveList: [{command: z, parameterList: [-25, 2, -47, 2, -76, 3]}]}, {feature: 撇折, start: [51, 11], curveList: [{command: c, parameterList: [-6, 7, -22, 22, -32, 26]}, {command: h, parameterList: [37]}]}, {feature: 撇折, start: [74, 22], curveList: [{command: c, parameterList: [-6, 6, -23, 20, -55, 37]}, {command: h, parameterList: [65]}]}, {feature: 点, start: [69, 40], curveList: [{command: c, parameterList: [5, 6, 10, 12, 15, 19]}]}]
-    - id: 1020 # 系：键道首部／余部分组
+    - id: 0x0064b # 系：键道首部／余部分组
       type: compound
       operator: ⿱
-      references: [{id: 192016}, {id: 276}]
-    - id: 192017
+      references: [{id: 0xf008a}, {id: 0x00250}]
+    - id: 0xf008b
       type: component
       name: 键道乘字余部
       strokes: [{feature: 竖, start: [29, 39], curveList: [{command: v, parameterList: [26]}]}, {feature: 横, start: [11, 49], curveList: [{command: h, parameterList: [18]}]}, {feature: 提, start: [8, 66], curveList: [{command: l, parameterList: [21, -6]}]}, {feature: 撇, start: [89, 43], curveList: [{command: c, parameterList: [-5, 5, -12, 8, -21, 11]}]}, {feature: 竖弯钩, start: [68, 39], curveList: [{command: v, parameterList: [26]}, {command: h, parameterList: [24]}]}, {feature: 撇, start: [50, 59], curveList: [{command: c, parameterList: [-11, 16, -25, 28, -43, 34]}]}, {feature: 捺, start: [50, 59], curveList: [{command: c, parameterList: [13, 17, 28, 27, 44, 33]}]}]
-    - id: 12944 # 乘：键道首部／余部分组
+    - id: 0x00904 # 乘：键道首部／余部分组
       type: compound
       operator: ⿻
-      references: [{id: 300}, {id: 192017}]
+      references: [{id: 0x00270}, {id: 0xf008b}]

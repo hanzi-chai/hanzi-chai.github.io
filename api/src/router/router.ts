@@ -8,6 +8,9 @@ import { routerUsers } from "./users";
 
 /** 主路由, 以 `/api` 为前缀 */
 export const routerApi = Router()
+  .get("/glyph-id-version", () => ({
+    glyph_id_version: 1,
+  }))
   // 登录接口
   .post("/login", Login)
   // 用户子路由

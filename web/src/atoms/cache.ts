@@ -1,6 +1,6 @@
 import {
+  GF0014映射,
   ok,
-  归并组装结果,
   type 元素,
   决策图,
   分析拼音,
@@ -18,6 +18,7 @@ import {
   序列化组装结果,
   type 强类型决策,
   type 强类型决策空间,
+  归并组装结果,
   type 当量映射,
   来源排序,
   构建优先简码映射,
@@ -37,7 +38,6 @@ import {
   计算全部合法元素与元素映射,
   计算拼音分析与元素映射,
   type 键位分布目标,
-  GF0014映射,
 } from "hanzi-chai";
 import { atom } from "jotai";
 import { MiniDb } from "jotai-minidb";
@@ -59,6 +59,7 @@ import {
   字母表原子,
   字集指示原子,
   拼写运算自定义原子,
+  数据配置原子,
   用户字形列表原子,
   用户字符列表原子,
   编码配置原子,
@@ -346,6 +347,7 @@ export const 强类型自定义分析原子 = atom((get) => {
     自定义分析,
     动态自定义拆分,
     get(分析配置原子),
+    get(数据配置原子),
   );
   return ok(结果);
 });
@@ -364,6 +366,7 @@ export const 字形分析配置原子 = atom((get) => {
   const 线性化决策 = 如线性化决策.value;
   return ok({
     分析配置,
+    数据配置: get(数据配置原子),
     决策,
     决策空间,
     线性化决策,

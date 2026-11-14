@@ -65,7 +65,7 @@ Worker 通过 `Thread` 类（`src/utils.ts`）管理，使用 `MessageChannel` �
 
 ## 资源与版本
 
-共享数据由根 `scripts/fetch.ts` 准备至根 `src/data/`，不要另建 `web/public/data/` 副本。`vite-data.ts` 在开发时提供 `/data/` 服务，构建时只复制网页所需的六份文件：`characters.json`、`glyphs.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`、`gf0014.txt`。开发核验文件不复制。
+共享数据由根 `scripts/fetch.ts` 准备至根 `data/`，不要另建 `web/public/data/` 副本。`vite-data.ts` 在开发时提供 `/data/` 服务，构建时只复制网页所需的六份文件：`characters.json`、`glyphs.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`、`gf0014.txt`。开发核验文件不复制。
 
 `src/preload.ts` 使用固定地址、`no-store` 加载原始 JSON/TXT；`public/_headers` 设置部署数据的缓存响应头，HTTP 压缩由托管平台处理。数据重新部署后在刷新时生效，已打开会话继续使用启动时加载的数据。
 

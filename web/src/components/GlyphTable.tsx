@@ -2,19 +2,20 @@ import { Button, Checkbox, Flex, Popconfirm, Space, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Table from "antd/es/table";
 import {
+  GF0014映射,
+  GF3001映射,
+  isVectorStroke,
   type 基本字形数据,
   type 基本部件数据,
   type 复合体数据,
   type 字形,
-  type 部件,
-  isVectorStroke,
-  是用户字形,
-  结构描述字符列表,
-  歧义字形,
-  GF0014映射,
-  GF3001映射,
   字符字形过滤器,
+  是用户字形,
+  格式化字形ID,
+  歧义字形,
+  结构描述字符列表,
   type 过滤器参数,
+  type 部件,
 } from "hanzi-chai";
 import { useAtom, useAtomValue } from "jotai";
 import { type ReactElement, useMemo, useState } from "react";
@@ -56,7 +57,7 @@ const CreateGlyph = ({ type }: { type: "component" | "compound" }) => {
     id: 0,
     type: "compound",
     operator: "⿰",
-    references: [{ id: 1 }, { id: 1 }],
+    references: [{ id: 0x00000 }, { id: 0x00000 }],
   };
   const initialValues = type === "component" ? dummyComponent : dummyCompound;
   const hashset = new Set<string>();
@@ -100,7 +101,7 @@ const DeleteGlyph = ({ id }: { id: number }) => {
     <DeleteButton
       disabled={!远程 && !是用户字形(id)}
       onClick={async () => {
-        if (!confirm(`确定删除字形 ${id} 吗？`)) return;
+        if (!confirm(`确定删除字形 ${格式化字形ID(id)} 吗？`)) return;
         if (远程) {
           const res = await removeGlyph(id);
           if (!errorFeedback(res)) {
@@ -122,7 +123,7 @@ const ReplaceGlyph = ({ id }: { id: number }) => {
 
   return (
     <Popconfirm
-      title={`将所有对字形 ${id} 的引用替换为：`}
+      title={`将所有对字形 ${格式化字形ID(id)} 的引用替换为：`}
       description={
         <GlyphSelect value={newId} onChange={setNewId} style={{ width: 160 }} />
       }
@@ -245,7 +246,7 @@ export default function GlyphTable() {
               <GlyphView glyph={record.图形盒子} />
             </BorderItem>
           </Tooltip>
-          {record.id}
+          {格式化字形ID(record.id)}
         </Flex>
       ),
       width: 80,
@@ -284,7 +285,7 @@ export default function GlyphTable() {
             {record.部分列表.map((字形) => {
               if (!字形) return null;
               return (
-                <Tooltip key={字形.id} title={`ID: ${字形.id}`}>
+                <Tooltip key={字形.id} title={`ID: ${格式化字形ID(字形.id)}`}>
                   <BorderItem>
                     <GlyphView glyph={字形.图形盒子} />
                   </BorderItem>

@@ -1,14 +1,12 @@
-import { describe, it, expect, beforeAll } from "bun:test";
-import { 部件字根, 默认退化配置 } from "../src/index.js";
-import type { 字库, 字符, 部件 } from "../src/index.js";
+import { beforeAll, describe, expect, it } from "bun:test";
+import type { 字库 } from "../src/index.js";
+import { 部件, 部件字根, 默认退化配置 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
-let 部件图形库: Map<字符, 部件>;
 let 字库实例: 字库;
 
 beforeAll(() => {
   const 数据 = 获取数据();
-  部件图形库 = 数据.部件图形库;
   字库实例 = 数据.字库;
 });
 
@@ -21,19 +19,24 @@ const 包含 = (字根名: string, 部件名: string, indices: number[]) => {
   );
 };
 
-const g = (字根字符串: string) => {
-  const 字符实例 = 字库实例.校验字符(字根字符串)!.character;
-  const 部件 = 部件图形库.get(字符实例)!;
-  if (!部件) throw new Error(`部件图形库中未找到字符 ${字根字符串} 的部件`);
-  return 部件;
+// 切片匹配检验实际笔画；数据库把同形重组为复合体时，按原笔顺展开后检验。
+const g = (名称: string): 部件 => {
+  const 字符 = 字库实例.校验字符(名称)!.character;
+  const 字形 = 字库实例.查询字符的字形(字符)?.[0];
+  if (!字形) throw new Error(`字库中未找到字符 ${名称} 的字形`);
+  return 字形 instanceof 部件
+    ? 字形
+    : new 部件({
+        id: 字形.id,
+        type: "component",
+        operator: undefined,
+        references: undefined,
+        strokes: 字形.图形盒子.获取笔画列表(),
+      });
 };
 
-const h = (字根字符串: string) => {
-  const 字符实例 = 字库实例.校验字符(字根字符串)!.character;
-  const 部件 = 部件图形库.get(字符实例)!;
-  if (!部件) throw new Error(`部件图形库中未找到字符 ${字根字符串} 的部件`);
-  return new 部件字根(字符实例, 部件);
-};
+const h = (名称: string) =>
+  new 部件字根(字库实例.校验字符(名称)!.character, g(名称));
 
 interface 切片来源 {
   部件名: string;

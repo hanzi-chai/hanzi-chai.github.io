@@ -1,5 +1,5 @@
-import init, { Web } from "libchai";
 import { 编码评估 } from "hanzi-chai/evaluation";
+import init, { Web } from "libchai";
 
 export interface WorkerInput {
   type: "sync" | "encode" | "evaluate" | "optimize";
@@ -9,8 +9,21 @@ export interface WorkerInput {
 export type WorkerOutput =
   | { type: "success"; result: any }
   | { type: "error"; error: Error }
-  | { type: "better_solution"; config: string; metric: string; score: number; index?: number }
-  | { type: "progress"; config: string; metric: string; score: number; steps: number; temperature: number }
+  | {
+      type: "better_solution";
+      config: string;
+      metric: string;
+      score: number;
+      index?: number;
+    }
+  | {
+      type: "progress";
+      config: string;
+      metric: string;
+      score: number;
+      steps: number;
+      temperature: number;
+    }
   | { type: "parameters"; t_max?: number; t_min?: number; steps?: number }
   | { type: "elapsed"; time: number }
   | { type: "trial_max"; temperature: number; accept_rate: number }

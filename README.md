@@ -26,7 +26,7 @@ npx chai evaluate ./scheme.yaml --out ./runs/baseline --json
 
 ## 默认数据与文件覆盖
 
-源码 CLI 默认使用 `src/data/`，构建或安装后使用包内的 `dist/data/`。包内仅包含下表的五份运行数据。示例源文件维护在本包的 `examples/`，构建后复制到 `dist/examples/`，无需依赖仓库根目录的资源。运行 `chai --help` 可以查看当前 CLI 的实际路径。直接传方案 YAML 即可共用这套数据。
+源码 CLI 默认使用 `data/`，构建或安装后使用包内的 `dist/data/`。包内仅包含下表的五份运行数据。示例源文件维护在本包的 `examples/`，构建后复制到 `dist/examples/`，无需依赖仓库根目录的资源。运行 `chai --help` 可以查看当前 CLI 的实际路径。直接传方案 YAML 即可共用这套数据。
 
 | 参数 | 默认文件或用途 |
 | --- | --- |
@@ -49,22 +49,28 @@ npx chai evaluate ./scheme.yml --dictionary ./user/dictionary.tsv \
 
 自定义分析文件每行为 `汉字<TAB>元素名称（空格分隔）`，方案中的完整元素名称为 `类别-元素名称`。网页中的用户词典、当量、键位分布和自定义分析存于 IndexedDB，可导出为对应文件交给 CLI。
 
-`data.glyph_sources` 选择字符的地区字形。字符没有任何指定来源时，自动按 `GHTJKNVMSBU` 顺序选取一个缺省字形，并保留其真实来源标签。尚未列入该顺序的来源排在其后，同优先级沿用字符记录中的顺序。缺省选择在 `data.character_customization` 补丁之后进行，无来源标签的兼容形也会保留。
+`data.glyph_sources` 可选，省略时默认为 `["G"]`，用于选择字符的地区字形。字符没有任何指定来源时，自动按 `GHTJKNVMSBU` 顺序选取一个缺省字形，并保留其真实来源标签。尚未列入该顺序的来源排在其后，同优先级沿用字符记录中的顺序。缺省选择在 `data.character_customization` 补丁之后进行，无来源标签的兼容形也会保留。
 
-`analysis.customize` 和 `dynamic_customize` 直接保存在方案 YAML 中。键与 `form.mapping` 一样支持字符、字形名称（如 `字形-123`）和旧版裸数字字形 ID。字符规则应用于当前来源选择下的所有部件字形，具体字形规则优先于字符规则。使用默认复合体分析器时，也可用字形 ID 直接覆盖复合体的取根序列。
+`analysis.customize` 和 `dynamic_customize` 直接保存在方案 YAML 中。键与 `form.mapping` 一样支持字符、五位十六进制字形名称（如 `字形-00123`）和裸十六进制 ID。字符规则应用于当前来源选择下的所有部件字形，具体字形规则优先于字符规则。使用默认复合体分析器时，也可用字形 ID 直接覆盖复合体的取根序列。
 
 ```yaml
 analysis:
   customize:
     天: ['1', 大]
-    字形-123: ['1', '2']
+    字形-00123: ['1', '2']
 ```
 
 ### 字形融合
 
 融合在拆分时把指定复合体的笔画按原笔顺合在一起，交给部件分析器，使字根可以跨越原来的分部边界。字库仍保留字形本来的结构和来源。部件分析器和复合体分析器均为「默认」时自动启用默认集合，使用其他分析器时默认关闭。
 
-`analysis.fusion: true` 启用默认集合，`false` 关闭融合。也可以传入字形 ID 列表来替换默认集合，例如 `analysis.fusion: [910]` 只融合「兆」的这一字形。融合后的字形可以用 `analysis.customize` 或 `analysis.dynamic_customize` 指定拆分。二笔部件分析器也支持这两种自定义，优先于整根和首两笔、末笔规则；对融合复合体的覆盖同样会传播到使用该字形的父级分析。融合支持 1 到 30 笔的复合体。
+`data.fusion: true` 启用默认集合，`false` 关闭融合。也可以传入字形 ID 列表来替换默认集合，例如 `data.fusion: [0x0445f]` 只融合「兆」的这一字形。融合后的字形可以用 `analysis.customize` 或 `analysis.dynamic_customize` 指定拆分。二笔部件分析器也支持这两种自定义，优先于整根和首两笔、末笔规则；对融合复合体的覆盖同样会传播到使用该字形的父级分析。融合支持 1 到 30 笔的复合体。
+
+融合选项放在 `data` 块中；旧配置中的 `data.fusion` 需要移动到 `data.fusion`，值保持不变。旧位置会收到明确的迁移提示，不会静默忽略。
+
+字形 ID 取值为 `0x00000`–`0xfffff`，数据库和 JSON 继续保存整数，名称、界面与 API 路径统一显示五位小写十六进制。前两位 `00` 为部件，`01`–`d6` 为康熙部首编号；第三位为余笔数减一，`f` 合并 16 笔及以上；末两位按五类笔画序列的字典序分配，同序列以迁移前 ID 保持稳定顺序。复合体从子节点开始广度优先查找部首，实际部首及偏旁字形维护在 `src/kangxi-radicals.ts`；左右耳共形按布局位置分别归阜、邑。部件以自身笔数分组。同组超过 256 个的字形进入 `d7`–`df`，真实部首、余笔及序号保存在 `src/glyph-id-overflow.json`；`e0`–`ef` 为生成区，`f0`–`ff` 为自定义区。
+
+已有 ID 按冻结映射迁移，新增字形不触发全库重排序。`bun run audit:glyph-ids` 检查归部、引用及溢出记录；`bun run migrate:glyph-ids -- --config old.yaml --out output/migrated` 可显式转换旧方案。线上数据库和 API 已使用新编号，下载器与客户端直接读写新 ID，不再自动转换旧编号。写入字库时须携带 `X-Glyph-ID-Version: 1`；共享客户端自动发送。历史映射仅保留在离线迁移脚本中，不随运行包发布。不会把旧十进制名称当作新十六进制名称静默加载。
 
 ## 命令与输出
 
@@ -305,7 +311,7 @@ bun run start:api   # 构建包后启动本地 API
 
 网页的其他构建目标为 `build:CF`、`build:BEX` 和 `build:CLIENT`，产物均在 `web/dist/`。`dev`、`start`、`preview` 保留为网页快捷命令；`build:pkg` 是 `build` 的兼容别名。网页说明见 [web/README.md](web/README.md)，部署资源需使用新的 `web/dist/<目标>` 路径。
 
-`bun run typecheck` 统一检查算法源码、测试和脚本；`typecheck:web`、`typecheck:api` 分别检查网页和 API。`lint` 检查算法及仓库脚本，`lint:web` 检查网页。`format` 只格式化，不执行 Git 暂存。版本发布准备使用 `bun run release`，它会修改版本、提交、打标签并推送；npm 发布由 CI 执行。
+`bun run typecheck` 统一检查算法源码、测试和脚本；`typecheck:web`、`typecheck:api` 分别检查网页和 API。`lint` 对全仓纳入范围的源码、测试、脚本和配置执行 Biome 格式、lint 与导入检查，并将警告视为失败；`lint:web` 检查网页。`format` 只格式化，不执行 Git 暂存。版本发布准备使用 `bun run release`，它会修改版本、提交、打标签并推送；npm 发布由 CI 执行。
 
 ### 工程配置
 
@@ -315,7 +321,7 @@ bun run start:api   # 构建包后启动本地 API
 
 ## 维护者的数据准备与发布
 
-仓库开发仍使用 `bun install && bun run fetch`；根目录下载脚本与算法包共用核心数据下载流程，并额外准备开发核验数据。所有开发数据仅保存在 `src/data/`；前端开发服务器直接读取此目录，前端构建时才把网页所需文件复制到 `web/dist/<目标>/data/`，不再维护 `web/public/data/` 副本。
+仓库开发仍使用 `bun install && bun run fetch`；根目录下载脚本与算法包共用核心数据下载流程，并额外准备开发核验数据。所有开发数据仅保存在 `data/`；前端开发服务器直接读取此目录，前端构建时才把网页所需文件复制到 `web/dist/<目标>/data/`，不再维护 `web/public/data/` 副本。
 
 算法包可以独立准备发布数据，不依赖前端代码或前端依赖。维护脚本统一为 `.ts`，由仓库要求的 Bun 执行；因此以下 npm 生命周期也需要环境中有 Bun。发布后的包仍只需 Node.js 20+：
 

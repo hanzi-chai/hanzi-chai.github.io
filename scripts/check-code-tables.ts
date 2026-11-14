@@ -10,8 +10,8 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import {
   列出示例方案,
-  获取示例方案路径,
   字集过滤查找表,
+  获取示例方案路径,
   评估方案项目,
   读取方案项目,
 } from "../src/index";
@@ -38,6 +38,7 @@ const root = path.resolve(import.meta.dir, "..");
 const { values } = parseArgs({
   options: {
     "reference-dir": { type: "string" },
+    "data-dir": { type: "string" },
     "base-url": {
       type: "string",
       default: "https://assets.chaifen.app/code-tables",
@@ -130,7 +131,12 @@ try {
         )
         .sort()
         .join("");
-      const project = 读取方案项目(获取示例方案路径(id));
+      const project = 读取方案项目(
+        获取示例方案路径(id),
+        values["data-dir"]
+          ? { directory: path.resolve(values["data-dir"]) }
+          : {},
+      );
       const scopeName = project.配置.data?.character_set ?? "general";
       const scope = new Set(
         [...project.上下文.字库]

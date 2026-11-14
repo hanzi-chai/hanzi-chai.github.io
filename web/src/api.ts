@@ -1,9 +1,6 @@
-import type {
-  字符数据,
-  基本字形数据,
-  EquivalenceData,
-} from "hanzi-chai";
 import { createClient } from "@chai-api/client";
+import type { EquivalenceData, 基本字形数据, 字符数据 } from "hanzi-chai";
+import { 格式化字形ID } from "hanzi-chai";
 
 export { endpoint, type 后端错误 } from "@chai-api/client";
 
@@ -53,12 +50,13 @@ export const createGlyph = (payload: 基本字形数据) =>
   post<number>("/glyphs", payload);
 
 export const updateGlyph = (payload: 基本字形数据) =>
-  put<boolean>(`/glyphs/${payload.id}`, payload);
+  put<boolean>(`/glyphs/${格式化字形ID(payload.id)}`, payload);
 
 export const replaceGlyph = (payload: { oldId: number; newId: number }) =>
   put<boolean>("/glyphs", payload);
 
-export const removeGlyph = (id: number) => del<boolean>(`/glyphs/${id}`);
+export const removeGlyph = (id: number) =>
+  del<boolean>(`/glyphs/${格式化字形ID(id)}`);
 
 export const listEquivalence = () => get<EquivalenceData[]>("/equivalence");
 

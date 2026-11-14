@@ -92,11 +92,13 @@ export function 构建字形分析配置(
       配置.analysis?.customize ?? {},
       配置.analysis?.dynamic_customize ?? {},
       配置.analysis,
+      配置.data,
     ),
     决策,
     决策空间,
     线性化决策,
     分析配置: 配置.analysis ?? {},
+    数据配置: 配置.data ?? {},
     字形来源列表: 配置.data?.glyph_sources ?? ["G"],
   };
 }

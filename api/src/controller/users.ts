@@ -1,19 +1,17 @@
-import { IRequest } from "itty-router";
-import { Ctx, Env } from "../dto/context";
-import { Err, ErrCode, Ok, Result } from "../error/error";
-import { User, UserLogin, UserRole, UserState } from "../dto/users";
-import { DataList } from "../dto/list";
-import { loadString } from "../dto/load";
-import { UserModel } from "../model/users";
+import type { IRequest } from "itty-router";
+import type { Ctx, Env } from "../dto/context";
 import { Claims } from "../dto/jwt";
+import {
+  读取注册,
+  读取状态,
+  读取用户更新,
+  读取登录,
+  读取角色,
+} from "../dto/requests";
+import { User, UserLogin, UserRole, UserState } from "../dto/users";
+import { Err, ErrCode, Ok, type Result } from "../error/error";
 import { authorizedAdmin } from "../middleware/jwt";
-
-/** 字母开头, 字母或数字结尾, [_-] 连接 */
-const patUid = /^[a-zA-Z]([_-]?[a-zA-Z0-9]+)*$/;
-/** 任意字符 */
-const patName = /^.+$/;
-/** 字母数字邮箱 */
-const patEmail = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+([.][a-zA-Z0-9_-]+)+$/;
+import { UserModel } from "../model/users";
 
 function userFromModel(userModel: UserModel): User {
   var user = new User();
@@ -24,26 +22,6 @@ function userFromModel(userModel: UserModel): User {
   user.role = userModel.role;
   user.state = userModel.state;
   return user;
-}
-
-async function userToModel(user: any): Promise<Result<UserModel>> {
-  var userModel = new UserModel();
-  userModel.id = loadString(user.id);
-  userModel.name = loadString(user.name);
-  userModel.email = loadString(user.email);
-  // TODO: 头像上传需要对象存储功能, 现在可以存为 url 或图像 base64
-  userModel.avatar = loadString(user.avatar);
-  // 密码在前端请求中使用 md5 或 sha1, 后端再将之存为 bcrypt
-  userModel.password = await hashPassword(loadString(user.password));
-  if (
-    userModel.id.match(patUid) &&
-    userModel.name.match(patName) &&
-    userModel.email.match(patEmail)
-  ) {
-    return userModel;
-  } else {
-    return new Err(ErrCode.ParamInvalid, "参数格式不正确");
-  }
 }
 
 /** 输入 -> SHA1 -> Base64 -> 输出 */
@@ -64,45 +42,9 @@ async function verifyPassword(
   return newHash === hash;
 }
 
-/** GET:/users?page=1&size=20 */
-export async function List(
-  request: IRequest,
-  env: Env,
-): Promise<Result<DataList<User>>> {
-  // 第 `page` 页, 每页 `size` 条
-  const { page, size } = request.query;
-
-  // 查询用户记录总数
-  const result = await UserModel.count(env);
-  if (!Ok(result)) {
-    return result as Err;
-  }
-
-  var userList = new DataList<User>();
-  userList.total = result;
-  userList.page = parseInt(loadString(page)) || 1;
-  userList.size = parseInt(loadString(size)) || 20;
-
-  if (userList.total > (userList.page - 1) * userList.size) {
-    // 本页有数据时, 查询数据
-    const result = await UserModel.list(
-      env,
-      (userList.page - 1) * userList.size,
-      userList.size,
-    );
-    if (!Ok(result)) {
-      return result as Err;
-    }
-
-    userList.items = result.map((userModel) => userFromModel(userModel));
-  }
-
-  return userList;
-}
-
 /** GET:/users/:id */
 export async function Info(request: IRequest, env: Env): Promise<Result<User>> {
-  const userId = request.params["id"];
+  const userId = request.params.id;
 
   // 从 `model` 层取回数据
   const result = await UserModel.byId(env, userId);
@@ -120,22 +62,17 @@ export async function Create(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  var args: any = {};
-  try {
-    const body: any = await request.json();
-    if (body.id && body.email) {
-      args = body;
-    } else {
-      return new Err(ErrCode.ParamInvalid, "用户名或邮箱不正确");
-    }
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
-
-  const userModel = await userToModel(args);
-  if (!Ok(userModel)) {
-    return userModel as Err;
-  }
+  const args = await 读取注册(request);
+  if (!Ok(args)) return args;
+  const userModel: UserModel = {
+    id: args.id,
+    name: args.name,
+    email: args.email,
+    avatar: args.avatar ?? "",
+    password: await hashPassword(args.password),
+    role: UserRole.Normal,
+    state: UserState.Normal,
+  };
 
   // 用户名或邮箱是否已存在
   var exist = await UserModel.exist(env, userModel.id, userModel.email);
@@ -166,7 +103,7 @@ export async function Delete(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  const userId = request.params["id"];
+  const userId = request.params.id;
   if (!userId) {
     return new Err(ErrCode.ParamInvalid, "用户名不正确");
   }
@@ -185,7 +122,7 @@ export async function Update(
   env: Env,
   ctx: Ctx,
 ): Promise<Result<boolean>> {
-  const userId = request.params["id"];
+  const userId = request.params.id;
   if (!userId) {
     return new Err(ErrCode.ParamInvalid, "用户名不正确");
   }
@@ -204,26 +141,22 @@ export async function Update(
     return userModel as Err;
   }
 
-  // 请求参数
-  var args: any = {};
-  try {
-    args = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const args = await 读取用户更新(request);
+  if (!Ok(args)) return args;
+  if (args.id !== undefined && args.id !== userId)
+    return new Err(ErrCode.ParamInvalid, "不可修改用户 ID");
 
-  // 更新
-  var newModel = await userToModel(args);
-  if (!Ok(newModel)) {
-    return newModel as Err;
-  }
-
-  newModel.id = userId;
-  newModel.name = newModel.name || userModel.name;
-  newModel.email = newModel.email || userModel.email;
-  newModel.avatar = newModel.avatar || userModel.avatar;
-  newModel.password = newModel.password || userModel.password;
-  return await UserModel.update(env, userModel);
+  const newModel: UserModel = {
+    ...userModel,
+    name: args.name ?? userModel.name,
+    email: args.email ?? userModel.email,
+    avatar: args.avatar ?? userModel.avatar,
+    password:
+      args.password === undefined
+        ? userModel.password
+        : await hashPassword(args.password),
+  };
+  return await UserModel.update(env, newModel);
 }
 
 /** PUT:/users/:id/promote */
@@ -232,7 +165,7 @@ export async function Promote(
   env: Env,
   ctx: Ctx,
 ): Promise<Result<boolean>> {
-  const userId = request.params["id"];
+  const userId = request.params.id;
   if (!userId) {
     return new Err(ErrCode.ParamInvalid, "用户名不正确");
   }
@@ -240,19 +173,9 @@ export async function Promote(
     return new Err(ErrCode.ParamInvalid, "不可修改当前登录用户");
   }
 
-  var newRole: number;
-  try {
-    const body: any = await request.json();
-    if (typeof body.role === "number") {
-      newRole = body.role;
-    } else {
-      return new Err(ErrCode.ParamInvalid, "用户角色枚举不正确");
-    }
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
-
-  return await UserModel.promote(env, userId, newRole);
+  const args = await 读取角色(request);
+  if (!Ok(args)) return args;
+  return await UserModel.promote(env, userId, args.role);
 }
 
 /** PUT:/users/:id/disable */
@@ -261,7 +184,7 @@ export async function Disable(
   env: Env,
   ctx: Ctx,
 ): Promise<Result<boolean>> {
-  const userId = request.params["id"];
+  const userId = request.params.id;
   if (!userId) {
     return new Err(ErrCode.ParamInvalid, "用户名不正确");
   }
@@ -269,19 +192,9 @@ export async function Disable(
     return new Err(ErrCode.ParamInvalid, "不可修改当前登录用户");
   }
 
-  var newState: number;
-  try {
-    const body: any = await request.json();
-    if (typeof body.state === "number") {
-      newState = body.state;
-    } else {
-      return new Err(ErrCode.ParamInvalid, "用户状态枚举不正确");
-    }
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
-
-  return await UserModel.disable(env, userId, newState);
+  const args = await 读取状态(request);
+  if (!Ok(args)) return args;
+  return await UserModel.disable(env, userId, args.state);
 }
 
 /** POST:/login */
@@ -289,22 +202,11 @@ export async function Login(
   request: IRequest,
   env: Env,
 ): Promise<Result<UserLogin>> {
-  var args: any = {};
-  try {
-    const body: any = await request.json();
-    if (body.username && body.password) {
-      args = body;
-    } else {
-      return new Err(ErrCode.ParamInvalid, "用户名或密码不正确");
-    }
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const args = await 读取登录(request);
+  if (!Ok(args)) return args;
+  const { username, password } = args;
 
-  const username = loadString(args.username);
-  const password = loadString(args.password);
-
-  var userModel;
+  let userModel: Result<UserModel>;
   if (username.match(/@/)) {
     // 通过邮箱登录
     userModel = await UserModel.byEmail(env, username);

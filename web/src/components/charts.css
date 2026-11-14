@@ -1,4 +1,6 @@
 .g2-tooltip-list-item-value {
+  /* biome-ignore lint/complexity/noImportantStyles: 覆盖 G2 tooltip 的行内 nowrap，让长汉字列表换行。 */
   white-space: normal !important;
+  /* biome-ignore lint/complexity/noImportantStyles: 覆盖 G2 tooltip 的行内省略样式，完整显示汉字。 */
   text-overflow: inherit !important;
 }

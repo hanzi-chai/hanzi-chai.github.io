@@ -1,9 +1,4 @@
-import {
-  type 分析配置,
-  合并分类器,
-  type 笔画名称,
-  type 退化配置,
-} from "hanzi-chai";
+import { type 分析配置, 合并分类器, type 退化配置 } from "hanzi-chai";
 import { atom } from "jotai";
 import { focusAtom } from "jotai-optics";
 import { 分析配置原子 } from "./config";
@@ -43,7 +38,7 @@ export const 动态自定义拆分原子 = focusAtom(分析配置原子, (o) =>
 );
 
 export const 分类器自定义原子 = focusAtom(分析配置原子, (o) =>
-  o.prop("classifier").valueOr({} as Record<笔画名称, number>),
+  o.prop("classifier").valueOr({} as NonNullable<分析配置["classifier"]>),
 );
 
 export const 分类器原子 = atom((get) => {

@@ -1,5 +1,6 @@
 import { 复合体 } from "./compound.js";
 import type { 字符数据, 结构描述字符 } from "./data.js";
+import { 解析字形ID } from "./glyph-id.js";
 import type { 字库, 字形 } from "./repertoire.js";
 import type { 字符 } from "./unicode.js";
 
@@ -42,7 +43,7 @@ export class 字符字形过滤器 {
       if (this.过滤条件.part) {
         subResult &&=
           glyph instanceof 复合体 &&
-          glyph.部分列表.some((p) => p.id === Number(this.过滤条件.part));
+          glyph.部分列表.some((p) => p.id === 解析字形ID(this.过滤条件.part!));
       }
       return subResult;
     });
@@ -53,7 +54,7 @@ export class 字符字形过滤器 {
     const { id, name, operator, part } = this.过滤条件;
     let result = true;
     if (id) {
-      result &&= id === glyph.id.toString();
+      result &&= 解析字形ID(id) === glyph.id;
     }
     if (name) {
       const 别名匹配 = (glyph.name ?? "").includes(name);
@@ -74,7 +75,7 @@ export class 字符字形过滤器 {
     if (part) {
       result &&=
         glyph instanceof 复合体 &&
-        glyph.部分列表.some((p) => p.id === Number(part));
+        glyph.部分列表.some((p) => p.id === 解析字形ID(part));
     }
     return result;
   }

@@ -22,6 +22,7 @@ export function createClient(getToken: TokenProvider) {
     const token = getToken();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "X-Glyph-ID-Version": "1",
     };
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -31,13 +32,17 @@ export function createClient(getToken: TokenProvider) {
       init.body = JSON.stringify(payload);
     }
     const res = await fetch(endpoint + slug, init);
-    return res.json() as Promise<R | 后端错误>;
+    const result = (await res.json()) as R | 后端错误;
+    return result;
   }
 
   return {
     get: <R>(slug: string) => request<R>("GET", slug),
-    post: <R>(slug: string, payload?: unknown) => request<R>("POST", slug, payload),
-    put: <R>(slug: string, payload?: unknown) => request<R>("PUT", slug, payload),
-    del: <R>(slug: string, payload?: unknown) => request<R>("DELETE", slug, payload),
+    post: <R>(slug: string, payload?: unknown) =>
+      request<R>("POST", slug, payload),
+    put: <R>(slug: string, payload?: unknown) =>
+      request<R>("PUT", slug, payload),
+    del: <R>(slug: string, payload?: unknown) =>
+      request<R>("DELETE", slug, payload),
   };
 }

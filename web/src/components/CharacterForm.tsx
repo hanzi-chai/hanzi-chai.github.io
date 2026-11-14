@@ -5,7 +5,6 @@ import {
   ProFormDigit,
   ProFormGroup,
   ProFormItem,
-  ProFormText,
 } from "@ant-design/pro-components";
 import { Button, Flex, Typography } from "antd";
 import type { 字符数据 } from "hanzi-chai";
@@ -47,14 +46,10 @@ export default function CharacterForm({
         <ProFormDigit name="unicode" label="Unicode" readonly />
         <ProFormDigit name="tygf" label="通用规范" readonly />
         <ProFormDigit name="gb2312" label="GB2312" readonly />
-        <ProFormText name="name" label="名称" />
         <ProFormCheckbox name="ambiguous" label="模糊" />
       </Flex>
       <Typography.Title level={5}>字形</Typography.Title>
-      <ProFormListMovable
-        name="glyphs"
-        alwaysShowItemLabel
-      >
+      <ProFormListMovable name="glyphs" alwaysShowItemLabel>
         <ProFormGroup>
           <ProFormItem label="ID" name="id" className="m-0!">
             <GlyphSelect />

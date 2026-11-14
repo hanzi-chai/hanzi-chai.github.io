@@ -1,9 +1,9 @@
 import type { 组装条目 } from "./assembly.js";
 import {
   下转换,
-  是强类型归并,
-  type 强类型决策,
   type 强类型元素位或编码,
+  type 强类型决策,
+  是强类型归并,
 } from "./utils.js";
 
 export interface 离散分析配置 {

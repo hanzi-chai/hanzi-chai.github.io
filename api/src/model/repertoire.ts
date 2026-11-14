@@ -1,6 +1,5 @@
-import { Env } from "../dto/context";
-import { Err, ErrCode, Result } from "../error/error";
-import { loadNumber } from "../dto/load";
+import type { Env } from "../dto/context";
+import { Err, ErrCode, type Result } from "../error/error";
 
 export interface 原始汉字模型 {
   unicode: number;
@@ -12,19 +11,16 @@ export interface 原始汉字模型 {
 
 const table = "repertoire";
 
-export class Model {
-  public static async byUnicode(
-    env: Env,
-    unicode: number,
-  ): Promise<Result<原始汉字模型>> {
+export const Model = {
+  async byUnicode(env: Env, unicode: number): Promise<Result<原始汉字模型>> {
     let res: 原始汉字模型 | null;
     try {
       res = await env.CHAI.prepare(
         `SELECT unicode, tygf, gb2312, glyphs, name FROM ${table} WHERE unicode=? LIMIT 1`,
       )
         .bind(unicode)
-        .first();
-    } catch (err) {
+        .first<原始汉字模型>();
+    } catch (_err) {
       return new Err(ErrCode.DataQueryFailed, "数据查询失败");
     }
 
@@ -33,13 +29,10 @@ export class Model {
     }
 
     return res;
-  }
+  },
 
-  public static async generateUnicode(
-    env: Env,
-    type: string,
-  ): Promise<Result<number>> {
-    var res: any[];
+  async generateUnicode(env: Env, type: string): Promise<Result<number>> {
+    let res: { unicode: number }[];
     const index = type.includes("component") ? 0 : 1;
     const breakpoint = [0xe000, 0xe800, 0xf000] as const;
     const from = breakpoint[index];
@@ -49,7 +42,7 @@ export class Model {
         `SELECT unicode FROM ${table} WHERE unicode >= ? AND unicode < ?`,
       )
         .bind(from, to)
-        .all();
+        .all<{ unicode: number }>();
       res = results;
     } catch (err) {
       return new Err(
@@ -74,67 +67,26 @@ export class Model {
       return new Err(ErrCode.UnknownInnerError, "已达上限，无法继续创建");
     }
     return code;
-  }
+  },
 
-  public static async exist(
-    env: Env,
-    unicode: number,
-  ): Promise<Result<boolean>> {
-    var res;
+  async exist(env: Env, unicode: number): Promise<Result<boolean>> {
+    let res: number | null;
     try {
       res = await env.CHAI.prepare(
         `SELECT COUNT(0) total FROM ${table} WHERE unicode=?`,
       )
         .bind(unicode)
-        .first("total");
+        .first<number>("total");
     } catch (err) {
       return new Err(
         ErrCode.DataQueryFailed,
         `数据查询失败（${(err as Error).message}）`,
       );
     }
-    return loadNumber(res) !== 0;
-  }
+    return (res ?? 0) !== 0;
+  },
 
-  public static async count(env: Env): Promise<Result<number>> {
-    var res;
-    try {
-      res = await env.CHAI.prepare(`SELECT COUNT(0) total FROM ${table}`).first(
-        "total",
-      );
-    } catch (err) {
-      return new Err(
-        ErrCode.DataQueryFailed,
-        `数据查询失败（${(err as Error).message}）`,
-      );
-    }
-    return loadNumber(res);
-  }
-
-  public static async list(
-    env: Env,
-    offset: number,
-    limit: number,
-  ): Promise<Result<原始汉字模型[]>> {
-    var res;
-    try {
-      res = await env.CHAI.prepare(
-        `SELECT unicode, tygf, gb2312, glyphs, name FROM ${table} LIMIT ? OFFSET ?`,
-      )
-        .bind(limit, offset)
-        .all();
-    } catch (err) {
-      return new Err(ErrCode.DataQueryFailed, "数据查询失败");
-    }
-
-    const { results } = res;
-    return results as unknown as 原始汉字模型[];
-  }
-
-  public static async create(
-    env: Env,
-    character: 原始汉字模型,
-  ): Promise<Result<number>> {
+  async create(env: Env, character: 原始汉字模型): Promise<Result<number>> {
     const { unicode, tygf, gb2312, glyphs, name } = character;
     try {
       await env.CHAI.prepare(
@@ -149,9 +101,9 @@ export class Model {
       );
     }
     return unicode;
-  }
+  },
 
-  public static async createBatch(
+  async createBatch(
     env: Env,
     characters: 原始汉字模型[],
   ): Promise<Result<boolean>> {
@@ -172,12 +124,9 @@ export class Model {
       );
     }
     return true;
-  }
+  },
 
-  public static async delete(
-    env: Env,
-    unicode: number,
-  ): Promise<Result<boolean>> {
+  async delete(env: Env, unicode: number): Promise<Result<boolean>> {
     try {
       await env.CHAI.prepare(`DELETE FROM ${table} WHERE unicode=?`)
         .bind(unicode)
@@ -189,12 +138,9 @@ export class Model {
       );
     }
     return true;
-  }
+  },
 
-  public static async update(
-    env: Env,
-    character: 原始汉字模型,
-  ): Promise<Result<boolean>> {
+  async update(env: Env, character: 原始汉字模型): Promise<Result<boolean>> {
     try {
       const { unicode, tygf, gb2312, glyphs, name } = character;
       await env.CHAI.prepare(
@@ -209,9 +155,9 @@ export class Model {
       );
     }
     return true;
-  }
+  },
 
-  public static async updateBatch(
+  async updateBatch(
     env: Env,
     characters: 原始汉字模型[],
   ): Promise<Result<boolean>> {
@@ -232,5 +178,5 @@ export class Model {
       );
     }
     return true;
-  }
-}
+  },
+};

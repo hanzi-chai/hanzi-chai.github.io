@@ -51,7 +51,7 @@ export const 区块列表: 区块[] = [
     label: "中日韩统一表意文字扩展D",
     begin: 0x2b740,
     end: 0x2b81f,
-    count: 222,
+    count: 223,
   },
   {
     name: "cjk-e",

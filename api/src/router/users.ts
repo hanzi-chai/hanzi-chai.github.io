@@ -1,13 +1,12 @@
 import { Router } from "itty-router";
+import * as users from "../controller/users";
 import {
-  authorizedUser,
   authorizedAdmin,
   authorizedSuper,
+  authorizedUser,
 } from "../middleware/jwt";
-import * as users from "../controller/users";
 
 export const routerUsers = Router({ base: "/users" })
-  .get("/", users.List)
   .get("/:id", users.Info)
   .post("/", users.Create)
   .delete("/:id", authorizedUser, authorizedAdmin, users.Delete)

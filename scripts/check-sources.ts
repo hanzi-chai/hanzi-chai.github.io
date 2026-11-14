@@ -8,7 +8,7 @@
  *   都须有来源；Unihan 中没有来源的字符，不应有任何来源。
  *
  * 用法：bun run scripts/check-sources.ts
- * 先运行 bun run fetch，准备 src/data/Unihan_IRGSources.txt。
+ * 先运行 bun run fetch，准备 data/Unihan_IRGSources.txt。
  * 只检查不修改。
  */
 

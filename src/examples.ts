@@ -1,10 +1,10 @@
 /** 随包发布的只读示例；导出时由调用方选择单个 YAML 文件。 */
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
-import { 方案错误 } from "./scheme.js";
-import { 创建方案模板, type Example } from "./templates.js";
 import type { 配置 } from "./config.js";
+import { 方案错误 } from "./scheme.js";
+import { type Example, 创建方案模板 } from "./templates.js";
 import { 校验配置结构 } from "./validation.js";
 
 const packaged = new URL("./examples/", import.meta.url);

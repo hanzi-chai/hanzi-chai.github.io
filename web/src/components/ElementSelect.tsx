@@ -58,7 +58,10 @@ export default function ElementSelect(
         if (!元素) return false;
         let 匹配序列 = false;
         if (元素 instanceof 字符) {
-          匹配序列 = 字库.查询字符的字形(元素)?.some((s) => s.标准笔顺.startsWith(input)) ?? false;
+          匹配序列 =
+            字库
+              .查询字符的字形(元素)
+              ?.some((s) => s.标准笔顺.startsWith(input)) ?? false;
         } else if (元素 instanceof 部件 || 元素 instanceof 复合体) {
           匹配序列 = 元素.标准笔顺.startsWith(input);
         }

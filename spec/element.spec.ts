@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { 从列表生成, 摘要, 转列表 } from "../src/index.js";
 
 describe("编码元素", () => {

@@ -40,7 +40,10 @@ export interface 数据配置 {
   character_customization?: Record<string, 字符数据补丁[]>;
   glyphs?: 基本字形数据[];
   glyph_algebra?: 字形拼写运算[];
+  /** 选用的字形来源，省略时仅使用 G。 */
   glyph_sources?: string[];
+  /** 布尔值开关默认融合集合，字形 ID 列表替换默认集合。 */
+  fusion?: boolean | number[];
 }
 
 export type 字形自定义 = Record<string, 字符数据补丁[]>;
@@ -72,23 +75,21 @@ export type OperatorVariable = {
 
 // config.analysis begin
 export interface 分析配置 {
-  classifier?: Record<笔画名称, number>;
+  classifier?: Partial<Record<笔画名称, number>>;
   degenerator?: 退化配置;
   selector?: string[];
-  // 键与 mapping 相同，支持字符或字形名称（字形-ID）；兼容旧版裸数字 ID。
+  // 键与 mapping 相同，支持字符、五位十六进制字形名称或裸十六进制 ID。
   customize?: Record<string, string[]>;
   dynamic_customize?: Record<string, string[][]>;
   strong?: string[];
   weak?: string[];
   component_analyzer?: string;
   compound_analyzer?: string;
-  /** 布尔值开关默认集合，字形 ID 列表替换默认集合。 */
-  fusion?: boolean | number[];
   dynamic?: boolean;
 }
 
 export interface 退化配置 {
-  feature?: Record<笔画名称, 笔画名称>;
+  feature?: Partial<Record<笔画名称, 笔画名称>>;
   no_cross?: boolean;
   /** 排除有外笔穿入两道相连横画之间的字根切片。 */
   no_insert_between_heng?: boolean;

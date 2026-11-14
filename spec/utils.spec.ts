@@ -1,5 +1,5 @@
-import { describe, it, expect } from "bun:test";
-import { 模拟矢量笔画, 字符, 解析原始词典 } from "../src/index.js";
+import { describe, expect, it } from "bun:test";
+import { 字符, 模拟矢量笔画, 解析原始词典 } from "../src/index.js";
 
 describe("Unicode 方法", () => {
   it("基本区汉字判断", () => {

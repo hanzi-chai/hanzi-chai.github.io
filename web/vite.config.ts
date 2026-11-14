@@ -1,12 +1,12 @@
 import path from "node:path";
-import { defineConfig, type UserConfig, type PluginOption } from "vite";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react-swc";
+import mdx from "@mdx-js/rollup";
 import yaml from "@modyfi/vite-plugin-yaml";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import Pages from "vite-plugin-pages";
 import wasm from "vite-plugin-wasm";
-import { visualizer } from "rollup-plugin-visualizer";
-import mdx from "@mdx-js/rollup";
 import packageJson from "../package.json";
 import tsconfig from "./tsconfig.json";
 import { localDataPlugin } from "./vite-data";
@@ -67,11 +67,6 @@ export default defineConfig(({ mode, command }) => {
         },
       },
     },
-    esbuild: {
-      supported: {
-        "top-level-await": true,
-      },
-    },
     define: {
       APP_VERSION: JSON.stringify(APP_VERSION),
       "import.meta.env.APP_VERSION": JSON.stringify(APP_VERSION),
@@ -84,9 +79,7 @@ export default defineConfig(({ mode, command }) => {
       localDataPlugin(),
       wasmContentTypePlugin,
       { enforce: "pre", ...mdx() },
-      react({
-        // plugins: [["@swc-jotai/react-refresh", {}]],
-      }),
+      react(),
       wasm(),
       yaml(),
       Pages({

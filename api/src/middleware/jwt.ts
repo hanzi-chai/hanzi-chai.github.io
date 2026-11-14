@@ -46,7 +46,7 @@ export async function authorizedUser(
 
 /** 管理员身份认证. **注意**: 必须有前置身份认证 */
 export async function authorizedAdmin(
-  request: IRequest,
+  _request: IRequest,
   env: Env,
   ctx: Ctx,
 ): Promise<any> {
@@ -61,7 +61,7 @@ export async function authorizedAdmin(
 
 /** 超级管理员身份认证. **注意**: 必须有前置身份认证 */
 export async function authorizedSuper(
-  request: IRequest,
+  _request: IRequest,
   env: Env,
   ctx: Ctx,
 ): Promise<any> {

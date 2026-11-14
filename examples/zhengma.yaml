@@ -105,7 +105,7 @@ analysis:
       - "\ue405"
       - '3'
       - '1'
-    面:
+    字形-1f500:
       - 丆
       - 囗
       - "\ue09c"
@@ -113,7 +113,7 @@ analysis:
       - 千
       - 日
       - 二
-    赤:
+    字形-20348:
       - 土
       - "\ue0ba"
       - 八
@@ -134,7 +134,7 @@ analysis:
       - 廿
       - 口
       - 龶
-    亦:
+    字形-0831c:
       - 亠
       - "\ue0ba"
       - 八
@@ -172,7 +172,7 @@ analysis:
     甪:
       - '3'
       - "\ue08c"
-    角:
+    字形-1243f:
       - "\ue020"
       - "\ue08c"
     "\ue072":
@@ -910,69 +910,29 @@ encoder:
       positive: s9
       negative: s10
 data:
-  glyph_customization:
-    周:
-      type: compound
-      operator: ⿵
-      operandList: [冂, "\ue832"]
-    佥:
-      type: spliced_component
-      operator: ⿱
-      operandList: [亼, "\ue046"]
-    亘:
-      type: compound
-      tags: [纵向包夹]
-      operator: ⿴
-      operandList: [二, 日]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    畺:
-      type: compound
-      tags: [纵向包夹]
-      operator: ⿻
-      operandList: [三, 畕]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 5}, {index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    南:
-      type: compound
-      operator: ⿱
-      operandList: [十, "\ue81b"]
-    "\uea02":
-      type: compound
-      operator: ⿴
-      operandList: ["\ue42b", 幺]
-    "\ue9d0":
-      type: compound
-      tags: [横向包夹]
-      operator: ⿴
-      operandList: ["\ue0e3", 米]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    戢:
-      type: compound
-      tags: [戈部截断]
-      operator: ⿰
-      operandList: [咠, 戈]
-    "\ue0a5":
-      type: compound
-      tags: [戈部截断]
-      operator: ⿰
-      operandList: ["\ue81f", 戈]
-    容:
-      type: compound
-      operator: ⿳
-      operandList: [穴, 人, 口]
-    胤:
-      type: compound
-      tags: [横向包夹]
-      operator: ⿴
-      operandList: [儿, "\ue99d"]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-  transformers:
-    - from: {operator: ⿺, operandList: [辶, {id: 1}]}
-      to: {operator: ⿺, operandList: [辶, {id: 1}]}
-    - from: {operator: ⿺, operandList: [廴, {id: 1}]}
-      to: {operator: ⿺, operandList: [廴, {id: 1}]}
-    - from: {operator: ⿺, operandList: [㇗, {id: 1}]}
-      to: {operator: ⿺, operandList: [㇗, {id: 1}]}
-    - from: {operator: ⿲, operandList: [彳, {id: 1}, 亍]}
-      to: {operator: ⿴, operandList: [行, {id: 1}]}
-    - from: {operator: ⿶, operandList: [山, {id: 1}]}
-      to: {operator: ⿶, operandList: [{id: 1}, 山]}
+  character_customization:
+    周: [{type: insert, id: 983040, sources: []}]
+    佥: [{type: insert, id: 983041, sources: []}]
+    亘: [{type: insert, id: 983042, sources: []}]
+    畺: [{type: insert, id: 983043, sources: []}]
+    南: [{type: insert, id: 983044, sources: []}]
+    : [{type: insert, id: 983045, sources: []}]
+    : [{type: insert, id: 983046, sources: []}]
+    戢: [{type: insert, id: 983047, sources: []}]
+    : [{type: insert, id: 983048, sources: []}]
+    容: [{type: insert, id: 983049, sources: []}]
+    胤: [{type: insert, id: 983050, sources: []}]
+  glyphs:
+    - {id: 983040, name: 周（郑码）, type: compound, operator: ⿵, references: [{id: 304}, {id: 131606}]}
+    - {id: 983041, name: 佥（郑码）, type: component, strokes: [{feature: 撇, start: [50, 4], curveList: [{command: c, parameterList: [-9, 16, -19, 31, -42, 45]}]}, {feature: 捺, start: [50, 4], curveList: [{command: c, parameterList: [9, 16, 19, 31, 42, 45]}]}, {feature: 横, start: [11, 63], curveList: [{command: h, parameterList: [78]}]}, {feature: 点, start: [14, 71], curveList: [{command: c, parameterList: [7, 7, 10, 13, 14, 25]}]}, {feature: 点, start: [39, 71], curveList: [{command: c, parameterList: [7, 7, 10, 13, 14, 25]}]}, {feature: 撇, start: [83, 71], curveList: [{command: c, parameterList: [-3, 8, -10, 17, -18, 25]}]}, {feature: 横, start: [6, 96], curveList: [{command: h, parameterList: [88]}]}]}
+    - {id: 983042, name: 亘（郑码）, type: compound, operator: ⿴, references: [{id: 256}, {id: 874}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
+    - {id: 983043, name: 畺（郑码）, type: compound, operator: ⿻, references: [{id: 512}, {id: 418830}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0, to: 4}, {index: 0, from: 1, to: 1}, {index: 1, from: 5}, {index: 0, from: 2}]}
+    - {id: 983044, name: 南（郑码）, type: compound, operator: ⿱, references: [{id: 261}, {id: 54297}]}
+    - {id: 983045, name: （郑码）, type: compound, operator: ⿴, references: [{id: 978}, {id: 755}]}
+    - {id: 983046, name: （郑码）, type: compound, operator: ⿴, references: [{id: 313}, {id: 1394}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
+    - {id: 983047, name: 戢（郑码）, type: compound, operator: ⿰, references: [{id: 124217}, {id: 839}]}
+    - {id: 983048, name: （郑码）, type: compound, operator: ⿰, references: [{id: 471298}, {id: 839}]}
+    - {id: 983049, name: 容（郑码）, type: compound, operator: ⿳, references: [{id: 164100}, {id: 325}, {id: 600}]}
+    - {id: 983050, name: 胤（郑码）, type: compound, operator: ⿴, references: [{id: 335}, {id: 213767}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
+  glyph_algebra:
+    - {from: {operator: ⿲, references: [638, {variable: 0}, 515]}, to: {operator: ⿴, references: [246272, {variable: 0}]}}

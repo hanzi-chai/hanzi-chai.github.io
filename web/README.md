@@ -22,7 +22,7 @@ bun run dev:web
 | `bun run typecheck:web` | TypeScript 检查 |
 | `bun run lint:web` | Biome 检查 |
 
-根目录构建命令会先构建算法包；直接在 `web/` 执行 `build:*` 前需自行准备根包产物。数据从根 `src/data/` 加载，构建时复制所需文件到网页产物。`vite-data.ts` 提供开发数据服务，`public/_headers` 配置部署后的缓存响应头。
+根目录构建命令会先构建算法包；直接在 `web/` 执行 `build:*` 前需自行准备根包产物。数据从根 `data/` 加载，构建时复制所需文件到网页产物。`vite-data.ts` 提供开发数据服务，`public/_headers` 配置部署后的缓存响应头。
 
 GitHub Pages 工作流从仓库根安装依赖、准备数据、构建，并上传 `web/dist/pages`。外部托管服务也应从仓库根执行构建，并使用对应的 `web/dist/<目标>` 作为发布目录。
 

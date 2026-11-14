@@ -102,73 +102,73 @@ analysis:
       - 用
       - '5'
     # 按当前字形 ID 恢复虎码的共用分部取根，避免旧字段被忽略。
-    字形-837: ["\ue096"] # 其字头
-    字形-882: ["\ue44d"] # 典字头
-    字形-12940: ["\ue42d", 八] # 兴
-    字形-4375: ["\ue400", 八] # 兵
-    字形-5031: ["\ue099", 八] # 具
-    字形-951: [字形-180001, 八] # 寒字腰
-    字形-765: [字形-180002, "1"] # 段字旁
-    字形-7818: [丷, 三] # 兰
-    字形-4832: [音, 十] # 章
-    字形-12932: [纟, 纟] # 丝
-    字形-9869: [千, 黑] # 熏
-    字形-740: [冂, 土] # 冉
-    字形-846: ["1", 冂, 土] # 再
-    字形-856: ["1", 白] # 百
-    字形-136099: [亼] # 合字头
-    字形-861: [戊, "5"] # 成
-    字形-4689: [亼, 月, 刂] # 俞
-    字形-925: [立, 冖] # 帝字头
-    字形-979: ["1", 自] # 夏字头
-    字形-16065: [页, 刀] # 寡字底
-    字形-1315: [立, 厂] # 彦字框
-    字形-891: [牛, 巾] # 制字旁
-    字形-7137: [牛, 巾, 刂] # 制：全局融合后保留虎码取根
-    字形-1111: [廿, 口, 龶] # 堇
-    字形-12944: [禾, 丬, 匕] # 乘
-    字形-1020: ["3", 糸] # 系
-    字形-878: [日, "5", "3"] # 曳
-    字形-543: ["3", 土] # 廷字心
-    字形-381: [了, "1"] # 孑
-    字形-20424: [儿, 幺, 月] # 胤
-    字形-4237: [侖, 口, 口, 口] # 龠
-    字形-1042: [土, 丷, "\ue422"] # 丧
-    字形-1288: ["\ue010", 儿] # 勉字框
-    字形-710: [水] # 犀字心头
-    字形-4288: [十, "\ue099", 八] # 真
-    字形-7569: [禾, "1", "5", 戈] # 羲字底
-    字形-10436: [刂, 米] # 渊字边
-    字形-8310: [臼, 冂, "1", 口] # 璺字头无冖
-    字形-28630: [丬, 匕] # 邶字旁
-    字形-30095: [止, 匕] # 雌字旁
-    字形-32137: [齐, 非, "1"] # 齑
-    字形-25153: ["\ue421", 车] # 舆字头
-    字形-180100: ["\ue057", 白, "\ue009", 儿] # 兜·兼容取根
-    字形-180101: [女, 田, 力, 田, 力] # 嬲·兼容取根
-    字形-180102: ["1", 白, 弓, 弓] # 弼·兼容取根
-    字形-180103: [彑, 矢, 匕, 匕] # 彘·兼容取根
-    字形-180104: [予, "3", 木, 木, 心] # 懋·兼容取根
-    字形-180105: [八, 刀, 龵, 手] # 掰·兼容取根
-    字形-180106: [亼, 口, 龵, 手] # 搿·兼容取根
-    字形-180107: [乂, 乂, 木, 木, 大, 手] # 攀·兼容取根
-    字形-180108: [文, 王, 王] # 斑·兼容取根
-    字形-180109: [乂, 乂, 木, 木, 大] # 樊·兼容取根
-    字形-180110: [廿, 丬, 口, 匕, 灬] # 燕·兼容取根
-    字形-180111: [瓜, 辛, 辛] # 瓣·兼容取根
-    字形-180112: [疒, 文, 王, 王] # 癍·兼容取根
-    字形-180113: [竹, "\ue057", 白, "\ue009", 儿] # 篼·兼容取根
-    字形-180114: [米, 弓, 弓] # 粥·兼容取根
-    字形-180115: [艹, "\ue057", 白, "\ue009", 儿] # 蔸·兼容取根
-    字形-180116: [衤, 乂, 乂, 木, 木, 大, 手] # 襻·兼容取根
-    字形-180117: [车, 纟, 纟, 口] # 辔·兼容取根
-    字形-180118: [刀, 辛, 辛] # 辨·兼容取根
-    字形-180119: [讠, 辛, 辛] # 辩·兼容取根
-    字形-180120: [纟, 辛, 辛] # 辫·兼容取根
-    字形-180121: [讠, 隹, 隹] # 雠·兼容取根
-    字形-180122: [米, 弓, 弓, 鬲] # 鬻·兼容取根
-    字形-180123: [女, 廿, 丬, 口, 匕, 灬] # 嬿·兼容取根
-    字形-180124: [予, '3', 木, 木] # 楙·兼容取根
+    字形-0050c: ["\ue096"] # 其字头
+    字形-0053e: ["\ue44d"] # 典字头
+    字形-0343a: ["\ue42d", 八] # 兴
+    字形-04521: ["\ue400", 八] # 兵
+    字形-02622: ["\ue099", 八] # 具
+    字形-00602: [字形-f0033, 八] # 寒字腰
+    字形-0048f: [字形-f0034, "1"] # 段字旁
+    字形-03321: [丷, 三] # 兰
+    字形-7550c: [音, 十] # 章
+    字形-013a2: [纟, 纟] # 丝
+    字形-56922: [千, 黑] # 熏
+    字形-00474: [冂, 土] # 冉
+    字形-00517: ["1", 冂, 土] # 再
+    字形-48101: ["1", 白] # 百
+    字形-00284: [亼] # 合字头
+    字形-00526: [戊, "5"] # 成
+    字形-4a41a: [亼, 月, 刂] # 俞
+    字形-0832b: [立, 冖] # 帝字头
+    字形-6d100: ["1", 自] # 夏字头
+    字形-0c808: [页, 刀] # 寡字底
+    字形-0056d: [立, 厂] # 彦字框
+    字形-0054f: [牛, 巾] # 制字旁
+    字形-12522: [牛, 巾, 刂] # 制：全局融合后保留虎码取根
+    字形-00a00: [廿, 口, 龶] # 堇
+    字形-00904: [禾, 丬, 匕] # 乘
+    字形-0064b: ["3", 糸] # 系
+    字形-0053a: [日, "5", "3"] # 曳
+    字形-0039a: ["3", 土] # 廷字心
+    字形-002d1: [了, "1"] # 孑
+    字形-04771: [儿, 幺, 月] # 胤
+    字形-01f82: [侖, 口, 口, 口] # 龠
+    字形-00705: [土, 丷, "\ue422"] # 丧
+    字形-1243a: ["\ue010", 儿] # 勉字框
+    字形-0044f: [水] # 犀字心头
+    字形-1870e: [十, "\ue099", 八] # 真
+    字形-0481d: [禾, "1", "5", 戈] # 羲字底
+    字形-0465c: [刂, 米] # 渊字边
+    字形-0da10: [臼, 冂, "1", 口] # 璺字头无冖
+    字形-15203: [丬, 匕] # 邶字旁
+    字形-4d102: [止, 匕] # 雌字旁
+    字形-b3502: [齐, 非, "1"] # 齑
+    字形-01aaf: ["\ue421", 车] # 舆字头
+    字形-f0036: ["\ue057", 白, "\ue009", 儿] # 兜·兼容取根
+    字形-f0037: [女, 田, 力, 田, 力] # 嬲·兼容取根
+    字形-f0038: ["1", 白, 弓, 弓] # 弼·兼容取根
+    字形-f0039: [彑, 矢, 匕, 匕] # 彘·兼容取根
+    字形-f003a: [予, "3", 木, 木, 心] # 懋·兼容取根
+    字形-f003b: [八, 刀, 龵, 手] # 掰·兼容取根
+    字形-f003c: [亼, 口, 龵, 手] # 搿·兼容取根
+    字形-f003d: [乂, 乂, 木, 木, 大, 手] # 攀·兼容取根
+    字形-f003e: [文, 王, 王] # 斑·兼容取根
+    字形-f003f: [乂, 乂, 木, 木, 大] # 樊·兼容取根
+    字形-f0040: [廿, 丬, 口, 匕, 灬] # 燕·兼容取根
+    字形-f0041: [瓜, 辛, 辛] # 瓣·兼容取根
+    字形-f0042: [疒, 文, 王, 王] # 癍·兼容取根
+    字形-f0043: [竹, "\ue057", 白, "\ue009", 儿] # 篼·兼容取根
+    字形-f0044: [米, 弓, 弓] # 粥·兼容取根
+    字形-f0045: [艹, "\ue057", 白, "\ue009", 儿] # 蔸·兼容取根
+    字形-f0046: [衤, 乂, 乂, 木, 木, 大, 手] # 襻·兼容取根
+    字形-f0047: [车, 纟, 纟, 口] # 辔·兼容取根
+    字形-f0048: [刀, 辛, 辛] # 辨·兼容取根
+    字形-f0049: [讠, 辛, 辛] # 辩·兼容取根
+    字形-f004a: [纟, 辛, 辛] # 辫·兼容取根
+    字形-f004b: [讠, 隹, 隹] # 雠·兼容取根
+    字形-f004c: [米, 弓, 弓, 鬲] # 鬻·兼容取根
+    字形-f004d: [女, 廿, 丬, 口, 匕, 灬] # 嬿·兼容取根
+    字形-f004e: [予, '3', 木, 木] # 楙·兼容取根
 form:
   alphabet: qwertyuiopasdfghjklzxcvbnm
   mapping:
@@ -453,7 +453,7 @@ form:
       element: 聿
     "\ue00a":
       element: 云
-    字形-180000:
+    字形-f0032:
       element: 聿
     "\ue0c1":
       element: 虫
@@ -643,7 +643,7 @@ form:
       element: 足
     "\ue0d5":
       element: 臣
-    字形-180001:
+    字形-f0033:
       element: 井
     耂:
       element: 老
@@ -709,7 +709,7 @@ form:
       element: 手
     龵:
       element: 手
-    字形-180002:
+    字形-f0034:
       element: 手
     "\ue002":
       element: 手
@@ -801,7 +801,7 @@ form:
       element: 大
     "\ue98e":
       element: 页
-    字形-180004:
+    字形-f0035:
       element: 水
     "\ue9f0":
       element: 鱼
@@ -814,17 +814,17 @@ form:
     "\ue439":
       element: 冂
     # 包围外框复用对应整字字根。
-    字形-1244: {element: 走}
-    字形-136028: {element: 麻}
-    字形-136027: {element: 鹿}
-    字形-136055: {element: 辰}
-    字形-136026: {element: 鬼}
-    字形-136033: {element: 虎}
-    字形-1287: {element: 支}
+    字形-2032e: {element: 走}
+    字形-35715: {element: 麻}
+    字形-5160c: {element: 鹿}
+    字形-1b406: {element: 辰}
+    字形-1c60d: {element: 鬼}
+    字形-02614: {element: 虎}
+    字形-18112: {element: 支}
     # 通规字中采用的形近根；与完整字形和切片使用同一匹配规则。
-    字形-519: {element: 冂} # 雋字底
-    字形-1049: {element: 页} # 憂字头
-    字形-1128: {element: 匕} # 横起笔匕形
+    字形-0037a: {element: 冂} # 雋字底
+    字形-0070d: {element: 页} # 憂字头
+    字形-0011d: {element: 匕} # 横起笔匕形
   mapping_type: 2
 encoder:
   max_length: 4
@@ -895,64 +895,64 @@ data:
   glyph_sources: [G]
   # 从原字形提取实笔画，迁移旧 data.repertoire 中的四个局部字根。
   glyphs:
-    - {id: 180000, type: component, name: 事字底, strokes: [{feature: 横折, start: [14, 49], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [28]}]}, {feature: 横, start: [5, 64], curveList: [{command: h, parameterList: [90]}]}, {feature: 横, start: [14, 77], curveList: [{command: h, parameterList: [67]}]}, {feature: 竖钩, start: [50, 4], curveList: [{command: v, parameterList: [90]}]}]}
-    - {id: 180001, type: component, name: 寒字腰无横, strokes: [{feature: 横, start: [15, 24], curveList: [{command: h, parameterList: [70]}]}, {feature: 横, start: [20, 56], curveList: [{command: h, parameterList: [60]}]}, {feature: 竖, start: [39, 7], curveList: [{command: v, parameterList: [81]}]}, {feature: 竖, start: [61, 7], curveList: [{command: v, parameterList: [81]}]}]}
-    - {id: 180002, type: component, name: 段字旁无横, strokes: [{feature: 平撇, start: [65, 10], curveList: [{command: z, parameterList: [-7, 3, -13, 4, -30, 5]}]}, {feature: 竖, start: [35, 15], curveList: [{command: v, parameterList: [79]}]}, {feature: 横, start: [35, 33], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [35, 52], curveList: [{command: h, parameterList: [30]}]}]}
-    - {id: 180004, type: component, name: 乑无撇, strokes: [{feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [80]}]}, {feature: 平撇, start: [38, 35], curveList: [{command: z, parameterList: [-8, 7, -18, 12, -28, 15]}]}, {feature: 平撇, start: [38, 65], curveList: [{command: z, parameterList: [-8, 7, -18, 12, -28, 13]}]}, {feature: 平撇, start: [81, 38], curveList: [{command: z, parameterList: [-4, 3, -8, 7, -21, 12]}]}, {feature: 捺, start: [58, 43], curveList: [{command: c, parameterList: [8, 19, 18, 30, 30, 37]}]}]}
+    - {id: 0xf0032, type: component, name: 事字底, strokes: [{feature: 横折, start: [14, 49], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [28]}]}, {feature: 横, start: [5, 64], curveList: [{command: h, parameterList: [90]}]}, {feature: 横, start: [14, 77], curveList: [{command: h, parameterList: [67]}]}, {feature: 竖钩, start: [50, 4], curveList: [{command: v, parameterList: [90]}]}]}
+    - {id: 0xf0033, type: component, name: 寒字腰无横, strokes: [{feature: 横, start: [15, 24], curveList: [{command: h, parameterList: [70]}]}, {feature: 横, start: [20, 56], curveList: [{command: h, parameterList: [60]}]}, {feature: 竖, start: [39, 7], curveList: [{command: v, parameterList: [81]}]}, {feature: 竖, start: [61, 7], curveList: [{command: v, parameterList: [81]}]}]}
+    - {id: 0xf0034, type: component, name: 段字旁无横, strokes: [{feature: 平撇, start: [65, 10], curveList: [{command: z, parameterList: [-7, 3, -13, 4, -30, 5]}]}, {feature: 竖, start: [35, 15], curveList: [{command: v, parameterList: [79]}]}, {feature: 横, start: [35, 33], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [35, 52], curveList: [{command: h, parameterList: [30]}]}]}
+    - {id: 0xf0035, type: component, name: 乑无撇, strokes: [{feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [80]}]}, {feature: 平撇, start: [38, 35], curveList: [{command: z, parameterList: [-8, 7, -18, 12, -28, 15]}]}, {feature: 平撇, start: [38, 65], curveList: [{command: z, parameterList: [-8, 7, -18, 12, -28, 13]}]}, {feature: 平撇, start: [81, 38], curveList: [{command: z, parameterList: [-4, 3, -8, 7, -21, 12]}]}, {feature: 捺, start: [58, 43], curveList: [{command: c, parameterList: [8, 19, 18, 30, 30, 37]}]}]}
     # 兼容取根只在方案形生效；保留实际分部与原笔顺。
-    - {id: 180100, type: compound, operator: ⿱, references: [{id: 6835}, {id: 128}], name: 兜·虎码兼容取根}
-    - {id: 180101, type: compound, operator: ⿰, references: [{id: 6255}, {id: 15649}], name: 嬲·虎码兼容取根}
-    - {id: 180102, type: compound, operator: ⿲, references: [{id: 374}, {id: 856}, {id: 374}], name: 弼·虎码兼容取根}
-    - {id: 180103, type: compound, operator: ⿱, references: [{id: 406}, {id: 16814}], name: 彘·虎码兼容取根}
-    - {id: 180104, type: compound, operator: ⿱, references: [{id: 15374}, {id: 612}], name: 懋·虎码兼容取根}
-    - {id: 180105, type: compound, operator: ⿲, references: [{id: 533}, {id: 5039}, {id: 529}], name: 掰·虎码兼容取根}
-    - {id: 180106, type: compound, operator: ⿲, references: [{id: 533}, {id: 4466}, {id: 529}], name: 搿·虎码兼容取根}
-    - {id: 180107, type: compound, operator: ⿱, references: [{id: 10858}, {id: 529}], name: 攀·虎码兼容取根}
-    - {id: 180108, type: compound, operator: ⿲, references: [{id: 417}, {id: 590}, {id: 417}], name: 斑·虎码兼容取根}
-    - {id: 180109, type: compound, operator: ⿱, references: [{id: 6101}, {id: 244}], name: 樊·虎码兼容取根}
-    - {id: 180110, type: compound, operator: ⿳, references: [{id: 444}, {id: 7206}, {id: 605}], name: 燕·虎码兼容取根}
-    - {id: 180111, type: compound, operator: ⿲, references: [{id: 1025}, {id: 773}, {id: 1024}], name: 瓣·虎码兼容取根}
-    - {id: 180112, type: compound, operator: ⿸, references: [{id: 795}, {id: 18358}], name: 癍·虎码兼容取根}
-    - {id: 180113, type: compound, operator: ⿱, references: [{id: 4100}, {id: 6834}], name: 篼·虎码兼容取根}
-    - {id: 180114, type: compound, operator: ⿲, references: [{id: 374}, {id: 933}, {id: 374}], name: 粥·虎码兼容取根}
-    - {id: 180115, type: compound, operator: ⿱, references: [{id: 228}, {id: 6834}], name: 蔸·虎码兼容取根}
-    - {id: 180116, type: compound, operator: ⿰, references: [{id: 807}, {id: 18226}], name: 襻·虎码兼容取根}
-    - {id: 180117, type: compound, operator: ⿱, references: [{id: 28395}, {id: 282}], name: 辔·虎码兼容取根}
-    - {id: 180118, type: compound, operator: ⿲, references: [{id: 1025}, {id: 152}, {id: 1024}], name: 辨·虎码兼容取根}
-    - {id: 180119, type: compound, operator: ⿲, references: [{id: 1025}, {id: 156}, {id: 1024}], name: 辩·虎码兼容取根}
-    - {id: 180120, type: compound, operator: ⿲, references: [{id: 1025}, {id: 407}, {id: 1024}], name: 辫·虎码兼容取根}
-    - {id: 180121, type: compound, operator: ⿰, references: [{id: 1064}, {id: 27572}], name: 雠·虎码兼容取根}
-    - {id: 180122, type: compound, operator: ⿱, references: [{id: 23902}, {id: 4196}], name: 鬻·虎码兼容取根}
-    - {id: 180123, type: compound, operator: ⿰, references: [{id: 389}, {id: 7205}], name: 嬿·虎码兼容取根}
-    - {id: 180124, type: compound, operator: ⿲, references: [{id: 448}, {id: 825}, {id: 448}], name: 楙·虎码兼容取根}
+    - {id: 0xf0036, type: compound, operator: ⿱, references: [{id: 0x6a32a}, {id: 0x0014f}], name: 兜·虎码兼容取根}
+    - {id: 0xf0037, type: compound, operator: ⿰, references: [{id: 0x6610c}, {id: 0x26664}], name: 嬲·虎码兼容取根}
+    - {id: 0xf0038, type: compound, operator: ⿲, references: [{id: 0x002ca}, {id: 0x48101}, {id: 0x002ca}], name: 弼·虎码兼容取根}
+    - {id: 0xf0039, type: compound, operator: ⿱, references: [{id: 0x002ef}, {id: 0x6f301}], name: 彘·虎码兼容取根}
+    - {id: 0xf003a, type: compound, operator: ⿱, references: [{id: 0xd7911}, {id: 0x003e9}], name: 懋·虎码兼容取根}
+    - {id: 0xf003b, type: compound, operator: ⿲, references: [{id: 0x0038a}, {id: 0x0c112}, {id: 0x00385}], name: 掰·虎码兼容取根}
+    - {id: 0xf003c, type: compound, operator: ⿲, references: [{id: 0x0038a}, {id: 0x1e26b}, {id: 0x00385}], name: 搿·虎码兼容取根}
+    - {id: 0xf003d, type: compound, operator: ⿱, references: [{id: 0x25b03}, {id: 0x00385}], name: 攀·虎码兼容取根}
+    - {id: 0xf003e, type: compound, operator: ⿲, references: [{id: 0x00307}, {id: 0x003d1}, {id: 0x00307}], name: 斑·虎码兼容取根}
+    - {id: 0xf003f, type: compound, operator: ⿱, references: [{id: 0x4b7cb}, {id: 0x00227}], name: 樊·虎码兼容取根}
+    - {id: 0xf0040, type: compound, operator: ⿳, references: [{id: 0x00326}, {id: 0x1e44c}, {id: 0x003e0}], name: 燕·虎码兼容取根}
+    - {id: 0xf0041, type: compound, operator: ⿲, references: [{id: 0x08422}, {id: 0x00499}, {id: 0x08421}], name: 瓣·虎码兼容取根}
+    - {id: 0xf0042, type: compound, operator: ⿸, references: [{id: 0x004ae}, {id: 0x60773}], name: 癍·虎码兼容取根}
+    - {id: 0xf0043, type: compound, operator: ⿱, references: [{id: 0x0442b}, {id: 0x0a805}], name: 篼·虎码兼容取根}
+    - {id: 0xf0044, type: compound, operator: ⿲, references: [{id: 0x002ca}, {id: 0x00572}, {id: 0x002ca}], name: 粥·虎码兼容取根}
+    - {id: 0xf0045, type: compound, operator: ⿱, references: [{id: 0x00215}, {id: 0x0a805}], name: 蔸·虎码兼容取根}
+    - {id: 0xf0046, type: compound, operator: ⿰, references: [{id: 0x004b9}, {id: 0x40e6e}], name: 襻·虎码兼容取根}
+    - {id: 0xf0047, type: compound, operator: ⿱, references: [{id: 0x78621}, {id: 0x00258}], name: 辔·虎码兼容取根}
+    - {id: 0xf0048, type: compound, operator: ⿲, references: [{id: 0x08422}, {id: 0x00171}, {id: 0x08421}], name: 辨·虎码兼容取根}
+    - {id: 0xf0049, type: compound, operator: ⿲, references: [{id: 0x08422}, {id: 0x00176}, {id: 0x08421}], name: 辩·虎码兼容取根}
+    - {id: 0xf004a, type: compound, operator: ⿲, references: [{id: 0x08422}, {id: 0x002f0}, {id: 0x08421}], name: 辫·虎码兼容取根}
+    - {id: 0xf004b, type: compound, operator: ⿰, references: [{id: 0x00721}, {id: 0x957f1}], name: 雠·虎码兼容取根}
+    - {id: 0xf004c, type: compound, operator: ⿱, references: [{id: 0x3981a}, {id: 0x01868}], name: 鬻·虎码兼容取根}
+    - {id: 0xf004d, type: compound, operator: ⿰, references: [{id: 0x002da}, {id: 0x56b10}], name: 嬿·虎码兼容取根}
+    - {id: 0xf004e, type: compound, operator: ⿲, references: [{id: 0x0032b}, {id: 0x004cd}, {id: 0x0032b}], name: 楙·虎码兼容取根}
   # 官方表兼收另一种取根次序，插入无来源标签的方案形。
   character_customization:
-    楙: [{type: insert, id: 180124, sources: []}]
-    嬿: [{type: insert, id: 180123, sources: []}]
-    兜: [{type: insert, id: 180100, sources: []}]
-    嬲: [{type: insert, id: 180101, sources: []}]
-    弼: [{type: insert, id: 180102, sources: []}]
-    彘: [{type: insert, id: 180103, sources: []}]
-    懋: [{type: insert, id: 180104, sources: []}]
-    掰: [{type: insert, id: 180105, sources: []}]
-    搿: [{type: insert, id: 180106, sources: []}]
-    攀: [{type: insert, id: 180107, sources: []}]
-    斑: [{type: insert, id: 180108, sources: []}]
-    樊: [{type: insert, id: 180109, sources: []}]
-    燕: [{type: insert, id: 180110, sources: []}]
-    瓣: [{type: insert, id: 180111, sources: []}]
-    癍: [{type: insert, id: 180112, sources: []}]
-    篼: [{type: insert, id: 180113, sources: []}]
-    粥: [{type: insert, id: 180114, sources: []}]
-    蔸: [{type: insert, id: 180115, sources: []}]
-    襻: [{type: insert, id: 180116, sources: []}]
-    辔: [{type: insert, id: 180117, sources: []}]
-    辨: [{type: insert, id: 180118, sources: []}]
-    辩: [{type: insert, id: 180119, sources: []}]
-    辫: [{type: insert, id: 180120, sources: []}]
-    雠: [{type: insert, id: 180121, sources: []}]
-    鬻: [{type: insert, id: 180122, sources: []}]
+    楙: [{type: insert, id: 0xf004e, sources: []}]
+    嬿: [{type: insert, id: 0xf004d, sources: []}]
+    兜: [{type: insert, id: 0xf0036, sources: []}]
+    嬲: [{type: insert, id: 0xf0037, sources: []}]
+    弼: [{type: insert, id: 0xf0038, sources: []}]
+    彘: [{type: insert, id: 0xf0039, sources: []}]
+    懋: [{type: insert, id: 0xf003a, sources: []}]
+    掰: [{type: insert, id: 0xf003b, sources: []}]
+    搿: [{type: insert, id: 0xf003c, sources: []}]
+    攀: [{type: insert, id: 0xf003d, sources: []}]
+    斑: [{type: insert, id: 0xf003e, sources: []}]
+    樊: [{type: insert, id: 0xf003f, sources: []}]
+    燕: [{type: insert, id: 0xf0040, sources: []}]
+    瓣: [{type: insert, id: 0xf0041, sources: []}]
+    癍: [{type: insert, id: 0xf0042, sources: []}]
+    篼: [{type: insert, id: 0xf0043, sources: []}]
+    粥: [{type: insert, id: 0xf0044, sources: []}]
+    蔸: [{type: insert, id: 0xf0045, sources: []}]
+    襻: [{type: insert, id: 0xf0046, sources: []}]
+    辔: [{type: insert, id: 0xf0047, sources: []}]
+    辨: [{type: insert, id: 0xf0048, sources: []}]
+    辩: [{type: insert, id: 0xf0049, sources: []}]
+    辫: [{type: insert, id: 0xf004a, sources: []}]
+    雠: [{type: insert, id: 0xf004b, sources: []}]
+    鬻: [{type: insert, id: 0xf004c, sources: []}]
   # 将衣、行的外框重组为已有字根，内件保持独立。
   glyph_algebra:
-    - {from: {operator: ⿳, references: [149, {variable: 1}, 576]}, to: {operator: ⿴, references: [921, {variable: 1}]}}
-    - {from: {operator: ⿲, references: [313, {variable: 1}, 211]}, to: {operator: ⿴, references: [4163, {variable: 1}]}}
+    - {from: {operator: ⿳, references: [0x0016e, {variable: 1}, 0x003bd]}, to: {operator: ⿴, references: [0x08324, {variable: 1}]}}
+    - {from: {operator: ⿲, references: [0x0027e, {variable: 1}, 0x00203]}, to: {operator: ⿴, references: [0x3c200, {variable: 1}]}}

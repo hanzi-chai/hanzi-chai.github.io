@@ -1,10 +1,10 @@
 import {
-  最小方案,
-  构建字库,
   准备方案,
+  type 原始词典,
   type 基本部件数据,
   type 字符数据,
-  type 原始词典,
+  最小方案,
+  构建字库,
 } from "../../src/index.js";
 
 export const glyphs: 基本部件数据[] = [1, 2].map((id) => ({
@@ -12,7 +12,6 @@ export const glyphs: 基本部件数据[] = [1, 2].map((id) => ({
   type: "component",
   operator: undefined,
   references: undefined,
-  ambiguous: false,
   strokes: Array.from({ length: id }, (_, index) => ({
     feature: "横",
     start: [10, 20 + index * 30],

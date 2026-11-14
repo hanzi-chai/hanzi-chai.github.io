@@ -18,8 +18,8 @@ import { Button, Dropdown, Flex, Input, Typography } from "antd";
 import type { BaseOptionType } from "antd/es/select";
 import {
   isVectorStroke,
-  仿射合并,
   仿射变换,
+  仿射合并,
   切片,
   区间,
   图形盒子,
@@ -28,12 +28,13 @@ import {
   type 字形数据,
   type 引用数据,
   type 引用笔画块数据,
-  获取并列布局主轴,
   校验字库整数,
+  格式化字形ID,
   模拟矢量笔画,
   type 矢量笔画数据,
   type 笔画名称,
   笔画表示方式,
+  获取并列布局主轴,
 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import type { MutableRefObject, ReactElement } from "react";
@@ -347,7 +348,16 @@ export default function GlyphForm({
         </EditorColumn>
         <EditorColumn span={15}>
           <Flex align="flex-start" gap="large">
-            <ProFormDigit name="id" label="id" disabled width={64} />
+            <ProFormDigit
+              name="id"
+              label="ID"
+              disabled
+              width={96}
+              fieldProps={{
+                formatter: (value) =>
+                  value === undefined ? "" : 格式化字形ID(Number(value)),
+              }}
+            />
             <ProFormText name="name" label="名称" width={128} readonly />
             <ProFormSelect
               label="类型"

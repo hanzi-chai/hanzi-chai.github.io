@@ -1,9 +1,10 @@
-import { 创建方案模板, type Example, type 示例配置 } from "hanzi-chai";
+import { type Example, 创建方案模板, type 示例配置 } from "hanzi-chai";
+
 export type {
-  Example,
   ClassifierType,
-  KeyboardTypes,
   EncoderTypes,
+  Example,
+  KeyboardTypes,
   StarterType,
 } from "hanzi-chai";
 

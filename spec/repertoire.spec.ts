@@ -1,11 +1,10 @@
-import { describe, it, expect } from "bun:test";
-import { 是复合体, 字库, 字形库 } from "../src/index.js";
+import { describe, expect, it } from "bun:test";
 import type { 基本部件数据, 字符数据, 字符数据补丁 } from "../src/index.js";
+import { 字库, 字形库, 是复合体 } from "../src/index.js";
 
 const 部件数据: 基本部件数据 = {
   type: "component",
   id: 1,
-  ambiguous: false,
   operator: undefined,
   references: undefined,
   strokes: [
@@ -146,14 +145,12 @@ describe("字形库与字库的分阶段构造", () => {
           type: "compound",
           operator: "⿰",
           references: [{ id: 1 }, { id: 2 }],
-          ambiguous: false,
         },
         {
           id: 4,
           type: "compound",
           operator: "⿱",
           references: [{ id: 3 }, { id: 1 }],
-          ambiguous: false,
         },
       ],
       [

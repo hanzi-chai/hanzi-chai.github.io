@@ -38,8 +38,6 @@ class 仿射变换 {
     "⿼": [this.idp, [new 区间(10, 60), new 区间(25, 75)]],
     "⿽": [this.idp, [new 区间(10, 60), new 区间(10, 60)]],
     "⿻": [this.idp, this.idp],
-    "⿾": [this.idp],
-    "⿿": [this.idp],
   };
 
   private readonly 横向缩放: number;

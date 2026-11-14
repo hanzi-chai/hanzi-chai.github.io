@@ -1,4 +1,5 @@
 import type { 笔画名称 } from "./classifier.js";
+import { 是合法字形ID } from "./glyph-id.js";
 
 export type N1 = [number];
 export type N2 = [number, number];
@@ -24,6 +25,7 @@ export type 绘制 =
 
 export type 向量 = N2;
 
+// 只支持二元、三元结构；一元镜像与旋转操作符已停用，变换结果保存为部件。
 export const 结构描述字符列表 = [
   "⿰",
   "⿱",
@@ -39,8 +41,6 @@ export const 结构描述字符列表 = [
   "⿻",
   "⿼",
   "⿽",
-  "⿾",
-  "⿿",
 ] as const;
 
 /**
@@ -78,7 +78,6 @@ export type 字形来源数据 = { id: number; sources: string[] };
 export interface 字符数据 {
   unicode: number;
   glyphs: 字形来源数据[];
-  name?: string;
   tygf?: 1 | 2 | 3;
   gb2312?: 1 | 2;
   ambiguous?: 1;
@@ -137,6 +136,8 @@ export function 校验字库整数(数据: unknown, 路径 = ""): string | undef
   }
   if (数据 === null || typeof 数据 !== "object") return;
   for (const [字段, 值] of Object.entries(数据)) {
+    if (字段 === "id" && !是合法字形ID(值))
+      return `字段 ${路径}/${字段} 必须是 0–1048575 的字形 ID 整数`;
     const 错误 = 校验字库整数(值, `${路径}/${字段}`);
     if (错误) return 错误;
   }

@@ -22,13 +22,14 @@ import {
   type 字形分析结果,
   type 字根,
   type 字根元素,
+  字符字形过滤器,
+  格式化字形ID,
   获取注册表,
+  type 过滤器参数,
   部件,
   部件字根,
   默认分类器,
   type 默认部件分析,
-  字符字形过滤器,
-  type 过滤器参数,
 } from "hanzi-chai";
 import { useState } from "react";
 import {
@@ -237,7 +238,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
                       ? 部首.元素.获取名称()
                       : map[部首.获取名称()]!;
                 }
-                tsv.push([复合体.id.toString(), 部首字符串]);
+                tsv.push([格式化字形ID(复合体.id), 部首字符串]);
               }
               exportTSV(tsv, "部首.txt");
             }}
@@ -260,7 +261,7 @@ const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
               if (last.some((x) => !是必要字根(x))) {
                 notification.warning({
                   message: "存在不合法的自定义拆分",
-                  description: `部件 ${部件.id} 的自定义拆分中包含非必要字根 ${last
+                  description: `部件 ${格式化字形ID(部件.id)} 的自定义拆分中包含非必要字根 ${last
                     .filter((x) => !是必要字根(x))
                     .join("、")}，请修改后重试`,
                 });

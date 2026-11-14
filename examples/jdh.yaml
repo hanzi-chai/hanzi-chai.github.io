@@ -6,100 +6,47 @@ info:
   version: '5.0'
   description: 方案不简单做给谁看呢
 data:
-  repertoire:
-    "\uf000":
-      unicode: 61440
-      tygf: 0
-      gb2312: 0
-      name: 禺字底
-      readings: []
-      glyphs: [{type: derived_component, source: 禺, strokes: [{feature: reference, index: 4}, {feature: reference, index: 5}, {feature: reference, index: 6}, {feature: reference, index: 7}, {feature: reference, index: 8}]}]
-      ambiguous: false
-    "\uf001":
-      unicode: 61441
-      tygf: 0
-      gb2312: 0
-      name: 草头
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [艹, 日]}]
-      ambiguous: false
-  glyph_customization:
-    黄:
-      type: compound
-      operator: ⿱
-      operandList: [龷, 更]
-    高:
-      type: compound
-      operator: ⿰
-      operandList: ["\ue804", 口]
-    尚:
-      type: compound
-      operator: ⿱
-      operandList: [龸, 口]
-    "\ue9f0":
-      type: compound
-      operator: ⿰
-      operandList: [鱼, 大]
-    兵:
-      type: compound
-      operator: ⿰
-      operandList: ["\ue400", "\ue450"]
-    "\ue824":
-      type: compound
-      operator: ⿰
-      operandList: [彳, "\ue849"]
-    命:
-      type: compound
-      operator: ⿰
-      operandList: [合, 卩]
-    夌:
-      type: compound
-      operator: ⿱
-      operandList: [土, "\ue989"]
-    丝:
-      type: compound
-      operator: ⿰
-      operandList: [纟, 纟]
-    隺:
-      type: compound
-      tags: [笔画搭挂]
-      operator: ⿻
-      operandList: [冖, 隹]
-    "\ue068":
-      type: basic_component
-      strokes: [{feature: 横, start: [8, 18], curveList: [{command: h, parameterList: [85]}]}, {feature: 撇, start: [45, 4], curveList: [{command: c, parameterList: [-8, 26, -22, 42, -39, 56]}]}]
-    莫:
-      type: compound
-      operator: ⿱
-      operandList: ["\uf001", 大]
-    㝵:
-      type: compound
-      operator: ⿱
-      operandList: [旦, 寸]
-    章:
-      type: compound
-      operator: ⿱
-      operandList: [音, 十]
-    "\ue9ab":
-      type: compound
-      operator: ⿲
-      operandList: ["\ue057", 白, "\ue009"]
-      order: [{index: 0, strokes: 0}, {index: 1, strokes: 0}, {index: 2, strokes: 0}]
-    "\ue00f":
-      type: compound
-      tags: [中竖截断]
-      operator: ⿱
-      operandList: [牛, 巾]
-    重:
-      type: compound
-      tags: [中竖截断]
-      operator: ⿱
-      operandList: [千, 里]
-    熏:
-      type: compound
-      tags: [中竖截断]
-      operator: ⿱
-      operandList: [千, 黑]
+  character_customization:
+    黄: [{type: insert, id: 983042, sources: []}]
+    高: [{type: insert, id: 983043, sources: []}]
+    尚: [{type: insert, id: 983044, sources: []}]
+    : [{type: insert, id: 983045, sources: []}]
+    兵: [{type: insert, id: 983046, sources: []}]
+    命: [{type: insert, id: 983047, sources: []}]
+    夌: [{type: insert, id: 983048, sources: []}]
+    丝: [{type: insert, id: 983049, sources: []}]
+    隺: [{type: insert, id: 983050, sources: []}]
+    : [{type: insert, id: 983051, sources: []}]
+    莫: [{type: insert, id: 983052, sources: []}]
+    㝵: [{type: insert, id: 983053, sources: []}]
+    章: [{type: insert, id: 983054, sources: []}]
+    : [{type: insert, id: 983055, sources: []}]
+    : [{type: insert, id: 983056, sources: []}]
+    重: [{type: insert, id: 983057, sources: []}]
+    熏: [{type: insert, id: 983058, sources: []}]
+  characters:
+    - {unicode: 61440, glyphs: [{id: 983040, sources: []}]}
+    - {unicode: 61441, glyphs: [{id: 983041, sources: []}]}
+  glyphs:
+    - {id: 983040, name: 禺字底, type: component, strokes: [{feature: 竖, start: [14, 59], curveList: [{command: v, parameterList: [36]}]}, {feature: 横折钩, start: [14, 59], curveList: [{command: h, parameterList: [72]}, {command: v, parameterList: [36]}]}, {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [69]}]}, {feature: 提, start: [26, 83], curveList: [{command: l, parameterList: [46, -4]}]}, {feature: 点, start: [66, 67], curveList: [{command: c, parameterList: [3, 4, 6, 11, 8, 19]}]}]}
+    - {id: 983041, name: 草头, type: compound, operator: ⿱, references: [{id: 533}, {id: 874}]}
+    - {id: 983042, name: 黄（简单鹤）, type: compound, operator: ⿱, references: [{id: 805}, {id: 1553}]}
+    - {id: 983043, name: 高（简单鹤）, type: compound, operator: ⿰, references: [{id: 58370}, {id: 600}]}
+    - {id: 983044, name: 尚（简单鹤）, type: compound, operator: ⿱, references: [{id: 172295}, {id: 600}]}
+    - {id: 983045, name: （简单鹤）, type: compound, operator: ⿰, references: [{id: 5873}, {id: 551}]}
+    - {id: 983046, name: 兵（简单鹤）, type: compound, operator: ⿰, references: [{id: 928}, {id: 552}]}
+    - {id: 983047, name: 命（简单鹤）, type: compound, operator: ⿰, references: [{id: 123499}, {id: 383}]}
+    - {id: 983048, name: 夌（简单鹤）, type: compound, operator: ⿱, references: [{id: 526}, {id: 49688}]}
+    - {id: 983049, name: 丝（简单鹤）, type: compound, operator: ⿰, references: [{id: 752}, {id: 752}]}
+    - {id: 983050, name: 隺（简单鹤）, type: compound, operator: ⿻, references: [{id: 373}, {id: 1825}]}
+    - {id: 983051, name: （简单鹤）, type: component, strokes: [{feature: 横, start: [8, 18], curveList: [{command: h, parameterList: [85]}]}, {feature: 撇, start: [45, 4], curveList: [{command: c, parameterList: [-8, 26, -22, 42, -39, 56]}]}]}
+    - {id: 983052, name: 莫（简单鹤）, type: compound, operator: ⿱, references: [{id: 983041}, {id: 551}]}
+    - {id: 983053, name: 㝵（简单鹤）, type: compound, operator: ⿱, references: [{id: 294912}, {id: 541}]}
+    - {id: 983054, name: 章（简单鹤）, type: compound, operator: ⿱, references: [{id: 480017}, {id: 261}]}
+    - {id: 983055, name: （简单鹤）, type: compound, operator: ⿲, references: [{id: 342}, {id: 1171}, {id: 376}], strokes: [{index: 0, from: 0}, {index: 1, from: 0}, {index: 2, from: 0}]}
+    - {id: 983056, name: （简单鹤）, type: compound, operator: ⿱, references: [{id: 902}, {id: 610}]}
+    - {id: 983057, name: 重（简单鹤）, type: compound, operator: ⿱, references: [{id: 624}, {id: 1585}]}
+    - {id: 983058, name: 熏（简单鹤）, type: compound, operator: ⿱, references: [{id: 624}, {id: 354087}]}
 analysis:
   degenerator:
     feature:
@@ -203,7 +150,7 @@ analysis:
     "\ue44b":
       - 千
       - 八
-    赤:
+    字形-20348:
       - 十
       - 丁
       - '3'
@@ -651,73 +598,6 @@ optimization:
       duplication: 200
       pair_equivalence: 11.4514
       levels: []
-  constraints:
-    elements:
-      - {element: 鹤声-a}
-      - {element: 鹤韵-a}
-      - {element: 鹤韵-ai}
-      - {element: 鹤韵-an}
-      - {element: 鹤韵-ang}
-      - {element: 鹤韵-ao}
-      - {element: 鹤声-b}
-      - {element: 鹤声-c}
-      - {element: 鹤声-ch}
-      - {element: 鹤声-d}
-      - {element: 鹤声-e}
-      - {element: 鹤韵-e}
-      - {element: 鹤韵-ei}
-      - {element: 鹤韵-en}
-      - {element: 鹤韵-eng}
-      - {element: 鹤声-f}
-      - {element: 鹤声-g}
-      - {element: 鹤声-h}
-      - {element: 鹤韵-i}
-      - {element: 鹤韵-ia}
-      - {element: 鹤韵-ian}
-      - {element: 鹤韵-iang}
-      - {element: 鹤韵-iao}
-      - {element: 鹤韵-ie}
-      - {element: 鹤韵-in}
-      - {element: 鹤韵-ing}
-      - {element: 鹤韵-iong}
-      - {element: 鹤韵-iu}
-      - {element: 鹤声-j}
-      - {element: 鹤声-k}
-      - {element: 鹤声-l}
-      - {element: 鹤声-m}
-      - {element: 鹤韵-m}
-      - {element: 鹤声-n}
-      - {element: 鹤韵-n}
-      - {element: 鹤韵-ng}
-      - {element: 鹤声-o}
-      - {element: 鹤韵-o}
-      - {element: 鹤韵-ong}
-      - {element: 鹤韵-ou}
-      - {element: 鹤声-p}
-      - {element: 鹤声-q}
-      - {element: 鹤声-r}
-      - {element: 鹤韵-r}
-      - {element: 鹤声-s}
-      - {element: 鹤声-sh}
-      - {element: 鹤声-t}
-      - {element: 鹤韵-u}
-      - {element: 鹤韵-ua}
-      - {element: 鹤韵-uai}
-      - {element: 鹤韵-uan}
-      - {element: 鹤韵-uang}
-      - {element: 鹤韵-ue}
-      - {element: 鹤韵-ui}
-      - {element: 鹤韵-un}
-      - {element: 鹤韵-uo}
-      - {element: 鹤韵-v}
-      - {element: 鹤韵-ve}
-      - {element: 鹤声-w}
-      - {element: 鹤声-x}
-      - {element: 鹤声-y}
-      - {element: 鹤声-z}
-      - {element: 鹤声-zh}
-    indices: []
-    element_indices: []
   metaheuristic:
     algorithm: SimulatedAnnealing
     parameters:

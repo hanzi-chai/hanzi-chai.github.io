@@ -12,6 +12,7 @@ import { type 分类器, type 笔画名称, 默认分类器 } from "./classifier
 import type { 条件, 退化配置 } from "./config.js";
 import type { 基本部件数据, 矢量图形数据, 结构描述字符 } from "./data.js";
 import { 二笔, type 元素, 未知元素, 笔画 } from "./element.js";
+import { 格式化字形ID } from "./glyph-id.js";
 import { 排序, 是共线, 是小于 } from "./math.js";
 import { 获取注册表 } from "./registry.js";
 import type { 字形分析配置 } from "./repertoire.js";
@@ -113,7 +114,7 @@ class 部件 {
   }
 
   获取名称() {
-    return `字形-${this.id}`;
+    return `字形-${格式化字形ID(this.id)}`;
   }
 
   _笔画列表() {
@@ -354,24 +355,24 @@ class 部件 {
       return false;
     }
     const id = root.获取部件().id;
-    if ([221, 222].includes(id)) {
+    if ([0x0020e, 0x0020f].includes(id)) {
       const [i1, _, i3] = indices as [number, number, number];
       const upperHeng = this.笔画列表[i1]!.curveList[0]!;
       const lowerHeng = this.笔画列表[i3]!.curveList[0]!;
       const lowerIsLonger = upperHeng.长度() < lowerHeng.长度();
-      return id === 221 ? lowerIsLonger : !lowerIsLonger;
+      return id === 0x0020e ? lowerIsLonger : !lowerIsLonger;
     }
-    if ([655, 657].includes(id)) {
+    if ([0x0040a, 0x0040c].includes(id)) {
       const [i1, i2] = indices as [number, number];
       const upperHeng = this.笔画列表[i1]!.curveList[0]!;
       const lowerHeng = this.笔画列表[i2]!.curveList[0]!;
       const lowerIsLonger = upperHeng.长度() < lowerHeng.长度();
-      return id === 655 ? lowerIsLonger : !lowerIsLonger;
+      return id === 0x0040a ? lowerIsLonger : !lowerIsLonger;
     }
-    if ([282 /* 口 */, 283 /* 囗 */].includes(id)) {
+    if ([0x00258 /* 口 */, 0x00259 /* 囗 */].includes(id)) {
       // 如果大框里面没有东西，理论上无法通过图形来判断。所以这里直接比对部件 id
-      if ([283, 556 /* 囱字框 */].includes(this.id)) {
-        return id === 283;
+      if ([0x00259, 0x003a7 /* 囱字框 */].includes(this.id)) {
+        return id === 0x00259;
       }
       const [i1, _, i3] = indices as [number, number, number];
       const upperLeft = this.笔画列表[i1]!.curveList[0]!.求值(0);
@@ -384,9 +385,9 @@ class 部件 {
       const containsStroke = otherStrokes.some((stroke) =>
         stroke.isBoundedBy(xrange, yrange),
       );
-      return id === 283 ? containsStroke : !containsStroke;
+      return id === 0x00259 ? containsStroke : !containsStroke;
     }
-    if ([123 /* 木无十 */, 120 /* 全字头 */].includes(id)) {
+    if ([0x00149 /* 木无十 */, 0x00146 /* 全字头 */].includes(id)) {
       const [i1] = indices as [number];
       const attachPoint = this.笔画列表[i1]!.curveList[0]!.求值(0);
       const otherStrokes = this.笔画列表.filter(
@@ -398,7 +399,7 @@ class 部件 {
           x.获取类型() === "linear" &&
           是共线(x.求值(0), x.求值(1), attachPoint),
       );
-      return id === 123 ? pieAndNaIsSeparated : !pieAndNaIsSeparated;
+      return id === 0x00149 ? pieAndNaIsSeparated : !pieAndNaIsSeparated;
     }
     return true;
   }

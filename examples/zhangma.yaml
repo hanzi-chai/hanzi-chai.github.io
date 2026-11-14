@@ -1,4 +1,4 @@
-version: '0.3'
+version: '0.4'
 source: zhangma
 info:
   name: 张码
@@ -25,66 +25,66 @@ analysis:
   customize:
     丈: ['1', 乂]
     下: ['1', 卜]
-    丌: ['1', 字形-110]
-    丐: ['1', 字形-89, '5']
-    再: ['1', 冂, 字形-268]
+    丌: ['1', 字形-00139]
+    丐: ['1', 字形-0011f, '5']
+    再: ['1', 冂, 字形-00247]
     末: ['1', 木]
-    束: [字形-449, 口]
-    字形-833: [王, 丷]
-    卡: [字形-89, '1', 卜]
-    里: [日, 字形-268]
+    束: [字形-0032c, 口]
+    字形-00507: [王, 丷]
+    卡: [字形-0011f, '1', 卜]
+    里: [日, 字形-00247]
     天: ['1', 大]
-    禹: ['3', 口, 冂, 字形-270]
-    字形-680: [土, 丷]
-    字形-597: [䒑, '2']
-    字形-692: ['1', 字形-364, '2']
-    字形-1075: [丷, 字形-517, 丷]
+    禹: ['3', 口, 冂, 字形-0024a]
+    字形-00429: [土, 丷]
+    字形-003d5: [䒑, '2']
+    字形-0043b: ['1', 字形-002bc, '2']
+    字形-00725: [丷, 字形-00376, 丷]
     凸: ['2', '1', '2', '5', '1']
     凹: ['2', '5', '2', '5', '1']
-    字形-971: ['1', 字形-102, 龷]
-    字形-649: [三, 人]
-    字形-1044: ['1', 日, 字形-270]
-    牜: [字形-295, '2']
-    㡀: [丷, 冂, 字形-277]
+    字形-00615: ['1', 字形-0012f, 龷]
+    字形-00401: [三, 人]
+    字形-00707: ['1', 日, 字形-0024a]
+    牜: [字形-0026b, '2']
+    㡀: [丷, 冂, 字形-00251]
     州: ['4', '3', '4', '2']
-    字形-1081: [耳, 戈]
+    字形-00802: [耳, 戈]
     瓦: ['1', '5', '5', '4']
-    字形-1060: [禾, 戈]
-    曲: [字形-102, 龷]
-    字形-581: [字形-131, 字形-153]
-    囬: [囗, 字形-94, 二]
-    万: ['1', 字形-175]
-    字形-582: [夂, '4']
-    丧: [土, 丷, 字形-393]
+    字形-0071b: [禾, 戈]
+    曲: [字形-0012f, 龷]
+    字形-003c4: [字形-00152, 字形-00173]
+    囬: [囗, 字形-00125, 二]
+    万: ['1', 字形-0018a]
+    字形-003c5: [夂, '4']
+    丧: [土, 丷, 字形-002df]
     兕: ['2', '5', '2', 儿]
-    字形-152: ['4', '3']
-    芈: [字形-91, 字形-89, 二, '2']
-    成: [戈, 字形-175]
+    字形-00171: ['4', '3']
+    芈: [字形-00121, 字形-0011f, 二, '2']
+    成: [戈, 字形-0018a]
     戍: [戈, 人]
-    戌: [戈, 字形-105]
+    戌: [戈, 字形-00134]
     孑: [了, '1']
     半: [丷, 十]
     冉: [冂, 二]
-    毛: [字形-190000, '5']
-    豕: [丆, 字形-392, 字形-122]
-    豸: ['3', 字形-392]
-    乘: [字形-764, 字形-267, 七]
-    字形-1247: [字形-190000, '5']
-    字形-800: [丷, 十]
-    字形-1090: [口, '3', 字形-122]
-    字形-398: ['5', 夂]
-    字形-1051: [丆, 字形-392, '4', '3', 字形-122]
-    字形-913: ['3', 字形-392, '3', 字形-122]
-    字形-1035: ['1', 丆, 字形-392, '3', 字形-122]
-    农: [冖, '3', 字形-122]
-    字形-830: [龶, 字形-175]
-    字形-432: ['1', 弋]
-    字形-684: ['1', 冂, 人]
-    承: [了, 三, 字形-402]
-    字形-1276: ['1', 儿]
-    字形-1320: ['1', 儿]
+    毛: [字形-f004f, '5']
+    豕: [丆, 字形-002dd, 字形-00148]
+    豸: ['3', 字形-002dd]
+    乘: [字形-0048e, 字形-00246, 七]
+    字形-00392: [字形-f004f, '5']
+    字形-004b1: [丷, 十]
+    字形-0080a: [口, '3', 字形-00148]
+    字形-002e4: ['5', 夂]
+    字形-0070f: [丆, 字形-002dd, '4', '3', 字形-00148]
+    字形-00568: ['3', 字形-002dd, '3', 字形-00148]
+    字形-00701: ['1', 丆, 字形-002dd, '3', 字形-00148]
+    农: [冖, '3', 字形-00148]
+    字形-00505: [龶, 字形-0018a]
+    字形-00318: ['1', 弋]
+    字形-0042e: ['1', 冂, 人]
+    承: [了, 三, 字形-002e8]
+    字形-00230: ['1', 儿]
+    字形-00232: ['1', 儿]
     噩: [王, 吅, 吅]
-    字形-1106: [鱼, 人]
+    字形-12746: [鱼, 人]
     发: ['5', 夂, '4']
   component_analyzer: 张码
   compound_analyzer: 张码
@@ -125,8 +125,8 @@ form:
     '55': z
     '61': 'n'
     米: q
-    字形-390: q
-    字形-135: q
+    字形-002db: q
+    字形-00156: q
     勺: q
     我: q
     月: q
@@ -138,12 +138,12 @@ form:
     皿: w
     几: w
     鱼: w
-    字形-556: w
+    字形-003a7: w
     子: e
     广: e
     犭: e
     彡: e
-    字形-310: e
+    字形-0027b: e
     爪: e
     巾: e
     年: e
@@ -153,28 +153,28 @@ form:
     儿: r
     门: r
     阝: r
-    字形-538: r
+    字形-00395: r
     乐: t
     亻: t
     乑: t
     丅: t
-    字形-105: t
+    字形-00134: t
     古: 'y'
     钅: 'y'
     亠: 'y'
-    字形-91: 'y'
+    字形-00121: 'y'
     己: 'y'
     习: 'y'
     白: u
     木: u
     䒑: u
     吅: u
-    字形-158: u
+    字形-00178: u
     巳: u
     水: i
     氵: i
     小: i
-    字形-4239: i
+    字形-1e583: i
     彐: i
     巴: i
     方: o
@@ -197,23 +197,23 @@ form:
     马: s
     四: s
     大: s
-    字形-762: s
+    字形-0048c: s
     镸: s
     田: s
     舟: d
     三: d
     王: d
-    字形-483: d
+    字形-00353: d
     示: d
     瓜: d
     士: f
     二: f
     土: f
-    字形-266: f
+    字形-00245: f
     夕: f
     言: g
     讠: g
-    字形-89: g
+    字形-0011f: g
     歹: g
     鸟: h
     十: h
@@ -229,7 +229,7 @@ form:
     旲: j
     光: k
     八: k
-    字形-445: k
+    字形-00327: k
     甘: k
     山: k
     饣: k
@@ -237,7 +237,7 @@ form:
     女: l
     九: l
     人: l
-    字形-916: l
+    字形-0056a: l
     早: l
     車: l
     立: z
@@ -250,7 +250,7 @@ form:
     可: x
     日: c
     曰: c
-    字形-633: c
+    字形-d7002: c
     巛: c
     勿: c
     口: v
@@ -261,185 +261,184 @@ form:
     冂: b
     厂: b
     虫: b
-    字形-122: b
+    字形-00148: b
     乃: b
     且: 'n'
     扌: 'n'
     冖: 'n'
-    字形-911: 'n'
-    字形-247: 'n'
-    字形-267: 'n'
+    字形-00566: 'n'
+    字形-0022a: 'n'
+    字形-00246: 'n'
     叉: 'n'
     工: m
-    字形-995: m
+    字形-1e353: m
     宀: m
     业: m
     冫: m
     刀: m
-    字形-702: l
-    字形-594: i
+    字形-00447: l
+    字形-0810f: i
     鹿: t
-    字形-256: 'y'
+    字形-00238: 'y'
     六: h
-    字形-392: v
+    字形-002dd: v
     丩: 'n'
     勹: {element: 勺}
-    字形-127: {element: 勺}
-    字形-131: {element: 勺}
-    字形-175: {element: 勺}
-    字形-928: {element: 羊}
-    字形-243: {element: 疒}
-    字形-730: {element: 皿}
-    字形-900: {element: 字形-556}
+    字形-0014e: {element: 勺}
+    字形-00152: {element: 勺}
+    字形-0018a: {element: 勺}
+    字形-0341c: {element: 羊}
+    字形-00226: {element: 疒}
+    字形-00467: {element: 皿}
+    字形-00557: {element: 字形-003a7}
     爫: {element: 爪}
-    字形-352: {element: 爪}
-    字形-603: {element: 爪}
+    字形-002b0: {element: 爪}
+    字形-003de: {element: 爪}
     覀: {element: 西}
     氏: {element: 虍}
-    字形-114: {element: 彳}
-    字形-115: {element: 彳}
-    字形-110: {element: 儿}
-    字形-111: {element: 儿}
-    字形-126: {element: 门}
+    字形-00140: {element: 彳}
+    字形-00141: {element: 彳}
+    字形-00139: {element: 儿}
+    字形-0013a: {element: 儿}
+    字形-0014d: {element: 门}
     卩: {element: 阝}
-    字形-168: {element: 阝}
-    字形-294: {element: 字形-538}
-    字形-112: {element: 亻}
-    字形-113: {element: 亻}
+    字形-00183: {element: 阝}
+    字形-0026a: {element: 字形-00395}
+    字形-0013b: {element: 亻}
+    字形-0013f: {element: 亻}
     丷: {element: 䒑}
     㔾: {element: 巳}
     氺: {element: 水}
-    字形-591: {element: 水}
-    字形-277: {element: 小}
-    字形-279: {element: 小}
-    字形-708: {element: 小}
-    字形-364: {element: 彐}
-    字形-482: {element: 彐}
-    字形-497: {element: 灬}
-    字形-498: {element: 灬}
-    字形-554: {element: 灬}
-    字形-1034: {element: 雨}
-    字形-4189: {element: 酉}
-    字形-484: {element: 止}
+    字形-003d2: {element: 水}
+    字形-00251: {element: 小}
+    字形-00254: {element: 小}
+    字形-0044d: {element: 小}
+    字形-002bc: {element: 彐}
+    字形-00352: {element: 彐}
+    字形-00360: {element: 灬}
+    字形-00361: {element: 灬}
+    字形-003a5: {element: 灬}
+    字形-05576: {element: 雨}
+    字形-0820a: {element: 酉}
+    字形-00354: {element: 止}
     龰: {element: 止}
-    字形-668: {element: 止}
-    字形-271: {element: 止}
+    字形-00419: {element: 止}
+    字形-0024b: {element: 止}
     辶: {element: 之}
     龴: {element: 廴}
     夂: {element: 廴}
-    字形-83: {element: 五}
+    字形-00117: {element: 五}
     丂: {element: 五}
     弋: {element: 戈}
     寸: {element: 戈}
-    字形-258: {element: 戈}
-    字形-203: {element: 马}
+    字形-0023b: {element: 戈}
+    字形-001a9: {element: 马}
     罒: {element: 四}
-    字形-749: {element: 四}
+    字形-0047f: {element: 四}
     穴: {element: 大}
     龸: {element: 大}
     长: {element: 镸}
-    字形-4168: {element: 田}
-    字形-517: {element: 三}
+    字形-0121e: {element: 田}
+    字形-00376: {element: 三}
     韦: {element: 王}
     龶: {element: 王}
     衤: {element: 示}
-    字形-262: {element: 瓜}
+    字形-00240: {element: 瓜}
     干: {element: 土}
-    字形-214: {element: 土}
-    字形-86: {element: 字形-266}
-    卜: {element: 字形-89}
-    字形-583: {element: 鸟}
+    字形-00206: {element: 土}
+    字形-0011a: {element: 字形-00245}
+    卜: {element: 字形-0011f}
+    字形-003c7: {element: 鸟}
     支: {element: 十}
-    字形-72: {element: 十}
-    字形-4100: {element: 竹}
-    字形-4108: {element: 臼}
-    字形-81: {element: 七}
+    字形-0010b: {element: 十}
+    字形-0442b: {element: 竹}
+    字形-0451f: {element: 臼}
+    字形-00115: {element: 七}
     匕: {element: 七}
-    字形-137: {element: 七}
-    字形-94: {element: 刂}
+    字形-00158: {element: 七}
+    字形-00125: {element: 刂}
     癶: {element: 八}
-    字形-5139: {element: 八}
+    字形-04476: {element: 八}
     礻: {element: 饣}
-    字形-192: {element: 厶}
-    字形-270: {element: 厶}
-    字形-120: {element: 人}
+    字形-0019c: {element: 厶}
+    字形-0024a: {element: 厶}
+    字形-00146: {element: 人}
     亽: {element: 人}
     车: {element: 車}
-    字形-470: {element: 車}
-    字形-206: {element: 母}
-    字形-207: {element: 母}
-    字形-870: {element: 母}
-    字形-200: {element: 纟}
+    字形-00342: {element: 車}
+    字形-001ac: {element: 母}
+    字形-001ad: {element: 母}
+    字形-00533: {element: 母}
+    字形-001a6: {element: 纟}
     彑: {element: 纟}
     㠯: {element: 目}
     囗: {element: 目}
-    字形-764: {element: 禾}
-    字形-656: {element: 禾}
+    字形-0048e: {element: 禾}
+    字形-0040b: {element: 禾}
     东: {element: 禾}
-    字形-696: {element: 禾}
+    字形-00440: {element: 禾}
     心: {element: 匚}
-    字形-502: {element: 匚}
+    字形-00366: {element: 匚}
     吂: {element: 可}
     艮: {element: 曰}
-    字形-813: {element: 曰}
+    字形-004c0: {element: 曰}
     忄: {element: 巛}
     也: {element: 勿}
-    字形-102: {element: 冂}
-    字形-125: {element: 冂}
+    字形-0012f: {element: 冂}
+    字形-0014c: {element: 冂}
     丆: {element: 厂}
-    字形-729: {element: 虫}
-    字形-393: {element: 字形-122}
-    字形-147: {element: 乃}
-    字形-236: {element: 字形-247}
-    了: {element: 字形-247}
-    丬: {element: 字形-267}
+    字形-00466: {element: 虫}
+    字形-002df: {element: 字形-00148}
+    字形-00162: {element: 乃}
+    字形-0021f: {element: 字形-0022a}
+    了: {element: 字形-0022a}
+    丬: {element: 字形-00246}
     乂: {element: 叉}
-    字形-195: {element: 叉}
-    字形-153: {element: 冫}
+    字形-0019f: {element: 叉}
+    字形-00173: {element: 冫}
     廾: {element: 冫}
     龷: {element: 冫}
     又: {element: 刀}
-    字形-97: {element: 字形-267}
-    字形-179: {element: 七}
-    字形-1052: {element: 雨}
-    字形-8664: {element: 鹿}
-    字形-278: {element: 小}
-    字形-402: {element: 水}
-    字形-268: {element: 土}
-    字形-246: {element: 大}
-    字形-183: {element: 七}
-    字形-143: {element: 力}
-    字形-449: {element: 木}
+    字形-00128: {element: 字形-00246}
+    字形-0018e: {element: 七}
+    字形-00711: {element: 雨}
+    字形-51609: {element: 鹿}
+    字形-00252: {element: 小}
+    字形-002e8: {element: 水}
+    字形-00247: {element: 土}
+    字形-00229: {element: 大}
+    字形-00192: {element: 七}
+    字形-0015e: {element: 力}
+    字形-0032c: {element: 木}
     朩: {element: 木}
-    字形-98: {element: 字形-267}
-    字形-99: {element: 字形-267}
-    字形-504: {element: 月}
-    字形-100: {element: 字形-267}
-    字形-436: {element: 王}
-    字形-297: {element: 三}
-    字形-74: {element: 十}
-    字形-92: {element: 十}
-    字形-237: {element: 字形-247}
-    字形-154: {element: 八}
-    字形-295: {element: 字形-538}
-    字形-567: {element: 爪}
-    字形-124: {element: 字形-122}
-    字形-8310: {element: 巾}
-    字形-710: {element: 氺}
-    字形-339: {element: 字形-583}
-    字形-73: {element: 丆}
-    字形-476: {element: 戈}
-    字形-171: {element: 丩}
-    字形-32326: {element: 字形-120}
-    字形-412: {element: 羊}
-    字形-136028: {element: 麻}
-    字形-136027: {element: 鹿}
-    字形-136026: {element: 鬼}
-    字形-136103: {element: 田}
-    字形-1287: {element: 支}
-    字形-1128: {element: 七}
-    字形-1290: {element: 乃}
-    字形-190000: {element: 三}
+    字形-00129: {element: 字形-00246}
+    字形-0012a: {element: 字形-00246}
+    字形-00368: {element: 月}
+    字形-0012b: {element: 字形-00246}
+    字形-0031c: {element: 王}
+    字形-0026d: {element: 三}
+    字形-00133: {element: 十}
+    字形-00122: {element: 十}
+    字形-00220: {element: 字形-0022a}
+    字形-00174: {element: 八}
+    字形-0026b: {element: 字形-00395}
+    字形-003b1: {element: 爪}
+    字形-0014a: {element: 字形-00148}
+    字形-0da10: {element: 巾}
+    字形-0044f: {element: 氺}
+    字形-002a3: {element: 字形-003c7}
+    字形-0010c: {element: 丆}
+    字形-00348: {element: 戈}
+    字形-00186: {element: 丩}
+    字形-28402: {element: 字形-00146}
+    字形-00300: {element: 羊}
+    字形-35715: {element: 麻}
+    字形-5160c: {element: 鹿}
+    字形-1c60d: {element: 鬼}
+    字形-18112: {element: 支}
+    字形-0011d: {element: 七}
+    字形-00196: {element: 乃}
+    字形-f004f: {element: 三}
 encoder:
   max_length: 4
   auto_select_length: 4
@@ -560,100 +559,104 @@ encoder:
       positive: null
       negative: s13
 data:
+  # 害的共享字形统一三层；张码沿用害字底的二、古兼容分部。
+  glyph_algebra:
+    - from: {operator: ⿳, references: [0x002b5, 0x00301, 0x00258]}
+      to: {operator: ⿱, references: [0x002b5, 0x1e300]}
+  fusion: [0x1f311]
   character_set: gb2312
   glyph_sources:
     - G
   # 方案局部覆盖：保留张码笔顺、形近根和跨分部取根，向宿主传播。
   glyphs:
-    - {id: 4493, name: 寒字头（张码）, type: compound, operator: ⿱, references: [{id: 32326}, {id: 117}]}
-    - {id: 910, name: 兆（张码）, type: compound, operator: ⿴, references: [{id: 591}, {id: 128}]}
-    - {id: 128, name: 儿（张码）, type: compound, operator: ⿰, references: [{id: 5}, {id: 31}]}
-    - {id: 308, name: 川（张码）, type: compound, operator: ⿰, references: [{id: 110}, {id: 3}]}
-    - {id: 8567, name: 率无亠无十（张码）, type: compound, operator: ⿴, references: [{id: 591}, {id: 410}]}
-    - {id: 176, name: 乃（张码）, type: component, strokes: [{feature: 撇, start: [33, 11], curveList: [{command: c, parameterList: [0, 35, 0, 55, -26, 82]}]}, {feature: 横折折撇, start: [14, 11], curveList: [{command: h, parameterList: [51]}, {command: v, parameterList: [27]}, {command: h, parameterList: [18]}, {command: c, parameterList: [-10, 38, -38, 50, -56, 56]}]}]}
-    - {id: 7757, name: 衰（张码）, type: compound, operator: ⿳, references: [{id: 4189}, {id: 1}, {id: 576}]}
-    - {id: 4946, name: 后（张码）, type: compound, operator: ⿸, references: [{id: 113}, {id: 4168}]}
-    - {id: 7370, name: 容（张码）, type: compound, operator: ⿳, references: [{id: 4150}, {id: 120}, {id: 282}]}
-    - {id: 4466, name: 合（张码）, type: compound, operator: ⿱, references: [{id: 120}, {id: 4168}]}
-    - {id: 5084, name: 哀（张码）, type: compound, operator: ⿱, references: [{id: 4189}, {id: 576}]}
-    - {id: 580, name: 卵字旁（张码）, type: compound, operator: ⿴, references: [{id: 326}, {id: 7}]}
-    - {id: 5365, name: 衮（张码）, type: compound, operator: ⿳, references: [{id: 4307}, {id: 187}, {id: 576}]}
-    - {id: 5819, name: 害字底（张码）, type: compound, operator: ⿱, references: [{id: 64}, {id: 675}]}
-    - {id: 18399, name: 旆字边（张码）, type: compound, operator: ⿱, references: [{id: 294}, {id: 290}]}
-    - {id: 26719, name: 衷（张码）, type: compound, operator: ⿳, references: [{id: 4189}, {id: 3}, {id: 576}]}
-    - {id: 32073, name: 鼍（张码）, type: compound, operator: ⿱, references: [{id: 14701}, {id: 724}]}
-    - {id: 27758, name: 赍字头（张码）, type: compound, operator: ⿱, references: [{id: 10792}, {id: 155}]}
-    - {id: 4203, name: 麥（张码）, type: compound, operator: ⿱, references: [{id: 418}, {id: 328}]}
-    - {id: 259, name: 万（张码）, type: component, strokes: [{feature: 横, start: [10, 20], curveList: [{command: h, parameterList: [80]}]}, {feature: 撇, start: [50, 20], curveList: [{command: c, parameterList: [0, 23, -6, 50, -25, 70]}]}, {feature: 横折钩, start: [46, 45], curveList: [{command: h, parameterList: [31]}, {command: v, parameterList: [45]}]}]}
-    - {id: 5222, name: 交（张码）, type: compound, operator: ⿱, references: [{id: 4307}, {id: 118}]}
-    - {id: 1064, name: 隹（张码）, type: compound, operator: ⿰, references: [{id: 108}, {id: 916}]}
-    - {id: 250, name: 兀（张码）, type: compound, operator: ⿱, references: [{id: 1}, {id: 128}]}
-    - {id: 15440, name: 夔字头（张码）, type: compound, operator: ⿻, references: [{id: 1100}, {id: 15442}]}
-    - {id: 7124, name: 孝（张码）, type: compound, operator: ⿱, references: [{id: 439}, {id: 378}]}
-    - {id: 645, name: 毋（张码）, type: component, strokes: [{feature: 竖折, start: [20, 11], curveList: [{command: v, parameterList: [64]}, {command: h, parameterList: [75]}]}, {feature: 横折钩, start: [20, 11], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [81]}]}, {feature: 横, start: [5, 50], curveList: [{command: h, parameterList: [90]}]}, {feature: 撇, start: [50, 20], curveList: [{command: c, parameterList: [0, 25, -4, 47, -13, 75]}]}]}
-    - {id: 13478, name: 载（张码）, type: compound, operator: ⿹, references: [{id: 835}, {id: 468}], strokes: [{index: 0, strokes: 3}, {index: 1}, {index: 0}]}
-    - {id: 593, type: component, name: 方（张码笔顺）, strokes: [{feature: 点, start: [44, 5], curveList: [{command: c, parameterList: [4, 6, 7, 10, 10, 18]}]}, {feature: 横, start: [10, 23], curveList: [{command: h, parameterList: [80]}]}, {feature: 撇, start: [39, 23], curveList: [{command: c, parameterList: [0, 21, 2, 54, -31, 71]}]}, {feature: 横折钩, start: [38, 48], curveList: [{command: h, parameterList: [43]}, {command: v, parameterList: [46]}]}]}
-    - {id: 175, type: component, name: 万无横（张码笔顺）, strokes: [{feature: 撇, start: [39, 15], curveList: [{command: c, parameterList: [0, 23, 2, 60, -31, 78]}]}, {feature: 横折钩, start: [38, 43], curveList: [{command: h, parameterList: [43]}, {command: v, parameterList: [50]}]}]}
-    - {id: 964, type: compound, name: 克（张码）, operator: ⿱, references: [{id: 675}, {id: 128}]}
-    - {id: 13659, type: compound, name: 兢（张码）, operator: ⿰, references: [{id: 964}, {id: 964}]}
-    - {id: 1024, type: compound, name: 辛（张码）, operator: ⿱, references: [{id: 797}, {id: 66}]}
-    - {id: 894, type: compound, name: 舌（张码）, operator: ⿱, references: [{id: 5}, {id: 675}]}
-    - {id: 930, type: compound, name: 并（张码）, operator: ⿱, references: [{id: 151}, {id: 241}]}
-    - {id: 932, type: compound, name: 关（张码）, operator: ⿱, references: [{id: 151}, {id: 244}]}
-    - {id: 7695, type: compound, name: 莫（张码）, operator: ⿱, references: [{id: 228}, {id: 7696}]}
-    - {id: 4167, type: compound, name: 豆（张码）, operator: ⿱, references: [{id: 4168}, {id: 345}]}
-    - {id: 401, type: component, name: 无横戈（张码笔顺）, strokes: [{feature: 斜钩, start: [41, 4], curveList: [{command: c, parameterList: [2, 54, 8, 76, 45, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: c, parameterList: [-6, 16, -30, 39, -69, 48]}]}]}
-    - {id: 475, type: component, name: 戈（张码笔顺）, strokes: [{feature: 横, start: [7, 30], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [41, 4], curveList: [{command: c, parameterList: [2, 54, 8, 76, 45, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -30, 39, -69, 48]}]}]}
-    - {id: 476, type: component, name: 戋无一（张码笔顺）, strokes: [{feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [80]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [81, 56], curveList: [{command: z, parameterList: [-8, 12, -35, 29, -69, 34]}]}]}
-    - {id: 663, type: component, name: 戋（张码笔顺）, strokes: [{feature: 横, start: [13, 30], curveList: [{command: h, parameterList: [76]}]}, {feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [80]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [81, 56], curveList: [{command: z, parameterList: [-8, 12, -35, 29, -69, 34]}]}]}
-    - {id: 664, type: component, name: 㦱字框（张码笔顺）, strokes: [{feature: 横, start: [16, 15], curveList: [{command: h, parameterList: [33]}]}, {feature: 横, start: [10, 32], curveList: [{command: h, parameterList: [82]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 8], curveList: [{command: c, parameterList: [4, 6, 8, 13, 11, 24]}]}, {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}]}
-    - {id: 690, type: component, name: 戊（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
-    - {id: 695, type: component, name: 越字心（张码笔顺）, strokes: [{feature: 横, start: [17, 23], curveList: [{command: h, parameterList: [74]}]}, {feature: 竖提, start: [17, 23], curveList: [{command: v, parameterList: [60]}, {command: l, parameterList: [30, -4]}]}, {feature: 斜钩, start: [52, 7], curveList: [{command: c, parameterList: [2, 54, 8, 76, 33, 86]}]}, {feature: 点, start: [69, 6], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [84, 39], curveList: [{command: z, parameterList: [-2, 19, -24, 43, -43, 53]}]}]}
-    - {id: 829, type: component, name: 㦮（张码笔顺）, strokes: [{feature: 横, start: [13, 25], curveList: [{command: h, parameterList: [76]}]}, {feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [80]}]}, {feature: 横, start: [10, 55], curveList: [{command: h, parameterList: [80]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}, {feature: 点, start: [64, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 61], curveList: [{command: z, parameterList: [-8, 11, -35, 25, -69, 30]}]}]}
-    - {id: 835, type: component, name: 载字框（张码笔顺）, strokes: [{feature: 横, start: [14, 15], curveList: [{command: h, parameterList: [40]}]}, {feature: 竖, start: [34, 5], curveList: [{command: v, parameterList: [25]}]}, {feature: 横, start: [9, 30], curveList: [{command: h, parameterList: [82]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 14], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 16]}]}, {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}]}
-    - {id: 854, type: component, name: 戌（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [17, 54], curveList: [{command: h, parameterList: [29]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
-    - {id: 859, type: component, name: 戍（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 点, start: [17, 44], curveList: [{command: c, parameterList: [9, 6, 17, 12, 27, 19]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
-    - {id: 861, type: component, name: 成（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横折钩, start: [17, 46], curveList: [{command: h, parameterList: [26]}, {command: v, parameterList: [35]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
-    - {id: 1003, type: component, name: 我（张码笔顺）, strokes: [{feature: 平撇, start: [45, 8], curveList: [{command: z, parameterList: [-8, 5, -17, 7, -35, 9]}]}, {feature: 横, start: [7, 35], curveList: [{command: h, parameterList: [86]}]}, {feature: 竖钩, start: [29, 13], curveList: [{command: v, parameterList: [81]}]}, {feature: 提, start: [8, 64], curveList: [{command: l, parameterList: [42, -6]}]}, {feature: 斜钩, start: [60, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 27, 87]}]}, {feature: 点, start: [74, 10], curveList: [{command: c, parameterList: [4, 6, 8, 10, 14, 25]}]}, {feature: 撇, start: [85, 47], curveList: [{command: c, parameterList: [-5, 14, -25, 33, -43, 42]}]}]}
-    - {id: 1050, type: component, name: 臧字框（张码笔顺）, strokes: [{feature: 横, start: [28, 19], curveList: [{command: h, parameterList: [65]}]}, {feature: 撇, start: [28, 19], curveList: [{command: c, parameterList: [0, 33, 0, 55, -8, 74]}]}, {feature: 竖折, start: [13, 13], curveList: [{command: v, parameterList: [25]}, {command: h, parameterList: [15]}]}, {feature: 横, start: [8, 54], curveList: [{command: h, parameterList: [20]}]}, {feature: 撇, start: [14, 54], curveList: [{command: c, parameterList: [0, 13, 0, 24, -8, 31]}]}, {feature: 斜钩, start: [72, 5], curveList: [{command: c, parameterList: [0, 56, 4, 79, 15, 90]}]}, {feature: 点, start: [83, 7], curveList: [{command: c, parameterList: [2, 4, 4, 10, 5, 12]}]}, {feature: 撇, start: [89, 35], curveList: [{command: z, parameterList: [-3, 18, -18, 51, -32, 58]}]}]}
-    - {id: 1060, type: component, name: 羲下框（张码笔顺）, strokes: [{feature: 平撇, start: [46, 8], curveList: [{command: z, parameterList: [-10, 2, -20, 3, -33, 3]}]}, {feature: 横, start: [9, 24], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [32, 10], curveList: [{command: v, parameterList: [31]}]}, {feature: 撇, start: [32, 24], curveList: [{command: c, parameterList: [-4, 6, -12, 10, -21, 14]}]}, {feature: 点, start: [32, 24], curveList: [{command: c, parameterList: [6, 5, 13, 10, 18, 14]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 8], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 16]}]}, {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}]}
-    - {id: 1069, type: component, name: 戠字框（张码笔顺）, strokes: [{feature: 点, start: [27, 5], curveList: [{command: c, parameterList: [2, 4, 4, 8, 5, 13]}]}, {feature: 横, start: [12, 18], curveList: [{command: h, parameterList: [39]}]}, {feature: 点, start: [18, 22], curveList: [{command: c, parameterList: [2, 4, 4, 13, 5, 16]}]}, {feature: 撇, start: [43, 22], curveList: [{command: c, parameterList: [-1, 5, -2, 13, -5, 16]}]}, {feature: 横, start: [8, 38], curveList: [{command: h, parameterList: [85]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 15], curveList: [{command: c, parameterList: [4, 6, 9, 16, 11, 23]}]}, {feature: 撇, start: [86, 50], curveList: [{command: c, parameterList: [-2, 15, -18, 34, -30, 42]}]}]}
-    - {id: 1081, type: component, name: 戢字框（张码笔顺）, strokes: [{feature: 横, start: [8, 39], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [19, 39], curveList: [{command: v, parameterList: [45]}]}, {feature: 竖, start: [49, 39], curveList: [{command: v, parameterList: [57]}]}, {feature: 横, start: [19, 53], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [19, 67], curveList: [{command: h, parameterList: [30]}]}, {feature: 提, start: [9, 86], curveList: [{command: l, parameterList: [50, -7]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [77, 16], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 23]}]}, {feature: 撇, start: [87, 49], curveList: [{command: c, parameterList: [-2, 15, -18, 40, -28, 45]}]}]}
-    - {id: 1224, type: component, name: 1224（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [17, 46], curveList: [{command: h, parameterList: [31]}]}, {feature: 竖钩, start: [43, 46], curveList: [{command: v, parameterList: [35]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
-    - {id: 1226, type: component, name: 1226（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [9, 57], curveList: [{command: h, parameterList: [20]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
-    - {id: 1250, type: component, name: 475·包围外框（张码笔顺）, strokes: [{feature: 横, start: [7, 30], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [56, 4], curveList: [{command: c, parameterList: [2, 54, 8, 76, 35, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-4, 15, -16, 37, -38, 50]}]}]}
-    - {id: 1261, type: component, name: 690·包围外框（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [60, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 28, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-4, 16, -17, 43, -34, 50]}]}]}
-    - {id: 1314, type: component, name: 854·包围外框（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [17, 46], curveList: [{command: h, parameterList: [36]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 51, 4, 74, 25, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 41], curveList: [{command: z, parameterList: [-3, 15, -8, 35, -20, 51]}]}]}
-    - {id: 1319, type: component, name: 1319（张码笔顺）, strokes: [{feature: 横, start: [7, 43], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [54, 5], curveList: [{command: c, parameterList: [1, 48, 6, 74, 36, 88]}]}, {feature: 点, start: [73, 35], curveList: [{command: c, parameterList: [5, 2, 9, 5, 12, 8]}]}, {feature: 撇, start: [82, 53], curveList: [{command: z, parameterList: [-4, 12, -12, 29, -28, 40]}]}]}
-    - {id: 1333, type: component, name: 1333（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [66, 6], curveList: [{command: c, parameterList: [0, 51, 4, 74, 23, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 41], curveList: [{command: z, parameterList: [-3, 15, -8, 35, -20, 51]}]}]}
-    - {id: 1335, type: component, name: 1335（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [66, 6], curveList: [{command: c, parameterList: [0, 51, 4, 74, 23, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 41], curveList: [{command: z, parameterList: [-3, 15, -8, 35, -20, 51]}]}]}
-    - {id: 1337, type: component, name: 1337（张码笔顺）, strokes: [{feature: 横, start: [7, 43], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [54, 5], curveList: [{command: c, parameterList: [1, 48, 6, 74, 36, 88]}]}, {feature: 点, start: [73, 35], curveList: [{command: c, parameterList: [5, 2, 9, 5, 12, 8]}]}, {feature: 撇, start: [82, 53], curveList: [{command: z, parameterList: [-4, 12, -12, 29, -28, 40]}]}]}
-    - {id: 923, type: compound, name: 产（张码）, operator: ⿸, references: [{id: 797}, {id: 5}]}
-    - {id: 536, type: compound, name: 气（张码）, operator: ⿱, references: [{id: 294}, {id: 17}]}
-    - {id: 5862, type: compound, name: 差（张码）, operator: ⿸, references: [{id: 928}, {id: 223}]}
-    - {id: 18132, type: compound, name: 着（张码）, operator: ⿸, references: [{id: 928}, {id: 712}]}
-    - {id: 1027, type: compound, name: 羌（张码）, operator: ⿱, references: [{id: 928}, {id: 31}]}
-    - {id: 11423, type: compound, name: 羞（张码）, operator: ⿸, references: [{id: 928}, {id: 629}]}
-    - {id: 13665, type: compound, name: 养（张码）, operator: ⿳, references: [{id: 928}, {id: 7}, {id: 110}]}
-    - {id: 4196, type: compound, name: 鬲（张码）, operator: ⿱, references: [{id: 4168}, {id: 4197}]}
-    - {id: 798, type: compound, name: 南字心（张码）, operator: ⿱, references: [{id: 151}, {id: 66}]}
-    - {id: 929, type: compound, name: 美字头（张码）, operator: ⿱, references: [{id: 151}, {id: 221}]}
-    - {id: 1025, type: compound, name: 辛旁（张码）, operator: ⿱, references: [{id: 797}, {id: 66}]}
-    - {id: 261, type: component, name: 弋（张码笔顺）, strokes: [{feature: 横, start: [7, 36], curveList: [{command: h, parameterList: [86]}]}, {feature: 点, start: [65, 16], curveList: [{command: c, parameterList: [4, 5, 7, 11, 10, 20]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 39, 88]}]}]}
-    - {id: 1251, type: compound, name: 536·包围外框（张码）, operator: ⿱, references: [{id: 294}, {id: 17}]}
-    - {id: 136103, type: compound, name: 匐字心上部（张码）, operator: ⿱, references: [{id: 1}, {id: 282}]}
-    - {id: 1072, type: compound, name: 並（张码）, operator: ⿱, references: [{id: 151}, {id: 703}]}
-    - {id: 1116, type: compound, name: 豙（张码）, operator: ⿱, references: [{id: 797}, {id: 913}]}
-    - {id: 1101, type: compound, name: 㒸（张码）, operator: ⿱, references: [{id: 345}, {id: 913}]}
-    - {id: 1026, type: compound, name: 养字头（张码）, operator: ⿱, references: [{id: 928}, {id: 7}]}
-    - {id: 4591, type: compound, name: 匃字心（张码）, operator: ⿱, references: [{id: 119}, {id: 28}]}
-    - {id: 1290, type: component, name: 176·包围外框（张码笔顺）, strokes: [{feature: 撇, start: [37, 11], curveList: [{command: c, parameterList: [0, 21, 0, 60, -29, 81]}]}, {feature: 横折折折钩, start: [12, 11], curveList: [{command: h, parameterList: [66]}, {command: l, parameterList: [-12, 34]}, {command: h, parameterList: [24]}, {command: v, parameterList: [48]}]}]}
-    - {id: 10987, type: compound, name: 断字旁（张码）, operator: ⿶, references: [{id: 28}, {id: 933}]}
-    - {id: 29989, type: compound, name: 陋字边（张码）, operator: ⿶, references: [{id: 28}, {id: 684}]}
-    - {id: 12164, type: component, name: 噩（张码整体取根）, strokes: [{feature: 横, start: [12, 11], curveList: [{command: h, parameterList: [76]}]}, {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [83]}]}, {feature: 竖, start: [16, 20], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [16, 20], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [16, 44], curveList: [{command: h, parameterList: [22]}]}, {feature: 竖, start: [62, 20], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [62, 20], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [62, 44], curveList: [{command: h, parameterList: [22]}]}, {feature: 横, start: [18, 52], curveList: [{command: h, parameterList: [64]}]}, {feature: 竖, start: [16, 61], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [16, 61], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [16, 85], curveList: [{command: h, parameterList: [22]}]}, {feature: 竖, start: [62, 61], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [62, 61], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [62, 85], curveList: [{command: h, parameterList: [22]}]}, {feature: 横, start: [8, 94], curveList: [{command: h, parameterList: [84]}]}]}
-    - {id: 1106, type: component, name: 衡字心（张码整体取根）, strokes: [{feature: 撇, start: [41, 4], curveList: [{command: c, parameterList: [-5, 8, -12, 15, -32, 23]}]}, {feature: 横撇, start: [33, 13], curveList: [{command: h, parameterList: [41]}, {command: c, parameterList: [-7, 5, -12, 10, -21, 14]}]}, {feature: 竖, start: [15, 27], curveList: [{command: v, parameterList: [36]}]}, {feature: 横折, start: [15, 27], curveList: [{command: h, parameterList: [70]}, {command: v, parameterList: [36]}]}, {feature: 横, start: [15, 45], curveList: [{command: h, parameterList: [70]}]}, {feature: 竖, start: [50, 27], curveList: [{command: v, parameterList: [36]}]}, {feature: 横, start: [15, 63], curveList: [{command: h, parameterList: [70]}]}, {feature: 横, start: [7, 74], curveList: [{command: h, parameterList: [86]}]}, {feature: 撇, start: [50, 63], curveList: [{command: c, parameterList: [0, 16, 0, 25, -43, 34]}]}, {feature: 捺, start: [49, 75], curveList: [{command: c, parameterList: [7, 8, 21, 16, 44, 22]}]}]}
-    - {id: 4123, type: component, name: 鬼（张码整体取根）, strokes: [{feature: 撇, start: [48, 5], curveList: [{command: c, parameterList: [-1, 3, -3, 8, -6, 12]}]}, {feature: 竖, start: [20, 17], curveList: [{command: v, parameterList: [41]}]}, {feature: 横折, start: [20, 17], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [41]}]}, {feature: 横, start: [20, 37], curveList: [{command: h, parameterList: [60]}]}, {feature: 横, start: [20, 58], curveList: [{command: h, parameterList: [60]}]}, {feature: 撇, start: [50, 17], curveList: [{command: c, parameterList: [0, 24, 0, 62, -41, 74]}]}, {feature: 竖弯钩, start: [50, 58], curveList: [{command: v, parameterList: [33]}, {command: h, parameterList: [40]}]}, {feature: 撇折, start: [71, 65], curveList: [{command: c, parameterList: [-3, 7, -6, 13, -12, 19]}, {command: h, parameterList: [23]}]}, {feature: 点, start: [79, 79], curveList: [{command: c, parameterList: [2, 2, 4, 5, 4, 7]}]}]}
-    - {id: 4195, type: compound, name: 鬯字头（张码）, operator: ⿱, references: [{id: 911}, {id: 163}]}
-    - {id: 190000, type: component, name: 毛前三笔（张码）, strokes: [{feature: 平撇, start: [80, 9], curveList: [{command: z, parameterList: [-17, 4, -38, 9, -64, 10]}]}, {feature: 横, start: [15, 38], curveList: [{command: h, parameterList: [67]}]}, {feature: 横, start: [7, 63], curveList: [{command: h, parameterList: [84]}]}]}
-    - {id: 911, type: component, name: 鬯字头无凵（张码笔顺）, strokes: [{feature: 点, start: [45, 15], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}, {feature: 点, start: [13, 40], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}, {feature: 撇, start: [80, 10], curveList: [{command: c, parameterList: [-6, 32, -28, 59, -75, 85]}]}, {feature: 捺, start: [20, 10], curveList: [{command: c, parameterList: [5, 32, 28, 59, 75, 85]}]}, {feature: 点, start: [76, 40], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}, {feature: 点, start: [45, 78], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}]}
-    - {id: 11743, type: component, name: 发（张码整体取根）, strokes: [{feature: 竖折, start: [20, 10], curveList: [{command: v, parameterList: [22]}, {command: h, parameterList: [70]}]}, {feature: 撇, start: [46, 5], curveList: [{command: c, parameterList: [-3, 20, -4, 50, -38, 86]}]}, {feature: 横撇, start: [43, 51], curveList: [{command: h, parameterList: [43]}, {command: c, parameterList: [-4, 17, -21, 35, -51, 45]}]}, {feature: 捺, start: [43, 51], curveList: [{command: c, parameterList: [4, 17, 22, 35, 51, 45]}]}, {feature: 点, start: [70, 15], curveList: [{command: c, parameterList: [5, 5, 8, 10, 10, 17]}]}]}
+    - {id: 0x28607, name: 寒字头（张码）, type: compound, operator: ⿱, references: [{id: 0x28402}, {id: 0x00143}]}
+    - {id: 0x0445f, name: 兆（张码）, type: compound, operator: ⿴, references: [{id: 0x003d2}, {id: 0x0014f}]}
+    - {id: 0x0014f, name: 儿（张码）, type: compound, operator: ⿰, references: [{id: 0x00004}, {id: 0x0001e}]}
+    - {id: 0x00279, name: 川（张码）, type: compound, operator: ⿰, references: [{id: 0x00139}, {id: 0x00002}]}
+    - {id: 0x0f427, name: 率无亠无十（张码）, type: compound, operator: ⿴, references: [{id: 0x003d2}, {id: 0x002f3}]}
+    - {id: 0x0018b, name: 乃（张码）, type: component, strokes: [{feature: 撇, start: [33, 11], curveList: [{command: c, parameterList: [0, 35, 0, 55, -26, 82]}]}, {feature: 横折折撇, start: [14, 11], curveList: [{command: h, parameterList: [51]}, {command: v, parameterList: [27]}, {command: h, parameterList: [18]}, {command: c, parameterList: [-10, 38, -38, 50, -56, 56]}]}]}
+    - {id: 0x08721, name: 衰（张码）, type: compound, operator: ⿳, references: [{id: 0x0820a}, {id: 0x00000}, {id: 0x003bd}]}
+    - {id: 0x1e269, name: 后（张码）, type: compound, operator: ⿸, references: [{id: 0x0013f}, {id: 0x0121e}]}
+    - {id: 0x28646, name: 容（张码）, type: compound, operator: ⿳, references: [{id: 0x28104}, {id: 0x00146}, {id: 0x00258}]}
+    - {id: 0x1e26b, name: 合（张码）, type: compound, operator: ⿱, references: [{id: 0x00146}, {id: 0x0121e}]}
+    - {id: 0x0861b, name: 哀（张码）, type: compound, operator: ⿱, references: [{id: 0x0820a}, {id: 0x003bd}]}
+    - {id: 0x003c3, name: 卵字旁（张码）, type: compound, operator: ⿴, references: [{id: 0x0028f}, {id: 0x00006}]}
+    - {id: 0x08744, name: 衮（张码）, type: compound, operator: ⿳, references: [{id: 0x08107}, {id: 0x00197}, {id: 0x003bd}]}
+    - {id: 0x1e300, name: 害字底（张码）, type: compound, operator: ⿱, references: [{id: 0x00100}, {id: 0x18207}]}
+    - {id: 0x0440b, name: 旆字边（张码）, type: compound, operator: ⿱, references: [{id: 0x0026a}, {id: 0x00262}]}
+    - {id: 0x0872a, name: 衷（张码）, type: compound, operator: ⿳, references: [{id: 0x0820a}, {id: 0x00002}, {id: 0x003bd}]}
+    - {id: 0xcdb02, name: 鼍（张码）, type: compound, operator: ⿱, references: [{id: 0x6691e}, {id: 0x0045f}]}
+    - {id: 0x09508, name: 赍字头（张码）, type: compound, operator: ⿱, references: [{id: 0x18313}, {id: 0x00175}]}
+    - {id: 0x23703, name: 麥（张码）, type: compound, operator: ⿱, references: [{id: 0x00308}, {id: 0x00291}]}
+    - {id: 0x0023c, name: 万（张码）, type: component, strokes: [{feature: 横, start: [10, 20], curveList: [{command: h, parameterList: [80]}]}, {feature: 撇, start: [50, 20], curveList: [{command: c, parameterList: [0, 23, -6, 50, -25, 70]}]}, {feature: 横折钩, start: [46, 45], curveList: [{command: h, parameterList: [31]}, {command: v, parameterList: [45]}]}]}
+    - {id: 0x0831f, name: 交（张码）, type: compound, operator: ⿱, references: [{id: 0x08107}, {id: 0x00144}]}
+    - {id: 0x00721, name: 隹（张码）, type: compound, operator: ⿰, references: [{id: 0x00137}, {id: 0x0056a}]}
+    - {id: 0x0022d, name: 兀（张码）, type: compound, operator: ⿱, references: [{id: 0x00000}, {id: 0x0014f}]}
+    - {id: 0x0cf1c, name: 夔字头（张码）, type: compound, operator: ⿻, references: [{id: 0x8420a}, {id: 0x4d20f}]}
+    - {id: 0x7d20a, name: 孝（张码）, type: compound, operator: ⿱, references: [{id: 0x0031e}, {id: 0x002ce}]}
+    - {id: 0xd7010, name: 毋（张码）, type: component, strokes: [{feature: 竖折, start: [20, 11], curveList: [{command: v, parameterList: [64]}, {command: h, parameterList: [75]}]}, {feature: 横折钩, start: [20, 11], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [81]}]}, {feature: 横, start: [5, 50], curveList: [{command: h, parameterList: [90]}]}, {feature: 撇, start: [50, 20], curveList: [{command: c, parameterList: [0, 25, -4, 47, -13, 75]}]}]}
+    - {id: 0x01821, name: 载（张码）, type: compound, operator: ⿹, references: [{id: 0x0050a}, {id: 0x00340}], strokes: [{index: 0, from: 0, to: 2}, {index: 1}, {index: 0, from: 3}]}
+    - {id: 0x0810e, type: component, name: 方（张码笔顺）, strokes: [{feature: 点, start: [44, 5], curveList: [{command: c, parameterList: [4, 6, 7, 10, 10, 18]}]}, {feature: 横, start: [10, 23], curveList: [{command: h, parameterList: [80]}]}, {feature: 撇, start: [39, 23], curveList: [{command: c, parameterList: [0, 21, 2, 54, -31, 71]}]}, {feature: 横折钩, start: [38, 48], curveList: [{command: h, parameterList: [43]}, {command: v, parameterList: [46]}]}]}
+    - {id: 0x0018a, type: component, name: 万无横（张码笔顺）, strokes: [{feature: 撇, start: [39, 15], curveList: [{command: c, parameterList: [0, 23, 2, 60, -31, 78]}]}, {feature: 横折钩, start: [38, 43], curveList: [{command: h, parameterList: [43]}, {command: v, parameterList: [50]}]}]}
+    - {id: 0x1840b, type: compound, name: 克（张码）, operator: ⿱, references: [{id: 0x18207}, {id: 0x0014f}]}
+    - {id: 0x18b19, type: compound, name: 兢（张码）, operator: ⿰, references: [{id: 0x1840b}, {id: 0x1840b}]}
+    - {id: 0x08421, type: compound, name: 辛（张码）, operator: ⿱, references: [{id: 0x08217}, {id: 0x00105}]}
+    - {id: 0x1e263, type: compound, name: 舌（张码）, operator: ⿱, references: [{id: 0x00004}, {id: 0x18207}]}
+    - {id: 0x0341f, type: compound, name: 并（张码）, operator: ⿱, references: [{id: 0x00170}, {id: 0x00224}]}
+    - {id: 0x03420, type: compound, name: 关（张码）, operator: ⿱, references: [{id: 0x00170}, {id: 0x00227}]}
+    - {id: 0x8c6af, type: compound, name: 莫（张码）, operator: ⿱, references: [{id: 0x00215}, {id: 0x48214}]}
+    - {id: 0x01544, type: compound, name: 豆（张码）, operator: ⿱, references: [{id: 0x0121e}, {id: 0x002a9}]}
+    - {id: 0x002e7, type: component, name: 无横戈（张码笔顺）, strokes: [{feature: 斜钩, start: [41, 4], curveList: [{command: c, parameterList: [2, 54, 8, 76, 45, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: c, parameterList: [-6, 16, -30, 39, -69, 48]}]}]}
+    - {id: 0x00347, type: component, name: 戈（张码笔顺）, strokes: [{feature: 横, start: [7, 30], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [41, 4], curveList: [{command: c, parameterList: [2, 54, 8, 76, 45, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -30, 39, -69, 48]}]}]}
+    - {id: 0x00348, type: component, name: 戋无一（张码笔顺）, strokes: [{feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [80]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [81, 56], curveList: [{command: z, parameterList: [-8, 12, -35, 29, -69, 34]}]}]}
+    - {id: 0x00413, type: component, name: 戋（张码笔顺）, strokes: [{feature: 横, start: [13, 30], curveList: [{command: h, parameterList: [76]}]}, {feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [80]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [81, 56], curveList: [{command: z, parameterList: [-8, 12, -35, 29, -69, 34]}]}]}
+    - {id: 0x00414, type: component, name: 㦱字框（张码笔顺）, strokes: [{feature: 横, start: [16, 15], curveList: [{command: h, parameterList: [33]}]}, {feature: 横, start: [10, 32], curveList: [{command: h, parameterList: [82]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 8], curveList: [{command: c, parameterList: [4, 6, 8, 13, 11, 24]}]}, {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}]}
+    - {id: 0x00436, type: component, name: 戊（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
+    - {id: 0x0043f, type: component, name: 越字心（张码笔顺）, strokes: [{feature: 横, start: [17, 23], curveList: [{command: h, parameterList: [74]}]}, {feature: 竖提, start: [17, 23], curveList: [{command: v, parameterList: [60]}, {command: l, parameterList: [30, -4]}]}, {feature: 斜钩, start: [52, 7], curveList: [{command: c, parameterList: [2, 54, 8, 76, 33, 86]}]}, {feature: 点, start: [69, 6], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [84, 39], curveList: [{command: z, parameterList: [-2, 19, -24, 43, -43, 53]}]}]}
+    - {id: 0x00502, type: component, name: 㦮（张码笔顺）, strokes: [{feature: 横, start: [13, 25], curveList: [{command: h, parameterList: [76]}]}, {feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [80]}]}, {feature: 横, start: [10, 55], curveList: [{command: h, parameterList: [80]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 40, 88]}]}, {feature: 点, start: [64, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 61], curveList: [{command: z, parameterList: [-8, 11, -35, 25, -69, 30]}]}]}
+    - {id: 0x0050a, type: component, name: 载字框（张码笔顺）, strokes: [{feature: 横, start: [14, 15], curveList: [{command: h, parameterList: [40]}]}, {feature: 竖, start: [34, 5], curveList: [{command: v, parameterList: [25]}]}, {feature: 横, start: [9, 30], curveList: [{command: h, parameterList: [82]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 14], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 16]}]}, {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}]}
+    - {id: 0x0051f, type: component, name: 戌（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [17, 54], curveList: [{command: h, parameterList: [29]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
+    - {id: 0x00524, type: component, name: 戍（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 点, start: [17, 44], curveList: [{command: c, parameterList: [9, 6, 17, 12, 27, 19]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
+    - {id: 0x00526, type: component, name: 成（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横折钩, start: [17, 46], curveList: [{command: h, parameterList: [26]}, {command: v, parameterList: [35]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
+    - {id: 0x00638, type: component, name: 我（张码笔顺）, strokes: [{feature: 平撇, start: [45, 8], curveList: [{command: z, parameterList: [-8, 5, -17, 7, -35, 9]}]}, {feature: 横, start: [7, 35], curveList: [{command: h, parameterList: [86]}]}, {feature: 竖钩, start: [29, 13], curveList: [{command: v, parameterList: [81]}]}, {feature: 提, start: [8, 64], curveList: [{command: l, parameterList: [42, -6]}]}, {feature: 斜钩, start: [60, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 27, 87]}]}, {feature: 点, start: [74, 10], curveList: [{command: c, parameterList: [4, 6, 8, 10, 14, 25]}]}, {feature: 撇, start: [85, 47], curveList: [{command: c, parameterList: [-5, 14, -25, 33, -43, 42]}]}]}
+    - {id: 0x0070e, type: component, name: 臧字框（张码笔顺）, strokes: [{feature: 横, start: [28, 19], curveList: [{command: h, parameterList: [65]}]}, {feature: 撇, start: [28, 19], curveList: [{command: c, parameterList: [0, 33, 0, 55, -8, 74]}]}, {feature: 竖折, start: [13, 13], curveList: [{command: v, parameterList: [25]}, {command: h, parameterList: [15]}]}, {feature: 横, start: [8, 54], curveList: [{command: h, parameterList: [20]}]}, {feature: 撇, start: [14, 54], curveList: [{command: c, parameterList: [0, 13, 0, 24, -8, 31]}]}, {feature: 斜钩, start: [72, 5], curveList: [{command: c, parameterList: [0, 56, 4, 79, 15, 90]}]}, {feature: 点, start: [83, 7], curveList: [{command: c, parameterList: [2, 4, 4, 10, 5, 12]}]}, {feature: 撇, start: [89, 35], curveList: [{command: z, parameterList: [-3, 18, -18, 51, -32, 58]}]}]}
+    - {id: 0x0071b, type: component, name: 羲下框（张码笔顺）, strokes: [{feature: 平撇, start: [46, 8], curveList: [{command: z, parameterList: [-10, 2, -20, 3, -33, 3]}]}, {feature: 横, start: [9, 24], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [32, 10], curveList: [{command: v, parameterList: [31]}]}, {feature: 撇, start: [32, 24], curveList: [{command: c, parameterList: [-4, 6, -12, 10, -21, 14]}]}, {feature: 点, start: [32, 24], curveList: [{command: c, parameterList: [6, 5, 13, 10, 18, 14]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 8], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 16]}]}, {feature: 撇, start: [84, 38], curveList: [{command: c, parameterList: [-2, 15, -18, 48, -30, 54]}]}]}
+    - {id: 0x00723, type: component, name: 戠字框（张码笔顺）, strokes: [{feature: 点, start: [27, 5], curveList: [{command: c, parameterList: [2, 4, 4, 8, 5, 13]}]}, {feature: 横, start: [12, 18], curveList: [{command: h, parameterList: [39]}]}, {feature: 点, start: [18, 22], curveList: [{command: c, parameterList: [2, 4, 4, 13, 5, 16]}]}, {feature: 撇, start: [43, 22], curveList: [{command: c, parameterList: [-1, 5, -2, 13, -5, 16]}]}, {feature: 横, start: [8, 38], curveList: [{command: h, parameterList: [85]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [76, 15], curveList: [{command: c, parameterList: [4, 6, 9, 16, 11, 23]}]}, {feature: 撇, start: [86, 50], curveList: [{command: c, parameterList: [-2, 15, -18, 34, -30, 42]}]}]}
+    - {id: 0x00802, type: component, name: 戢字框（张码笔顺）, strokes: [{feature: 横, start: [8, 39], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [19, 39], curveList: [{command: v, parameterList: [45]}]}, {feature: 竖, start: [49, 39], curveList: [{command: v, parameterList: [57]}]}, {feature: 横, start: [19, 53], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [19, 67], curveList: [{command: h, parameterList: [30]}]}, {feature: 提, start: [9, 86], curveList: [{command: l, parameterList: [50, -7]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 25, 0, 80, 19, 87]}]}, {feature: 点, start: [77, 16], curveList: [{command: c, parameterList: [4, 6, 8, 10, 10, 23]}]}, {feature: 撇, start: [87, 49], curveList: [{command: c, parameterList: [-2, 15, -18, 40, -28, 45]}]}]}
+    - {id: 0x0061e, type: component, name: 1224（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [17, 46], curveList: [{command: h, parameterList: [31]}]}, {feature: 竖钩, start: [43, 46], curveList: [{command: v, parameterList: [35]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
+    - {id: 0x00520, type: component, name: 1226（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [9, 57], curveList: [{command: h, parameterList: [20]}]}, {feature: 斜钩, start: [54, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 32, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-6, 16, -28, 43, -54, 50]}]}]}
+    - {id: 0x00349, type: component, name: 475·包围外框（张码笔顺）, strokes: [{feature: 横, start: [7, 30], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [56, 4], curveList: [{command: c, parameterList: [2, 54, 8, 76, 35, 88]}]}, {feature: 点, start: [64, 13], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-4, 15, -16, 37, -38, 50]}]}]}
+    - {id: 0x00437, type: component, name: 690·包围外框（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [60, 6], curveList: [{command: c, parameterList: [2, 54, 8, 76, 28, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [82, 41], curveList: [{command: z, parameterList: [-4, 16, -17, 43, -34, 50]}]}]}
+    - {id: 0x00521, type: component, name: 854·包围外框（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 横, start: [17, 46], curveList: [{command: h, parameterList: [36]}]}, {feature: 斜钩, start: [64, 6], curveList: [{command: c, parameterList: [0, 51, 4, 74, 25, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 41], curveList: [{command: z, parameterList: [-3, 15, -8, 35, -20, 51]}]}]}
+    - {id: 0x0034a, type: component, name: 1319（张码笔顺）, strokes: [{feature: 横, start: [7, 43], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [54, 5], curveList: [{command: c, parameterList: [1, 48, 6, 74, 36, 88]}]}, {feature: 点, start: [73, 35], curveList: [{command: c, parameterList: [5, 2, 9, 5, 12, 8]}]}, {feature: 撇, start: [82, 53], curveList: [{command: z, parameterList: [-4, 12, -12, 29, -28, 40]}]}]}
+    - {id: 0x00438, type: component, name: 1333（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [66, 6], curveList: [{command: c, parameterList: [0, 51, 4, 74, 23, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 41], curveList: [{command: z, parameterList: [-3, 15, -8, 35, -20, 51]}]}]}
+    - {id: 0x00439, type: component, name: 1335（张码笔顺）, strokes: [{feature: 横, start: [18, 25], curveList: [{command: h, parameterList: [74]}]}, {feature: 撇, start: [18, 25], curveList: [{command: c, parameterList: [0, 32, 0, 53, -12, 68]}]}, {feature: 斜钩, start: [66, 6], curveList: [{command: c, parameterList: [0, 51, 4, 74, 23, 87]}]}, {feature: 点, start: [70, 8], curveList: [{command: c, parameterList: [7, 4, 12, 10, 15, 17]}]}, {feature: 撇, start: [85, 41], curveList: [{command: z, parameterList: [-3, 15, -8, 35, -20, 51]}]}]}
+    - {id: 0x0034b, type: component, name: 1337（张码笔顺）, strokes: [{feature: 横, start: [7, 43], curveList: [{command: h, parameterList: [86]}]}, {feature: 斜钩, start: [54, 5], curveList: [{command: c, parameterList: [1, 48, 6, 74, 36, 88]}]}, {feature: 点, start: [73, 35], curveList: [{command: c, parameterList: [5, 2, 9, 5, 12, 8]}]}, {feature: 撇, start: [82, 53], curveList: [{command: z, parameterList: [-4, 12, -12, 29, -28, 40]}]}]}
+    - {id: 0x08329, type: compound, name: 产（张码）, operator: ⿸, references: [{id: 0x08217}, {id: 0x00004}]}
+    - {id: 0x0038f, type: compound, name: 气（张码）, operator: ⿱, references: [{id: 0x0026a}, {id: 0x00010}]}
+    - {id: 0x30519, type: compound, name: 差（张码）, operator: ⿸, references: [{id: 0x0341c}, {id: 0x00210}]}
+    - {id: 0x6d572, type: compound, name: 着（张码）, operator: ⿸, references: [{id: 0x0341c}, {id: 0x00451}]}
+    - {id: 0x03525, type: compound, name: 羌（张码）, operator: ⿱, references: [{id: 0x0341c}, {id: 0x0001e}]}
+    - {id: 0x05818, type: compound, name: 羞（张码）, operator: ⿸, references: [{id: 0x0341c}, {id: 0x003fd}]}
+    - {id: 0x04776, type: compound, name: 养（张码）, operator: ⿳, references: [{id: 0x0341c}, {id: 0x00006}, {id: 0x00139}]}
+    - {id: 0x01868, type: compound, name: 鬲（张码）, operator: ⿱, references: [{id: 0x0121e}, {id: 0x0d322}]}
+    - {id: 0x3310c, type: compound, name: 南字心（张码）, operator: ⿱, references: [{id: 0x00170}, {id: 0x00105}]}
+    - {id: 0x60118, type: compound, name: 美字头（张码）, operator: ⿱, references: [{id: 0x00170}, {id: 0x0020e}]}
+    - {id: 0x08422, type: compound, name: 辛旁（张码）, operator: ⿱, references: [{id: 0x08217}, {id: 0x00105}]}
+    - {id: 0x0023f, type: component, name: 弋（张码笔顺）, strokes: [{feature: 横, start: [7, 36], curveList: [{command: h, parameterList: [86]}]}, {feature: 点, start: [65, 16], curveList: [{command: c, parameterList: [4, 5, 7, 11, 10, 20]}]}, {feature: 斜钩, start: [44, 5], curveList: [{command: c, parameterList: [2, 54, 8, 76, 39, 88]}]}]}
+    - {id: 0x00393, type: compound, name: 536·包围外框（张码）, operator: ⿱, references: [{id: 0x0026a}, {id: 0x00010}]}
+    - {id: 0x03626, type: compound, name: 並（张码）, operator: ⿱, references: [{id: 0x00170}, {id: 0x00448}]}
+    - {id: 0x0884d, type: compound, name: 豙（张码）, operator: ⿱, references: [{id: 0x08217}, {id: 0x00568}]}
+    - {id: 0x00814, type: compound, name: 㒸（张码）, operator: ⿱, references: [{id: 0x002a9}, {id: 0x00568}]}
+    - {id: 0x03522, type: compound, name: 养字头（张码）, operator: ⿱, references: [{id: 0x0341c}, {id: 0x00006}]}
+    - {id: 0x0900b, type: compound, name: 匃字心（张码）, operator: ⿱, references: [{id: 0x00145}, {id: 0x0001b}]}
+    - {id: 0x00196, type: component, name: 176·包围外框（张码笔顺）, strokes: [{feature: 撇, start: [37, 11], curveList: [{command: c, parameterList: [0, 21, 0, 60, -29, 81]}]}, {feature: 横折折折钩, start: [12, 11], curveList: [{command: h, parameterList: [66]}, {command: l, parameterList: [-12, 34]}, {command: h, parameterList: [24]}, {command: v, parameterList: [48]}]}]}
+    - {id: 0x77001, type: compound, name: 断字旁（张码）, operator: ⿶, references: [{id: 0x0001b}, {id: 0x00572}]}
+    - {id: 0x0540c, type: compound, name: 陋字边（张码）, operator: ⿶, references: [{id: 0x0001b}, {id: 0x0042e}]}
+    - {id: 0x00f00, type: component, name: 噩（张码整体取根）, strokes: [{feature: 横, start: [12, 11], curveList: [{command: h, parameterList: [76]}]}, {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [83]}]}, {feature: 竖, start: [16, 20], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [16, 20], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [16, 44], curveList: [{command: h, parameterList: [22]}]}, {feature: 竖, start: [62, 20], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [62, 20], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [62, 44], curveList: [{command: h, parameterList: [22]}]}, {feature: 横, start: [18, 52], curveList: [{command: h, parameterList: [64]}]}, {feature: 竖, start: [16, 61], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [16, 61], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [16, 85], curveList: [{command: h, parameterList: [22]}]}, {feature: 竖, start: [62, 61], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [62, 61], curveList: [{command: h, parameterList: [22]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [62, 85], curveList: [{command: h, parameterList: [22]}]}, {feature: 横, start: [8, 94], curveList: [{command: h, parameterList: [84]}]}]}
+    - {id: 0x12746, type: component, name: 衡字心（张码整体取根）, strokes: [{feature: 撇, start: [41, 4], curveList: [{command: c, parameterList: [-5, 8, -12, 15, -32, 23]}]}, {feature: 横撇, start: [33, 13], curveList: [{command: h, parameterList: [41]}, {command: c, parameterList: [-7, 5, -12, 10, -21, 14]}]}, {feature: 竖, start: [15, 27], curveList: [{command: v, parameterList: [36]}]}, {feature: 横折, start: [15, 27], curveList: [{command: h, parameterList: [70]}, {command: v, parameterList: [36]}]}, {feature: 横, start: [15, 45], curveList: [{command: h, parameterList: [70]}]}, {feature: 竖, start: [50, 27], curveList: [{command: v, parameterList: [36]}]}, {feature: 横, start: [15, 63], curveList: [{command: h, parameterList: [70]}]}, {feature: 横, start: [7, 74], curveList: [{command: h, parameterList: [86]}]}, {feature: 撇, start: [50, 63], curveList: [{command: c, parameterList: [0, 16, 0, 25, -43, 34]}]}, {feature: 捺, start: [49, 75], curveList: [{command: c, parameterList: [7, 8, 21, 16, 44, 22]}]}]}
+    - {id: 0x1c60c, type: component, name: 鬼（张码整体取根）, strokes: [{feature: 撇, start: [48, 5], curveList: [{command: c, parameterList: [-1, 3, -3, 8, -6, 12]}]}, {feature: 竖, start: [20, 17], curveList: [{command: v, parameterList: [41]}]}, {feature: 横折, start: [20, 17], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [41]}]}, {feature: 横, start: [20, 37], curveList: [{command: h, parameterList: [60]}]}, {feature: 横, start: [20, 58], curveList: [{command: h, parameterList: [60]}]}, {feature: 撇, start: [50, 17], curveList: [{command: c, parameterList: [0, 24, 0, 62, -41, 74]}]}, {feature: 竖弯钩, start: [50, 58], curveList: [{command: v, parameterList: [33]}, {command: h, parameterList: [40]}]}, {feature: 撇折, start: [71, 65], curveList: [{command: c, parameterList: [-3, 7, -6, 13, -12, 19]}, {command: h, parameterList: [23]}]}, {feature: 点, start: [79, 79], curveList: [{command: c, parameterList: [2, 2, 4, 5, 4, 7]}]}]}
+    - {id: 0x1150a, type: compound, name: 鬯字头（张码）, operator: ⿱, references: [{id: 0x00566}, {id: 0x0017e}]}
+    - {id: 0xf004f, type: component, name: 毛前三笔（张码）, strokes: [{feature: 平撇, start: [80, 9], curveList: [{command: z, parameterList: [-17, 4, -38, 9, -64, 10]}]}, {feature: 横, start: [15, 38], curveList: [{command: h, parameterList: [67]}]}, {feature: 横, start: [7, 63], curveList: [{command: h, parameterList: [84]}]}]}
+    - {id: 0x00566, type: component, name: 鬯字头无凵（张码笔顺）, strokes: [{feature: 点, start: [45, 15], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}, {feature: 点, start: [13, 40], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}, {feature: 撇, start: [80, 10], curveList: [{command: c, parameterList: [-6, 32, -28, 59, -75, 85]}]}, {feature: 捺, start: [20, 10], curveList: [{command: c, parameterList: [5, 32, 28, 59, 75, 85]}]}, {feature: 点, start: [76, 40], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}, {feature: 点, start: [45, 78], curveList: [{command: c, parameterList: [5, 5, 10, 12, 15, 18]}]}]}
+    - {id: 0x1d218, type: component, name: 发（张码整体取根）, strokes: [{feature: 竖折, start: [20, 10], curveList: [{command: v, parameterList: [22]}, {command: h, parameterList: [70]}]}, {feature: 撇, start: [46, 5], curveList: [{command: c, parameterList: [-3, 20, -4, 50, -38, 86]}]}, {feature: 横撇, start: [43, 51], curveList: [{command: h, parameterList: [43]}, {command: c, parameterList: [-4, 17, -21, 35, -51, 45]}]}, {feature: 捺, start: [43, 51], curveList: [{command: c, parameterList: [4, 17, 22, 35, 51, 45]}]}, {feature: 点, start: [70, 15], curveList: [{command: c, parameterList: [5, 5, 8, 10, 10, 17]}]}]}

@@ -2,11 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { 读取方案项目, 评估方案项目 } from "../../src/index.js";
+import { 评估方案项目, 读取方案项目 } from "../../src/index.js";
 
-const 示例目录 = fileURLToPath(
-  new URL("../../examples/", import.meta.url),
-);
+const 示例目录 = fileURLToPath(new URL("../../examples/", import.meta.url));
 
 describe("示例方案完整运行", () => {
   for (const filename of readdirSync(示例目录)
@@ -14,6 +12,11 @@ describe("示例方案完整运行", () => {
     .sort()) {
     it(filename, () => {
       const 项目 = 读取方案项目(path.join(示例目录, filename));
+      expect(
+        Object.keys(项目.配置.form.mapping).filter(
+          (名称) => !项目.上下文.名称映射.has(名称),
+        ),
+      ).toEqual([]);
       const 记录 = 评估方案项目(项目);
       expect(记录.analysis.length).toBeGreaterThan(0);
       expect(记录.codes.length).toBeGreaterThan(0);
@@ -21,7 +24,7 @@ describe("示例方案完整运行", () => {
       expect(记录.metrics.characters_full).toBeDefined();
       if (filename === "huma.yaml") {
         expect(项目.上下文.配置.data?.character_set).toBe("general");
-        expect(项目.上下文.配置.analysis?.fusion).toBeUndefined();
+        expect(项目.上下文.配置.data?.fusion).toBeUndefined();
         const 单字码 = new Set(
           记录.codes.map((条目) => `${条目.词}\t${条目.全码}`),
         );
@@ -70,7 +73,7 @@ describe("示例方案完整运行", () => {
           ["苎", "jmg"],
           ["承", "ndip"],
           ["鬯", "njjx"],
-        ]) {
+        ] as const) {
           expect(单字码.get(字)).toBe(码);
         }
       }

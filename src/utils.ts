@@ -16,6 +16,7 @@ import {
   type 广义安排,
   type 广义码位,
   type 拼写运算,
+  type 数据配置,
   是变量,
   是归并,
   type 条件,
@@ -24,7 +25,6 @@ import {
   type 非空安排,
 } from "./config.js";
 import {
-  获取并列布局主轴,
   type 向量,
   type 引用数据,
   type 引用笔画块数据,
@@ -33,6 +33,7 @@ import {
   type 结构描述字符,
   结构描述字符列表,
   type 绘制,
+  获取并列布局主轴,
 } from "./data.js";
 import {
   二笔,
@@ -45,6 +46,7 @@ import {
 } from "./element.js";
 import { 获取包围内部范围 } from "./enclosure.js";
 import { 获取分析部件, 获取融合字形集合 } from "./fusion.js";
+import { 解析字形ID } from "./glyph-id.js";
 import { 复杂度布局 } from "./layout.js";
 import { 应用拼写运算, type 拼音分析映射 } from "./pinyin.js";
 import type { 字库, 字形 } from "./repertoire.js";
@@ -426,15 +428,16 @@ export function 构建强类型决策与决策空间(
   return { 决策: 强类型决策, 决策空间: 强类型决策空间 };
 }
 
-/** 与 mapping 共用名称映射；字符匹配当前有效的所有部件字形。裸数字 ID 兼容旧配置。 */
+/** 与 mapping 共用名称映射；字符匹配当前有效的所有部件字形。裸 ID 按十六进制解释。 */
 export function 解析自定义拆分部件(
   字库: 字库,
   名称映射: Map<string, 元素>,
   名称: string,
   分析配置?: 分析配置,
+  数据配置?: 数据配置,
 ): 部件[] {
   const 元素 = 名称映射.get(名称);
-  const 融合字形集合 = 获取融合字形集合(分析配置);
+  const 融合字形集合 = 获取融合字形集合(分析配置, 数据配置);
   if (元素 instanceof 字符) {
     return (字库.查询字符的字形(元素) ?? [])
       .map((字形) => 获取分析部件(字形, 融合字形集合))
@@ -443,8 +446,8 @@ export function 解析自定义拆分部件(
   const 字形 =
     元素 instanceof 部件 || 元素 instanceof 复合体
       ? 元素
-      : /^\d+$/.test(名称)
-        ? 字库.获取字形(Number(名称))
+      : 解析字形ID(名称) !== undefined
+        ? 字库.获取字形(解析字形ID(名称)!)
         : undefined;
   const 部件实例 = 字形 && 获取分析部件(字形, 融合字形集合);
   return 部件实例 ? [部件实例] : [];
@@ -456,13 +459,16 @@ export function 解析自定义拆分字形(
   名称映射: Map<string, 元素>,
   名称: string,
   分析配置?: 分析配置,
+  数据配置?: 数据配置,
 ): 字形[] {
-  const 部件列表 = 解析自定义拆分部件(字库, 名称映射, 名称, 分析配置);
+  const 部件列表 = 解析自定义拆分部件(字库, 名称映射, 名称, 分析配置, 数据配置);
   if (部件列表.length || (分析配置?.compound_analyzer || "默认") !== "默认")
     return 部件列表;
   const 字形 =
     名称映射.get(名称) ??
-    (/^\d+$/.test(名称) ? 字库.获取字形(Number(名称)) : undefined);
+    (解析字形ID(名称) !== undefined
+      ? 字库.获取字形(解析字形ID(名称)!)
+      : undefined);
   return 字形 instanceof 复合体 ? [字形] : [];
 }
 
@@ -472,6 +478,7 @@ export function 构建强类型自定义分析(
   自定义分析: Record<string, string[]>,
   动态自定义拆分: Record<string, string[][]>,
   分析配置?: 分析配置,
+  数据配置?: 数据配置,
 ) {
   const 恢复字根列表 = (名称列表: string[]): 字根元素[] =>
     名称列表
@@ -496,7 +503,13 @@ export function 构建强类型自定义分析(
         Number(!(名称映射.get(b) instanceof 字符)),
     );
     for (const [名称, value] of 条目) {
-      const 字形列表 = 解析自定义拆分字形(字库, 名称映射, 名称, 分析配置);
+      const 字形列表 = 解析自定义拆分字形(
+        字库,
+        名称映射,
+        名称,
+        分析配置,
+        数据配置,
+      );
       const 结果 = 转换(value);
       for (const 字形 of 字形列表) 映射.set(字形, 结果);
     }

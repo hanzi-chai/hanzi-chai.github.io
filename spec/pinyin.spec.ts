@@ -1,5 +1,11 @@
-import { expect, it, beforeAll } from "bun:test";
-import { 合并拼写运算, 字符, 计算拼音分析与元素映射, 默认拼音分析器, 拼音元素} from "../src/index.js";
+import { beforeAll, expect, it } from "bun:test";
+import {
+  合并拼写运算,
+  字符,
+  拼音元素,
+  计算拼音分析与元素映射,
+  默认拼音分析器,
+} from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 let 拼音分析器: 默认拼音分析器;

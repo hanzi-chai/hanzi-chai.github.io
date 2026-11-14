@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+  type 分析执行环境,
   创建静态分析环境,
   推导动态分析,
   选择分析,
-  type 分析执行环境,
 } from "../src/analysis-execution.js";
 import type { 条件 } from "../src/config.js";
 import { default_err, ok, type Result, 优先表 } from "../src/utils.js";

@@ -9,7 +9,7 @@ import {
   Select,
   Typography,
 } from "antd";
-import { type 元素, 复合体, 字符, 部件, 字符字形过滤器 } from "hanzi-chai";
+import { type 元素, 复合体, 字符, 字符字形过滤器, 部件 } from "hanzi-chai";
 import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import { useAtom, useAtomValue, 字库原子, 字形字符映射原子 } from "~/atoms";

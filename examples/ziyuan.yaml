@@ -225,7 +225,7 @@ analysis:
       - "\ue800"
       - '2'
       - 人
-    卑:
+    字形-1852d:
       - 白
       - 千
     垂:
@@ -449,10 +449,7 @@ form:
     韵母-u: u
     韵母-e: e
     韵母-n: 'n'
-    韵母-ê1: e
-    韵母-ê2: e
-    韵母-ê3: e
-    韵母-ê4: e
+    韵母-ê: e
     韵母-m: m
     韵母-v: v
     韵母-o: o
@@ -690,8 +687,6 @@ form:
       element: 西
     "\ue406":
       element: 口
-    "\ue449":
-      element: 大
     "\ue043":
       element: 大
     "\ue452":
@@ -910,80 +905,38 @@ encoder:
       negative: s15
 data:
   character_set: extended
-  glyph_customization:
-    面:
-      type: compound
-      operator: ⿵
-      operandList: [而, 三]
-    丢:
-      type: compound
-      tags: []
-      operator: ⿱
-      operandList: [壬, 厶]
-    令:
-      type: compound
-      operator: ⿱
-      operandList: [今, 丶]
-    畺:
-      type: compound
-      tags: [纵向包夹]
-      operator: ⿻
-      operandList: [三, 畕]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 5}, {index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    堇:
-      type: compound
-      operator: ⿻
-      operandList: [革, 二]
-    是:
-      type: compound
-      operator: ⿱
-      operandList: [旦, 龰]
-    舍:
-      type: compound
-      tags: []
-      operator: ⿱
-      operandList: [亼, 古]
-    囱:
-      type: compound
-      operator: ⿴
-      operandList: ["\ue02d", 夕]
-      order: [{index: 0, strokes: 3}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    㐫:
-      type: compound
-      operator: ⿶
-      operandList: [凵, 文]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    威:
-      type: compound
-      operator: ⿵
-      operandList: [戌, 女]
-      order: [{index: 0, strokes: 3}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    容:
-      type: compound
-      operator: ⿳
-      operandList: [穴, 人, 口]
-    㝵:
-      type: compound
-      operator: ⿱
-      operandList: [旦, 寸]
-    "\uea02":
-      type: compound
-      operator: ⿴
-      operandList: ["\ue42b", 幺]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    胤:
-      type: compound
-      tags: [横向包夹]
-      operator: ⿴
-      operandList: [儿, "\ue99d"]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    "\ue9d0":
-      type: compound
-      tags: [横向包夹]
-      operator: ⿴
-      operandList: ["\ue0e3", 米]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-  repertoire: {}
+  character_customization:
+    面: [{type: insert, id: 983040, sources: []}]
+    丢: [{type: insert, id: 983041, sources: []}]
+    令: [{type: insert, id: 983042, sources: []}]
+    畺: [{type: insert, id: 983043, sources: []}]
+    堇: [{type: insert, id: 983044, sources: []}]
+    是: [{type: insert, id: 983045, sources: []}]
+    舍: [{type: insert, id: 983046, sources: []}]
+    囱: [{type: insert, id: 983047, sources: []}]
+    㐫: [{type: insert, id: 983048, sources: []}]
+    威: [{type: insert, id: 983049, sources: []}]
+    容: [{type: insert, id: 983050, sources: []}]
+    㝵: [{type: insert, id: 983051, sources: []}]
+    : [{type: insert, id: 983052, sources: []}]
+    胤: [{type: insert, id: 983053, sources: []}]
+    : [{type: insert, id: 983054, sources: []}]
+  glyphs:
+    - {id: 983040, name: 面（字源）, type: compound, operator: ⿵, references: [{id: 5222}, {id: 512}]}
+    - {id: 983041, name: 丢（字源）, type: compound, operator: ⿱, references: [{id: 920}, {id: 407}]}
+    - {id: 983042, name: 令（字源）, type: compound, operator: ⿱, references: [{id: 16945}, {id: 6}]}
+    - {id: 983043, name: 畺（字源）, type: compound, operator: ⿻, references: [{id: 512}, {id: 418830}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0, to: 4}, {index: 0, from: 1, to: 1}, {index: 1, from: 5}, {index: 0, from: 2}]}
+    - {id: 983044, name: 堇（字源）, type: compound, operator: ⿻, references: [{id: 2051}, {id: 256}]}
+    - {id: 983045, name: 是（字源）, type: compound, operator: ⿱, references: [{id: 294912}, {id: 857}]}
+    - {id: 983046, name: 舍（字源）, type: compound, operator: ⿱, references: [{id: 4418}, {id: 98823}]}
+    - {id: 983047, name: 囱（字源）, type: compound, operator: ⿴, references: [{id: 935}, {id: 656}], strokes: [{index: 0, from: 0, to: 2}, {index: 1, from: 0}, {index: 0, from: 3}]}
+    - {id: 983048, name: 㐫（字源）, type: compound, operator: ⿶, references: [{id: 382}, {id: 977}], strokes: [{index: 1, from: 0}, {index: 0, from: 0}]}
+    - {id: 983049, name: 威（字源）, type: compound, operator: ⿵, references: [{id: 1311}, {id: 730}], strokes: [{index: 0, from: 0, to: 2}, {index: 1, from: 0}, {index: 0, from: 3}]}
+    - {id: 983050, name: 容（字源）, type: compound, operator: ⿳, references: [{id: 164100}, {id: 325}, {id: 600}]}
+    - {id: 983051, name: 㝵（字源）, type: compound, operator: ⿱, references: [{id: 294912}, {id: 541}]}
+    - {id: 983052, name: （字源）, type: compound, operator: ⿴, references: [{id: 978}, {id: 755}], strokes: [{index: 1, from: 0}, {index: 0, from: 0}]}
+    - {id: 983053, name: 胤（字源）, type: compound, operator: ⿴, references: [{id: 335}, {id: 213767}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
+    - {id: 983054, name: （字源）, type: compound, operator: ⿴, references: [{id: 313}, {id: 1394}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
 algebra:
   二字母:
     - type: xform

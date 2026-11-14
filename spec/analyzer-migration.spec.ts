@@ -1,19 +1,19 @@
 import { describe, expect, it } from "bun:test";
 import {
-  分析方案,
   准备方案,
-  构建字库,
-  最小方案,
-  运行方案,
-  本地编码评估,
-  获取默认目标,
+  分析方案,
   type 基本字形数据,
   type 复合体数据,
   type 字符数据,
+  最小方案,
+  本地编码评估,
   type 条件,
+  构建字库,
+  获取默认目标,
+  运行方案,
   type 配置,
-  首末取大部件分析器,
   首末取大复合体分析器,
+  首末取大部件分析器,
 } from "../src/index.js";
 
 const 复合 = (
@@ -25,14 +25,12 @@ const 复合 = (
   type: "compound",
   operator,
   references: ids.map((id) => ({ id })),
-  ambiguous: false,
 });
 const 字形: 基本字形数据[] = [
   ...[1, 2, 3].map(
     (id): 基本字形数据 => ({
       id,
       type: "component",
-      ambiguous: false,
       operator: undefined,
       references: undefined,
       strokes: Array.from({ length: id }, (_, i) => ({
@@ -66,7 +64,7 @@ const 字符表: 字符数据[] = [..."口三甲乙丙丁戊己庚功辛"].map((
     { id: [2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18][i]!, sources: ["G"] },
   ],
 }));
-const 可选根 = ["字形-2", "字形-10", "字形-11"];
+const 可选根 = ["字形-00002", "字形-0000a", "字形-0000b"];
 const 分析器组合 = [
   ["默认", "默认"],
   ["默认", "首右"],
@@ -86,11 +84,11 @@ function 上下文(
   修改?: (配置: 配置) => void,
 ) {
   const 配置 = structuredClone(最小方案);
+  配置.data!.fusion = false;
   配置.analysis = {
     component_analyzer: 部件,
     compound_analyzer: 复合体,
     dynamic,
-    fusion: false,
     selector: ["根少优先", "全符笔顺", "取大优先"],
   };
   配置.form = {
@@ -241,10 +239,10 @@ describe("全部分析器共用静态与动态规则", () => {
   it("张码和逸码复用默认自定义拆分，动态候选保留补码等附加信息", () => {
     for (const 部件 of ["张码", "逸码"]) {
       const 修改 = (配置: 配置) => {
-        配置.analysis!.customize = { "字形-3": ["1", "1"] };
+        配置.analysis!.customize = { "字形-00003": ["1", "1"] };
         配置.analysis!.dynamic_customize = {
-          "字形-3": [
-            ["字形-2", "1"],
+          "字形-00003": [
+            ["字形-00002", "1"],
             ["1", "1"],
           ],
         };
@@ -256,8 +254,8 @@ describe("全部分析器共用静态与动态规则", () => {
         const 静态 = 分析方案(
           上下文(部件, 部件, [存在, 0, 0], false, (配置) => {
             修改(配置);
-            配置.analysis!.customize!["字形-3"] = 存在
-              ? ["字形-2", "1"]
+            配置.analysis!.customize!["字形-00003"] = 存在
+              ? ["字形-00002", "1"]
               : ["1", "1"];
           }),
         );

@@ -7,8 +7,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { load } from "js-yaml";
-import { packageRoot, readDataFiles } from "./assets.js";
 import { 校验配置结构 } from "../dist/validation.js";
+import { packageRoot, readDataFiles } from "./assets.js";
 
 const { buffers } = readDataFiles();
 const source = new URL("examples/", packageRoot);
@@ -22,6 +22,13 @@ const schemes = examples.map((file): [string, Buffer] => {
   return [file, bytes];
 });
 // 清理旧版资源，防止已取消发布的文件继续残留在 dist 中。
+for (const file of [
+  "glyph-id-legacy.js",
+  "glyph-id-legacy.d.ts",
+  "glyph-id-migration-map.json",
+]) {
+  rmSync(new URL(`dist/${file}`, packageRoot), { force: true });
+}
 for (const name of ["data", "examples"]) {
   const directory = new URL(`dist/${name}/`, packageRoot);
   rmSync(directory, { recursive: true, force: true });

@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
   mkdtempSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -88,7 +88,7 @@ try {
     import { createRequire } from 'node:module';
     import { 默认数据目录, 获取字库, 获取原始词典, 获取键位分布目标, 获取当量映射,
       列出示例方案, 读取示例配置, 获取示例方案路径, 读取方案项目, 最小方案,
-      读取内置方案模板, 字符字形过滤器, GF0014映射, GF3001映射, 歧义字形, 分析当量数据, 运行方案 } from 'hanzi-chai';
+      读取内置方案模板, 字符字形过滤器, GF0014映射, GF3001映射, 歧义字形, 分析当量数据, 运行方案, 格式化字形ID, 解析字形ID } from 'hanzi-chai';
     globalThis.fetch = () => { throw new Error('运行时不应联网'); };
     assert.equal(typeof 运行方案, 'function');
     assert(获取字库(最小方案).校验字符('一'));
@@ -111,9 +111,12 @@ try {
     const library = 获取字库(最小方案);
     const character = library.校验字符('一');
     assert(new 字符字形过滤器({ name: '一' }).过滤字符(character.character, character, library));
-    assert.equal(GF0014映射.get(1), 138);
-    assert.equal(GF3001映射.get(1), 2);
-    assert(歧义字形.has(211));
+    assert.throws(() => createRequire(import.meta.url).resolve('hanzi-chai/legacy-ids'));
+    assert.equal(格式化字形ID(0), '00000');
+    assert.equal(解析字形ID('abcde'), 0xabcde);
+    assert.equal(GF0014映射.get(0), 138);
+    assert.equal(GF3001映射.get(0), 2);
+    assert(歧义字形.has(0x00203));
     assert.deepEqual(分析当量数据([]).当量, []);
   `;
   execFileSync("node", ["--input-type=module", "--eval", verificationCode], {

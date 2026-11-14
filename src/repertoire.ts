@@ -1,13 +1,13 @@
-import { max } from "lodash-es";
 import { type 分类器, 合并分类器 } from "./classifier.js";
 import { type 基本部件分析, 部件, 默认退化配置 } from "./component.js";
 import type { 基本复合体分析 } from "./compound.js";
-import { 复合体, 冰雪飞花意符优先字 } from "./compound.js";
+import { 冰雪飞花意符优先字, 复合体 } from "./compound.js";
 import type {
   分析配置,
   字形拼写运算,
   字形自定义,
   字集指示,
+  数据配置,
   模式,
   补丁操作,
   退化配置,
@@ -20,12 +20,13 @@ import type {
 } from "./data.js";
 import { 二笔, type 元素, 笔画, 自定义元素 } from "./element.js";
 import { 获取分析部件, 获取融合字形集合 } from "./fusion.js";
+import { 创建字形ID分配器 } from "./glyph-id.js";
 import { 获取注册表 } from "./registry.js";
 import { type 筛选器, 默认筛选器列表 } from "./selector.js";
 import { 字符, 字集过滤查找表 } from "./unicode.js";
 import {
-  ok,
   default_err,
+  ok,
   type Result,
   优先表,
   type 原始词典,
@@ -35,11 +36,11 @@ import {
   type 强类型决策空间,
   type 强类型安排,
   type 强类型安排描述,
+  来源排序,
   type 自定义分析,
   type 自定义分析映射,
   type 词典,
   部件字根,
-  来源排序,
 } from "./utils.js";
 
 // 模式变量映射：记录模式匹配过程中变量的绑定
@@ -102,6 +103,7 @@ interface 动态字形分析结果<
 
 export interface 字形分析基本配置 {
   分析配置: 分析配置;
+  数据配置?: 数据配置;
   决策: 强类型决策;
   决策空间: 强类型决策空间;
   线性化决策: Map<元素, string>;
@@ -143,13 +145,7 @@ class 字形库 {
     this.字形表 = new Map();
     this.字形查找表 = new Map();
     // 新字形 ID 分配器
-    let 新ID计数器 = max(字形数据列表.map((x) => x.id))! + 1; // 占位符 ID 起始值
-    const 取新ID = () => {
-      if (新ID计数器 > 0x2_ffff) {
-        throw new Error("新字形 ID 超过范围");
-      }
-      return 新ID计数器++;
-    };
+    const 取新ID = 创建字形ID分配器(字形数据列表.map((x) => x.id));
 
     // 处理所有字形
     字形数据列表.map((glyph) => this.字形查找表.set(glyph.id, glyph));
@@ -758,7 +754,7 @@ class 字库 {
       自定义分析映射,
       动态自定义分析映射,
     } = base;
-    const 融合字形集合 = 获取融合字形集合(分析配置);
+    const 融合字形集合 = 获取融合字形集合(分析配置, base.数据配置);
     for (const id of 融合字形集合) {
       const 字形 = this.获取字形(id);
       if (!字形 || 是部件(字形)) continue;

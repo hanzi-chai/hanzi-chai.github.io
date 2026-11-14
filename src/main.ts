@@ -4,7 +4,6 @@ import {
   冰雪飞花部件分析器,
   张码部件分析器,
   逸码部件分析器,
-  首末取大部件分析器,
   默认部件分析器,
 } from "./component.js";
 import {
@@ -15,7 +14,6 @@ import {
   真码复合体分析器,
   逸码复合体分析器,
   首右复合体分析器,
-  首末取大复合体分析器,
   默认复合体分析器,
 } from "./compound.js";
 import { 默认拼音分析器 } from "./pinyin.js";
@@ -49,13 +47,15 @@ export * from "./data.js";
 export * from "./dispersion.js";
 export * from "./element.js";
 export * from "./enclosure.js";
+export * from "./equivalence.js";
 export * from "./evaluation.js";
 export * from "./explain.js";
 export * from "./filter.js";
-export * from "./glyph-metadata.js";
-export * from "./equivalence.js";
-export * from "./templates.js";
 export { 默认融合字形 } from "./fusion.js";
+export * from "./glyph-id.js";
+export * from "./glyph-metadata.js";
+export * from "./glyph-radical.js";
+export * from "./kangxi-radicals.js";
 export * from "./math.js";
 export * from "./pinyin.js";
 export * from "./proofread.js";
@@ -64,6 +64,7 @@ export * from "./repertoire.js";
 export * from "./scheme.js";
 export * from "./selector.js";
 export * from "./stroke-render.js";
+export * from "./templates.js";
 export * from "./unicode.js";
 export * from "./utils.js";
 export * from "./validation.js";

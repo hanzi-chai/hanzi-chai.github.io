@@ -2,7 +2,14 @@ name: Publish
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "beta"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -22,18 +29,26 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Check if version changed
+      - name: Check release version and npm tag
         id: version-check
         run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          NPM_VERSION=$(npm view hanzi-chai version 2>/dev/null || echo "0.0.0")
-          echo "pkg=$PKG_VERSION"
-          echo "npm=$NPM_VERSION"
-          if [ "$PKG_VERSION" != "$NPM_VERSION" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          const { name, version } = JSON.parse(readFileSync('package.json', 'utf8'));
+          const beta = process.env.GITHUB_REF_NAME === 'beta';
+          const pattern = beta ? /^\d+\.\d+\.\d+-beta\.\d+$/ : /^\d+\.\d+\.\d+$/;
+          if (!pattern.test(version)) {
+            throw new Error(`Invalid version ${version} for branch ${process.env.GITHUB_REF_NAME}`);
+          }
+          const tag = beta ? 'beta' : 'latest';
+          const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}/${encodeURIComponent(version)}`);
+          if (!response.ok && response.status !== 404) {
+            throw new Error(`npm registry returned HTTP ${response.status}`);
+          }
+          const changed = response.status === 404;
+          console.log(`${name}@${version}: tag=${tag}, publish=${changed}`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\ntag=${tag}\n`);
+          NODE
 
       - name: Install dependencies
         if: steps.version-check.outputs.changed == 'true'
@@ -51,6 +66,6 @@ jobs:
 
       - name: Publish to npm
         if: steps.version-check.outputs.changed == 'true'
-        run: npm publish
+        run: npm publish --tag "${{ steps.version-check.outputs.tag }}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

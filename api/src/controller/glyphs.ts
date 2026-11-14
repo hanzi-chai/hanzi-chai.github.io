@@ -1,12 +1,21 @@
-import type { IRequest } from "itty-router";
 import {
-  校验字库整数,
+  创建字形ID分配器,
   type 字形数据,
   type 字符数据,
   type 结构描述字符,
+  解析字形ID,
 } from "hanzi-chai";
+import type { IRequest } from "itty-router";
 import type { Env } from "../dto/context";
-import { Err, ErrCode } from "../error/error";
+import {
+  type 字形写入,
+  读取字形,
+  读取字形删除,
+  读取字形批量创建,
+  读取字形批量更新,
+  读取替换ID,
+} from "../dto/requests";
+import { Err, ErrCode, Ok } from "../error/error";
 import type { 字符模型 } from "./characters";
 
 const table = "glyphs";
@@ -32,9 +41,7 @@ function 转数据(数据: 字形模型): 字形数据 {
   } as 字形数据;
 }
 
-function 转模型(数据: 字形数据): 字形模型 {
-  const 错误 = 校验字库整数(数据);
-  if (错误) throw new Error(错误);
+function 转模型(数据: 字形写入) {
   return {
     ...数据,
     name: 数据.name ?? null,
@@ -54,8 +61,8 @@ export async function List(_request: Request, env: Env) {
 
 /** GET:/glyphs/:id */
 export async function Info(request: IRequest, env: Env) {
-  const id = parseInt(request.params.id, 10);
-  if (!Number.isInteger(id)) return new Err(ErrCode.ParamInvalid, "ID不正确");
+  const id = 解析字形ID(request.params.id);
+  if (id === undefined) return new Err(ErrCode.ParamInvalid, "ID不正确");
   const res = await env.CHAI.prepare(
     `SELECT * FROM ${table} WHERE id=? LIMIT 1`,
   )
@@ -65,38 +72,22 @@ export async function Info(request: IRequest, env: Env) {
   return 转数据(res);
 }
 
-async function getNextId(
-  type: 字形模型["type"],
-  env: Env,
-  count = 1,
-): Promise<number[]> {
+async function getNextId(env: Env, count = 1): Promise<number[]> {
   const allIDs = await env.CHAI.prepare(`SELECT id FROM ${table}`).all<{
     id: number;
   }>();
   const idSet = new Set(allIDs.results.map((item) => item.id));
-  let id = type === "component" ? 64 : 4096;
-  const ids: number[] = [];
-  for (let i = 0; i < count; i++) {
-    while (idSet.has(id)) {
-      id++;
-    }
-    ids.push(id);
-    idSet.add(id);
-  }
-  return ids;
+  const 分配 = 创建字形ID分配器(idSet);
+  return Array.from({ length: count }, () => 分配());
 }
 
 /** POST:/glyphs */
 export async function Create(request: IRequest, env: Env) {
-  let body: any;
-  try {
-    body = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const body = await 读取字形(request);
+  if (!Ok(body)) return body;
   try {
     const { name, type, operator, references, strokes } = 转模型(body);
-    const [id] = await getNextId(type, env);
+    const [id] = await getNextId(env);
     await env.CHAI.prepare(
       `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes) VALUES (?, ?, ?, ?, ?, ?)`,
     )
@@ -113,19 +104,15 @@ export async function Create(request: IRequest, env: Env) {
 
 /** POST:/glyphs/batch */
 export async function CreateBatch(request: IRequest, env: Env) {
-  let body: any[];
-  try {
-    body = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const body = await 读取字形批量创建(request);
+  if (!Ok(body)) return body;
   try {
     const statement = env.CHAI.prepare(
       `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes) VALUES (?, ?, ?, ?, ?, ?)`,
     );
-    const ids = await getNextId(body[0].type, env, body.length);
+    const ids = await getNextId(env, body.length);
     await env.CHAI.batch(
-      body.map((item: any, index: number) => {
+      body.map((item, index) => {
         const { name, type, operator, references, strokes } = 转模型(item);
         return statement.bind(
           ids[index],
@@ -148,16 +135,14 @@ export async function CreateBatch(request: IRequest, env: Env) {
 
 /** PUT:/glyphs/:id */
 export async function Update(request: IRequest, env: Env) {
-  const id = parseInt(request.params.id, 10);
-  if (!Number.isInteger(id)) return new Err(ErrCode.ParamInvalid, "ID不正确");
+  const id = 解析字形ID(request.params.id);
+  if (id === undefined) return new Err(ErrCode.ParamInvalid, "ID不正确");
 
-  let body: any;
+  const body = await 读取字形(request);
+  if (!Ok(body)) return body;
   try {
-    body = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
-  try {
+    if (body.id !== id)
+      return new Err(ErrCode.ParamInvalid, "路径与请求中的字形 ID 不一致");
     const { name, type, operator, references, strokes } = 转模型(body);
     await env.CHAI.prepare(
       `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=? WHERE id=?`,
@@ -174,19 +159,16 @@ export async function Update(request: IRequest, env: Env) {
 }
 
 export async function UpdateBatch(request: IRequest, env: Env) {
-  let body: any[];
-  try {
-    body = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const body = await 读取字形批量更新(request);
+  if (!Ok(body)) return body;
   try {
     const statement = env.CHAI.prepare(
       `UPDATE ${table} SET name=?, type=?, operator=?, \`references\`=?, strokes=? WHERE id=?`,
     );
     await env.CHAI.batch(
-      body.map((item: any) => {
-        const { id, name, type, operator, references, strokes } = 转模型(item);
+      body.map((item) => {
+        const { name, type, operator, references, strokes } = 转模型(item);
+        const { id } = item;
         return statement.bind(name, type, operator, references, strokes, id);
       }),
     );
@@ -230,8 +212,8 @@ async function prepareReferenceSet(env: Env): Promise<Set<number>> {
 
 /** DELETE:/glyphs/:id */
 export async function Delete(request: IRequest, env: Env) {
-  const id = parseInt(request.params.id, 10);
-  if (!Number.isInteger(id)) return new Err(ErrCode.ParamInvalid, "ID不正确");
+  const id = 解析字形ID(request.params.id);
+  if (id === undefined) return new Err(ErrCode.ParamInvalid, "ID不正确");
 
   const referenceSet = await prepareReferenceSet(env);
   if (referenceSet.has(id)) {
@@ -253,16 +235,9 @@ export async function Delete(request: IRequest, env: Env) {
 }
 
 export async function DeleteBatch(request: IRequest, env: Env) {
-  let body: { ids: number[] };
-  try {
-    body = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const body = await 读取字形删除(request);
+  if (!Ok(body)) return body;
   const { ids } = body;
-  if (!Array.isArray(ids) || !ids.every((id) => Number.isInteger(id))) {
-    return new Err(ErrCode.ParamInvalid, "ID列表不正确");
-  }
 
   const referenceSet = await prepareReferenceSet(env);
   for (const id of ids) {
@@ -300,16 +275,9 @@ export async function DeleteAll(_request: IRequest, env: Env) {
 
 /** PUT:/glyphs/replace-id */
 export async function ReplaceId(request: IRequest, env: Env) {
-  let body: { oldId: number; newId: number };
-  try {
-    body = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const body = await 读取替换ID(request);
+  if (!Ok(body)) return body;
   const { oldId, newId } = body;
-  if (!Number.isInteger(oldId) || !Number.isInteger(newId)) {
-    return new Err(ErrCode.ParamInvalid, "ID不正确");
-  }
   if (oldId === newId) return true;
 
   // 更新 characters 表的 glyphs 字段
@@ -336,8 +304,8 @@ export async function ReplaceId(request: IRequest, env: Env) {
         }
         return changed ? stmt.bind(JSON.stringify(parsed), c.unicode) : null;
       })
-      .filter(Boolean);
-    if (batch.length) await env.CHAI.batch(batch as any);
+      .filter((statement) => statement !== null);
+    if (batch.length) await env.CHAI.batch(batch);
   }
 
   // 更新 glyphs 表的 references 字段
@@ -368,8 +336,8 @@ export async function ReplaceId(request: IRequest, env: Env) {
         }
         return changed ? stmt.bind(JSON.stringify(parsed), g.id) : null;
       })
-      .filter(Boolean);
-    if (batch.length) await env.CHAI.batch(batch as any);
+      .filter((statement) => statement !== null);
+    if (batch.length) await env.CHAI.batch(batch);
   }
 
   return true;

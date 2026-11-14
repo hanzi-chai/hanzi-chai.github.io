@@ -1,8 +1,7 @@
-import type { 矢量图形数据 } from "../src/data.js";
-import { 仿射合并 } from "../src/utils.js";
-import { 图形盒子 } from "../src/affine.js";
 import { describe, expect, it } from "bun:test";
-import { 复合体数据 } from "../src/data.js";
+import { 图形盒子 } from "../src/affine.js";
+import type { N2, 复合体数据, 矢量图形数据 } from "../src/data.js";
+import { 仿射合并 } from "../src/utils.js";
 
 describe("仿射变换", () => {
   it("合并部件", () => {
@@ -11,7 +10,6 @@ describe("仿射变换", () => {
       type: "compound",
       operator: "⿰",
       references: [{ id: 1 }, { id: 2 }],
-      ambiguous: false,
     };
     const 甲 = 图形盒子.从笔画列表构建([
       {
@@ -56,7 +54,6 @@ describe("仿射变换", () => {
       type: "compound",
       operator: "⿴",
       references: [{ id: 1 }, { id: 2 }],
-      ambiguous: false,
       strokes: [{ index: 1 }, { index: 0 }],
     };
     const 甲 = 图形盒子.从笔画列表构建([
@@ -144,11 +141,40 @@ describe("仿射变换", () => {
   });
 
   it.each([
-    ["⿰", [22, 24], [58, 40]],
-    ["⿱", [22, 24], [36, 48]],
-    ["⿲", [22, 24], [58, 40], [106, 64]],
-    ["⿳", [22, 24], [36, 48], [60, 68]],
-  ] as const)("沿 %s 主轴逐段贴合并保留各部分缩放", (operator, ...起点列表) => {
+    [
+      "⿰",
+      [
+        [22, 24],
+        [58, 40],
+      ],
+    ],
+    [
+      "⿱",
+      [
+        [22, 24],
+        [36, 48],
+      ],
+    ],
+    [
+      "⿲",
+      [
+        [22, 24],
+        [58, 40],
+        [106, 64],
+      ],
+    ],
+    [
+      "⿳",
+      [
+        [22, 24],
+        [36, 48],
+        [60, 68],
+      ],
+    ],
+  ] satisfies [
+    复合体数据["operator"],
+    N2[],
+  ][])("沿 %s 主轴逐段贴合并保留各部分缩放", (operator, 起点列表) => {
     const 部分 = 图形盒子.从笔画列表构建([
       {
         feature: "横折",

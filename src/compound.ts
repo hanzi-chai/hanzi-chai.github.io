@@ -19,6 +19,7 @@ import {
 } from "./component.js";
 import type { 复合体数据, 引用笔画块数据, 结构描述字符 } from "./data.js";
 import { 二笔, 未知元素, 结构符元素 } from "./element.js";
+import { 格式化字形ID } from "./glyph-id.js";
 import {
   type 基本部件分析,
   type 字形,
@@ -70,7 +71,7 @@ class 复合体 {
   }
 
   获取名称() {
-    return `字形-${this.id}`;
+    return `字形-${格式化字形ID(this.id)}`;
   }
 
   替换分析部分(部分列表: 字形[]): 复合体 {
@@ -482,7 +483,7 @@ class 张码复合体分析器 extends 复合体分析器<张码部件分析, �
         // 下包围和「竖折」笔画的左下包围优先取内部，其余取外部
         if (
           复合体.结构描述字符 === "⿶" ||
-          (复合体.结构描述字符 === "⿺" && 复合体.部分列表[0]?.id === 0x31d7)
+          (复合体.结构描述字符 === "⿺" && 复合体.部分列表[0]?.id === 0xc5603)
         ) {
           for (const part of [...复合体.部分列表].reverse())
             分析.字根序列.push(...this.顺序取根(part, 环境));

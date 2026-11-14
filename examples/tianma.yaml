@@ -110,7 +110,7 @@ analysis:
     戍:
       - 戈
       - 人
-    囬:
+    字形-1f311:
       - 囗
       - "\ue09c"
     亙:
@@ -217,7 +217,7 @@ analysis:
       - '6'
       - 止
     # 面已改为复合体，按具体字形保留原取根约定。
-    字形-1085:
+    字形-1f500:
       - 丆
       - 囗
       - "\ue09c"
@@ -245,97 +245,52 @@ analysis:
     系:
       - '3'
       - 糸
-    字形-6476:
+    字形-1a402:
       - "\ue057"
       - 丷
       - 卩
       - '4'
-    字形-11743:
+    字形-1d218:
       - '5'
       - 厂
       - 又
       - '4'
-    字形-8519:
+    字形-0445b:
       - 亼
       - "\ue0ae"
-    字形-573:
+    字形-003b8:
       - 丂
       - '2'
       - '3'
-    字形-6412:
+    字形-1b117:
       - 厂
       - 又
-    字形-5084:
+    字形-0861b:
       - "\ue006"
       - "\ue0b7"
-    字形-18292:
+    字形-31306:
       - "\ue17f"
       - 攵
-    字形-10436:
+    字形-0465c:
       - "\ue0e3"
       - 米
-    字形-8567:
+    字形-0f427:
       - 幺
       - "\ue18e"
-    字形-25153:
+    字形-01aaf:
       - "\ue0af"
       - 车
     # 提退化为横后，子／孑、艹／卄会互相匹配；明确各自的整形取根。
-    字形-378:
+    字形-002ce:
       - 子
-    字形-381:
+    字形-002d1:
       - 孑
-    字形-228:
+    字形-00215:
       - 艹
-    字形-730:
+    字形-00467:
       - 冂
       - 卄
   strong: []
-  # 沿用默认融合，卵和发保留分部；补充跨分部取根的方案字形。
-  fusion:
-    - 869
-    - 894
-    - 910
-    - 923
-    - 930
-    - 964
-    - 1018
-    - 1024
-    - 1025
-    - 1026
-    - 1027
-    - 1066
-    - 1070
-    - 1072
-    - 1100
-    - 1102
-    - 1106
-    - 1116
-    - 1282
-    - 1283
-    - 1291
-    - 4295
-    - 5222
-    - 5375
-    - 5714
-    - 7137
-    - 7757
-    - 7818
-    - 14053
-    - 4167
-    - 4221
-    - 925
-    - 798
-    - 918
-    - 136099
-    - 4171
-    - 4202
-    - 4206
-    - 954
-    - 4123
-    - 1020
-    - 136055
-    - 932
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping:
@@ -894,28 +849,28 @@ form:
       element: "\ue09e"
     𦣞:
       element: "\ue0d5"
-    字形-11274:
+    字形-9d42b:
       element: "\ue277"
-    字形-1291:
+    字形-0341d:
       element: "\ue042"
     # 新字库中包围外框使用独立 ID，沿用相应整字根的键位。
-    字形-136024:
+    字形-02629:
       element: "\ue28a"
-    字形-136028:
+    字形-35715:
       element: 麻
-    字形-136055:
+    字形-1b406:
       element: 辰
-    字形-136065:
+    字形-35716:
       element: 麻
-    字形-136099:
+    字形-00284:
       element: 亼
-    字形-136027:
+    字形-5160c:
       element: 鹿
-    字形-1244:
+    字形-2032e:
       element: 走
-    字形-136026:
+    字形-1c60d:
       element: 鬼
-    字形-1128:
+    字形-0011d:
       element: 匕
   mapping_type: 2
 encoder:
@@ -1012,136 +967,160 @@ encoder:
     - length_in_range: [4, 10]
       formula: AaBaCaZa
 data:
+  # 沿用默认融合，卵和发保留分部；补充跨分部取根的方案字形。
+  fusion:
+    - 0x2a210
+    - 0x1e263
+    - 0x0445f
+    - 0x08329
+    - 0x0341f
+    - 0x1840b
+    - 0x12439
+    - 0x08421
+    - 0x08422
+    - 0x03522
+    - 0x03525
+    - 0x04659
+    - 0x0361c
+    - 0x03626
+    - 0x8420a
+    - 0x3a51d
+    - 0x12746
+    - 0x0884d
+    - 0x02429
+    - 0x1840c
+    - 0x0341d
+    - 0x019b2
+    - 0x0831f
+    - 0x48715
+    - 0x2e20e
+    - 0x12522
+    - 0x08721
+    - 0x03321
+    - 0x1a704
+    - 0x01544
+    - 0x21507
+    - 0x0832b
+    - 0x3310c
+    - 0x08313
+    - 0x00284
+    - 0x1b405
+    - 0x5160b
+    - 0x35714
+    - 0x2032d
+    - 0x1c60c
+    - 0x0064b
+    - 0x1b406
+    - 0x03420
   character_set: general
   characters:
-    - unicode: 61440
-      name: 㐆无折
-      glyphs: [{id: 150000, sources: []}]
-    - unicode: 61443
-      name: 肃下
-      glyphs: [{id: 150001, sources: []}]
-    - unicode: 61441
-      name: 宐字底无横
-      glyphs: [{id: 150002, sources: []}]
-    - unicode: 61442
-      name: 毎字底
-      glyphs: [{id: 150003, sources: []}]
-    - unicode: 61445
-      name: 𦥓字框
-      glyphs: [{id: 150005, sources: []}]
-    - unicode: 61447
-      name: 𦥒字底
-      glyphs: [{id: 150007, sources: []}]
-    - unicode: 61448
-      name: 𠚒字底
-      glyphs: [{id: 150008, sources: []}]
-    - unicode: 61451
-      name: 𤔘字底
-      glyphs: [{id: 150011, sources: []}]
-    - unicode: 61452
-      name: 𦯵字腰
-      glyphs: [{id: 150012, sources: []}]
-    - unicode: 61453
-      name: 隹变
-      glyphs: [{id: 150013, sources: []}]
-  # 从旧版 repertoire 迁移的方案专用字形；坐标和索引均为整数。
+    - {unicode: 61440, glyphs: [{id: 983040, sources: []}]}
+    - {unicode: 61443, glyphs: [{id: 983041, sources: []}]}
+    - {unicode: 61441, glyphs: [{id: 983042, sources: []}]}
+    - {unicode: 61442, glyphs: [{id: 983043, sources: []}]}
+    - {unicode: 61445, glyphs: [{id: 983044, sources: []}]}
+    - {unicode: 61447, glyphs: [{id: 983045, sources: []}]}
+    - {unicode: 61448, glyphs: [{id: 983046, sources: []}]}
+    - {unicode: 61451, glyphs: [{id: 983047, sources: []}]}
+    - {unicode: 61452, glyphs: [{id: 983048, sources: []}]}
+    - {unicode: 61453, glyphs: [{id: 983049, sources: []}]}
   glyphs:
-    - id: 150000
+    - id: 0xf0000
       type: component
       strokes: [{feature: 平撇, start: [77, 7], curveList: [{command: z, parameterList: [-22, 5, -45, 6, -54, 7]}]}, {feature: 撇, start: [23, 14], curveList: [{command: c, parameterList: [0, 30, 0, 52, -12, 79]}]}, {feature: 横折, start: [22, 26], curveList: [{command: h, parameterList: [56]}, {command: v, parameterList: [28]}]}, {feature: 横, start: [23, 40], curveList: [{command: h, parameterList: [55]}]}, {feature: 横, start: [21, 54], curveList: [{command: h, parameterList: [57]}]}]
       name: 㐆无折
-    - id: 150001
+    - id: 0xf0001
       type: component
       strokes: [{feature: 撇, start: [20, 53], curveList: [{command: c, parameterList: [0, 16, 0, 30, -13, 40]}]}, {feature: 竖, start: [82, 53], curveList: [{command: v, parameterList: [40]}]}, {feature: 撇, start: [36, 58], curveList: [{command: c, parameterList: [0, 8, -3, 15, -7, 27]}]}, {feature: 点, start: [64, 58], curveList: [{command: c, parameterList: [2, 6, 5, 13, 7, 27]}]}]
       name: 肃下
-    - id: 150002
+    - id: 0xf0002
       type: component
       strokes: [{feature: 竖, start: [26, 12], curveList: [{command: v, parameterList: [40]}]}, {feature: 横折, start: [26, 35], curveList: [{command: h, parameterList: [46]}, {command: v, parameterList: [55]}]}, {feature: 平点, start: [36, 52], curveList: [{command: z, parameterList: [10, 4, 18, 6, 26, 7]}]}]
       name: 宐字底无横
-    - id: 150003
+    - id: 0xf0003
       type: compound
       operator: ⿻
-      references: [{id: 206, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 92, xbegin: 0, xend: 100, ybegin: 0, yend: 100}]
+      references: [{id: 0x001ac, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 0x00122, xbegin: 0, xend: 100, ybegin: 0, yend: 100}]
       name: 毎字底
-    - id: 150005
+    - id: 0xf0004
       type: component
       strokes: [{feature: 平撇, start: [45, 10], curveList: [{command: z, parameterList: [-8, 4, -19, 7, -30, 10]}]}, {feature: 竖, start: [15, 20], curveList: [{command: v, parameterList: [66]}]}, {feature: 横折, start: [55, 20], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [66]}]}, {feature: 横, start: [15, 86], curveList: [{command: h, parameterList: [70]}]}]
       name: 𦥓字框
-    - id: 150007
+    - id: 0xf0005
       type: compound
       operator: ⿶
-      references: [{id: 163, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 70, xbegin: 25, xend: 75, ybegin: 10, yend: 60}]
+      references: [{id: 0x0017e, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 0x00109, xbegin: 25, xend: 75, ybegin: 10, yend: 60}]
       strokes: [{index: 1, from: 0, to: 1}, {index: 0, from: 0, to: 1}]
       name: 𦥒字底
-    - id: 150008
+    - id: 0xf0006
       type: compound
       operator: ⿶
-      references: [{id: 163, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 32294, xbegin: 25, xend: 75, ybegin: 10, yend: 60}]
+      references: [{id: 0x0017e, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 0x07101, xbegin: 25, xend: 75, ybegin: 10, yend: 60}]
       strokes: [{index: 1, from: 0, to: 3}, {index: 0, from: 0, to: 1}]
       name: 𠚒字底
-    - id: 150011
+    - id: 0xf0007
       type: component
       strokes: [{feature: 平撇, start: [40, 10], curveList: [{command: z, parameterList: [-7, 3, -13, 4, -30, 5]}]}, {feature: 竖, start: [10, 15], curveList: [{command: v, parameterList: [75]}]}, {feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [10, 65], curveList: [{command: h, parameterList: [30]}]}, {feature: 横折, start: [60, 15], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [75]}]}, {feature: 横, start: [60, 40], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [60, 65], curveList: [{command: h, parameterList: [30]}]}, {feature: 横, start: [35, 85], curveList: [{command: h, parameterList: [70]}]}]
       name: 𤔘字底
-    - id: 150012
+    - id: 0xf0008
       type: component
       strokes: [{feature: 平撇, start: [45, 10], curveList: [{command: z, parameterList: [-8, 4, -19, 7, -30, 10]}]}, {feature: 竖, start: [15, 20], curveList: [{command: v, parameterList: [66]}]}, {feature: 横折, start: [55, 20], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [66]}]}, {feature: 横, start: [15, 55], curveList: [{command: h, parameterList: [70]}]}, {feature: 横, start: [15, 86], curveList: [{command: h, parameterList: [70]}]}]
       name: 𦯵字腰
-    - id: 150013
+    - id: 0xf0009
       type: component
       strokes: [{feature: 撇, start: [30, 5], curveList: [{command: c, parameterList: [-4, 16, -14, 37, -27, 46]}]}, {feature: 竖, start: [22, 26], curveList: [{command: v, parameterList: [69]}]}, {feature: 竖, start: [56, 30], curveList: [{command: v, parameterList: [60]}]}, {feature: 点, start: [55, 7], curveList: [{command: c, parameterList: [3, 5, 5, 9, 7, 18]}]}, {feature: 横, start: [22, 25], curveList: [{command: h, parameterList: [69]}]}, {feature: 横, start: [22, 47], curveList: [{command: h, parameterList: [65]}]}, {feature: 横, start: [22, 68], curveList: [{command: h, parameterList: [65]}]}, {feature: 竖, start: [59, 25], curveList: [{command: v, parameterList: [65]}]}, {feature: 横, start: [22, 90], curveList: [{command: h, parameterList: [73]}]}]
       name: 隹变
-    - id: 150026
+    - id: 0xf000a
       type: compound
       operator: ⿱
-      references: [{id: 318, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 262, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
+      references: [{id: 0x01142, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 0x00240, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
       name: 会（天码）
-    - id: 150029
+    - id: 0xf000b
       type: compound
       operator: ⿰
-      references: [{id: 77, xbegin: 0, xend: 50, ybegin: 0, yend: 100}, {id: 173, xbegin: 50, xend: 100, ybegin: 0, yend: 100}]
+      references: [{id: 0x00111, xbegin: 0, xend: 50, ybegin: 0, yend: 100}, {id: 0x00188, xbegin: 50, xend: 100, ybegin: 0, yend: 100}]
       name: 切（天码）
-    - id: 150037
+    - id: 0xf000c
       type: compound
       operator: ⿴
-      references: [{id: 128, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 6369, xbegin: 25, xend: 75, ybegin: 25, yend: 75}]
+      references: [{id: 0x0014f, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 0x34307, xbegin: 25, xend: 75, ybegin: 25, yend: 75}]
       strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0, to: 6}, {index: 0, from: 1, to: 1}]
       name: 胤（天码）
-    - id: 150045
+    - id: 0xf000d
       type: compound
       operator: ⿱
-      references: [{id: 105, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 438, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
+      references: [{id: 0x00134, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 0x0031d, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
       name: 年（天码）
-    - id: 150046
+    - id: 0xf000e
       type: compound
       operator: ⿱
-      references: [{id: 4189, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 576, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
+      references: [{id: 0x0820a, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 0x003bd, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
       name: 哀（天码）
-    - id: 150063
+    - id: 0xf000f
       type: compound
       operator: ⿱
-      references: [{id: 41093, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 576, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
+      references: [{id: 0x0861c, xbegin: 0, xend: 100, ybegin: 0, yend: 50}, {id: 0x003bd, xbegin: 0, xend: 100, ybegin: 50, yend: 100}]
       name: 裛（天码）
   character_customization:
     会:
-      - {type: update, sources: [G], id: 150026}
+      - {type: update, sources: [G], id: 0xf000a}
     切:
-      - {type: update, sources: [G], id: 150029}
+      - {type: update, sources: [G], id: 0xf000b}
     年:
-      - {type: update, sources: [G], id: 150045}
+      - {type: update, sources: [G], id: 0xf000d}
     哀:
-      - {type: update, sources: [G], id: 150046}
+      - {type: update, sources: [G], id: 0xf000e}
     裛:
-      - {type: update, sources: [G], id: 150063}
+      - {type: update, sources: [G], id: 0xf000f}
     关:
-      - {type: update, sources: [G], id: 73922}
+      - {type: update, sources: [G], id: 0x0c30a}
     胤:
-      - {type: update, sources: [G], id: 150037}
+      - {type: update, sources: [G], id: 0xf000c}
   glyph_sources:
     - G
   # 行框保留中件；离字头重组为文、凵，供全部宿主共用。
   glyph_algebra:
-    - from: {operator: ⿲, references: [313, {variable: 0}, 211]}
-      to: {operator: ⿰, references: [4163, {variable: 0}]}
-    - from: 4301
-      to: {operator: ⿱, references: [590, 163]}
+    - from: {operator: ⿲, references: [0x0027e, {variable: 0}, 0x00203]}
+      to: {operator: ⿰, references: [0x3c200, {variable: 0}]}
+    - from: 0x08321
+      to: {operator: ⿱, references: [0x003d1, 0x0017e]}

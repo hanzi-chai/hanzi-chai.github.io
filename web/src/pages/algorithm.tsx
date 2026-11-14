@@ -1,11 +1,11 @@
 import { Flex, Layout, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
+  字符字形过滤器,
+  type 过滤器参数,
   部件,
   部件字根,
   默认退化配置,
-  字符字形过滤器,
-  type 过滤器参数,
 } from "hanzi-chai";
 import { useEffect, useState } from "react";
 import { listCharacters, listGlyphs } from "~/api";

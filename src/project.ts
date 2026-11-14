@@ -31,7 +31,12 @@ import {
 } from "./utils.js";
 import { 是记录, 检查方案元素 } from "./validation.js";
 
-export const 默认数据目录 = fileURLToPath(new URL("./data/", import.meta.url));
+export const 默认数据目录 = fileURLToPath(
+  new URL(
+    import.meta.url.endsWith(".ts") ? "../data/" : "./data/",
+    import.meta.url,
+  ),
+);
 const packageInfo = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ) as { version: string; dependencies: { libchai: string } };

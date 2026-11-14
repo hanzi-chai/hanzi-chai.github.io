@@ -4,10 +4,10 @@ import {
   ProFormText,
   QueryFilter,
 } from "@ant-design/pro-components";
+import type { 过滤器参数 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { debounce } from "lodash-es";
 import { 全部来源原子 } from "~/atoms";
-import type { 过滤器参数 } from "hanzi-chai";
 import GlyphSelect from "./GlyphSelect";
 import OperatorSelect from "./OperatorSelect";
 
@@ -20,7 +20,7 @@ export default function FilterForm({ setFilter, isGlyph }: StrokeSearchProps) {
   const tags = useAtomValue(全部来源原子);
   const debounced = debounce(setFilter, 500);
   const idLabel = isGlyph ? "字形 ID" : "Unicode";
-  const idPlaceholder = isGlyph ? "十进制" : "十或十六进制";
+  const idPlaceholder = isGlyph ? "五位十六进制" : "十或十六进制";
   const nameLabel = isGlyph ? "别名或字符" : "字符";
   return (
     <QueryFilter<过滤器参数>

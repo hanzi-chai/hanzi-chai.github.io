@@ -1,16 +1,18 @@
 import { describe, expect, it } from "bun:test";
 import {
-  字符,
-  笔画,
   下转换,
-  归并组装结果,
-  分析原始重码,
   估计阶重码,
+  type 元素,
+  分析原始重码,
   分析边际重码,
-  筛选组装结果,
-  type 组装条目,
+  字符,
   type 强类型元素位或编码,
   type 强类型决策,
+  type 强类型非空安排,
+  归并组装结果,
+  笔画,
+  筛选组装结果,
+  type 组装条目,
 } from "../src/index.js";
 
 const a = 笔画.创建(1),
@@ -83,7 +85,7 @@ describe("元素离散性分析", () => {
     expect([...groups.values()]).toEqual([["甲", "乙"], ["丙"]]);
   });
   it("只解析显式归并和元素位引用，不合并碰巧同键的元素", () => {
-    const decisions: 强类型决策 = new Map([
+    const decisions: 强类型决策 = new Map<元素, 强类型非空安排>([
       [a, { element: b }],
       [b, [位(c, 1)]],
       [c, "aa"],
@@ -134,5 +136,4 @@ describe("元素离散性分析", () => {
     expect(result.新增对象).toEqual([]);
     expect(估计阶重码(result.合并分布, 0, 30)).toBe(0);
   });
-
 });

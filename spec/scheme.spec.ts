@@ -1,41 +1,41 @@
 import { describe, expect, it } from "bun:test";
 import {
+  下转换,
+  决策图,
+  准备方案,
   分析拼音,
+  动态组装,
+  合并分类器,
   合并拼写运算,
+  序列化组装结果,
+  本地编码评估,
+  构建优先简码映射,
+  构建字库,
   构建强类型决策与决策空间,
   构建强类型自定义分析,
-  决策图,
-  合并分类器,
-  计算全部合法元素与元素映射,
-  计算拼音分析与元素映射,
-  序列化组装结果,
-  添加优先简码,
-  组装,
-  动态组装,
-  下转换,
-  构建优先简码映射,
-  获取默认目标,
-  本地编码评估,
-  运行方案,
   校验方案配置,
   检查方案元素,
+  添加优先简码,
+  组装,
+  获取默认目标,
+  解析自定义拆分部件,
   解释取码,
   解释拆分,
-  构建字库,
-  准备方案,
-  解析自定义拆分部件,
+  计算全部合法元素与元素映射,
+  计算拼音分析与元素映射,
+  运行方案,
 } from "../src/index.js";
 import {
+  characters,
+  dictionary,
   fixtureConfig,
   fixtureContext,
   glyphs,
-  characters,
-  dictionary,
 } from "./fixtures/scheme.js";
 
 describe("完整方案运行", () => {
   it("自定义拆分支持字符、字形名称及旧版数字 ID", () => {
-    for (const key of ["二", "字形-2", "2"]) {
+    for (const key of ["二", "字形-00002", "2"]) {
       const config = fixtureConfig();
       config.analysis = { customize: { [key]: ["1"] } };
       const context = fixtureContext(config);
@@ -47,7 +47,7 @@ describe("完整方案运行", () => {
   });
 
   it("动态自定义拆分采用相同的名称解析", () => {
-    for (const key of ["二", "字形-2", "2"]) {
+    for (const key of ["二", "字形-00002", "2"]) {
       const config = fixtureConfig();
       config.analysis = {
         dynamic: true,
@@ -73,7 +73,7 @@ describe("完整方案运行", () => {
     const config = fixtureConfig();
     config.data!.glyph_sources = ["G", "H"];
     // 具体字形写在字符规则之前，也应优先于字符规则。
-    config.analysis = { customize: { "字形-2": ["1"], 二: ["1", "1"] } };
+    config.analysis = { customize: { "字形-00002": ["1"], 二: ["1", "1"] } };
     const parts = [...glyphs, { ...glyphs[1]!, id: 3 }];
     const chars = characters.map((x) =>
       x.unicode === "二".codePointAt(0)
@@ -88,7 +88,7 @@ describe("完整方案运行", () => {
     const resolve = (key: string) =>
       解析自定义拆分部件(repertoire, context.名称映射, key).map((x) => x.id);
     expect(resolve("二")).toEqual([2, 3]);
-    expect(resolve("字形-3")).toEqual([3]);
+    expect(resolve("字形-00003")).toEqual([3]);
     const map = context.字形分析配置.自定义分析映射;
     expect(
       [...map].map(([part, roots]) => [
@@ -99,11 +99,14 @@ describe("完整方案运行", () => {
       [2, ["1"]],
       [3, ["1", "1"]],
     ]);
-    config.data!.glyph_sources = ["G"];
+    delete config.data!.glyph_sources;
+    expect(() => 校验方案配置(config)).not.toThrow();
     const onlyG = 准备方案(config, {
       字库: 构建字库(config, chars, parts),
       原始词典: dictionary,
     });
+    expect(onlyG.字形分析配置.字形来源列表).toEqual(["G"]);
+    expect(onlyG.组装配置.来源列表).toEqual(["G"]);
     expect(
       解析自定义拆分部件(onlyG.字库, onlyG.名称映射, "二").map((x) => x.id),
     ).toEqual([2]);
@@ -112,12 +115,12 @@ describe("完整方案运行", () => {
   it("自定义目标必须能解析到部件，并提供配置路径诊断", () => {
     const config = fixtureConfig();
     config.analysis = {
-      customize: { "字形-999": ["1"], 不存在: ["1"] },
+      customize: { "字形-003e7": ["1"], 不存在: ["1"] },
       dynamic_customize: { "字音-未知": [["1"]] },
     };
     const diagnostics = 检查方案元素(fixtureContext(config));
     expect(diagnostics.map((x) => x.path)).toEqual([
-      "/analysis/customize/字形-999",
+      "/analysis/customize/字形-003e7",
       "/analysis/customize/不存在",
       "/analysis/dynamic_customize/字音-未知",
     ]);
@@ -127,7 +130,7 @@ describe("完整方案运行", () => {
   it("归并字根在整部件和笔画切片中使用相同的匹配规则", () => {
     const config = fixtureConfig();
     config.form.mapping.一 = "b";
-    config.form.mapping["字形-2"] = { element: "一" };
+    config.form.mapping["字形-00002"] = { element: "一" };
     const 字库 = 构建字库(
       config,
       [
@@ -260,7 +263,6 @@ describe("完整方案运行", () => {
         type: "compound",
         operator: "⿱",
         references: [{ id: 1 }, { id: 1 }],
-        ambiguous: false,
         strokes: [],
       },
     ]);
@@ -270,15 +272,31 @@ describe("完整方案运行", () => {
     expect(编码结果.find((x) => x.词 === "二")?.全码).toBe("aa");
   });
 
+  it("data.fusion 校验新路径，并明确拒绝旧 analysis 路径", () => {
+    const config = fixtureConfig();
+    for (const fusion of [true, false, [], [0x0445f]]) {
+      expect(() =>
+        校验方案配置({ ...config, data: { ...config.data, fusion } }),
+      ).not.toThrow();
+    }
+    for (const fusion of [null, "false", [-1], [1.5], ["0445f"]]) {
+      expect(() =>
+        校验方案配置({ ...config, data: { ...config.data, fusion } }),
+      ).toThrow("/data/fusion");
+    }
+    expect(() =>
+      校验方案配置({ ...config, analysis: { fusion: false } }),
+    ).toThrow("fusion 已移至 /data/fusion");
+  });
+
   it("默认分析器融合字形，保留来源和字库结构，并支持显式覆盖", () => {
     const config = fixtureConfig();
-    校验方案配置({ ...config, analysis: { fusion: [910] } });
+    校验方案配置({ ...config, data: { ...config.data, fusion: [0x0445f] } });
     config.form.mapping.二 = "b";
     const compound = {
       type: "compound",
       operator: "⿱",
       references: [{ id: 1 }, { id: 1 }],
-      ambiguous: false,
     } as const;
     const 字库 = 构建字库(
       config,
@@ -287,7 +305,7 @@ describe("完整方案运行", () => {
         {
           unicode: "吕".codePointAt(0)!,
           tygf: 1,
-          glyphs: [{ id: 910, sources: ["G"] }],
+          glyphs: [{ id: 0x0445f, sources: ["G"] }],
         },
         {
           unicode: "品".codePointAt(0)!,
@@ -297,8 +315,8 @@ describe("完整方案运行", () => {
       ],
       [
         ...glyphs,
-        { ...compound, id: 910, references: [...compound.references] },
-        { ...compound, id: 3, references: [{ id: 910 }, { id: 1 }] },
+        { ...compound, id: 0x0445f, references: [...compound.references] },
+        { ...compound, id: 3, references: [{ id: 0x0445f }, { id: 1 }] },
       ],
     );
     const data = {
@@ -309,8 +327,14 @@ describe("完整方案运行", () => {
         { 词: "品", 拼音: ["pin3"], 频率: 1 },
       ],
     };
-    const run = (analysis: typeof config.analysis) => {
-      const context = 准备方案({ ...config, analysis }, data);
+    const run = (
+      analysis: typeof config.analysis,
+      fusion?: NonNullable<typeof config.data>["fusion"],
+    ) => {
+      const context = 准备方案(
+        { ...config, analysis, data: { ...config.data, fusion } },
+        data,
+      );
       const { 输入, 分析 } = 运行方案(context);
       const [codes] = 本地编码评估(输入, 获取默认目标(config.encoder));
       return {
@@ -320,24 +344,31 @@ describe("完整方案运行", () => {
     };
     const 默认 = run(undefined);
     expect(默认.品).toBe("ba");
-    expect(默认.吕).toMatchObject({ 部件: { id: 910 }, sources: ["G"] });
-    expect(字库.获取字形(910)?.type).toBe("compound");
-    expect(run({ fusion: false }).品).toBe("aaa");
-    expect(run({ fusion: [] }).品).toBe("aaa");
+    expect(默认.吕).toMatchObject({ 部件: { id: 0x0445f }, sources: ["G"] });
+    expect(字库.获取字形(0x0445f)?.type).toBe("compound");
+    expect(run(undefined, false).品).toBe("aaa");
+    expect(run(undefined, []).品).toBe("aaa");
     expect(run({ compound_analyzer: "真码" }).品).toBe("aaa");
-    expect(run({ compound_analyzer: "真码", fusion: true }).品).toBe("ba");
+    expect(run({ compound_analyzer: "真码" }, true).品).toBe("ba");
     expect(run({ component_analyzer: "逸码" }).吕).toHaveProperty("复合体");
-    expect(run({ dynamic: true, fusion: [910] }).品).toBe("ba");
-    expect(run({ customize: { "字形-910": ["1", "1"] } }).品).toBe("aaa");
-    const 覆盖复合体 = run({ fusion: false, customize: { "字形-910": ["1"] } });
+    expect(run({ dynamic: true }, [0x0445f]).品).toBe("ba");
+    expect(run({ customize: { "字形-0445f": ["1", "1"] } }).品).toBe("aaa");
+    const 覆盖复合体 = run(
+      {
+        customize: { "字形-0445f": ["1"] },
+      },
+      false,
+    );
     expect(覆盖复合体.品).toBe("aa");
     expect(覆盖复合体.吕).toHaveProperty("复合体");
     expect(
-      run({
-        fusion: false,
-        dynamic: true,
-        dynamic_customize: { "字形-910": [["1"]] },
-      }).品,
+      run(
+        {
+          dynamic: true,
+          dynamic_customize: { "字形-0445f": [["1"]] },
+        },
+        false,
+      ).品,
     ).toBe("aa");
   });
 
@@ -357,7 +388,7 @@ describe("完整方案运行", () => {
   it("动态分析保留可选字根的条件和备用拆分", () => {
     const config = fixtureConfig();
     config.analysis = { dynamic: true };
-    config.form.mapping["二"] = "b";
+    config.form.mapping.二 = "b";
     config.form.mapping_space = {
       二: [
         { value: "b", score: 0 },

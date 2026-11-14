@@ -38,8 +38,8 @@ bun run test                # 顶层算法测试
 bun run test:all             # ./spec 下全部测试，含示例回归
 bun run test:scheme          # 独立字库方案与 CLI 测试
 bun run typecheck           # 算法源码、测试与脚本类型检查
-bun run lint                # 算法源码和脚本的 Biome 检查
-bun run fix                 # Biome 自动修复（unsafe，先确认修改范围）
+bun run lint                # 全仓 Biome 格式、lint 和导入检查（含应用、测试与配置）
+bun run fix                 # 全仓 Biome 自动修复（unsafe，先确认修改范围）
 bun run format              # 格式化，不执行 Git 暂存
 bun run check:package       # 将真实 tarball 安装至仓库外验证
 ```
@@ -64,9 +64,9 @@ bun run check:package       # 将真实 tarball 安装至仓库外验证
 
 ## 数据准备与发布资源
 
-共享开发数据只保存于 `src/data/`。`scripts/fetch.ts` 复用 `scripts/fetch-data.ts` 的严格下载流程，并补充网页和开发核验资源。核心五份文件为 `characters.json`、`glyphs.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`，下载或格式校验失败必须终止，全部成功后才写入。额外资源包括 `gf0014.txt`、`cjk.txt`、`tygf.txt`、`Unihan_IRGSources.txt`；核验用 TXT 下载失败时可警告。数据来自 `api.chaifen.app` 与 `assets.chaifen.app`。
+共享开发数据只保存于 `data/`。`scripts/fetch.ts` 复用 `scripts/fetch-data.ts` 的严格下载流程，并补充网页和开发核验资源。核心五份文件为 `characters.json`、`glyphs.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`，下载或格式校验失败必须终止，全部成功后才写入。额外资源包括 `gf0014.txt`、`cjk.txt`、`tygf.txt`、`Unihan_IRGSources.txt`；核验用 TXT 下载失败时可警告。数据来自 `api.chaifen.app` 与 `assets.chaifen.app`。
 
-`build` 不自动下载数据。源码 CLI 默认读取 `src/data/`，安装包读取 `dist/data/`；参数 `--data-dir` 和单文件参数可以覆盖默认文件。命令行路径相对当前工作目录，项目清单中的路径相对清单本身。
+`build` 不自动下载数据。源码 CLI 默认读取 `data/`，安装包读取 `dist/data/`；参数 `--data-dir` 和单文件参数可以覆盖默认文件。命令行路径相对当前工作目录，项目清单中的路径相对清单本身。
 
 `prepack` 构建并按白名单复制五份运行数据及示例 YAML 至 `dist/`，先清理旧资源目录。核验资源不发布；安装包不执行下载，运行时不自动更新数据。`check:package` 检查真实安装产物中的 Node API、CLI、示例和默认数据，防止工作区链接或应用依赖掩盖漏打包；安装步骤需要 npm registry，安装后的运行不访问数据服务器。
 
@@ -130,7 +130,7 @@ bun run check:package       # 将真实 tarball 安装至仓库外验证
 
 - `test.yml`：PR 或推送到 `main` 时，冻结锁文件安装、准备数据、运行 `test:all`。
 - `code-tables.yml`：push、PR 或手动触发，准备数据、校对示例，输出摘要与完整报告 artifact。
-- `publish.yml`：推送到 `main` 时比较根版本与 npm 已发布版本，变化则从根目录安装包依赖、准备数据、构建、验证并发布。
+- `publish.yml`：推送到 `main` 或 `beta` 时检查根版本是否已在 npm 发布；未发布则安装包依赖、准备数据、构建、验证并发布。`main` 仅允许正式版本并使用 `latest` 标签，`beta` 仅允许 `x.y.z-beta.N` 并使用 `beta` 标签。
 - 网页部署工作流及构建目标见 [web/AGENTS.md](web/AGENTS.md)。
 
 ## 示例方案单字全码 CI 校对
@@ -192,6 +192,8 @@ bun run check:code-tables --base-url https://assets.chaifen.app/code-tables --ou
 #### 字段命名
 
 数据库和配置文件的新字段使用 `snake_case`。
+
+复合体仅使用 `结构描述字符列表` 中的二元、三元操作符：⿲、⿳ 必须有三个操作数，其余必须有两个。⿾（U+2FFE）和 ⿿（U+2FFF）已从本项目移除，不再使用；镜像、旋转后的字形直接保存为展开笔画的部件，不保留一元复合体。
 
 #### 整数存储
 
@@ -421,6 +423,8 @@ $$
 | 共用分部仅在少数用途需要不同解释 | 保留主要用途，只对例外字符和来源复用或新增字形 |
 
 字符级自定义会覆盖当前选中来源下的多个部件字形，字形级规则优先；只支持具体字形的例外应按 `字形-ID` 限定。旧字段不能机械迁移，先核实当前配置是否读取以及目标仍是部件还是已变复合体。
+
+字形融合配置使用 `data.fusion`，不放在 `analysis` 中。布尔值开关默认集合，字形 ID 列表替换默认集合；自定义拆分仍放在 `analysis.customize` / `analysis.dynamic_customize` 中。
 
 ### 字形与字根修改的经验
 

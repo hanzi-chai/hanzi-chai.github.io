@@ -22,9 +22,9 @@ import {
   估计阶重码,
   分析原始重码,
   分析边际重码,
-  筛选组装结果,
   反序列化,
   序列化,
+  筛选组装结果,
 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
 import { range, sumBy } from "lodash-es";

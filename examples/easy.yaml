@@ -6,240 +6,109 @@ info:
   author: 小泥巴
   description: 形码单字四二顶
 data:
-  repertoire:
-    "\uf003":
-      unicode: 61443
-      tygf: 0
-      gb2312: 0
-      name: 㗊上
-      readings: []
-      glyphs: [{type: compound, operator: ⿰, operandList: [口, 口]}]
-      ambiguous: false
-    "\uf000":
-      unicode: 61440
-      tygf: 0
-      gb2312: 0
-      name: 其字头无横
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue414", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}]}]
-      ambiguous: false
-    "\uf002":
-      unicode: 61442
-      tygf: 0
-      gb2312: 0
-      name: 囱字框省
-      readings: []
-      glyphs: [{type: derived_component, source: "\ue02d", strokes: [{feature: reference, index: 0}, {feature: reference, index: 1}, {feature: reference, index: 2}]}]
-      ambiguous: false
-    "\uf001":
-      unicode: 61441
-      tygf: 0
-      gb2312: 0
-      name: 乑省
-      readings: []
-      glyphs: [{type: derived_component, source: 乑, strokes: [{feature: reference, index: 1}, {feature: reference, index: 2}, {feature: reference, index: 3}, {feature: reference, index: 4}, {feature: reference, index: 5}]}]
-      ambiguous: false
-    "\uf004":
-      unicode: 61444
-      tygf: 0
-      gb2312: 0
-      name: 㗊下
-      readings: []
-      glyphs: [{type: compound, operator: ⿰, operandList: [口, 口]}]
-      ambiguous: false
-    䒤:
-      unicode: 17572
-      tygf: 0
-      gb2312: 0
-      name: null
-      readings: []
-      glyphs: [{type: compound, operator: ⿱, operandList: [艹, 日]}]
-      ambiguous: false
-  glyph_customization:
-    胤:
-      type: compound
-      tags: [横向包夹]
-      operator: ⿻
-      operandList: [儿, "\ue99d"]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 1}]
-    蕞:
-      type: compound
-      operator: ⿱
-      operandList: [䒤, 取]
-    亓:
-      type: compound
-      tags: []
-      operator: ⿱
-      operandList: [一, 丌]
-    兽:
-      type: compound
-      operator: ⿱
-      operandList: ["\ue98a", "\ue800"]
-    克:
-      type: basic_component
-      strokes: [{feature: 横, start: [8, 17], curveList: [{command: h, parameterList: [84]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [30]}]}, {feature: 竖, start: [21, 34], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [21, 34], curveList: [{command: h, parameterList: [58]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [21, 58], curveList: [{command: h, parameterList: [58]}]}, {feature: 撇, start: [38, 58], curveList: [{command: c, parameterList: [0, 6, 0, 26, -30, 35]}]}, {feature: 竖弯钩, start: [61, 58], curveList: [{command: v, parameterList: [35]}, {command: h, parameterList: [32]}]}]
-    囱:
-      type: compound
-      operator: ⿳
-      operandList: ["\uf002", 夂, 一]
-    古:
-      type: basic_component
-      strokes: [{feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [80]}]}, {feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [45]}]}, {feature: 竖, start: [30, 60], curveList: [{command: v, parameterList: [30]}]}, {feature: 横折, start: [30, 60], curveList: [{command: h, parameterList: [40]}, {command: v, parameterList: [30]}]}, {feature: 横, start: [30, 90], curveList: [{command: h, parameterList: [40]}]}]
-    囟:
-      type: compound
-      operator: ⿳
-      operandList: ["\uf002", 乂, 一]
-    隺:
-      type: compound
-      tags: [笔画搭挂]
-      operator: ⿻
-      operandList: [冖, 隹]
-    "\ue0e4":
-      type: compound
-      operator: ⿰
-      operandList: [吅, 口]
-    兕:
-      type: compound
-      operator: ⿱
-      operandList: ["\ue060", 兀]
-    衮:
-      type: compound
-      operator: ⿳
-      operandList: [六, 厶, "\ue0b7"]
-    "\ue964":
-      type: compound
-      operator: ⿺
-      operandList: ["\ue063", "\ue811"]
-    草:
-      type: compound
-      operator: ⿱
-      operandList: [䒤, 十]
-    熏:
-      type: compound
-      tags: [中竖截断]
-      operator: ⿱
-      operandList: [千, 黑]
-    "\ue9be":
-      type: compound
-      operator: ⿲
-      operandList: ["\ue079", 矢, 匕]
-    昊:
-      type: compound
-      operator: ⿱
-      operandList: [旦, 大]
-    舍:
-      type: compound
-      tags: []
-      operator: ⿱
-      operandList: [亼, 古]
-    "\ue9e0":
-      type: compound
-      operator: ⿻
-      operandList: ["\ue421", 水]
-    丢:
-      type: compound
-      tags: []
-      operator: ⿱
-      operandList: [壬, 厶]
-    "\ue9d0":
-      type: compound
-      tags: [横向包夹]
-      operator: ⿻
-      operandList: ["\ue0e3", 米]
-      order: [{index: 0, strokes: 1}, {index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    丝:
-      type: compound
-      operator: ⿰
-      operandList: [纟, 纟]
-    哀:
-      type: compound
-      operator: ⿱
-      operandList: ["\ue006", "\ue0b7"]
-    司:
-      type: basic_component
-      strokes: [{feature: 横折钩, start: [12, 11], curveList: [{command: h, parameterList: [71]}, {command: v, parameterList: [83]}]}, {feature: 横, start: [15, 30], curveList: [{command: h, parameterList: [57]}]}, {feature: 竖, start: [18, 49], curveList: [{command: v, parameterList: [25]}]}, {feature: 横折, start: [18, 49], curveList: [{command: h, parameterList: [38]}, {command: v, parameterList: [25]}]}, {feature: 横, start: [18, 74], curveList: [{command: h, parameterList: [38]}]}]
-    兵:
-      type: compound
-      operator: ⿱
-      operandList: ["\ue400", "\ue450"]
-    菖:
-      type: compound
-      operator: ⿱
-      operandList: [䒤, 日]
-    "\ue9f0":
-      type: compound
-      tags: [笔画搭挂]
-      operator: ⿻
-      operandList: [鱼, 人]
-    㝵:
-      type: compound
-      operator: ⿱
-      operandList: [旦, 寸]
-    蔓:
-      type: compound
-      operator: ⿱
-      operandList: [䒤, "\ue891"]
-    直:
-      type: basic_component
-      strokes: [{feature: 横, start: [9, 16], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [26]}]}, {feature: 竖, start: [23, 30], curveList: [{command: v, parameterList: [60]}]}, {feature: 横折, start: [23, 30], curveList: [{command: h, parameterList: [54]}, {command: v, parameterList: [60]}]}, {feature: 横, start: [23, 45], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [23, 60], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [23, 74], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [6, 90], curveList: [{command: h, parameterList: [88]}]}]
-    葛:
-      type: compound
-      operator: ⿱
-      operandList: [䒤, 匃]
-    堇:
-      type: compound
-      operator: ⿱
-      operandList: [革, 二]
-    "\ue819":
-      type: compound
-      operator: ⿳
-      operandList: [十, 从, 冖]
-    "\ue8f5":
-      type: compound
-      operator: ⿳
-      operandList: ["\ue028", 米, 一]
-    "\ue8d5":
-      type: compound
-      operator: ⿱
-      operandList: ["\ue868", 冖]
-    㐫:
-      type: compound
-      operator: ⿶
-      operandList: [凵, 文]
-      order: [{index: 1, strokes: 0}, {index: 0, strokes: 0}]
-    元:
-      type: compound
-      tags: []
-      operator: ⿱
-      operandList: [一, 兀]
-    㗊:
-      type: compound
-      operator: ⿱
-      operandList: ["\uf003", "\uf004"]
-    "\ue019":
-      type: compound
-      operator: ⿴
-      operandList: [囗, "\ue009"]
-    莫:
-      type: compound
-      operator: ⿱
-      operandList: [䒤, 大]
-    舆:
-      type: compound
-      operator: ⿱
-      operandList: ["\ue867", "\ue450"]
-    章:
-      type: compound
-      operator: ⿱
-      operandList: [音, 十]
-    "\ue8e2":
-      type: compound
-      operator: ⿱
-      operandList: [䒑, 八]
-    爽:
-      type: compound
-      operator: ⿻
-      operandList: [大, 㸚]
+  character_customization:
+    胤: [{type: insert, id: 983046, sources: []}]
+    蕞: [{type: insert, id: 983047, sources: []}]
+    亓: [{type: insert, id: 983048, sources: []}]
+    兽: [{type: insert, id: 983049, sources: []}]
+    克: [{type: insert, id: 983050, sources: []}]
+    囱: [{type: insert, id: 983051, sources: []}]
+    古: [{type: insert, id: 983052, sources: []}]
+    囟: [{type: insert, id: 983053, sources: []}]
+    隺: [{type: insert, id: 983054, sources: []}]
+    : [{type: insert, id: 983055, sources: []}]
+    兕: [{type: insert, id: 983056, sources: []}]
+    衮: [{type: insert, id: 983057, sources: []}]
+    : [{type: insert, id: 983058, sources: []}]
+    草: [{type: insert, id: 983059, sources: []}]
+    熏: [{type: insert, id: 983060, sources: []}]
+    : [{type: insert, id: 983061, sources: []}]
+    昊: [{type: insert, id: 983062, sources: []}]
+    舍: [{type: insert, id: 983063, sources: []}]
+    : [{type: insert, id: 983064, sources: []}]
+    丢: [{type: insert, id: 983065, sources: []}]
+    : [{type: insert, id: 983066, sources: []}]
+    丝: [{type: insert, id: 983067, sources: []}]
+    哀: [{type: insert, id: 983068, sources: []}]
+    司: [{type: insert, id: 983069, sources: []}]
+    兵: [{type: insert, id: 983070, sources: []}]
+    菖: [{type: insert, id: 983071, sources: []}]
+    : [{type: insert, id: 983072, sources: []}]
+    㝵: [{type: insert, id: 983073, sources: []}]
+    蔓: [{type: insert, id: 983074, sources: []}]
+    直: [{type: insert, id: 983075, sources: []}]
+    葛: [{type: insert, id: 983076, sources: []}]
+    堇: [{type: insert, id: 983077, sources: []}]
+    : [{type: insert, id: 983078, sources: []}]
+    : [{type: insert, id: 983079, sources: []}]
+    : [{type: insert, id: 983080, sources: []}]
+    㐫: [{type: insert, id: 983081, sources: []}]
+    元: [{type: insert, id: 983082, sources: []}]
+    㗊: [{type: insert, id: 983083, sources: []}]
+    : [{type: insert, id: 983084, sources: []}]
+    莫: [{type: insert, id: 983085, sources: []}]
+    舆: [{type: insert, id: 983086, sources: []}]
+    章: [{type: insert, id: 983087, sources: []}]
+    : [{type: insert, id: 983088, sources: []}]
+    爽: [{type: insert, id: 983089, sources: []}]
+  characters:
+    - {unicode: 61443, glyphs: [{id: 983040, sources: []}]}
+    - {unicode: 61440, glyphs: [{id: 983041, sources: []}]}
+    - {unicode: 61442, glyphs: [{id: 983042, sources: []}]}
+    - {unicode: 61441, glyphs: [{id: 983043, sources: []}]}
+    - {unicode: 61444, glyphs: [{id: 983044, sources: []}]}
+    - {unicode: 17572, glyphs: [{id: 983045, sources: []}]}
+  glyphs:
+    - {id: 983040, name: 㗊上, type: compound, operator: ⿰, references: [{id: 600}, {id: 600}]}
+    - {id: 983041, name: 其字头无横, type: component, strokes: [{feature: 横, start: [7, 24], curveList: [{command: h, parameterList: [86]}]}, {feature: 竖, start: [26, 6], curveList: [{command: v, parameterList: [80]}]}, {feature: 竖, start: [74, 6], curveList: [{command: v, parameterList: [80]}]}, {feature: 横, start: [26, 45], curveList: [{command: h, parameterList: [48]}]}, {feature: 横, start: [26, 66], curveList: [{command: h, parameterList: [48]}]}]}
+    - {id: 983042, name: 囱字框省, type: component, strokes: [{feature: 撇, start: [43, 6], curveList: [{command: c, parameterList: [-1, 3, -2, 7, -6, 13]}]}, {feature: 竖, start: [15, 19], curveList: [{command: v, parameterList: [70]}]}, {feature: 横折, start: [15, 19], curveList: [{command: h, parameterList: [70]}, {command: v, parameterList: [70]}]}]}
+    - {id: 983043, name: 乑省, type: component, strokes: [{feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [80]}]}, {feature: 平撇, start: [38, 35], curveList: [{command: z, parameterList: [-8, 7, -18, 12, -28, 15]}]}, {feature: 平撇, start: [38, 65], curveList: [{command: z, parameterList: [-8, 7, -18, 12, -28, 13]}]}, {feature: 平撇, start: [81, 38], curveList: [{command: z, parameterList: [-4, 3, -8, 7, -21, 12]}]}, {feature: 捺, start: [58, 43], curveList: [{command: c, parameterList: [8, 19, 18, 30, 30, 37]}]}]}
+    - {id: 983044, name: 㗊下, type: compound, operator: ⿰, references: [{id: 600}, {id: 600}]}
+    - {id: 983045, name: 䒤（易码）, type: compound, operator: ⿱, references: [{id: 533}, {id: 874}]}
+    - {id: 983046, name: 胤（易码）, type: compound, operator: ⿻, references: [{id: 335}, {id: 213767}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1, to: 1}]}
+    - {id: 983047, name: 蕞（易码）, type: compound, operator: ⿱, references: [{id: 983045}, {id: 524557}]}
+    - {id: 983048, name: 亓（易码）, type: compound, operator: ⿱, references: [{id: 0}, {id: 549}]}
+    - {id: 983049, name: 兽（易码）, type: compound, operator: ⿱, references: [{id: 418071}, {id: 4638}]}
+    - {id: 983050, name: 克（易码）, type: component, strokes: [{feature: 横, start: [8, 17], curveList: [{command: h, parameterList: [84]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [30]}]}, {feature: 竖, start: [21, 34], curveList: [{command: v, parameterList: [24]}]}, {feature: 横折, start: [21, 34], curveList: [{command: h, parameterList: [58]}, {command: v, parameterList: [24]}]}, {feature: 横, start: [21, 58], curveList: [{command: h, parameterList: [58]}]}, {feature: 撇, start: [38, 58], curveList: [{command: c, parameterList: [0, 6, 0, 26, -30, 35]}]}, {feature: 竖弯钩, start: [61, 58], curveList: [{command: v, parameterList: [35]}, {command: h, parameterList: [32]}]}]}
+    - {id: 983051, name: 囱（易码）, type: compound, operator: ⿳, references: [{id: 983042}, {id: 657}, {id: 0}]}
+    - {id: 983052, name: 古（易码）, type: component, strokes: [{feature: 横, start: [10, 40], curveList: [{command: h, parameterList: [80]}]}, {feature: 竖, start: [50, 15], curveList: [{command: v, parameterList: [45]}]}, {feature: 竖, start: [30, 60], curveList: [{command: v, parameterList: [30]}]}, {feature: 横折, start: [30, 60], curveList: [{command: h, parameterList: [40]}, {command: v, parameterList: [30]}]}, {feature: 横, start: [30, 90], curveList: [{command: h, parameterList: [40]}]}]}
+    - {id: 983053, name: 囟（易码）, type: compound, operator: ⿳, references: [{id: 983042}, {id: 324}, {id: 0}]}
+    - {id: 983054, name: 隺（易码）, type: compound, operator: ⿻, references: [{id: 373}, {id: 1825}]}
+    - {id: 983055, name: （易码）, type: compound, operator: ⿰, references: [{id: 123434}, {id: 600}]}
+    - {id: 983056, name: 兕（易码）, type: compound, operator: ⿱, references: [{id: 891}, {id: 557}]}
+    - {id: 983057, name: 衮（易码）, type: compound, operator: ⿳, references: [{id: 33031}, {id: 407}, {id: 957}]}
+    - {id: 983058, name: （易码）, type: compound, operator: ⿺, references: [{id: 547}, {id: 316177}]}
+    - {id: 983059, name: 草（易码）, type: compound, operator: ⿱, references: [{id: 983045}, {id: 261}]}
+    - {id: 983060, name: 熏（易码）, type: compound, operator: ⿱, references: [{id: 624}, {id: 354087}]}
+    - {id: 983061, name: （易码）, type: compound, operator: ⿲, references: [{id: 277}, {id: 151830}, {id: 340}]}
+    - {id: 983062, name: 昊（易码）, type: compound, operator: ⿱, references: [{id: 294912}, {id: 551}]}
+    - {id: 983063, name: 舍（易码）, type: compound, operator: ⿱, references: [{id: 4418}, {id: 983052}]}
+    - {id: 983064, name: （易码）, type: compound, operator: ⿻, references: [{id: 17695}, {id: 892}]}
+    - {id: 983065, name: 丢（易码）, type: compound, operator: ⿱, references: [{id: 920}, {id: 407}]}
+    - {id: 983066, name: （易码）, type: compound, operator: ⿻, references: [{id: 313}, {id: 1394}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
+    - {id: 983067, name: 丝（易码）, type: compound, operator: ⿰, references: [{id: 752}, {id: 752}]}
+    - {id: 983068, name: 哀（易码）, type: compound, operator: ⿱, references: [{id: 33290}, {id: 957}]}
+    - {id: 983069, name: 司（易码）, type: component, strokes: [{feature: 横折钩, start: [12, 11], curveList: [{command: h, parameterList: [71]}, {command: v, parameterList: [83]}]}, {feature: 横, start: [15, 30], curveList: [{command: h, parameterList: [57]}]}, {feature: 竖, start: [18, 49], curveList: [{command: v, parameterList: [25]}]}, {feature: 横折, start: [18, 49], curveList: [{command: h, parameterList: [38]}, {command: v, parameterList: [25]}]}, {feature: 横, start: [18, 74], curveList: [{command: h, parameterList: [38]}]}]}
+    - {id: 983070, name: 兵（易码）, type: compound, operator: ⿱, references: [{id: 928}, {id: 552}]}
+    - {id: 983071, name: 菖（易码）, type: compound, operator: ⿱, references: [{id: 983045}, {id: 874}]}
+    - {id: 983072, name: （易码）, type: compound, operator: ⿻, references: [{id: 5873}, {id: 325}]}
+    - {id: 983073, name: 㝵（易码）, type: compound, operator: ⿱, references: [{id: 294912}, {id: 541}]}
+    - {id: 983074, name: 蔓（易码）, type: compound, operator: ⿱, references: [{id: 983045}, {id: 499979}]}
+    - {id: 983075, name: 直（易码）, type: component, strokes: [{feature: 横, start: [9, 16], curveList: [{command: h, parameterList: [82]}]}, {feature: 竖, start: [50, 4], curveList: [{command: v, parameterList: [26]}]}, {feature: 竖, start: [23, 30], curveList: [{command: v, parameterList: [60]}]}, {feature: 横折, start: [23, 30], curveList: [{command: h, parameterList: [54]}, {command: v, parameterList: [60]}]}, {feature: 横, start: [23, 45], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [23, 60], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [23, 74], curveList: [{command: h, parameterList: [54]}]}, {feature: 横, start: [6, 90], curveList: [{command: h, parameterList: [88]}]}]}
+    - {id: 983076, name: 葛（易码）, type: compound, operator: ⿱, references: [{id: 983045}, {id: 82445}]}
+    - {id: 983077, name: 堇（易码）, type: compound, operator: ⿱, references: [{id: 2051}, {id: 256}]}
+    - {id: 983078, name: （易码）, type: compound, operator: ⿳, references: [{id: 261}, {id: 37161}, {id: 373}]}
+    - {id: 983079, name: （易码）, type: compound, operator: ⿳, references: [{id: 636}, {id: 1394}, {id: 0}]}
+    - {id: 983080, name: （易码）, type: compound, operator: ⿱, references: [{id: 55824}, {id: 373}]}
+    - {id: 983081, name: 㐫（易码）, type: compound, operator: ⿶, references: [{id: 382}, {id: 977}], strokes: [{index: 1, from: 0}, {index: 0, from: 0}]}
+    - {id: 983082, name: 元（易码）, type: compound, operator: ⿱, references: [{id: 0}, {id: 557}]}
+    - {id: 983083, name: 㗊（易码）, type: compound, operator: ⿱, references: [{id: 983040}, {id: 983044}]}
+    - {id: 983084, name: （易码）, type: compound, operator: ⿴, references: [{id: 601}, {id: 376}]}
+    - {id: 983085, name: 莫（易码）, type: compound, operator: ⿱, references: [{id: 983045}, {id: 551}]}
+    - {id: 983086, name: 舆（易码）, type: compound, operator: ⿱, references: [{id: 549635}, {id: 552}]}
+    - {id: 983087, name: 章（易码）, type: compound, operator: ⿱, references: [{id: 480017}, {id: 261}]}
+    - {id: 983088, name: （易码）, type: compound, operator: ⿱, references: [{id: 681}, {id: 323}]}
+    - {id: 983089, name: 爽（易码）, type: compound, operator: ⿻, references: [{id: 551}, {id: 365320}]}
 analysis:
   classifier:
     横折钩: 7
@@ -336,7 +205,7 @@ analysis:
     朿:
       - 木
       - 冂
-    今:
+    字形-04231:
       - 亽
       - '5'
 form:
@@ -1021,8 +890,6 @@ form:
       element: 高
     "\ue089":
       element: "\ue001"
-    "\ue40a":
-      element: "\ue050"
     "\ue421":
       element: 臼
     "\ue036":
@@ -1092,48 +959,8 @@ optimization:
       tiers: [{top: 3000, duplication: 4, levels: []}]
       duplication: 200
       key_distribution: 2
-      new_key_equivalence_modified: 0.01
-      new_pair_equivalence: 0.01
+      pair_equivalence: 0.01
       levels: [{length: 2, frequency: -2}]
-  constraints:
-    elements:
-      - {element: '11', keys: [g]}
-      - {element: '12', keys: [f]}
-      - {element: '13', keys: [d]}
-      - {element: '14', keys: [s]}
-      - {element: '15', keys: [a]}
-      - {element: '21', keys: [h]}
-      - {element: '22', keys: [j]}
-      - {element: '23', keys: [k]}
-      - {element: '24', keys: [l]}
-      - {element: '25', keys: [m]}
-      - {element: '31', keys: [t]}
-      - {element: '32', keys: [r]}
-      - {element: '33', keys: [e]}
-      - {element: '34', keys: [w]}
-      - {element: '35', keys: [q]}
-      - {element: '41', keys: ['y']}
-      - {element: '42', keys: [u]}
-      - {element: '43', keys: [i]}
-      - {element: '44', keys: [o]}
-      - {element: '45', keys: [p]}
-      - {element: '51', keys: [b]}
-      - {element: '52', keys: [v]}
-      - {element: '53', keys: [c]}
-      - {element: '54', keys: [x]}
-      - {element: '55', keys: ['n']}
-      - {element: '1', keys: [f]}
-      - {element: '2', keys: [j]}
-      - {element: '3', keys: [e]}
-      - {element: '4', keys: [i]}
-      - {element: '5', keys: [v]}
-    indices:
-      - {index: 1}
-    element_indices:
-      - {element: 白, index: 0, keys: [d]}
-      - {element: 勹, index: 0, keys: [s, d, f, k, j, l, e, r, i, o, u]}
-      - {element: 不, index: 0, keys: [e, r, u, i, o, s, d, f, j, k, l]}
-      - {element: 口, index: 0, keys: [e, r, u, i, o, s, d, f, j, k, l]}
   metaheuristic:
     algorithm: SimulatedAnnealing
     parameters:

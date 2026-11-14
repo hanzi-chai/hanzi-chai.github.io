@@ -5,6 +5,7 @@ import { Err, ErrCode } from "./error/error";
 import { routerApi } from "./router/router";
 
 const { preflight, corsify } = cors({
+  allowHeaders: ["Content-Type", "Authorization", "X-Glyph-ID-Version"],
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 });
 
@@ -30,6 +31,23 @@ const router = Router()
 
 export default {
   async fetch(request: Request, env: Env, ctx: Ctx): Promise<Response> {
+    if (
+      !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
+      /^\/(glyphs|characters|repertoire)(\/|$)/.test(
+        new URL(request.url).pathname,
+      ) &&
+      request.headers.get("X-Glyph-ID-Version") !== "1"
+    ) {
+      return corsify(
+        Response.json(
+          {
+            err: "GlyphIDVersionRequired",
+            msg: "字形编号已迁移，请更新客户端并重新加载字库",
+          },
+          { status: 409, headers: { "Cache-Control": "no-store" } },
+        ),
+      );
+    }
     // 附加 Response Headers
     ctx.extraHeaders = new Headers();
 
@@ -37,6 +55,7 @@ export default {
       .fetch(request, env, ctx)
       .then(json)
       .then((response: Response) => {
+        response.headers.set("X-Glyph-ID-Version", "1");
         // 注入附加响应头
         for (const [key, value] of ctx.extraHeaders.entries()) {
           response.headers.set(key, value);

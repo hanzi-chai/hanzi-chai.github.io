@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { 笔画表示方式 } from "../src/classifier.js";
 import type { 向量, 矢量笔画数据 } from "../src/data.js";
-import { 生成笔画路径, 处理路径 } from "../src/stroke-render.js";
+import { 处理路径, 生成笔画路径 } from "../src/stroke-render.js";
 import { 模拟矢量笔画 } from "../src/utils.js";
 
 const vertical = (length: number): 矢量笔画数据 => ({
@@ -112,12 +112,17 @@ describe("显示用钩和圆角", () => {
       const strokes = [point, horizontal];
       const before = structuredClone(strokes);
       const paths = 生成笔画路径(strokes);
-      const translated = parse(paths[0]!).slice(1).map(({ command, points }) => ({
-        command,
-        points: points.map((x, i) => (i % 2 === 0 ? x + 60 * scale : x)),
-      }));
+      const translated = parse(paths[0]!)
+        .slice(1)
+        .map(({ command, points }) => ({
+          command,
+          points: points.map((x, i) => (i % 2 === 0 ? x + 60 * scale : x)),
+        }));
       const right = parse(paths[1]!);
-      expect(right[1]).toEqual({ command: "L", points: [80 * scale, 20 * scale] });
+      expect(right[1]).toEqual({
+        command: "L",
+        points: [80 * scale, 20 * scale],
+      });
       expect(right.slice(2)).toEqual(translated);
       expect(paths).toEqual(strokes.map(处理路径));
       expect(strokes).toEqual(before);

@@ -1,4 +1,3 @@
-import type { Pair, EquivalenceData } from "hanzi-chai";
 import {
   Button,
   Flex,
@@ -10,6 +9,7 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { EquivalenceData, Pair } from "hanzi-chai";
 import { mean, random, range, shuffle } from "lodash-es";
 import { nanoid } from "nanoid";
 import type { ComponentProps, PropsWithChildren, SetStateAction } from "react";

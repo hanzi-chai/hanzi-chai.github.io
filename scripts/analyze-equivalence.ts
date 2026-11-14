@@ -7,7 +7,6 @@ import {
   分析当量数据,
   序列化当量统计,
 } from "../src/equivalence";
-import { get } from "./utils";
 
 const { values } = parseArgs({
   options: {
@@ -17,10 +16,12 @@ const { values } = parseArgs({
 });
 const data: EquivalenceData[] = values.input
   ? JSON.parse(readFileSync(values.input, "utf8"))
-  : await get<EquivalenceData[]>("/equivalence").then((result) => {
-      if ("err" in result) throw new Error(result.msg);
-      return result;
-    });
+  : await (await import("./utils"))
+      .get<EquivalenceData[]>("/equivalence")
+      .then((result) => {
+        if ("err" in result) throw new Error(result.msg);
+        return result;
+      });
 const { 样本, 当量 } = 分析当量数据(data);
 const output = path.resolve(values.out!);
 mkdirSync(output, { recursive: true });

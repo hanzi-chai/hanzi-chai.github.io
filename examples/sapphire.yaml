@@ -122,106 +122,106 @@ analysis:
       - '5'
       - '3'
       - '4'
-    字形-5375:
+    字形-48715:
       - 大
       - 丷
       - 日
       - 小
-    字形-910:
+    字形-0445f:
       - 儿
       - 
-    字形-1089:
+    字形-00809:
       - 日
       - 冂
       - 
-    字形-861:
+    字形-00526:
       - 戊
       - '5'
-    字形-878:
+    字形-0053a:
       - 日
       - '5'
       - '3'
-    字形-893:
+    字形-00550:
       - '3'
       - 去
-    字形-1111:
+    字形-00a00:
       - 廿
       - 口
       - 龶
-    字形-1015:
+    字形-0064a:
       - 
       - 日
       - '5'
-    字形-1020:
+    字形-0064b:
       - '3'
       - 幺
       - 小
-    字形-12944:
+    字形-00904:
       - 禾
       - 北
-    字形-907:
+    字形-00561:
       - 
       - 彐
       - '5'
-    字形-1315:
+    字形-0056d:
       - 
       - 厂
-    字形-1068:
+    字形-1253c:
       - 
       - 儿
       - '4'
-    字形-1115:
+    字形-1282f:
       - 
       - 
-    字形-1018:
+    字形-12439:
       - 
       - 儿
-    字形-7818:
+    字形-03321:
       - 丷
       - 三
-    字形-1105:
+    字形-00905:
       - 
       - 黑
-    字形-1101:
+    字形-00814:
       - 丷
       - 豕
-    字形-1288:
+    字形-1243a:
       - 
       - 儿
-    字形-1320:
+    字形-00232:
       - '1'
       - 儿
-    字形-1276:
+    字形-00230:
       - '1'
       - 儿
-    字形-1000:
+    字形-00635:
       - '2'
       - '5'
       - '2'
       - '5'
       - '1'
       - 儿
-    字形-11480:
+    字形-46307:
       - 方
       - 攵
-    字形-1080:
+    字形-0072b:
       - 了
       - 三
       - 
-    字形-1094:
+    字形-0071c:
       - 
       - 
       - 
-    字形-6476:
+    字形-1a402:
       - 
       - 
       - 卩
       - '4'
-    字形-12164:
+    字形-00f00:
       - 王
       - 吅
       - 吅
-    字形-329:
+    字形-00292:
       - 夂
 form:
   alphabet: qwertyuiopasdfghjklxcvbnm
@@ -755,27 +755,25 @@ form:
       element: 鹿
     "\ue04c":
       element: 木
-    字形-136099:
+    字形-00284:
       element: 亼
-    字形-1244:
+    字形-2032e:
       element: 走
-    字形-136032:
+    字形-4841a:
       element: 是
-    字形-136027:
+    字形-5160c:
       element: 鹿
-    字形-136058:
+    字形-35306:
       element: 
-    字形-277:
+    字形-00251:
       element: 小
-    字形-710:
+    字形-0044f:
       element: 氺
-    字形-136103:
-      element: 
-    字形-136077:
+    字形-1b728:
       element: 原
-    字形-1128:
+    字形-0011d:
       element: 
-    字形-136091:
+    字形-0912b:
       element: 从
 encoder:
   max_length: 4
@@ -856,311 +854,291 @@ data:
   glyph_sources:
     - G
   characters:
-    - unicode: 61440
-      name: 熏字底
-      glyphs: [{id: 160000, sources: []}]
-    - unicode: 61441
-      name: 兼无䒑无八
-      glyphs: [{id: 160001, sources: []}]
-    - unicode: 61442
-      name: 千二
-      glyphs: [{id: 160002, sources: []}]
-    - unicode: 61443
-      name: 惠字头无丶
-      glyphs: [{id: 160003, sources: []}]
-    - unicode: 61444
-      name: 临无右下
-      glyphs: [{id: 160004, sources: []}]
-    - unicode: 61445
-      name: 事字底
-      glyphs: [{id: 160005, sources: []}]
-    - unicode: 61446
-      name: 夔字头
-      glyphs: [{id: 160006, sources: []}]
-    - unicode: 61447
-      name: 重无前二
-      glyphs: [{id: 160007, sources: []}]
-    - unicode: 61448
-      name: 鼍字头带口
-      glyphs: [{id: 160008, sources: []}]
-    - unicode: 61449
-      name: 齑字底
-      glyphs: [{id: 160009, sources: []}]
+    - {unicode: 61440, glyphs: [{id: 983056, sources: []}]}
+    - {unicode: 61441, glyphs: [{id: 983057, sources: []}]}
+    - {unicode: 61442, glyphs: [{id: 983058, sources: []}]}
+    - {unicode: 61443, glyphs: [{id: 983059, sources: []}]}
+    - {unicode: 61444, glyphs: [{id: 983060, sources: []}]}
+    - {unicode: 61445, glyphs: [{id: 983061, sources: []}]}
+    - {unicode: 61446, glyphs: [{id: 983062, sources: []}]}
+    - {unicode: 61447, glyphs: [{id: 983063, sources: []}]}
+    - {unicode: 61448, glyphs: [{id: 983064, sources: []}]}
+    - {unicode: 61449, glyphs: [{id: 983065, sources: []}]}
   glyphs:
-    - id: 160000
+    - id: 0xf0010
       type: component
       name: 熏字底
       strokes: [{feature: 竖, start: [18, 27], curveList: [{command: v, parameterList: [27]}]}, {feature: 横折, start: [18, 27], curveList: [{command: h, parameterList: [64]}, {command: v, parameterList: [27]}]}, {feature: 点, start: [29, 37], curveList: [{command: c, parameterList: [4, 4, 6, 5, 10, 17]}]}, {feature: 撇, start: [70, 37], curveList: [{command: c, parameterList: [-2, 4, -6, 8, -10, 17]}]}, {feature: 横, start: [18, 54], curveList: [{command: h, parameterList: [64]}]}, {feature: 竖, start: [50, 5], curveList: [{command: v, parameterList: [70]}]}, {feature: 横, start: [13, 64], curveList: [{command: h, parameterList: [74]}]}, {feature: 横, start: [7, 75], curveList: [{command: h, parameterList: [86]}]}, {feature: 点, start: [21, 83], curveList: [{command: c, parameterList: [-2, 3, -7, 8, -13, 13]}]}, {feature: 点, start: [36, 83], curveList: [{command: c, parameterList: [3, 3, 5, 6, 6, 13]}]}, {feature: 点, start: [57, 83], curveList: [{command: c, parameterList: [3, 3, 5, 6, 8, 13]}]}, {feature: 点, start: [77, 83], curveList: [{command: c, parameterList: [6, 3, 11, 8, 15, 13]}]}]
-    - id: 160001
+    - id: 0xf0011
       type: component
       name: 兼无䒑无八
       strokes: [{feature: 横折, start: [17, 19], curveList: [{command: h, parameterList: [64]}, {command: v, parameterList: [40]}]}, {feature: 横, start: [7, 39], curveList: [{command: h, parameterList: [86]}]}, {feature: 横, start: [17, 59], curveList: [{command: h, parameterList: [64]}]}, {feature: 竖, start: [40, 10], curveList: [{command: v, parameterList: [85]}]}, {feature: 竖, start: [60, 10], curveList: [{command: v, parameterList: [85]}]}]
-    - id: 160002
+    - id: 0xf0012
       type: component
       name: 千二
       strokes: [{feature: 平撇, start: [86, 10], curveList: [{command: z, parameterList: [-25, 5, -47, 7, -72, 7]}]}, {feature: 横, start: [6, 49], curveList: [{command: h, parameterList: [88]}]}]
-    - id: 160003
+    - id: 0xf0013
       type: component
       name: 惠字头无丶
       strokes: [{feature: 横, start: [10, 15], curveList: [{command: h, parameterList: [80]}]}, {feature: 竖, start: [18, 34], curveList: [{command: v, parameterList: [26]}]}, {feature: 横折, start: [18, 34], curveList: [{command: h, parameterList: [64]}, {command: v, parameterList: [26]}]}, {feature: 横, start: [18, 47], curveList: [{command: h, parameterList: [64]}]}, {feature: 横, start: [18, 60], curveList: [{command: h, parameterList: [64]}]}, {feature: 竖, start: [50, 7], curveList: [{command: v, parameterList: [83]}]}, {feature: 提, start: [10, 94], curveList: [{command: l, parameterList: [77, -8]}]}]
-    - id: 160004
+    - id: 0xf0014
       type: compound
       name: 临无右下
       operator: ⿰
-      references: [{id: 94}, {id: 305}]
-    - id: 160005
+      references: [{id: 0x00125}, {id: 0x00276}]
+    - id: 0xf0015
       type: component
       name: 事字底
       strokes: [{feature: 横折, start: [14, 49], curveList: [{command: h, parameterList: [67]}, {command: v, parameterList: [28]}]}, {feature: 横, start: [5, 64], curveList: [{command: h, parameterList: [90]}]}, {feature: 横, start: [14, 77], curveList: [{command: h, parameterList: [67]}]}, {feature: 竖钩, start: [50, 4], curveList: [{command: v, parameterList: [90]}]}]
-    - id: 160006
+    - id: 0xf0016
       type: compound
       name: 夔字头
       operator: ⿲
-      references: [{id: 485}, {id: 1100}, {id: 371}]
+      references: [{id: 0x00355}, {id: 0x8420a}, {id: 0x002c7}]
       strokes: [{index: 1}, {index: 0}, {index: 2}]
-    - id: 160007
+    - id: 0xf0017
       type: component
       name: 重无前二
       strokes: [{feature: 竖, start: [18, 36], curveList: [{command: v, parameterList: [28]}]}, {feature: 横折, start: [18, 36], curveList: [{command: h, parameterList: [64]}, {command: v, parameterList: [28]}]}, {feature: 横, start: [18, 50], curveList: [{command: h, parameterList: [64]}]}, {feature: 横, start: [18, 64], curveList: [{command: h, parameterList: [64]}]}, {feature: 竖, start: [50, 11], curveList: [{command: v, parameterList: [80]}]}, {feature: 横, start: [12, 77], curveList: [{command: h, parameterList: [76]}]}, {feature: 横, start: [8, 91], curveList: [{command: h, parameterList: [84]}]}]
-    - id: 160008
+    - id: 0xf0018
       type: compound
       name: 鼍字头带口
       operator: ⿳
-      references: [{id: 4698}, {id: 727}, {id: 4168}]
-    - id: 160009
+      references: [{id: 0x1e22a}, {id: 0x00464}, {id: 0x0121e}]
+    - id: 0xf0019
       type: compound
       name: 齑字底
       operator: ⿴
-      references: [{id: 4180}, {id: 110}]
-    - id: 160010
+      references: [{id: 0xaf000}, {id: 0x00139}]
+    - id: 0xf001a
       type: compound
       operator: ⿸
-      references: [{id: 160004}, {id: 517}]
+      references: [{id: 0xf0014}, {id: 0x00376}]
       name: 临（蓝宝石）
-    - id: 160011
+    - id: 0xf001b
       type: compound
       operator: ⿺
-      references: [{id: 1009}, {id: 187}]
+      references: [{id: 0x00641}, {id: 0x00197}]
       name: 鬼（蓝宝石）
-    - id: 160012
+    - id: 0xf001c
       type: compound
       operator: ⿱
-      references: [{id: 151}, {id: 208}]
+      references: [{id: 0x00170}, {id: 0x00200}]
       name: 兰（蓝宝石）
-    - id: 160013
+    - id: 0xf001d
       type: compound
       operator: ⿸
-      references: [{id: 113}, {id: 4168}]
+      references: [{id: 0x0013f}, {id: 0x0121e}]
       name: 后（蓝宝石）
-    - id: 160014
+    - id: 0xf001e
       type: compound
       operator: ⿱
-      references: [{id: 4189}, {id: 576}]
+      references: [{id: 0x0820a}, {id: 0x003bd}]
       name: 哀（蓝宝石）
-    - id: 160015
+    - id: 0xf001f
       type: compound
       operator: ⿳
-      references: [{id: 5648}, {id: 282}, {id: 345}]
+      references: [{id: 0x01425}, {id: 0x00258}, {id: 0x002a9}]
       name: 壹（蓝宝石）
-    - id: 160016
+    - id: 0xf0020
       type: compound
       operator: ⿱
-      references: [{id: 160006}, {id: 4886}]
+      references: [{id: 0xf0016}, {id: 0x0c218}]
       name: 夔（蓝宝石）
-    - id: 160017
+    - id: 0xf0021
       type: compound
       operator: ⿳
-      references: [{id: 4150}, {id: 120}, {id: 282}]
+      references: [{id: 0x28104}, {id: 0x00146}, {id: 0x00258}]
       name: 容（蓝宝石）
-    - id: 160018
+    - id: 0xf0022
       type: compound
       operator: ⿳
-      references: [{id: 357}, {id: 980}, {id: 5039}]
+      references: [{id: 0x002b5}, {id: 0x00620}, {id: 0x0c112}]
       name: 寡（蓝宝石）
-    - id: 160019
+    - id: 0xf0023
       type: compound
       operator: ⿸
-      references: [{id: 6259}, {id: 991}]
+      references: [{id: 0x35305}, {id: 0x0062d}]
       name: 廑（蓝宝石）
-    - id: 160020
+    - id: 0xf0024
       type: compound
       operator: ⿴
-      references: [{id: 758}, {id: 4145}]
+      references: [{id: 0x25116}, {id: 0x15104}]
       name: （蓝宝石）
-    - id: 160021
+    - id: 0xf0025
       type: compound
       operator: ⿱
-      references: [{id: 4745}, {id: 234}]
+      references: [{id: 0x48000}, {id: 0x0021d}]
       name: 㝵（蓝宝石）
-    - id: 160022
+    - id: 0xf0026
       type: compound
       operator: ⿻
-      references: [{id: 160002}, {id: 160007}]
+      references: [{id: 0xf0012}, {id: 0xf0017}]
       name: 重（蓝宝石）
-    - id: 160023
+    - id: 0xf0027
       type: compound
       operator: ⿻
-      references: [{id: 160002}, {id: 160000}]
+      references: [{id: 0xf0012}, {id: 0xf0010}]
       name: 熏（蓝宝石）
-    - id: 160024
+    - id: 0xf0028
       type: compound
       operator: ⿳
-      references: [{id: 4189}, {id: 1}, {id: 576}]
+      references: [{id: 0x0820a}, {id: 0x00000}, {id: 0x003bd}]
       name: 衰（蓝宝石）
-    - id: 160025
+    - id: 0xf0029
       type: compound
       operator: ⿳
-      references: [{id: 4307}, {id: 187}, {id: 576}]
+      references: [{id: 0x08107}, {id: 0x00197}, {id: 0x003bd}]
       name: 衮（蓝宝石）
-    - id: 160026
+    - id: 0xf002a
       type: compound
       operator: ⿴
-      references: [{id: 4698}, {id: 282}]
+      references: [{id: 0x1e22a}, {id: 0x00258}]
       name: （蓝宝石）
-    - id: 160027
+    - id: 0xf002b
       type: compound
       operator: ⿴
-      references: [{id: 282}, {id: 4786}]
+      references: [{id: 0x00258}, {id: 0x15204}]
       name: （蓝宝石）
-    - id: 160028
+    - id: 0xf002c
       type: compound
       operator: ⿱
-      references: [{id: 151}, {id: 982}]
+      references: [{id: 0x00170}, {id: 0x00622}]
       name: 㒸（蓝宝石）
-    - id: 160029
+    - id: 0xf002d
       type: compound
       operator: ⿴
-      references: [{id: 410}, {id: 591}]
+      references: [{id: 0x002f3}, {id: 0x003d2}]
       name: （蓝宝石）
-    - id: 160030
+    - id: 0xf002e
       type: compound
       operator: ⿳
-      references: [{id: 66}, {id: 4205}, {id: 155}]
+      references: [{id: 0x00105}, {id: 0x09129}, {id: 0x00175}]
       name: （蓝宝石）
-    - id: 160031
+    - id: 0xf002f
       type: compound
       operator: ⿱
-      references: [{id: 25540}, {id: 448}]
+      references: [{id: 0xd8004}, {id: 0x0032b}]
       name: 蕖（蓝宝石）
-    - id: 160032
+    - id: 0xf0030
       type: compound
       operator: ⿱
-      references: [{id: 160008}, {id: 724}]
+      references: [{id: 0xf0018}, {id: 0x0045f}]
       name: 鼍（蓝宝石）
-    - id: 160033
+    - id: 0xf0031
       type: compound
       operator: ⿱
-      references: [{id: 590}, {id: 160009}]
+      references: [{id: 0x003d1}, {id: 0xf0019}]
       name: 齑（蓝宝石）
   character_customization:
     临:
-      - {type: update, sources: [G], id: 160010}
+      - {type: update, sources: [G], id: 0xf001a}
     鬼:
-      - {type: update, sources: [G], id: 160011}
+      - {type: update, sources: [G], id: 0xf001b}
     兰:
-      - {type: update, sources: [G], id: 160012}
+      - {type: update, sources: [G], id: 0xf001c}
     后:
-      - {type: update, sources: [G], id: 160013}
+      - {type: update, sources: [G], id: 0xf001d}
     哀:
-      - {type: update, sources: [G], id: 160014}
+      - {type: update, sources: [G], id: 0xf001e}
     壹:
-      - {type: update, sources: [G], id: 160015}
+      - {type: update, sources: [G], id: 0xf001f}
     夔:
-      - {type: update, sources: [G], id: 160016}
+      - {type: update, sources: [G], id: 0xf0020}
     容:
-      - {type: update, sources: [G], id: 160017}
+      - {type: update, sources: [G], id: 0xf0021}
     寡:
-      - {type: update, sources: [G], id: 160018}
+      - {type: update, sources: [G], id: 0xf0022}
     廑:
-      - {type: update, sources: [G], id: 160019}
+      - {type: update, sources: [G], id: 0xf0023}
     㝵:
-      - {type: update, sources: [G], id: 160021}
+      - {type: update, sources: [G], id: 0xf0025}
     重:
-      - {type: update, sources: [G], id: 160022}
+      - {type: update, sources: [G], id: 0xf0026}
     熏:
-      - {type: update, sources: [G], id: 160023}
+      - {type: update, sources: [G], id: 0xf0027}
     衰:
-      - {type: update, sources: [G], id: 160024}
+      - {type: update, sources: [G], id: 0xf0028}
     衮:
-      - {type: update, sources: [G], id: 160025}
+      - {type: update, sources: [G], id: 0xf0029}
     㒸:
-      - {type: update, sources: [G], id: 160028}
+      - {type: update, sources: [G], id: 0xf002c}
     蕖:
-      - {type: update, sources: [G], id: 160031}
+      - {type: update, sources: [G], id: 0xf002f}
     鼍:
-      - {type: update, sources: [G], id: 160032}
+      - {type: update, sources: [G], id: 0xf0030}
     齑:
-      - {type: update, sources: [G], id: 160033}
+      - {type: update, sources: [G], id: 0xf0031}
   glyph_algebra:
-    - from: 16814
-      to: 160020
-    - from: 4239
-      to: 160026
-    - from: 7206
-      to: 160027
-    - from: 8567
-      to: 160029
-    - from: 27758
-      to: 160030
-    - from: 5368
-      to: {operator: ⿱, references: [136099, 448]}
-    - from: {operator: ⿲, references: [108, 3, {variable: 0}]}
-      to: {operator: ⿰, references: [32303, {variable: 0}]}
-    - from: 4167
-      to: {operator: ⿱, references: [4168, 345]}
-    - from: 925
-      to: {operator: ⿱, references: [592, 155]}
-    - from: {operator: ⿰, references: [593, {operator: ⿱, references: [105, {variable: 0}]}]}
-      to: {operator: ⿰, references: [7078, {variable: 0}]}
-    - from: 4196
-      to: {operator: ⿱, references: [4168, 4197]}
-    - from: 5712
-      to: {operator: ⿱, references: [32307, 130]}
-    - from: 6078
-      to: {operator: ⿱, references: [32307, 417]}
-    - from: 10766
-      to: {operator: ⿱, references: [32307, 410]}
-    - from: 12937
-      to: 160010
-    - from: 4123
-      to: 160011
-    - from: 7818
-      to: 160012
-    - from: 4946
-      to: 160013
-    - from: 5084
-      to: 160014
-    - from: 5378
-      to: 160015
-    - from: 15439
-      to: 160016
-    - from: 7370
-      to: 160017
-    - from: 16064
-      to: 160018
-    - from: 16713
-      to: 160019
-    - from: 4860
-      to: 160021
-    - from: 1093
-      to: 160022
-    - from: 9869
-      to: 160023
-    - from: 7757
-      to: 160024
-    - from: 5365
-      to: 160025
-    - from: 1101
-      to: 160028
-    - from: 25925
-      to: 160031
-    - from: 32073
-      to: 160032
-    - from: 32137
-      to: 160033
-    - from: {operator: ⿱, references: [228, {operator: ⿰, references: [350, {variable: 0}]}]}
-      to: {operator: ⿰, references: [32305, {variable: 0}]}
-    - from: 8310
-      to: {operator: ⿴, references: [4108, 4614]}
-    - from: 25455
-      to: {operator: ⿱, references: [6055, 468]}
+    - from: 0x6f301
+      to: 0xf0024
+    - from: 0x1e583
+      to: 0xf002a
+    - from: 0x1e44c
+      to: 0xf002b
+    - from: 0x0f427
+      to: 0xf002d
+    - from: 0x09508
+      to: 0xf002e
+    - from: 0x04543
+      to: {operator: ⿱, references: [0x00284, 0x0032b]}
+    - from: {operator: ⿲, references: [0x00137, 0x00002, {variable: 0}]}
+      to: {operator: ⿰, references: [0x09001, {variable: 0}]}
+    - from: 0x01544
+      to: {operator: ⿱, references: [0x0121e, 0x002a9]}
+    - from: 0x0832b
+      to: {operator: ⿱, references: [0x0810c, 0x00175]}
+    - from: {operator: ⿰, references: [0x0810e, {operator: ⿱, references: [0x00134, {variable: 0}]}]}
+      to: {operator: ⿰, references: [0x46104, {variable: 0}]}
+    - from: 0x01868
+      to: {operator: ⿱, references: [0x0121e, 0x0d322]}
+    - from: 0x2e20d
+      to: {operator: ⿱, references: [0x2e000, 0x00151]}
+    - from: 0x2e401
+      to: {operator: ⿱, references: [0x2e000, 0x00307]}
+    - from: 0x2e633
+      to: {operator: ⿱, references: [0x2e000, 0x002f3]}
+    - from: 0x02713
+      to: 0xf001a
+    - from: 0x1c60c
+      to: 0xf001b
+    - from: 0x03321
+      to: 0xf001c
+    - from: 0x1e269
+      to: 0xf001d
+    - from: 0x0861b
+      to: 0xf001e
+    - from: 0x97400
+      to: 0xf001f
+    - from: 0x22f09
+      to: 0xf0020
+    - from: 0x28646
+      to: 0xf0021
+    - from: 0x28a1f
+      to: 0xf0022
+    - from: 0x35a07
+      to: 0xf0023
+    - from: 0x48311
+      to: 0xf0025
+    - from: 0x0080e
+      to: 0xf0026
+    - from: 0x56922
+      to: 0xf0027
+    - from: 0x08721
+      to: 0xf0028
+    - from: 0x08744
+      to: 0xf0029
+    - from: 0x00814
+      to: 0xf002c
+    - from: 0xd84e7
+      to: 0xf002f
+    - from: 0xcdb02
+      to: 0xf0030
+    - from: 0xb3502
+      to: 0xf0031
+    - from: {operator: ⿱, references: [0x00215, {operator: ⿰, references: [0x002ae, {variable: 0}]}]}
+      to: {operator: ⿰, references: [0x8c243, {variable: 0}]}
+    - from: 0x0da10
+      to: {operator: ⿴, references: [0x0451f, 0x0d30d]}
+    - from: 0xd7f65
+      to: {operator: ⿱, references: [0x8c118, 0x00340]}

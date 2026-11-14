@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import {
-  type 基本字形数据,
-  type 结构描述字符,
-  构建字库,
   准备方案,
-  运行方案,
+  type 基本字形数据,
   本地编码评估,
+  构建字库,
+  type 结构描述字符,
   获取默认目标,
-  读取方案项目,
   评估方案项目,
+  读取方案项目,
+  运行方案,
 } from "../src/index.js";
 import {
   characters,

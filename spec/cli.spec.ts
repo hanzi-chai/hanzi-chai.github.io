@@ -11,11 +11,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { dump } from "js-yaml";
 import {
+  保存运行记录,
   对比运行记录,
+  评估方案项目,
   读取方案项目,
   读取运行记录,
-  评估方案项目,
-  保存运行记录,
 } from "../src/index.js";
 import { fixtureBuffers, fixtureConfig } from "./fixtures/scheme.js";
 
@@ -60,9 +60,7 @@ describe("CLI 与方案快照", () => {
     expect(command("examples", "snow4").output.result.config.info.name).toBe(
       "冰雪四拼",
     );
-    expect(
-      command("examples", "snow4", "--out", "exported.yaml").code,
-    ).toBe(0);
+    expect(command("examples", "snow4", "--out", "exported.yaml").code).toBe(0);
     const yaml = readFileSync(path.join(root, "exported.yaml"), "utf8");
     expect(yaml).toContain("冰雪四拼");
     const repeated = command("examples", "snow4", "--out", "exported.yaml");
@@ -144,8 +142,8 @@ describe("CLI 与方案快照", () => {
         },
       ],
     };
-    config.form.mapping["二"] = "b";
-    config.form.mapping["一"] = "c";
+    config.form.mapping.二 = "b";
+    config.form.mapping.一 = "c";
     const file = "schemes/root-order.yml";
     const out = path.join(root, "root-order-run");
     writeFileSync(path.join(root, file), dump(config));

@@ -4,8 +4,8 @@ import type { 笔画名称 } from "hanzi-chai";
 import type { PropsWithChildren } from "react";
 import { useState } from "react";
 import {
-  useAddAtom,
   useAtomValue,
+  useSetAtom,
   分类器原子,
   分类器自定义原子,
 } from "~/atoms";
@@ -44,7 +44,7 @@ const Droppable = ({ id, children }: PropsWithChildren<{ id: number }>) => {
 
 export default function Classifier() {
   const classifier = useAtomValue(分类器原子);
-  const add = useAddAtom(分类器自定义原子);
+  const setCustomization = useSetAtom(分类器自定义原子);
   const [categories, setCategories] = useState(
     Math.max(...Object.values(classifier)),
   );
@@ -63,7 +63,10 @@ export default function Classifier() {
       onDragEnd={(event) => {
         const { active, over } = event;
         if (over) {
-          add(active.id as 笔画名称, over.id as number);
+          setCustomization((current) => ({
+            ...current,
+            [active.id as 笔画名称]: over.id as number,
+          }));
         }
       }}
     >

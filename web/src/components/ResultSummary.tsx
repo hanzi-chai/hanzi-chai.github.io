@@ -1,9 +1,9 @@
 import { Button, Flex, Popover } from "antd";
 import {
-  解析自定义拆分字形,
   type 元素,
   type 基本分析,
   type 复合体,
+  解析自定义拆分字形,
   部件,
   部件字根,
   type 默认部件分析,
@@ -18,8 +18,9 @@ import {
   分析配置原子,
   动态分析原子,
   动态自定义拆分原子,
-  强类型自定义分析原子,
   字库原子,
+  强类型自定义分析原子,
+  数据配置原子,
   自定义拆分原子,
 } from "~/atoms";
 import ElementSelect from "./ElementSelect";
@@ -167,6 +168,7 @@ export default function ResultSummary({
   const 移除动态自定义分析 = useRemoveAtom(动态自定义拆分原子);
   const 字库 = useAtomValue(字库原子);
   const 分析配置 = useAtomValue(分析配置原子);
+  const 数据配置 = useAtomValue(数据配置原子);
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 自定义配置 = useAtomValue(自定义拆分原子);
   const 动态自定义配置 = useAtomValue(动态自定义拆分原子);
@@ -176,7 +178,7 @@ export default function ResultSummary({
   ) => {
     for (const key of Object.keys(配置)) {
       if (
-        解析自定义拆分字形(字库, 名称映射, key, 分析配置).some(
+        解析自定义拆分字形(字库, 名称映射, key, 分析配置, 数据配置).some(
           (part) => part.id === glyph.id,
         )
       )

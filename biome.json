@@ -17,19 +17,13 @@
       "*.json",
       "web/*.json",
       "api/*.json"
-    ],
-    "ignoreUnknown": false
+    ]
   },
   "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineEnding": "lf"
+    "indentStyle": "space"
   },
   "linter": {
-    "enabled": true,
     "rules": {
-      "recommended": true,
       "style": {
         "noNonNullAssertion": "off"
       },
@@ -44,11 +38,6 @@
         "noForEach": "off",
         "noBannedTypes": "off"
       }
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double"
     }
   },
   "css": {

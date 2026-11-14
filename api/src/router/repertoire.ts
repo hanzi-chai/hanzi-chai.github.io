@@ -3,7 +3,6 @@ import * as repertoire from "../controller/repertoire";
 import { authorizedAdmin, authorizedUser } from "../middleware/jwt";
 
 export const routerRepertoire = Router({ base: "/repertoire" })
-  .get("/", repertoire.List)
   .get("/all", repertoire.ListAll)
   .get("/:unicode", repertoire.validateUnicode, repertoire.Info)
   .post("/", authorizedUser, authorizedAdmin, repertoire.CreatePUA)

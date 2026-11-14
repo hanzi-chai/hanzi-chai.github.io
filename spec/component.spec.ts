@@ -1,11 +1,11 @@
-import { describe, expect, it, beforeAll } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import {
+  type 字库,
+  type 字符,
+  type 矢量笔画数据,
   部件,
   部件字根,
   默认退化配置,
-  type 字符,
-  type 字库,
-  type 矢量笔画数据,
 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
@@ -49,7 +49,6 @@ describe("横间不穿心", () => {
       type: "component",
       operator: undefined,
       references: undefined,
-      ambiguous: false,
       strokes,
     });
   const 配置 = { no_insert_between_heng: true };
@@ -71,29 +70,26 @@ describe("横间不穿心", () => {
     ["外笔端点相连", 50, 横(20, 40, 30), true],
     ["外笔交在两横之外", 50, 横(20, 80, 60), true],
     ["外笔交在框边", 10, 横(0, 40, 60), true],
-  ] as const)(
-    "%s",
-    (_, 中竖位置, 外笔, 保留) => {
-      const 笔画: 矢量笔画数据[] = [
-        横(10, 20, 80),
-        {
-          feature: "竖",
-          start: [中竖位置, 20],
-          curveList: [{ command: "v", parameterList: [70] }],
-        },
-        横(10, 60, 80),
-      ];
-      const 根部件 = 构建部件(900, 笔画);
-      const 字根 = new 部件字根(根部件, 根部件);
-      const 部件实例 = 构建部件(901, [...笔画, 外笔]);
-      const 切片 = 部件实例.索引转二进制([0, 1, 2]);
-      for (const 生成 of [
-        部件实例.生成二进制切片列表,
-        部件实例.生成新二进制切片列表,
-      ]) {
-        expect(生成.call(部件实例, 字根, {})).toContain(切片);
-        expect(生成.call(部件实例, 字根, 配置).includes(切片)).toBe(保留);
-      }
-    },
-  );
+  ] as const)("%s", (_, 中竖位置, 外笔, 保留) => {
+    const 笔画: 矢量笔画数据[] = [
+      横(10, 20, 80),
+      {
+        feature: "竖",
+        start: [中竖位置, 20],
+        curveList: [{ command: "v", parameterList: [70] }],
+      },
+      横(10, 60, 80),
+    ];
+    const 根部件 = 构建部件(900, 笔画);
+    const 字根 = new 部件字根(根部件, 根部件);
+    const 部件实例 = 构建部件(901, [...笔画, 外笔]);
+    const 切片 = 部件实例.索引转二进制([0, 1, 2]);
+    for (const 生成 of [
+      部件实例.生成二进制切片列表,
+      部件实例.生成新二进制切片列表,
+    ]) {
+      expect(生成.call(部件实例, 字根, {})).toContain(切片);
+      expect(生成.call(部件实例, 字根, 配置).includes(切片)).toBe(保留);
+    }
+  });
 });

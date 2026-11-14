@@ -26,7 +26,7 @@ for (const g of glyphs) {
   if (g.type === "compound") {
     if (
       g.operator === "⿺" &&
-      g.references[1]?.id === 189 &&
+      g.references[1]?.id === 0x00199 &&
       g.strokes === undefined
     ) {
       g.references = [g.references[1], g.references[0]!];

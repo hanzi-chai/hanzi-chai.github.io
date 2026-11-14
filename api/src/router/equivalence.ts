@@ -1,50 +1,39 @@
-import { IRequest, Router } from "itty-router";
+import type { EquivalenceData } from "hanzi-chai";
+import { type IRequest, Router } from "itty-router";
+import type { Env } from "../dto/context";
+import { 读取当量 } from "../dto/requests";
+import { Err, ErrCode, Ok, type Result } from "../error/error";
 import { authorizedUser } from "../middleware/jwt";
-import { Env } from "../dto/context";
-import { Err, ErrCode, Result } from "../error/error";
 
 const tableEquivalence = "equivalence";
+type 当量模型 = Omit<EquivalenceData, "data"> & { data: string };
 
-async function List(request: IRequest, env: Env) {
+async function List(_request: IRequest, env: Env) {
   const { results } = await env.CHAI.prepare(
-    `SELECT * FROM ${tableEquivalence}`,
-  ).all();
-  const data = results.map((row) => {
-    return {
+    `SELECT user, model, data FROM ${tableEquivalence}`,
+  ).all<当量模型>();
+  return results.map(
+    (row): EquivalenceData => ({
       user: row.user,
       model: row.model,
-      data: JSON.parse(row.data as string),
-    };
-  });
-  return data;
+      data: JSON.parse(row.data) as EquivalenceData["data"],
+    }),
+  );
 }
 
 async function Create(request: IRequest, env: Env): Promise<Result<boolean>> {
-  let success = false;
+  const body = await 读取当量(request);
+  if (!Ok(body)) return body;
   try {
-    let user, model, data;
-    const body = await request.json();
-    if (
-      typeof body === "object" &&
-      body !== null &&
-      "user" in body &&
-      "model" in body &&
-      "data" in body
-    ) {
-      user = body.user;
-      model = body.model;
-      data = body.data;
-    }
     const res = await env.CHAI.prepare(
       `INSERT INTO ${tableEquivalence} (user, model, data) VALUES (?, ?, ?)`,
     )
-      .bind(user, model, JSON.stringify(data))
+      .bind(body.user, body.model, JSON.stringify(body.data))
       .run();
-    success = res.error === undefined;
-  } catch (e) {
+    return res.error === undefined;
+  } catch {
     return new Err(ErrCode.DataCreateFailed, "上传失败");
   }
-  return success;
 }
 
 export const routerEquivalence = Router({ base: "/equivalence" })

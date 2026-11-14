@@ -32,15 +32,17 @@ function isPUA(unicode: number): boolean {
 }
 
 function formatUnicode(unicode: number): string {
-  return `U+${unicode.toString(16).toUpperCase().padStart(unicode > 0xffff ? 5 : 4, "0")}`;
+  return `U+${unicode
+    .toString(16)
+    .toUpperCase()
+    .padStart(unicode > 0xffff ? 5 : 4, "0")}`;
 }
 
 interface 多余PUA信息 {
   unicode: number;
   char: string;
-  name?: string;
   glyphId: number;
-  引用者列表: { unicode: number; char: string; name?: string }[];
+  引用者列表: { unicode: number; char: string }[];
 }
 
 async function main() {
@@ -74,17 +76,25 @@ async function main() {
   // 检查项 1：字形数量异常
   // ============================================================
 
-  const 多字形列表: { unicode: number; char: string; name?: string; count: number }[] = [];
-  const 无字形列表: { unicode: number; char: string; name?: string }[] = [];
+  const 多字形列表: {
+    unicode: number;
+    char: string;
+    count: number;
+  }[] = [];
+  const 无字形列表: { unicode: number; char: string }[] = [];
 
   for (const 字符 of pua字符列表) {
     const char = String.fromCodePoint(字符.unicode);
     const glyphCount = 字符.glyphs.length;
 
     if (glyphCount === 0) {
-      无字形列表.push({ unicode: 字符.unicode, char, name: 字符.name });
+      无字形列表.push({ unicode: 字符.unicode, char });
     } else if (glyphCount > 1) {
-      多字形列表.push({ unicode: 字符.unicode, char, name: 字符.name, count: glyphCount });
+      多字形列表.push({
+        unicode: 字符.unicode,
+        char,
+        count: glyphCount,
+      });
     }
   }
 
@@ -109,12 +119,10 @@ async function main() {
       多余列表.push({
         unicode: pua字符.unicode,
         char: String.fromCodePoint(pua字符.unicode),
-        name: pua字符.name,
         glyphId,
         引用者列表: 更小引用者.map((c) => ({
           unicode: c.unicode,
           char: String.fromCodePoint(c.unicode),
-          name: c.name,
         })),
       });
     }
@@ -129,18 +137,16 @@ async function main() {
   if (多字形列表.length > 0) {
     hasError = true;
     console.log(`❌ 发现 ${多字形列表.length} 个 PUA 字符有多个字形：`);
-    for (const { unicode, char, name, count } of 多字形列表) {
-      const namePart = name ? ` (${name})` : "";
-      console.log(`  ${formatUnicode(unicode)} ${char}${namePart}：${count} 个字形`);
+    for (const { unicode, char, count } of 多字形列表) {
+      console.log(`  ${formatUnicode(unicode)} ${char}：${count} 个字形`);
     }
     console.log();
   }
 
   if (无字形列表.length > 0) {
     console.log(`⚠️  发现 ${无字形列表.length} 个 PUA 字符没有字形：`);
-    for (const { unicode, char, name } of 无字形列表) {
-      const namePart = name ? ` (${name})` : "";
-      console.log(`  ${formatUnicode(unicode)} ${char}${namePart}`);
+    for (const { unicode, char } of 无字形列表) {
+      console.log(`  ${formatUnicode(unicode)} ${char}`);
     }
     console.log();
   }
@@ -148,14 +154,12 @@ async function main() {
   if (多余列表.length > 0) {
     hasError = true;
     console.log(`♻️  发现 ${多余列表.length} 个多余的 Plane 15/16 PUA 字符：`);
-    for (const { unicode, char, name, glyphId, 引用者列表 } of 多余列表) {
-      const namePart = name ? ` (${name})` : "";
-      console.log(`  ${formatUnicode(unicode)} ${char}${namePart}`);
+    for (const { unicode, char, glyphId, 引用者列表 } of 多余列表) {
+      console.log(`  ${formatUnicode(unicode)} ${char}`);
       console.log(`    字形 ID: ${glyphId}`);
       console.log(`    被以下更小码位字符引用：`);
       for (const 引用者 of 引用者列表) {
-        const refName = 引用者.name ? ` (${引用者.name})` : "";
-        console.log(`      ${formatUnicode(引用者.unicode)} ${引用者.char}${refName}`);
+        console.log(`      ${formatUnicode(引用者.unicode)} ${引用者.char}`);
       }
     }
     console.log();

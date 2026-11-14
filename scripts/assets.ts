@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 export const packageRoot = new URL("../", import.meta.url);
-export const dataDirectory = new URL("src/data/", packageRoot);
+export const dataDirectory = new URL("data/", packageRoot);
 export const dataSources = {
   "characters.json": "https://api.chaifen.app/characters",
   "glyphs.json": "https://api.chaifen.app/glyphs",

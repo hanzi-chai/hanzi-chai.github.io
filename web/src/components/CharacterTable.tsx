@@ -4,9 +4,10 @@ import Table from "antd/es/table";
 import {
   区块列表,
   图形盒子,
+  字符字形过滤器,
   type 扩展字符数据,
   是用户字符,
-  字符字形过滤器,
+  格式化字形ID,
   type 过滤器参数,
 } from "hanzi-chai";
 import { useMemo, useState } from "react";
@@ -201,7 +202,7 @@ export default function CharacterTable() {
         <span>
           {character.final_glyphs.map(({ id, sources }) => (
             <span key={id}>
-              <Tooltip title={id}>
+              <Tooltip title={格式化字形ID(id)}>
                 <EditOrRedrawGraph
                   id={id}
                   trigger={

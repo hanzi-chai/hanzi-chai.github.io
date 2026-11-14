@@ -10,7 +10,7 @@ Cloudflare Worker，使用 itty-router。目录结构：
 - `src/router/` — 路由定义（characters、glyphs、equivalence、repertoire、users）
 - `src/controller/` — 请求处理逻辑
 - `src/model/` — 数据库操作（D1 + KV）
-- `src/dto/` — 数据类型定义（context、jwt、list、load、users）
+- `src/dto/` — 数据类型、请求 JSON Schema 与统一解析（context、jwt、request、requests、users）
 - `src/middleware/` — JWT 认证中间件
 - `src/error/` — 错误类型定义
 - `src/utils/` — 工具函数
@@ -34,6 +34,14 @@ bun run deploy:api      # 先构建根包，再部署
 本目录 tsconfig 继承根 `tsconfig.base.json`，只声明 Worker/Node 全局类型及本地文件范围；TypeScript 与 Biome 由根工作区统一提供，不单独声明工具版本。
 
 直接在 `api/` 执行 `start` 或 `deploy` 前，需自行准备根包产物。API 不新增 spec；通过类型检查、构建及实际运行验证。Wrangler 命令先读取对应技能；具体绑定、API 和平台配置以当前源码、安装的配置 schema 及官方文档为准。
+
+## 请求与数据库边界
+
+- 数据库读取使用 D1 的 `first<T>()`、`all<T>()` 声明实际行类型，保留 SQL 的 `null`；JSON 列的序列化与反序列化留在数据适配处，不再逐字段使用 `loadString`、`loadNumber`。
+- 请求体统一在 `src/dto/requests.ts` 定义 JSON Schema 和对应 TypeScript 类型，由 `定义请求` 生成解析器；控制器使用解析结果，不重复调用 `request.json()`。解析器复用 `@cfworker/json-schema`，非法 JSON、缺字段、类型错误均返回 `ParamInvalid`，不静默强转或填成空值。
+- 单条与批量请求复用同一项 Schema，整批校验通过后才执行写入。字符和字形继续复用 `校验字库整数`，数据库异常与请求参数错误分开处理。
+- 未提供的可选字段在业务层明确赋默认值；用户更新保留未提供字段，允许显式清空头像，密码仅在提供时重新散列。用户角色和状态仅由专用接口修改。
+- 已移除仓库内无调用的 `GET /users`、`GET /repertoire` 分页接口及 `DataList`；保留 `GET /repertoire/all` 与单条查询。
 
 ## 数据写入约束
 

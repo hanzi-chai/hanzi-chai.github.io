@@ -1,7 +1,13 @@
 import { Select } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 import type { SelectProps } from "antd/lib";
-import { type IDVariable, type 字形, 部件 } from "hanzi-chai";
+import {
+  type IDVariable,
+  type 字形,
+  格式化字形ID,
+  解析字形ID,
+  部件,
+} from "hanzi-chai";
 import { useEffect, useState } from "react";
 import { useAtomValue, 字库原子 } from "~/atoms";
 import GlyphView from "./GlyphView";
@@ -41,7 +47,8 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
           <span>
             <GlyphView glyph={字形.图形盒子} />
             <span className="text-xs">
-              ({value}, {字形 instanceof 部件 ? "部件" : "复合体"})
+              ({格式化字形ID(value)}, {字形 instanceof 部件 ? "部件" : "复合体"}
+              )
             </span>
           </span>
         ),
@@ -55,7 +62,7 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
       <span>
         <GlyphView glyph={x.图形盒子} />
         <span className="text-xs">
-          ({x.id}, {x instanceof 部件 ? "部件" : "复合体"})
+          ({格式化字形ID(x.id)}, {x instanceof 部件 ? "部件" : "复合体"})
         </span>
       </span>
     ),
@@ -78,7 +85,7 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
         }
       }}
       showSearch
-      placeholder="输入笔画或字符搜索"
+      placeholder="输入笔画、字符或五位 ID"
       filterOption={false}
       onSearch={(input) => {
         const 选项列表: DefaultOptionType[] = [];
@@ -121,6 +128,12 @@ export default function GlyphSelect<T extends GlyphValue = GlyphValue>({
               选项列表.push(makeOption(字形));
             }
           }
+        }
+        if (/^(?:(?:字形-|0x)[0-9a-f]{1,5}|[0-9a-f]{5})$/i.test(input)) {
+          const id = 解析字形ID(input);
+          const 字形 = id === undefined ? undefined : 字库.获取字形(id);
+          if (字形 && !选项列表.some((选项) => 选项.value === id))
+            选项列表.unshift(makeOption(字形));
         }
         setOptions(选项列表);
       }}

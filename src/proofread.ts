@@ -1,7 +1,7 @@
 import type { 字集指示 } from "./config.js";
 import { type 字库, 是部件 } from "./repertoire.js";
 import { type 字符, 字集过滤查找表 } from "./unicode.js";
-import { 解析码表, type 码表条目 } from "./utils.js";
+import { type 码表条目, 解析码表 } from "./utils.js";
 
 export const 码表格式列表 = [
   "char_tab_code",

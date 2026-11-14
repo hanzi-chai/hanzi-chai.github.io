@@ -77,10 +77,10 @@ analysis:
     夹:
       - '1'
       - '4'
-    奂:
+    字形-12438:
       - '3'
       - '4'
-    矢:
+    字形-25116:
       - '3'
       - '4'
     生:
@@ -301,45 +301,25 @@ encoder:
   conditions: {}
 data:
   character_set: gb2312
-  glyph_customization:
-    修:
-      type: compound
-      operator: ⿲
-      operandList: [亻, 丨, "\ue80d"]
-    倏:
-      type: compound
-      operator: ⿲
-      operandList: [亻, 丨, "\ue80f"]
-    "\uebc7":
-      type: spliced_component
-      operator: ⿱
-      operandList: ["\ue018", 囗]
-      parameters: {gap2: 0}
-    卤:
-      type: compound
-      operator: ⿴
-      operandList: ["\uebc7", 一]
-    攸:
-      type: compound
-      operator: ⿲
-      operandList: [亻, 丨, 攵]
-    毫:
-      type: compound
-      operator: ⿱
-      operandList: ["\ue804", 毛]
-    畿:
-      type: compound
-      operator: ⿱
-      operandList: [幺, 戈]
-    郴:
-      type: compound
-      operator: ⿲
-      operandList: [木, 木, 阝]
-    鬼:
-      type: spliced_component
-      operator: ⿺
-      operandList: ["\ue0ed", 厶]
-    鸿:
-      type: compound
-      operator: ⿲
-      operandList: [氵, 工, 鸟]
+  character_customization:
+    修: [{type: insert, id: 983040, sources: []}]
+    倏: [{type: insert, id: 983041, sources: []}]
+    : [{type: insert, id: 983042, sources: []}]
+    卤: [{type: insert, id: 983043, sources: []}]
+    攸: [{type: insert, id: 983044, sources: []}]
+    毫: [{type: insert, id: 983045, sources: []}]
+    畿: [{type: insert, id: 983046, sources: []}]
+    郴: [{type: insert, id: 983047, sources: []}]
+    鬼: [{type: insert, id: 983048, sources: []}]
+    鸿: [{type: insert, id: 983049, sources: []}]
+  glyphs:
+    - {id: 983040, name: 修（首右拼音）, type: compound, operator: ⿲, references: [{id: 311}, {id: 2}, {id: 139783}]}
+    - {id: 983041, name: 倏（首右拼音）, type: compound, operator: ⿲, references: [{id: 311}, {id: 2}, {id: 140038}]}
+    - {id: 983042, name: （首右拼音）, type: component, strokes: [{feature: 竖, start: [50, 3], curveList: [{command: v, parameterList: [44]}]}, {feature: 横, start: [50, 25], curveList: [{command: h, parameterList: [40]}]}, {feature: 竖, start: [10, 53], curveList: [{command: v, parameterList: [44]}]}, {feature: 横折, start: [10, 53], curveList: [{command: h, parameterList: [80]}, {command: v, parameterList: [44]}]}, {feature: 横, start: [10, 97], curveList: [{command: h, parameterList: [80]}]}]}
+    - {id: 983043, name: 卤（首右拼音）, type: compound, operator: ⿴, references: [{id: 983042}, {id: 0}]}
+    - {id: 983044, name: 攸（首右拼音）, type: compound, operator: ⿲, references: [{id: 311}, {id: 2}, {id: 16904}]}
+    - {id: 983045, name: 毫（首右拼音）, type: compound, operator: ⿱, references: [{id: 58370}, {id: 910}]}
+    - {id: 983046, name: 畿（首右拼音）, type: compound, operator: ⿱, references: [{id: 755}, {id: 839}]}
+    - {id: 983047, name: 郴（首右拼音）, type: compound, operator: ⿲, references: [{id: 811}, {id: 811}, {id: 381}]}
+    - {id: 983048, name: 鬼（首右拼音）, type: component, strokes: [{feature: 撇, start: [48, 5], curveList: [{command: c, parameterList: [-1, 3, -3, 8, -6, 12]}]}, {feature: 竖, start: [20, 17], curveList: [{command: v, parameterList: [41]}]}, {feature: 横折, start: [20, 17], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [41]}]}, {feature: 横, start: [20, 37], curveList: [{command: h, parameterList: [60]}]}, {feature: 横, start: [20, 58], curveList: [{command: h, parameterList: [60]}]}, {feature: 撇, start: [50, 17], curveList: [{command: c, parameterList: [0, 24, 0, 62, -41, 74]}]}, {feature: 竖弯钩, start: [50, 58], curveList: [{command: v, parameterList: [33]}, {command: h, parameterList: [40]}]}, {feature: 撇折, start: [71, 65], curveList: [{command: c, parameterList: [-3, 7, -6, 13, -12, 19]}, {command: h, parameterList: [23]}]}, {feature: 点, start: [79, 79], curveList: [{command: c, parameterList: [2, 2, 4, 5, 4, 7]}]}]}
+    - {id: 983049, name: 鸿（首右拼音）, type: compound, operator: ⿲, references: [{id: 686}, {id: 528}, {id: 5009}]}

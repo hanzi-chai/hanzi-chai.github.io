@@ -1,4 +1,4 @@
-import { 合并分类器, type 分类器 } from "./classifier.js";
+import { type 分类器, 合并分类器 } from "./classifier.js";
 import { 默认退化配置 } from "./component.js";
 import type { 编码配置, 配置, 键盘配置 } from "./config.js";
 import { 默认筛选器列表 } from "./selector.js";
@@ -90,10 +90,10 @@ export interface StarterType {
 export function 创建方案模板(示例: Record<Example, 配置>) {
   // 私有副本防止调用方后续编辑示例时改变预设。
   const examples = structuredClone(示例);
-  const classifierMap: Record<ClassifierType, 分类器> = {
-    国标五分类: {} as 分类器,
-    表形码六分类: examples.mswb.analysis?.classifier ?? ({} as 分类器),
-    郑码七分类: examples.zhengma.analysis?.classifier ?? ({} as 分类器),
+  const classifierMap: Record<ClassifierType, Partial<分类器>> = {
+    国标五分类: {},
+    表形码六分类: examples.mswb.analysis?.classifier ?? {},
+    郑码七分类: examples.zhengma.analysis?.classifier ?? {},
   };
   const keyboardMap: Record<KeyboardTypes, 键盘配置> = {
     冰雪四拼: examples.snow4.form,

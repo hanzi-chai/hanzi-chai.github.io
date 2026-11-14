@@ -1,9 +1,13 @@
 import type { IRequest } from "itty-router";
-import type { 原始汉字模型 } from "../model/repertoire";
 import type { Ctx, Env } from "../dto/context";
-import { DataList } from "../dto/list";
-import { loadString } from "../dto/load";
+import {
+  读取PUA创建,
+  读取旧字库,
+  读取旧字库删除,
+  读取旧字库批量,
+} from "../dto/requests";
 import { Err, ErrCode, Ok, type Result } from "../error/error";
+import type { 原始汉字模型 } from "../model/repertoire";
 import { Model } from "../model/repertoire";
 
 export async function validateUnicode(request: IRequest, _env: Env, ctx: Ctx) {
@@ -40,44 +44,8 @@ export async function checkNotExist(_request: IRequest, env: Env, ctx: Ctx) {
 export async function ListAll(_request: Request, env: Env) {
   const { results } = await env.CHAI.prepare(
     "SELECT unicode, tygf, gb2312, glyphs, name FROM repertoire",
-  ).all();
+  ).all<原始汉字模型>();
   return results;
-}
-
-/** GET:/repertoire?page=1&size=20 */
-export async function List(
-  request: IRequest,
-  env: Env,
-): Promise<Result<DataList<原始汉字模型>>> {
-  // 第 `page` 页, 每页 `size` 条
-  const { page, size } = request.query;
-
-  // 查询记录总数
-  const result = await Model.count(env);
-  if (!Ok(result)) {
-    return result as Err;
-  }
-
-  var list = new DataList<原始汉字模型>();
-  list.total = result;
-  list.page = parseInt(loadString(page), 10) || 1;
-  list.size = parseInt(loadString(size), 10) || 20;
-
-  if (list.total > (list.page - 1) * list.size) {
-    // 本页有数据时, 查询数据
-    const result = await Model.list(
-      env,
-      (list.page - 1) * list.size,
-      list.size,
-    );
-    if (!Ok(result)) {
-      return result as Err;
-    }
-
-    list.items = result;
-  }
-
-  return list;
 }
 
 /** GET:/repertoire/:unicode */
@@ -99,18 +67,10 @@ export async function Create(
   request: IRequest,
   env: Env,
 ): Promise<Result<number>> {
-  let glyph: unknown;
-  try {
-    glyph = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const glyph = await 读取旧字库(request);
+  if (!Ok(glyph)) return glyph;
 
-  // if (!validateCharacter.validate(glyph)) {
-  //   return new Err(ErrCode.ParamInvalid, "请求不合法");
-  // }
-
-  return await Model.create(env, glyph as 原始汉字模型);
+  return await Model.create(env, glyph);
 }
 
 /** POST:/repertoire/batch */
@@ -118,7 +78,8 @@ export async function CreateBatch(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  const glyph: 原始汉字模型[] = await request.json();
+  const glyph = await 读取旧字库批量(request);
+  if (!Ok(glyph)) return glyph;
   return await Model.createBatch(env, glyph);
 }
 
@@ -127,12 +88,8 @@ export async function CreatePUA(
   request: IRequest,
   env: Env,
 ): Promise<Result<number>> {
-  let glyph: any;
-  try {
-    glyph = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const glyph = await 读取PUA创建(request);
+  if (!Ok(glyph)) return glyph;
 
   const unicode = await Model.generateUnicode(env, glyph.type);
 
@@ -144,7 +101,7 @@ export async function CreatePUA(
     tygf: 0,
     gb2312: 0,
     glyphs: "[]",
-    name: glyph.name,
+    name: glyph.name ?? null,
   };
 
   return await Model.create(env, model);
@@ -184,18 +141,10 @@ export async function Update(
   env: Env,
 ): Promise<Result<boolean>> {
   // 请求参数
-  let glyph: unknown;
-  try {
-    glyph = await request.json();
-  } catch (err) {
-    return new Err(ErrCode.UnknownInnerError, (err as Error).message);
-  }
+  const glyph = await 读取旧字库(request);
+  if (!Ok(glyph)) return glyph;
 
-  // if (!validateCharacter.validate(glyph)) {
-  //   return new Err(ErrCode.ParamInvalid, "请求不合法");
-  // }
-
-  return await Model.update(env, glyph as 原始汉字模型);
+  return await Model.update(env, glyph);
 }
 
 /** POST:/repertoire/batch */
@@ -203,7 +152,8 @@ export async function UpdateBatch(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  const glyph: 原始汉字模型[] = await request.json();
+  const glyph = await 读取旧字库批量(request);
+  if (!Ok(glyph)) return glyph;
   return await Model.updateBatch(env, glyph);
 }
 
@@ -211,7 +161,8 @@ export async function DeleteBatch(
   request: IRequest,
   env: Env,
 ): Promise<Result<boolean>> {
-  const unicodes: number[] = await request.json();
+  const unicodes = await 读取旧字库删除(request);
+  if (!Ok(unicodes)) return unicodes;
   const statement = env.CHAI.prepare(`DELETE FROM repertoire WHERE unicode=?`);
   await env.CHAI.batch(unicodes.map((unicode) => statement.bind(unicode)));
   return true;

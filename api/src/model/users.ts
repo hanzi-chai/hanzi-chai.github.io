@@ -1,5 +1,4 @@
 import type { Env } from "../dto/context";
-import { loadNumber, loadString } from "../dto/load";
 import { Err, ErrCode, type Result } from "../error/error";
 
 const tableUsers = "users";
@@ -13,26 +12,14 @@ export class UserModel {
   role: number = 0;
   state: number = 0;
 
-  public static modelFromRecord(record: Record<string, any>): UserModel {
-    var userModel = new UserModel();
-    userModel.id = loadString(record.id);
-    userModel.name = loadString(record.name);
-    userModel.email = loadString(record.email);
-    userModel.password = loadString(record.password);
-    userModel.avatar = loadString(record.avatar);
-    userModel.role = loadNumber(record.role);
-    userModel.state = loadNumber(record.state);
-    return userModel;
-  }
-
   public static async byId(env: Env, id: string): Promise<Result<UserModel>> {
-    var res;
+    let res: UserModel | null;
     try {
       res = await env.CHAI.prepare(
         `SELECT * FROM ${tableUsers} WHERE id=? LIMIT 1`,
       )
         .bind(id)
-        .first();
+        .first<UserModel>();
     } catch (err) {
       console.warn({ message: (err as Error).message });
       return new Err(ErrCode.DataQueryFailed, "数据查询失败");
@@ -42,20 +29,20 @@ export class UserModel {
       return new Err(ErrCode.RecordNotFound, "用户不存在");
     }
 
-    return UserModel.modelFromRecord(res);
+    return res;
   }
 
   public static async byEmail(
     env: Env,
     email: string,
   ): Promise<Result<UserModel>> {
-    var res;
+    let res: UserModel | null;
     try {
       res = await env.CHAI.prepare(
         `SELECT * FROM ${tableUsers} WHERE email=? LIMIT 1`,
       )
         .bind(email)
-        .first();
+        .first<UserModel>();
     } catch (err) {
       console.warn({ message: (err as Error).message });
       return new Err(ErrCode.DataQueryFailed, "数据查询失败");
@@ -65,7 +52,7 @@ export class UserModel {
       return new Err(ErrCode.RecordNotFound, "用户不存在");
     }
 
-    return UserModel.modelFromRecord(res);
+    return res;
   }
 
   /** 指定ID或邮箱的用户是否存在 */
@@ -74,52 +61,31 @@ export class UserModel {
     id: string,
     email: string,
   ): Promise<Result<boolean>> {
-    var res;
+    let res: number | null;
     try {
       res = await env.CHAI.prepare(
         `SELECT COUNT(0) total FROM ${tableUsers} WHERE id=? OR email=?`,
       )
         .bind(id, email)
-        .first("total");
+        .first<number>("total");
     } catch (err) {
       console.warn({ message: (err as Error).message });
       return new Err(ErrCode.DataQueryFailed, "数据查询失败");
     }
-    return loadNumber(res) !== 0;
+    return (res ?? 0) !== 0;
   }
 
   public static async count(env: Env): Promise<Result<number>> {
-    var res;
+    let res: number | null;
     try {
       res = await env.CHAI.prepare(
         `SELECT COUNT(0) total FROM ${tableUsers}`,
-      ).first("total");
+      ).first<number>("total");
     } catch (err) {
       console.warn({ message: (err as Error).message });
       return new Err(ErrCode.DataQueryFailed, "数据查询失败");
     }
-    return loadNumber(res);
-  }
-
-  public static async list(
-    env: Env,
-    offset: number,
-    limit: number,
-  ): Promise<Result<UserModel[]>> {
-    var res;
-    try {
-      res = await env.CHAI.prepare(
-        `SELECT * FROM ${tableUsers} LIMIT ? OFFSET ?`,
-      )
-        .bind(limit, offset)
-        .all();
-    } catch (err) {
-      console.warn({ message: (err as Error).message });
-      return new Err(ErrCode.DataQueryFailed, "数据查询失败");
-    }
-
-    const { results } = res;
-    return results.map((record) => UserModel.modelFromRecord(record));
+    return res ?? 0;
   }
 
   public static async create(

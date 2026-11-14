@@ -4,8 +4,8 @@ import {
   三次曲线,
   拓扑,
   曲线,
-  笔画图形,
   type 曲线关系,
+  笔画图形,
 } from "../src/bezier.js";
 import type { 向量 } from "../src/data.js";
 

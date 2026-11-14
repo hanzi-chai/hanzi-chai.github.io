@@ -21,7 +21,9 @@ export const 用户字形列表原子 = focusAtom(数据配置原子, (o) =>
 );
 
 export const 字形自定义原子 = focusAtom(数据配置原子, (o) =>
-  o.prop("character_customization").valueOr({} as Record<string, 字符数据补丁[]>),
+  o
+    .prop("character_customization")
+    .valueOr({} as Record<string, 字符数据补丁[]>),
 );
 
 export const 字形拼写运算列表原子 = focusAtom(数据配置原子, (o) =>

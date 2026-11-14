@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import {
-  分析方案,
   准备方案,
-  构建字库,
-  最小方案,
-  type 配置,
+  分析方案,
   type 基本字形数据,
   type 字符数据,
+  type 配置 as 方案配置,
+  最小方案,
+  构建字库,
 } from "../src/index.js";
 
 const 横部件 = (id: number, count: number): 基本字形数据 => ({
@@ -14,7 +14,6 @@ const 横部件 = (id: number, count: number): 基本字形数据 => ({
   type: "component",
   operator: undefined,
   references: undefined,
-  ambiguous: false,
   strokes: Array.from({ length: count }, (_, i) => ({
     feature: "横",
     start: [10, 15 + i * 25],
@@ -25,10 +24,14 @@ const 复合 = (id: number, ids: number[]): 基本字形数据 => ({
   id,
   type: "compound",
   operator: "⿱",
-  ambiguous: false,
   references: ids.map((id) => ({ id })),
 });
-function 上下文(配置: 配置, 字形: 基本字形数据[], 字符: string, id: number) {
+function 上下文(
+  配置: 方案配置,
+  字形: 基本字形数据[],
+  字符: string,
+  id: number,
+) {
   const 字符表: 字符数据[] = [
     {
       unicode: 字符.codePointAt(0)!,
@@ -43,17 +46,17 @@ function 上下文(配置: 配置, 字形: 基本字形数据[], 字符: string,
 }
 function 配置() {
   const c = structuredClone(最小方案);
+  c.data!.fusion = false;
   c.analysis = {
     component_analyzer: "冰雪飞花",
     compound_analyzer: "冰雪飞花",
-    fusion: false,
     selector: ["根少优先", "全符笔顺", "取大优先"],
   };
-  c.form = { alphabet: "aeb", mapping: { "1": "e", "字形-2": "b" } };
+  c.form = { alphabet: "aeb", mapping: { "1": "e", "字形-00002": "b" } };
   return c;
 }
 const 名称 = (x: any) => x.字根序列.map((根: any) => 根.获取名称());
-function 对照(c: 配置, 字形: 基本字形数据[], 字符 = "三", id = 3) {
+function 对照(c: 方案配置, 字形: 基本字形数据[], 字符 = "三", id = 3) {
   const ctx = 上下文(c, 字形, 字符, id);
   const 静态 = 分析方案(ctx);
   if (静态.dynamic) throw new Error("应为静态分析");
@@ -93,10 +96,10 @@ describe("冰雪飞花静态与动态规则", () => {
     undefined,
   ])("字根跨集合或不选取时仍有一致回退：%s", (键) => {
     const c = 配置();
-    if (键) c.form.mapping["字形-2"] = 键;
-    else delete c.form.mapping["字形-2"];
+    if (键) c.form.mapping["字形-00002"] = 键;
+    else delete c.form.mapping["字形-00002"];
     c.form.mapping_space = {
-      "字形-2": [
+      "字形-00002": [
         { value: "b", score: 0 },
         { value: "e", score: 0 },
         { value: null, score: 0 },
@@ -110,10 +113,10 @@ describe("冰雪飞花静态与动态规则", () => {
     undefined,
   ])("可选复合体正根继续回退且随布局一致：%s", (键) => {
     const c = 配置();
-    if (键) c.form.mapping["字形-10"] = 键;
-    else delete c.form.mapping["字形-10"];
+    if (键) c.form.mapping["字形-0000a"] = 键;
+    else delete c.form.mapping["字形-0000a"];
     c.form.mapping_space = {
-      "字形-10": [
+      "字形-0000a": [
         { value: "b", score: 0 },
         { value: "e", score: 0 },
         { value: null, score: 0 },
@@ -135,8 +138,8 @@ describe("冰雪飞花静态与动态规则", () => {
       11,
     );
     expect(名称(静)[0]).toBe("1");
-    expect((静 as any).常规字根序列[0].获取名称()).toBe("字形-2");
-    expect(首选.常规字根序列[0].获取名称()).toBe("字形-2");
+    expect((静 as any).常规字根序列[0].获取名称()).toBe("字形-00002");
+    expect(首选.常规字根序列[0].获取名称()).toBe("字形-00002");
   });
   it("准包围由 glyph_algebra 改写，分析器仅按包围结构处理", () => {
     const c = 配置();
@@ -155,6 +158,6 @@ describe("冰雪飞花静态与动态规则", () => {
       11,
     );
     expect((静 as any).复合体.结构描述字符).toBe("⿵");
-    expect(名称(静)[0]).toBe("字形-2");
+    expect(名称(静)[0]).toBe("字形-00002");
   });
 });

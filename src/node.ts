@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { 组装 } from "./assembly.js";
 import { 合并分类器 } from "./classifier.js";
@@ -13,6 +12,7 @@ import {
   type 拼音分析映射,
   type 拼音分析结果,
 } from "./pinyin.js";
+import { 默认数据目录 } from "./project.js";
 import type { 字库, 字形分析结果 } from "./repertoire.js";
 import { 构建字库, 构建字形分析配置, 构建组装配置 } from "./scheme.js";
 import {
@@ -35,10 +35,6 @@ import {
 } from "./utils.js";
 import { 校验配置结构 } from "./validation.js";
 
-// ESM 中模拟 __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 export function 读取配置(路径: string): 配置 {
   const 内容 = readFileSync(路径, "utf-8");
   const 配置 = load(内容);
@@ -52,16 +48,16 @@ function 读取数据文件<T>(
   解析函数: (tsv: string[][]) => T,
   自定义路径?: string,
 ): T {
-  const 默认路径 = path.join(__dirname, "data", 文件名);
+  const 默认路径 = path.join(默认数据目录, 文件名);
   const 内容 = readFileSync(自定义路径 ?? 默认路径, "utf-8");
   const tsv = 读取表格(内容);
   return 解析函数(tsv);
 }
 
 export function 获取字库(配置: 配置): 字库 {
-  const 字符列表路径 = path.join(__dirname, "data", "characters.json");
+  const 字符列表路径 = path.join(默认数据目录, "characters.json");
   const 字符列表内容 = readFileSync(字符列表路径, "utf8");
-  const 字形列表路径 = path.join(__dirname, "data", "glyphs.json");
+  const 字形列表路径 = path.join(默认数据目录, "glyphs.json");
   const 字形列表内容 = readFileSync(字形列表路径, "utf8");
   const 字符列表: 字符数据[] = JSON.parse(字符列表内容);
   const 字形列表: 基本字形数据[] = JSON.parse(字形列表内容);

@@ -1,11 +1,11 @@
-import type { 配置, 离散分析配置 } from "hanzi-chai";
 import useTitle from "ahooks/es/useTitle";
-import init, { validate } from "libchai";
 import { notification } from "antd";
-import type { 后端错误 } from "~/api";
-import { isEqual, range } from "lodash-es";
 import { diff } from "deep-object-diff";
+import type { 离散分析配置, 配置 } from "hanzi-chai";
 import { dump } from "js-yaml";
+import init, { validate } from "libchai";
+import { isEqual, range } from "lodash-es";
+import type { 后端错误 } from "~/api";
 import type { WorkerOutput } from "~/worker";
 import { APP_VERSION } from "./version";
 
@@ -169,7 +169,7 @@ export const 数字 = (n: number) => {
   const 汉字数字 = "零一二三四五六七八九十";
   const 绝对值 = 汉字数字[absn] || absn.toString();
   return n >= 0 ? 绝对值 : `负${绝对值}`;
-}
+};
 
 export const 颜色插值 = (color1: string, color2: string, percent: number) => {
   // Convert the hex colors to RGB values
@@ -188,12 +188,12 @@ export const 颜色插值 = (color1: string, color2: string, percent: number) =>
 
   // Convert the interpolated RGB values back to a hex color
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-}
+};
 
 export const 标准键盘 = [
   ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
   ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
   ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";"],
   ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"],
-  ['_', '\'', '-', '=', '[', ']', '\\', '`', ' ', ' '],
+  ["_", "'", "-", "=", "[", "]", "\\", "`", " ", " "],
 ];

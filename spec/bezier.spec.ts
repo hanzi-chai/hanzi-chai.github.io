@@ -1,14 +1,14 @@
-import { expect, describe, it, beforeAll } from "bun:test";
-import { 一次曲线, 三次曲线, 叉乘, 区间 } from "../src/index.js";
+import { beforeAll, describe, expect, it } from "bun:test";
 import type {
-  绘制,
-  向量,
   Tuple,
-  笔画关系,
-  部件,
-  字符,
+  向量,
   字库,
+  字符,
+  笔画关系,
+  绘制,
+  部件,
 } from "../src/index.js";
+import { 一次曲线, 三次曲线, 区间, 叉乘 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 let 部件图形库: Map<字符, 部件>;

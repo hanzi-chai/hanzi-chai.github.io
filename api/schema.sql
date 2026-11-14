@@ -10,8 +10,7 @@ CREATE TABLE IF NOT EXISTS characters (
   `unicode` INTEGER PRIMARY KEY,
   `tygf` INTEGER,
   `gb2312` INTEGER,
-  `glyphs` TEXT NOT NULL,
-  `name` TEXT
+  `glyphs` TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS glyphs (

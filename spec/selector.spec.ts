@@ -1,19 +1,19 @@
-import { describe, expect, it, beforeAll } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
+import type { 部件 } from "../src/index.js";
 import {
   全符笔顺,
   决策图,
   取大优先,
+  type 字形分析配置,
+  type 拆分方式,
+  type 拆分环境,
   构建强类型决策与决策空间,
   根少优先,
   能散不连,
   能连不交,
   计算全部合法元素与元素映射,
   默认分类器,
-  type 拆分方式,
-  type 拆分环境,
-  type 字形分析配置,
 } from "../src/index.js";
-import type { 部件 } from "../src/index.js";
 import { 获取数据 } from "./index.js";
 
 let 配置: 字形分析配置;

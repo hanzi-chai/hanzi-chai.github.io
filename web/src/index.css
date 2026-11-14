@@ -27,7 +27,9 @@
   margin: 0;
 }
 .glyph-form-modal .ant-pro-form-list-item {
+  /* biome-ignore lint/complexity/noImportantStyles: 覆盖 ProFormList 的行内布局，保持字形表单对齐。 */
   justify-content: space-between !important;
+  /* biome-ignore lint/complexity/noImportantStyles: ProFormList 内联设置 flex-end，此处需要居中对齐。 */
   align-items: center !important;
 }
 .glyph-form-modal .ant-form-item {

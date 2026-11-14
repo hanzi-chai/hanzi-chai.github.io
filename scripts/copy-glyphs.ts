@@ -1,14 +1,13 @@
 /**
- * 复制所有引用了字形 359 的字形：把引用替换为 360 后创建为新字形。
+ * 复制所有引用了源字形的字形：将指定引用替换为目标字形后创建副本。
  *
  * 用法：
  *   bun run scripts/copy-glyphs.ts --dry-run   # 仅预览，不修改
  *   bun run scripts/copy-glyphs.ts              # 执行复制
  *
  * 需要设置环境变量 JWT（用于 API 认证）。
- * 新字形的 ID 由脚本分配（部件从 64 起、复合体从 4096 起取首个空闲 ID），
- * 与服务器 POST /glyphs 的自动分配逻辑一致。
- * 如果引用 360 的等价字形已存在（排除 id），则跳过，
+ * 新字形的 ID 由服务器从 E0–EF 生成区分配。
+ * 如果替换后的等价字形已存在（排除 id），则跳过，
  * 因此重复运行本脚本是安全的。
  */
 
@@ -16,8 +15,8 @@ import "dotenv/config";
 import type { 基本字形数据, 复合体数据, 字形数据 } from "hanzi-chai";
 import { get, post } from "./utils";
 
-const 源ID = 228;
-const 目标ID = 437;
+const 源ID = 0x00215;
+const 目标ID = 0x18103;
 
 /** 返回字形的比较键（排除 id），用于判断等价字形是否已存在。 */
 function 比较键(字形: 字形数据): string {
