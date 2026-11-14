@@ -1,70 +1,27 @@
-/**
- * 从 api.chaifen.app 获取最新的数据 JSON 文件。
- * 从 assets.chaifen.app 获取最新的数据 TXT 文件。
- * 保存到两个位置：
- * - packages/hanzi-chai/src/data/ (用于 Node.js 环境)
- * - public/data/${version}/ (用于网页，版本化避免缓存)
- */
-
+/** 下载核心发布数据，并准备前端及开发核验所用资源。 */
 import { mkdirSync, writeFileSync } from "node:fs";
-import pako from "pako";
-import { listCharacters, listGlyphs } from "../src/api";
+import { getLocalDataPath } from "./data-path.js";
+import { fetchDataFiles } from "./fetch-data.js";
 import { fetchIRGSources } from "./unicode.js";
-import { getLocalDataPath, VERSION } from "./utils.js";
 
-function saveCompressedJson(filename: string, data: unknown, debug = false) {
-  const jsonString = JSON.stringify(data);
-  const compressedData = pako.deflate(jsonString);
-  if (debug) {
-    writeFileSync(`${nodeOutputDir}/${filename}.json`, jsonString);
-    writeFileSync(`${webOutputDir}/${filename}.json`, jsonString);
-  }
-  writeFileSync(`${nodeOutputDir}/${filename}.json.deflate`, compressedData);
-  writeFileSync(`${webOutputDir}/${filename}.json.deflate`, compressedData);
-}
-
-const assetsEndpoint = "https://assets.chaifen.app/";
-
-const nodeOutputDir = "packages/hanzi-chai/src/data";
-const webOutputDir = getLocalDataPath();
+const nodeOutputDir = getLocalDataPath();
 mkdirSync(nodeOutputDir, { recursive: true });
-mkdirSync(webOutputDir, { recursive: true });
 
-const characters = await listCharacters();
-const glyphs = await listGlyphs();
-if ("err" in characters || "err" in glyphs) {
-  throw new Error("无法从 API 获取数据，请检查网络连接或 API 状态。");
-}
-
-saveCompressedJson("characters", characters, true);
-saveCompressedJson("glyphs", glyphs, true);
-
-for (const filename of [
-  "cjk",
-  "dictionary",
-  "distribution",
-  "equivalence",
-  "tygf",
-  "gf0014",
-]) {
-  const url = `${assetsEndpoint}${filename}.txt`;
+// 与 npm 发布共用严格下载流程，不依赖前端 API 模块。
+await fetchDataFiles();
+// 核心运行之外的数据：gf0014 供网页使用，cjk、tygf 供开发核验；均不随 npm 包发布。
+for (const filename of ["cjk", "tygf", "gf0014"]) {
   try {
-    const response = await fetch(url);
+    const response = await fetch(`https://assets.chaifen.app/${filename}.txt`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
     writeFileSync(`${nodeOutputDir}/${filename}.txt`, text);
-    writeFileSync(`${webOutputDir}/${filename}.txt`, text);
     console.log(`已下载 ${filename}.txt`);
   } catch {
     console.warn(`跳过 ${filename}.txt（服务器上不存在或者不可用）`);
   }
 }
 
-// 来源表固定使用官方 Unicode 18.0，避免被 assets 上的旧版本覆盖。
 const irgSources = await fetchIRGSources();
 writeFileSync(`${nodeOutputDir}/Unihan_IRGSources.txt`, irgSources);
-writeFileSync(`${webOutputDir}/Unihan_IRGSources.txt`, irgSources);
-
-console.log(`\n所有资源已保存到:`);
-console.log(`  Node.js: ${nodeOutputDir}`);
-console.log(`  Web (v${VERSION}): ${webOutputDir}`);
+console.log(`\n所有资源已保存到: ${nodeOutputDir}`);

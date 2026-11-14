@@ -1,7 +1,5 @@
 version: '0.3'
 source: zhangma
-# 校对依据：data/zhangma.txt，GB2312 6763 字，每字一条全码。
-# SHA-256: 99f5e315030b3e91f226dc89b3dbb45921e900e282da44c05147505c5aff8b4c
 info:
   name: 张码
   author: 张建平

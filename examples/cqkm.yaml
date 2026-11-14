@@ -21,7 +21,7 @@ analysis:
     - 取大优先
   component_analyzer: 二笔
   compound_analyzer: 二笔
-  # 按方案取码融合；数据库保留符合 DATA.md 的图形分部。
+  # 按方案取码融合；数据库保留符合根 AGENTS.md 数据规范的图形分部。
   fusion:
     - 566
     - 4155

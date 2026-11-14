@@ -93,14 +93,12 @@ analysis:
     字形-1207: [几, '4']
     字形-1217: [匚, ]
     # 保留尚需覆盖的取根次序和局部字形。
-    # 校正仍有多码的共用分部和异体。
     字形-1138: ['3', 糸]
     # 港、台标「虱／風」内的横画按参考字形保留。
     字形-1144: ['3', 虫]
     字形-1166: [气]
     字形-4215: ['2', 八, 八]
     字形-14447: [口, 亠, 囗, 口]
-    字形-18861: [木, , , '1']
     字形-73922: [䒑, 大]
     字形-66186: [龶, 夊]
     字形-130525: [艹, '1', 廾, 刂]
@@ -119,6 +117,10 @@ analysis:
 form:
   alphabet: abcdefghijklmnopqrstuvwxyz
   mapping:
+    # 长竖耳、点长撇丷与长顶横口遵循普通字根匹配。
+    字形-235101: {element: 耳}
+    字形-235104: {element: 丷}
+    字形-235404: {element: 口}
     # 港、台标微字心的横与儿分离，同样归入兀。
     字形-233000: {element: 兀}
     # 韩标双点辶也按同一字根取码。
@@ -201,6 +203,8 @@ form:
     户: hh
     戸: hh
     匚: hf
+    # 匸与匚同根；完整字形和笔画切片使用同一规则。
+    匸: {element: 匚}
     丂: hk
     牙: ha
     犬: hq
@@ -237,6 +241,8 @@ form:
     目: jm
     且: jq
     見: jj
+    # 覎、覐等宿主的見形包围外框也作为普通字根登记。
+    字形-136031: {element: 見}
     貝: jb
     頁: je
     缶: jf
@@ -1286,7 +1292,290 @@ data:
     - {id: 232008, type: compound, operator: ⿱, references: [{id: 232001}, {id: 4199}]}
     # 从共享微字心的实际三笔提取，按普通字根规则匹配。
     - {id: 233000, type: component, name: 兀·横儿分离形, strokes: [{feature: 横, start: [6, 45], curveList: [{command: h, parameterList: [88]}]}, {feature: 撇, start: [34, 50], curveList: [{command: c, parameterList: [0, 28, 0, 39, -26, 48]}]}, {feature: 竖弯钩, start: [66, 50], curveList: [{command: v, parameterList: [48]}, {command: h, parameterList: [26]}]}]}
+    # 亙按一、亙心、一分部，贴合上下两横并保留共享原形的笔画几何。
+    - id: 853
+      type: compound
+      operator: ⿳
+      references:
+        - {id: 1, xbegin: 5, xend: 95, ybegin: 0, yend: 24}
+        - {id: 527, ybegin: 0, yend: 100, attach_to_previous: true}
+        - {id: 1, xbegin: 1, xend: 99, attach_to_previous: true}
+    # 畢的兼容形只将两条侧竖各收短三单位，使艹与举字底 #209 留隙。
+    - id: 234000
+      type: component
+      name: 畢·兼容拆分
+      strokes:
+        - {feature: 竖, start: [20, 10], curveList: [{command: v, parameterList: [26]}]}
+        - {feature: 横折, start: [20, 10], curveList: [{command: h, parameterList: [60]}, {command: v, parameterList: [26]}]}
+        - {feature: 横, start: [20, 23], curveList: [{command: h, parameterList: [60]}]}
+        - {feature: 横, start: [20, 36], curveList: [{command: h, parameterList: [60]}]}
+        - {feature: 横, start: [6, 53], curveList: [{command: h, parameterList: [88]}]}
+        - {feature: 竖, start: [26, 39], curveList: [{command: v, parameterList: [26]}]}
+        - {feature: 竖, start: [74, 39], curveList: [{command: v, parameterList: [26]}]}
+        - {feature: 横, start: [11, 68], curveList: [{command: h, parameterList: [78]}]}
+        - {feature: 横, start: [13, 82], curveList: [{command: h, parameterList: [74]}]}
+        - {feature: 竖, start: [50, 10], curveList: [{command: v, parameterList: [83]}]}
+    - {id: 234001, type: compound, operator: ⿰, references: [{id: 350}, {id: 234000}], name: 滭·畢兼容拆分}
+    - {id: 234002, type: compound, operator: ⿰, references: [{id: 599}, {id: 234000}], name: 熚·畢兼容拆分}
+    - {id: 234003, type: compound, operator: ⿰, references: [{id: 807}, {id: 234000}], name: 襅·畢兼容拆分}
+    - {id: 234004, type: compound, operator: ⿰, references: [{id: 4120}, {id: 234000}], name: 饆·畢兼容拆分}
+    - {id: 234005, type: compound, operator: ⿺, references: [{id: 136026}, {id: 234000}], name: 魓·畢兼容拆分}
+    # 跨分部的穴、京上：重组原复合体，复用已有完整分部。
+    - {id: 19031, type: compound, operator: ⿳, references: [{id: 4150}, {id: 187}, {id: 448}]}
+    - {id: 26813, type: compound, operator: ⿳, references: [{id: 4189}, {id: 634}, {id: 576}]}
+    # 痲、痳展开实笔画供跨分部取麻；左侧点用平点，末端左收一单位以匹配冫。
+    - id: 22302
+      type: component
+      name: 痲·跨分部取麻
+      strokes:
+        - {feature: 点, start: [53, 6], curveList: [{command: c, parameterList: [3, 4, 5, 8, 6, 12]}]}
+        - {feature: 横, start: [25, 18], curveList: [{command: h, parameterList: [66]}]}
+        - {feature: 撇, start: [25, 18], curveList: [{command: c, parameterList: [0, 35, 0, 50, -12, 75]}]}
+        - {feature: 平点, start: [8, 24], curveList: [{command: z, parameterList: [5, 4, 9, 10, 11, 15]}]}
+        - {feature: 提, start: [7, 63], curveList: [{command: l, parameterList: [12, -2]}]}
+        - {feature: 横, start: [29, 43], curveList: [{command: h, parameterList: [30]}]}
+        - {feature: 竖, start: [45, 28], curveList: [{command: v, parameterList: [64]}]}
+        - {feature: 撇, start: [37, 53], curveList: [{command: c, parameterList: [0, 14, 0, 25, -7, 35]}]}
+        - {feature: 竖弯, start: [52, 53], curveList: [{command: v, parameterList: [35]}, {command: h, parameterList: [7]}]}
+        - {feature: 横, start: [63, 43], curveList: [{command: h, parameterList: [30]}]}
+        - {feature: 竖, start: [78, 28], curveList: [{command: v, parameterList: [64]}]}
+        - {feature: 撇, start: [70, 53], curveList: [{command: c, parameterList: [0, 14, 0, 25, -6, 35]}]}
+        - {feature: 竖弯, start: [86, 53], curveList: [{command: v, parameterList: [35]}, {command: h, parameterList: [7]}]}
+    - id: 22304
+      type: component
+      name: 痳·跨分部取麻
+      strokes:
+        - {feature: 点, start: [53, 6], curveList: [{command: c, parameterList: [3, 4, 5, 8, 6, 12]}]}
+        - {feature: 横, start: [25, 18], curveList: [{command: h, parameterList: [66]}]}
+        - {feature: 撇, start: [25, 18], curveList: [{command: c, parameterList: [0, 35, 0, 50, -12, 75]}]}
+        - {feature: 平点, start: [8, 24], curveList: [{command: z, parameterList: [5, 4, 9, 10, 11, 15]}]}
+        - {feature: 提, start: [7, 63], curveList: [{command: l, parameterList: [12, -2]}]}
+        - {feature: 横, start: [29, 44], curveList: [{command: h, parameterList: [31]}]}
+        - {feature: 竖, start: [45, 28], curveList: [{command: v, parameterList: [64]}]}
+        - {feature: 撇, start: [45, 44], curveList: [{command: c, parameterList: [-4, 17, -9, 29, -15, 36]}]}
+        - {feature: 捺, start: [45, 44], curveList: [{command: c, parameterList: [3, 17, 8, 29, 14, 36]}]}
+        - {feature: 横, start: [63, 44], curveList: [{command: h, parameterList: [31]}]}
+        - {feature: 竖, start: [78, 28], curveList: [{command: v, parameterList: [64]}]}
+        - {feature: 撇, start: [78, 44], curveList: [{command: c, parameterList: [-3, 17, -8, 29, -14, 36]}]}
+        - {feature: 捺, start: [78, 44], curveList: [{command: c, parameterList: [4, 17, 9, 29, 15, 36]}]}
+    # 満字旁保留九笔，艹贴下横成龷；山中竖从冂框横处起笔。
+    - id: 20463
+      type: component
+      name: 満字旁·跨分部取龷
+      strokes:
+        - {feature: 横, start: [4, 17], curveList: [{command: h, parameterList: [88]}]}
+        - {feature: 竖, start: [33, 3], curveList: [{command: v, parameterList: [29]}]}
+        - {feature: 竖, start: [67, 3], curveList: [{command: v, parameterList: [29]}]}
+        - {feature: 横, start: [8, 32], curveList: [{command: h, parameterList: [84]}]}
+        - {feature: 竖, start: [14, 45], curveList: [{command: v, parameterList: [44]}]}
+        - {feature: 横折钩, start: [14, 45], curveList: [{command: h, parameterList: [72]}, {command: v, parameterList: [44]}]}
+        - {feature: 竖, start: [50, 45], curveList: [{command: v, parameterList: [31]}]}
+        - {feature: 竖折, start: [29, 57], curveList: [{command: v, parameterList: [19]}, {command: h, parameterList: [42]}]}
+        - {feature: 竖, start: [71, 57], curveList: [{command: v, parameterList: [19]}]}
+    # 互的首横上移三单位，与彑形留隙，避免新增匸根跨两根认取。
+    - {id: 479, type: component, name: 互·首横分离, strokes: [{feature: 横, start: [10, 9], curveList: [{command: h, parameterList: [80]}]}, {feature: 竖折, start: [26, 12], curveList: [{command: v, parameterList: [54]}, {command: h, parameterList: [46]}]}, {feature: 横折, start: [26, 36], curveList: [{command: h, parameterList: [46]}, {command: v, parameterList: [54]}]}, {feature: 横, start: [7, 90], curveList: [{command: h, parameterList: [86]}]}]}
+    # 爕、羉及髙保留发布表已收录的兼容笔顺或认根路径。
+    - {id: 235004, type: compound, operator: ⿱, references: [{id: 137583}, {id: 599}]}
+    - {id: 235005, type: compound, operator: ⿲, references: [{id: 4101}, {id: 1021}, {id: 948}], strokes: [{index: 0}, {index: 1}, {index: 2}]}
+    - {id: 235007, type: compound, operator: ⿱, references: [{id: 743}, {id: 235005}]}
+    # 霊字底的七笔整体分析，恢复跨分部的二、业。
+    - id: 30140
+      type: component
+      name: 霊字底·跨分部取二
+      strokes:
+        - {feature: 横, start: [6, 6], curveList: [{command: h, parameterList: [88]}]}
+        - {feature: 横, start: [10, 19], curveList: [{command: h, parameterList: [80]}]}
+        - {feature: 竖, start: [40, 19], curveList: [{command: v, parameterList: [75]}]}
+        - {feature: 竖, start: [60, 19], curveList: [{command: v, parameterList: [75]}]}
+        - {feature: 点, start: [12, 36], curveList: [{command: c, parameterList: [4, 10, 9, 23, 14, 40]}]}
+        - {feature: 撇, start: [88, 36], curveList: [{command: c, parameterList: [-3, 14, -7, 25, -14, 40]}]}
+        - {feature: 横, start: [10, 94], curveList: [{command: h, parameterList: [80]}]}
+    - id: 235008
+      type: component
+      name: 𠅘字头字头
+      strokes:
+        - {feature: 点, start: [44, 5], curveList: [{command: c, parameterList: [4, 5, 6, 8, 8, 14]}]}
+        - {feature: 横, start: [10, 23], curveList: [{command: h, parameterList: [80]}]}
+        - {feature: 竖, start: [36, 23], curveList: [{command: v, parameterList: [65]}]}
+        - {feature: 竖, start: [64, 23], curveList: [{command: v, parameterList: [65]}]}
+        - {feature: 横, start: [36, 45], curveList: [{command: h, parameterList: [28]}]}
+        - {feature: 横, start: [36, 68], curveList: [{command: h, parameterList: [28]}]}
+    - {id: 235009, type: compound, operator: ⿱, references: [{id: 235008}, {id: 4190, attach_to_previous: true}]}
+    # 长竖耳和赱的点长撇形均作为普通字根，不区分整形与切片。
+    - type: component
+      name: 聽字旁长竖耳形
+      id: 235101
+      strokes:
+        - {feature: 横, start: [14, 10], curveList: [{command: h, parameterList: [74]}]}
+        - {feature: 竖, start: [27, 10], curveList: [{command: v, parameterList: [43]}]}
+        - {feature: 竖, start: [73, 10], curveList: [{command: v, parameterList: [84]}]}
+        - {feature: 横, start: [27, 25], curveList: [{command: h, parameterList: [46]}]}
+        - {feature: 横, start: [27, 39], curveList: [{command: h, parameterList: [46]}]}
+        - {feature: 提, start: [11, 54], curveList: [{command: l, parameterList: [62, -4]}]}
+    # 斲及鬭的共用字旁交换前两笔，几何不变。
+    - id: 1110
+      type: component
+      name: 斲字旁
+      strokes:
+        - {feature: 竖折折, start: [20, 10], curveList: [{command: v, parameterList: [20]}, {command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}
+        - {feature: 横折, start: [20, 10], curveList: [{command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}
+        - {feature: 横, start: [20, 50], curveList: [{command: h, parameterList: [20]}]}
+        - {feature: 竖折折, start: [20, 50], curveList: [{command: v, parameterList: [20]}, {command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}
+        - {feature: 横折, start: [60, 10], curveList: [{command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}
+        - {feature: 横, start: [60, 30], curveList: [{command: h, parameterList: [20]}]}
+        - {feature: 竖折折, start: [60, 10], curveList: [{command: v, parameterList: [40]}, {command: h, parameterList: [20]}, {command: v, parameterList: [20]}]}
+        - {feature: 横, start: [60, 70], curveList: [{command: h, parameterList: [20]}]}
+        - {feature: 竖, start: [60, 70], curveList: [{command: v, parameterList: [20]}]}
+        - {feature: 横, start: [20, 90], curveList: [{command: h, parameterList: [60]}]}
+    # 羋保留中竖先写的兼容顺序。
+    - id: 235102
+      type: component
+      name: 羋字头·中竖先写兼容
+      strokes:
+        - {feature: 竖, start: [50, 10], curveList: [{command: v, parameterList: [80]}]}
+        - {feature: 竖, start: [30, 10], curveList: [{command: v, parameterList: [80]}]}
+        - {feature: 横, start: [10, 50], curveList: [{command: h, parameterList: [20]}]}
+        - {feature: 竖, start: [70, 10], curveList: [{command: v, parameterList: [80]}]}
+        - {feature: 横, start: [70, 50], curveList: [{command: h, parameterList: [20]}]}
+    - {type: compound, operator: ⿱, references: [{id: 235102}, {id: 209}], id: 235103}
+    - type: component
+      name: 赱字底的点长撇形
+      id: 235104
+      strokes:
+        - {feature: 点, start: [19, 16], curveList: [{command: c, parameterList: [7, 4, 13, 9, 19, 19]}]}
+        - {feature: 撇, start: [81, 16], curveList: [{command: c, parameterList: [-9, 29, -43, 60, -70, 70]}]}
+    # 喪将底横贴合畏字底，再从十二笔中自动取十、口、口、畏下。
+    - id: 14532
+      type: component
+      strokes:
+        - {feature: 横, start: [14, 28], curveList: [{command: h, parameterList: [72]}]}
+        - {feature: 竖, start: [50, 3], curveList: [{command: v, parameterList: [60]}]}
+        - {feature: 竖, start: [3, 33], curveList: [{command: v, parameterList: [17]}]}
+        - {feature: 横折, start: [3, 33], curveList: [{command: h, parameterList: [44]}, {command: v, parameterList: [17]}]}
+        - {feature: 横, start: [3, 50], curveList: [{command: h, parameterList: [44]}]}
+        - {feature: 竖, start: [53, 33], curveList: [{command: v, parameterList: [17]}]}
+        - {feature: 横折, start: [53, 33], curveList: [{command: h, parameterList: [44]}, {command: v, parameterList: [17]}]}
+        - {feature: 横, start: [53, 50], curveList: [{command: h, parameterList: [44]}]}
+        - {feature: 横, start: [7, 63], curveList: [{command: h, parameterList: [86]}]}
+        - {feature: 竖提, start: [20, 63], curveList: [{command: v, parameterList: [28]}, {command: l, parameterList: [20, -1]}]}
+        - {feature: 平撇, start: [84, 75], curveList: [{command: z, parameterList: [-10, 5, -20, 7, -23, 7]}]}
+        - {feature: 捺, start: [47, 63], curveList: [{command: c, parameterList: [3, 12, 11, 22, 45, 29]}]}
+    # 養系的兼容形让人形上端分开，自动取八、一、艮；规范地区形保持。
+    - {id: 235201, type: compound, operator: ⿱, references: [{id: 117, xbegin: 3, xend: 97, ybegin: -60, yend: 123}, {id: 1, xbegin: 6, xend: 94, ybegin: 59, yend: 109}], name: 養字中·八形兼容}
+    - {id: 235202, type: compound, operator: ⿱, references: [{id: 235201}, {id: 943}], name: 養字底·八一艮兼容}
+    - {id: 235203, type: compound, operator: ⿱, references: [{id: 929}, {id: 235202}], name: 養·八一艮兼容}
+    - {type: compound, operator: ⿸, references: [{id: 795}, {id: 235203}], id: 235204}
+    - {type: compound, operator: ⿰, references: [{id: 686}, {id: 235203}], id: 235205}
+    # 亹、斖的取根兼容形：中横两端留隙，排除完整月形。
+    - id: 235206
+      type: component
+      name: 亹字心·横两端留隙兼容
+      strokes:
+        - {feature: 竖, start: [35, 15], curveList: [{command: v, parameterList: [57]}]}
+        - {feature: 横折, start: [35, 15], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [57]}]}
+        - {feature: 横, start: [38, 35], curveList: [{command: h, parameterList: [24]}]}
+        - {feature: 横, start: [35, 52], curveList: [{command: h, parameterList: [30]}]}
+        - {feature: 竖折, start: [50, 52], curveList: [{command: v, parameterList: [20]}, {command: h, parameterList: [15]}]}
+    - {id: 235207, type: compound, name: 亹字中·T中件先写, operator: ⿴, references: [{id: 1095}, {id: 235206, xbegin: 0, xend: 100, ybegin: 0, yend: 100}], strokes: [{index: 1}, {index: 0}]}
+    - {id: 235208, type: compound, name: 亹·T, operator: ⿳, references: [{id: 149}, {id: 235207}, {id: 713}]}
+    - id: 235209
+      type: component
+      name: 斖字心·横两端留隙兼容
+      strokes:
+        - {feature: 竖, start: [35, 15], curveList: [{command: v, parameterList: [57]}]}
+        - {feature: 横折, start: [35, 15], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [57]}]}
+        - {feature: 横, start: [38, 35], curveList: [{command: h, parameterList: [24]}]}
+        - {feature: 横, start: [35, 52], curveList: [{command: h, parameterList: [30]}]}
+        - {feature: 竖, start: [50, 52], curveList: [{command: v, parameterList: [20]}]}
+    - {id: 235210, type: compound, name: 釁字头·T中件先写, operator: ⿴, references: [{id: 1095}, {id: 235209, xbegin: 0, xend: 100, ybegin: 0, yend: 100}], strokes: [{index: 1}, {index: 0}]}
+    - {id: 235211, type: compound, name: 斖字底·T, operator: ⿱, references: [{id: 235210}, {id: 713}]}
+    - {id: 235212, type: compound, name: 斖·T, operator: ⿱, references: [{id: 590}, {id: 235211}]}
+    # 釁、虋保留月、臼、竖的参考兼容次序，规范 T 顺序另由共享库提供。
+    - {id: 235213, type: compound, name: 釁字头·月臼竖兼容顺序, operator: ⿴, references: [{id: 1095}, {id: 1370, xbegin: 0, xend: 100, ybegin: 0, yend: 100}], strokes: [{index: 1, to: 3}, {index: 0, to: 6}, {index: 1, from: 4}, {index: 0, from: 7}]}
+    - {id: 235214, type: compound, name: 釁·月臼竖兼容, operator: ⿳, references: [{id: 235213}, {id: 977}, {id: 5039}]}
+    - {id: 235215, type: compound, name: 虋·月臼竖兼容, operator: ⿱, references: [{id: 437}, {id: 235214}], strokes: [{index: 0, from: 1, to: 1}, {index: 0, from: 0, to: 0}, {index: 0, from: 2}, {index: 1}]}
+    # 断幺字边分为真实的七笔、八笔两部分，保持所有笔画几何和先后。
+    - type: component
+      name: 断幺字边上部七笔
+      id: 235301
+      strokes:
+        - {feature: 撇折, start: [27, 4], curveList: [{command: c, parameterList: [-3, 6, -13, 17, -18, 21]}, {command: h, parameterList: [21]}]}
+        - {feature: 撇折, start: [41, 13], curveList: [{command: c, parameterList: [-4, 5, -14, 16, -32, 29]}, {command: h, parameterList: [37]}]}
+        - {feature: 点, start: [38, 29], curveList: [{command: c, parameterList: [3, 4, 5, 9, 9, 16]}]}
+        - {feature: 撇折, start: [72, 4], curveList: [{command: c, parameterList: [-4, 6, -14, 17, -19, 21]}, {command: h, parameterList: [21]}]}
+        - {feature: 撇折, start: [85, 13], curveList: [{command: c, parameterList: [-3, 5, -13, 16, -32, 29]}, {command: h, parameterList: [37]}]}
+        - {feature: 点, start: [82, 29], curveList: [{command: c, parameterList: [3, 4, 6, 9, 9, 16]}]}
+        - {feature: 横, start: [5, 47], curveList: [{command: h, parameterList: [90]}]}
+    - type: component
+      name: 断幺字边下部八笔
+      id: 235302
+      strokes:
+        - {feature: 竖, start: [95, 0], curveList: [{command: v, parameterList: [94]}]}
+        - {feature: 撇折, start: [27, 50], curveList: [{command: c, parameterList: [-3, 6, -13, 17, -18, 21]}, {command: h, parameterList: [21]}]}
+        - {feature: 撇折, start: [41, 59], curveList: [{command: c, parameterList: [-4, 5, -14, 16, -32, 29]}, {command: h, parameterList: [37]}]}
+        - {feature: 点, start: [38, 75], curveList: [{command: c, parameterList: [3, 4, 5, 9, 9, 16]}]}
+        - {feature: 撇折, start: [72, 50], curveList: [{command: c, parameterList: [-4, 6, -14, 17, -19, 21]}, {command: h, parameterList: [21]}]}
+        - {feature: 撇折, start: [85, 59], curveList: [{command: c, parameterList: [-3, 5, -13, 16, -32, 29]}, {command: h, parameterList: [37]}]}
+        - {feature: 点, start: [82, 75], curveList: [{command: c, parameterList: [3, 4, 6, 9, 9, 16]}]}
+        - {feature: 横, start: [5, 94], curveList: [{command: h, parameterList: [90]}]}
+    - {id: 26672, type: compound, name: 断幺字边·保留横的取根次序, operator: ⿻, references: [{id: 235301, xbegin: 0, xend: 100, ybegin: 0, yend: 100}, {id: 235302, xbegin: 0, xend: 100, ybegin: 0, yend: 100}]}
+    # 蘷使用首横与白形分离的局部兼容形，不影响百及其他宿主。
+    - type: component
+      name: 蘷字腰·一白分离形
+      id: 235303
+      strokes:
+        - {feature: 横, start: [8, 13], curveList: [{command: h, parameterList: [84]}]}
+        - {feature: 撇, start: [51, 16], curveList: [{command: c, parameterList: [-1, 6, -4, 12, -8, 18]}]}
+        - {feature: 竖, start: [24, 34], curveList: [{command: v, parameterList: [55]}]}
+        - {feature: 横折, start: [24, 34], curveList: [{command: h, parameterList: [56]}, {command: v, parameterList: [55]}]}
+        - {feature: 横, start: [24, 63], curveList: [{command: h, parameterList: [56]}]}
+        - {feature: 横, start: [24, 89], curveList: [{command: h, parameterList: [56]}]}
+    - {id: 235304, type: compound, name: 蘷字腰, operator: ⿲, references: [{id: 485}, {id: 235303}, {id: 371}], strokes: [{index: 1}, {index: 0}, {index: 2}]}
+    - {id: 235305, type: compound, operator: ⿳, references: [{id: 437}, {id: 235304}, {id: 328}]}
+    # 帯的短竖状点按静态竖形认根，作为无来源兼容形插入。
+    - id: 235306
+      type: component
+      name: 帯的短竖冖兼容形
+      strokes:
+        - {feature: 竖, start: [12, 35], curveList: [{command: v, parameterList: [30]}]}
+        - {feature: 横钩, start: [12, 35], curveList: [{command: h, parameterList: [76]}]}
+    - {id: 235307, type: compound, operator: ⿳, references: [{id: 673}, {id: 235306}, {id: 290}]}
+    # 舋内口的顶横向左伸出；共用右边在兼容形中重描，规范五笔形保留。
+    - type: component
+      name: 口·顶横左伸形
+      id: 235404
+      strokes:
+        - {feature: 竖, start: [50, 52], curveList: [{command: v, parameterList: [20]}]}
+        - {feature: 横折, start: [35, 52], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [20]}]}
+        - {feature: 横, start: [50, 72], curveList: [{command: h, parameterList: [15]}]}
+    - type: component
+      name: 舋字心·共用框边重描兼容
+      id: 235405
+      strokes:
+        - {feature: 竖, start: [35, 15], curveList: [{command: v, parameterList: [57]}]}
+        - {feature: 横折, start: [35, 15], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [57]}]}
+        - {feature: 横, start: [41, 35], curveList: [{command: h, parameterList: [18]}]}
+        - {feature: 竖, start: [50, 52], curveList: [{command: v, parameterList: [20]}]}
+        - {feature: 横折, start: [35, 52], curveList: [{command: h, parameterList: [30]}, {command: v, parameterList: [20]}]}
+        - {feature: 横, start: [50, 72], curveList: [{command: h, parameterList: [15]}]}
+    - {id: 235406, type: compound, name: 舋字头·T中件先写, operator: ⿴, references: [{id: 1095}, {id: 235405, xbegin: 0, xend: 100, ybegin: 0, yend: 100}], strokes: [{index: 1}, {index: 0}]}
+    - {id: 235407, type: compound, name: 舋·T, operator: ⿱, references: [{id: 235406}, {id: 713}]}
   character_customization:
+    # 方案兼容拆分不冒充 Unicode 地区来源。
+    爕: [{type: insert, id: 235004, sources: []}]
+    羉: [{type: insert, id: 235007, sources: []}]
+    髙: [{type: insert, id: 235009, sources: []}]
+    羋: [{type: insert, id: 235103, sources: []}]
+    養: [{type: insert, id: 235203, sources: []}]
+    癢: [{type: insert, id: 235204, sources: []}]
+    礢: [{type: insert, id: 235205, sources: []}]
+    亹: [{type: insert, id: 235208, sources: []}]
+    斖: [{type: insert, id: 235212, sources: []}]
+    釁: [{type: insert, id: 235214, sources: []}]
+    虋: [{type: insert, id: 235215, sources: []}]
+    蘷: [{type: insert, id: 235305, sources: []}]
+    帯: [{type: insert, id: 235307, sources: []}]
+    舋: [{type: insert, id: 235407, sources: []}]
     # 港、台标「垂」保留两个「十」，并给相关字补兼容形。
     垂: [{type: insert, id: 191101, sources: []}]
     唾: [{type: insert, id: 191102, sources: []}]
@@ -1425,6 +1714,13 @@ data:
     譽: [{type: insert, id: 232006, sources: []}]
     轝: [{type: insert, id: 232007, sources: []}]
     鸒: [{type: insert, id: 232008, sources: []}]
+    # 畢系的兼容码沿用无来源插入形，保留既有地区字形。
+    畢: [{type: insert, id: 234000, sources: []}]
+    滭: [{type: insert, id: 234001, sources: []}]
+    熚: [{type: insert, id: 234002, sources: []}]
+    襅: [{type: insert, id: 234003, sources: []}]
+    饆: [{type: insert, id: 234004, sources: []}]
+    魓: [{type: insert, id: 234005, sources: []}]
   character_set: basic
   glyph_sources:
     - G

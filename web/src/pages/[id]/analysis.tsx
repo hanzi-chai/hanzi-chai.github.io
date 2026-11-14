@@ -1,0 +1,344 @@
+import {
+  Button,
+  Col,
+  Collapse,
+  Flex,
+  Modal,
+  notification,
+  Pagination,
+  Radio,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Switch,
+} from "antd";
+import type { CollapseProps } from "antd/lib";
+import {
+  优先表,
+  type 冰雪飞花复合体分析,
+  type 动态字形分析结果,
+  type 基本部件分析,
+  type 字形分析结果,
+  type 字根,
+  type 字根元素,
+  获取注册表,
+  部件,
+  部件字根,
+  默认分类器,
+  type 默认部件分析,
+  字符字形过滤器,
+  type 过滤器参数,
+} from "hanzi-chai";
+import { useState } from "react";
+import {
+  useAtom,
+  useAtomValue,
+  useAtomValueUnwrapped,
+  分析配置原子,
+  动态分析原子,
+  复合体分析器原子,
+  如动态字形分析结果原子,
+  如字形分析结果原子,
+  字库原子,
+  强类型决策原子,
+  强类型决策空间原子,
+  强类型自定义分析原子,
+  部件分析器原子,
+} from "~/atoms";
+import Degenerator from "~/components/Degenerator";
+import CharacterQuery from "~/components/FilterForm";
+import ResultDetail from "~/components/ResultDetail";
+import ResultSummary from "~/components/ResultSummary";
+import Selector from "~/components/Selector";
+import { exportTSV, useChaifenTitle } from "~/utils";
+
+const 导出字形分析结果 = (a: 字形分析结果 | 动态字形分析结果) => {
+  const { 分析结果 } = a;
+  const tsv: string[][] = [];
+  const 序列化 = (l: 字根[]) =>
+    l
+      .map((z) => (z instanceof 部件字根 ? z.元素.获取名称() : z.获取名称()))
+      .join(" ");
+  for (const [汉字, 分析列表] of 分析结果) {
+    const head = [汉字.获取名称()];
+    for (const 分析 of 分析列表) {
+      if (分析 instanceof 优先表) {
+        tsv.push([
+          ...head,
+          // 动态分析以全角空格隔开
+          [...分析].map((x) => 序列化(x.字根序列)).join("　"),
+          分析.sources.join(","),
+        ]);
+      } else {
+        tsv.push([...head, 序列化(分析.字根序列), 分析.sources.join(",")]);
+      }
+    }
+  }
+  exportTSV(tsv, "拆分结果.txt");
+};
+
+const ConfigureRules = () => {
+  const [modal, setModal] = useState(0);
+  const [动态分析, 设置动态分析] = useAtom(动态分析原子);
+  const [部件分析器, 设置部件分析器] = useAtom(部件分析器原子);
+  const [复合体分析器, 设置复合体分析器] = useAtom(复合体分析器原子);
+  const 注册表 = 获取注册表();
+
+  return (
+    <Flex gap="middle" justify="center" align="center">
+      动态拆分：
+      <Switch checked={动态分析} onChange={设置动态分析} />
+      部件分析器：
+      <Select
+        className="min-w-24"
+        value={部件分析器}
+        onChange={设置部件分析器}
+        options={[...注册表.部件分析器映射.keys()].map((x) => ({
+          label: x,
+          value: x,
+        }))}
+      />
+      复合体分析器：
+      <Select
+        className="min-w-24"
+        value={复合体分析器}
+        onChange={设置复合体分析器}
+        options={[...注册表.复合体分析器映射.keys()].map((x) => ({
+          label: x,
+          value: x,
+        }))}
+      />
+      <Degenerator />
+      <Button onClick={() => setModal(2)}>配置拆分方式筛选规则</Button>
+      <Modal
+        title=""
+        open={modal === 2}
+        footer={null}
+        onCancel={() => setModal(0)}
+      >
+        <Selector />
+      </Modal>
+    </Flex>
+  );
+};
+
+const ExportDynamicAnalysis = () => {
+  const 动态分析结果 = useAtomValueUnwrapped(如动态字形分析结果原子);
+  return (
+    <Button onClick={() => 导出字形分析结果(动态分析结果)}>导出动态拆分</Button>
+  );
+};
+
+const AnalysisResults = ({ filter }: { filter: 过滤器参数 }) => {
+  const 字库 = useAtomValue(字库原子);
+  const [step, setStep] = useState(0 as 0 | 1);
+  const 分析配置 = useAtomValue(分析配置原子);
+  const 字形分析结果 = useAtomValueUnwrapped(如字形分析结果原子);
+  const { 部件分析结果, 复合体分析结果 } = 字形分析结果;
+  const 动态分析 = useAtomValue(动态分析原子);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const { 自定义分析映射, 动态自定义分析映射 } = useAtomValueUnwrapped(
+    强类型自定义分析原子,
+  );
+  const 全部自定义字形 = new Set([
+    ...自定义分析映射.keys(),
+    ...动态自定义分析映射.keys(),
+  ]);
+  const 自定义部件数 = [...全部自定义字形].filter(
+    (字形) => 字形 instanceof 部件,
+  ).length;
+  const 自定义字形ID = new Set([...全部自定义字形].map((字形) => 字形.id));
+  const 决策 = useAtomValueUnwrapped(强类型决策原子);
+  const [过滤必要字根, 设置过滤必要字根] = useState(true);
+  const 过滤器 = new 字符字形过滤器(filter);
+  const 决策空间 = useAtomValueUnwrapped(强类型决策空间原子);
+  const [只显示自定义, 设置只显示自定义] = useState(false);
+  const 是必要字根 = (e: 字根元素) => {
+    return (
+      决策.get(e) && (决策空间.get(e) ?? []).every((x) => x.value !== null)
+    );
+  };
+  const 部件分析内容: (NonNullable<CollapseProps["items"]>[number] & {
+    sequence: number[];
+  })[] = [];
+  const 复合体分析内容: NonNullable<CollapseProps["items"]> = [];
+  let 需拆分部件数 = 0;
+  for (const [部件, 分析] of 部件分析结果) {
+    if (分析.字根序列.length === 1) continue;
+    需拆分部件数++;
+    if (!过滤器.过滤字形(部件, 字库)) continue;
+    if (
+      只显示自定义 &&
+      !自定义分析映射.get(部件) &&
+      !动态自定义分析映射.get(部件)
+    )
+      continue;
+    const r = 分析 as 默认部件分析 | 基本部件分析;
+    部件分析内容.push({
+      key: 分析.部件.id,
+      label: <ResultSummary glyph={分析.部件} analysis={分析} />,
+      children:
+        "全部拆分方式" in r ? (
+          <ResultDetail
+            glyph={分析.部件}
+            data={r.全部拆分方式}
+            map={r.字根笔画映射}
+          />
+        ) : undefined,
+      sequence: r.字根序列.flatMap((x) => x.获取笔画序列(默认分类器)),
+    });
+  }
+  for (const [复合体, 复合体分析] of 复合体分析结果) {
+    if (!过滤器.过滤字形(复合体, 字库)) continue;
+    if (只显示自定义 && !自定义字形ID.has(复合体.id)) continue;
+    复合体分析内容.push({
+      key: 复合体.id,
+      label: <ResultSummary glyph={复合体} analysis={复合体分析} />,
+    });
+  }
+  部件分析内容.sort(
+    (a, b) =>
+      a.sequence.length - b.sequence.length ||
+      a.sequence.join("").localeCompare(b.sequence.join("")),
+  );
+
+  const displays = [部件分析内容, 复合体分析内容] as const;
+  return (
+    <>
+      <Flex gap="middle">
+        <Radio.Group
+          value={step}
+          onChange={(e) => setStep(e.target.value as 0)}
+          className="min-w-50"
+        >
+          <Radio.Button value={0}>部件拆分</Radio.Button>
+          <Radio.Button value={1}>复合体拆分</Radio.Button>
+        </Radio.Group>
+        <Button onClick={() => 导出字形分析结果(字形分析结果)}>导出拆分</Button>
+        {分析配置.component_analyzer === "冰雪飞花" && (
+          <Button
+            onClick={() => {
+              const tsv: string[][] = [];
+              const map: Record<string, string> = {
+                1: "一",
+                2: "丨",
+                3: "丿",
+                4: "丶",
+                5: "乙",
+              };
+              for (const [复合体, result] of 字形分析结果.复合体分析结果) {
+                const 部首 = (result as 冰雪飞花复合体分析).部首;
+                let 部首字符串 = "〇";
+                if (部首) {
+                  部首字符串 =
+                    部首 instanceof 部件字根
+                      ? 部首.元素.获取名称()
+                      : map[部首.获取名称()]!;
+                }
+                tsv.push([复合体.id.toString(), 部首字符串]);
+              }
+              exportTSV(tsv, "部首.txt");
+            }}
+          >
+            导出部首
+          </Button>
+        )}
+        {动态分析 && <ExportDynamicAnalysis />}
+        <Button
+          onClick={() => {
+            const 全部自定义拆分 = new Map(动态自定义分析映射);
+            for (const [k, v] of 自定义分析映射) {
+              if (全部自定义拆分.get(k) === undefined) {
+                全部自定义拆分.set(k, [v]);
+              }
+            }
+            for (const [部件, 字根序列列表] of 全部自定义拆分) {
+              const last = 字根序列列表[字根序列列表.length - 1];
+              if (!last) continue;
+              if (last.some((x) => !是必要字根(x))) {
+                notification.warning({
+                  message: "存在不合法的自定义拆分",
+                  description: `部件 ${部件.id} 的自定义拆分中包含非必要字根 ${last
+                    .filter((x) => !是必要字根(x))
+                    .join("、")}，请修改后重试`,
+                });
+                return;
+              }
+            }
+            notification.success({
+              message: "检查通过",
+              description: "所有自定义拆分均合法",
+            });
+          }}
+        >
+          检查自定义组
+        </Button>
+        <Space>
+          <span>过滤必要字根</span>
+          <Switch
+            checked={过滤必要字根}
+            onChange={() => 设置过滤必要字根((x) => !x)}
+          />
+        </Space>
+      </Flex>
+      <Row className="w-4/5 items-center">
+        <Col span={5}>
+          <Statistic title="总部件数" value={部件分析结果.size} />
+        </Col>
+        <Col span={5}>
+          <Statistic title="需拆分部件数" value={需拆分部件数} />
+        </Col>
+        <Col span={5}>
+          <Statistic
+            title="自动拆分部件数"
+            value={需拆分部件数 - 自定义部件数}
+          />
+        </Col>
+        <Col span={5}>
+          <Statistic title="自定义部件数" value={自定义部件数} />
+        </Col>
+        <Col span={4}>
+          <Space>
+            <span>只显示自定义</span>
+            <Switch
+              checked={只显示自定义}
+              onChange={() => 设置只显示自定义((x) => !x)}
+            />
+          </Space>
+        </Col>
+      </Row>
+      <Collapse
+        items={displays[step].slice((page - 1) * pageSize, page * pageSize)}
+        accordion={true}
+        size="small"
+        className="self-stretch"
+      />
+      <Pagination
+        current={page}
+        onChange={(page, pageSize) => {
+          setPage(page);
+          setPageSize(pageSize);
+        }}
+        total={displays[step].length}
+        pageSize={pageSize}
+      />
+    </>
+  );
+};
+
+export default function Analysis() {
+  useChaifenTitle("拆分");
+  const [filter, setFilter] = useState<过滤器参数>({});
+
+  return (
+    <Flex vertical align="center" gap="middle" className="px-8">
+      <Flex gap="middle" justify="center" className="mb-4">
+        <ConfigureRules />
+      </Flex>
+      <CharacterQuery setFilter={setFilter} />
+      <AnalysisResults filter={filter} />
+    </Flex>
+  );
+}

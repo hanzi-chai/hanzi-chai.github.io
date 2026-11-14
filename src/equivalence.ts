@@ -1,6 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { mean, round, sortBy, sum } from "lodash-es";
-import { listEquivalence } from "~/api";
+import { mean, range, round, sortBy, sum } from "lodash-es";
 
 // Abramowitz & Stegun approximation, max error 1.5e-7
 function erf(x: number): number {
@@ -16,14 +14,13 @@ function erf(x: number): number {
   return sign * y;
 }
 
-function std(data: number[]): number {
+function std(data: readonly number[]): number {
+  if (data.length < 2) return 0;
   const m = mean(data);
   return Math.sqrt(
     data.reduce((s, x) => s + (x - m) ** 2, 0) / (data.length - 1),
   );
 }
-import { exit } from "node:process";
-import { range } from "lodash-es";
 
 export interface EquivalenceData {
   user: string;
@@ -33,7 +30,7 @@ export interface EquivalenceData {
 
 type Relation<T> = (v1: T, v2: T) => boolean;
 
-interface Model<T> {
+export interface Model<T> {
   group: Set<T>;
   relation: Relation<T>;
 }
@@ -49,6 +46,7 @@ export function partition<T>({ group, relation }: Model<T>) {
     const stack = [v];
     while (stack.length > 0) {
       const u = stack.pop()!;
+      if (visited.has(u)) continue;
       visited.add(u);
       subgroup.add(u);
       for (const w of group) {
@@ -116,13 +114,13 @@ export const 手机五行七列: Model<Pair> = {
   },
 };
 
-interface Estimation {
+export interface Estimation {
   value: number;
   std: number;
   length: number;
 }
 
-interface Equivalence {
+export interface Equivalence {
   distance: number;
   value: number;
   std: number;
@@ -133,13 +131,15 @@ function chauvenet(data: number[]) {
   const n = data.length;
   const meanValue = mean(data);
   const stdValue = std(data);
+  if (n < 2 || stdValue === 0) return data;
   return data.filter((x) => {
     const k = Math.abs(x - meanValue) / stdValue;
     return erf(k / Math.SQRT2) < 1 - 1 / (2 * n);
   });
 }
 
-function measure(data: number[]): Estimation {
+export function 估计当量测量(values: readonly number[]): Estimation {
+  const data = values.filter((value) => Number.isFinite(value) && value >= 0);
   if (data.length === 0) {
     return {
       value: Number.NaN,
@@ -169,7 +169,7 @@ function measure(data: number[]): Estimation {
   };
 }
 
-function analyze(
+function 分析单份当量样本(
   d: EquivalenceData,
   partitions: Set<Pair>[],
   hashmap: Map<string, number>,
@@ -179,7 +179,6 @@ function analyze(
   for (const { initial, final, time } of data) {
     const key = hashmap.get(`${initial},${final}`);
     if (key === undefined || key >= result.length) {
-      console.error(`Key not found for ${initial},${final}`);
       continue;
     }
     result[key]!.data.push(time);
@@ -187,7 +186,7 @@ function analyze(
   const stats = result.map(({ set, data }) => {
     const dist = distance([...set][0]!);
     return {
-      ...measure(data),
+      ...估计当量测量(data),
       rawLength: data.length,
       distance: dist,
     };
@@ -195,8 +194,16 @@ function analyze(
   return stats;
 }
 
-function preprocess(modelData: EquivalenceData[]) {
-  const partitions = partition(手机五行七列);
+export interface 当量样本分组 {
+  set: Set<Pair>;
+  data: Equivalence[];
+}
+
+export function 预处理当量样本(
+  modelData: readonly EquivalenceData[],
+  model: Model<Pair> = 手机五行七列,
+): 当量样本分组[] {
+  const partitions = partition(model);
   const hashmap = new Map<string, number>();
   for (const [index, set] of partitions.entries()) {
     for (const v of set) {
@@ -211,16 +218,17 @@ function preprocess(modelData: EquivalenceData[]) {
 
   for (const sample of modelData) {
     // 和 partitions 一一对应
-    const sampleResult = analyze(sample, partitions, hashmap);
+    const sampleResult = 分析单份当量样本(sample, partitions, hashmap);
     const baseline = sampleResult.find((x) => x.distance === 0);
-    if (!baseline) continue;
-    sampleResult.forEach(({ distance, value, std }, index) => {
+    if (!baseline || !Number.isFinite(baseline.value) || baseline.value <= 0)
+      continue;
+    sampleResult.forEach(({ distance, value, std, length }, index) => {
+      if (!length || !Number.isFinite(value) || value <= 0) return;
       if (distance === 0) {
         sampleData[index]!.data.push({ distance, value: 1, std: 0 });
       } else {
         const ratio = value / baseline.value;
         const correction = 1 + baseline.std ** 2 / baseline.value ** 2;
-        if (correction > 1.0003) console.log(distance, ratio, correction);
         const ratioStd =
           Math.sqrt((std / value) ** 2 + (baseline.std / baseline.value) ** 2) *
           ratio;
@@ -235,58 +243,61 @@ function preprocess(modelData: EquivalenceData[]) {
   return sampleData;
 }
 
-function finalize(sampleData: { set: Set<Pair>; data: Equivalence[] }[]) {
-  return sampleData.map(({ set, data }) => {
-    const distance = data[0]!.distance;
-    const values = data.map((x) => x.value);
-    const stds = data.map((x) => x.std);
-    const variances = stds.map((x) => x ** 2);
-    const coefficients = data.map(() => 1 / data.length);
-    // 另一种权重计算方法
-    // const suminvvar = sum(variances.map((x) => 1 / x));
-    // const coefficients = variances.map((x) => 1 / x / suminvvar);
-    const value = sum(values.map((x, j) => x * coefficients[j]!));
-    const variance = sum(variances.map((x, j) => x * coefficients[j]! ** 2));
-    const std = Math.sqrt(variance);
-    const equivalence: Equivalence = { distance, value, std };
-    return { set, ...equivalence };
-  });
+export function 汇总当量样本(sampleData: readonly 当量样本分组[]) {
+  return sampleData
+    .filter(({ data }) => data.length > 0)
+    .map(({ set, data }) => {
+      const distance = data[0]!.distance;
+      const values = data.map((x) => x.value);
+      const stds = data.map((x) => x.std);
+      const variances = stds.map((x) => x ** 2);
+      const coefficients = data.map(() => 1 / data.length);
+      const value = sum(values.map((x, j) => x * coefficients[j]!));
+      const variance = sum(variances.map((x, j) => x * coefficients[j]! ** 2));
+      const std = Math.sqrt(variance);
+      const equivalence: Equivalence = { distance, value, std };
+      return { set, ...equivalence };
+    });
 }
 
-let data: EquivalenceData[];
-if (existsSync("scripts/data.json")) {
-  data = JSON.parse(readFileSync("scripts/data.json", "utf-8"));
-} else {
-  const res = await listEquivalence();
-  if ("err" in res) exit(1);
-  data = res;
-  writeFileSync("scripts/data.json", JSON.stringify(data, null, 2));
+/** 计算同一实验模型的相对当量；不访问网络、文件系统或记录日志。 */
+export function 分析当量数据(
+  data: readonly EquivalenceData[],
+  modelName = "手机五行七列",
+  model: Model<Pair> = 手机五行七列,
+) {
+  const records = data.filter((record) => record.model === modelName);
+  const 样本 = records.length ? 预处理当量样本(records, model) : [];
+  const 当量 = sortBy(汇总当量样本(样本), "distance", "value");
+  return { 样本, 当量 };
 }
-const modelData = data.filter((d) => d.model === "手机五行七列");
-const sampleData = preprocess(modelData);
-const equivalence = finalize(sampleData);
-const sortedEquivalence = sortBy(equivalence, "distance", "value");
 
-writeFileSync("scripts/equivalence.json", JSON.stringify(sampleData, null, 2));
-
-const content = [["组合", "分组", "当量", "不确定度"].join("\t")];
-const counter = new Map<number, number>();
-for (const { distance, value, std, set } of sortedEquivalence) {
-  let groupname: string;
-  if (distance === -1) {
-    groupname = "/";
-  } else {
-    const distanceCount = counter.get(distance) ?? 0;
-    groupname = `${distance}${"ABCDEFGHIJKLMNOPQRSTUVWXYZ"[distanceCount]}`;
-    counter.set(distance, distanceCount + 1);
+export function 序列化当量统计(
+  当量: readonly (Equivalence & { set: Set<Pair> })[],
+): string[][] {
+  const rows = [["组合", "分组", "当量", "不确定度"]];
+  const counter = new Map<number, number>();
+  for (const { distance, value, std, set } of sortBy(
+    当量,
+    "distance",
+    "value",
+  )) {
+    let groupname: string;
+    if (distance === -1) {
+      groupname = "/";
+    } else {
+      const count = counter.get(distance) ?? 0;
+      groupname = `${distance}${"ABCDEFGHIJKLMNOPQRSTUVWXYZ"[count] ?? count}`;
+      counter.set(distance, count + 1);
+    }
+    for (const { initial, final } of sortBy([...set], "initial", "final")) {
+      rows.push([
+        `${initial}-${final}`,
+        groupname,
+        String(round(value, 3)),
+        String(round(std, 3)),
+      ]);
+    }
   }
-  for (const { initial, final } of sortBy([...set], "initial", "final")) {
-    content.push(
-      [`${initial}-${final}`, groupname, round(value, 3), round(std, 3)].join(
-        "\t",
-      ),
-    );
-  }
+  return rows;
 }
-
-writeFileSync("scripts/手机 5 × 7 当量.txt", `${content.join("\n")}\n`);

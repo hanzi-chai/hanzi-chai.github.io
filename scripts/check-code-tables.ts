@@ -1,19 +1,26 @@
 import { createHash } from "node:crypto";
 import {
   appendFileSync,
+  existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import {
+  列出示例方案,
+  获取示例方案路径,
   字集过滤查找表,
   评估方案项目,
   读取方案项目,
-} from "../packages/hanzi-chai/src/index";
-import { type CodeMap, compareTables, parseTable } from "./compare-code-tables";
+} from "../src/index";
+import {
+  applyExclusions,
+  type CodeMap,
+  compareTables,
+  parseTable,
+} from "./compare-code-tables";
 
 const schemeIds = [
   "cqkm",
@@ -73,8 +80,8 @@ const lines = [
   "",
   "在示例配置的字集内双向比较全码集合；同字异码保留，重复码对去重。",
   "",
-  "| 方案 | 字集 | 目标字数 | 完全相符 | 多码 | 缺码 | 参考缺字 | 生成缺字 | 结果 |",
-  "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+  "| 方案 | 字集 | 目标字数 | 排除码对 | 完全相符 | 多码 | 缺码 | 参考缺字 | 生成缺字 | 结果 |",
+  "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
 ];
 const errors: string[] = [];
 let failed = false;
@@ -105,7 +112,25 @@ try {
           entry.pairs
       )
         throw new Error("参考表字数或码对数与清单不符");
-      const project = 读取方案项目(path.join(root, "examples", `${id}.yaml`));
+      const exclusionFile = path.join(root, "data", `${id}-excluded.tsv`);
+      const exclusionText = existsSync(exclusionFile)
+        ? readFileSync(exclusionFile, "utf8")
+        : undefined;
+      const exclusions =
+        exclusionText === undefined
+          ? undefined
+          : {
+              file: path.relative(root, exclusionFile),
+              sha256: sha256(exclusionText),
+              ...applyExclusions(reference, exclusionText),
+            };
+      const effectiveReference = [...reference]
+        .flatMap(([character, codes]) =>
+          [...codes].map((code) => `${character}\t${code}\n`),
+        )
+        .sort()
+        .join("");
+      const project = 读取方案项目(获取示例方案路径(id));
       const scopeName = project.配置.data?.character_set ?? "general";
       const scope = new Set(
         [...project.上下文.字库]
@@ -131,6 +156,8 @@ try {
         scope: scopeName,
         status,
         reference_sha256: entry.sha256,
+        reference_effective_sha256: sha256(effectiveReference),
+        reference_exclusions: exclusions,
         metadata: record.metadata,
         ...comparison,
       };
@@ -143,28 +170,29 @@ try {
         path.join(out, `${id}.tsv`),
         `字\t参考全码\t生成全码\t多码\t缺码\n${comparison.differences.map((item) => [item.character, item.reference.join(" "), item.generated.join(" "), item.extra.join(" "), item.missing.join(" ")].join("\t")).join("\n")}\n`,
       );
-      const row = `| ${id} | ${scopeName} | ${comparison.characters} | ${comparison.exact} | ${comparison.extra} | ${comparison.missing} | ${comparison.reference_missing} | ${comparison.generated_missing} | ${status} |`;
+      const row = `| ${id} | ${scopeName} | ${comparison.characters} | ${exclusions?.applied_pairs ?? 0} | ${comparison.exact} | ${comparison.extra} | ${comparison.missing} | ${comparison.reference_missing} | ${comparison.generated_missing} | ${status} |`;
       lines.push(row);
       console.log(row);
     } catch (error) {
       failed = true;
       const message = error instanceof Error ? error.message : String(error);
       results.push({ id: id, status: "错误", error: message });
-      lines.push(`| ${id} | — | — | — | — | — | — | — | 错误 |`);
+      lines.push(`| ${id} | — | — | — | — | — | — | — | — | 错误 |`);
       errors.push(`校对错误（${id}）：${message.replace(/\n/g, " ")}`);
       console.error(`${id}: ${message}`);
     }
   }
   lines.push("", ...errors);
   const checked = new Set(schemeIds);
-  const skipped = readdirSync(path.join(root, "examples")).filter(
-    (name) => name.endsWith(".yaml") && !checked.has(name.slice(0, -5)),
-  );
+  const skipped = 列出示例方案()
+    .filter(({ id }) => !checked.has(id))
+    .map(({ id }) => `${id}.yaml`);
   lines.push(
     "",
     `未提供本地参考码表的示例（未校对）：${skipped.join("、")}`,
     "",
     "参考表包含官方兼容码和地区字形码；差异不一定表示算法错误，请按字形来源复核。完整差异见同名 TSV / JSON。",
+    "已核实的排除项读取 data/<方案>-excluded.tsv，先校验原始参考表哈希和计数，再按字、全码排除。JSON 记录排除清单哈希、实际排除条目及排除后的参考表哈希。",
   );
 } catch (error) {
   failed = true;

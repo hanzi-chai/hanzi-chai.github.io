@@ -2,136 +2,78 @@
 
 **总是用中文回复。**
 
-本文件为在此仓库工作的编码代理提供指导。命令、依赖版本和注册组件以各包的 `package.json`、`vite.config.ts` 和算法注册入口为准。
+本文件适用于整个仓库，包含核心算法、数据规范及方案校对方法。网页专属指导见 [web/AGENTS.md](web/AGENTS.md)，API 专属指导见 [api/AGENTS.md](api/AGENTS.md)；进入相应目录工作时一并遵循。命令、依赖和组件注册以 `package.json` 及源码入口为准。
 
-## 项目简介
+## 项目与目录
 
-汉字自动拆分系统——一个位于 https://chaifen.app 的网页应用，用于设计和测试中文输入方案。用户定义拆分和编码规则，系统自动分解汉字并生成码表。版本 0.4.0。
+汉字自动拆分系统以根目录的 `hanzi-chai` npm 包与 CLI 为主体，按用户定义的拆分和编码规则生成码表。网页与 API 是辅助应用。版本号以根 `package.json` 为唯一来源。
+
+```text
+hanzi-chai/
+├── src/              # TypeScript 核心算法与 Node/浏览器入口
+├── spec/             # Bun 算法测试
+├── examples/         # 随包发布的方案 YAML
+├── scripts/          # 数据准备、构建、校对及维护工具
+├── web/              # React/Vite 网页，独立指导见本目录 AGENTS.md
+└── api/              # Cloudflare Worker API，独立指导见本目录 AGENTS.md
+```
+
+`web` 与 `api` 是 private workspace，均以 `file:..` 依赖根包。业务代码统一从 `hanzi-chai` 导入；网页 Worker 评估单独使用轻量的 `hanzi-chai/evaluation`，避免引入拆分组件。根条件导出自动区分 Node/Bun 完整 API 与浏览器/Worker 通用 API；YAML 示例保留 `hanzi-chai/examples/*.yaml` 资源路径。源码开发脚本需要实时算法时可直接引用根 `src/`，不要意外运行旧 `dist/`。
+
+算法使用 TypeScript 与 `libchai`（Rust WASM），仓库开发使用 Bun、TypeScript、Biome，测试使用 `bun:test`。仓库维护脚本统一使用 `.ts` 并由 Bun 执行，源码构建和 `npm run` 生命周期也需要 Bun；安装后的 npm 成品继续由 Node.js 运行。npm 使用者需要 Node.js 20+，仓库使用的 Bun 版本要求见根 `package.json`。
 
 ## 常用命令
 
+以下命令均从仓库根目录执行：
+
 ```bash
-# 安装依赖并下载字库数据（安装后必须执行 fetch）
-bun install && bun run fetch
-
-# 开发
-bun run dev          # Vite 开发服务器（localhost:5173），等同 bun run start
-bun run preview      # 预览构建产物
-
-# 代码检查与格式化
-bun run lint         # Biome 检查（仅 ./src）
-bun run fix          # Biome 自动修复（unsafe）
-bun run format       # 按 Biome 配置格式化，并执行 git add .（会暂存所有改动）
-bunx tsc --noEmit    # 根项目 TypeScript 类型检查
-
-# 构建
-bun run build:pkg    # 仅构建算法包（hanzi-chai）
-bun run build:PAGES  # GitHub Pages 静态站点 → dist/pages
-bun run build:CF     # Cloudflare Workers 前端 → dist/cf
-bun run build:BEX    # 浏览器扩展 → dist/pages
-bun run build:CLIENT # 本地服务客户端前端 → dist/client
-bun run build        # 完整构建（fetch + build:CF）
-
-# API 后端（packages/api/）
-bun run start:api    # 本地启动 wrangler dev
-bun run deploy:api   # 部署到 Cloudflare Workers
-
-# 测试
-bun run --filter hanzi-chai test       # 运行核心算法测试
-bun run --filter hanzi-chai test:all   # 运行全部测试（含 spec/ 下所有文件）
-bun run --filter hanzi-chai test:scheme # 独立字库的方案运行与 CLI 测试
-
-# 无界面方案开发（完整用法见 packages/hanzi-chai/README.md）
+bun install --frozen-lockfile
+bun run fetch               # 首次准备共享数据；已有可用数据时无需重复下载
+bun run fetch:data          # 只准备五份 npm 包运行数据
 bun run chai --help
-bun run chai validate ./examples/snow4.yaml --json
-bun run chai evaluate ./scheme.yml --out ./runs/baseline --json
-
-# 发布
-bun run publish      # 版本 bump + git tag + commit + push
-bun run version      # 类型检查并构建 BEX、PAGES、CF（不含 CLIENT）
+bun run chai validate ./scheme.yaml --json
+bun run chai evaluate ./scheme.yaml --out ./output/baseline --json
+bun run build               # 构建算法包至根 dist/；build:pkg 为兼容别名
+bun run test                # 顶层算法测试
+bun run test:all             # ./spec 下全部测试，含示例回归
+bun run test:scheme          # 独立字库方案与 CLI 测试
+bun run typecheck           # 算法源码、测试与脚本类型检查
+bun run lint                # 算法源码和脚本的 Biome 检查
+bun run fix                 # Biome 自动修复（unsafe，先确认修改范围）
+bun run format              # 格式化，不执行 Git 暂存
+bun run check:package       # 将真实 tarball 安装至仓库外验证
 ```
 
-`package.json` 声明需要 Bun 1.0+，CI 使用最新版 Bun。当前根 `package.json` 未配置 `pre-commit` / `precommit`，不能假定提交前会自动格式化。
+发布准备命令 `bun run release` 会 bump 版本、提交、打标签并推送；npm 发布由 CI 执行。不能把发布准备当作本地验证命令。当前没有 `pre-commit` / `precommit` 脚本，不能假定提交前会自动格式化。
 
-### 修改与验证
+## 共享工程配置
 
-- 优先沿用现有中文领域命名和模块划分。前端交互改动放在 `src/`，拆分与组装规则放在 `packages/hanzi-chai/`。
-- 仅 `packages/hanzi-chai/` 核心算法库编写和保留 spec 测试；其他代码通过类型检查、lint 和实际运行验证，不添加 spec 测试。
-- 算法改动运行相关 Bun 测试；需要覆盖示例方案时运行 `test:all`。前端改动运行 `bun run lint` 和 `bunx tsc --noEmit`，构建验证选择对应目标。
-- 首次安装或缺少字库文件时运行 `bun run fetch`；该命令需要联网，已有可用数据时不必每次重复下载。单独的 `build:*` 脚本不会自动 fetch。
-- 局部格式化优先使用 `bunx biome format --write <文件路径>`；`bun run format` 会执行 `git add .`，可能暂存用户已有改动。
+- `tsconfig.base.json` 维护通用语言目标、严格模式、模块隔离和默认 `noEmit`；各环境自行声明全局类型、文件范围和路径。根 `tsconfig.json` 使用 Bundler 解析与 `customConditions: ["node"]` 统一检查算法、测试与脚本；`tsconfig.build.json` 仅包含算法源码，使用 NodeNext 校验实际 Node 模块路径并输出 JavaScript/声明。
+- `web/tsconfig.json` 与 `api/tsconfig.json` 直接继承基础配置，不继承主包的文件范围或 Bun 全局类型。DOM/JSX、Worker 类型和源码别名只放在对应环境。不同环境的 `noUncheckedIndexedAccess` 等既有检查策略保留在各自配置，不借配置整理改变严格程度。
+- TypeScript 与 Biome 工具依赖只在根 `package.json` 声明，工作区使用同一套版本。平台专属类型依赖仍在对应包维护。
+- 全仓共用根 `biome.json`，代码及配置文件统一使用两空格缩进和 LF；无需 `.editorconfig`。Biome 配置不控制编辑器输入时的默认行为，也不承担仓库内 Markdown、YAML、TOML 等未纳入格式化范围的文件格式管理。UTF-8 仍是文件约定，不由格式化器转码。
+- 不为少量差异再增加环境基础配置或 project references。Vite、Wrangler 分别维护应用构建/部署设置；共享的语言与风格规则放在上述根配置中。
 
-## 架构
+## 修改与验证
 
-### 三层 Monorepo
+- 沿用现有中文领域命名；通用算法放在根 `src/`，各应用的交互、文件/API 适配保留在对应应用或 `scripts/`。
+- 仅核心算法库编写和保留 `spec/` 测试；网页、API 和其他代码通过类型检查、lint、构建及实际运行验证，不新增 spec。
+- 算法改动运行相关 Bun 测试；影响共用字形、候选、筛选器或示例方案时运行完整回归。测试命令使用显式路径 `./spec`，避免收集 `output/` 中的历史测试。
+- 基线已有失败时，用相同源码基线、依赖及数据快照对照失败条目；分别报告本次新增问题和已有问题，不用历史成功计数代替当前验证。测试使用说明见 [spec/README.md](spec/README.md)。
+- 局部格式化优先 `bunx biome format --write <文件>`，保留用户既有改动，不自动暂存或提交。
 
-```
-chai (root)
-├── packages/
-│   ├── hanzi-chai/   # 纯 TypeScript 算法库，汉字拆分与编码核心
-│   └── api/          # Cloudflare Worker 后端（chai-data），提供字库 CRUD API
-└── src/              # React/Vite 前端网页应用
-```
+## 数据准备与发布资源
 
-1. **`packages/hanzi-chai/`** — 纯 TypeScript 算法库，负责汉字拆分与编码，无 UI 依赖，有独立的 Bun 测试套件（`bun:test`）。发布到 npm 为 `hanzi-chai`。
-2. **`packages/api/`** — Cloudflare Worker 后端（基于 itty-router），使用 D1（SQLite）和 KV 存储字库数据，提供 REST API（`https://api.chaifen.app`）供前端和 fetch 脚本调用。共享客户端代码在 `packages/api/src/client.ts`。
-3. **`src/`** — React/Vite 前端应用，消费算法库和后端 API。
+共享开发数据只保存于 `src/data/`。`scripts/fetch.ts` 复用 `scripts/fetch-data.ts` 的严格下载流程，并补充网页和开发核验资源。核心五份文件为 `characters.json`、`glyphs.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`，下载或格式校验失败必须终止，全部成功后才写入。额外资源包括 `gf0014.txt`、`cjk.txt`、`tygf.txt`、`Unihan_IRGSources.txt`；核验用 TXT 下载失败时可警告。数据来自 `api.chaifen.app` 与 `assets.chaifen.app`。
 
-路径别名：
-- `~/` → `src/`
-- `hanzi-chai`（开发模式）→ `packages/hanzi-chai/src/main.ts`
-- `@chai-api/client` → `packages/api/src/client.ts`
+`build` 不自动下载数据。源码 CLI 默认读取 `src/data/`，安装包读取 `dist/data/`；参数 `--data-dir` 和单文件参数可以覆盖默认文件。命令行路径相对当前工作目录，项目清单中的路径相对清单本身。
 
-### 状态管理（`src/atoms/`）
+`prepack` 构建并按白名单复制五份运行数据及示例 YAML 至 `dist/`，先清理旧资源目录。核验资源不发布；安装包不执行下载，运行时不自动更新数据。`check:package` 检查真实安装产物中的 Node API、CLI、示例和默认数据，防止工作区链接或应用依赖掩盖漏打包；安装步骤需要 npm registry，安装后的运行不访问数据服务器。
 
-使用 Jotai 原子，按领域组织：
-- `config.ts` — 主配置对象、URL 位置（通过 `jotai-location`）、撤销/重做历史（10 步，通过 `jotai-history`），聚焦子 atom（基本信息、数据、分析、编码、拼写运算、键盘、优化、图示）
-- `cache.ts` — 核心派生状态：字库构建、字形分析、拼音分析、组装配置、编码结果、用户自定义数据。包含本地/远程双模式（admin 页面使用远程可编辑数据）
-- `data.ts` — 字集视图、字形覆盖、变换器、分类器选取
-- `encoder.ts` — 码长、简码、构词规则
-- `analysis.ts` — 退化配置、过滤器、分类器
-- `keyboard.ts` — 键盘布局
-- `optimization.ts` — 优化器配置
-- `index.ts` — 共享工具 hooks（`useAddAtom`、`useRemoveAtom`、`useAppendAtom`、`useExcludeAtom`、`useModifyAtom`、`useListAtom`、`useAtomValueUnwrapped`）和 `repertoireTypeAtom`
-
-配置以 URL 中方案 ID 为键持久化到 localStorage（通过 `atomWithStorage` + `jotai-family` 的 `atomFamily`）。用户自定义词典、键位分布、当量映射使用 `jotai-minidb`（IndexedDB）持久化。
-
-### 路由（`src/pages/`）
-
-使用 `vite-plugin-pages`（基于文件的路由）结合 `react-router` v7。主要路由：
-- `/` — 方案管理（列表、示例、上传）
-- `/admin` — 管理后台（字库数据的远程 CRUD）
-- `/algorithm` — 算法文档页
-- `/:id/` — 方案编辑器，包含子页面：`element`、`analysis`、`assembly`、`statistics`、`statistics2`、`optimization`、`diagram`、`debug`、`repertoire`
-- `/repertoire` — 字集浏览
-- `/equivalence` — 当量测试
-
-路由模式由构建模式决定：`CF` 使用 Browser 路由，其他模式使用 Hash 路由（见 `src/utils.ts` 中的 `useHashRouter`）。
-
-### 重计算任务
-
-`src/worker.ts` 是一个 Web Worker，负责处理 encode、evaluate、optimize 等 CPU 密集型操作，避免阻塞主线程。
-
-`hanzi-chai` 提供 TypeScript 字形分析和组装逻辑。`libchai`（Rust 编译的 WASM 库）除在 `src/utils.ts` 中提供配置校验（`validate`）外，还在 Worker 中通过 `Web.sync`、`Web.encode_evaluate` 和 `Web.optimize` 承担编码评估与优化。
-
-`CLIENT` 模式将任务转发到同源 `/api/sync`、`/api/encode`、`/api/optimize`，并通过 `/sse/status` 接收优化进度；该构建需要配套本地服务。
-
-Worker 通过 `Thread` 类（`src/utils.ts`）管理，使用 `MessageChannel` 进行双向通信。
-
-### 数据管道
-
-1. **数据源**：`api.chaifen.app`（JSON 数据）和 `assets.chaifen.app`（TXT 数据文件）
-2. **下载脚本**：`scripts/fetch.ts` — 从 API 拉取字库和字形数据，保存到两处：
-   - `packages/hanzi-chai/src/data/`（Node.js 环境，含 `.json` 和 `.json.deflate`）
-   - `public/data/{APP_VERSION}/`（Web 端，版本化以避免缓存）
-3. **数据文件**：`characters.json.deflate`、`glyphs.json.deflate`、`cjk.txt`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`、`tygf.txt`、`gf0014.txt`、`Unihan_IRGSources.txt`。字符与字形也保存未压缩 JSON 供调试；TXT 下载失败时脚本仅警告并跳过
-4. **前端加载**：`src/preload.ts` 在应用启动时预加载并解压数据（pako 解压 `.deflate` 文件）
-5. **版本管理**：版本号取自 `packages/hanzi-chai/package.json` 的 `version` 字段，通过 Vite `define` 注入为 `APP_VERSION`
-6. **后端 API**：`packages/api/`（Cloudflare Worker）处理字库、字形、当量数据的 CRUD（Bearer token 鉴权）
-
-### 算法库（`packages/hanzi-chai/src/`）
+## 算法模块（`src/`）
 
 关键模块：
+
 - `main.ts` — 浏览器入口及内置组件注册；当前注册 5 个部件分析器、8 个复合体分析器、2 个组装器、1 个拼音分析器和 14 个筛选器。首末取大部件/复合体分析器虽有实现，但注册被注释
 - `index.ts` — Node.js 入口，重新导出 `main.ts`，并提供基于 `node:fs` 的数据加载及配置处理；前端代码不要直接引入此入口
 - `component.ts` — 从笔画序列提取部件（默认、二笔、张码、逸码、冰雪飞花、首末取大）
@@ -140,6 +82,10 @@ Worker 通过 `Thread` 类（`src/utils.ts`）管理，使用 `MessageChannel` �
 - `selector.ts` — 14 种取码启发式规则（全符笔顺、取大优先、取小优先、倒序取大、首末取大、同向笔画、多强字根、少弱字根、根少优先、结构完整、能散不连、能连不交、连续笔顺、非形近根）
 - `config.ts` — 配置类型定义与校验
 - `registry.ts` — 可扩展性插件注册表
+- `templates.ts` — 纯方案模板工厂，统一分类器、键盘与编码预设，每次创建返回独立配置
+- `filter.ts` — 字符与字形筛选规则，不依赖 UI
+- `glyph-metadata.ts` — GF0014／GF3001 编号映射及歧义字形集合
+- `equivalence.ts` — 当量测量的分组、异常值过滤、归一化及汇总；文件/API 适配在 `scripts/analyze-equivalence.ts`
 - `classifier.ts` — 字根分类器
 - `data.ts` — 数据加载与解析（原始字库、词典、当量映射、键位分布）
 - `element.ts` — 元素操作
@@ -151,42 +97,8 @@ Worker 通过 `Thread` 类（`src/utils.ts`）管理，使用 `MessageChannel` �
 - `repertoire.ts` — 字集管理
 - `utils.ts` — 通用工具函数
 
-测试位于 `packages/hanzi-chai/spec/`，覆盖 affine、bezier、component、degenerator、element、pinyin、primitive、repertoire、selector、unicode、utils 及 e2e。
+测试位于 `spec/`，覆盖 affine、bezier、component、degenerator、element、pinyin、primitive、repertoire、selector、unicode、utils 及 e2e。
 
-### 构建目标
-
-| 模式 | 路由 | 部署目标 |
-|------|------|---------|
-| PAGES | Hash | GitHub Pages（`dist/pages`） |
-| CF | Browser | Cloudflare Workers（前端 `dist/cf`） |
-| BEX | Hash | 浏览器扩展（`dist/pages`） |
-| CLIENT | Hash | 本地服务客户端前端（`dist/client`） |
-
-构建过程：先通过 `build:pkg` 编译算法包，再根据模式调用 Vite 构建。所有构建注入 Tailwind CSS v4、Ant Design v5、MDX 支持。
-
-### API 后端（`packages/api/src/`）
-
-Cloudflare Worker，使用 itty-router。目录结构：
-- `worker.ts` — 入口，CORS 中间件
-- `router/` — 路由定义（characters、glyphs、equivalence、repertoire、users）
-- `controller/` — 请求处理逻辑
-- `model/` — 数据库操作（D1 + KV）
-- `dto/` — 数据类型定义（context、jwt、list、load、users）
-- `middleware/` — JWT 认证中间件
-- `error/` — 错误类型定义
-- `utils/` — 工具函数
-
-绑定资源：D1 数据库 `CHAI`、KV 命名空间 `REFERENCE`。
-
-## 技术栈
-
-**前端**：React 18、Vite 8、TypeScript 6、Tailwind CSS 4、Ant Design 5、Jotai（状态管理）、react-router v7、@xyflow/react（流程图）、@ant-design/charts / @antv/s2（图表）、@dnd-kit（拖拽）、MDX（文档）
-
-**算法**：TypeScript、libchai（Rust WASM，npm 包）、pako（压缩）
-
-**后端**：Cloudflare Workers（itty-router）、D1（SQLite）、KV、JWT 认证
-
-**工具链**：Bun、Biome 2.5（格式化 + lint）、Bun 内置测试运行器（`bun:test`）
 
 ## 领域术语
 
@@ -216,10 +128,10 @@ Cloudflare Worker，使用 itty-router。目录结构：
 
 ## CI/CD
 
-- **`static.yml`**：推送到 `main` 或手动触发 → `bun install` → `bun run fetch` → `bun run build:PAGES` → 部署到 GitHub Pages
-- **`test.yml`**：PR 或推送到 `main` → `bun install` → `bun run fetch` → `bun run --filter hanzi-chai test:all`
-- **`code-tables.yml`**：每次推送、PR 或手动触发 → 下载共享数据 → `bun run check:code-tables` → 输出校对摘要和完整报告 artifact
-- **`publish.yml`**：推送到 `main`，比较 `packages/hanzi-chai/package.json` 版本与 npm 已发布版本，不同则安装算法包依赖、构建并发布到 npm
+- `test.yml`：PR 或推送到 `main` 时，冻结锁文件安装、准备数据、运行 `test:all`。
+- `code-tables.yml`：push、PR 或手动触发，准备数据、校对示例，输出摘要与完整报告 artifact。
+- `publish.yml`：推送到 `main` 时比较根版本与 npm 已发布版本，变化则从根目录安装包依赖、准备数据、构建、验证并发布。
+- 网页部署工作流及构建目标见 [web/AGENTS.md](web/AGENTS.md)。
 
 ## 示例方案单字全码 CI 校对
 
@@ -236,6 +148,8 @@ Cloudflare Worker，使用 itty-router。目录结构：
 
 脚本校验文件哈希、字数和去重后的码对数，按每个示例的 `data.character_set` 确定目标字集。字库中属于目标字集但未生成编码的字符也参与比较；参考表中超出目标字集的字符不算差异。仅比较全码集合，不比较简码或候选排名。
 
+已核实的多余码对维护在 `data/<方案>-excluded.tsv`。清单以 `character`、`code` 为唯一键，`reason` 必填，其余列保存码位、来源、版本等依据。先校验原始参考表的哈希和计数，再应用排除项；同字的其他全码保留。报告记录排除清单哈希、实际排除条目和有效参考表哈希。后续新增排除项持续追加到同一份清单，不再另建按字集分散的文件。
+
 ### 运行
 
 ```bash
@@ -243,7 +157,7 @@ Cloudflare Worker，使用 itty-router。目录结构：
 bun run check:code-tables
 
 # 只检查一套方案
-bun run check:code-tables --scheme huma
+bun run check:code-tables --scheme <方案ID>
 
 # 使用已整理好的本地参考表
 bun run check:code-tables --reference-dir output/code-tables
@@ -267,8 +181,282 @@ bun run check:code-tables --base-url https://assets.chaifen.app/code-tables --ou
 
 `output/` 中已有的码表、压缩包和历史实验文件保留。
 
-## 关于字符与字形数据库的约定
+## 字符与字形数据规范
 
-数据库和配置文件的新字段使用 `snake_case`。字符与字形数据库的数值字段只存整数，包括 JSON 中嵌套的坐标、笔画参数和索引。
+字形数据库（`glyphs.json`）用贝塞尔曲线记录供拆分算法分析的字形。字符数据库（`characters.json`）记录字符、字形 ID 与来源的对应关系。「参考字形」指 Unicode 码表中的字形。数据库将来源 KP 简写为 N，将 UK 简写为 B。数据依据见 [Unicode 18.0 基本集码表](https://www.unicode.org/Public/18.0.0/charts/PDF/U4E00.pdf) 和 [Unihan.zip](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip)。
 
-参见[DATA.md](./DATA.md)。
+下文用「字符」（#ID）指称具体字形。字形只对应某个字符的局部时，优先写「宿主」的相应部位（#ID）。有独立别名或部件名时，也可用「别名」（#ID）。
+
+### 数据约定与维护目标
+
+#### 字段命名
+
+数据库和配置文件的新字段使用 `snake_case`。
+
+#### 整数存储
+
+字符与字形数据只存整数数值，包括字形 ID、坐标、曲线参数和索引。布局与渲染可在内存中使用小数。保存展开后的笔画时，将绝对坐标取整。
+
+#### 来源映射
+
+对 Unicode 收录的每个汉字及其码表来源，字符库应恰有一个字形带有对应来源标签。这个字形应与该来源的参考字形相容。维护时逐个来源修复不相容的映射，并补齐缺失的字形和映射。
+
+### 系统字形与参考字形的相容性
+
+判断以笔画、部件及其结构能否正确辨识为准。先核对结构，再按实际笔形与接点应用笔画规则。
+
+#### 结构的相容性
+
+##### 比例和间距
+
+部件大小、比例和间距可以随字体布局变化，以各部分仍可辨识为限。
+
+##### 分部接口
+
+上下、左右、包围或叠加的分部位置和围合关系一致，且双方主体各自可辨时，相邻边缘可以局部相连、轻微交叠或分离。以实际接口及分部相对位置判断。
+
+##### 封口、分格和穿插
+
+保留封口、分格、连续外沿和主笔穿过另一分部的关系。接触差异改变这些关系、改变笔画归属或影响辨识时，判为不相容。
+
+##### 齒字底中横
+
+「齒」下部及同形字底统一保留框内中横与两侧壁的分离。各来源可共用这一画法。外框、中横和上下两排内件均须保留。
+
+##### 鬥的边竖
+
+「鬥」的两侧各以独立的竖或竖钩表示。两笔与中间的横群保持分离，参考字形的横端贴到边竖时仍可沿用这一画法。中间左右笔群的轮廓各自保全。
+
+#### 笔画的相容性
+
+##### 1. 提与横
+
+参考字形的提允许用系统字形同一位置的横表示。
+
+##### 2. 部件右下角的捺与点
+
+一个部件右下角的捺与点允许互变。由这项互变直接造成的微小拓扑差异也可接受。适用范围限于这个位置和这项笔形变化。
+
+##### 3. 短竖状的点
+
+J、K、N、T、V 来源中，实际为点的短竖状笔画可以用点表示。根据笔画所在的位置、作用和走势确认其身份。
+
+##### 4. 横捺与普通捺
+
+J、K、N 来源中的横捺可用普通捺表示，保留该笔的位置和结构作用。
+
+##### 5. 直段或折段的钩
+
+竖与竖钩、横折钩与横折、竖折折钩与竖折折分别允许互变。
+
+##### 6. 弯钩与提
+
+竖弯钩与竖提允许互变，横折弯钩与横折提也允许互变。
+
+##### 7. 点的方向
+
+系统中实际为点的笔画，包括子型「平点」，可以朝左下或右下，允许与参考字形方向不同。根据库内笔画类型辨认点，真正的撇、提及接点变化按相应规则处理。
+
+##### 8. 点或短撇接下方横向笔画
+
+点或较短的撇下方有横画或横向段时，系统倾向于让这两笔相接。各来源在同一位置接离有别时，可以统一接合。此条限于下方横画和笔画的直横向段。弯钩的弯曲横段保持其原有轮廓和接离关系。对中竖明显较长的⺌形，只让中竖接下部，两侧点撇仍分离。
+
+##### 9. 水形及相同侧笔组的分离
+
+「水」或「⺢」类字形的左右两侧与中竖分离。任何主体左侧呈「冫」形的上点下提，或右侧呈「⺢」末两笔形的上撇下点时，侧笔组的两笔均与主体分离。参考形接到主体时仍采用分离。按实际笔形和位置认定侧笔组，本条优先于一般的接笔容差。
+
+##### 10. 点末端近接长撇
+
+点的末端靠近长撇中部时，系统倾向于让两笔相接，允许参考字形在同一位置留微隙。此条只适用于点末端与长撇中部的关系，点的起笔按实际位置判断。
+
+##### 11. 大形底部的撇捺
+
+底部呈「大」形时，参考字形的撇捺分离视为装饰性差异，系统统一用撇捺相接表示。应保留两笔及其他部件结构。
+
+##### 12. 已有相容来源时的微小接离
+
+同一系统字形已经与同一字符的至少一个来源相容时，其余来源可接受同一对笔画之间从相接到微隙的差异。逐处判断，仅局部略微延伸或收短即可转换接离，且走势、部件辨识和结构均保留时适用。明显分离、相交、笔形变化和框的开合按各自规则处理。
+
+##### 13. 同一位置的附笔
+
+点、短撇或开口内的短横始终位于主体同一侧的局部位置或同一开口，且主体和附笔均可辨时，可以随写法相连或分离。附笔可由起端或末端相接，点的末梢也可在接点处略过主笔中线。附笔伸入另一分部、贯穿主干或改变开口时，按实际结构判断。⺌形及第 9 条侧笔组分别按其专门规则处理。
+
+##### 14. 已确认的笔形变体
+
+幺形第一撇折可以横伸接第二撇折，也可以收为向右下的短折尾并与第二笔分离。两笔及末点须各自可辨。瓜形中部竖提和右捺可以接顶撇，也可以从顶撇下方起笔。顶撇、左撇构成的外沿及下方各笔关系须保留。
+
+##### 15. 撇的斜度
+
+同一笔可辨为撇时，允许斜撇和近于竖向的撇互变。仍须保留该笔的位置、向左收笔的走势及原有交连关系。
+
+### 部件和复合体的判定原则
+
+以实际字形确定可用的切分位置，再用分部信息熵选择分法。字源、笔顺、字义、读音和传统部件身份均排除在判定依据之外。
+
+#### 先识别须保全的图形
+
+##### 闭合框架
+
+完整外轮廓和字形局部的闭框均须保全。参与围合的笔画归同一部分，即使只有一段构成框边，或同一笔还伸出框外。可沿外接部分与框边的接点分开。结合外轮廓判断内件接入后形成的小格，以实际承担围合的笔画为准。
+
+##### 平行笔群
+
+走势相近、沿主方向投影明显重叠且沿垂直方向相邻成列的笔画可归为一组。根据短钩、轻微弧度、笔画长短和笔画所属的主干、框边或层次判断。组内笔画跨连通子图时须保全整组。同一连通子图有保全整组的合法切法时，排除拆散该组的切法。若整组与其他主笔各成可辨的层次，可沿接口分开。
+
+##### 轮廓内的附笔
+
+被外轮廓、格子或凹入处包夹并随主体成形的分离单笔，归入主体。附笔可以位于多个区域或区域中部，须看整笔和边界的关系。若数笔在开口中独立成组，或长笔从内侧伸出并与外侧另一笔形成可辨的下部，可以另分。
+
+##### 轮廓外的附笔
+
+单笔或一小组短笔与折转主干的端部对位，沿同一局部窄列接续，且只占主体的局部宽度时，归入主干。检查折角、端部和短笔位置。独立占一层或一列的笔画按其布局判断。
+
+#### 判断是否存在可辨的分部
+
+##### 连通子图和独立分部
+
+单个连通子图通常保留为部件。多个连通子图通常可组成复合体，须先按保全规则归组，再判断剩余间隙能否分出独立主体。实际连通子图和按结构归组的笔群分别记录。
+
+##### 对称的单笔
+
+多个同方向的单笔近似对称排列时，可以合为一组。
+
+##### 共同展开的主笔
+
+各子图主笔在同一空间内穿插或共同展开，无法各成行、列或内外部分时，整体保留。各列若各有主干和附笔、列间分界清楚，则按列分部。
+
+##### 中竖与对称侧笔
+
+主体子图含一竖或多竖，且两侧有近似对称的笔画时，侧笔随主体归组。主体可以含其他笔画，竖也可写成竖钩。
+
+##### 连续主笔与外围附笔
+
+连续主笔贯穿多层横画时，检查它是否和两侧附笔共同构成轮廓。两侧附笔只占主笔两旁的同一层时，随主体保留。作为整体外沿的分离笔画也可以与主体同组。
+
+##### 接点处的两笔下限
+
+分界经过真实接点或轻微的局部搭接时，参与该分界的每个分部至少两笔。半包围和叠加同样适用。与主体接合的单笔随其笔群保留。核对笔画实际端点和路径。路径留有间隙时按相离判断，程序因容差标出的连接作为复核提示。
+
+##### 明显跨部相交
+
+拟切分的两组之间若有明显相交，保留相交的笔画在同一分部。长笔在中段穿过另一组的框边或主干，且交点两侧均有清楚的延伸时，属于明显相交。端点附近的轻微搭接按接点规则判断。组内原有的相交保留。
+
+##### 上下堆叠
+
+结合每层的宽度、主笔和内部组合寻找分界。可分两层或三层，封口横留在原框内。少量伸出或投影重叠时，以主体位置和接口为准。上下各自有独立竖笔且在接点对齐时，可沿接点分开。底部单笔横贯一层、与上方留隙且伸出侧边时，也可以独立分层。
+
+##### 左右并列
+
+各部分分列左右，各有可辨的主干或轮廓时，可以沿相邻侧边分开。多笔接到邻列同一根边笔时，仍可保留各列完整笔群。少量外伸可使两侧包围盒重叠。
+
+##### 内外包围
+
+外部须有可辨的围合轮廓，内件主体位于各边共同限定的空间。完整包围应保全外框。半包围允许内件局部探出开口，或在端点附近与外沿轻微搭接，以双方主体仍可辨为限。明显穿过外沿的笔画按跨部相交规则归组。只有一个拐角、投影重叠或共同托底横时，须继续检查其余外沿。成排的笔画或逐层错开的折笔应按各自轮廓归组。内件仅由横、竖组成且与外框共同分格时，整体保留。
+
+##### 叠加
+
+主体骨架完整、置入笔群可整体取出且双方各有清楚走势时，可以分为叠加结构。符合两笔下限的笔群可以在局部相接。明显跨部相交仍按保全规则归组。叠加单笔须与主体分离，并符合附笔保全规则。框内填充、共享框边或需要截断的笔画按对应的保全规则处理。
+
+##### 无法切分或证据未定
+
+找不到合法分部时，整体保留为部件。图形关系尚无法确认时，记录具体有争议的笔群、框边或接点。
+
+#### 确定引用与选择分法
+
+##### 复用或新增字形
+
+先确定分部，再按相容性核对可复用的字形。已有完整字形可作为主体时优先复用，独立附笔可通过布局定位。人工确认可以复用且试排仍有组内交连差异时，记录具体位置，同时保全分部边界和可辨轮廓。缺少相容字形时，按原笔群及其内部交连建立所需的部件。多个字形有相同缺件时可共用一个新字形。
+
+##### 分部信息熵
+
+只比较通过图形判据的分法。按《汉字字形分部的信息熵及其最小化》的模型，固定一份含 $N$ 个字形的全库快照，每个字形 ID 等权。结构 $s$ 由结构描述字符和直属引用项数 $d_s$ 确定。位置按 `references` 的顺序排列。部件使用单独的结构，唯一位置记录自身 ID。
+
+记 $n_s$ 为采用结构 $s$ 的字形数，$n_{s,k,b}$ 为该结构第 $k$ 个位置使用字形 ID $b$ 的次数。设 $f(n)=n\log_2 n$，$f(0)=0$。分部信息熵为
+
+$$
+H=\log_2 N+\frac{\sum_s(d_s-1)f(n_s)-\sum_{s,k,b}f(n_{s,k,b})}{N}.
+$$
+
+逐个用候选替换原表示，更新受影响的计数，选取 $H$ 最小者。新增字形在引用位置用临时 ID 表示，比较时保持统计字形集合一致。熵相同时优先选择新增 ID 较少的分法。采纳后以更新过的字库为后续比较的基准。
+
+同形分部的统一表示也要保持：例如豆、鬲采用「一、口、下部」三层时，不能仅因单项熵较低，让其中一个单独退回另一种分部。
+
+## 方案校对与回归方法
+
+### 固定参考表和输入
+
+1. 记录官方发布版本、下载地址、文件编码、列序、校验值，以及纳入目标的主表、兼容码、调整码和拆分注解。逐表核实格式，不能假定两个发布表的列序或权重含义相同。整理为无表头 UTF-8「单字<TAB>全码」TSV，按码对去重，保留同字异码。
+2. 按官方定义区分全码、简码和消重补码。最长码、固定权重或前缀关系都不是通用提取规则；不同路径的短全码可能有效，消重延长码可能不是标准全码。具体提取逻辑留在参考表整理流程，不加入通用 CI 脚本。
+3. 按有效单字覆盖选择 `data.character_set`：完整覆盖 8,105 个通规字时采用 `general`，否则以 `gb2312` 为校对范围，并独立确认其覆盖是否完整。词组中出现的字不算单字覆盖；两种字集按字符库的 `tygf`、`gb2312` 元数据判断，不互相推定包含，也不用码位区间近似。扩集时保留原范围的独立回归。
+4. 固定 `data.glyph_sources`、配置、字符/字形数据、词典、参考表与排除清单，保存 `build` 基线及输入哈希。每批输出使用新目录。CLI 只校对字库能识别的单字，参考缺字、生成缺字、无可用字形和空码需要另外核算。
+
+校对 Unicode CJK 基本集时显式筛选 U+4E00–U+9FFF 的 20,992 个码位；系统 `basic` 字集还包含区间外的通规字，两者不可混用。
+
+### 核实来源与参考依据
+
+- 按相同 Unicode 版本的 `Unihan_IRGSources.txt` 核对来源存在性：G/H/T 对应 `kIRG_GSource`、`kIRG_HSource`、`kIRG_TSource`，再看码表中相应来源栏的真实字形。简繁身份、码表中的“陆标/台标”注解和基础字的来源，都不足以证明宿主字符具有同一来源。
+- 没有指定来源时，算法按 `GHTJKNVMSBU` 顺序选择一个实际存在的缺省来源；不在顺序中的来源排后，同优先级沿用记录顺序。选择在字符补丁之后执行，兼容无来源形仍保留。记录真实选中来源，不为满足目标码补造来源，也不因没有 G/H/T 就删除整个字符。
+- 参考笔顺需与实际来源编号对应。台标可按同一 CNS 位面号核对全字库笔顺资料；教育部动画可补充具体轨迹。全字库数字 1–5 对应横、竖、撇、点、折。不要取同一码位的任意 CNS 映射，也不要从目标编码倒推共享笔顺。
+- 参考码有疑问时交叉核对主表、调整表、拆分注解、Unicode 原图及同来源笔顺。无来源依据、码表笔误、共享字库错误和方案兼容规则分别处理，不能仅因系统生成不同就排除目标码。
+- 排除项按「字、全码」维护，保留版本、收录表、来源编号和理由；只排除确实无效的码对。同码仍有有效来源时保留全码，只撤去无效来源归因。来源不明的兼容码单列待核。原始表和历史快照保留，通过统一排除清单生成有效目标。
+
+参考资料：[Unicode 18 基本集码表](https://www.unicode.org/Public/18.0.0/charts/PDF/U4E00.pdf)、[Unihan 来源字段](https://www.unicode.org/reports/tr38/#IRG_Sources)、[全字库开放资料](https://data.gov.tw/dataset/5961)。
+
+### 从差异定位原因
+
+先把差异分为多码、缺码、两者都有和整字缺失。保留字符、码位、双方全码集合、实际字形 ID/来源、系统字根序列及官方拆分。按共用分部 ID 和字根序列归组，统计受影响的错误字与已对齐字，抽查同组正确字和相似反例。
+
+`inspect` 核对字形、来源和笔顺；`analyze` 可查看评估词典外的字符；`explain` 区分下列情况：
+
+| 证据 | 优先检查或修改位置 |
+| --- | --- |
+| 目标拆分从未成为候选 | 字形实际笔画、接离、相交、投影、笔顺、分部及字根登记 |
+| 目标候选存在但未胜出 | 第一个改变排序的筛选器；方案例外可按字形 ID 选择已有候选 |
+| 拆分正确但编码不同 | 组装轨迹、取根位置、末根补码、键位归并及词/单字规则 |
+| Unicode 来源形缺失或映射错误 | 按真实来源修共享库，优先复用已有相容分部，保留其余来源 |
+| 同形兼容拆分或笔顺有方案依据 | `data.character_customization` 使用 `type: insert`、`sources: []`；不冒充规范地区形 |
+| 跨分部字根可由已有分部重组 | 优先 `data.glyph_algebra`，匹配结构及分部 ID，保留可变内件 |
+| 必须跨原分部搜索笔画 | 融合实际被切开的最小字形，检查笔顺、候选及其他默认分析方案；共享原分部保持正确 |
+| 既有字根的形近写法 | 以实际字形登记 `form.mapping` 或 `{element: 原字根}`，执行全库切片匹配检查 |
+| 共用分部仅在少数用途需要不同解释 | 保留主要用途，只对例外字符和来源复用或新增字形 |
+
+字符级自定义会覆盖当前选中来源下的多个部件字形，字形级规则优先；只支持具体字形的例外应按 `字形-ID` 限定。旧字段不能机械迁移，先核实当前配置是否读取以及目标仍是部件还是已变复合体。
+
+### 字形与字根修改的经验
+
+- 结构符描述实际分部，不能用结构符把原部件硬写成目标字根序列。需要展开时保留实笔画、坐标、笔数及笔顺，保存坐标取整；交错笔顺用复合体 `strokes` 的分部笔画块表达。改变笔形或接点时如实记录，不能称为纯分部变换。
+- 字形存在不代表宿主引用正确；沿引用树逐个检查宿主的实际来源与分部。共用中间分部尽量复用，例外写法只限定到需要的用途。
+- 先排查缺笔、误合笔、笔形标注和实际接点。一个坐标单位也可能改变接离及切片匹配；程序容差给出的连接只作提示，仍核对真实路径。不要用仅在宿主生效的特殊根掩盖共享原形错误。
+- 形近根在完整部件和切片中遵循同一规则。新增根要扫描全库命中、异名根覆盖、重复候选和全部宿主；“没有覆盖其他字根”不等于“没有编码变化”。同码归并也可能改变筛选、组装、简码和排名。
+- 共享字库修复后，重新试删失效或已冗余的局部字形和拆分覆盖。分别在通用规则开关关闭、打开时核对每个字形的字根序列，区分本来就冗余和只有新规则启用才可删的条目，再做完整回归。
+- 通用规则同时验证命中例、相似反例及开关两种状态；检查实际穿插关系，不能以投影落在某区间代替穿过主笔的判断。
+- 保留正确地区形和有依据的兼容码。规范字形能成立，不代表编码已符合方案约定；新增规范形产生参考未收录码时单独核对，不能为减少多码删除正确来源。
+
+共享库远程写入、正式 ID 预演和回读流程见 [api/AGENTS.md](api/AGENTS.md)。
+
+### 双向回测与验收
+
+每批只改一类原因，用相同输入执行 `validate`、`build`、`compare` 和双向 `proofread`。正向检查多码，反向检查缺码，按「字、全码」去重汇总；多个字形可能生成相同码，CLI 条目数不等于去重码对数。
+
+设每字官方全码集合为 R、基线为 B、当前为 A：多码是 A−R，缺码是 R−A；凡 B=R 的字，须继续满足 A=R。逐字检查原已覆盖目标码是否丢失，不能只看多码/缺码总量下降。至少报告完全对齐字数、多码、缺码、两侧缺字及退步字；“至少一个码匹配”和“缺码归零”均不等于双向全码集合一致。
+
+CLI `proofread` 的 `correct` 表示主体码匹配任意参考码，必须结合双向结果；`unknown` 表示对侧缺字。`--scope` 仅筛选结果，不缩小方案生成范围；明细通过 `--limit`、`--offset` 分页，统计覆盖完整范围。CLI 发现编码差异仍退出 0，CI 集合检查器发现差异退出 1，不可混用退出码验收。
+
+纯配置整理、规则迁移或冗余覆盖删除，还应比较完整 `codes.tsv`，确认重复候选、简码和排名一起保留。共用规则变更须回测方案默认字集及小范围之外的宿主。若共享库同时有其他更新，在快照中只还原本批修改以重建对照，避免把外部更新的影响归到本批。
+
+通用操作示例（为 `scheme`、`reference`、`work`、`text` 分别设置方案路径、已整理参考表路径、新输出目录和待查字符）：
+
+```bash
+bun run chai validate "$scheme" --json
+bun run chai build "$scheme" --out "$work/baseline" --json
+bun run chai inspect "$scheme" --text "$text" --json
+bun run chai analyze "$scheme" --text "$text" --json
+bun run chai explain "$scheme" --text "$text" --limit 100 --json
+bun run chai proofread "$scheme" --reference "$reference" --direction forward --json
+bun run chai proofread "$scheme" --reference "$reference" --direction reverse --json
+# 修改后使用新目录，并检查拆分、编码和排名变化
+bun run chai build "$scheme" --out "$work/candidate" --json
+bun run chai compare "$work/baseline" "$work/candidate" --json
+```
+
+长期指导文档保留方法、规范与可复用经验，不追加具体方案逐批修正、字码清单、准确率战报或发布版本校对记录。方案本身的行为说明留在配置注释；机器可读参考排除清单与必要回归测试继续维护。`output/` 中已有码表、压缩包与历史实验产物保留。

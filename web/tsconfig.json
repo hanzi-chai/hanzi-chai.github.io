@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "jsx": "react-jsx",
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["bun-types", "@modyfi/vite-plugin-yaml/modules", "@types/mdx"],
+    "paths": {
+      "~/*": ["./src/*"],
+      "hanzi-chai": ["../src/main.ts"],
+      "@chai-api/client": ["../api/src/client.ts"],
+      "hanzi-chai/evaluation": ["../src/evaluation.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts", "vite-data.ts"]
+}

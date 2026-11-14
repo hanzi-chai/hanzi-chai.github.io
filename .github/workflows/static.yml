@@ -42,7 +42,7 @@ jobs:
 
       - name: Build
         run: |
-          bun install
+          bun install --frozen-lockfile
           bun run fetch
           bun run build:PAGES
 
@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: "dist/pages"
+          path: "web/dist/pages"
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -7,7 +7,7 @@
 
 import "dotenv/config";
 import type { 基本字形数据, 复合体数据 } from "hanzi-chai";
-import { createClient } from "../packages/api/src/client";
+import { createClient } from "../api/src/client";
 
 const { get, put } = createClient(() => process.env.JWT ?? null);
 

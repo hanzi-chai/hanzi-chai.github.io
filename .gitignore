@@ -25,10 +25,10 @@ dist-ssr
 *.sw?
 
 coverage
-public/data/
+web/public/data/
 .wrangler/
 data/
 .env
 .dev.vars
-package/hanzi-chai/src/data
+src/data/
 output/

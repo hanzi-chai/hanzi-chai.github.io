@@ -19,8 +19,9 @@
 
 import "dotenv/config";
 import type { 字符数据 } from "hanzi-chai";
-import { listCharacters } from "../src/api";
-import { del } from "./utils";
+import { del, get } from "./utils";
+
+const listCharacters = () => get<字符数据[]>("/characters");
 
 function isPUA(unicode: number): boolean {
   return (

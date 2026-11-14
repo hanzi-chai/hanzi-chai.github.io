@@ -1,36 +1,9 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "forceConsistentCasingInFileNames": true,
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "paths": {
-      "~/*": ["./src/*"],
-      "hanzi-chai": ["./packages/hanzi-chai/src/main.ts"],
-      "hanzi-chai/evaluation": ["./packages/hanzi-chai/src/evaluation.ts"],
-      "@chai-api/client": ["./packages/api/src/client.ts"]
-    },
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "moduleDetection": "force",
-
-    /* Linting */
-    "strict": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
-    "noFallthroughCasesInSwitch": true,
-    "types": [
-      "bun-types",
-      "@modyfi/vite-plugin-yaml/modules",
-      "@types/mdx"
-    ]
+    "types": ["bun-types"],
+    "customConditions": ["node"]
   },
-  "include": ["src", "scripts", "vite.config.ts"]
+  "include": ["src", "spec", "scripts"]
 }
