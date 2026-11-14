@@ -130,7 +130,7 @@ bun run check:package       # 将真实 tarball 安装至仓库外验证
 
 - `test.yml`：PR 或推送到 `main` 时，冻结锁文件安装、准备数据、运行 `test:all`。
 - `code-tables.yml`：push、PR 或手动触发，准备数据、校对示例，输出摘要与完整报告 artifact。
-- `publish.yml`：推送到 `main` 或 `beta` 时检查根版本是否已在 npm 发布；未发布则安装包依赖、准备数据、构建、验证并发布。`main` 仅允许正式版本并使用 `latest` 标签，`beta` 仅允许 `x.y.z-beta.N` 并使用 `beta` 标签。
+- `publish.yml`：推送到 `main` 或 `beta` 时检查根版本是否已在 npm 发布；未发布则安装包依赖、准备数据、构建、验证并发布。`main` 仅允许正式版本并使用 `latest` 标签，`beta` 仅允许 `x.y.z-beta.N` 并使用 `beta` 标签。发布使用 npm Trusted Publishing（GitHub OIDC），需在 npm 包设置中授权 `hanzi-chai/hanzi-chai` 的 `publish.yml` 直接执行 `npm publish`，无需 `NPM_TOKEN`。
 - 网页部署工作流及构建目标见 [web/AGENTS.md](web/AGENTS.md)。
 
 ## 示例方案单字全码 CI 校对

@@ -85,7 +85,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hanzi-chai/hanzi-chai.github.io"
+    "url": "https://github.com/hanzi-chai/hanzi-chai"
   },
   "license": "GPL-3.0-only",
   "workspaces": [

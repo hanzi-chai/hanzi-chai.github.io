@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: npm-publish-${{ github.ref }}
@@ -16,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Bun (TypeScript maintenance scripts)
         uses: oven-sh/setup-bun@v2
@@ -24,10 +25,14 @@ jobs:
           bun-version: latest
 
       - name: Setup Node.js (for npm publish)
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Setup npm for trusted publishing
+        run: npm install --global npm@11.21.2
 
       - name: Check release version and npm tag
         id: version-check
@@ -67,5 +72,3 @@ jobs:
       - name: Publish to npm
         if: steps.version-check.outputs.changed == 'true'
         run: npm publish --tag "${{ steps.version-check.outputs.tag }}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
