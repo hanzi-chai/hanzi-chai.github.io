@@ -465,7 +465,9 @@ class 部件 {
    */
   给出部件分析(配置: 字形分析配置): Result<默认部件分析, Error> {
     const 当前字根 = new Set(配置.字根决策.keys());
-    const 必要字根 = 当前字根.difference(配置.可选字根);
+    const 必要字根 = new Set(
+      [...当前字根].filter((字根) => !配置.可选字根.has(字根)),
+    );
     const 退化配置 = 配置.退化配置;
     const 二进制字根映射 = this.生成二进制字根映射(
       配置.部件字根列表,
